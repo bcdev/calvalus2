@@ -7,6 +7,7 @@
     <version>0.1-SNAPSHOT</version>
     <name>Calvados EO Data Processing Platform</name>
     <url>http://maven.apache.org</url>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.mahout.hadoop</groupId>
@@ -16,8 +17,21 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>4.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
