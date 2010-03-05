@@ -59,6 +59,11 @@ public class N1ProductFileConverter implements ProductFileConverter {
 
     }
 
+    /**
+     * 
+     * @param args
+     * @throws FileNotFoundException
+     */
     public static void main(String[] args) throws FileNotFoundException {
         Locale.setDefault(Locale.ENGLISH);
 
