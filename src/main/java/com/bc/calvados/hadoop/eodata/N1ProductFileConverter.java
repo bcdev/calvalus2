@@ -63,7 +63,7 @@ public class N1ProductFileConverter implements ProductFileConverter {
 
     @Override
     public void convertFromMRFriendlyFormat(InputStream inputStream, File outputFile) throws IOException {
-//        throw new IllegalStateException("Not implemented.");
+
         FileCacheImageInputStream imageInputStream = new FileCacheImageInputStream(inputStream, new File("."));
         ProductFile productFile = ProductFile.open(imageInputStream);
 
