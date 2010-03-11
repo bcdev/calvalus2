@@ -1,6 +1,7 @@
 package com.bc.calvados.hadoop.io;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -14,9 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.DSD;
 import org.esa.beam.dataio.envisat.ProductFile;
 
-import javax.imageio.stream.FileCacheImageInputStream;
 import javax.imageio.stream.ImageInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,24 +36,25 @@ public class N1InputFormat extends FileInputFormat<LongWritable, BytesWritable> 
         Map<Path, Integer> granuleSizeMap = new HashMap<Path, Integer>();
         for (InputSplit inputSplit : inputSplits) {
             FileSplit split = (FileSplit) inputSplit;
-            final Path file = split.getPath();
+            final Path path = split.getPath();
             int headerSize;
             int granuleSize;
-            if (headerSizeMap.containsKey(file)) {
-                headerSize = headerSizeMap.get(file);
-                granuleSize = granuleSizeMap.get(file);
+            if (headerSizeMap.containsKey(path)) {
+                headerSize = headerSizeMap.get(path);
+                granuleSize = granuleSizeMap.get(path);
             }  else {
-                FileSystem fs = file.getFileSystem(job.getConfiguration());
-                FSDataInputStream fileIn = fs.open(file);
-                ImageInputStream imageInputStream = new FileCacheImageInputStream(fileIn, new File("."));
+                FileSystem fs = path.getFileSystem(job.getConfiguration());
+                FSDataInputStream fileIn = fs.open(path);
+                final FileStatus status = fs.getFileStatus(path);
+                ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
                 ProductFile productFile = ProductFile.open(imageInputStream);
                 final org.esa.beam.dataio.envisat.RecordReader[] mdsRecordReaders = getMdsRecordReaders(productFile);
                 headerSize = (int) mdsRecordReaders[0].getDSD().getDatasetOffset();
                 granuleSize = computeGranuleSize(mdsRecordReaders);
                 productFile.close();
                 fileIn.close();
-                headerSizeMap.put(file, headerSize);
-                granuleSizeMap.put(file, granuleSize);
+                headerSizeMap.put(path, headerSize);
+                granuleSizeMap.put(path, granuleSize);
             }
             N1InputSplit n1Split = new N1InputSplit(split.getPath(), split.getStart(), split.getLength(), split.getLocations(), headerSize, granuleSize);
             n1Splits.add(n1Split);

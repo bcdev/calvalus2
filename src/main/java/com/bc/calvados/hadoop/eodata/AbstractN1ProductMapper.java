@@ -1,24 +1,20 @@
 package com.bc.calvados.hadoop.eodata;
 
-import com.bc.calvados.hadoop.io.ByteArrayWritable;
+import com.bc.calvados.hadoop.io.FSImageInputStream;
 import com.bc.calvados.hadoop.io.N1InputSplit;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.dataio.envisat.ProductFile;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
 
-import javax.imageio.stream.FileCacheImageInputStream;
 import javax.imageio.stream.ImageInputStream;
-import java.io.File;
 import java.io.IOException;
 
 
@@ -37,7 +33,8 @@ public abstract class AbstractN1ProductMapper<KEYOUT, VALUEOUT> extends Mapper<L
 
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FSDataInputStream fileIn = fs.open(path);
-        ImageInputStream imageInputStream = new FileCacheImageInputStream(fileIn, new File("."));
+        final FileStatus status = fs.getFileStatus(path);
+        ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
 
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
