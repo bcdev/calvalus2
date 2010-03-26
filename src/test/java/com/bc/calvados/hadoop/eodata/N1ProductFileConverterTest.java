@@ -13,12 +13,15 @@ import java.io.OutputStream;
 
 import static org.junit.Assert.*;
 
-public class N1RecordReaderTest {
+public class N1ProductFileConverterTest {
     private static final int ONE_MB = 1024*1024;
 
     @Test
     public void testConvertToAndFrom() throws IOException {
-        File convertedFile = new File("src/test/data/converted");
+        File testDataDir = new File("target/testdata");
+        testDataDir.mkdirs();
+        File convertedFile = new File(testDataDir, "converted");
+        convertedFile.deleteOnExit();
         OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(convertedFile), ONE_MB);
 
         File inputFile = new File("src/test/data/MER_RR__1P.N1");
@@ -29,7 +32,7 @@ public class N1RecordReaderTest {
         outputStream.close();
 
         InputStream inputStream = new BufferedInputStream(new FileInputStream(convertedFile), ONE_MB);
-        File reconvertedFile = new File("src/test/data/reconverted.N1");
+        File reconvertedFile = new File(testDataDir, "reconverted.N1");
         n1Converter.convertFromMRFriendlyFormat(inputStream, reconvertedFile);
         inputStream.close();
 
