@@ -15,6 +15,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,8 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class StxMapReduceTest {
 
@@ -46,8 +47,14 @@ public class StxMapReduceTest {
         inputProduct = createConvertedN1Product();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        final Path outputDir = mrTester.getOutputDir();
+        mrTester.getFileSystem().delete(outputDir, true);
+    }
+
     @AfterClass
-    public static void tearDown() throws Exception {
+    public static void afterClass() throws Exception {
         if (mrTester != null) {
             mrTester.tearDownCluster();
         }
@@ -126,20 +133,65 @@ public class StxMapReduceTest {
         }
         
         assertEquals("0\tmin=6374.0  max=15441.0", line1);
-        assertEquals("16\tmin=6209.0  max=10677.0", line2);
+        assertEquals("0\tmin=6209.0  max=10677.0", line2);
         assertEquals(22, numLines);
         reader.close();
     }
 
     private void runStxMapper() throws Exception {
-        final Job job = new Job(mrTester.createJobConf(), "stx test");
+        final Job job = new Job(mrTester.createJobConf(), "stx m test");
+
+        job.setInputFormatClass(N1ProductFormat.class);
 
         job.setMapperClass(StxMapper.class);
-        job.setInputFormatClass(N1ProductFormat.class);
         job.setMapOutputKeyClass(IntWritable.class);
         job.setMapOutputValueClass(StxWritable.class);
+
         FileInputFormat.setInputPaths(job, mrTester.getInputDir());
         FileOutputFormat.setOutputPath(job, mrTester.getOutputDir());
+
+        job.waitForCompletion(true);
+    }
+
+    @Test
+    public void testMapperAndReducer() throws Exception {
+        runStxMR();
+
+        // check the output
+        final FileSystem fs = mrTester.getFileSystem();
+        Path[] outputFiles = FileUtil.stat2Paths(fs.listStatus(
+        mrTester.getOutputDir(), new OutputLogFilter()));
+        assertEquals(1, outputFiles.length);
+        InputStream is = fs.open(outputFiles[0]);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+        final String line1 = reader.readLine();
+        final String line2 = reader.readLine();
+        assertEquals("0\tmin=0.0  max=17595.0", line1);
+        assertNull(line2);
+        reader.close();
+    }
+
+    private void runStxMR() throws Exception {
+        final Job job = new Job(mrTester.createJobConf(), "stx mr test");
+
+        job.setInputFormatClass(N1ProductFormat.class);
+
+        job.setMapperClass(StxMapper.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(StxWritable.class);
+
+        job.setReducerClass(StxReducer.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(StxWritable.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setNumReduceTasks(1);
+
+        job.setCombinerClass(StxReducer.class);
+
+        FileInputFormat.setInputPaths(job, mrTester.getInputDir());
+        FileOutputFormat.setOutputPath(job, mrTester.getOutputDir());
+
         job.waitForCompletion(true);
     }
 }
