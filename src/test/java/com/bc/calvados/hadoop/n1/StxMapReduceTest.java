@@ -138,7 +138,7 @@ public class StxMapReduceTest {
         job.setMapperClass(StxMapper.class);
         job.setInputFormatClass(N1ProductFormat.class);
         job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputValueClass(StxWritable.class);
         FileInputFormat.setInputPaths(job, mrTester.getInputDir());
         FileOutputFormat.setOutputPath(job, mrTester.getOutputDir());
         job.waitForCompletion(true);
