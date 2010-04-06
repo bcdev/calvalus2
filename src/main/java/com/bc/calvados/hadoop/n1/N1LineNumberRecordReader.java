@@ -10,7 +10,8 @@ import java.io.IOException;
 
 public class N1LineNumberRecordReader extends RecordReader<IntWritable, IntWritable> {
 
-    private static final int RECORD_HEIGHT = 16;
+    public static final String RECORD_HEIGHT = "record_height";
+    private int recordHeigth = 1000;
     private int yStart;
     private int height;
     private int nextLine;
@@ -28,6 +29,7 @@ public class N1LineNumberRecordReader extends RecordReader<IntWritable, IntWrita
      */
     @Override
     public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
+        recordHeigth = context.getConfiguration().getInt(RECORD_HEIGHT, recordHeigth);
         N1LineInputSplit split = (N1LineInputSplit) inputSplit;
         yStart = split.getYStart();
         height = split.getHeight();
@@ -46,7 +48,7 @@ public class N1LineNumberRecordReader extends RecordReader<IntWritable, IntWrita
         if (nextLine < yStart + height) {
             key.set(nextLine);
             int actualHeight = 0;
-            while ((nextLine + actualHeight <= yStart + height) && (actualHeight < RECORD_HEIGHT)) {
+            while ((nextLine + actualHeight <= yStart + height) && (actualHeight < recordHeigth)) {
                 actualHeight++;
             }
             nextLine += actualHeight;

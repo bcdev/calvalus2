@@ -18,6 +18,8 @@ public class StxJob extends Configured implements Tool {
         Job job = new Job(getConf(), "Stx computation");
         job.setJarByClass(StxJob.class);
 
+        job.getConfiguration().setInt(N1LineNumberRecordReader.RECORD_HEIGHT, 1000);
+
         job.setInputFormatClass(N1ProductFormat.class);
 
         job.setMapperClass(StxMapper.class);
