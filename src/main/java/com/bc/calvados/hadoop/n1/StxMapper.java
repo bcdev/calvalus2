@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
@@ -19,9 +20,9 @@ import javax.imageio.stream.ImageInputStream;
 import java.io.IOException;
 
 
-public class StxMapper extends Mapper<IntWritable, IntWritable, IntWritable, StxWritable> {
+public class StxMapper extends Mapper<IntWritable, IntWritable, Text, StxWritable> {
 
-    private IntWritable resultKey = new IntWritable(0);
+    private Text resultKey = new Text();
     private StxWritable stxResult = new StxWritable();
 
     /**
@@ -37,6 +38,7 @@ public class StxMapper extends Mapper<IntWritable, IntWritable, IntWritable, Stx
         final Stx stx = subset.getBandAt(0).getStx();
         stxResult.setMin(stx.getMin());
         stxResult.setMax(stx.getMax());
+        resultKey.set(product.getName());
         context.write(resultKey, stxResult);
     }
 

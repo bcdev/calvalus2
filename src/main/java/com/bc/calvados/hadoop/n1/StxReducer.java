@@ -1,12 +1,12 @@
 package com.bc.calvados.hadoop.n1;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
 
-public class StxReducer extends Reducer<IntWritable, StxWritable, IntWritable, StxWritable> {
+public class StxReducer extends Reducer<Text, StxWritable, Text, StxWritable> {
 
     private StxWritable result = new StxWritable();
 
@@ -16,7 +16,7 @@ public class StxReducer extends Reducer<IntWritable, StxWritable, IntWritable, S
      * is an identity function.
      */
     @Override
-    protected void reduce(IntWritable key, Iterable<StxWritable> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<StxWritable> values, Context context) throws IOException, InterruptedException {
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
         for (StxWritable stx : values) {

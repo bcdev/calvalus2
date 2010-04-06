@@ -2,14 +2,13 @@ package com.bc.calvados.hadoop.n1;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
 
 
 public class StxJob extends Configured implements Tool {
@@ -22,11 +21,11 @@ public class StxJob extends Configured implements Tool {
         job.setInputFormatClass(N1ProductFormat.class);
 
         job.setMapperClass(StxMapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(StxWritable.class);
 
         job.setReducerClass(StxReducer.class);
-        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(StxWritable.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         job.setNumReduceTasks(1);
