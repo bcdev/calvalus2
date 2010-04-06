@@ -8,7 +8,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceTestCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -125,17 +126,14 @@ public class StxMapReduceTest {
         InputStream is = fs.open(outputFiles[0]);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-        final String line1 = reader.readLine();
-        final String line2 = reader.readLine();
-        int numLines = 2;
-        while(reader.readLine() != null) {
-            numLines++;
+        final List<String> lines = new ArrayList<String>();
+        String s;
+        while((s = reader.readLine()) != null) {
+            lines.add(s);
         }
-        
-        assertEquals("0\tmin=6374.0  max=15441.0", line1);
-        assertEquals("0\tmin=6209.0  max=10677.0", line2);
-        assertEquals(22, numLines);
         reader.close();
+
+        assertEquals(11, lines.size());
     }
 
     private void runStxMapper() throws Exception {
@@ -144,7 +142,7 @@ public class StxMapReduceTest {
         job.setInputFormatClass(N1ProductFormat.class);
 
         job.setMapperClass(StxMapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(StxWritable.class);
 
         FileInputFormat.setInputPaths(job, mrTester.getInputDir());
@@ -167,7 +165,7 @@ public class StxMapReduceTest {
 
         final String line1 = reader.readLine();
         final String line2 = reader.readLine();
-        assertEquals("0\tmin=0.0  max=17595.0", line1);
+        assertEquals("MER_RR__1PPBCM20090804_080334_000000542081_00207_38838_0196.N1\tmin=0.0  max=17595.0", line1);
         assertNull(line2);
         reader.close();
     }
@@ -178,11 +176,11 @@ public class StxMapReduceTest {
         job.setInputFormatClass(N1ProductFormat.class);
 
         job.setMapperClass(StxMapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(StxWritable.class);
 
         job.setReducerClass(StxReducer.class);
-        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(StxWritable.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         job.setNumReduceTasks(1);
