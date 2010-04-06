@@ -196,12 +196,15 @@ public class N1ProductFileConverter implements ProductFileConverter {
             configuration.set("fs.default.name", fsDefaultName);
             FileSystem fileSystem = FileSystem.get(configuration);
             if (oneBlock) {
-                outputStream = fileSystem.create(path, true);
-            } else {
                 int bufferSize = fileSystem.getConf().getInt("io.file.buffer.size", 4096);
+                int checksumSize = fileSystem.getConf().getInt("io.bytes.per.checksum", 512);
                 short replication =fileSystem.getDefaultReplication();
-                long blockSize = inputFile.length();
+                long fileSize = inputFile.length();
+                // blocksize must be a multiple of checksum size
+                long blockSize = ((fileSize / checksumSize) + 1) * checksumSize;
                 outputStream = fileSystem.create(path, true, bufferSize, replication, blockSize);
+            } else {
+                outputStream = fileSystem.create(path, true);
             }
         }
         return outputStream;
