@@ -125,13 +125,16 @@ public class N1ProductFileConverter implements ProductFileConverter {
 
         boolean copy = false;
         boolean exceptions = false;
+        boolean oneBlock = false;
         ArrayList<String> argList = new ArrayList<String>();
         for (String arg : args) {
             if (arg.startsWith("-")) {
                 if (arg.equals("-c") || arg.equals("--copy")) {
                     copy = true;
-                } else    if (arg.equals("-e") || arg.equals("--exceptions")) {
+                } else  if (arg.equals("-e") || arg.equals("--exceptions")) {
                         exceptions = true;
+                } else  if (arg.equals("-o") || arg.equals("--oneblock")) {
+                        oneBlock = true;
                 } else {
                     System.out.println(MessageFormat.format("Error: Illegal option ''{0}''", arg));
                     System.exit(1);
@@ -154,7 +157,7 @@ public class N1ProductFileConverter implements ProductFileConverter {
         try {
             long time = System.nanoTime();
             File inputFile = new File(inputFilePath);
-            OutputStream outputStream = getOutputStream(inputFile, outputDirPath, toHdfs);
+            OutputStream outputStream = getOutputStream(inputFile, outputDirPath, toHdfs, oneBlock);
             if (copy) {
                 System.out.println(MessageFormat.format("Copying ''{0}'' to ''{1}''...", inputFilePath, outputDirPath));
                 copy(inputFile, outputStream);
@@ -180,7 +183,7 @@ public class N1ProductFileConverter implements ProductFileConverter {
         }
     }
 
-    private static OutputStream getOutputStream(File inputFile, String outputDirPath, boolean toHdfs) throws IOException {
+    private static OutputStream getOutputStream(File inputFile, String outputDirPath, boolean toHdfs, boolean oneBlock) throws IOException {
         OutputStream outputStream;
         if (!toHdfs) {
             File outputFile = new File(outputDirPath, inputFile.getName());
@@ -192,7 +195,14 @@ public class N1ProductFileConverter implements ProductFileConverter {
             Configuration configuration = new Configuration();
             configuration.set("fs.default.name", fsDefaultName);
             FileSystem fileSystem = FileSystem.get(configuration);
-            outputStream = fileSystem.create(path, true);
+            if (oneBlock) {
+                outputStream = fileSystem.create(path, true);
+            } else {
+                int bufferSize = fileSystem.getConf().getInt("io.file.buffer.size", 4096);
+                short replication =fileSystem.getDefaultReplication();
+                long blockSize = inputFile.length();
+                outputStream = fileSystem.create(path, true, bufferSize, replication, blockSize);
+            }
         }
         return outputStream;
     }
