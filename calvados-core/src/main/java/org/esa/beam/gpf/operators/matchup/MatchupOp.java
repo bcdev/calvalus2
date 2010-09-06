@@ -1,5 +1,6 @@
 package org.esa.beam.gpf.operators.matchup;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
@@ -13,9 +14,11 @@ import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 
 public class MatchupOp extends Operator {
@@ -35,14 +38,14 @@ public class MatchupOp extends Operator {
     @Parameter(defaultValue = "3600", unit = "seconds")
     private double deltaTime;
 
-    @Parameter(defaultValue = "5", unit = "pixel")
+    @Parameter(defaultValue = "3", unit = "pixel")
     private int windowSize;
 
     @Parameter
-    private String validMask;
+    private String validMask; // TODO
 
     @TargetProperty
-    private Matchup[] matchups;
+    private MatchupDataset[] matchupDatasets;
 
 
     private ReferenceDatabase referenceDatabase;
@@ -53,64 +56,63 @@ public class MatchupOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+        validateInput();
         setTargetProduct(sourceProduct);
         if (!isProductInTimeRange(sourceProduct, startTime, endTime)) {
             return;
         }
-        //TODO get reference Database, if not set
+        if (referenceDatabase == null) {
+            //TODO get reference Database, if not set
+            return;
+        }
         List<ReferenceMeasurement> measurementList = referenceDatabase.findReferenceMeasurement(site, sourceProduct, deltaTime);
         if (measurementList.isEmpty()) {
             return;
         }
-        List<Matchup>  matchupList = new ArrayList<Matchup>(measurementList.size());
+        List<MatchupDataset> matchupDatasetList = new ArrayList<MatchupDataset>(measurementList.size());
         for (ReferenceMeasurement referenceMeasurement : measurementList) {
             Product subset = createSubset(sourceProduct, referenceMeasurement.getLocation(), windowSize);
             Product result = processProduct(subset);
-            Matchup matchup = extractMatchup(result, referenceMeasurement);
-            if (matchup != null) {
-                matchupList.add(matchup);
+            MatchupDataset matchupDataset = extractMatchup(result, referenceMeasurement);
+            if (matchupDataset != null) {
+                matchupDatasetList.add(matchupDataset);
             }
         }
-        matchups = matchupList.toArray(new Matchup[matchupList.size()]);
+        matchupDatasets = matchupDatasetList.toArray(new MatchupDataset[matchupDatasetList.size()]);
+    }
 
+    private void validateInput() {
+        if (sourceProduct.getGeoCoding() == null) {
+            throw new OperatorException("Source product has not geo-coding.");
+        }
+        if (sourceProduct.getStartTime() == null) {
+            throw new OperatorException("Source product has not start time.");
+        }
+        if (sourceProduct.getEndTime() == null) {
+            throw new OperatorException("Source product has not end time.");
+        }
     }
 
     static boolean isProductInTimeRange(Product product, ProductData.UTC startUTC, ProductData.UTC endUTC) {
+        Date productStart = product.getStartTime().getAsDate();
+        Date productEnd = product.getEndTime().getAsDate();
         if (startUTC != null && endUTC != null) {
             Date start = startUTC.getAsDate();
             Date end = endUTC.getAsDate();
-            ProductData.UTC productStart = product.getStartTime();
-            if (productStart != null) {
-                Date date = productStart.getAsDate();
-                if (date.after(start) && date.before(end)) {
-                    return true;
-                }
+            if (productStart.after(start) && productStart.before(end)) {
+                return true;
             }
-            ProductData.UTC productEnd = product.getEndTime();
-            if (productEnd != null) {
-                Date date = productEnd.getAsDate();
-                if (date.after(start) && date.before(end)) {
-                    return true;
-                }
+            if (productEnd.after(start) && productEnd.before(end)) {
+                return true;
             }
         } else if (startUTC != null) {
             Date start = startUTC.getAsDate();
-            ProductData.UTC productStart = product.getStartTime();
-            if (productStart != null && productStart.getAsDate().after(start)) {
-                return true;
-            }
-            ProductData.UTC productEnd = product.getEndTime();
-            if (productEnd != null && productEnd.getAsDate().after(start)) {
+            if (productStart.after(start) || productEnd.after(start)) {
                 return true;
             }
         } else if (endUTC != null) {
             Date end = endUTC.getAsDate();
-            ProductData.UTC productStart = product.getStartTime();
-            if (productStart != null && productStart.getAsDate().before(end)) {
-                return true;
-            }
-            ProductData.UTC productEnd = product.getEndTime();
-            if (productEnd != null && productEnd.getAsDate().before(end)) {
+            if (productStart.before(end) || productEnd.before(end)) {
                 return true;
             }
         } else {
@@ -139,7 +141,58 @@ public class MatchupOp extends Operator {
         return subset;  //TODO
     }
 
-    private Matchup extractMatchup(Product result, ReferenceMeasurement measurement) {
-        return null;  //TODO
+    private MatchupDataset extractMatchup(Product product, ReferenceMeasurement measurement) {
+        GeoPos location = measurement.getLocation();
+        ProductData.UTC observationTime = getObservationTime(product, location);
+        MatchupDataset dataset = new MatchupDataset(location, observationTime);
+        dataset.setProductName(product.getName());
+        Band[] bands = product.getBands();
+        for (Band band : bands) {
+            Raster data = band.getGeophysicalImage().getData();
+            double sampleSum = 0;
+            int sampleCount = 0;
+            Rectangle bounds = data.getBounds();
+            double[] samples = data.getSamples(bounds.x, bounds.y, bounds.width, bounds.height, 0, (double[])null);
+            int[] validMask = null;
+            if (band.isValidMaskUsed()) {
+                Raster validData = band.getValidMaskImage().getData();
+                validMask = validData.getSamples(bounds.x, bounds.y, bounds.width, bounds.height, 0, (int[])null);
+            }
+            for (int i = 0; i < samples.length; i++) {
+                if (!band.isValidMaskUsed() || validMask[i] != 0) {
+                    final double sample;
+                    if (band.getDataType() == ProductData.TYPE_INT8) {
+                        sample = (byte) samples[i];
+                    } else if (band.getDataType() == ProductData.TYPE_UINT32) {
+                        sample = ((int)samples[i]) & 0xFFFFFFFFL;
+                    } else {
+                        sample = samples[i];
+                    }
+                    sampleSum += sample;
+                    sampleCount++;
+                }
+            }
+            if (sampleCount > 0) {
+                double sample =  sampleSum/sampleCount;
+                if (band.isScalingApplied()) {
+                    sample = band.scale(sample);
+                }
+                dataset.setBandData(band.getName(), sample, sampleCount);
+            }
+        }
+        return dataset;
+    }
+
+    private static ProductData.UTC getObservationTime(Product product, GeoPos location) {
+        PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
+
+        final ProductData.UTC startTime = product.getStartTime();
+        final ProductData.UTC endTime = product.getEndTime();
+
+        final double dStart = startTime.getMJD();
+        final double dEnd = endTime.getMJD();
+        final double vPerLine = (dEnd - dStart) / (product.getSceneRasterHeight() - 1);
+        final double currentLine = vPerLine * pixelPos.y + dStart;
+        return new ProductData.UTC(currentLine);
     }
 }
