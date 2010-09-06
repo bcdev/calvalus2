@@ -9,8 +9,10 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProperty;
-import org.esa.beam.gpf.operators.matchup.ReferenceDatabase;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.math.MathUtils;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,8 +35,8 @@ public class MatchupOp extends Operator {
     @Parameter(defaultValue = "3600", unit = "seconds")
     private double deltaTime;
 
-    @Parameter(defaultValue = "1000", unit = "m")
-    private double windowSize;
+    @Parameter(defaultValue = "5", unit = "pixel")
+    private int windowSize;
 
     @Parameter
     private String validMask;
@@ -51,20 +53,20 @@ public class MatchupOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        setTargetProduct(new Product("DUMMY","t",0,0 ));
+        setTargetProduct(sourceProduct);
         if (!isProductInTimeRange(sourceProduct, startTime, endTime)) {
             return;
         }
         //TODO get reference Database, if not set
-        List<ReferenceMeasurement> measurements = referenceDatabase.findReferenceMeasurement(site, sourceProduct);
-        if (measurements.isEmpty()) {
+        List<ReferenceMeasurement> measurementList = referenceDatabase.findReferenceMeasurement(site, sourceProduct, deltaTime);
+        if (measurementList.isEmpty()) {
             return;
         }
-        List<Matchup>  matchupList = new ArrayList<Matchup>(measurements.size());
-        for (ReferenceMeasurement measurement : measurements) {
-            Product subset = createSubset(sourceProduct, measurement.getLocation(), windowSize);
+        List<Matchup>  matchupList = new ArrayList<Matchup>(measurementList.size());
+        for (ReferenceMeasurement referenceMeasurement : measurementList) {
+            Product subset = createSubset(sourceProduct, referenceMeasurement.getLocation(), windowSize);
             Product result = processProduct(subset);
-            Matchup matchup = extractMatchup(result, measurement);
+            Matchup matchup = extractMatchup(result, referenceMeasurement);
             if (matchup != null) {
                 matchupList.add(matchup);
             }
@@ -117,8 +119,20 @@ public class MatchupOp extends Operator {
         return false;
     }
 
-    private Product createSubset(Product source, GeoPos location, double windowSize) {
-        return null;  //TODO
+    static Product createSubset(Product source, GeoPos location, int windowSize) {
+        SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setSourceProduct(source);
+
+        PixelPos centerPos = source.getGeoCoding().getPixelPos(location, null);
+        int offset = MathUtils.floorInt(windowSize / 2);
+        int upperLeftX = MathUtils.floorInt(centerPos.x - offset);
+        int upperLeftY = MathUtils.floorInt(centerPos.y - offset);
+        Rectangle region = new Rectangle(upperLeftX, upperLeftY, windowSize, windowSize);
+        subsetOp.setRegion(region);
+
+        subsetOp.setCopyMetadata(true);
+
+        return subsetOp.getTargetProduct();
     }
 
     private Product processProduct(Product subset) {
