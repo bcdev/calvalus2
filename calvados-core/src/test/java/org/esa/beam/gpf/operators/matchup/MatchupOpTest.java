@@ -6,7 +6,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.ProductUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 import org.opengis.referencing.FactoryException;
@@ -17,7 +16,6 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -89,8 +87,8 @@ public class MatchupOpTest {
             @Override
             public List<ReferenceMeasurement> findReferenceMeasurement(String site, Product product, double deltaTime) {
 
-                ReferenceMeasurement measurement = new ReferenceMeasurement("id0", referenceTime.getAsDate(), location);
-                ArrayList arrayList = new ArrayList(1);
+                ReferenceMeasurement measurement = new ReferenceMeasurement("id0", "northsea", referenceTime.getAsDate(), location);
+                List<ReferenceMeasurement> arrayList = new ArrayList<ReferenceMeasurement>(1);
                 arrayList.add(measurement);
                 return arrayList;
             }

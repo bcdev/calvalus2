@@ -18,7 +18,6 @@ import java.awt.image.Raster;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 
 
 public class MatchupOp extends Operator {
@@ -142,9 +141,8 @@ public class MatchupOp extends Operator {
     }
 
     private MatchupDataset extractMatchup(Product product, ReferenceMeasurement measurement) {
-        GeoPos location = measurement.getLocation();
-        ProductData.UTC observationTime = getObservationTime(product, location);
-        MatchupDataset dataset = new MatchupDataset(location, observationTime);
+        ProductData.UTC observationTime = measurement.getObservationTime(product);
+        MatchupDataset dataset = new MatchupDataset(measurement.getLocation(), observationTime);
         dataset.setProductName(product.getName());
         Band[] bands = product.getBands();
         for (Band band : bands) {
@@ -181,18 +179,5 @@ public class MatchupOp extends Operator {
             }
         }
         return dataset;
-    }
-
-    private static ProductData.UTC getObservationTime(Product product, GeoPos location) {
-        PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
-
-        final ProductData.UTC startTime = product.getStartTime();
-        final ProductData.UTC endTime = product.getEndTime();
-
-        final double dStart = startTime.getMJD();
-        final double dEnd = endTime.getMJD();
-        final double vPerLine = (dEnd - dStart) / (product.getSceneRasterHeight() - 1);
-        final double currentLine = vPerLine * pixelPos.y + dStart;
-        return new ProductData.UTC(currentLine);
     }
 }
