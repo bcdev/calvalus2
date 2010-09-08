@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -16,8 +17,10 @@ import org.esa.beam.util.math.MathUtils;
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 
 public class MatchupOp extends Operator {
@@ -42,6 +45,12 @@ public class MatchupOp extends Operator {
 
     @Parameter
     private String validMask; // TODO
+
+    @Parameter
+    private String operatorName;
+
+    @Parameter
+    private Map<String, Object> operatorParameters;
 
     @TargetProperty
     private MatchupDataset[] matchupDatasets;
@@ -137,7 +146,15 @@ public class MatchupOp extends Operator {
     }
 
     private Product processProduct(Product subset) {
-        return subset;  //TODO
+        if (operatorName != null && !operatorName.isEmpty()) {
+            Map<String, Object> parameters = Collections.emptyMap();
+            if (operatorParameters != null) {
+                parameters = operatorParameters;
+            }
+            return GPF.createProduct(operatorName, parameters, subset);
+        } else {
+            return subset;
+        }
     }
 
     private MatchupDataset extractMatchup(Product product, ReferenceMeasurement measurement) {
