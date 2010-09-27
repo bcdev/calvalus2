@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.mapred;
+package org.apache.hadoop;
 
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MiniMRCluster;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,15 +33,15 @@ import java.util.Properties;
  * <p/>
  * It runs a 2 node cluster Hadoop with a 2 node DFS.
  * <p/>
- * The JobConf to use must be obtained via the creatJobConf() method.
+ * The {@code JobConf} to use must be obtained via the {@code createJobConf()} method.
  * <p/>
- * It creates a temporary directory -accessible via getTestRootDir()-
+ * It creates a temporary directory -accessible via  {@code getTestRootDir()} -
  * for both input and output.
  * <p/>
- * The input directory is accesible via getInputDir() and the output
- * directory via getOutputDir()
+ * The input directory is accessible via  {@code getInputDir()} and the output
+ * directory via  {@code getOutputDir() }.
  * <p/>
- * The DFS filesystem is formated before the testcase starts and after it ends.
+ * The DFS filesystem is formatted before the test case starts and after it ends.
  */
 public class MapReduceTestCluster {
     private static final String TEST_LOGS = "target/hadoop-test-logs";
@@ -81,7 +83,7 @@ public class MapReduceTestCluster {
 
         System.setProperty("hadoop.log.dir", TEST_LOGS);
         System.setProperty("javax.xml.parsers.SAXParserFactory",
-                            "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+                           "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
 
         if (dfsCluster == null) {
             JobConf conf = new JobConf();
@@ -91,8 +93,8 @@ public class MapReduceTestCluster {
                 }
             }
             dfsCluster = new MiniDFSCluster(conf, 4, reformatDFS,
-                    new String[]{"/rack0", "/rack0", "/rack1", "/rack1"},
-                    new String[]{"host0", "host1", "host2", "host3"});
+                                            new String[]{"/rack0", "/rack0", "/rack1", "/rack1"},
+                                            new String[]{"host0", "host1", "host2", "host3"});
 
             ConfigurableMiniMRCluster.setConfiguration(props);
             dfsCluster.getFileSystem().makeQualified(getInputDir());

@@ -2,16 +2,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bc.calvados</groupId>
-    <artifactId>calvados</artifactId>
+    <groupId>com.bc.calvalus</groupId>
+    <artifactId>calvalus</artifactId>
     <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
 
     <name>Calvados EO Data Processing Platform</name>
 
     <modules>
-        <module>calvados-core</module>
-        <!--<module>calvados-phase1</module>-->
+        <module>calvalus-core</module>
+        <module>calvalus-phase1</module>
     </modules>
 
 </project>

@@ -2,18 +2,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bc.calvados</groupId>
-    <artifactId>calvados-phase1</artifactId>
+    <groupId>com.bc.calvalus</groupId>
+    <artifactId>calvalus-phase1</artifactId>
     <packaging>jar</packaging>
     <version>0.1-SNAPSHOT</version>
 
-    <name>Calvados - Phase 1</name>
+    <name>Calvalus - Phase 1</name>
 
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
-            <version>4.8-SNAPSHOT</version>
+            <version>4.9-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -23,10 +23,34 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.mahout.hadoop</groupId>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
-            <version>0.20.1</version>
+            <version>0.20.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-test</artifactId>
+            <version>0.20.2</version>
+        </dependency>
+
+        <!-- Logging used by Hadoop 0.20.2, try to get rid of these -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

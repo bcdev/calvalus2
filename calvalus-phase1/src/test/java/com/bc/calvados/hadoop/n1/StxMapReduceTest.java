@@ -2,6 +2,7 @@ package com.bc.calvados.hadoop.n1;
 
 import com.bc.calvados.hadoop.eodata.N1ProductFileConverter;
 import com.bc.calvados.hadoop.eodata.ProductFileConverter;
+import org.apache.hadoop.MapReduceTestCluster;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -9,7 +10,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.MapReduceTestCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
