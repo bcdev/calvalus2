@@ -7,7 +7,7 @@
     <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
 
-    <name>Calvados EO Data Processing Platform</name>
+    <name>Calvalus EO Data Processing Platform</name>
 
     <modules>
         <module>calvalus-core</module>
