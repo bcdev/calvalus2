@@ -33,8 +33,8 @@ public class LineInterleavedEnvisatReaderTest {
         File convertedFile = new File(testDataDir, "converted");
         convertedFile.deleteOnExit();
         OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(convertedFile), ONE_MB);
-        ProductFileConverter n1Converter = new N1ProductFileConverter();
-        n1Converter.convertToMRFriendlyFormat(inputFile, outputStream);
+        FileConverter n1Converter = new N1ToLineInterleavedConverter();
+        n1Converter.convertTo(inputFile, outputStream);
         outputStream.close();
 
         final ProductFile productFileLineInterleaved = ProductFile.open(convertedFile, new FileImageInputStream(convertedFile), true);

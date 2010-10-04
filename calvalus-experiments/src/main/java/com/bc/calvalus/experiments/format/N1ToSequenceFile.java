@@ -39,14 +39,19 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+// todo - make this a file converter and test it by FormatPerformanceReporter (nf - 04.10.2010)
+
 /**
- * A tool used to convert Envisat MERIS RR files to Hadoop Sequence Files.
+ * A tool used to convert Envisat MERIS RR N1 files to Hadoop Sequence Files.
+ * The N1 file ist first split into "children" using the <a href="https://github.com/bcdev/eo-child-gen">EO-Childgen</a> tool.
+ *
  * <pre>
  * Usage:
  *    N1ToSequenceFile <mer-rr-n1> <output-dir>
  * </pre>
  *
  * @author Norman Fomferra
+ * @since 0.1
  */
 public class N1ToSequenceFile {
 

@@ -15,10 +15,28 @@ import java.io.OutputStream;
 import java.text.MessageFormat;
 import java.util.Locale;
 
-public class FormatPerformanceReport {
+
+// todo - Also measure N1ToSequenceFile (nf - 04.10.2010)
+// todo - Also measure CopyConverter (nf - 04.10.2010)
+// todo - For each format measure read and write (nf - 04.10.2010) 
+// todo - Output CSV format (nf - 04.10.2010)
+
+/**
+ * A tool used to perform some performance tests on several data storage formats.
+ *
+ * <pre>
+ *    Usage:
+ *        todo!
+ * </pre>
+ * @author Norman Fomferra
+ * @author Marco Zuehlke
+ * @since 0.1
+ */
+public class FormatPerformanceReporter {
 
     private static final String HDFS_PREFIX = "hdfs://";
 
+    // todo - read from properties file (nf - 04.10.2010)
     private static final String productDir = "/home/marcoz/EOData/Meris/L1b/";
     private static final String localTmpDir = "/tmp/calvalus";
     private static final String localStorageDir = "/tmp/calvalus/Repo/";
@@ -35,11 +53,11 @@ public class FormatPerformanceReport {
     public static void main(String[] args) throws IOException {
         Locale.setDefault(Locale.ENGLISH);
 
-        String[] productNames = getProductName(productDir);
-        new FormatPerformanceReport(productNames).run();
+        String[] productNames = getProductNames(productDir);
+        new FormatPerformanceReporter(productNames).run();
     }
 
-    private static String[] getProductName(String productDir) {
+    private static String[] getProductNames(String productDir) {
         return new String[]{
 //                "MER_RR__1PP01R20030401_095958_000001972015_00108_05673_0001.N1",  //small (40MB)
                 "MER_RR__1PNPDK20040607_094206_000022072027_00294_11871_0978.N1",    // full orbit (400MB)
@@ -47,7 +65,7 @@ public class FormatPerformanceReport {
         };
     }
 
-    FormatPerformanceReport(String[] productNames) {
+    FormatPerformanceReporter(String[] productNames) {
         this.productNames = productNames;
     }
 
@@ -70,7 +88,7 @@ public class FormatPerformanceReport {
     private void doProcess(String msg, String srcDir, String destDir, MODE mode) throws IOException {
         ensureDirExist(srcDir);
         ensureDirExist(destDir);
-        N1ProductFileConverter n1Converter = new N1ProductFileConverter();
+        FileConverter fileConverter = new N1ToLineInterleavedConverter();
 
         System.out.println(MessageFormat.format("{0} - ''{1}'' to ''{2}''...", msg, srcDir, destDir));
         for (String productName : productNames) {
@@ -81,12 +99,7 @@ public class FormatPerformanceReport {
                     case COPY: {
                         final InputStream inputStream = getInputStream(srcDir, productName);
                         final OutputStream outputStream = getOutputStream(destDir, productName);
-                        byte[] bytes = new byte[1024 * 1024];
-                        int len;
-                        while ((len = inputStream.read(bytes)) > 0) {
-                            outputStream.write(bytes, 0, len);
-                            length += len;
-                        }
+                        length = CopyConverter.copy(inputStream, outputStream);
                         inputStream.close();
                         outputStream.close();
                         break;
@@ -95,14 +108,14 @@ public class FormatPerformanceReport {
                         final File inputFile = new File(srcDir, productName);
                         length = inputFile.length();
                         final OutputStream outputStream = getOutputStream(destDir, productName);
-                        n1Converter.convertToMRFriendlyFormat(inputFile, outputStream);
+                        fileConverter.convertTo(inputFile, outputStream);
                         outputStream.close();
                         break;
                     }
                     case RECONVERT: {
                         final InputStream inputStream = getInputStream(srcDir, productName);
                         final File outputFile = new File(destDir, productName);
-                        n1Converter.convertFromMRFriendlyFormat(inputStream, outputFile);
+                        fileConverter.convertFrom(inputStream, outputFile);
                         inputStream.close();
                         length = outputFile.length();
                         break;

@@ -1,8 +1,8 @@
 package com.bc.calvalus.experiments.stx;
 
 import com.bc.calvalus.experiments.MapReduceTestCluster;
-import com.bc.calvalus.experiments.format.N1ProductFileConverter;
-import com.bc.calvalus.experiments.format.ProductFileConverter;
+import com.bc.calvalus.experiments.format.FileConverter;
+import com.bc.calvalus.experiments.format.N1ToLineInterleavedConverter;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -70,8 +70,8 @@ public class StxMapReduceTest {
         File inputFile = new File("src/test/data/MER_RR__1P.N1");
         assertTrue(inputFile.length() > 0);
 
-        ProductFileConverter n1Converter = new N1ProductFileConverter();
-        n1Converter.convertToMRFriendlyFormat(inputFile, out);
+        FileConverter n1Converter = new N1ToLineInterleavedConverter();
+        n1Converter.convertTo(inputFile, out);
         out.close();
         return path;
     }

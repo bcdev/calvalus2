@@ -6,7 +6,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class ByteArrayWritable extends CompressedWritable {
+class ByteArrayWritable extends CompressedWritable {
     private int length;
     private byte[] array;
 

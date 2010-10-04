@@ -2,7 +2,7 @@ package com.bc.calvalus.experiments.format.seq;
 
 import org.apache.hadoop.io.BytesWritable;
 
-public class ByteArrayFactory {
+class ByteArrayFactory {
     public static Class getType(boolean compressed) {
         if (compressed) {
             return  MyByteArrayWritable.class;

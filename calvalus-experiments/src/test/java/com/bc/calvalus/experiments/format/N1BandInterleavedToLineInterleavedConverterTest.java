@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class N1ProductFileConverterTest {
+public class N1BandInterleavedToLineInterleavedConverterTest {
     private static final int ONE_MB = 1024 * 1024;
 
     @Test
@@ -28,13 +28,13 @@ public class N1ProductFileConverterTest {
         File inputFile = new File("src/test/data/MER_RR__1P.N1");
         assertTrue(inputFile.length() > 0);
 
-        ProductFileConverter n1Converter = new N1ProductFileConverter();
-        n1Converter.convertToMRFriendlyFormat(inputFile, outputStream);
+        FileConverter n1Converter = new N1ToLineInterleavedConverter();
+        n1Converter.convertTo(inputFile, outputStream);
         outputStream.close();
 
         InputStream inputStream = new BufferedInputStream(new FileInputStream(convertedFile), ONE_MB);
         File reconvertedFile = new File(testDataDir, "reconverted.N1");
-        n1Converter.convertFromMRFriendlyFormat(inputStream, reconvertedFile);
+        n1Converter.convertFrom(inputStream, reconvertedFile);
         inputStream.close();
 
         assertEquals(convertedFile.length(), inputFile.length());
