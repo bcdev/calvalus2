@@ -13,9 +13,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.MessageFormat;
 
 
@@ -26,12 +24,6 @@ public class AddRastersTool extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        System.out.println("Hi, type 'ok' to continue...");
-        System.out.print("> ");
-        String line = new BufferedReader(new InputStreamReader(System.in)).readLine();
-        if (!line.equalsIgnoreCase("ok")) {
-            return -1;
-        }
         System.out.println("Submitting job...");
 
         Job job = new Job(getConf(), "SimpleHadoopTest");
@@ -39,7 +31,7 @@ public class AddRastersTool extends Configured implements Tool {
         job.getConfiguration().setInt(RasterInputFormat.RASTER_WIDTH_PROPERTY, 10);
         job.getConfiguration().setInt(RasterInputFormat.RASTER_HEIGHT_PROPERTY, 10);
 
-        job.setJarByClass(getClass());
+        //job.setJarByClass(getClass());
         job.setInputFormatClass(RasterInputFormat.class);
         job.setOutputFormatClass(RasterOutputFormat.class);
         job.setOutputKeyClass(IntWritable.class);
