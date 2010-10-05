@@ -1,7 +1,8 @@
 package com.bc.calvalus.hadoop.io;
 
 import org.apache.hadoop.io.CompressedWritable;
-
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.BytesWritable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
