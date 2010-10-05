@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class N1BandInterleavedToLineInterleavedConverterTest {
+public class N1ToLineInterleavedConverterTest {
     private static final int ONE_MB = 1024 * 1024;
 
     @Test
