@@ -31,7 +31,7 @@ public class AddRastersTool extends Configured implements Tool {
         job.getConfiguration().setInt(RasterInputFormat.RASTER_WIDTH_PROPERTY, 10);
         job.getConfiguration().setInt(RasterInputFormat.RASTER_HEIGHT_PROPERTY, 10);
 
-        //job.setJarByClass(getClass());
+        job.setJarByClass(getClass());
         job.setInputFormatClass(RasterInputFormat.class);
         job.setOutputFormatClass(RasterOutputFormat.class);
         job.setOutputKeyClass(IntWritable.class);
@@ -67,18 +67,22 @@ public class AddRastersTool extends Configured implements Tool {
         }
         final int width = job.getConfiguration().getInt(RasterInputFormat.RASTER_WIDTH_PROPERTY, -1);
         final int height = job.getConfiguration().getInt(RasterInputFormat.RASTER_HEIGHT_PROPERTY, -1);
-        final int n = 3;
-        for (int i = 0; i < n; i++) {
-            Path file = new Path(input, MessageFormat.format("input-raster-{0}x{1}x1-{2}", width, height, i));
+        final int numBands = 3;
+        for (int band = 0; band < numBands; band++) {
+            Path file = new Path(input, MessageFormat.format("input-raster-{0}x{1}x1-{2}", width, height, band));
             FSDataOutputStream stream = fs.create(file);
             try {
-                for (int j = 0; j < width * height; j++) {
-                    stream.write((2 * i + j) % 251);
+                for (int sample = 0; sample < width * height; sample++) {
+                    stream.write(generateInputRasterPixel(band, sample));
                 }
             } finally {
                 stream.close();
             }
         }
+    }
+
+    static int generateInputRasterPixel(int band, int sample) {
+        return (2 * band + sample) % 251;
     }
 
     public static void main(String[] args) throws Exception {
