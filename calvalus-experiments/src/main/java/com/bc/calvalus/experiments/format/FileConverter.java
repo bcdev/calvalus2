@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public interface FileConverter {
-    void convertTo(File inputFile, OutputStream outputStream) throws IOException;
+    FormatPerformanceMetrics convertTo(File inputFile, OutputStream outputStream) throws IOException;
 
-    void convertFrom(InputStream inputStream, File outputFile) throws IOException;
+    FormatPerformanceMetrics convertFrom(InputStream inputStream, File outputFile) throws IOException;
 }

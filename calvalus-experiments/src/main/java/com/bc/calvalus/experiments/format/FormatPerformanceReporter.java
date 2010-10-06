@@ -99,7 +99,8 @@ public class FormatPerformanceReporter {
                     case COPY: {
                         final InputStream inputStream = getInputStream(srcDir, productName);
                         final OutputStream outputStream = getOutputStream(destDir, productName);
-                        length = CopyConverter.copy(inputStream, outputStream);
+                        FormatPerformanceMetrics metrics = CopyConverter.copy(inputStream, outputStream);
+                        length = metrics.numBytesRead;
                         inputStream.close();
                         outputStream.close();
                         break;

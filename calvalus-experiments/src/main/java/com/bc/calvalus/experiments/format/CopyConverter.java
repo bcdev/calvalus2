@@ -9,33 +9,48 @@ import java.io.OutputStream;
 
 public class CopyConverter implements FileConverter {
 
-    public void convertTo(File inputFile, OutputStream outputStream) throws IOException {
+    public FormatPerformanceMetrics convertTo(File inputFile, OutputStream outputStream) throws IOException {
         InputStream inputStream = new FileInputStream(inputFile);
         try {
-            copy(inputStream, outputStream);
+            return copy(inputStream, outputStream);
         } finally {
             inputStream.close();
         }
     }
 
     @Override
-    public void convertFrom(InputStream inputStream, File outputFile) throws IOException {
+    public FormatPerformanceMetrics convertFrom(InputStream inputStream, File outputFile) throws IOException {
         OutputStream outputStream = new FileOutputStream(outputFile);
         try {
-            copy(inputStream, outputStream);
+            return copy(inputStream, outputStream);
         } finally {
             outputStream.close();
         }
     }
 
-    public static long copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+    public static FormatPerformanceMetrics copy(InputStream inputStream, OutputStream outputStream) throws IOException {
         byte[] buffer = new byte[1024 * 1024];
-        int n;
-        long size = 0;
-        while ((n = inputStream.read(buffer)) > 0) {
+        long numBytes = 0;
+        long rt = 0;
+        long wt = 0;
+        long t0;
+        while (true) {
+
+            t0 = System.nanoTime();
+            int n = inputStream.read(buffer);
+            rt += System.nanoTime() - t0;
+
+            if (n <= 0) {
+                break;
+            }
+
+            t0 = System.nanoTime();
             outputStream.write(buffer, 0, n);
-            size += n;
+            wt += System.nanoTime() - t0;
+
+            numBytes += n;
         }
-        return size;
+
+        return new FormatPerformanceMetrics(numBytes, rt, numBytes, wt);
     }
 }
