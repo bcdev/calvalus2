@@ -7,7 +7,7 @@ import java.io.IOException;
 
 
 /**
- * An {@link ImageInputStream} that can read from a Hadoop {@link FSImageInputStream}.
+ * An {@link javax.imageio.stream.ImageInputStream} that can read from a Hadoop {@link FSImageInputStream}.
  *
  * @author Marco Zuehlke
  * @since 0.1
