@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 /**
  * A tool used to convert Envisat MERIS RR N1 files to Hadoop Sequence Files.
  * The N1 file ist first split into "children" using the <a href="https://github.com/bcdev/eo-child-gen">EO-Childgen</a> tool.
- *
+ * <p/>
  * <pre>
  * Usage:
  *    N1ToSequenceFile <mer-rr-n1> <output-dir>
@@ -174,9 +174,9 @@ public class N1ToSequenceFile {
 
             try {
                 childGenerator = ChildGeneratorFactory.createChildGenerator(inputFileName);
-                childGenerator.fragment(iis,
-                                        MER_RR_LINES_PER_SPLIT,
-                                        new MyFragmentHandler(sequenceFileWriter));
+                childGenerator.slice(iis,
+                                     MER_RR_LINES_PER_SPLIT,
+                                     new MySliceHandler(sequenceFileWriter));
             } catch (IOException e) {
                 fs.delete(outputFile, false);
                 throw e;
@@ -190,35 +190,36 @@ public class N1ToSequenceFile {
         }
     }
 
-    private class MyFragmentHandler implements ChildGeneratorImpl.FragmentHandler {
+    private class MySliceHandler implements ChildGeneratorImpl.SliceHandler {
         private final SequenceFile.Writer sequenceFileWriter;
         private final MyByteArrayOutputStream arrayOutputStream;
 
-        public MyFragmentHandler(SequenceFile.Writer sequenceFileWriter) {
+        public MySliceHandler(SequenceFile.Writer sequenceFileWriter) {
             this.sequenceFileWriter = sequenceFileWriter;
             this.arrayOutputStream = new MyByteArrayOutputStream(MER_RR_BUFFER_SIZE);
         }
 
         @Override
-        public ImageOutputStream beginFragment(int fragmentIndex, String productName, int firstLine, int lastLine) throws IOException {
+        public ImageOutputStream beginSlice(int sliceIndex, String productName, int firstLine, int lastLine) throws IOException {
             LOG.log(Level.INFO, MessageFormat.format("Processing fragment {0} (line {1} ... {2})",
-                                                     fragmentIndex, firstLine, lastLine));
+                                                     sliceIndex, firstLine, lastLine));
             arrayOutputStream.reset();
             return new FileCacheImageOutputStream(arrayOutputStream, null);
         }
 
         @Override
-        public void endFragment(int fragmentIndex, String productName, long bytesWritten) throws IOException {
-            sequenceFileWriter.append(new IntWritable(fragmentIndex),
+        public void endSlice(int sliceIndex, String productName, long bytesWritten) throws IOException {
+            sequenceFileWriter.append(new IntWritable(sliceIndex),
                                       new ByteArrayWritable(arrayOutputStream.getInternalBuffer()));
             LOG.log(Level.INFO, MessageFormat.format("Fragment {0} processed, bytes written: {1}",
-                                                     fragmentIndex, bytesWritten));
+                                                     sliceIndex, bytesWritten));
         }
 
         @Override
-        public void handleError(int fragmentIndex, IOException e) {
+        public boolean handleError(int sliceIndex, IOException e) {
             LOG.log(Level.SEVERE, MessageFormat.format("Problem while processing fragment {0}",
-                                                       fragmentIndex), e);
+                                                       sliceIndex), e);
+            return true;
         }
 
     }
