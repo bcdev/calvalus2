@@ -35,9 +35,9 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final Path path = split.getPath();
 
         Configuration conf = context.getConfiguration();
-        FileSystem fs = path.getFileSystem(conf);
-        FSDataInputStream fileIn = fs.open(path);
-        final FileStatus status = fs.getFileStatus(path);
+        FileSystem inputFileSystem = path.getFileSystem(conf);
+        FSDataInputStream fileIn = inputFileSystem.open(path);
+        final FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
 
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
@@ -64,23 +64,21 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         writeOp.writeProduct(ProgressMonitor.NULL);
 
         Path output = getOutputPath(conf);
+        FileSystem outputFileSystem = path.getFileSystem(conf);
 
         final Path dimPath = new Path(output, "L2_of_" + path.getName() + ".dim");
 //        final Path dataPath = new Path("output", "L2_of_" + path.getName() + ".data");
 
         final Path path1 = new Path(new File(outName + ".dim").getAbsolutePath());
-        fs.copyFromLocalFile(path1, output);
+        outputFileSystem.copyFromLocalFile(path1, output);
 
         // dont copy .data directories are tricky....
 //        final Path path2 = new Path(new File(outName + ".data").getAbsolutePath());
-//        fs.copyFromLocalFile(path2, output);
-
+//        inputFileSystem.copyFromLocalFile(path2, output);
 
         final Text resultKey = new Text(path.getName());
         final Text resultValue = new Text(dimPath.toString());
         context.write(resultKey, resultValue);
-
-
     }
 
     public static Path getOutputPath(Configuration conf) {

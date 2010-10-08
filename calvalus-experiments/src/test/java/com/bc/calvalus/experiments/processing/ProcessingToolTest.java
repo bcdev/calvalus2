@@ -12,6 +12,9 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * 
+ */
 public class ProcessingToolTest {
     private static final String TMP_INPUT = "/tmp/input";
     private static final String TMP_OUTPUT = "/tmp/output";
