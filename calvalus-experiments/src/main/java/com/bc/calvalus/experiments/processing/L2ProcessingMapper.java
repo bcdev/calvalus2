@@ -14,13 +14,21 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
 import org.esa.beam.framework.dataio.ProductReader;
+import org.esa.beam.framework.dataio.ProductSubsetBuilder;
+import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.meris.NdviOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * TODO add API doc
@@ -29,9 +37,24 @@ import java.io.IOException;
  */
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
+    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
+    static {
+        Handler[] handlers = LOG.getHandlers();
+        for (Handler handler : handlers) {
+            LOG.removeHandler(handler);
+        }
+        Handler handler = new ConsoleHandler();
+        handler.setFormatter(new LogFormatter());
+        LOG.addHandler(handler);
+        LOG.setLevel(Level.ALL);
+    }
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final FileSplit split = (FileSplit) context.getInputSplit();
+        LOG.info("mapping split " + split);
+        final boolean lineInterleaved = split instanceof N1InterleavedInputSplit;
+        final boolean singleSplit = ! lineInterleaved; // TODO refine to distinguish not only A from E
         final Path path = split.getPath();
 
         Configuration conf = context.getConfiguration();
@@ -43,26 +66,31 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
 
-        final ProductFile productFile = ProductFile.open(null, imageInputStream, true);
+        final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
 
         Product product = productReader.readProductNodes(productFile, null);
 
-        /////////////////
+        // for splits replace product by subset for split
+        if (! singleSplit) {
+            int yStart = ((N1InterleavedInputSplit) split).getYStart();
+            int height = ((N1InterleavedInputSplit) split).getHeight();
+            ProductSubsetDef subsetDef = new ProductSubsetDef();
+            subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
+            product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
+        }
 
-        // for now: single split --> no subset
-//        ProductSubsetDef subsetDef = new ProductSubsetDef();
-//        subsetDef.setRegion(0, lineNumber.get(), product.getSceneRasterWidth(), recordCount.get());
-//        final Product subset = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
-
-//        final Product resultProduct = GPF.createProduct("NdviSample", Collections.<String, Object>emptyMap(), product);
-
+        // apply operator to product
         final NdviOp op = new NdviOp();
         op.setSourceProduct("inputProduct", product);
         final Product resultProduct = op.getTargetProduct();
-        final String outName = "L2_of_" + path.getName();
+
+        // write product to files in DIMAP format
+        final String outName = "L2_of_" + path.getName() + "_split" + ((N1InterleavedInputSplit) split).getYStart();;
         final WriteOp writeOp = new WriteOp(resultProduct, new File(outName + ".dim"), "BEAM-DIMAP");
         writeOp.writeProduct(ProgressMonitor.NULL);
 
+        // copy .dim output file to output file system
+        // TODO handle directory tree or use different output format
         Path output = getOutputPath(conf);
         FileSystem outputFileSystem = path.getFileSystem(conf);
 

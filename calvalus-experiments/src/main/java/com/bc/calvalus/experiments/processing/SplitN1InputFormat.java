@@ -16,7 +16,12 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Generator of splits for case A "single split".
+ * TODO: currently only applicable to inputs with block size=product size, generalise!
+ */
 public class SplitN1InputFormat extends FileInputFormat {
+
     public static final String NUMBER_OF_SPLITS = "splits.number";
 
     public SplitN1InputFormat() {
@@ -35,6 +40,8 @@ public class SplitN1InputFormat extends FileInputFormat {
     @Override
     public List<FileSplit> getSplits(JobContext job) throws IOException {
         List<FileSplit> splits = (List<FileSplit>) super.getSplits(job);
+        // assert that block size is product size or larger
+        assert splits.size() == 1;
         // Say something just to let me know that we arrived here
         for (int i = 0; i < splits.size(); i++) {
             FileSplit fileSplit = splits.get(i);

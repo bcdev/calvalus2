@@ -10,33 +10,76 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-// bin/hadoop jar hadoop-tests-1.0.jar com.bc.calvalus.hadoop.eodata.AddRastersTool input output
-
-//
+/**
+ * Creates and runs Hadoop job for L2 processing. Expects input directory
+ * with MERIS L1 product(s) and output directory path to be created and filled
+ * with outputs.
+ * Currently accepts option -lineInterleaved to distinguish case E "interleaved"
+ * from case A "single split".
+ * <p/>
+ * Call with:
+ * <pre>
+ *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
+ *    com.bc.calvalus.experiments.processing.ProcessingTool \
+ *    hdfs://cvmaster00:9000/input \
+ *    hdfs://cvmaster00:9000/output
+ * </pre>
+ */
 public class ProcessingTool extends Configured implements Tool {
+
+    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
+    static {
+        Handler[] handlers = LOG.getHandlers();
+        for (Handler handler : handlers) {
+            LOG.removeHandler(handler);
+        }
+        Handler handler = new ConsoleHandler();
+        handler.setFormatter(new LogFormatter());
+        LOG.addHandler(handler);
+        LOG.setLevel(Level.ALL);
+    }
 
     @Override
     public int run(String[] args) throws Exception {
-        // construct job and set parameters and handlers
+
         System.out.println("Submitting job...");
 
-        Job job = new Job(getConf(), "SimpleHadoopTest");
+        // parse command line arguments
+        Args options = new Args(args);
+        Boolean isLineInterleaved = Boolean.parseBoolean(options.get("lineInterleaved"));
+        Long splitSize = options.getLong("splitSize", -1);
 
-        job.getConfiguration().setInt(SplitN1InputFormat.NUMBER_OF_SPLITS, 1);
-
+        // construct job and set parameters and handlers
+        Job job = new Job(getConf(), "L2HadoopTest");
         job.setJarByClass(getClass());
 
-        job.setMapperClass(L2ProcessingMapper.class);
-        job.setInputFormatClass(SplitN1InputFormat.class);
+        // register handlers for splitting, map, and output
+        if (isLineInterleaved) {
+            job.setInputFormatClass(N1InterleavedInputFormat.class);
+            if (splitSize != -1) {
+                job.getConfiguration().setLong(N1InterleavedInputFormat.SPLIT_SIZE_PARAM, splitSize);
+            }
+        } else {
+            job.getConfiguration().setInt(SplitN1InputFormat.NUMBER_OF_SPLITS, 1);
+            job.setInputFormatClass(SplitN1InputFormat.class);
+        }
 
-        //job.setReducerClass(AddRastersReducer.class);
+        job.setMapperClass(L2ProcessingMapper.class);
+        // XXX use default reducer
+        //job.setReducerClass(XXXReducer.class);
+
         job.setOutputFormatClass(TextOutputFormat.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
-        Path input = new Path(args[0]);
-        Path output = new Path(args[1]);
+        // provide input and output directories to job
+        Path input = new Path(options.getArgs()[0]);
+        Path output = new Path(options.getArgs()[1]);
         FileInputFormat.addInputPath(job, input);
         FileOutputFormat.setOutputPath(job, output);
 
