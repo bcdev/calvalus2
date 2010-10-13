@@ -22,10 +22,11 @@ public class N1ToLineInterleavedConverterTest {
         File testDataDir = new File("target/testdata");
         testDataDir.mkdirs();
         File convertedFile = new File(testDataDir, "converted");
-        convertedFile.deleteOnExit();
+        //convertedFile.deleteOnExit();
         OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(convertedFile), ONE_MB);
 
-        File inputFile = new File("src/test/data/MER_RR__1P.N1");
+        final String path = getClass().getResource("/MER_RR__1P.N1").getPath();
+        File inputFile = new File(path);
         assertTrue(inputFile.length() > 0);
 
         FileConverter n1Converter = new N1ToLineInterleavedConverter();
