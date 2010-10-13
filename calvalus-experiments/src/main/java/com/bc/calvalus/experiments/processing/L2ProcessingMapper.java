@@ -17,14 +17,12 @@ import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductSubsetBuilder;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.meris.NdviOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -72,8 +70,8 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
 
         // for splits replace product by subset for split
         if (! singleSplit) {
-            int yStart = ((N1InterleavedInputSplit) split).getYStart();
-            int height = ((N1InterleavedInputSplit) split).getHeight();
+            int yStart = ((N1InterleavedInputSplit) split).getStartRecord();
+            int height = ((N1InterleavedInputSplit) split).getNumberOfRecords();
             ProductSubsetDef subsetDef = new ProductSubsetDef();
             subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
             product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
@@ -85,7 +83,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final Product resultProduct = op.getTargetProduct();
 
         // write product to files in DIMAP format
-        final String outName = "L2_of_" + path.getName() + "_split" + ((N1InterleavedInputSplit) split).getYStart();;
+        final String outName = "L2_of_" + path.getName() + "_split" + ((N1InterleavedInputSplit) split).getStartRecord();;
         final WriteOp writeOp = new WriteOp(resultProduct, new File(outName + ".dim"), "BEAM-DIMAP");
         writeOp.writeProduct(ProgressMonitor.NULL);
 

@@ -1,7 +1,6 @@
 package com.bc.calvalus.experiments.processing;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import java.io.DataInput;
@@ -17,9 +16,12 @@ import java.io.IOException;
  */
 public class N1InterleavedInputSplit extends FileSplit implements Writable {
 
-    private int yStart;
-    private int height;
+    private int startRecord;
+    private int numberOfRecords;
 
+    /**
+     * called by Hadoop using reflection
+     */
     public N1InterleavedInputSplit() {
         super(null, 0, 0, null);
     }
@@ -29,56 +31,39 @@ public class N1InterleavedInputSplit extends FileSplit implements Writable {
                                    long length,
                                    String[] hosts,
                                    int yStart,
-                                   int height) {
+                                   int numberOfRecords) {
         super(file, start, length, hosts);
-        this.yStart = yStart;
-        this.height = height;
+        this.startRecord = yStart;
+        this.numberOfRecords = numberOfRecords;
     }
 
     /** @return start record number of split */
-    public int getYStart() {
-        return yStart;
+    public int getStartRecord() {
+        return startRecord;
     }
 
     /** @return number of records of split */
-    public int getHeight() {
-        return height;
+    public int getNumberOfRecords() {
+        return numberOfRecords;
     }
 
     @Override
     public String toString() {
         return getPath() + ":" + getStart() + "+" + getLength()
-               + " (" + getYStart() + "+" + getHeight() + ")";
+               + " (" + getStartRecord() + "+" + getNumberOfRecords() + ")";
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeInt(yStart);
-        out.writeInt(height);
+        out.writeInt(startRecord);
+        out.writeInt(numberOfRecords);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        yStart = in.readInt();
-        height = in.readInt();
+        startRecord = in.readInt();
+        numberOfRecords = in.readInt();
     }
-
-    /**
-     * Static factory, unfortunately has to expand code from FileSplit as this does not have a public default constructor
-     *
-     * @param in  DataInput to read the values of one split from
-     * @return  Newly constructed N1InterleavedInputSplit
-     * @throws IOException  if values cannot be read
-     */
-//    public static N1InterleavedInputSplit read(DataInput in) throws IOException {
-//        Path file = new Path(Text.readString(in));
-//        long start = in.readLong();
-//        long length = in.readLong();
-//        String[] hosts = null;
-//        int yStart = in.readInt();
-//        int height = in.readInt();
-//        return new N1InterleavedInputSplit(file, start, length, hosts, yStart, height);
-//    }
 }
