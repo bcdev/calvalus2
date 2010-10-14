@@ -1,0 +1,9 @@
+#!/bin/bash
+
+hadoop --config ~/hpc/conf fs -rmr hdfs://cvmaster00:9000/user/boe/meris-l2
+
+time hadoop --config ~/hpc/conf jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar com.bc.calvalus.experiments.processing.ProcessingTool hdfs://cvmaster00:9000/user/boe/meris-l1 hdfs://cvmaster00:9000/user/boe/meris-l2 -lineInterleaved -splitSize=17000000 > output.tmp 2>&1
+
+job_number=`cat output.tmp | awk "/ Running job: / { print substr(\\$7,5) }"`
+
+echo ${job_number}

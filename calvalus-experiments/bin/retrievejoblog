@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ "$1" == "" ]
+then
+    echo "retrieves and merges log file entries for job"
+    echo "usage  : $0 <job_number>"
+    echo "example: $0 201010081626_0022"
+    echo "creates file 201010081626_0022.log"
+    exit 1
+fi
+
+jobnumber="$1"
+slavenumbers='00 01 02 03 04 05 06 07 08'
+
+echo "retrieving log from cvmaster00 ..."
+( ssh hadoop@cvmaster00 "grep -h ${jobnumber} /var/log/hadoop-0.20/hadoop-hadoop-jobtracker-cvmaster00.log*" ) | sed -e 's/org.apache.hadoop.mapred.JobTracker:/cvmaster00/' -e 's/org.apache.hadoop.mapred.JobInProgress:/cvmaster00/' -e 's/org.apache.hadoop.mapred.JobHistory:/cvmaster00/' > ${jobnumber}.log.tmp
+
+for slavenumber in $slavenumbers
+do
+    echo "retrieving log from cvslave${slavenumber} ..."
+    ( ssh hadoop@cvslave${slavenumber} "grep -h ${jobnumber} /var/log/hadoop-0.20/hadoop-hadoop-tasktracker-cvslave${slavenumber}.log* /var/log/hadoop-0.20/userlogs/attempt_${jobnumber}*/stderr" ) | sed -e "s/org.apache.hadoop.mapred.TaskTracker:/cvslave${slavenumber} /" -e "s/org.apache.hadoop.mapred.TaskRunner:/cvslave${slavenumber} /" -e "s/org.apache.hadoop.mapred.JvmManager:/cvslave${slavenumber} /" -e "s/org.apache.hadoop.mapred.TaskTracker.clienttrace:/cvslave${slavenumber} /" -e "s/org.apache.hadoop.mapred.IndexCache:/cvslave${slavenumber} /" -e "s/com.bc.calvalus:/cvslave${slavenumber} /" >> ${jobnumber}.log.tmp
+done
+sort ${jobnumber}.log.tmp > ${jobnumber}.log
+rm ${jobnumber}.log.tmp
+
+echo "${jobnumber}.log"

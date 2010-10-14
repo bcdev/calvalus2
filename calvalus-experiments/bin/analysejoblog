@@ -1,0 +1,67 @@
+#!/bin/bash
+
+if [ "$1" == "" ]
+then
+    echo "extracts job and task start and stop times from merged log"
+    echo "usage  : $0 <job_number>"
+    echo "example: $0 201010081626_0022"
+    echo "creates file 201010081626_0022.list"
+    exit 1
+fi
+
+jobnumber="$1"
+
+
+# 2010-10-13 18:33:21,607 INFO cvmaster00 Initializing job_201010081626_0022
+# 2010-10-13 18:33:58,000 INFO cvmaster00 Job job_201010081626_0022 has completed successfully.
+
+job_start=`cat ${jobnumber}.log | awk '/cvmaster00 Initializing job_/ { print $1, $2 }' | head -1`
+job_stop=`cat ${jobnumber}.log | awk '/cvmaster00 Job job_.* has completed successfully./ { print $1, $2 }'`
+
+echo "${job_start} start ${jobnumber}" > ${jobnumber}.list.tmp
+echo "${job_stop} stop  ${jobnumber}" >> ${jobnumber}.list.tmp
+
+
+# 2010-10-13 18:33:24,976 INFO cvmaster00 Choosing data-local task task_201010081626_0022_m_000001
+
+tasks=`cat ${jobnumber}.log | awk '/cvmaster00 Choosing / { print substr($8,6) }'`
+
+for task in ${tasks}
+do
+
+# 2010-10-13 18:33:24,976 INFO cvmaster00 Adding task 'attempt_201010081626_0022_m_000001_0' to tip task_201010081626_0022_m_000001, for tracker 'tracker_cvslave04.bc.local:localhost/127.0.0.1:48991'
+# 2010-10-13 18:33:33,983 INFO cvmaster00 Task 'attempt_201010081626_0022_m_000001_0' has completed task_201010081626_0022_m_000001 successfully.
+# 2010-10-13 18:33:24,976 INFO cvmaster00 Adding task 'attempt_201010081626_0022_m_000001_0' to tip task_201010081626_0022_m_000001, for tracker 'tracker_cvslave04.bc.local:localhost/127.0.0.1:48991'
+# 2010-10-13 18:33:24,976 INFO cvmaster00 Choosing data-local task task_201010081626_0022_m_000001
+
+    task_start=`cat ${jobnumber}.log | awk "/cvmaster00 Adding task .attempt_${task}/ { print \\$1, \\$2 }" | tail -1`
+    task_stop=`cat ${jobnumber}.log | awk "/cvmaster00 .* has completed task_${task} successfully./ { print \\$1, \\$2 }" | tail -1`
+    task_host=`cat ${jobnumber}.log | awk "/cvmaster00 Adding task .attempt_${task}/ { print substr(\\$13,10,9) }" | tail -1`
+    task_local=`cat ${jobnumber}.log | awk "/cvmaster00 Choosing .* task task_${task}/ { print \\$6 }"`
+
+# 2010-10-13 18:35:04,562 INFO cvslave04  LaunchTaskAction (registerTask): attempt_201010081626_0022_m_000001_0 task's state:UNASSIGNED
+# 2010-10-13 18:35:04,996 INFO cvslave04  JVM with ID: jvm_201010081626_0022_m_-1849133320 given task: attempt_201010081626_0022_m_000001_0
+# 2010-10-13 18:35:10,899 INFO cvslave04  Task attempt_201010081626_0022_m_000001_0 is done.
+# 2010-10-13 18:35:37,631 INFO cvslave04  attempt_201010081626_0022_m_000001_0 done; removing files.
+
+    task_launch=`cat ${jobnumber}.log | awk "/cvslave..  LaunchTaskAction .registerTask.: attempt_${task}/ { print \\$1, \\$2 }" | tail -1`
+    task_jvm=`cat ${jobnumber}.log | awk "/cvslave..  JVM with ID: jvm_.* given task: attempt_${task}/ { print \\$1, \\$2 }" | tail -1`
+    task_done=`cat ${jobnumber}.log | awk "/cvslave..  Task attempt_${task}_. is done/ { print \\$1, \\$2 }" | tail -1`
+    task_removed=`cat ${jobnumber}.log | awk "/cvslave..  attempt_${task}_. done; removing files/ { print \\$1, \\$2 }" | tail -1`
+
+# 2010-10-14 16:28:58,524 INFO cvslave05  attempt_201010081626_0031_m_000010_0 starts processing of split hdfs://cvmaster00:9000/user/boe/meris-l1/MER_RR__1PQACR20040526_091235_000026432027_00122_11699_0000.N1:201311116+17000857 (5321+457)
+# 2010-10-14 16:28:58,524 INFO cvslave05  attempt_201010081626_0031_m_000010_0 starts processing of split hdfs://cvmaster00:9000/user/boe/meris-l1/MER_RR__1PQACR20040526_091235_000026432027_00122_11699_0000.N1:201311116+17000857 (5321+457)
+# 2010-10-14 16:28:58,524 INFO cvslave05  attempt_201010081626_0031_m_000010_0 starts processing of split hdfs://cvmaster00:9000/user/boe/meris-l1/MER_RR__1PQACR20040526_091235_000026432027_00122_11699_0000.N1:201311116+17000857 (5321+457)
+
+    map_start=`cat ${jobnumber}.log | awk "/^20.*cvslave..  attempt_${task}_. starts processing of split/ { print \\$1, \\$2 }" | tail -1`
+    map_stop=`cat ${jobnumber}.log | awk "/^20.*cvslave..  attempt_${task}_. stops processing of split/ { print \\$1, \\$2 }" | tail -1`
+    map_bytes=`cat ${jobnumber}.log | awk "/^20.*cvslave..  attempt_${task}_. starts processing of split/ { print substr(\\$10,index(\\$10,\"+\")+1) }" | tail -1`
+
+    echo "${task_start} (${map_start}) start ${task} ${task_host} ${task_local} ${map_bytes}" >> ${jobnumber}.list.tmp
+    echo "${task_stop} (${map_stop}) stop  ${task} ${task_host}" >> ${jobnumber}.list.tmp
+
+done
+
+sort ${jobnumber}.list.tmp > ${jobnumber}.list
+
+echo ${jobnumber}.list
