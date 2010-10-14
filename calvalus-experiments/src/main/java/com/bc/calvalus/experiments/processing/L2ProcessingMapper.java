@@ -29,7 +29,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * TODO add API doc
+ * Mapper to perform L2 processing (NDVI) on a split. Handles cases A and E,
+ * distinguishes them by the class of the split (N1InterleavedInputSplit).
+ * Unless the product is a single split a subset of the product is processed.
+ * Currently, the output is written to the local file system, and the .dim
+ * file is copied to HDFS. The data directory is lost. The key-value pair
+ * provided to the reducer is the pair of input file name and output file name.
  *
  * @author Martin Boettcher
  */
@@ -50,25 +55,27 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final FileSplit split = (FileSplit) context.getInputSplit();
-        LOG.info("mapping split " + split);
+
+        // write initial log entry for runtime measurements
+        LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
+
+        // distinguish cases A to E (currently only A and E)
         final boolean lineInterleaved = split instanceof N1InterleavedInputSplit;
         final boolean singleSplit = ! lineInterleaved; // TODO refine to distinguish not only A from E
-        final Path path = split.getPath();
 
+        // open the split as ImageInputStream and create a product via an Envisat product reader
+        final Path path = split.getPath();
         Configuration conf = context.getConfiguration();
         FileSystem inputFileSystem = path.getFileSystem(conf);
         FSDataInputStream fileIn = inputFileSystem.open(path);
         final FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
-
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
-
         final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
-
         Product product = productReader.readProductNodes(productFile, null);
 
-        // for splits replace product by subset for split
+        // for splits replace product by subset
         if (! singleSplit) {
             int yStart = ((N1InterleavedInputSplit) split).getStartRecord();
             int height = ((N1InterleavedInputSplit) split).getNumberOfRecords();
@@ -83,32 +90,35 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final Product resultProduct = op.getTargetProduct();
 
         // write product to files in DIMAP format
-        final String outName = "L2_of_" + path.getName() + "_split" + ((N1InterleavedInputSplit) split).getStartRecord();;
+        final String outName = "L2_of_" + path.getName()
+                + ((split instanceof N1InterleavedInputSplit) ? "_split" + ((N1InterleavedInputSplit) split).getStartRecord() : "");
         final WriteOp writeOp = new WriteOp(resultProduct, new File(outName + ".dim"), "BEAM-DIMAP");
         writeOp.writeProduct(ProgressMonitor.NULL);
 
         // copy .dim output file to output file system
         // TODO handle directory tree or use different output format
         Path output = getOutputPath(conf);
-        FileSystem outputFileSystem = path.getFileSystem(conf);
-
-        final Path dimPath = new Path(output, "L2_of_" + path.getName() + ".dim");
-//        final Path dataPath = new Path("output", "L2_of_" + path.getName() + ".data");
-
         final Path path1 = new Path(new File(outName + ".dim").getAbsolutePath());
+        final Path dimPath = new Path(output, "L2_of_" + path.getName() + ".dim");
+        FileSystem outputFileSystem = output.getFileSystem(conf);
         outputFileSystem.copyFromLocalFile(path1, output);
 
         // dont copy .data directories are tricky....
+//        final Path dataPath = new Path("output", "L2_of_" + path.getName() + ".data");
 //        final Path path2 = new Path(new File(outName + ".data").getAbsolutePath());
 //        inputFileSystem.copyFromLocalFile(path2, output);
 
+        // provide pair of input file name and output file name to reducer
         final Text resultKey = new Text(path.getName());
         final Text resultValue = new Text(dimPath.toString());
         context.write(resultKey, resultValue);
+
+        // write final log entry for runtime measurements
+        LOG.info(context.getTaskAttemptID() + " stops processing of split " + split);
     }
 
     public static Path getOutputPath(Configuration conf) {
-    String name = conf.get("mapred.output.dir");
-    return name == null ? null: new Path(name);
-  }
+        String name = conf.get("mapred.output.dir");
+        return name == null ? null : new Path(name);
+    }
 }

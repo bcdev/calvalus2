@@ -58,7 +58,8 @@ public class N1InterleavedInputFormat extends FileInputFormat {
         final List<InputSplit> blocks = super.getSplits(job);
         final long desiredSplitSizeInBytes =
                 job.getConfiguration().getLong(SPLIT_SIZE_PARAM, DEFAULT_SPLIT_SIZE_IN_BYTES);
-        LOG.config("desired split size [Bytes]: " + desiredSplitSizeInBytes);
+        //LOG.config("desired split size [Bytes]: " + desiredSplitSizeInBytes);
+        LOG.info("desired split size [Bytes]: " + desiredSplitSizeInBytes);
 
         // introduce variables for split borders
         Path             prevBlockPath = null;
@@ -103,8 +104,9 @@ public class N1InterleavedInputFormat extends FileInputFormat {
                                                     block.getLocations(),
                                                     /* startRecord */ (int) ((startOfSplit - productAnatomy.getHeaderSize()) / productAnatomy.getGranuleSize()),
                                                     /* numberOfRecords */ (int) ((endOfSplit - startOfSplit) / productAnatomy.getGranuleSize()));
-                LOG.fine("split generated: " + split);
-                System.out.println("split generated: " + split);
+                //LOG.fine("split generated: " + split);
+                LOG.info("split generated: " + split);
+                //System.out.println("split generated: " + split);
                 splitAccu.add(split);
                 startOfSplit = endOfSplit;
             }
