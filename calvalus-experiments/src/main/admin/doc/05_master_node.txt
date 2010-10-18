@@ -1,0 +1,17 @@
+# generate ssh key for communication with slaves (only required at the first time) 
+ssh-keygen -t rsa  -P ""
+
+# copy key onto the slave machines ( you have to entrer 'yes' and the password for every slave)
+ssh-copy-id cvslaveXX
+
+# update slave list in
+~/conf/slaves
+
+# copy configuration to all slaves
+./Admin/copy-configuration.sh
+
+# before starting for the first time format the name node
+hadoop namenode -format
+
+# start and stop the cluster from the namenode 
+# using the start-* and stop* scripts in "~/Admin/" directory
