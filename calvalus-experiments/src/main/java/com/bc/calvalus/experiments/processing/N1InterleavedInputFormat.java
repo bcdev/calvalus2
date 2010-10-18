@@ -1,5 +1,6 @@
 package com.bc.calvalus.experiments.processing;
 
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -12,9 +13,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -39,17 +37,7 @@ public class N1InterleavedInputFormat extends FileInputFormat {
     public static final String SPLIT_SIZE_PARAM = "job.splitSize";
     private static final long DEFAULT_SPLIT_SIZE_IN_BYTES = 64 * 1024 * 1024;
 
-    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
-    static {
-        Handler[] handlers = LOG.getHandlers();
-        for (Handler handler : handlers) {
-            LOG.removeHandler(handler);
-        }
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        LOG.addHandler(handler);
-        LOG.setLevel(Level.ALL);
-    }
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     public List<InputSplit> getSplits(JobContext job) throws IOException {
 

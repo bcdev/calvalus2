@@ -5,7 +5,7 @@ import com.bc.calvalus.experiments.format.FileConverter;
 import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
 import com.bc.calvalus.experiments.format.N1ToLineInterleavedConverter;
 import com.bc.calvalus.experiments.processing.Args;
-import com.bc.calvalus.experiments.processing.LogFormatter;
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGenException;
 import com.bc.childgen.ChildGeneratorFactory;
 import com.bc.childgen.ChildGeneratorImpl;
@@ -21,9 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -47,18 +44,7 @@ public class TransferTool extends Configured implements Tool {
     private static final int MER_RR_BYTES_PER_SCAN = MER_RR_LINE_LENGTH * (15 * 2 + 2 + 1);
     private static final int MER_RR_BUFFER_SIZE = MER_RR_LINES_PER_SPLIT * MER_RR_BYTES_PER_SCAN;
 
-    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
-
-    static {
-        Handler[] handlers = LOG.getHandlers();
-        for (Handler handler : handlers) {
-            LOG.removeHandler(handler);
-        }
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        LOG.addHandler(handler);
-        LOG.setLevel(Level.ALL);
-    }
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new TransferTool(), args));

@@ -1,5 +1,6 @@
 package com.bc.calvalus.experiments.processing;
 
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -10,9 +11,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -32,17 +30,7 @@ import java.util.logging.Logger;
  */
 public class ProcessingTool extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
-    static {
-        Handler[] handlers = LOG.getHandlers();
-        for (Handler handler : handlers) {
-            LOG.removeHandler(handler);
-        }
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        LOG.addHandler(handler);
-        LOG.setLevel(Level.ALL);
-    }
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
     public int run(String[] args) throws Exception {

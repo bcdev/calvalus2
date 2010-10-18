@@ -1,6 +1,7 @@
 package com.bc.calvalus.experiments.processing;
 
 import com.bc.calvalus.experiments.format.streaming.StreamingProductWriter;
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.FSImageInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -21,9 +22,6 @@ import org.esa.beam.gpf.operators.meris.NdviOp;
 
 import javax.imageio.stream.ImageInputStream;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -38,17 +36,7 @@ import java.util.logging.Logger;
  */
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
-    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
-    static {
-        Handler[] handlers = LOG.getHandlers();
-        for (Handler handler : handlers) {
-            LOG.removeHandler(handler);
-        }
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        LOG.addHandler(handler);
-        LOG.setLevel(Level.ALL);
-    }
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {

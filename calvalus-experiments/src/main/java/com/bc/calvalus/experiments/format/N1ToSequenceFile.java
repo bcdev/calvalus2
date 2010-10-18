@@ -1,5 +1,6 @@
 package com.bc.calvalus.experiments.format;
 
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.ByteArrayWritable;
 import com.bc.childgen.ChildGeneratorFactory;
 import com.bc.childgen.ChildGeneratorImpl;
@@ -28,15 +29,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.Date;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 // todo - make this a file converter and test it by FormatPerformanceReporter (nf - 04.10.2010)
@@ -67,18 +62,7 @@ public class N1ToSequenceFile {
     private static final int MER_RR_BYTES_PER_SCAN = MER_RR_LINE_LENGTH * (15 * 2 + 2 + 1);
     private static final int MER_RR_BUFFER_SIZE = MER_RR_LINES_PER_SPLIT * MER_RR_BYTES_PER_SCAN;
 
-    private static final Logger LOG = Logger.getLogger("com.bc.calvalus");
-
-    static {
-        Handler[] handlers = LOG.getHandlers();
-        for (Handler handler : handlers) {
-            LOG.removeHandler(handler);
-        }
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new MyLogFormatter());
-        LOG.addHandler(handler);
-        LOG.setLevel(Level.ALL);
-    }
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     public static void main(String[] args) {
         if (args.length == 1) {
@@ -238,24 +222,6 @@ public class N1ToSequenceFile {
         @Override
         public void progress() {
 
-        }
-    }
-
-    private static class MyLogFormatter extends Formatter {
-        @Override
-        public String format(LogRecord logRecord) {
-            StringBuilder sb = new StringBuilder(MessageFormat.format("{0}: {1} - {2}\n",
-                                                                      logRecord.getLevel(),
-                                                                      new Date(logRecord.getMillis()),
-                                                                      logRecord.getMessage()));
-            Throwable throwable = logRecord.getThrown();
-            if (throwable != null) {
-                StringWriter writer = new StringWriter();
-                throwable.printStackTrace(new PrintWriter(writer));
-                sb.append(writer.toString());
-                sb.append("\n");
-            }
-            return sb.toString();
         }
     }
 }
