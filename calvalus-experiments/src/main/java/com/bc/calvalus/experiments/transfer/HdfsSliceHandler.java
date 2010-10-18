@@ -57,7 +57,7 @@ public class HdfsSliceHandler implements ChildGeneratorImpl.SliceHandler {
     public void endSlice(int sliceIndex, String productName, long bytesWritten) throws IOException {
         LOG.log(Level.INFO, MessageFormat.format("Fragment {0} processed, bytes written: {1}",
                                                  sliceIndex, bytesWritten));
-        out.close();
+//        out.close();
     }
 
     @Override

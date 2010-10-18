@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ "$1" == "" ]
+then
+    echo "extracts transfer start and stop times from log"
+    echo "usage  : $0 <logfile>"
+    echo "example: $0 transfer-input-lineinterleaved-2010-10-18T14:48:26.tmp"
+    echo "creates file transfer-input-lineinterleaved-2010-10-18T14:48:26"
+    exit 1
+fi
+
+logfile="$1"
+output="${1%.tmp}"
+
+cat ${logfile} | awk '/com.bc.calvalus:/ { print $0 }' > ${output}
+
+echo ${output}

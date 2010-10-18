@@ -93,6 +93,7 @@ public class TransferTool extends Configured implements Tool {
                 }
 
                 for (File sourceFile : sourceFiles) {
+                    LOG.info("start transfer of " + sourceFile.getName());
                     // distinguish formats
                     if ("n1".equals(format)) {
                         metrics.add(toSingleBlockN1(hdfs, sourceFile, destination));
@@ -103,6 +104,7 @@ public class TransferTool extends Configured implements Tool {
                     } else {
                         throw new IllegalArgumentException("one of lineinterleaved, sliced, n1 expected for format, found " + format);
                     }
+                    LOG.info("stop  transfer of " + sourceFile.getName() + " " + sourceFile.length());
                 }
             }
             // transfer from HDFS ...

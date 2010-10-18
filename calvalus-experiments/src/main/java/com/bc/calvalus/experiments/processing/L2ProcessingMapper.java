@@ -1,7 +1,7 @@
 package com.bc.calvalus.experiments.processing;
 
+import com.bc.calvalus.experiments.format.streaming.StreamingProductWriter;
 import com.bc.calvalus.hadoop.io.FSImageInputStream;
-import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -18,10 +18,8 @@ import org.esa.beam.framework.dataio.ProductSubsetBuilder;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.gpf.operators.meris.NdviOp;
-import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.imageio.stream.ImageInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -89,28 +87,17 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         op.setSourceProduct("inputProduct", product);
         final Product resultProduct = op.getTargetProduct();
 
-        // write product to files in DIMAP format
-        final String outName = "L2_of_" + path.getName()
-                + ((split instanceof N1InterleavedInputSplit) ? "_split" + ((N1InterleavedInputSplit) split).getStartRecord() : "");
-        final WriteOp writeOp = new WriteOp(resultProduct, new File(outName + ".dim"), "BEAM-DIMAP");
-        writeOp.writeProduct(ProgressMonitor.NULL);
-
-        // copy .dim output file to output file system
-        // TODO handle directory tree or use different output format
-        Path output = getOutputPath(conf);
-        final Path path1 = new Path(new File(outName + ".dim").getAbsolutePath());
-        final Path dimPath = new Path(output, "L2_of_" + path.getName() + ".dim");
-        FileSystem outputFileSystem = output.getFileSystem(conf);
-        outputFileSystem.copyFromLocalFile(path1, output);
-
-        // dont copy .data directories are tricky....
-//        final Path dataPath = new Path("output", "L2_of_" + path.getName() + ".data");
-//        final Path path2 = new Path(new File(outName + ".data").getAbsolutePath());
-//        inputFileSystem.copyFromLocalFile(path2, output);
+        // write product in the streaming product format
+        Path outputDir = getOutputPath(conf);
+        final String outputFileName = "L2_of_" + path.getName()
+                + ((split instanceof N1InterleavedInputSplit) ? "_split" + ((N1InterleavedInputSplit) split).getStartRecord() : "")
+                + ".seq";
+        final Path outputProductPath = new Path(outputDir, outputFileName);
+        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, conf);
 
         // provide pair of input file name and output file name to reducer
         final Text resultKey = new Text(path.getName());
-        final Text resultValue = new Text(dimPath.toString());
+        final Text resultValue = new Text(outputProductPath.toString());
         context.write(resultKey, resultValue);
 
         // write final log entry for runtime measurements
