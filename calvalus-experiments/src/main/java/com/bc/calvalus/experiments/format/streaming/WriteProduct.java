@@ -140,11 +140,11 @@ public class WriteProduct {
     }
 
     public static void main(String[] args) throws IOException {
-        File productFile = new File("/home/marcoz/EOData/Meris/L1b/MER_RR__1PQBCM20030101_102746_000002002012_00323_04385_0301.N1");
-        Product product = ProductIO.readProduct(productFile);
-        Configuration configuration = new Configuration();
-        Path path = new Path("/home/marcoz/tmp/inermediate_product.seq");
-        WriteProduct.writeProduct(product, path, configuration);
+        if (args.length != 2) {
+            System.out.println("Usage : ProductFile StreamingProductFile");
+        }
+        Product product = ProductIO.readProduct(new File(args[0]));
+        WriteProduct.writeProduct(product, new Path(args[1]), new Configuration());
     }
 
 }
