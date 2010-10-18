@@ -1,5 +1,6 @@
 package com.bc.calvalus.experiments.transfer;
 
+import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGeneratorImpl;
 import org.apache.hadoop.fs.FileSystem;
@@ -18,16 +19,24 @@ import java.util.logging.Logger;
  *
  * @author Martin Boettcher
  */
-public class HdfsSliceHandler implements ChildGeneratorImpl.SliceHandler {
+public class SingleHdfsFileSliceHandler implements ChildGeneratorImpl.SliceHandler {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final String destination;
     private final FileSystem hdfs;
 
-    public HdfsSliceHandler(FileSystem hdfs, String destination) {
+    private long numBytes = 0;
+    long wt = 0;
+    private long t0;
+
+    public SingleHdfsFileSliceHandler(FileSystem hdfs, String destination) {
         this.hdfs = hdfs;
         this.destination = destination;
+    }
+
+    public FormatPerformanceMetrics getFormatPerformanceMetrics() {
+        return new FormatPerformanceMetrics(0, 0, numBytes, wt);
     }
 
     @Override
@@ -35,6 +44,7 @@ public class HdfsSliceHandler implements ChildGeneratorImpl.SliceHandler {
         LOG.info(MessageFormat.format("Processing fragment {0} (line {1} ... {2})",
                                                  sliceIndex, firstLine, lastLine));
         Path destPath = new Path(destination, productName + ".s" + sliceIndex);
+        t0 = System.nanoTime();
         return new MemoryCacheImageOutputStream(hdfs.create(destPath, true));
     }
 
@@ -42,6 +52,8 @@ public class HdfsSliceHandler implements ChildGeneratorImpl.SliceHandler {
     public void endSlice(int sliceIndex, String productName, long bytesWritten) throws IOException {
         LOG.info(MessageFormat.format("Fragment {0} processed, bytes written: {1}",
                                                  sliceIndex, bytesWritten));
+        wt += System.nanoTime() - t0;
+        numBytes += bytesWritten;
     }
 
     @Override

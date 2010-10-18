@@ -210,10 +210,9 @@ public class TransferTool extends Configured implements Tool {
         }
         // compute number of lines from block size, slice header size, and record size
         int lines = MER_RR_LINES_PER_SPLIT;  // TODO compute
-        childGenerator.slice(in,
-                             lines,
-                             new HdfsSliceHandler(hdfs, destination));
-        return new FormatPerformanceMetrics(-1, -1, -1, -1);  // TODO measure
+        SingleHdfsFileSliceHandler sliceHandler = new SingleHdfsFileSliceHandler(hdfs, destination);
+        childGenerator.slice(in, lines, sliceHandler);
+        return sliceHandler.getFormatPerformanceMetrics();
     }
 
 
