@@ -31,12 +31,9 @@ import static org.junit.Assert.assertTrue;
 public class SplitProcessingToolTest {
     private static final String TMP_INPUT = "hdfs://localhost:9000/user/boe/meris-l1";
     private static final String TMP_OUTPUT = "hdfs://localhost:9000/user/boe/meris-l2";
-    //private static final String TMP_INPUT = "/home/boe/samples";
-    //private static final String TMP_OUTPUT = "/home/boe/feasibility/hadoop/output6";
     private static final String INPUT_FILE = "MER_RR__1PQACR20040526_091235_000026432027_00122_11699_0000.N1";
 
     private static final long TEST_SPLIT_SIZE = 17 * 1024*1024;
-    private static final int TEST_EXPECTED_NUMBER_OF_SPLITS = 33;
 
     /**
      * Verifies that splits are generated properly.

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * 
  */
-public class ProcessingToolTest {
+public class LocalProcessingToolTest {
     private static final String TMP_INPUT = "/tmp/input";
     private static final String TMP_OUTPUT = "/tmp/output";
 
