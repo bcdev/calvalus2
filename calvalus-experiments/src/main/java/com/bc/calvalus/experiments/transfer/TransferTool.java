@@ -4,7 +4,7 @@ import com.bc.calvalus.experiments.format.CopyConverter;
 import com.bc.calvalus.experiments.format.FileConverter;
 import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
 import com.bc.calvalus.experiments.format.N1ToLineInterleavedConverter;
-import com.bc.calvalus.experiments.processing.Args;
+import com.bc.calvalus.experiments.util.Args;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGenException;
 import com.bc.childgen.ChildGeneratorFactory;

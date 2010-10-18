@@ -1,4 +1,4 @@
-package com.bc.calvalus.experiments.processing;
+package com.bc.calvalus.experiments.util;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
