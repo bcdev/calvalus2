@@ -22,19 +22,20 @@ public class N1ToLineInterleavedConverter implements FileConverter {
 
     public FormatPerformanceMetrics convertTo(File inputFile, OutputStream outputStream) throws IOException {
 
+        long numBytes = 0;
+        long t0;
+        long rt = 0;
+        long wt = 0;
+
+        t0 = System.nanoTime();
         ProductFile productFile = ProductFile.open(inputFile);
-
         try {
-            long numBytes = 0;
-            long t0;
-            long rt = 0;
-            long wt = 0;
-
             RecordReader[] recordReaders = getMdsRecordReaders(productFile);
             byte[][] recordBuffers = getMdsRecordBuffers(recordReaders);
 
             ImageInputStream inputStream = productFile.getDataInputStream();
             int headerSize = (int) recordReaders[0].getDSD().getDatasetOffset();
+            rt += System.nanoTime() - t0;
 
             byte[] headerBuffer = new byte[headerSize];
 
@@ -53,12 +54,11 @@ public class N1ToLineInterleavedConverter implements FileConverter {
             for (int y = 0; y < rasterHeight; y++) {
                 for (int i = 0; i < recordReaders.length; i++) {
                     RecordReader recordReader = recordReaders[i];
-                    DSD dsd = recordReader.getDSD();
-                    long pos = dsd.getDatasetOffset() + (y * dsd.getRecordSize());
-
-                    byte[] recordBuffer = recordBuffers[i];
 
                     t0 = System.nanoTime();
+                    DSD dsd = recordReader.getDSD();
+                    long pos = dsd.getDatasetOffset() + (y * dsd.getRecordSize());
+                    byte[] recordBuffer = recordBuffers[i];
                     inputStream.seek(pos);
                     inputStream.read(recordBuffer);
                     rt += System.nanoTime() - t0;
@@ -70,27 +70,27 @@ public class N1ToLineInterleavedConverter implements FileConverter {
                     numBytes += recordBuffer.length;
                 }
             }
-
-            return new FormatPerformanceMetrics(numBytes, rt, numBytes, wt);
-
         } finally {
+            t0 = System.nanoTime();
             productFile.close();
+            wt += System.nanoTime() - t0;
         }
-
+        return new FormatPerformanceMetrics(numBytes, rt, numBytes, wt);
     }
 
     @Override
     public FormatPerformanceMetrics convertFrom(InputStream inputStream, File outputFile) throws IOException {
 
+        long numBytes = 0;
+        long t0;
+        long rt = 0;
+        long wt = 0;
+
         FileCacheImageInputStream imageInputStream = new FileCacheImageInputStream(inputStream, new File("."));
+
+        t0 = System.nanoTime();
         ProductFile productFile = ProductFile.open(imageInputStream);
-
         try {
-            long numBytes = 0;
-            long t0;
-            long rt = 0;
-            long wt = 0;
-
             RecordReader[] recordReaders = getMdsRecordReaders(productFile);
             byte[][] recordBuffers = getMdsRecordBuffers(recordReaders);
 
@@ -99,7 +99,6 @@ public class N1ToLineInterleavedConverter implements FileConverter {
 
             byte[] headerBuffer = new byte[headerSize];
 
-            t0 = System.nanoTime();
             imageInputStream.seek(0);
             imageInputStream.read(headerBuffer);
             rt += System.nanoTime() - t0;
@@ -114,12 +113,11 @@ public class N1ToLineInterleavedConverter implements FileConverter {
             for (int y = 0; y < rasterHeight; y++) {
                 for (int i = 0; i < recordReaders.length; i++) {
                     RecordReader recordReader = recordReaders[i];
-                    DSD dsd = recordReader.getDSD();
-                    long pos = dsd.getDatasetOffset() + (y * dsd.getRecordSize());
-
-                    byte[] recordBuffer = recordBuffers[i];
 
                     t0 = System.nanoTime();
+                    DSD dsd = recordReader.getDSD();
+                    long pos = dsd.getDatasetOffset() + (y * dsd.getRecordSize());
+                    byte[] recordBuffer = recordBuffers[i];
                     imageInputStream.read(recordBuffer);
                     imageOutputStream.seek(pos);
                     rt += System.nanoTime() - t0;
@@ -132,11 +130,13 @@ public class N1ToLineInterleavedConverter implements FileConverter {
                 }
             }
 
-            return new FormatPerformanceMetrics(numBytes, rt, numBytes, wt);
 
         } finally {
+            t0 = System.nanoTime();
             productFile.close();
+            wt += System.nanoTime() - t0;
         }
+        return new FormatPerformanceMetrics(numBytes, rt, numBytes, wt);
 
     }
 
