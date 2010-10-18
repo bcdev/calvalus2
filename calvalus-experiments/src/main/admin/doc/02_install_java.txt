@@ -1,0 +1,18 @@
+### install sun jre using the canonical partner repository
+# first become root
+sudo su -
+
+# add partner repository to apt sources
+echo "deb http://archive.canonical.com/ubuntu lucid partner" > /etc/apt/sources.list.d/partner.list
+
+# install java
+apt-get update
+apt-get -y install sun-java6-jdk
+
+# install ntp (for automatic time synchronisation)
+apt-get -y install ntp
+
+
+## copy and paste line
+
+echo "deb http://archive.canonical.com/ubuntu lucid partner" > /etc/apt/sources.list.d/partner.list && apt-get update && apt-get -y install sun-java6-jdk ntp
