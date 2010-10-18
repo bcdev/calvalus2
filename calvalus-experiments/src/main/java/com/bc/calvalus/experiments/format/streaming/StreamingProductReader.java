@@ -26,7 +26,6 @@ import org.apache.hadoop.io.Text;
 import org.esa.beam.dataio.dimap.DimapProductHelpers;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -149,14 +148,16 @@ public class StreamingProductReader extends AbstractProductReader {
     }
 
     public static void main(String[] args) throws IOException {
-        Configuration configuration = new Configuration();
-        Path path = new Path("/home/marcoz/tmp/inermediate_product.seq");
-        StreamingProductReader reader = new StreamingProductReader(path, configuration);
+        if (args.length != 2) {
+            System.out.println("Usage : StreamingProductFile DimapProductFile");
+        }
+        StreamingProductReader reader = new StreamingProductReader(new Path(args[0]), new Configuration());
         Product product = reader.readProductNodes(null, null);
-        ProductWriter writer = ProductIO.getProductWriter(ProductIO.DEFAULT_FORMAT_NAME);
-        writer.writeProductNodes(product, "/home/marcoz/tmp/inermediate_product.dim");
+
+        //        ProductWriter writer = ProductIO.getProductWriter(ProductIO.DEFAULT_FORMAT_NAME);
+//        writer.writeProductNodes(product, "/home/marcoz/tmp/inermediate_product.dim");
         
-        ProductIO.writeProduct(product, "/home/marcoz/tmp/inermediate_product.dim", ProductIO.DEFAULT_FORMAT_NAME);
+        ProductIO.writeProduct(product, args[1], ProductIO.DEFAULT_FORMAT_NAME);
     }
 
 }

@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 
-public class WriteProduct {
+public class StreamingProductWriter {
 
     private static final int SLICE_HEIGHT = 64;
 
@@ -144,7 +144,7 @@ public class WriteProduct {
             System.out.println("Usage : ProductFile StreamingProductFile");
         }
         Product product = ProductIO.readProduct(new File(args[0]));
-        WriteProduct.writeProduct(product, new Path(args[1]), new Configuration());
+        StreamingProductWriter.writeProduct(product, new Path(args[1]), new Configuration());
     }
 
 }
