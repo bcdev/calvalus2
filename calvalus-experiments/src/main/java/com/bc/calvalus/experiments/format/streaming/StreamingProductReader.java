@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.esa.beam.dataio.dimap.DimapProductHelpers;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
@@ -36,11 +35,8 @@ import org.esa.beam.util.math.MathUtils;
 import org.jdom.Document;
 
 import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
-import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -51,16 +47,16 @@ public class StreamingProductReader extends AbstractProductReader {
 
     private final Path path;
     private final Configuration configuration;
+    private final Map<String, Long> keyIndex;
 
     private SequenceFile.Reader reader;
     private int sliceHeight;
-    private long startPos;
-    Map<Band, ByteArrayWritable> cache = new HashMap<Band, ByteArrayWritable>();
 
     public StreamingProductReader(Path path, Configuration configuration) {
-        super(null);    // TODO
+        super(null);    // TODO  use a ProductReaderPluigin
         this.path = path;
         this.configuration = configuration;
+        this.keyIndex = new HashMap<String, Long>();
     }
 
     @Override
@@ -80,53 +76,32 @@ public class StreamingProductReader extends AbstractProductReader {
                                           int destOffsetX, int destOffsetY,
                                           int destWidth, int destHeight,
                                           ProductData destBuffer, ProgressMonitor pm) throws IOException {
-        System.out.println("destBand = " + destBand.getName());
-        System.out.println("sourceOffsetX = " + sourceOffsetX);
-        System.out.println("sourceOffsetY = " + sourceOffsetY);
-        System.out.println("sourceWidth = " + sourceWidth);
-        System.out.println("sourceHeight = " + sourceHeight);
         int sliceIndex = MathUtils.floorInt(sourceOffsetY / sliceHeight);
-        System.out.println("sliceIndex = " + sliceIndex);
-        System.out.println("====================================");
         String expectedKey = destBand.getName() + ":" + sliceIndex;
-        System.out.println("expectedKey = " + expectedKey);
 
         Text key = new Text();
         ByteArrayWritable value = new ByteArrayWritable();
-        try {
-            reader.next(key, value);
-            System.out.println("key = " + key);
-            if (!key.toString().equals(expectedKey)) {
-                reader.seek(startPos);
-                boolean hasMore = true;
-                while (hasMore) {
-                    hasMore = reader.next(key, value);
-                    System.out.println("key = " + key);
-                    if (key.toString().equals(expectedKey)) {
-                        break;
-                    }
-                }
-                if (!key.toString().equals(expectedKey)) {
-                    throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));
-                }
+        synchronized (reader) {
+            Long keyPosition = keyIndex.get(expectedKey);
+            if (keyPosition != reader.getPosition()) {
+                reader.seek(keyPosition);
             }
-            byte[] byteArray = value.getArray();
-
-            InputStream inputStream = new ByteArrayInputStream(byteArray);
-            ImageInputStream iis = new MemoryCacheImageInputStream(inputStream);
-
-            destBuffer.readFrom(iis);
-
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } finally {
+            reader.next(key, value);
         }
-        //TODO    use cache
+        if (!key.toString().equals(expectedKey)) {
+            throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));
+        }
+        byte[] byteArray = value.getArray();
+
+        InputStream inputStream = new ByteArrayInputStream(byteArray);
+        ImageInputStream iis = new MemoryCacheImageInputStream(inputStream);
+
+        destBuffer.readFrom(iis);
     }
 
     public void close() throws IOException {
         reader.close();
-        cache.clear();
+        keyIndex.clear();
     }
 
     private Product readHeader() throws IOException {
@@ -139,7 +114,7 @@ public class StreamingProductReader extends AbstractProductReader {
         Document dom = DimapProductHelpers.createDom(inputStream);
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
-        startPos = reader.getPosition();
+        buildKeyIndex();
         return product;
     }
 
@@ -161,6 +136,15 @@ public class StreamingProductReader extends AbstractProductReader {
 
             productData.readFrom(iis);
             tpg.setData(productData);
+        }
+    }
+
+    private void buildKeyIndex() throws IOException {
+        Text key = new Text();
+        long currentPos = reader.getPosition();
+        while(reader.next(key)) {
+            keyIndex.put(key.toString(), currentPos);
+            currentPos = reader.getPosition();
         }
     }
 

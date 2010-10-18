@@ -52,41 +52,36 @@ public class WriteProduct {
         int w = product.getSceneRasterWidth();
         int h = SLICE_HEIGHT;
         int sliceIndex = 0;
-        for (int y = 0; y < product.getSceneRasterHeight(); y+=SLICE_HEIGHT,sliceIndex++) {
+        for (int y = 0; y < product.getSceneRasterHeight(); y += SLICE_HEIGHT, sliceIndex++) {
             if (y + h > product.getSceneRasterHeight()) {
                 h = product.getSceneRasterHeight() - y;
             }
             for (Band band : bands) {
                 Raster data = band.getSourceImage().getData(new Rectangle(x, y, w, h));
                 ProductData productData = ProductData.createInstance(band.getDataType(),
-                                                     ImageUtils.getPrimitiveArray(data.getDataBuffer()));
+                        ImageUtils.getPrimitiveArray(data.getDataBuffer()));
                 String key = band.getName() + ":" + sliceIndex;
-                System.out.println("key = " + key);
                 writeProductData(writer, key, productData);
             }
         }
+        writer.close();
     }
 
-    public static SequenceFile.Writer writeHeader(Product product, Path outputPath, Configuration configuration) {
+    public static SequenceFile.Writer writeHeader(Product product, Path outputPath, Configuration configuration) throws IOException {
         SequenceFile.Metadata metadata = createMetadata(product);
-        try {
-            FileSystem fileSystem = outputPath.getFileSystem(configuration);
-            SequenceFile.Writer sequenceFileWriter = SequenceFile.createWriter(fileSystem,
-                    configuration,
-                    outputPath,
-                    Text.class,
-                    ByteArrayWritable.class,
-                    SequenceFile.CompressionType.NONE,
-                    null, // new DefaultCodec(),
-                    new NullProgressable(),
-                    metadata);
+        FileSystem fileSystem = outputPath.getFileSystem(configuration);
+        SequenceFile.Writer sequenceFileWriter = SequenceFile.createWriter(fileSystem,
+                configuration,
+                outputPath,
+                Text.class,
+                ByteArrayWritable.class,
+                SequenceFile.CompressionType.NONE,
+                null, // new DefaultCodec(),
+                new NullProgressable(),
+                metadata);
 
-            writeTiePointData(product, sequenceFileWriter);
-            return sequenceFileWriter;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        writeTiePointData(product, sequenceFileWriter);
+        return sequenceFileWriter;
     }
 
     private static void writeTiePointData(Product product, SequenceFile.Writer sequenceFileWriter) throws IOException {
@@ -138,7 +133,8 @@ public class WriteProduct {
         private InternalByteArrayOutputStream(int capacity) {
             super(capacity);
         }
-        private  byte[] getInternalBuffer() {
+
+        private byte[] getInternalBuffer() {
             return buf;
         }
     }
