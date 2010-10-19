@@ -16,6 +16,8 @@ import static org.junit.Assert.assertTrue;
 
 public class N1ToLineInterleavedConverterTest {
     private static final int ONE_MB = 1024 * 1024;
+    //private static final String INPUT_PATH = "/MER_RR__1P.N1";
+    private static final String INPUT_PATH = "/MER_FRS_1PNUPA20080410_095355_000005122067_00337_31954_4601.N1";
 
     @Test
     public void testConvertToAndFrom() throws IOException {
@@ -25,7 +27,7 @@ public class N1ToLineInterleavedConverterTest {
         //convertedFile.deleteOnExit();
         OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(convertedFile), ONE_MB);
 
-        final String path = getClass().getResource("/MER_RR__1P.N1").getPath();
+        final String path = getClass().getResource(INPUT_PATH).getPath();
         File inputFile = new File(path);
         assertTrue(inputFile.length() > 0);
 

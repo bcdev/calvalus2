@@ -57,7 +57,7 @@ public class ReadSequenceFile {
             timeTotal += (t1 - t0);
             bytesTotal += value.getLength();
         }
-        System.out.println(MessageFormat.format("{0} bytes read in {1} ms", bytesTotal, timeTotal / 1000 / 1000));
+        System.out.println(MessageFormat.format("{0} bytes read in {1} ms", bytesTotal, timeTotal / 1E9 ));
     }
 
 }

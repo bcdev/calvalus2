@@ -40,9 +40,14 @@ public class TransferTool extends Configured implements Tool {
     private static final String HDFS_PREFIX = "hdfs://";
 
     private static final int MER_RR_LINE_LENGTH = 1121;
-    private static final int MER_RR_LINES_PER_SPLIT = 1121;
+    private static final int MER_RR_LINES_PER_SPLIT = 1121 + 560;
     private static final int MER_RR_BYTES_PER_SCAN = MER_RR_LINE_LENGTH * (15 * 2 + 2 + 1);
     private static final int MER_RR_BUFFER_SIZE = MER_RR_LINES_PER_SPLIT * MER_RR_BYTES_PER_SCAN;
+
+    private static final int MER_FR_LINE_LENGTH = 1121 * 4 - 1;
+    private static final int MER_FR_LINES_PER_SPLIT = (1121 + 560) / 4;
+    private static final int MER_FR_BYTES_PER_SCAN = MER_FR_LINE_LENGTH * (15 * 2 + 2 + 1);
+    private static final int MER_FR_BUFFER_SIZE = MER_FR_LINES_PER_SPLIT * MER_FR_BYTES_PER_SCAN;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -80,17 +85,20 @@ public class TransferTool extends Configured implements Tool {
 
                 for (File sourceFile : sourceFiles) {
                     LOG.info("start transfer of " + sourceFile.getName());
+                    FormatPerformanceMetrics metric;
                     // distinguish formats
                     if ("n1".equals(format)) {
-                        metrics.add(toSingleBlockN1(hdfs, sourceFile, destination));
+                        metric = toSingleBlockN1(hdfs, sourceFile, destination);
                     } else if ("lineinterleaved".equals(format)) {
-                        metrics.add(toInterleaved(hdfs, sourceFile, destination));
+                        metric = toInterleaved(hdfs, sourceFile, destination);
                     } else if ("sliced".equals(format)) {
-                        metrics.add(toSlices(hdfs, sourceFile, destination));
+                        metric = toSlices(hdfs, sourceFile, destination);
                     } else {
                         throw new IllegalArgumentException("one of lineinterleaved, sliced, n1 expected for format, found " + format);
                     }
                     LOG.info("stop  transfer of " + sourceFile.getName() + " " + sourceFile.length());
+                    LOG.info("metric: " +  metric);
+                    metrics.add(metric);
                 }
             }
             // transfer from HDFS ...
@@ -104,17 +112,22 @@ public class TransferTool extends Configured implements Tool {
                 destDir.mkdirs();
 
                 for (FileStatus input : inputs) {
+                    LOG.info("start transfer of " + input.getPath().getName());
+                    FormatPerformanceMetrics metric;
                     Path inputPath = input.getPath();
                     // distinguish formats
                     if ("n1".equals(format)) {
-                        metrics.add(copyFrom(hdfs, inputPath, destDir));
+                        metric = copyFrom(hdfs, inputPath, destDir);
                     } else if ("lineinterleaved".equals(format)) {
-                        metrics.add(fromInterleaved(hdfs, inputPath, destDir));
+                        metric = fromInterleaved(hdfs, inputPath, destDir);
                     } else if ("sliced".equals(format)) {
-                        metrics.add(copyFrom(hdfs, inputPath, destDir));
+                        metric = copyFrom(hdfs, inputPath, destDir);
                     } else {
                         throw new IllegalArgumentException("one of lineinterleaved, sliced, n1 expected for format, found " + format);
                     }
+                    LOG.info("stop  transfer of " + input.getPath().getName() + " " + input.getLen());
+                    LOG.info("metric: " +  metric);
+                    metrics.add(metric);
                 }
             }
             LOG.info("stopping " + format + " transfer from " + source + " to " + destination);
@@ -209,7 +222,7 @@ public class TransferTool extends Configured implements Tool {
             throw new IOException("child generation failed: " + ex.getMessage(), ex);
         }
         // compute number of lines from block size, slice header size, and record size
-        int lines = MER_RR_LINES_PER_SPLIT;  // TODO compute
+        int lines = inputFile.getName().startsWith("MER_RR") ? MER_RR_LINES_PER_SPLIT : MER_FR_LINES_PER_SPLIT;
         SingleHdfsFileSliceHandler sliceHandler = new SingleHdfsFileSliceHandler(hdfs, destination);
         childGenerator.slice(in, lines, sliceHandler);
         return sliceHandler.getFormatPerformanceMetrics();

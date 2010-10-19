@@ -26,6 +26,6 @@ public class FormatPerformanceMetrics {
     }
 
     public String toString() {
-        return numBytesRead + " bytes read in " + (readTime / 10e9) + " sec, " + numBytesWritten + " bytes written in " + (writeTime / 10e9) + " sec";
+        return numBytesRead + " bytes read in " + (readTime / 1E9) + " sec, " + numBytesWritten + " bytes written in " + (writeTime / 1E9) + " sec";
     }
 }

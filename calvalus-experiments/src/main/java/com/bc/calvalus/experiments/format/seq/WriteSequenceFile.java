@@ -83,7 +83,7 @@ public class WriteSequenceFile {
 
         FileStatus[] stati = fileSystem.listStatus(path);
         for (FileStatus status : stati) {
-            System.out.println(MessageFormat.format("{0} written, size is {1} bytes, {2} ms for writing.", status.getPath(), status.getLen(), timeTotal / 1000 / 1000));
+            System.out.println(MessageFormat.format("{0} written, size is {1} bytes, {2} ms for writing.", status.getPath(), status.getLen(), timeTotal / 1E9));
         }
     }
 
