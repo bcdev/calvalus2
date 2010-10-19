@@ -16,8 +16,7 @@ import static org.junit.Assert.assertTrue;
 
 public class N1ToLineInterleavedConverterTest {
     private static final int ONE_MB = 1024 * 1024;
-    //private static final String INPUT_PATH = "/MER_RR__1P.N1";
-    private static final String INPUT_PATH = "/MER_FRS_1PNUPA20080410_095355_000005122067_00337_31954_4601.N1";
+    private static final String INPUT_PATH = "/MER_RR__1P.N1";
 
     @Test
     public void testConvertToAndFrom() throws IOException {

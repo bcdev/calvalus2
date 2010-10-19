@@ -225,6 +225,7 @@ public class TransferTool extends Configured implements Tool {
         int lines = inputFile.getName().startsWith("MER_RR") ? MER_RR_LINES_PER_SPLIT : MER_FR_LINES_PER_SPLIT;
         SingleHdfsFileSliceHandler sliceHandler = new SingleHdfsFileSliceHandler(hdfs, destination);
         childGenerator.slice(in, lines, sliceHandler);
+        in.close();
         return sliceHandler.getFormatPerformanceMetrics();
     }
 

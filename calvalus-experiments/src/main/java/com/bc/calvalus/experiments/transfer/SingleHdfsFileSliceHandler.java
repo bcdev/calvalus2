@@ -3,6 +3,7 @@ package com.bc.calvalus.experiments.transfer;
 import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGeneratorImpl;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -29,6 +30,7 @@ public class SingleHdfsFileSliceHandler implements ChildGeneratorImpl.SliceHandl
     private long numBytes = 0;
     long wt = 0;
     private long t0;
+    private FSDataOutputStream outputStream;
 
     public SingleHdfsFileSliceHandler(FileSystem hdfs, String destination) {
         this.hdfs = hdfs;
@@ -45,7 +47,9 @@ public class SingleHdfsFileSliceHandler implements ChildGeneratorImpl.SliceHandl
                                                  sliceIndex, firstLine, lastLine));
         Path destPath = new Path(destination, productName + ".s" + sliceIndex);
         t0 = System.nanoTime();
-        return new MemoryCacheImageOutputStream(hdfs.create(destPath, true));
+        outputStream = hdfs.create(destPath, true);
+        MemoryCacheImageOutputStream imageOutputStream = new MemoryCacheImageOutputStream(outputStream);
+        return imageOutputStream;
     }
 
     @Override
@@ -54,6 +58,11 @@ public class SingleHdfsFileSliceHandler implements ChildGeneratorImpl.SliceHandl
                                                  sliceIndex, bytesWritten));
         wt += System.nanoTime() - t0;
         numBytes += bytesWritten;
+        
+        if (outputStream != null) {
+            outputStream.close();
+            outputStream = null;
+        }
     }
 
     @Override
