@@ -14,22 +14,24 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
+import org.esa.beam.dataio.envisat.RecordReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductSubsetBuilder;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.gpf.operators.meris.NdviOp;
+import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 
 import javax.imageio.stream.ImageInputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Mapper to perform L2 processing (NDVI) on a split. Handles cases A and E,
- * distinguishes them by the class of the split (N1InterleavedInputSplit).
+ * Mapper to perform L2 processing (NDVI or Radiometry) on a split. Handles cases A to E,
+ * distinguishes them by the class of the split (N1InterleavedInputSplit) and the splits.number job parameter.
  * Unless the product is a single split a subset of the product is processed.
- * Currently, the output is written to the local file system, and the .dim
- * file is copied to HDFS. The data directory is lost. The key-value pair
+ * The output is written to a sequence file containing the header and the data in tiles. The key-value pair
  * provided to the reducer is the pair of input file name and output file name.
  *
  * @author Martin Boettcher
@@ -37,17 +39,19 @@ import java.util.logging.Logger;
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    public static final String OPERATOR = "operator";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final FileSplit split = (FileSplit) context.getInputSplit();
+        final int numSplits = context.getConfiguration().getInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
+        final String operatorName = context.getConfiguration().get(OPERATOR, "ndvi").toLowerCase();
 
         // write initial log entry for runtime measurements
         LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
 
         // distinguish cases A to E (currently only A and E)
         final boolean lineInterleaved = split instanceof N1InterleavedInputSplit;
-        final boolean singleSplit = ! lineInterleaved; // TODO refine to distinguish not only A from E
 
         // open the split as ImageInputStream and create a product via an Envisat product reader
         final Path path = split.getPath();
@@ -62,31 +66,63 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         Product product = productReader.readProductNodes(productFile, null);
 
         // for splits replace product by subset
-        if (! singleSplit) {
-            int yStart = ((N1InterleavedInputSplit) split).getStartRecord();
-            int height = ((N1InterleavedInputSplit) split).getNumberOfRecords();
+        int yStart = 0;
+        int height = 0;
+        String splitNamePart = "";
+        if (lineInterleaved) {
+            N1InterleavedInputSplit n1Split = (N1InterleavedInputSplit) split;
+            yStart = n1Split.getStartRecord();
+            height = n1Split.getNumberOfRecords();
+            splitNamePart = "_split" + yStart;
+        } else if (numSplits > 1) {
+            long start = split.getStart();
+            long length = split.getLength();
+
+            final RecordReader[] mdsRecordReaders = N1ProductAnatomy.getMdsRecordReaders(productFile);
+            long headerSize = mdsRecordReaders[0].getDSD().getDatasetOffset();
+            long granuleSize = N1ProductAnatomy.computeGranuleSize(mdsRecordReaders);
+
+            if (start == 0) {
+                yStart = 0;  // first split contains header, start at first record
+            } else {
+                yStart = (int) ((start - headerSize + granuleSize - 1) / granuleSize);
+            }
+            height = (int) ((start + length - headerSize + granuleSize - 1) / granuleSize - yStart);
+            splitNamePart = "_split" + yStart;
+            LOG.info("multiple split start=" + start + " length=" + length + " yStart=" + yStart + " height=" + height);
+        }
+        if (height != 0) {
             ProductSubsetDef subsetDef = new ProductSubsetDef();
             subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
             product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
         }
 
         // apply operator to product
-        final NdviOp op = new NdviOp();
-        op.setSourceProduct("inputProduct", product);
+        final Operator op;
+        if ("ndvi".equals(operatorName)) {
+            op = new NdviOp();
+            op.setSourceProduct("inputProduct", product);
+        } else if ("radiometry".equals(operatorName)) {
+            op = new MerisRadiometryCorrectionOp();
+            op.setSourceProduct("sourceProduct", product);
+        } else {
+            throw new IllegalArgumentException("unknown operator " + operatorName + ". One of ndvi, radiometry expected");
+        }
         final Product resultProduct = op.getTargetProduct();
 
         // write product in the streaming product format
         Path outputDir = getOutputPath(conf);
         final String outputFileName = "L2_of_" + path.getName()
-                + ((split instanceof N1InterleavedInputSplit) ? "_split" + ((N1InterleavedInputSplit) split).getStartRecord() : "")
+                + splitNamePart
                 + ".seq";
         final Path outputProductPath = new Path(outputDir, outputFileName);
         StreamingProductWriter.writeProduct(resultProduct, outputProductPath, conf);
 
         // provide pair of input file name and output file name to reducer
-        final Text resultKey = new Text(path.getName());
-        final Text resultValue = new Text(outputProductPath.toString());
-        context.write(resultKey, resultValue);
+        // commented to try to avoid reduce task at all, which is not successful
+//        final Text resultKey = new Text(path.getName());
+//        final Text resultValue = new Text(outputProductPath.toString());
+//        context.write(resultKey, resultValue);
 
         // write final log entry for runtime measurements
         LOG.info(context.getTaskAttemptID() + " stops processing of split " + split);

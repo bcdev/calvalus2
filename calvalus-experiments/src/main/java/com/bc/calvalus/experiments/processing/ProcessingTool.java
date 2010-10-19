@@ -36,45 +36,81 @@ public class ProcessingTool extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
 
-        System.out.println("Submitting job...");
+        try {
+            // parse command line arguments
+            Args options = new Args(args);
+            String source = options.getArgs()[0];
+            String destination = options.getArgs()[1];
+            String format = options.getArgs()[2];
+            String operator = (options.getArgs().length > 3) ? options.getArgs()[3] : "ndvi";
 
-        // parse command line arguments
-        Args options = new Args(args);
-        Boolean isLineInterleaved = Boolean.parseBoolean(options.get("lineInterleaved"));
-        Long splitSize = options.getLong("splitSize", -1);
+            // construct job and set parameters and handlers
+            Job job = new Job(getConf(), "L2HadoopTest");
+            job.setJarByClass(getClass());
+            job.getConfiguration().set(L2ProcessingMapper.OPERATOR, operator);
 
-        // construct job and set parameters and handlers
-        Job job = new Job(getConf(), "L2HadoopTest");
-        job.setJarByClass(getClass());
+            // register handlers for splitting, map, and output
+            // distinguish formats
+            if ("n1".equals(format)) {
 
-        // register handlers for splitting, map, and output
-        if (isLineInterleaved) {
-            job.setInputFormatClass(N1InterleavedInputFormat.class);
-            if (splitSize != -1) {
-                job.getConfiguration().setLong(N1InterleavedInputFormat.SPLIT_SIZE_PARAM, splitSize);
+                int numberOfSplits = (int) options.getLong("splits", 1);
+                job.setInputFormatClass(N1InputFormat.class);
+                job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
+
+            } else if ("n3".equals(format)) {
+
+                int numberOfSplits = (int) options.getLong("splits", 3);
+                job.setInputFormatClass(N1InputFormat.class);
+                job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
+
+            } else if ("lineinterleaved".equals(format)) {
+
+                job.setInputFormatClass(N1InterleavedInputFormat.class);
+                long splitSize = options.getLong("splitSize", -1);
+                if (splitSize != -1) {
+                    job.getConfiguration().setLong(N1InterleavedInputFormat.SPLIT_SIZE_PARAM, splitSize);
+                }
+
+            } else if ("sliced".equals(format)) {
+
+                int numberOfSplits = (int) options.getLong("splits", 1);
+                job.setInputFormatClass(N1InputFormat.class);
+                job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
+
+            } else {
+                throw new IllegalArgumentException("one of lineinterleaved, sliced, n1, n3 expected for format, found " + format);
             }
-        } else {
-            job.getConfiguration().setInt(SplitN1InputFormat.NUMBER_OF_SPLITS, 1);
-            job.setInputFormatClass(SplitN1InputFormat.class);
+
+            job.setMapperClass(L2ProcessingMapper.class);
+            // XXX use default reducer
+//            job.setReducerClass(XXXReducer.class);
+
+            job.setOutputFormatClass(TextOutputFormat.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(Text.class);
+
+            // provide input and output directories to job
+            Path input = new Path(source);
+            Path output = new Path(destination);
+            FileInputFormat.addInputPath(job, input);
+            FileOutputFormat.setOutputPath(job, output);
+
+            return job.waitForCompletion(true) ? 0 : 1;
+
+        } catch (IllegalArgumentException ex) {
+
+            System.err.println("failed: " + ex.getMessage());
+            return 1;
+
+        } catch (ArrayIndexOutOfBoundsException ex) {
+
+            System.err.println("usage:   ProcessingTool <source> <destination> <format> [<operator>]");
+            System.err.println("example: ProcessingTool hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08 hdfs://cvmaster00:9000/output/n1/MERIS-RR-2010-08 n1 ndvi");
+            System.err.println("formats: n1, n3, sliced, lineinterleaved");
+            System.err.println("operators: ndvi, radiometry");
+            return 1;
         }
 
-        job.setMapperClass(L2ProcessingMapper.class);
-        // XXX use default reducer
-        //job.setReducerClass(XXXReducer.class);
-
-        job.setOutputFormatClass(TextOutputFormat.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-
-        // provide input and output directories to job
-        Path input = new Path(options.getArgs()[0]);
-        Path output = new Path(options.getArgs()[1]);
-        FileInputFormat.addInputPath(job, input);
-        FileOutputFormat.setOutputPath(job, output);
-
-        System.out.println("CWD: " + job.getWorkingDirectory());
-
-        return job.waitForCompletion(true) ? 0 : 1;
     }
 
     public static void main(String[] args) throws Exception {
