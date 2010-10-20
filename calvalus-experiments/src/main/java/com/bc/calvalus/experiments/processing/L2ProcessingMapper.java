@@ -39,24 +39,26 @@ import java.util.logging.Logger;
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    public static final String OPERATOR = "operator";
+    public static final String OPERATOR_OPTION = "operator";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+
         final FileSplit split = (FileSplit) context.getInputSplit();
         final int numSplits = context.getConfiguration().getInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
-        final String operatorName = context.getConfiguration().get(OPERATOR, "ndvi").toLowerCase();
+        final String operatorName = context.getConfiguration().get(OPERATOR_OPTION, "ndvi").toLowerCase();
+        final String outputDir = context.getConfiguration().get("mapred.output.dir");
 
         // write initial log entry for runtime measurements
         LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
+        long startTime = System.nanoTime();
 
         // distinguish cases A to E (currently only A and E)
         final boolean lineInterleaved = split instanceof N1InterleavedInputSplit;
 
         // open the split as ImageInputStream and create a product via an Envisat product reader
         final Path path = split.getPath();
-        Configuration conf = context.getConfiguration();
-        FileSystem inputFileSystem = path.getFileSystem(conf);
+        FileSystem inputFileSystem = path.getFileSystem(context.getConfiguration());
         FSDataInputStream fileIn = inputFileSystem.open(path);
         final FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
@@ -111,12 +113,11 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final Product resultProduct = op.getTargetProduct();
 
         // write product in the streaming product format
-        Path outputDir = getOutputPath(conf);
         final String outputFileName = "L2_of_" + path.getName()
                 + splitNamePart
                 + ".seq";
         final Path outputProductPath = new Path(outputDir, outputFileName);
-        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, conf);
+        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration());
 
         // provide pair of input file name and output file name to reducer
         // commented to try to avoid reduce task at all, which is not successful
@@ -125,11 +126,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
 //        context.write(resultKey, resultValue);
 
         // write final log entry for runtime measurements
-        LOG.info(context.getTaskAttemptID() + " stops processing of split " + split);
-    }
-
-    public static Path getOutputPath(Configuration conf) {
-        String name = conf.get("mapred.output.dir");
-        return name == null ? null : new Path(name);
+        long stopTime = System.nanoTime();
+        LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
     }
 }

@@ -43,11 +43,16 @@ public class ProcessingTool extends Configured implements Tool {
             String destination = options.getArgs()[1];
             String format = options.getArgs()[2];
             String operator = (options.getArgs().length > 3) ? options.getArgs()[3] : "ndvi";
+            LOG.info("start processing " + operator + " of " + format + " " + source + " to " + destination);
+            long startTime = System.nanoTime();
 
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), "L2HadoopTest");
             job.setJarByClass(getClass());
-            job.getConfiguration().set(L2ProcessingMapper.OPERATOR, operator);
+            job.getConfiguration().set(L2ProcessingMapper.OPERATOR_OPTION, operator);
+            job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
+            job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
+            job.getConfiguration().set("mapred.job.reuse.jvm.num.tasks", "-1");
 
             // register handlers for splitting, map, and output
             // distinguish formats
@@ -95,7 +100,10 @@ public class ProcessingTool extends Configured implements Tool {
             FileInputFormat.addInputPath(job, input);
             FileOutputFormat.setOutputPath(job, output);
 
-            return job.waitForCompletion(true) ? 0 : 1;
+            int result = job.waitForCompletion(true) ? 0 : 1;
+            long stopTime = System.nanoTime();
+            LOG.info("stop  processing " + operator + " of " + format + " " + source + " after " + ((stopTime - startTime) / 1E9) +  " sec");
+            return result;
 
         } catch (IllegalArgumentException ex) {
 
