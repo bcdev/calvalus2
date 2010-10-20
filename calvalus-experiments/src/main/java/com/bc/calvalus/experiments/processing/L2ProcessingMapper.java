@@ -3,7 +3,6 @@ package com.bc.calvalus.experiments.processing;
 import com.bc.calvalus.experiments.format.streaming.StreamingProductWriter;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.FSImageInputStream;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,6 +37,7 @@ import java.util.logging.Logger;
  */
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
+    private static final int TILE_HEIGHT = 64; // TODO mz make this an option
     private static final Logger LOG = CalvalusLogger.getLogger();
     public static final String OPERATOR_OPTION = "operator";
 
@@ -62,6 +62,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         FSDataInputStream fileIn = inputFileSystem.open(path);
         final FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
+        System.setProperty("beam.envisat.tileHeight", Integer.toString(TILE_HEIGHT));
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
@@ -97,6 +98,8 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
             ProductSubsetDef subsetDef = new ProductSubsetDef();
             subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
             product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
+            // subset builder does not set "preferred tile size"
+            product.setPreferredTileSize(product.getSceneRasterWidth(), TILE_HEIGHT);
         }
 
         // apply operator to product
@@ -113,11 +116,9 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final Product resultProduct = op.getTargetProduct();
 
         // write product in the streaming product format
-        final String outputFileName = "L2_of_" + path.getName()
-                + splitNamePart
-                + ".seq";
+        final String outputFileName = "L2_of_" + path.getName() + splitNamePart + ".seq";
         final Path outputProductPath = new Path(outputDir, outputFileName);
-        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration());
+        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration(), TILE_HEIGHT);
 
         // provide pair of input file name and output file name to reducer
         // commented to try to avoid reduce task at all, which is not successful
