@@ -5,6 +5,7 @@ import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -18,15 +19,15 @@ import java.util.logging.Logger;
  * Creates and runs Hadoop job for L2 processing. Expects input directory
  * with MERIS L1 product(s) and output directory path to be created and filled
  * with outputs.
- * Currently accepts option -lineInterleaved to distinguish case E "interleaved"
- * from case A "single split".
  * <p/>
  * Call with:
  * <pre>
  *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
  *    com.bc.calvalus.experiments.processing.ProcessingTool \
  *    hdfs://cvmaster00:9000/input \
- *    hdfs://cvmaster00:9000/output
+ *    hdfs://cvmaster00:9000/output \
+ *    (n1|n3|sliced|lineinterleaved) \
+ *    [ndvi|radiometry] [-splits=n] [-tileHeight=h]
  * </pre>
  */
 public class ProcessingTool extends Configured implements Tool {
@@ -49,10 +50,15 @@ public class ProcessingTool extends Configured implements Tool {
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), "L2HadoopTest");
             job.setJarByClass(getClass());
-            job.getConfiguration().set(L2ProcessingMapper.OPERATOR_OPTION, operator);
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.job.reuse.jvm.num.tasks", "-1");
+            job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
+            job.getConfiguration().set("mapred.reduce.tasks", "0");
+            job.getConfiguration().set(L2ProcessingMapper.OPERATOR_OPTION, operator);
+            if (options.get(L2ProcessingMapper.TILE_HEIGHT_OPTION) != null) {
+                job.getConfiguration().set(L2ProcessingMapper.TILE_HEIGHT_OPTION, options.get(L2ProcessingMapper.TILE_HEIGHT_OPTION));
+            }
 
             // register handlers for splitting, map, and output
             // distinguish formats
