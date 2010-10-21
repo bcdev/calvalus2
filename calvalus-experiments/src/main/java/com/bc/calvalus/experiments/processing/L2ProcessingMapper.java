@@ -23,6 +23,7 @@ import org.esa.beam.gpf.operators.meris.NdviOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 
 import javax.imageio.stream.ImageInputStream;
+import javax.media.jai.JAI;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -37,16 +38,22 @@ import java.util.logging.Logger;
  */
 public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
-    private static final int TILE_HEIGHT = 64; // TODO mz make this an option
-    private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final int TILE_HEIGHT_DEFAULT = 64;
+    public static final String TILE_HEIGHT_OPTION = "tileHeight";
     public static final String OPERATOR_OPTION = "operator";
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
+        JAI.enableDefaultTileCache();
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
+
+
         final FileSplit split = (FileSplit) context.getInputSplit();
         final int numSplits = context.getConfiguration().getInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
         final String operatorName = context.getConfiguration().get(OPERATOR_OPTION, "ndvi").toLowerCase();
+        final int tileHeight = context.getConfiguration().getInt(TILE_HEIGHT_OPTION, TILE_HEIGHT_DEFAULT);
         final String outputDir = context.getConfiguration().get("mapred.output.dir");
 
         // write initial log entry for runtime measurements
@@ -62,7 +69,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         FSDataInputStream fileIn = inputFileSystem.open(path);
         final FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fileIn, status.getLen());
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(TILE_HEIGHT));
+        System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
@@ -99,7 +106,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
             subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
             product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
             // subset builder does not set "preferred tile size"
-            product.setPreferredTileSize(product.getSceneRasterWidth(), TILE_HEIGHT);
+            product.setPreferredTileSize(product.getSceneRasterWidth(), tileHeight);
         }
 
         // apply operator to product
@@ -118,7 +125,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         // write product in the streaming product format
         final String outputFileName = "L2_of_" + path.getName() + splitNamePart + ".seq";
         final Path outputProductPath = new Path(outputDir, outputFileName);
-        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration(), TILE_HEIGHT);
+        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration(), tileHeight);
 
         // provide pair of input file name and output file name to reducer
         // commented to try to avoid reduce task at all, which is not successful
