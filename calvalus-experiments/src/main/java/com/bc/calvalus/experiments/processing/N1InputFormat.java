@@ -29,8 +29,6 @@ public class N1InputFormat extends FileInputFormat {
     @Override
     public List<FileSplit> getSplits(JobContext job) throws IOException {
         List<FileSplit> blocks = (List<FileSplit>) super.getSplits(job);
-        // assert that block size is product size or larger
-        assert blocks.size() == 1;
 
         final int numSplits = job.getConfiguration().getInt(NUMBER_OF_SPLITS, 1);
         if (numSplits == 1) {
@@ -38,18 +36,19 @@ public class N1InputFormat extends FileInputFormat {
         }
 
         List<FileSplit> splits = new ArrayList<FileSplit>(numSplits);
-        for (int i = 0; i < numSplits; i++) {
-            FileSplit block = blocks.get(0);
+        for (FileSplit block : blocks) {
+            for (int i = 0; i < numSplits; i++) {
 
-            Path path = block.getPath();
-            long start = block.getStart(); // should be zero, because only one block exists
-            long length = block.getLength();
-            String[] locations = block.getLocations();
+                Path path = block.getPath();
+                long start = block.getStart(); // should be zero, because only one block exists
+                long length = block.getLength();
+                String[] locations = block.getLocations();
 
-            long splitLength = length / numSplits;
-            FileSplit split = new FileSplit(path, start + splitLength * i, splitLength, locations);
+                long splitLength = length / numSplits;
+                FileSplit split = new FileSplit(path, start + splitLength * i, splitLength, locations);
 
-            splits.add(split);
+                splits.add(split);
+            }
         }
         return splits;
     }
