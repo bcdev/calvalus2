@@ -1,5 +1,5 @@
 # add cloudera deb package repository
-echo "deb http://archive.cloudera.com/debian lucid-cdh3 contrib" > /etc/apt/sources.list.d/cloudera.list
+echo "deb http://archive.cloudera.com/debian lucid-cdh3b2 contrib" > /etc/apt/sources.list.d/cloudera.list
 
 # add cloudera key to keyring
 wget -O- http://archive.cloudera.com/debian/archive.key | apt-key add -
@@ -10,3 +10,4 @@ apt-get -y install hadoop-0.20 hadoop-0.20-pipes hadoop-0.20-tasktracker hadoop-
 
 # on the master node only (no datanode here)
 apt-get -y install hadoop-0.20 hadoop-0.20-pipes hadoop-0.20-jobtracker hadoop-0.20-namenode hadoop-0.20-secondarynamenode
+
