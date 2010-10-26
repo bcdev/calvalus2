@@ -5,7 +5,6 @@ import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -33,6 +32,8 @@ import java.util.logging.Logger;
 public class ProcessingTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final String SPLITS_OPTION = "splits";
+    private static final String SPLIT_SIZE_OPTION = "splitSize";
 
     @Override
     public int run(String[] args) throws Exception {
@@ -47,8 +48,34 @@ public class ProcessingTool extends Configured implements Tool {
             LOG.info("start processing " + operator + " of " + format + " " + source + " to " + destination);
             long startTime = System.nanoTime();
 
+            // create job name
+            StringBuilder jobName = new StringBuilder("L2: ");
+            jobName.append(operator);
+            jobName.append(" of ");
+            jobName.append(format);
+            jobName.append(" ");
+            jobName.append(source);
+            if (options.get(L2ProcessingMapper.TILE_HEIGHT_OPTION) != null) {
+                jobName.append(" ");
+                jobName.append(L2ProcessingMapper.TILE_HEIGHT_OPTION);
+                jobName.append("=");
+                jobName.append(options.get(L2ProcessingMapper.TILE_HEIGHT_OPTION));
+            }
+            if (options.get(SPLITS_OPTION) != null) {
+                jobName.append(" ");
+                jobName.append(SPLITS_OPTION);
+                jobName.append("=");
+                jobName.append(options.get(SPLITS_OPTION));
+            }
+            if (options.get(SPLIT_SIZE_OPTION) != null) {
+                jobName.append(" ");
+                jobName.append(SPLIT_SIZE_OPTION);
+                jobName.append("=");
+                jobName.append(options.get(SPLIT_SIZE_OPTION));
+            }
+            
             // construct job and set parameters and handlers
-            Job job = new Job(getConf(), "L2: " + operator + " of " + format + " " + source);
+            Job job = new Job(getConf(), jobName.toString());
             job.setJarByClass(getClass());
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
@@ -64,27 +91,27 @@ public class ProcessingTool extends Configured implements Tool {
             // distinguish formats
             if ("n1".equals(format)) {
 
-                int numberOfSplits = (int) options.getLong("splits", 1);
+                int numberOfSplits = (int) options.getLong(SPLITS_OPTION, 1);
                 job.setInputFormatClass(N1InputFormat.class);
                 job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
 
             } else if ("n3".equals(format)) {
 
-                int numberOfSplits = (int) options.getLong("splits", 3);
+                int numberOfSplits = (int) options.getLong(SPLITS_OPTION, 3);
                 job.setInputFormatClass(N1InputFormat.class);
                 job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
 
             } else if ("lineinterleaved".equals(format)) {
 
                 job.setInputFormatClass(N1InterleavedInputFormat.class);
-                long splitSize = options.getLong("splitSize", -1);
+                long splitSize = options.getLong(SPLIT_SIZE_OPTION, -1);
                 if (splitSize != -1) {
                     job.getConfiguration().setLong(N1InterleavedInputFormat.SPLIT_SIZE_PARAM, splitSize);
                 }
 
             } else if ("sliced".equals(format)) {
 
-                int numberOfSplits = (int) options.getLong("splits", 1);
+                int numberOfSplits = (int) options.getLong(SPLITS_OPTION, 1);
                 job.setInputFormatClass(N1InputFormat.class);
                 job.getConfiguration().setInt(N1InputFormat.NUMBER_OF_SPLITS, numberOfSplits);
 
