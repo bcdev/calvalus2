@@ -10,7 +10,7 @@ then
 fi
 
 jobnumber="$1"
-slavenumbers='00 01 02 03 04 05 06 07 08'
+slavenumbers='01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18'
 
 echo "retrieving log from cvmaster00 ..."
 ( ssh hadoop@cvmaster00 "grep -h ${jobnumber} /var/log/hadoop-0.20/hadoop-hadoop-jobtracker-cvmaster00.log*" ) | sed -e 's/org.apache.hadoop.mapred.JobTracker:/cvmaster00/' -e 's/org.apache.hadoop.mapred.JobInProgress:/cvmaster00/' -e 's/org.apache.hadoop.mapred.JobHistory:/cvmaster00/' > ${jobnumber}.log.tmp
