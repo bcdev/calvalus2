@@ -48,7 +48,7 @@ public class ProcessingTool extends Configured implements Tool {
             long startTime = System.nanoTime();
 
             // construct job and set parameters and handlers
-            Job job = new Job(getConf(), "L2HadoopTest");
+            Job job = new Job(getConf(), "L2: " + operator + " of " + format + " " + source);
             job.setJarByClass(getClass());
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
