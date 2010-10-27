@@ -28,5 +28,5 @@ do
     $BIN_DIR/runprocessing2 hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-RR-2010-08 sliced radiometry
     $BIN_DIR/runprocessing2 hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08 lineinterleaved radiometry
 done
-) 2>&1 | tee output.list 
+) 2>&1 | tee output-`date '+%Y-%m-%dT%H:%M:%S'`.list 
 
