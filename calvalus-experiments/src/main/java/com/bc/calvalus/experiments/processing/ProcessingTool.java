@@ -54,7 +54,8 @@ public class ProcessingTool extends Configured implements Tool {
             jobName.append(" of ");
             jobName.append(format);
             jobName.append(" ");
-            jobName.append(source);
+            int lastSlash = source.lastIndexOf("/");
+            jobName.append(source.substring(lastSlash+1));
             if (options.get(L2ProcessingMapper.TILE_HEIGHT_OPTION) != null) {
                 jobName.append(" ");
                 jobName.append(L2ProcessingMapper.TILE_HEIGHT_OPTION);
@@ -73,13 +74,14 @@ public class ProcessingTool extends Configured implements Tool {
                 jobName.append("=");
                 jobName.append(options.get(SPLIT_SIZE_OPTION));
             }
-            
+            LOG.info("jobname: "+ jobName.toString());
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), jobName.toString());
             job.setJarByClass(getClass());
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
-            job.getConfiguration().set("mapred.job.reuse.jvm.num.tasks", "-1");
+// disable reuse for now....
+//            job.getConfiguration().set("mapred.job.reuse.jvm.num.tasks", "-1");
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
             job.getConfiguration().set(L2ProcessingMapper.OPERATOR_OPTION, operator);
