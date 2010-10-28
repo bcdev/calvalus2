@@ -26,7 +26,7 @@ import java.util.logging.Logger;
  *    hdfs://cvmaster00:9000/input \
  *    hdfs://cvmaster00:9000/output \
  *    (n1|n3|sliced|lineinterleaved) \
- *    [ndvi|radiometry] [-splits=n] [-tileHeight=h]
+ *    [ndvi|radiometry|c2r] [-splits=n] [-tileHeight=h]
  * </pre>
  */
 public class ProcessingTool extends Configured implements Tool {

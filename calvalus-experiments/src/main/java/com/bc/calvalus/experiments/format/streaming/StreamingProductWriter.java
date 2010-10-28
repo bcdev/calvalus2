@@ -23,9 +23,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.util.Progressable;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -37,7 +37,6 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.logging.Logger;
@@ -47,8 +46,8 @@ public class StreamingProductWriter {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public static void writeProduct(Product product, Path outputPath, Configuration configuration, int tileHeight) throws IOException {
-        SequenceFile.Writer writer = writeHeader(product, outputPath, configuration, tileHeight);
+    public static void writeProduct(Product product, Path outputPath, MapContext context, int tileHeight) throws IOException {
+        SequenceFile.Writer writer = writeHeader(product, outputPath, context, tileHeight);
         LOG.info(" written header");
         Band[] bands = product.getBands();
         int x = 0;
@@ -71,8 +70,9 @@ public class StreamingProductWriter {
         writer.close();
     }
 
-    public static SequenceFile.Writer writeHeader(Product product, Path outputPath, Configuration configuration, int tile_height) throws IOException {
+    public static SequenceFile.Writer writeHeader(Product product, Path outputPath, MapContext context, int tile_height) throws IOException {
         SequenceFile.Metadata metadata = createMetadata(product, tile_height);
+        Configuration configuration = context.getConfiguration();
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         SequenceFile.Writer sequenceFileWriter = SequenceFile.createWriter(fileSystem,
                 configuration,
@@ -84,7 +84,7 @@ public class StreamingProductWriter {
                 fileSystem.getDefaultBlockSize(),
                 SequenceFile.CompressionType.NONE,
                 null, // new DefaultCodec(),
-                new NullProgressable(),
+                context,
                 metadata);
 
         writeTiePointData(product, sequenceFileWriter);
@@ -130,12 +130,6 @@ public class StreamingProductWriter {
 
     }
 
-    private static class NullProgressable implements Progressable {
-        @Override
-        public void progress() {
-        }
-    }
-
     private static class InternalByteArrayOutputStream extends ByteArrayOutputStream {
         private InternalByteArrayOutputStream(int capacity) {
             super(capacity);
@@ -144,14 +138,6 @@ public class StreamingProductWriter {
         private byte[] getInternalBuffer() {
             return buf;
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.out.println("Usage : ProductFile StreamingProductFile");
-        }
-        Product product = ProductIO.readProduct(new File(args[0]));
-        StreamingProductWriter.writeProduct(product, new Path(args[1]), new Configuration(), 64);
     }
 
 }

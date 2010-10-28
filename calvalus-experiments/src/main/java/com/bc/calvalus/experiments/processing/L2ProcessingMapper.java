@@ -11,6 +11,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.atmosphere.operator.GlintCorrectionOperator;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
 import org.esa.beam.dataio.envisat.RecordReader;
@@ -20,7 +21,9 @@ import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.gpf.operators.meris.NdviOp;
+import org.esa.beam.meris.case2.MerisCase2WaterOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
+import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
@@ -73,7 +76,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
-        Product product = productReader.readProductNodes(productFile, null);
+        Product sourceProduct = productReader.readProductNodes(productFile, null);
         LOG.info(context.getTaskAttemptID() + " source product opened.");
 
         // for splits replace product by subset
@@ -104,31 +107,48 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         }
         if (height != 0) {
             ProductSubsetDef subsetDef = new ProductSubsetDef();
-            subsetDef.setRegion(0, yStart, product.getSceneRasterWidth(), height);
-            product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
+            int rasterWidth = sourceProduct.getSceneRasterWidth();
+            subsetDef.setRegion(0, yStart, rasterWidth, height);
+            sourceProduct = ProductSubsetBuilder.createProductSubset(sourceProduct, subsetDef, "n", "d");
             // subset builder does not set "preferred tile size"
-            product.setPreferredTileSize(product.getSceneRasterWidth(), tileHeight);
+            sourceProduct.setPreferredTileSize(rasterWidth, tileHeight);
             LOG.info(context.getTaskAttemptID() + " subset created: y0=" + yStart + ", h=" + height);
         }
 
         // apply operator to product
-        final Operator op;
+        Product resultProduct;
         if ("ndvi".equals(operatorName)) {
-            op = new NdviOp();
-            op.setSourceProduct("inputProduct", product);
+            Operator op = new NdviOp();
+            op.setSourceProduct("inputProduct", sourceProduct);
+            resultProduct = op.getTargetProduct();
         } else if ("radiometry".equals(operatorName)) {
-            op = new MerisRadiometryCorrectionOp();
-            op.setSourceProduct("sourceProduct", product);
+            Operator op = new MerisRadiometryCorrectionOp();
+            op.setSourceProduct("sourceProduct", sourceProduct);
+            resultProduct = op.getTargetProduct();
+        } else if ("c2r".equals(operatorName)) {
+
+            Operator radCorOp = new MerisRadiometryCorrectionOp();
+            radCorOp.setParameter("doCalibration", false);
+            radCorOp.setParameter("doRadToRefl", false);
+            radCorOp.setParameter("reproVersion", ReprocessingVersion.REPROCESSING_2);
+            radCorOp.setSourceProduct("sourceProduct", sourceProduct);
+
+            Operator atmoCorOp = new GlintCorrectionOperator();
+            atmoCorOp.setSourceProduct("merisProduct", radCorOp.getTargetProduct());
+
+            Operator case2Op = new MerisCase2WaterOp();
+            case2Op.setSourceProduct("acProduct", atmoCorOp.getTargetProduct());
+
+            resultProduct = case2Op.getTargetProduct();
         } else {
             throw new IllegalArgumentException("unknown operator " + operatorName + ". One of ndvi, radiometry expected");
         }
-        final Product resultProduct = op.getTargetProduct();
         LOG.info(context.getTaskAttemptID() + " target product created.");
 
         // write product in the streaming product format
         final String outputFileName = "L2_of_" + path.getName() + splitNamePart + ".seq";
         final Path outputProductPath = new Path(outputDir, outputFileName);
-        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context.getConfiguration(), tileHeight);
+        StreamingProductWriter.writeProduct(resultProduct, outputProductPath, context, tileHeight);
 
         // provide pair of input file name and output file name to reducer
         // commented to try to avoid reduce task at all, which is not successful

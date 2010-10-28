@@ -80,17 +80,26 @@
                 <artifactId>beam-gpf</artifactId>
                 <version>4.9-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-envisat-reader</artifactId>
+                <version>1.4-SNAPSHOT</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-radiometry</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
-
             <dependency>
                 <groupId>org.esa.beam</groupId>
-                <artifactId>beam-envisat-reader</artifactId>
-                <version>1.4-SNAPSHOT</version>
+                <artifactId>beam-meris-glint</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-meris-case2-water</artifactId>
+                <version>1.0-SNAPSHOT</version>
             </dependency>
 
             <!--  Envisat N1 Childgen -->

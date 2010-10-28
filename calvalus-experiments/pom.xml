@@ -43,6 +43,14 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-glint</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-case2-water</artifactId>
+        </dependency>
 
         <!--  N1 Childgen -->
 
