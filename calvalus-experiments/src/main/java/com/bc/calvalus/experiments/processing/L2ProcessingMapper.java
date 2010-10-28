@@ -74,6 +74,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final ProductReader productReader = plugIn.createReaderInstance();
         final ProductFile productFile = ProductFile.open(null, imageInputStream, lineInterleaved);
         Product product = productReader.readProductNodes(productFile, null);
+        LOG.info(context.getTaskAttemptID() + " source product opened.");
 
         // for splits replace product by subset
         int yStart = 0;
@@ -107,6 +108,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
             product = ProductSubsetBuilder.createProductSubset(product, subsetDef, "n", "d");
             // subset builder does not set "preferred tile size"
             product.setPreferredTileSize(product.getSceneRasterWidth(), tileHeight);
+            LOG.info(context.getTaskAttemptID() + " subset created: y0=" + yStart + ", h=" + height);
         }
 
         // apply operator to product
@@ -121,6 +123,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
             throw new IllegalArgumentException("unknown operator " + operatorName + ". One of ndvi, radiometry expected");
         }
         final Product resultProduct = op.getTargetProduct();
+        LOG.info(context.getTaskAttemptID() + " target product created.");
 
         // write product in the streaming product format
         final String outputFileName = "L2_of_" + path.getName() + splitNamePart + ".seq";

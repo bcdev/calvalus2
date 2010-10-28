@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.experiments.format.streaming;
 
+import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.ByteArrayWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,12 +40,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.logging.Logger;
 
 
 public class StreamingProductWriter {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     public static void writeProduct(Product product, Path outputPath, Configuration configuration, int tileHeight) throws IOException {
         SequenceFile.Writer writer = writeHeader(product, outputPath, configuration, tileHeight);
+        LOG.info(" written header");
         Band[] bands = product.getBands();
         int x = 0;
         int w = product.getSceneRasterWidth();
@@ -61,6 +66,7 @@ public class StreamingProductWriter {
                 String key = band.getName() + ":" + sliceIndex;
                 writeProductData(writer, key, productData);
             }
+            LOG.info(" written y="+y+" h="+h);
         }
         writer.close();
     }
@@ -73,6 +79,9 @@ public class StreamingProductWriter {
                 outputPath,
                 Text.class,
                 ByteArrayWritable.class,
+                1024 * 1024, //buffersize,
+                (short)1, //replication,
+                fileSystem.getDefaultBlockSize(),
                 SequenceFile.CompressionType.NONE,
                 null, // new DefaultCodec(),
                 new NullProgressable(),

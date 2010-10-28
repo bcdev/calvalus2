@@ -78,6 +78,9 @@ public class ProcessingTool extends Configured implements Tool {
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), jobName.toString());
             job.setJarByClass(getClass());
+
+            job.getConfiguration().setInt("io.file.buffer.size", 1024*1024); // default is 4096
+
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
 // disable reuse for now....
