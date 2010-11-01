@@ -11,7 +11,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.atmosphere.operator.GlintCorrectionOperator;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
 import org.esa.beam.dataio.envisat.RecordReader;
@@ -21,9 +20,8 @@ import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.gpf.operators.meris.NdviOp;
-import org.esa.beam.meris.case2.MerisCase2WaterOp;
+import org.esa.beam.meris.case2.MerisCase2IOPOperator;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
-import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
@@ -126,20 +124,9 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
             op.setSourceProduct("sourceProduct", sourceProduct);
             resultProduct = op.getTargetProduct();
         } else if ("c2r".equals(operatorName)) {
-
-            Operator radCorOp = new MerisRadiometryCorrectionOp();
-            radCorOp.setParameter("doCalibration", false);
-            radCorOp.setParameter("doRadToRefl", false);
-            radCorOp.setParameter("reproVersion", ReprocessingVersion.REPROCESSING_2);
-            radCorOp.setSourceProduct("sourceProduct", sourceProduct);
-
-            Operator atmoCorOp = new GlintCorrectionOperator();
-            atmoCorOp.setSourceProduct("merisProduct", radCorOp.getTargetProduct());
-
-            Operator case2Op = new MerisCase2WaterOp();
-            case2Op.setSourceProduct("acProduct", atmoCorOp.getTargetProduct());
-
-            resultProduct = case2Op.getTargetProduct();
+            Operator op = new MerisCase2IOPOperator();
+            op.setSourceProduct("sourceProduct", sourceProduct);
+            resultProduct = op.getTargetProduct();
         } else {
             throw new IllegalArgumentException("unknown operator " + operatorName + ". One of ndvi, radiometry expected");
         }
