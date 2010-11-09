@@ -39,6 +39,8 @@
             <artifactId>beam-envisat-reader</artifactId>
         </dependency>
 
+        <!--  BEAM Processors -->
+
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
@@ -61,6 +63,7 @@
         
 
         <!--  Hadoop -->
+        
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
@@ -70,6 +73,8 @@
             <artifactId>hadoop-test</artifactId>
         </dependency>
 
+        <!--  JUnit -->
+        
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

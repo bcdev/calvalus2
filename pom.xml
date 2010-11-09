@@ -13,6 +13,7 @@
     <modules>
         <module>calvalus-hadoop</module>
         <module>calvalus-experiments</module>
+        <module>calvalus-binning</module>
     </modules>
 
     <distributionManagement>
@@ -75,6 +76,12 @@
         <dependencies>
 
             <!--  BEAM -->
+            
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-core</artifactId>
+                <version>4.9-SNAPSHOT</version>
+            </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
@@ -85,6 +92,8 @@
                 <artifactId>beam-envisat-reader</artifactId>
                 <version>1.4-SNAPSHOT</version>
             </dependency>
+
+            <!--  BEAM Processors -->
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -103,6 +112,7 @@
             </dependency>
 
             <!--  Envisat N1 Childgen -->
+            
             <dependency>
                 <groupId>com.bc.eo</groupId>
                 <artifactId>eo-childgen-N1</artifactId>
@@ -110,6 +120,7 @@
             </dependency>
 
             <!--  JUnit -->
+            
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -118,6 +129,7 @@
             </dependency>
 
             <!--  Hadoop -->
+
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
@@ -130,6 +142,7 @@
             </dependency>
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
+            
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
