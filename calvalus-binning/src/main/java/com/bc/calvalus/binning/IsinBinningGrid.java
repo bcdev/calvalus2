@@ -4,7 +4,7 @@ import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
 
 /**
- * Implementation of the ISIN (Integerized Sinusoidal) binnning grid as used for NASA
+ * Implementation of the ISIN (Integerized Sinusoidal) binning grid as used for NASA
  * SeaDAS and MODIS L3 products.
  * @see <a href="http://oceancolor.gsfc.nasa.gov/SeaWiFS/TECH_REPORTS/PreLPDF/PreLVol32.pdf">SeaWiFS Technical Report Series Volume 32, Level-3 SeaWiFS Data</a>
  * @see <a href="http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf">Ocean Level-3 Binned Data Products</a>
@@ -86,6 +86,7 @@ public final class IsinBinningGrid implements BinningGrid {
         return row;
     }
 
+    // todo
     // @Override
     public double[] getCenterLatLon(int idx) {
         final int row = getRow(idx);
