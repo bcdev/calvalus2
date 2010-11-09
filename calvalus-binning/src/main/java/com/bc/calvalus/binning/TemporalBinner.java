@@ -3,8 +3,7 @@ package com.bc.calvalus.binning;
 import java.util.List;
 
 /**
- * Processes a spatial slice of bin cells.
- * Called by {@link SpatialBinner}.
+ * An implementation of the {@link BinConsumer} interface that performs a temporal binning.
  * @param <BIN> The bin type.
  */
 public class TemporalBinner<BIN extends Bin> implements BinConsumer<BIN> {

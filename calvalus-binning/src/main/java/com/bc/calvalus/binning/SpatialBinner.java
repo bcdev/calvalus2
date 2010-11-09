@@ -38,6 +38,11 @@ public class SpatialBinner<OBS extends Observation, BIN extends AbstractBin<OBS>
         this.finalizedBinMap = new HashMap<Integer, BIN>();
     }
 
+    /**
+     * Processes a slice of observations.
+     * Will cause the {@link BinConsumer#consumeSlice(int, java.util.List) BinConsumer.consumeSlice()} method to be called.
+     * @param observations The observations.
+     */
     public void processSlice(OBS ... observations) {
 
         if (sliceIndex >= observations.length) {

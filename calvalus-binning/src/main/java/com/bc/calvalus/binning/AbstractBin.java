@@ -1,10 +1,10 @@
 package com.bc.calvalus.binning;
 
 /**
- * A bin in which pixel values are collected.
- * @param <PIXEL>
+ * A bin in which observations (a pixel's sample values) are collected.
+ * @param <OBS> The observation type.
  */
-public abstract class AbstractBin<PIXEL extends Observation> implements Bin<PIXEL> {
+public abstract class AbstractBin<OBS extends Observation> implements Bin<OBS> {
     private final int index;
 
     public AbstractBin(int index) {
@@ -34,5 +34,4 @@ public abstract class AbstractBin<PIXEL extends Observation> implements Bin<PIXE
     public int hashCode() {
         return index;
     }
-
 }

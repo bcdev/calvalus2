@@ -1,9 +1,9 @@
 package com.bc.calvalus.binning;
 
 /**
- * A storage for bin persistence.
+ * A storage for bins.
  */
-public interface BinStore<BIN extends Bin> {
+public interface BinStore<BIN extends Bin> {    
     BIN getBin(int binIndex);
 
     void putBin(BIN bin);
