@@ -21,7 +21,6 @@ class MyBin extends AbstractBin<MyObservation> {
 
     @Override
     public void addBin(Bin bin) {
-        // todo - get rid of ugly cast
         addBin((MyBin) bin);
     }
 

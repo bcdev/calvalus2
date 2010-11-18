@@ -8,5 +8,5 @@ import java.util.List;
  * @param <BIN>
  */
 public interface BinConsumer<BIN extends Bin> {
-    void consumeSlice(int sliceIndex, List<BIN> sliceBins);
+    void consumeSlice(int sliceIndex, List<BIN> sliceBins) throws Exception;
 }

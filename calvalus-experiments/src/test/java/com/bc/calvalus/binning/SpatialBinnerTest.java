@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 public class SpatialBinnerTest {
     @Test
-    public void testThatObservationsAreAggregated() {
+    public void testThatObservationsAreAggregated() throws Exception {
         MyBinFactory factory = new MyBinFactory();
         MyBinStore store = new MyBinStore();
         BinConsumer<MyBin> consumer = new TemporalBinner<MyBin>(store);
@@ -53,7 +53,7 @@ public class SpatialBinnerTest {
     }
 
     @Test
-    public void testThatCellsAreDeterminedCorrectly() {
+    public void testThatCellsAreDeterminedCorrectly() throws Exception {
         IsinBinningGrid grid = new IsinBinningGrid();
 
         // bin size in degree

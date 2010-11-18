@@ -12,7 +12,7 @@ import java.util.Map;
  * @param <OBS> The pixel type.
  * @param <BIN> The bin type.
  */
-public class SpatialBinner<OBS extends Observation, BIN extends AbstractBin<OBS>> {
+public class SpatialBinner<OBS extends Observation, BIN extends Bin<OBS>> {
 
     private final BinningGrid grid;
     private final BinFactory<BIN> factory;
@@ -40,8 +40,9 @@ public class SpatialBinner<OBS extends Observation, BIN extends AbstractBin<OBS>
      * Processes a slice of observations.
      * Will cause the {@link BinConsumer#consumeSlice(int, java.util.List) BinConsumer.consumeSlice()} method to be called.
      * @param observations The observations.
+     * @throws Exception if an error occurs
      */
-    public void processSlice(OBS ... observations) {
+    public void processSlice(OBS ... observations) throws Exception {
 
         if (sliceIndex >= observations.length) {
             return;
@@ -73,7 +74,7 @@ public class SpatialBinner<OBS extends Observation, BIN extends AbstractBin<OBS>
         sliceIndex++;
     }
 
-    private void emitSliceBins(Map<Integer, BIN> binMap) {
+    private void emitSliceBins(Map<Integer, BIN> binMap) throws Exception {
         List<BIN> list = new ArrayList<BIN>(binMap.values());
         for (BIN bin : list) {
             bin.close();
