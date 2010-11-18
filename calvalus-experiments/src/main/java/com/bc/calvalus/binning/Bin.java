@@ -11,5 +11,5 @@ public interface Bin<OBS extends Observation> {
 
     void addBin(Bin bin);
 
-    void finish();
+    void close();
 }

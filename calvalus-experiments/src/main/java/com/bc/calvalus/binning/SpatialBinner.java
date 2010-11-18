@@ -1,8 +1,6 @@
 package com.bc.calvalus.binning;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +76,7 @@ public class SpatialBinner<OBS extends Observation, BIN extends AbstractBin<OBS>
     private void emitSliceBins(Map<Integer, BIN> binMap) {
         List<BIN> list = new ArrayList<BIN>(binMap.values());
         for (BIN bin : list) {
-            bin.finish();
+            bin.close();
         }
         consumer.consumeSlice(sliceIndex, list);
     }
