@@ -33,7 +33,7 @@ class MyBin extends AbstractBin<MyObservation> {
     }
 
     @Override
-    public void finish() {
+    public void close() {
         weight = Math.sqrt(numObservations);
         sumX /= weight;
         sumXX /= weight;

@@ -18,17 +18,17 @@ public class TemporalBinnerTest {
         b1.addObservation(new MyObservation(0, 0, 1.1));
         b1.addObservation(new MyObservation(0, 0, 1.2));
         b1.addObservation(new MyObservation(0, 0, 1.3));
-        b1.finish();
+        b1.close();
         MyBin b2 = new MyBin(2);
         b2.addObservation(new MyObservation(0, 0, 2.1));
         b2.addObservation(new MyObservation(0, 0, 2.2));
         b2.addObservation(new MyObservation(0, 0, 2.3));
-        b2.finish();
+        b2.close();
         MyBin b3 = new MyBin(3);
         b3.addObservation(new MyObservation(0, 0, 3.1));
         b3.addObservation(new MyObservation(0, 0, 3.2));
         b3.addObservation(new MyObservation(0, 0, 3.3));
-        b3.finish();
+        b3.close();
 
         temporalBinner.consumeSlice(0, Arrays.asList(b1, b2, b3));
         assertEquals(3, store.binMap.size());
@@ -41,15 +41,15 @@ public class TemporalBinnerTest {
         b2 = new MyBin(2);
         b2.addObservation(new MyObservation(0, 0, 1.1));
         b2.addObservation(new MyObservation(0, 0, 1.2));
-        b2.finish();
+        b2.close();
         b3 = new MyBin(3);
         b3.addObservation(new MyObservation(0, 0, 2.1));
         b3.addObservation(new MyObservation(0, 0, 2.2));
-        b3.finish();
+        b3.close();
         MyBin b4 = new MyBin(4);
         b4.addObservation(new MyObservation(0, 0, 3.1));
         b4.addObservation(new MyObservation(0, 0, 3.2));
-        b4.finish();
+        b4.close();
 
         temporalBinner.consumeSlice(0, Arrays.asList(b2, b3, b4));
         assertEquals(4, store.binMap.size());
