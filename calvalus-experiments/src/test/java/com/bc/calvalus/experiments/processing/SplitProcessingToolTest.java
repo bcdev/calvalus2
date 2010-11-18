@@ -168,7 +168,7 @@ public class SplitProcessingToolTest {
         assertTrue(inputFileSystem.exists(new Path(TMP_INPUT, INPUT_FILE)));
 
         // Run the map-reduce job
-        ToolRunner.run(new ProcessingTool(),
+        ToolRunner.run(new L2ProcessingTool(),
                        new String[] { TMP_INPUT, TMP_OUTPUT, "-lineInterleaved" , "-splitSize=16777216" });
 
         // verify that the output has been generated

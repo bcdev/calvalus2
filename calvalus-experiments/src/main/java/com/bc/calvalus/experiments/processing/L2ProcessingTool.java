@@ -22,14 +22,14 @@ import java.util.logging.Logger;
  * Call with:
  * <pre>
  *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
- *    com.bc.calvalus.experiments.processing.ProcessingTool \
+ *    com.bc.calvalus.experiments.processing.L2ProcessingTool \
  *    hdfs://cvmaster00:9000/input \
  *    hdfs://cvmaster00:9000/output \
  *    (n1|n3|sliced|lineinterleaved) \
  *    [ndvi|radiometry|c2r] [-splits=n] [-tileHeight=h]
  * </pre>
  */
-public class ProcessingTool extends Configured implements Tool {
+public class L2ProcessingTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String SPLITS_OPTION = "splits";
@@ -150,8 +150,8 @@ public class ProcessingTool extends Configured implements Tool {
 
         } catch (ArrayIndexOutOfBoundsException ex) {
 
-            System.err.println("usage:   ProcessingTool <source> <destination> <format> [<operator>]");
-            System.err.println("example: ProcessingTool hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08 hdfs://cvmaster00:9000/output/n1/MERIS-RR-2010-08 n1 ndvi");
+            System.err.println("usage:   L2ProcessingTool <source> <destination> <format> [<operator>]");
+            System.err.println("example: L2ProcessingTool hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08 hdfs://cvmaster00:9000/output/n1/MERIS-RR-2010-08 n1 ndvi");
             System.err.println("formats: n1, n3, sliced, lineinterleaved");
             System.err.println("operators: ndvi, radiometry");
             return 1;
@@ -160,6 +160,6 @@ public class ProcessingTool extends Configured implements Tool {
     }
 
     public static void main(String[] args) throws Exception {
-        System.exit(ToolRunner.run(new ProcessingTool(), args));
+        System.exit(ToolRunner.run(new L2ProcessingTool(), args));
     }
 }
