@@ -23,6 +23,13 @@ public final class IsinBinningGrid implements BinningGrid {
     }
 
     public IsinBinningGrid(int numRows) {
+        if (numRows < 2) {
+            throw new IllegalArgumentException("numRows < 2");
+        }
+        if (numRows % 2 != 0) {
+            throw new IllegalArgumentException("numRows % 2 != 0");
+        }
+
         this.numRows = numRows;
         latBin = new double[numRows];
         baseBin = new int[numRows];

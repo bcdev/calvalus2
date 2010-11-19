@@ -14,6 +14,8 @@ import java.io.IOException;
  * @author Norman Fomferra
  */
 public class SpatialBin implements Bin<ObservationImpl>, Writable {
+    static final boolean LOGN = false;
+
     int index;
     int numObs;
     float sumX;
@@ -34,17 +36,26 @@ public class SpatialBin implements Bin<ObservationImpl>, Writable {
 
     @Override
     public void addObservation(ObservationImpl observation) {
-        double x = Math.log(observation.getX());
-        sumX += x;
-        sumXX += x * x;
-        numObs++;
+        if (LOGN) {
+            double x = Math.log(observation.getX());
+            sumX += x;
+            sumXX += x * x;
+            numObs++;
+        } else {
+            double x = observation.getX();
+            sumX += x;
+            sumXX += x * x;
+            numObs++;
+        }
     }
 
     @Override
     public void close() {
-        float weight = (float) Math.sqrt(numObs);
-        sumX /= weight;
-        sumXX /= weight;
+        if (LOGN) {
+            float weight = (float) Math.sqrt(numObs);
+            sumX /= weight;
+            sumXX /= weight;
+        }
     }
 
     @Override

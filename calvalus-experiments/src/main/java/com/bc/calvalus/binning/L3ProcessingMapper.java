@@ -18,6 +18,8 @@ import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.VirtualBand;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
@@ -38,8 +40,10 @@ import java.util.logging.Logger;
  */
 public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWritable, SpatialBin> {
 
-    private static final int TILE_HEIGHT_DEFAULT = 64;
-    public static final String TILE_HEIGHT_OPTION = "tileHeight";
+    static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.level3.numScansPerSlice";
+    static final String CONFNAME_L3_NUM_ROWS = "calvalus.level3.numRows";
+
+    private static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
@@ -47,7 +51,7 @@ public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWr
 
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
-        int tileHeight = context.getConfiguration().getInt(TILE_HEIGHT_OPTION, TILE_HEIGHT_DEFAULT);
+        int tileHeight = context.getConfiguration().getInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, DEFAULT_L3_NUM_SCANS_PER_SLICE);
         System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));
 
         FileSplit split = (FileSplit) context.getInputSplit();
@@ -69,16 +73,19 @@ public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWr
             EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
             ProductReader productReader = plugIn.createReaderInstance();
 
-            Product sourceProduct = productReader.readProductNodes(imageInputStream, null);
-            GeoCoding geoCoding = sourceProduct.getGeoCoding();
-            Band band = sourceProduct.getBand("radiance_13");  // todo - use mult. vars, get from config
+            Product product = productReader.readProductNodes(imageInputStream, null);
+            VirtualBand band = new VirtualBand("ndvi", ProductData.TYPE_FLOAT32, product.getSceneRasterWidth(), product.getSceneRasterHeight(),
+                                               "(radiance_10 - radiance_6) / (radiance_10 + radiance_6)");
+            band.setValidPixelExpression("!l1_flags.INVALID && !l1_flags.BRIGHT && l1_flags.LAND_OCEAN");
+            product.addBand(band);
+            GeoCoding geoCoding = product.getGeoCoding();
             MultiLevelImage maskImage = band.getValidMaskImage();
             MultiLevelImage varImage = band.getGeophysicalImage();
-            assertThatImageIsSliced(sourceProduct, maskImage);
-            assertThatImageIsSliced(sourceProduct, varImage);
+            assertThatImageIsSliced(product, maskImage);
+            assertThatImageIsSliced(product, varImage);
             Point[] tileIndices = varImage.getTileIndices(null);
 
-            int numBinningGridRows = IsinBinningGrid.DEFAULT_NUM_ROWS; // todo - get from config
+            int numBinningGridRows = context.getConfiguration().getInt(CONFNAME_L3_NUM_ROWS, -1);
             SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
             SpatialBinner<ObservationImpl, SpatialBin> spatialBinner
                     = new SpatialBinner<ObservationImpl, SpatialBin>(new IsinBinningGrid(numBinningGridRows),
@@ -106,7 +113,7 @@ public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWr
                 } catch (Exception e) {
                     String m = MessageFormat.format("Failed to process slice {0} of input product {1}",
                                                     tileIndex,
-                                                    sourceProduct.getName());
+                                                    product.getName());
                     LOG.log(Level.SEVERE, m, e);
                 }
 
@@ -153,7 +160,6 @@ public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWr
         @Override
         public void consumeSlice(int sliceIndex, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
-                spatialBin.close();
                 context.write(new IntWritable(spatialBin.getIndex()), spatialBin);
             }
             numBinsEmitted += spatialBins.size();

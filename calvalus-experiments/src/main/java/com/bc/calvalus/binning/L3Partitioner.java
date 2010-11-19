@@ -12,8 +12,6 @@ import org.apache.hadoop.mapreduce.Partitioner;
  */
 public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implements Configurable {
 
-    static final String CONFNAME_L3_NUM_ROWS = "calvalus.l3.numRows";
-    
     private Configuration conf;
     private IsinBinningGrid binningGrid;
 
@@ -27,7 +25,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        int numRows = conf.getInt(CONFNAME_L3_NUM_ROWS, -1);
+        int numRows = conf.getInt(L3ProcessingMapper.CONFNAME_L3_NUM_ROWS, -1);
         binningGrid = new IsinBinningGrid(numRows);
     }
 
