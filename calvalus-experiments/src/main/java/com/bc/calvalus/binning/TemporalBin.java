@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 /**
- * Writable for bins.
+ * A temporal bin that is Hadoop-serializable.
  *
  * @author Marco Zuehlke
  * @author Norman Fomferra
@@ -21,11 +21,6 @@ public class TemporalBin extends SpatialBin {
 
     public TemporalBin(int index) {
         super(index);
-    }
-
-    @Override
-    public void addBin(Bin bin) {
-        addBin((SpatialBin) bin);
     }
 
     public void addBin(SpatialBin bin) {

@@ -77,7 +77,7 @@ public final class IsinBinningGrid implements BinningGrid {
         return (int) ((90.0 + lat) * (numRows / 180.0));
     }
 
-    public int getRow(int idx) {
+    public int getRowIndex(int idx) {
         // todo - optimize me!
         int row = numRows - 1;
         while (idx < baseBin[row]) {
@@ -88,7 +88,7 @@ public final class IsinBinningGrid implements BinningGrid {
 
     // @Override
     public double[] getCenterLatLon(int idx) {
-        final int row = getRow(idx);
+        final int row = getRowIndex(idx);
         return new double[]{
                 latBin[row],
                 getCenterLon(row, idx - baseBin[row])

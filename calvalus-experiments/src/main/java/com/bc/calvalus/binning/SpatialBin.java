@@ -8,7 +8,7 @@ import java.io.IOException;
 
 
 /**
- * Writable for bins.
+ * A spatial bin that is Hadoop-serializable.
  *
  * @author Marco Zuehlke
  * @author Norman Fomferra
@@ -38,10 +38,6 @@ public class SpatialBin implements Bin<ObservationImpl>, Writable {
         sumX += x;
         sumXX += x * x;
         numObs++;
-    }
-
-    @Override
-    public void addBin(Bin bin) {
     }
 
     @Override
