@@ -120,7 +120,7 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             if (returnCode == 0) {
                 LOG.info("execution successful: " + output.toString());
             } else {
-                throw new ProcessorException("execution of " + commandLine + " failed: " + output.toString())
+                throw new ProcessorException("execution of " + commandLine + " failed: " + output.toString());
             }
 
             // write final log entry for runtime measurements

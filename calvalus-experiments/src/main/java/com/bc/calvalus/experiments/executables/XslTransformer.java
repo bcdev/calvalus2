@@ -4,6 +4,8 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -24,13 +26,13 @@ public class XslTransformer {
 
     final Transformer transformer;
 
-    public XslTransformer(File xsl) throws IOException, SAXException {
+    public XslTransformer(File xsl) throws IOException, SAXException, TransformerConfigurationException {
         Reader in = new FileReader(xsl);
         transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(in));
         in.close();
     }
 
-    public String transform(Document doc) {
+    public String transform(Document doc) throws TransformerException {
         Writer out = new StringWriter();
         transformer.transform(new DOMSource(doc), new StreamResult(out));
         return out.toString();

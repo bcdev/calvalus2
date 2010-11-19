@@ -26,19 +26,19 @@ public class XmlDoc {
     final XPath xpath = XPathFactory.newInstance().newXPath();
 
     public XmlDoc(String content) throws ParserConfigurationException, SAXException, IOException {
-        doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(content)))';
+        doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(content)));
     }
 
     public Document getDocument() { return doc; }
 
     public String getString(String path) throws IllegalArgumentException, XPathExpressionException {
-        String result = (String) xpath.evaluate(path, doc);
+        String result = xpath.evaluate(path, doc);
         if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
         return result;
     }
 
     public String getString(String path, Node node) throws IllegalArgumentException, XPathExpressionException {
-        String result = (String) xpath.evaluate(path, node);
+        String result = xpath.evaluate(path, node);
         if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
         return result;
     }
