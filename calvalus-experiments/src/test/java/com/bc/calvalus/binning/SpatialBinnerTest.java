@@ -17,7 +17,7 @@ public class SpatialBinnerTest {
     public void testThatObservationsAreAggregated() throws Exception {
         MyBinFactory factory = new MyBinFactory();
         MyBinStore store = new MyBinStore();
-        BinConsumer<MyBin> consumer = new TemporalBinner<MyBin>(store);
+        TemporalBinner consumer = new TemporalBinner(store);
         SpatialBinner<MyObservation, MyBin> producer = new SpatialBinner<MyObservation, MyBin>(new MyBinningGrid(), factory, consumer, 2);
 
         producer.processSlice(new MyObservation(0, 1, 1.1),

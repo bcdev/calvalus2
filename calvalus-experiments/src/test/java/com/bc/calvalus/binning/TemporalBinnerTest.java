@@ -12,7 +12,7 @@ public class TemporalBinnerTest {
     @Test
     public void testTemporalBinning() {
         MyBinStore store = new MyBinStore();
-        TemporalBinner<MyBin> temporalBinner = new TemporalBinner<MyBin>(store);
+        TemporalBinner temporalBinner = new TemporalBinner(store);
 
         MyBin b1 = new MyBin(1);
         b1.addObservation(new MyObservation(0, 0, 1.1));

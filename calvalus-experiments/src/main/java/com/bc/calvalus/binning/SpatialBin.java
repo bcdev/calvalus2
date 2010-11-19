@@ -41,10 +41,6 @@ public class SpatialBin implements Bin<ObservationImpl>, Writable {
     }
 
     @Override
-    public void addBin(Bin bin) {
-    }
-
-    @Override
     public void close() {
         float weight = (float) Math.sqrt(numObs);
         sumX /= weight;

@@ -23,11 +23,6 @@ public class TemporalBin extends SpatialBin {
         super(index);
     }
 
-    @Override
-    public void addBin(Bin bin) {
-        addBin((SpatialBin) bin);
-    }
-
     public void addBin(SpatialBin bin) {
         sumX += bin.sumX;
         sumXX += bin.sumXX;

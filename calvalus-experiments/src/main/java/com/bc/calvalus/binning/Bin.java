@@ -9,7 +9,5 @@ public interface Bin<OBS extends Observation> {
 
     void addObservation(OBS observation);
 
-    void addBin(Bin bin);
-
     void close();
 }
