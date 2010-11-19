@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 /**
- * Writable for bins.
+ * A temporal bin that is Hadoop-serializable.
  *
  * @author Marco Zuehlke
  * @author Norman Fomferra

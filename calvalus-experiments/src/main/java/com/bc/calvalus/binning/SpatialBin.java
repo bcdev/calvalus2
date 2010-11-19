@@ -8,7 +8,7 @@ import java.io.IOException;
 
 
 /**
- * Writable for bins.
+ * A spatial bin that is Hadoop-serializable.
  *
  * @author Marco Zuehlke
  * @author Norman Fomferra
