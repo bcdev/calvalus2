@@ -34,7 +34,7 @@ public class LocalProcessingToolTest {
         assertTrue(fs.exists(new Path(TMP_INPUT, "MER_RR__1P.N1")));
 
         // Run the map-reduce job
-        ToolRunner.run(new ProcessingTool(), new String[] {
+        ToolRunner.run(new L2ProcessingTool(), new String[] {
                 TMP_INPUT, TMP_OUTPUT
         });
 

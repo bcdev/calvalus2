@@ -9,6 +9,10 @@ then
     exit 1
 fi
 
+baseDir="`dirname ${0}`/.."
+configDir=${baseDir}/src/main/admin/conf
+jobJar=${baseDir}/target/calvalus-experiments-0.1-SNAPSHOT-job.jar
+
 commandline="$0 $*"
 command=$0
 sourceUrl=$1
@@ -20,9 +24,15 @@ now=`date '+%Y-%m-%dT%H:%M:%S'`
 shift 3
 logfile=processing-${sourceName}-${format}-${operator}-${now}
 
-hadoop --config ~/hpc/conf fs -rmr ${targetUrl}
+baseDir="`dirname ${command}`/.."
+configDir=${baseDir}/src/main/admin/conf
+jobJar=${baseDir}/target/calvalus-experiments-0.1-SNAPSHOT-job.jar
 
-time hadoop --config ~/hpc/conf jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar com.bc.calvalus.experiments.processing.ProcessingTool ${sourceUrl} ${targetUrl} ${format} ${operator} $@ > ${logfile}.tmp 2>&1
+echo ${commandline}
+
+hadoop --config ${configDir} fs -rmr ${targetUrl}
+
+time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.experiments.processing.ProcessingTool ${sourceUrl} ${targetUrl} ${format} ${operator} $@ > ${logfile}.tmp 2>&1
 
 job_number=`cat ${logfile}.tmp | awk "/ Running job: / { print substr(\\$7,5) }"`
 

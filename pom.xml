@@ -201,6 +201,14 @@
                 </exclusions>
             </dependency>
 
+            <!-- Saxon 8.8 -->
+
+            <dependency>
+                <groupId>saxon</groupId>
+                <artifactId>saxon</artifactId>
+                <version>8.8</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

@@ -1,0 +1,4 @@
+ssh hadoop@cvslave11
+sudo sh -c "mkdir /hd3 ; mount -t vfat /dev/sdd2 /hd3"
+cd ingestion
+./ingest.sh /hd3

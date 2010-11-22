@@ -23,6 +23,13 @@ public final class IsinBinningGrid implements BinningGrid {
     }
 
     public IsinBinningGrid(int numRows) {
+        if (numRows < 2) {
+            throw new IllegalArgumentException("numRows < 2");
+        }
+        if (numRows % 2 != 0) {
+            throw new IllegalArgumentException("numRows % 2 != 0");
+        }
+
         this.numRows = numRows;
         latBin = new double[numRows];
         baseBin = new int[numRows];
@@ -77,7 +84,7 @@ public final class IsinBinningGrid implements BinningGrid {
         return (int) ((90.0 + lat) * (numRows / 180.0));
     }
 
-    public int getRow(int idx) {
+    public int getRowIndex(int idx) {
         // todo - optimize me!
         int row = numRows - 1;
         while (idx < baseBin[row]) {
@@ -89,7 +96,7 @@ public final class IsinBinningGrid implements BinningGrid {
     // todo
     // @Override
     public double[] getCenterLatLon(int idx) {
-        final int row = getRow(idx);
+        final int row = getRowIndex(idx);
         return new double[]{
                 latBin[row],
                 getCenterLon(row, idx - baseBin[row])

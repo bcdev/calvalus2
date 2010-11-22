@@ -14,10 +14,10 @@ import static org.junit.Assert.*;
 
 public class SpatialBinnerTest {
     @Test
-    public void testThatObservationsAreAggregated() {
+    public void testThatObservationsAreAggregated() throws Exception {
         MyBinFactory factory = new MyBinFactory();
         MyBinStore store = new MyBinStore();
-        BinConsumer<MyBin> consumer = new TemporalBinner<MyBin>(store);
+        TemporalBinner consumer = new TemporalBinner(store);
         SpatialBinner<MyObservation, MyBin> producer = new SpatialBinner<MyObservation, MyBin>(new MyBinningGrid(), factory, consumer, 2);
 
         producer.processSlice(new MyObservation(0, 1, 1.1),
@@ -53,7 +53,7 @@ public class SpatialBinnerTest {
     }
 
     @Test
-    public void testThatCellsAreDeterminedCorrectly() {
+    public void testThatCellsAreDeterminedCorrectly() throws Exception {
         IsinBinningGrid grid = new IsinBinningGrid();
 
         // bin size in degree

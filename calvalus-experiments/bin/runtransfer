@@ -9,14 +9,18 @@ then
     exit 1
 fi
 
+baseDir="`dirname ${0}`/.."
+configDir=${baseDir}/src/main/admin/conf
+jobJar=${baseDir}/target/calvalus-experiments-0.1-SNAPSHOT-job.jar
+
 sourceDir=$1
 format=$2
 sourceName=`basename ${sourceDir}`
 targetUrl=hdfs://cvmaster00:9000/data/experiments/${format}/${sourceName}
 now=`date '+%Y-%m-%dT%H:%M:%S'`
 
-hadoop --config ~/hpc/conf fs -rmr ${targetUrl}
+hadoop --config ${configDir} fs -rmr ${targetUrl}
 
-time hadoop --config ~/hpc/conf jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar com.bc.calvalus.experiments.transfer.TransferTool ${sourceDir} ${targetUrl} ${format} > transfer-${sourceName}-${format}-${now}.tmp 2>&1
+time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.experiments.transfer.TransferTool ${sourceDir} ${targetUrl} ${format} > transfer-${sourceName}-${format}-${now}.tmp 2>&1
 
 echo transfer-${sourceName}-${format}-${now}.tmp

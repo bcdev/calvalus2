@@ -19,12 +19,6 @@ class MyBin extends AbstractBin<MyObservation> {
         numObservations++;
     }
 
-    @Override
-    public void addBin(Bin bin) {
-        // todo - get rid of ugly cast
-        addBin((MyBin) bin);
-    }
-
     public void addBin(MyBin bin) {
         sumX += bin.sumX;
         sumXX += bin.sumXX;
@@ -33,7 +27,7 @@ class MyBin extends AbstractBin<MyObservation> {
     }
 
     @Override
-    public void finish() {
+    public void close() {
         weight = Math.sqrt(numObservations);
         sumX /= weight;
         sumXX /= weight;

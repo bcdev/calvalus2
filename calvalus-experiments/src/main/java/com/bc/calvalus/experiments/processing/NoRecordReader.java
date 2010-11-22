@@ -12,7 +12,7 @@ import java.io.IOException;
 *
 * @author Martin Boettcher
 */
-class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
+public class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
