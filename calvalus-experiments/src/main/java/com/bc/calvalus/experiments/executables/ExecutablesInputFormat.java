@@ -16,7 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.xpath.XPathConstants;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +32,10 @@ public class ExecutablesInputFormat extends InputFormat {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private static final String INPUTS_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.input']";
-    private static final String INPUT_HREF_XPATH = "wps:Reference/@xlink:href";
+    //private static final String INPUTS_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.input']";
+    //private static final String INPUT_HREF_XPATH = "wps:Reference/@xlink:href";
+    private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
+    private static final String INPUT_HREF_XPATH = "Reference/@href";
 
     /**
      * Generate the list of files and make them into FileSplits.

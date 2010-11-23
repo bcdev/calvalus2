@@ -4,7 +4,6 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -18,26 +17,48 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 /**
- * TODO add API doc
+ * Wrapper of an XSL Transformer configured by an XSL file.
+ * It transforms Documents into Strings.
+ * It supports XSLT 2.0 by using Saxon (8.8).
  *
  * @author Martin Boettcher
  */
 public class XslTransformer {
 
-    final Transformer transformer;
+    private final Transformer transformer;
 
-    public XslTransformer(File xsl) throws IOException, SAXException, TransformerConfigurationException {
-        Reader in = new FileReader(xsl);
-        transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(in));
+    /**
+     * Creates XSL Transformer from XSL file
+     * @param  xsl  File with XSL definition
+     * @throws IOException  if file cannot be ProcessUtil
+     * @throws SAXException   if file is not well formed XML
+     * @throws TransformerException  if Transformer factory (saxon) is not found
+     *             or fails to create transformer from XSL
+     */
+    public XslTransformer(File xsl) throws IOException, SAXException, TransformerException {
+        final Reader in = new FileReader(xsl);
+        final TransformerFactory transformerFactory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null);
+        transformer = transformerFactory.newTransformer(new StreamSource(in));
         in.close();
     }
 
+    /**
+     * Applies transformation to Document
+     * @param doc  parsed XML document
+     * @return  String result of transformation
+     * @throws TransformerException  if transformation fails
+     */
     public String transform(Document doc) throws TransformerException {
-        Writer out = new StringWriter();
+        final Writer out = new StringWriter();
         transformer.transform(new DOMSource(doc), new StreamResult(out));
         return out.toString();
     }
 
+    /**
+     * Sets transformation parameter that may be referenced in XSL document
+     * @param key  parameter name
+     * @param value  parameter value
+     */
     public void setParameter(String key, Object value) {
         transformer.setParameter(key, value);
     }

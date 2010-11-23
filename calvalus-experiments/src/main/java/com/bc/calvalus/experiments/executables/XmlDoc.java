@@ -17,6 +17,9 @@ import java.io.StringReader;
 
 /**
  * Wrapper of an XML document for XPath access to values and nodes.
+ * The Document is built from a String provided as constructor parameter.
+ * The getX methods handle missing values of required parameters by
+ * throwing IllegalArgumentException with a proper error message.
  *
  * @author Martin Boettcher
  */
@@ -25,24 +28,54 @@ public class XmlDoc {
     final Document doc;
     final XPath xpath = XPathFactory.newInstance().newXPath();
 
+    /**
+     * Creates Document from String
+     * @param content  XML string to be parsed
+     * @throws ParserConfigurationException  if application should have configured
+     *             non-default document builder and factory fails
+     * @throws SAXException  if XML string is not well-formed
+     * @throws IOException  should never occur when reading from String
+     */
     public XmlDoc(String content) throws ParserConfigurationException, SAXException, IOException {
         doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(content)));
     }
 
+    /** Returns Document node */
     public Document getDocument() { return doc; }
 
+    /**
+     * Returns XPath value for document as string, verifies that path exists
+     * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
+     * @return  string content of addressed element or attribute
+     * @throws IllegalArgumentException  path does not point to value in document, value would be null
+     * @throws XPathExpressionException  XPath expression not well formed
+     */
     public String getString(String path) throws IllegalArgumentException, XPathExpressionException {
         String result = xpath.evaluate(path, doc);
         if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
         return result;
     }
 
+    /**
+     * Returns XPath value starting at node as string, verifies that path exists
+     * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
+     * @param node  start node to apply path to
+     * @return  string content of addressed element or attribute
+     * @throws IllegalArgumentException  path does not point to value below node, value would be null
+     * @throws XPathExpressionException  XPath expression not well formed
+     */
     public String getString(String path, Node node) throws IllegalArgumentException, XPathExpressionException {
         String result = xpath.evaluate(path, node);
         if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
         return result;
     }
 
+    /**
+     * Returns list of nodes at XPath expression in document
+     * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
+     * @return  NodeList of nodes found
+     * @throws XPathExpressionException  XPath expression not well formed
+     */
     public NodeList getNodes(String path) throws XPathExpressionException {
         return (NodeList) xpath.evaluate(path, doc, XPathConstants.NODESET);
     }

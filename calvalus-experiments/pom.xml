@@ -82,11 +82,17 @@
 
         <!-- Saxon 8.8 -->
 
-        <!--<dependency>-->
-            <!--<groupId>saxon</groupId>-->
-            <!--<artifactId>saxon</artifactId>-->
-            <!--<version>8.8</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>saxon</artifactId>
+            <version>8.8.0.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>saxon-jdom</artifactId>
+            <version>8.8.0.7</version>
+        </dependency>
 
     </dependencies>
 
