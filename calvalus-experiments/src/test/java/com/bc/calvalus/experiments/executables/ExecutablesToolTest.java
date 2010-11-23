@@ -14,8 +14,8 @@ import static org.junit.Assert.assertTrue;
  * 
  */
 public class ExecutablesToolTest {
-    private static final String REQUEST = "/home/boe/modules/calvalus/calvalus-experiments/bin/l2gen-request.xml";
-    private static final String OUTPUT_DIR = "hdfs://localhost:9000/calvalus/outputs/meris-l2gen-99";
+    private static final String REQUEST = "/home/boe/modules/calvalus/calvalus-experiments/bin/l2gen-local-request.xml";
+    private static final String OUTPUT_DIR = "file:///tmp/meris-l2gen-99";
 
     @Test
     public void runProcessing() throws Exception {

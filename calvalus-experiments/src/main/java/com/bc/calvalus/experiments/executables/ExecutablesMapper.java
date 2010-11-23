@@ -36,6 +36,13 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
     private static final String PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
     private static final String VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
 
+    /**
+     * Mapper implementation method. See class comment.
+     * @param context  task "configuration"
+     * @throws IOException  if installation or process initiation raises it
+     * @throws InterruptedException   if processing is interrupted externally
+     * @throws ProcessorException  if processing fails
+     */
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
 
@@ -56,29 +63,44 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final String archiveRootPath = archiveMountPath + "/calvalus/software/0.5";
 
             // check for and maybe install processor package and XSL for request type
+            final ExecutablesInstaller installer =
+                new ExecutablesInstaller(archiveRootPath, installationRootPath);
             final File packageDir =
-                maybeInstallProcessorPackage(archiveRootPath, installationRootPath, packageName, packageVersion);
-            File callXsl =
-                maybeInstallCallXsl(archiveRootPath, installationRootPath, packageName, packageVersion, requestType);
+                installer.maybeInstallProcessorPackage(packageName, packageVersion);
+            final File callXsl =
+                installer.maybeInstallCallXsl(packageName, packageVersion, requestType);
 
             // transform request into command line, may write parameter files as side effect
-            XslTransformer xslt = new XslTransformer(new File(callXsl.getPath()));
-            xslt.setParameter("calvalus.input", archiveMountPath + File.separator + split.getPath().toUri().getPath());
-            xslt.setParameter("calvalus.processor.dir", packageDir.getPath());
-            String commandLine = xslt.transform(request.getDocument());
+            final XslTransformer xslt = new XslTransformer(new File(callXsl.getPath()));
+            //xslt.setParameter("calvalus.input", archiveMountPath + File.separator + split.getPath().toUri().getPath());
+            xslt.setParameter("calvalus.input", split.getPath().toUri());
+            xslt.setParameter("calvalus.task.id", context.getTaskAttemptID());
+            xslt.setParameter("calvalus.package.dir", packageDir.getPath());
+            xslt.setParameter("calvalus.archive.mount", archiveMountPath);
+            final String commandLine = xslt.transform(request.getDocument());
             LOG.info("command line to be executed: " + commandLine);
 
             // write initial log entry for runtime measurements
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
-            long startTime = System.nanoTime();
+            final long startTime = System.nanoTime();
+
+            // ensure that output dir exists
+            final String requestOutputPhysicalPath = (requestOutputPath.startsWith("hdfs:"))
+                    ? archiveMountPath + File.separator + new Path(requestOutputPath).toUri().getPath()
+                    : new Path(requestOutputPath).toUri().getPath();
+            final File requestOutputDir = new File(requestOutputPhysicalPath);
+            requestOutputDir.mkdirs();
 
             // run process for command line
             final Context theContext = context;
-            ProcessUtil processor = new ProcessUtil(new ProcessUtil.OutputObserver() {
-                public void handle(String line) { theContext.progress(); }
+            final ProcessUtil processor = new ProcessUtil(new ProcessUtil.OutputObserver() {
+                public void handle(String line) {
+                    LOG.info(line);    // TODO take care for verbose processors
+                    theContext.progress();
+                }
             });
-            processor.directory(new File(archiveMountPath + File.separator + new Path(requestOutputPath).toUri().getPath()));
-            int returnCode = processor.run(commandLine.split(" "));
+            processor.directory(requestOutputDir);
+            final int returnCode = processor.run("/bin/bash", "-c", commandLine);
             if (returnCode == 0) {
                 LOG.info("execution of " + commandLine + " successful: " + processor.getOutputString());
             } else {
@@ -86,7 +108,7 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             }
 
             // write final log entry for runtime measurements
-            long stopTime = System.nanoTime();
+            final long stopTime = System.nanoTime();
             LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
 
         } catch (ProcessorException e) {
@@ -106,24 +128,29 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
         throws IOException, InterruptedException
     {
         String installationScriptFilename = packageName + "-" + packageVersion + "-install.sh";
+        // check package availability in software archive
+        File archivePackage = new File(archiveRootPath, packageName + "-" + packageVersion + ".tar.gz");  // TODO generalise to allow zip
+        if (!archivePackage.exists())
+            throw new ProcessorException(archivePackage.getPath() + " installation package not found");
+        // check package dir availability and age in installation dir
         File installationRootDir = new File(installationRootPath);
         File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
-        if (! packageDir.exists()) {
+        if (! packageDir.exists() || packageDir.lastModified() < archivePackage.lastModified()) {
             LOG.info("installation " + installationScriptFilename + " ...");
-            // check package availability in software archive
-            File archivePackage = new File(archiveRootPath, packageName + "-" + packageVersion + ".tar.gz");  // TODO generalise to allow zip
+            // check package installation script availability in software archive
             File packageInstallScript = new File(archiveRootPath, installationScriptFilename);
-            if (! archivePackage.exists())
-                throw new ProcessorException(archivePackage.getPath() + " installation package not found");
             if (! packageInstallScript.exists())
                 throw new ProcessorException(packageInstallScript.getPath() + " install script not found");
             // install package from software archive
+            installationRootDir.mkdirs();
             ProcessUtil installation = new ProcessUtil();
             installation.directory(installationRootDir);
-            if (installation.run(packageInstallScript.getPath(),
-                                 archivePackage.getPath(),
-                                 installationRootPath,
-                                 packageName + "-" + packageVersion) != 0) {
+            if (installation.run("/bin/bash",  // hdfs does not support exe mode of files
+                                 "-c",
+                                 ". " + packageInstallScript.getPath() + " " +
+                                 archivePackage.getPath() + " " +
+                                 installationRootPath + " " +
+                                 packageName + "-" + packageVersion) == 0) {
                 LOG.info("installation " + installationScriptFilename + " successful: " + installation.getOutputString());
             } else {
                 throw new ProcessorException("installation " + installationScriptFilename + " failed: " + installation.getOutputString());
@@ -141,16 +168,19 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
         throws IOException, InterruptedException
     {
         String callXslFilename   = packageName + "-" + packageVersion + "-" + requestType + "-call.xsl";
+        // check transformation file availability in software archive
+        File archiveCallXsl = new File(archiveRootPath, callXslFilename);
+        if (! archiveCallXsl.exists()) throw new ProcessorException(archiveCallXsl.getPath() + " call transformation not found");
+        // -- check transformation file availability and age in package directory
         File installationRootDir = new File(installationRootPath);
         File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
-        File callXsl             = new File(packageDir, callXslFilename);
-        if (! callXsl.exists()) {
+        File callXsl             = new File(packageDir, callXslFilename); 
+        if (! callXsl.exists() || callXsl.lastModified() < archiveCallXsl.lastModified()) {
             LOG.info("installation of " + callXslFilename + " ...");
-            File archiveCallXsl = new File(archiveRootPath, callXslFilename);
-            if (! archiveCallXsl.exists()) throw new ProcessorException(archiveCallXsl.getPath() + " call transformation not found");
+            // copy transformation file into package directory
             ProcessUtil installation = new ProcessUtil();
             installation.directory(installationRootDir);
-            if (installation.run("/bin/cp", archiveCallXsl.getPath(), callXsl.getPath()) != 0) {
+            if (installation.run("/bin/cp", archiveCallXsl.getPath(), callXsl.getPath()) == 0) {
                 LOG.info("installation of " + callXslFilename + " successful: " + installation.getOutputString());
             } else {
                 throw new ProcessorException("installation of " + callXslFilename + " failed: " + installation.getOutputString());
