@@ -9,7 +9,7 @@ import java.util.Map;
  * Produces spatial bins for a given slice of observation.
  * A slice forms a spatially contiguous region.
  *
- * @param <OBS> The pixel type.
+ * @param <OBS> The observation type.
  * @param <BIN> The bin type.
  */
 public class SpatialBinner<OBS extends Observation, BIN extends Bin<OBS>> {
