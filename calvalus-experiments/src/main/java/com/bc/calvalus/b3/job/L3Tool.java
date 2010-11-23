@@ -1,15 +1,12 @@
 package com.bc.calvalus.b3.job;
 
-import com.bc.calvalus.b3.Aggregator;
 import com.bc.calvalus.b3.AggregatorAverage;
-import com.bc.calvalus.b3.AggregatorAverageML;
 import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinManagerImpl;
 import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
-import com.bc.calvalus.b3.Vector;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.processing.N1InputFormat;
 import com.bc.calvalus.experiments.util.Args;
@@ -67,7 +64,7 @@ public class L3Tool extends Configured implements Tool {
             long startTime = System.nanoTime();
 
             // construct job and set parameters and handlers
-            Job job = new Job(getConf(), "L3");
+            Job job = new Job(getConf());
             job.setJarByClass(getClass());
 
             Configuration configuration = job.getConfiguration();
@@ -85,8 +82,9 @@ public class L3Tool extends Configured implements Tool {
                 configuration.setInt(L3Mapper.CONFNAME_L3_NUM_SCANS_PER_SLICE, 64);
             }
             if (configuration.get(L3Mapper.CONFNAME_L3_NUM_ROWS) == null) {
-                configuration.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, 3 * IsinBinningGrid.DEFAULT_NUM_ROWS);
+                configuration.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
             }
+            job.setJobName(String.format("l3_ndvi_%d", configuration.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1)));
 
             job.setInputFormatClass(N1InputFormat.class);
             configuration.setInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
@@ -108,7 +106,7 @@ public class L3Tool extends Configured implements Tool {
             }
 
             // provide input and output directories to job
-            for (int day = 1; day <= 30; day++) {
+            for (int day = 1; day <= 16; day++) {
                 String pathName = String.format("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d", day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
@@ -116,7 +114,7 @@ public class L3Tool extends Configured implements Tool {
             FileOutputFormat.setOutputPath(job, output);
 
             int result = 0;
-            //result = job.waitForCompletion(true) ? 0 : 1;
+            result = job.waitForCompletion(true) ? 0 : 1;
             long stopTime = System.nanoTime();
             LOG.info(MessageFormat.format("stop L3 processing after {0} sec", (stopTime - startTime) / 1E9));
 
@@ -143,7 +141,9 @@ public class L3Tool extends Configured implements Tool {
         int height = configuration.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1);
         BinningGrid binningGrid = new IsinBinningGrid(height);
         int width = height * 2;
-        float[] imageData = new float[width * height];
+        float[] nobsData = new float[width * height];
+        float[] meanData = new float[width * height];
+        float[] sigmaData = new float[width * height];
 
         int numObsMaxTotal = -1;
         int numPassesMaxTotal = -1;
@@ -166,13 +166,19 @@ public class L3Tool extends Configured implements Tool {
                     IntWritable binIndex = new IntWritable();
                     TemporalBin temporalBin = new TemporalBin();
                     if (!reader.next(binIndex, temporalBin)) {
-                        processBinRow(binningGrid, binManager, lastRowIndex, binRow, imageData, width, height);
+                        processBinRow(binningGrid, binManager,
+                                      lastRowIndex, binRow,
+                                      nobsData, meanData, sigmaData,
+                                      width, height);
                         binRow.clear();
                         break;
                     }
                     int rowIndex = binningGrid.getRowIndex(binIndex.get());
                     if (rowIndex != lastRowIndex) {
-                        processBinRow(binningGrid, binManager, lastRowIndex, binRow, imageData, width, height);
+                        processBinRow(binningGrid, binManager,
+                                      lastRowIndex, binRow,
+                                      nobsData, meanData, sigmaData,
+                                      width, height);
                         binRow.clear();
                         lastRowIndex = rowIndex;
                     }
@@ -196,42 +202,60 @@ public class L3Tool extends Configured implements Tool {
         LOG.info(MessageFormat.format("numObsMaxTotal = {0}, numPassesMaxTotal = {1}", numObsMaxTotal, numPassesMaxTotal));
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
 
-        File outputImageFile = new File("level3.png");
-        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
+        writeImage(width, height, nobsData, 0.5f, new File("l3_ndvi_nobs_" + binningGrid.getNumRows() + ".png"));
+        writeImage(width, height, meanData, 255 / 0.8f, new File("l3_ndvi_mean_" + binningGrid.getNumRows() + ".png"));
+        writeImage(width, height, sigmaData, 255 / 0.1f, new File("l3_ndvi_sigma_" + binningGrid.getNumRows() + ".png"));
+    }
 
+    private void writeImage(int width, int height, float[] rawData, float factor, File outputImageFile) throws IOException {
+        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
         byte[] data = dataBuffer.getData();
-        float factor = 255 / 0.8f;
-        for (int i = 0; i < imageData.length; i++) {
-            int sample = (int) (factor * imageData[i]);
+        for (int i = 0; i < rawData.length; i++) {
+            int sample = (int) (factor * rawData[i]);
             if (sample < 0) {
                 sample = 0;
             } else if (sample > 255) {
                 sample = 255;
             }
-            data[i] = (byte) (sample);
+            data[i] = (byte) sample;
         }
         ImageIO.write(image, "PNG", outputImageFile);
     }
 
-    static void processBinRow(BinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height) {
+    static void processBinRow(BinningGrid binningGrid, BinManager binManager,
+                              int y, List<TemporalBin> binRow,
+                               float[] nobsData, float[] meanData, float[] sigmaData,
+                              int width, int height) {
         if (y >= 0 && !binRow.isEmpty()) {
 //            LOG.info("row " + y + ": processing " + binRow.size() + " bins, bin #0 = " + binRow.get(0));
-            processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, false);
+            processBinRow0(binningGrid, binManager,
+                           y, binRow,
+                           nobsData, meanData, sigmaData,
+                           width, height);
         } else {
 //            LOG.info("row " + y + ": no bins");
         }
     }
 
-    static void processBinRow0(BinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height, boolean debug) {
+    static void processBinRow0(BinningGrid binningGrid,
+                               BinManager binManager,
+                               int y,
+                               List<TemporalBin> binRow,
+                               float[] nobsData,
+                               float[] meanData,
+                               float[] sigmaData,
+                               int width,
+                               int height) {
         int offset = y * width;
         double lat = -90.0 + (y + 0.5) * 180.0 / height;
         int lastBinIndex = -1;
         TemporalBin temporalBin = null;
         int rowIndex = -1;
         float lastMean = Float.NaN;
-         WritableVector outputVector = binManager.createOutputVector();
+        float lastSigma = Float.NaN;
+        WritableVector outputVector = binManager.createOutputVector();
         for (int x = 0; x < width; x++) {
             double lon = -180.0 + (x + 0.5) * 360.0 / width;
             int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
@@ -243,6 +267,7 @@ public class L3Tool extends Configured implements Tool {
                         temporalBin = binRow.get(i);
                         binManager.computeOutput(temporalBin, outputVector);
                         lastMean = outputVector.get(0);
+                        lastSigma = outputVector.get(1);
                         lastBinIndex = wantedBinIndex;
                         rowIndex = i;
                         break;
@@ -250,13 +275,13 @@ public class L3Tool extends Configured implements Tool {
                 }
             }
             if (temporalBin != null) {
-                if (debug) {
-                    imageData[offset + x] = temporalBin.getNumObs();
-                } else {
-                    imageData[offset + x] = lastMean;
-                }
+                nobsData[offset + x] = temporalBin.getNumObs();
+                meanData[offset + x] = lastMean;
+                sigmaData[offset + x] = lastSigma;
             } else {
-                imageData[offset + x] = Float.NaN;
+                nobsData[offset + x] = Float.NaN;
+                meanData[offset + x] = Float.NaN;
+                sigmaData[offset + x] = Float.NaN;
             }
         }
     }
