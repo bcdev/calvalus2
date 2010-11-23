@@ -20,11 +20,9 @@ public class AggregatorTest {
         assertEquals("c_sum_xx", agg.getTemporalPropertyName(1));
         assertEquals("c_sum_w", agg.getTemporalPropertyName(2));
 
-        assertEquals(4, agg.getOutputPropertyCount());
+        assertEquals(2, agg.getOutputPropertyCount());
         assertEquals("c_mean", agg.getOutputPropertyName(0));
-        assertEquals("c_stdev", agg.getOutputPropertyName(1));
-        assertEquals("c_median", agg.getOutputPropertyName(2));
-        assertEquals("c_sigma", agg.getOutputPropertyName(3)); //???
+        assertEquals("c_sigma", agg.getOutputPropertyName(1));
 
     }
 
@@ -45,9 +43,9 @@ public class AggregatorTest {
 
         assertEquals(4, agg.getOutputPropertyCount());
         assertEquals("b_mean", agg.getOutputPropertyName(0));
-        assertEquals("b_stdev", agg.getOutputPropertyName(1));
+        assertEquals("b_sigma", agg.getOutputPropertyName(1));
         assertEquals("b_median", agg.getOutputPropertyName(2));
-        assertEquals("b_sigma", agg.getOutputPropertyName(3)); //???
+        assertEquals("b_mode", agg.getOutputPropertyName(3));
     }
 
     @Test

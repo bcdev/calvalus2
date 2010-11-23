@@ -3,8 +3,8 @@ package com.bc.calvalus.b3;
 /**
  * An aggregator that computes an average.
  */
-public class AggregatorAverage implements Aggregator {
-    protected final int varIndex;
+public final class AggregatorAverage implements Aggregator {
+    private final int varIndex;
     private final String[] spatialPropertyNames;
     private final String[] temporalPropertyNames;
     private final String[] outputPropertyNames;
@@ -13,7 +13,7 @@ public class AggregatorAverage implements Aggregator {
         varIndex = ctx.getVariableIndex(varName);
         spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
         temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
-        outputPropertyNames = new String[]{varName + "_mean", varName + "_stdev", varName + "_median", varName + "_sigma"};
+        outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma"};
     }
 
     @Override
@@ -43,7 +43,7 @@ public class AggregatorAverage implements Aggregator {
 
     @Override
     public int getOutputPropertyCount() {
-        return 4;
+        return 2;
     }
 
     @Override
@@ -83,9 +83,12 @@ public class AggregatorAverage implements Aggregator {
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
         float sumX = temporalVector.get(0);
+        float sumXX = temporalVector.get(1);
         float sumW = temporalVector.get(2);
-        float xMean = sumX / sumW;
-        outputVector.set(0, xMean);
+        float mean = sumX / sumW;
+        float sigma = (float) Math.sqrt(sumXX / sumW - mean * mean);
+        outputVector.set(0, mean);
+        outputVector.set(1, sigma);
     }
 
     private static float weight(int numObs) {
