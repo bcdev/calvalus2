@@ -1,6 +1,5 @@
 package com.bc.calvalus.b3;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -69,7 +68,71 @@ public class IsinBinningGridTest {
         long t1 = System.nanoTime();
 
         final double seconds = (t1 - t0) / 1.0E9;
-        assertTrue("Bad performance in IsinBinningGrid detected, took " + seconds + " seconds", 
+        assertTrue("Bad performance in IsinBinningGrid detected, took " + seconds + " seconds",
                    seconds < 1.0);
+    }
+
+
+    @Test
+    public void testGetRowIndex() {
+
+        // 3, 8, 12, 12, 8, 3
+        IsinBinningGrid grid = new IsinBinningGrid(6);
+        try {
+            grid.getRowIndex(-1);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+        assertEquals(0, grid.getRowIndex(0));
+        assertEquals(0, grid.getRowIndex(1));
+        assertEquals(0, grid.getRowIndex(2));
+        assertEquals(1, grid.getRowIndex(3));
+        assertEquals(1, grid.getRowIndex(4));
+        assertEquals(1, grid.getRowIndex(5));
+        assertEquals(1, grid.getRowIndex(6));
+        assertEquals(1, grid.getRowIndex(7));
+        assertEquals(1, grid.getRowIndex(8));
+        assertEquals(1, grid.getRowIndex(9));
+        assertEquals(1, grid.getRowIndex(10));
+        assertEquals(2, grid.getRowIndex(11));
+        assertEquals(2, grid.getRowIndex(12));
+        assertEquals(2, grid.getRowIndex(13));
+        assertEquals(2, grid.getRowIndex(14));
+        assertEquals(2, grid.getRowIndex(15));
+        assertEquals(2, grid.getRowIndex(16));
+        assertEquals(2, grid.getRowIndex(17));
+        assertEquals(2, grid.getRowIndex(18));
+        assertEquals(2, grid.getRowIndex(19));
+        assertEquals(2, grid.getRowIndex(20));
+        assertEquals(2, grid.getRowIndex(21));
+        assertEquals(2, grid.getRowIndex(22));
+        assertEquals(3, grid.getRowIndex(23));
+        assertEquals(3, grid.getRowIndex(24));
+        assertEquals(3, grid.getRowIndex(25));
+        assertEquals(3, grid.getRowIndex(26));
+        assertEquals(3, grid.getRowIndex(27));
+        assertEquals(3, grid.getRowIndex(28));
+        assertEquals(3, grid.getRowIndex(29));
+        assertEquals(3, grid.getRowIndex(30));
+        assertEquals(3, grid.getRowIndex(31));
+        assertEquals(3, grid.getRowIndex(32));
+        assertEquals(3, grid.getRowIndex(33));
+        assertEquals(3, grid.getRowIndex(34));
+        assertEquals(4, grid.getRowIndex(35));
+        assertEquals(4, grid.getRowIndex(36));
+        assertEquals(4, grid.getRowIndex(37));
+        assertEquals(4, grid.getRowIndex(38));
+        assertEquals(4, grid.getRowIndex(39));
+        assertEquals(4, grid.getRowIndex(40));
+        assertEquals(4, grid.getRowIndex(41));
+        assertEquals(4, grid.getRowIndex(42));
+        assertEquals(5, grid.getRowIndex(43));
+        assertEquals(5, grid.getRowIndex(44));
+        assertEquals(5, grid.getRowIndex(45));
+        try {
+            grid.getRowIndex(46);
+//            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
     }
 }

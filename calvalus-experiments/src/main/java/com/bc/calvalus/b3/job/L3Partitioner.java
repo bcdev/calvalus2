@@ -1,5 +1,6 @@
 package com.bc.calvalus.b3.job;
 
+import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import org.apache.hadoop.conf.Configurable;
@@ -15,7 +16,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implements Configurable {
 
     private Configuration conf;
-    private IsinBinningGrid binningGrid;
+    private BinningGrid binningGrid;
 
     @Override
     public int getPartition(IntWritable binIndex, SpatialBin spatialBin, int numPartitions) {
@@ -37,7 +38,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
         return conf;
     }
 
-    IsinBinningGrid getBinningGrid() {
+    BinningGrid getBinningGrid() {
         return binningGrid;
     }
 }

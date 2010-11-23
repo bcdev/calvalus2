@@ -3,7 +3,7 @@ package com.bc.calvalus.b3;
 /**
  * An aggregator that sets an output if an input is maximal.
  */
-public class AggregatorOnMaxSet implements Aggregator {
+public final class AggregatorOnMaxSet implements Aggregator {
     private final String[] propertyNames;
     private final int numProperties;
     private final int[] varIndexes;
@@ -48,6 +48,16 @@ public class AggregatorOnMaxSet implements Aggregator {
     }
 
     @Override
+    public int getOutputPropertyCount() {
+        return numProperties; 
+    }
+
+    @Override
+    public String getOutputPropertyName(int i) {
+        return propertyNames[i];
+    }
+
+    @Override
     public void initSpatial(WritableVector vector) {
         vector.set(0, -Float.MAX_VALUE);
     }
@@ -85,4 +95,10 @@ public class AggregatorOnMaxSet implements Aggregator {
         }
     }
 
+    @Override
+    public void computeOutput(Vector temporalVector, WritableVector outputVector) {
+        for (int i = 1; i < numProperties; i++) {
+            outputVector.set(i, temporalVector.get(i));
+        }
+    }
 }

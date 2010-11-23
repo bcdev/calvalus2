@@ -15,6 +15,10 @@ public interface Aggregator {
 
     String getTemporalPropertyName(int i);
 
+    int getOutputPropertyCount();
+
+    String getOutputPropertyName(int i);
+
     /**
      * Initialises the spatial aggregation.
      *
@@ -53,4 +57,12 @@ public interface Aggregator {
      * @param temporalVector The temporal aggregation to be updated.
      */
     void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector);
+
+    /**
+     * Computes the output vector from the temporal vector.
+     *
+     * @param temporalVector The temporal vector.
+     * @param outputVector   The output vector to be computed.
+     */
+    void computeOutput(Vector temporalVector, WritableVector outputVector);
 }

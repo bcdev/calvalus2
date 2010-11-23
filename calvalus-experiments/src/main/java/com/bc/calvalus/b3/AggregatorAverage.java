@@ -7,11 +7,13 @@ public class AggregatorAverage implements Aggregator {
     protected final int varIndex;
     private final String[] spatialPropertyNames;
     private final String[] temporalPropertyNames;
+    private final String[] outputPropertyNames;
 
     public AggregatorAverage(VariableContext ctx, String varName) {
         varIndex = ctx.getVariableIndex(varName);
         spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
         temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
+        outputPropertyNames = new String[]{varName + "_mean", varName + "_stdev", varName + "_median", varName + "_sigma"};
     }
 
     @Override
@@ -37,6 +39,16 @@ public class AggregatorAverage implements Aggregator {
     @Override
     public String getTemporalPropertyName(int i) {
         return temporalPropertyNames[i];
+    }
+
+    @Override
+    public int getOutputPropertyCount() {
+        return 4;
+    }
+
+    @Override
+    public String getOutputPropertyName(int i) {
+        return outputPropertyNames[i]; 
     }
 
     @Override
@@ -66,6 +78,14 @@ public class AggregatorAverage implements Aggregator {
         temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));
         temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));
         temporalVector.set(2, temporalVector.get(2) + weight(numSpatialObs));
+    }
+
+    @Override
+    public void computeOutput(Vector temporalVector, WritableVector outputVector) {
+        float sumX = temporalVector.get(0);
+        float sumW = temporalVector.get(2);
+        float xMean = sumX / sumW;
+        outputVector.set(0, xMean);
     }
 
     private static float weight(int numObs) {

@@ -2,6 +2,7 @@ package com.bc.calvalus.b3.job;
 
 import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.BinManagerImpl;
+import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
@@ -20,7 +21,6 @@ import java.io.IOException;
 public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, TemporalBin> implements Configurable {
 
     private Configuration conf;
-    private IsinBinningGrid binningGrid;
     private BinManagerImpl binningManager;
 
     @Override
@@ -35,9 +35,6 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        // todo - use config to construct a BinningGrid instance of the correct type
-        int numRows = conf.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1);
-        binningGrid = new IsinBinningGrid(numRows);
         // todo - use config to construct the correct list of aggregators
         AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
         binningManager = new BinManagerImpl(aggregator);
@@ -46,9 +43,5 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public Configuration getConf() {
         return conf;
-    }
-
-    IsinBinningGrid getBinningGrid() {
-        return binningGrid;
     }
  }

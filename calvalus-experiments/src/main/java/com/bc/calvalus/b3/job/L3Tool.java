@@ -5,10 +5,12 @@ import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.AggregatorAverageML;
 import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinManagerImpl;
+import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.Vector;
+import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.processing.N1InputFormat;
 import com.bc.calvalus.experiments.util.Args;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
@@ -114,7 +116,7 @@ public class L3Tool extends Configured implements Tool {
             FileOutputFormat.setOutputPath(job, output);
 
             int result = 0;
-            result = job.waitForCompletion(true) ? 0 : 1;
+            //result = job.waitForCompletion(true) ? 0 : 1;
             long stopTime = System.nanoTime();
             LOG.info(MessageFormat.format("stop L3 processing after {0} sec", (stopTime - startTime) / 1E9));
 
@@ -137,14 +139,16 @@ public class L3Tool extends Configured implements Tool {
         AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
         BinManager binManager = new BinManagerImpl(aggregator);
 
-        LOG.info(MessageFormat.format("collecting {0} parts", numParts));
+        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", numParts));
         int height = configuration.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1);
-        IsinBinningGrid binningGrid = new IsinBinningGrid(height);
+        BinningGrid binningGrid = new IsinBinningGrid(height);
         int width = height * 2;
         float[] imageData = new float[width * height];
 
         int numObsMaxTotal = -1;
         int numPassesMaxTotal = -1;
+
+        long startTime = System.nanoTime();
 
         for (int i = 0; i < numParts; i++) {
             Path partFile = new Path(output, String.format("part-r-%05d", i));
@@ -187,8 +191,10 @@ public class L3Tool extends Configured implements Tool {
             numObsMaxTotal = Math.max(numObsMaxTotal, numObsMaxPart);
             numPassesMaxTotal = Math.max(numPassesMaxTotal, numPassesMaxPart);
         }
+        long stopTime = System.nanoTime();
 
         LOG.info(MessageFormat.format("numObsMaxTotal = {0}, numPassesMaxTotal = {1}", numObsMaxTotal, numPassesMaxTotal));
+        LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
 
         File outputImageFile = new File("level3.png");
         LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
@@ -209,7 +215,7 @@ public class L3Tool extends Configured implements Tool {
         ImageIO.write(image, "PNG", outputImageFile);
     }
 
-    static void processBinRow(IsinBinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height) {
+    static void processBinRow(BinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height) {
         if (y >= 0 && !binRow.isEmpty()) {
 //            LOG.info("row " + y + ": processing " + binRow.size() + " bins, bin #0 = " + binRow.get(0));
             processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, false);
@@ -218,14 +224,16 @@ public class L3Tool extends Configured implements Tool {
         }
     }
 
-    static void processBinRow0(IsinBinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height, boolean debug) {
+    static void processBinRow0(BinningGrid binningGrid, BinManager binManager, int y, List<TemporalBin> binRow, float[] imageData, int width, int height, boolean debug) {
         int offset = y * width;
-        float lat = -90f + (y + 0.5f) * 180.0f / height;
+        double lat = -90.0 + (y + 0.5) * 180.0 / height;
         int lastBinIndex = -1;
         TemporalBin temporalBin = null;
         int rowIndex = -1;
+        float lastMean = Float.NaN;
+         WritableVector outputVector = binManager.createOutputVector();
         for (int x = 0; x < width; x++) {
-            float lon = -180f + (x + 0.5f) * 360.0f / width;
+            double lon = -180.0 + (x + 0.5) * 360.0 / width;
             int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
             if (lastBinIndex != wantedBinIndex) {
                 //search
@@ -233,6 +241,8 @@ public class L3Tool extends Configured implements Tool {
                 for (int i = rowIndex + 1; i < binRow.size(); i++) {
                     if (wantedBinIndex == binRow.get(i).getIndex()) {
                         temporalBin = binRow.get(i);
+                        binManager.computeOutput(temporalBin, outputVector);
+                        lastMean = outputVector.get(0);
                         lastBinIndex = wantedBinIndex;
                         rowIndex = i;
                         break;
@@ -243,27 +253,7 @@ public class L3Tool extends Configured implements Tool {
                 if (debug) {
                     imageData[offset + x] = temporalBin.getNumObs();
                 } else {
-                    // todo - assuming exactly 1 aggregator
-                    int aggIndex = 0;
-                    Vector vector = binManager.getTemporalVector(temporalBin, aggIndex);
-                    Aggregator aggregator = binManager.getAggregator(aggIndex);
-                    // todo - bad cast, oh, oh, oh ...
-                    if (aggregator instanceof AggregatorAverageML) {
-                        float sumX = vector.get(0);
-                        float sumXX = vector.get(1);
-                        float sumW = vector.get(2);
-                        float avLogs = sumX / sumW;
-                        float vrLogs = sumXX / sumW - avLogs * avLogs;
-                        float xMean = (float) Math.exp(avLogs + 0.5 * vrLogs);
-                        imageData[offset + x] = xMean;
-                    } else if (aggregator instanceof AggregatorAverage) {
-                        float sumX = vector.get(0);
-                        float sumW = vector.get(2);
-                        float xMean = sumX / sumW;
-                        imageData[offset + x] = xMean;
-                    } else {
-                        throw new IllegalStateException("not handled: " + aggregator);
-                    }
+                    imageData[offset + x] = lastMean;
                 }
             } else {
                 imageData[offset + x] = Float.NaN;

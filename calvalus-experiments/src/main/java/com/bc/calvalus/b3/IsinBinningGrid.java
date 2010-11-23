@@ -7,9 +7,9 @@ import static java.lang.Math.toRadians;
  * Implementation of the ISIN (Integerized Sinusoidal) binnning grid as used for NASA
  * SeaDAS and MODIS L3 products.
  *
+ * @author Norman Fomferra
  * @see <a href="http://oceancolor.gsfc.nasa.gov/SeaWiFS/TECH_REPORTS/PreLPDF/PreLVol32.pdf">SeaWiFS Technical Report Series Volume 32, Level-3 SeaWiFS Data</a>
  * @see <a href="http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf">Ocean Level-3 Binned Data Products</a>
- * @author Norman Fomferra
  */
 public final class IsinBinningGrid implements BinningGrid {
     public static final int DEFAULT_NUM_ROWS = 2160;
@@ -51,6 +51,7 @@ public final class IsinBinningGrid implements BinningGrid {
         return numRows;
     }
 
+    @Override
     public int getNumCols(int row) {
         return numBin[row];
     }
@@ -86,22 +87,42 @@ public final class IsinBinningGrid implements BinningGrid {
         return (int) ((90.0 + lat) * (numRows / 180.0));
     }
 
-    public int getRowIndex(int idx) {
-        // todo - optimize me!
-        int row = numRows - 1;
-        while (idx < baseBin[row]) {
-            row--;
+    /**
+     * Pseudo-code:
+     * <pre>
+     *       int row = numRows - 1;
+     *       while (idx < baseBin[row]) {
+     *            row--;
+     *       }
+     *       return row;
+     * </pre>
+     *
+     * @param binId The bin ID.
+     * @return The row index.
+     */
+    public int getRowIndex(int binId) {
+        final int max = baseBin.length - 1;
+        int low = 0;
+        int high = max;
+        while (true) {
+            int mid = (low + high) >>> 1;
+            if (binId < baseBin[mid]) {
+                high = mid - 1;
+            } else if (mid == max) {
+                return mid;
+            } else if (binId < baseBin[mid + 1]) {
+                return mid;
+            } else {
+                low = mid + 1;
+            }
         }
-        return row;
     }
 
-    // @Override
-
-    public double[] getCenterLatLon(int idx) {
-        final int row = getRowIndex(idx);
+    public double[] getCenterLatLon(int binId) {
+        final int row = getRowIndex(binId);
         return new double[]{
                 latBin[row],
-                getCenterLon(row, idx - baseBin[row])
+                getCenterLon(row, binId - baseBin[row])
         };
     }
 

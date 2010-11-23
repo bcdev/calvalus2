@@ -2,7 +2,7 @@ package com.bc.calvalus.b3;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class AggregatorTest {
     @Test
@@ -19,6 +19,13 @@ public class AggregatorTest {
         assertEquals("c_sum_x", agg.getTemporalPropertyName(0));
         assertEquals("c_sum_xx", agg.getTemporalPropertyName(1));
         assertEquals("c_sum_w", agg.getTemporalPropertyName(2));
+
+        assertEquals(4, agg.getOutputPropertyCount());
+        assertEquals("c_mean", agg.getOutputPropertyName(0));
+        assertEquals("c_stdev", agg.getOutputPropertyName(1));
+        assertEquals("c_median", agg.getOutputPropertyName(2));
+        assertEquals("c_sigma", agg.getOutputPropertyName(3)); //???
+
     }
 
     @Test
@@ -35,6 +42,12 @@ public class AggregatorTest {
         assertEquals("b_sum_x", agg.getTemporalPropertyName(0));
         assertEquals("b_sum_xx", agg.getTemporalPropertyName(1));
         assertEquals("b_sum_w", agg.getTemporalPropertyName(2));
+
+        assertEquals(4, agg.getOutputPropertyCount());
+        assertEquals("b_mean", agg.getOutputPropertyName(0));
+        assertEquals("b_stdev", agg.getOutputPropertyName(1));
+        assertEquals("b_median", agg.getOutputPropertyName(2));
+        assertEquals("b_sigma", agg.getOutputPropertyName(3)); //???
     }
 
     @Test
@@ -50,6 +63,10 @@ public class AggregatorTest {
         assertEquals(2, agg.getTemporalPropertyCount());
         assertEquals("a_min", agg.getTemporalPropertyName(0));
         assertEquals("a_max", agg.getTemporalPropertyName(1));
+
+        assertEquals(2, agg.getOutputPropertyCount());
+        assertEquals("a_min", agg.getOutputPropertyName(0));
+        assertEquals("a_max", agg.getOutputPropertyName(1));
     }
 
     @Test
@@ -67,6 +84,11 @@ public class AggregatorTest {
         assertEquals("c_max", agg.getTemporalPropertyName(0));
         assertEquals("a", agg.getTemporalPropertyName(1));
         assertEquals("b", agg.getTemporalPropertyName(2));
+
+        assertEquals(3, agg.getOutputPropertyCount());
+        assertEquals("c_max", agg.getOutputPropertyName(0));
+        assertEquals("a", agg.getOutputPropertyName(1));
+        assertEquals("b", agg.getOutputPropertyName(2));
     }
 
 }

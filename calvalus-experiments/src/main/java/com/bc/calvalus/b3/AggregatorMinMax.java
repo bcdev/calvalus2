@@ -38,6 +38,16 @@ public class AggregatorMinMax implements Aggregator {
     }
 
     @Override
+    public int getOutputPropertyCount() {
+        return 2;
+    }
+
+    @Override
+    public String getOutputPropertyName(int i) {
+       return propertyNames[i];
+    }
+
+    @Override
     public void initSpatial(WritableVector vector) {
         vector.set(0, +Float.MAX_VALUE);
         vector.set(1, -Float.MAX_VALUE);
@@ -64,6 +74,12 @@ public class AggregatorMinMax implements Aggregator {
     public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
         temporalVector.set(0, Math.min(temporalVector.get(0), spatialVector.get(0)));
         temporalVector.set(1, Math.max(temporalVector.get(1), spatialVector.get(1)));
+    }
+
+    @Override
+    public void computeOutput(Vector temporalVector, WritableVector outputVector) {
+        outputVector.set(0, temporalVector.get(0));
+        outputVector.set(1, temporalVector.get(1));
     }
 
 }

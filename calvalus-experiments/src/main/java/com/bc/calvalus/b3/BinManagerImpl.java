@@ -9,24 +9,31 @@ public class BinManagerImpl implements BinManager {
     private final Aggregator[] aggregators;
     private final int spatialPropertyCount;
     private final int temporalPropertyCount;
+    private final int outputPropertyCount;
     private final int[] spatialPropertyOffsets;
     private final int[] temporalPropertyOffsets;
+    private final int[] outputPropertyOffsets;
 
     public BinManagerImpl(Aggregator... aggregators) {
         this.aggregators = aggregators.clone();
         this.spatialPropertyOffsets = new int[aggregators.length];
         this.temporalPropertyOffsets = new int[aggregators.length];
+        this.outputPropertyOffsets = new int[aggregators.length];
         int spatialPropertyCount = 0;
         int temporalPropertyCount = 0;
+        int outputPropertyCount = 0;
         for (int i = 0; i < aggregators.length; i++) {
             Aggregator aggregator = aggregators[i];
             spatialPropertyOffsets[i] = spatialPropertyCount;
             temporalPropertyOffsets[i] = temporalPropertyCount;
+            outputPropertyOffsets[i] = outputPropertyCount;
             spatialPropertyCount += aggregator.getSpatialPropertyCount();
             temporalPropertyCount += aggregator.getTemporalPropertyCount();
+            outputPropertyCount += aggregator.getOutputPropertyCount();
         }
         this.spatialPropertyCount = spatialPropertyCount;
         this.temporalPropertyCount = temporalPropertyCount;
+        this.outputPropertyCount = outputPropertyCount;
     }
 
     @Override
@@ -53,6 +60,11 @@ public class BinManagerImpl implements BinManager {
         final Aggregator aggregator = aggregators[aggIndex];
         vector.setOffsetAndSize(temporalPropertyOffsets[aggIndex], aggregator.getTemporalPropertyCount());
         return vector;
+    }
+
+    @Override
+    public WritableVector createOutputVector() {
+        return new VectorImpl(new float[outputPropertyCount]);
     }
 
     @Override
@@ -104,6 +116,18 @@ public class BinManagerImpl implements BinManager {
         }
         temporalBin.numObs += numSpatialObs;
         temporalBin.numPasses++;
+    }
+
+    @Override
+    public void computeOutput(TemporalBin temporalBin, WritableVector outputVector) {
+        final VectorImpl temporalVector = new VectorImpl(temporalBin.properties);
+        final VectorImpl outputVectorImpl = (VectorImpl) outputVector;
+        for (int i = 0; i < aggregators.length; i++) {
+            final Aggregator aggregator = aggregators[i];
+            temporalVector.setOffsetAndSize(temporalPropertyOffsets[i], aggregator.getTemporalPropertyCount());
+            outputVectorImpl.setOffsetAndSize(outputPropertyOffsets[i], aggregator.getOutputPropertyCount());
+            aggregator.computeOutput(temporalVector, outputVector);
+        }
     }
 
     private void initSpatialBin(SpatialBin bin) {

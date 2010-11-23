@@ -1,5 +1,6 @@
 package com.bc.calvalus.b3.job;
 
+import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
@@ -32,7 +33,7 @@ public class L3PartitionerTest {
         int numRows = 6;
         conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
-        IsinBinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));
         assertEquals(8, binningGrid.getNumCols(1));
@@ -64,7 +65,7 @@ public class L3PartitionerTest {
         int numRows = 6;
         conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
-        IsinBinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));
         assertEquals(8, binningGrid.getNumCols(1));
@@ -97,7 +98,7 @@ public class L3PartitionerTest {
         int numRows = 8;
         conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
-        IsinBinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));
         assertEquals(9, binningGrid.getNumCols(1));

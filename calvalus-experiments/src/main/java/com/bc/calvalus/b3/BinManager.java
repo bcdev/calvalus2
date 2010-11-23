@@ -15,6 +15,8 @@ public interface BinManager {
 
     TemporalBin createTemporalBin(int binIndex);
 
+    WritableVector createOutputVector();
+
     Vector getSpatialVector(SpatialBin bin, int aggIndex);
 
     Vector getTemporalVector(TemporalBin bin, int aggIndex);
@@ -24,4 +26,6 @@ public interface BinManager {
     void completeSpatialBin(SpatialBin bin);
 
     void aggregateTemporalBin(SpatialBin sBin, TemporalBin tBin);
+
+    void computeOutput(TemporalBin temporalBin, WritableVector outputVector);
 }

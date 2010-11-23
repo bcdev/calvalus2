@@ -20,4 +20,15 @@ public class AggregatorAverageML extends AggregatorAverage {
         spatialVector.set(0, spatialVector.get(0) + value);
         spatialVector.set(1, spatialVector.get(1) + value * value);
     }
+
+    @Override
+    public void computeOutput(Vector temporalVector, WritableVector outputVector) {
+        float sumX = temporalVector.get(0);
+        float sumXX = temporalVector.get(1);
+        float sumW = temporalVector.get(2);
+        float avLogs = sumX / sumW;
+        float vrLogs = sumXX / sumW - avLogs * avLogs;
+        float xMean = (float) Math.exp(avLogs + 0.5 * vrLogs);
+        outputVector.set(0, xMean);
+    }
 }
