@@ -1,7 +1,6 @@
 package com.bc.calvalus.b3.job;
 
 import com.bc.calvalus.b3.BinningGrid;
-import com.bc.calvalus.b3.IsinBinningGrid;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
@@ -18,7 +17,7 @@ public class L3PartitionerTest {
 
         Configuration conf = new Configuration();
         int numRows = 113;
-        conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
+        conf.setInt(L3Tool.CONFNAME_L3_NUM_ROWS, numRows);
         try {
             l3Partitioner.setConf(conf);
             fail("IllegalArgumentException?");
@@ -31,7 +30,7 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
         Configuration conf = new Configuration();
         int numRows = 6;
-        conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
+        conf.setInt(L3Tool.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
@@ -63,7 +62,7 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
         Configuration conf = new Configuration();
         int numRows = 6;
-        conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
+        conf.setInt(L3Tool.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
@@ -96,7 +95,7 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
         Configuration conf = new Configuration();
         int numRows = 8;
-        conf.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, numRows);
+        conf.setInt(L3Tool.CONFNAME_L3_NUM_ROWS, numRows);
         l3Partitioner.setConf(conf);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 

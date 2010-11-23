@@ -20,7 +20,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -35,23 +34,17 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Creates and runs Hadoop job for L3 processing. Expects input directory
- * with MERIS L1 product(s) and output directory path to be created and filled
- * with outputs.
- * <p/>
- * Call with:
- * <pre>
- *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
- *    com.bc.calvalus.experiments.processing.L2ProcessingTool \
- *    hdfs://cvmaster00:9000/input \
- *    hdfs://cvmaster00:9000/output \
- *    (n1|n3|sliced|lineinterleaved) \
- *    [ndvi|radiometry|c2r] [-splits=n] [-tileHeight=h]
- * </pre>
+ * Creates and runs Hadoop job for L3 processing. 
  */
 public class L3Tool extends Configured implements Tool {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
+    static final Logger LOG = CalvalusLogger.getLogger();
+    static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.level3.numScansPerSlice";
+    static final String CONFNAME_L3_NUM_ROWS = "calvalus.level3.numRows";
+    static final String CONFNAME_L3_NUM_DAYS = "calvalus.level3.numDays";
+    static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
+    static final int DEFAULT_L3_NUM_NUM_DAYS = 64;
+    static final String MERIS_INPUT_MONTH_DIR = "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d";
 
     @Override
     public int run(String[] args) throws Exception {
@@ -78,13 +71,18 @@ public class L3Tool extends Configured implements Tool {
             int numReducers = 10;
             job.setNumReduceTasks(numReducers);
 
-            if (configuration.get(L3Mapper.CONFNAME_L3_NUM_SCANS_PER_SLICE) == null) {
-                configuration.setInt(L3Mapper.CONFNAME_L3_NUM_SCANS_PER_SLICE, 64);
+            if (configuration.get(CONFNAME_L3_NUM_SCANS_PER_SLICE) == null) {
+                configuration.setInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, 64);
             }
-            if (configuration.get(L3Mapper.CONFNAME_L3_NUM_ROWS) == null) {
-                configuration.setInt(L3Mapper.CONFNAME_L3_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
+            if (configuration.get(CONFNAME_L3_NUM_ROWS) == null) {
+                configuration.setInt(CONFNAME_L3_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
             }
-            job.setJobName(String.format("l3_ndvi_%d", configuration.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1)));
+            if (configuration.get(CONFNAME_L3_NUM_DAYS) == null) {
+                configuration.setInt(CONFNAME_L3_NUM_DAYS, DEFAULT_L3_NUM_NUM_DAYS);
+            }
+            job.setJobName(String.format("l3_ndvi_%dd_%dr",
+                                         configuration.getInt(CONFNAME_L3_NUM_DAYS, -1),
+                                         configuration.getInt(CONFNAME_L3_NUM_ROWS, -1)));
 
             job.setInputFormatClass(N1InputFormat.class);
             configuration.setInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
@@ -99,15 +97,12 @@ public class L3Tool extends Configured implements Tool {
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(TemporalBin.class);
 
-            if (false) {
-                job.setOutputFormatClass(TextOutputFormat.class);
-            } else {
-                job.setOutputFormatClass(SequenceFileOutputFormat.class);
-            }
+            // job.setOutputFormatClass(TextOutputFormat.class);
+            job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
             // provide input and output directories to job
             for (int day = 1; day <= 16; day++) {
-                String pathName = String.format("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d", day);
+                String pathName = String.format(MERIS_INPUT_MONTH_DIR, day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
             Path output = new Path(destination);
@@ -138,7 +133,7 @@ public class L3Tool extends Configured implements Tool {
         BinManager binManager = new BinManagerImpl(aggregator);
 
         LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", numParts));
-        int height = configuration.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1);
+        int height = configuration.getInt(CONFNAME_L3_NUM_ROWS, -1);
         BinningGrid binningGrid = new IsinBinningGrid(height);
         int width = height * 2;
         float[] nobsData = new float[width * height];
@@ -202,9 +197,11 @@ public class L3Tool extends Configured implements Tool {
         LOG.info(MessageFormat.format("numObsMaxTotal = {0}, numPassesMaxTotal = {1}", numObsMaxTotal, numPassesMaxTotal));
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
 
-        writeImage(width, height, nobsData, 0.5f, new File("l3_ndvi_nobs_" + binningGrid.getNumRows() + ".png"));
-        writeImage(width, height, meanData, 255 / 0.8f, new File("l3_ndvi_mean_" + binningGrid.getNumRows() + ".png"));
-        writeImage(width, height, sigmaData, 255 / 0.1f, new File("l3_ndvi_sigma_" + binningGrid.getNumRows() + ".png"));
+        String baseName = String.format("l3_ndvi_%dd_%dr", configuration.getInt(CONFNAME_L3_NUM_DAYS, -1),
+                                        configuration.getInt(CONFNAME_L3_NUM_ROWS, -1));
+        writeImage(width, height, nobsData, 0.5f, new File(baseName + "_nobs.png"));
+        writeImage(width, height, meanData, 255 / 0.8f, new File(baseName + "_mean.png"));
+        writeImage(width, height, sigmaData, 255 / 0.1f, new File(baseName + "_sigma.png"));
     }
 
     private void writeImage(int width, int height, float[] rawData, float factor, File outputImageFile) throws IOException {
@@ -226,7 +223,7 @@ public class L3Tool extends Configured implements Tool {
 
     static void processBinRow(BinningGrid binningGrid, BinManager binManager,
                               int y, List<TemporalBin> binRow,
-                               float[] nobsData, float[] meanData, float[] sigmaData,
+                              float[] nobsData, float[] meanData, float[] sigmaData,
                               int width, int height) {
         if (y >= 0 && !binRow.isEmpty()) {
 //            LOG.info("row " + y + ": processing " + binRow.size() + " bins, bin #0 = " + binRow.get(0));

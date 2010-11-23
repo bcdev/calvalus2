@@ -48,10 +48,6 @@ import java.util.logging.Logger;
  */
 public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, SpatialBin> {
 
-    static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.level3.numScansPerSlice";
-    static final String CONFNAME_L3_NUM_ROWS = "calvalus.level3.numRows";
-
-    private static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
@@ -59,7 +55,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
-        int tileHeight = context.getConfiguration().getInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, DEFAULT_L3_NUM_SCANS_PER_SLICE);
+        int tileHeight = context.getConfiguration().getInt(L3Tool.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Tool.DEFAULT_L3_NUM_SCANS_PER_SLICE);
         System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));
 
         FileSplit split = (FileSplit) context.getInputSplit();
@@ -93,7 +89,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
             assertThatImageIsSliced(product, varImage);
             Point[] tileIndices = varImage.getTileIndices(null);
 
-            int numBinningGridRows = context.getConfiguration().getInt(CONFNAME_L3_NUM_ROWS, -1);
+            int numBinningGridRows = context.getConfiguration().getInt(L3Tool.CONFNAME_L3_NUM_ROWS, -1);
             SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
             VariableContext variableContext = new MyVariableContext();

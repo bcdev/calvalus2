@@ -29,7 +29,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
     public void setConf(Configuration conf) {
         this.conf = conf;
         // todo - use config to construct a BinningGrid instance of the correct type
-        int numRows = conf.getInt(L3Mapper.CONFNAME_L3_NUM_ROWS, -1);
+        int numRows = conf.getInt(L3Tool.CONFNAME_L3_NUM_ROWS, -1);
         binningGrid = new IsinBinningGrid(numRows);
     }
 

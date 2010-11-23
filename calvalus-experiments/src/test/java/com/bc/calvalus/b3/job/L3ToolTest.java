@@ -60,24 +60,26 @@ public class L3ToolTest {
                                                  createTBin(22)
         );
 
-        float[] imageData = new float[6 * 12];
+        float[] nobsData = new float[6 * 12];
+        float[] meanData = new float[6 * 12];
+        float[] sigmaData = new float[6 * 12];
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, true);
+        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData, meanData, sigmaData, width, height);
 
-        assertEquals(11f, imageData[y * width + 0], 1E-5f);
-        assertEquals(12f, imageData[y * width + 1], 1E-5f);
-        assertEquals(13f, imageData[y * width + 2], 1E-5f);
-        assertEquals(14f, imageData[y * width + 3], 1E-5f);
-        assertEquals(15f, imageData[y * width + 4], 1E-5f);
-        assertEquals(16f, imageData[y * width + 5], 1E-5f);
-        assertEquals(17f, imageData[y * width + 6], 1E-5f);
-        assertEquals(18f, imageData[y * width + 7], 1E-5f);
-        assertEquals(19f, imageData[y * width + 8], 1E-5f);
-        assertEquals(20f, imageData[y * width + 9], 1E-5f);
-        assertEquals(21f, imageData[y * width + 10], 1E-5f);
-        assertEquals(22f, imageData[y * width + 11], 1E-5f);
+        assertEquals(11f, nobsData[y * width + 0], 1E-5f);
+        assertEquals(12f, nobsData[y * width + 1], 1E-5f);
+        assertEquals(13f, nobsData[y * width + 2], 1E-5f);
+        assertEquals(14f, nobsData[y * width + 3], 1E-5f);
+        assertEquals(15f, nobsData[y * width + 4], 1E-5f);
+        assertEquals(16f, nobsData[y * width + 5], 1E-5f);
+        assertEquals(17f, nobsData[y * width + 6], 1E-5f);
+        assertEquals(18f, nobsData[y * width + 7], 1E-5f);
+        assertEquals(19f, nobsData[y * width + 8], 1E-5f);
+        assertEquals(20f, nobsData[y * width + 9], 1E-5f);
+        assertEquals(21f, nobsData[y * width + 10], 1E-5f);
+        assertEquals(22f, nobsData[y * width + 11], 1E-5f);
 
 
     }
@@ -106,24 +108,26 @@ public class L3ToolTest {
                                                  // createTBin(22)
         );
 
-        float[] imageData = new float[6 * 12];
+        float[] nobsData = new float[6 * 12];
+        float[] meanData = new float[6 * 12];
+        float[] sigmaData = new float[6 * 12];
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, true);
+        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
 
-        assertEquals(NAN, imageData[y * width + 0], 1E-5f);
-        assertEquals(12f, imageData[y * width + 1], 1E-5f);
-        assertEquals(13f, imageData[y * width + 2], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 3], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 4], 1E-5f);
-        assertEquals(16f, imageData[y * width + 5], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 6], 1E-5f);
-        assertEquals(18f, imageData[y * width + 7], 1E-5f);
-        assertEquals(19f, imageData[y * width + 8], 1E-5f);
-        assertEquals(20f, imageData[y * width + 9], 1E-5f);
-        assertEquals(21f, imageData[y * width + 10], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 11], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
+        assertEquals(12f, nobsData[y * width + 1], 1E-5f);
+        assertEquals(13f, nobsData[y * width + 2], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 3], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
+        assertEquals(16f, nobsData[y * width + 5], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
+        assertEquals(18f, nobsData[y * width + 7], 1E-5f);
+        assertEquals(19f, nobsData[y * width + 8], 1E-5f);
+        assertEquals(20f, nobsData[y * width + 9], 1E-5f);
+        assertEquals(21f, nobsData[y * width + 10], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 11], 1E-5f);
 
 
     }
@@ -143,24 +147,26 @@ public class L3ToolTest {
                                                  createTBin(1),
                                                  createTBin(2));
 
-        float[] imageData = new float[6 * 12];
+        float[] nobsData = new float[6 * 12];
+        float[] meanData = new float[6 * 12];
+        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, true);
+        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
 
-        assertEquals(0f, imageData[y * width + 0], 1E-5f);
-        assertEquals(0f, imageData[y * width + 1], 1E-5f);
-        assertEquals(0f, imageData[y * width + 2], 1E-5f);
-        assertEquals(0f, imageData[y * width + 3], 1E-5f);
-        assertEquals(1f, imageData[y * width + 4], 1E-5f);
-        assertEquals(1f, imageData[y * width + 5], 1E-5f);
-        assertEquals(1f, imageData[y * width + 6], 1E-5f);
-        assertEquals(1f, imageData[y * width + 7], 1E-5f);
-        assertEquals(2f, imageData[y * width + 8], 1E-5f);
-        assertEquals(2f, imageData[y * width + 9], 1E-5f);
-        assertEquals(2f, imageData[y * width + 10], 1E-5f);
-        assertEquals(2f, imageData[y * width + 11], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 0], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 1], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 2], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 3], 1E-5f);
+        assertEquals(1f, nobsData[y * width + 4], 1E-5f);
+        assertEquals(1f, nobsData[y * width + 5], 1E-5f);
+        assertEquals(1f, nobsData[y * width + 6], 1E-5f);
+        assertEquals(1f, nobsData[y * width + 7], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 8], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 9], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 10], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 11], 1E-5f);
     }
 
     @Test
@@ -177,24 +183,26 @@ public class L3ToolTest {
                                                  //createTBin(1),
                                                  createTBin(2));
 
-        float[] imageData = new float[6 * 12];
+        float[] nobsData = new float[6 * 12];
+        float[] meanData = new float[6 * 12];
+        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, true);
+        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
 
-        assertEquals(0f, imageData[y * width + 0], 1E-5f);
-        assertEquals(0f, imageData[y * width + 1], 1E-5f);
-        assertEquals(0f, imageData[y * width + 2], 1E-5f);
-        assertEquals(0f, imageData[y * width + 3], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 4], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 5], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 6], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 7], 1E-5f);
-        assertEquals(2f, imageData[y * width + 8], 1E-5f);
-        assertEquals(2f, imageData[y * width + 9], 1E-5f);
-        assertEquals(2f, imageData[y * width + 10], 1E-5f);
-        assertEquals(2f, imageData[y * width + 11], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 0], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 1], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 2], 1E-5f);
+        assertEquals(0f, nobsData[y * width + 3], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 5], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 7], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 8], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 9], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 10], 1E-5f);
+        assertEquals(2f, nobsData[y * width + 11], 1E-5f);
     }
 
     @Test
@@ -209,24 +217,26 @@ public class L3ToolTest {
 
         List<TemporalBin> binRow = Arrays.asList();
 
-        float[] imageData = new float[6 * 12];
+        float[] nobsData = new float[6 * 12];
+        float[] meanData = new float[6 * 12];
+        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, imageData, width, height, true);
+        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData, meanData, sigmaData, width, height);
 
-        assertEquals(NAN, imageData[y * width + 0], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 1], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 2], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 3], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 4], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 5], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 6], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 7], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 8], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 9], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 10], 1E-5f);
-        assertEquals(NAN, imageData[y * width + 11], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 1], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 2], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 3], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 5], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 7], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 8], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 9], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 10], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 11], 1E-5f);
     }
 
     @Test
