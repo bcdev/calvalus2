@@ -6,20 +6,15 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.logging.Logger;
 
 /**
@@ -47,8 +42,10 @@ public class ExecutablesTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private static final String TYPE_XPATH = "/wps:Execute/ows:Identifier";
-    private static final String OUTPUT_DIR_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:LiteralData";
+    //private static final String TYPE_XPATH = "/wps:Execute/ows:Identifier";
+    //private static final String OUTPUT_DIR_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:LiteralData";
+    private static final String TYPE_XPATH = "/Execute/Identifier";
+    private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new ExecutablesTool(), args));
@@ -80,7 +77,7 @@ public class ExecutablesTool extends Configured implements Tool {
             final Path output = new Path(requestOutputDir);
             final FileSystem fileSystem = output.getFileSystem(getConf());
             fileSystem.delete(output, true);
-            fileSystem.mkdirs(output);
+            //fileSystem.mkdirs(output);
 
             LOG.info("start processing " + requestType + " (" + requestPath + ")");
             long startTime = System.nanoTime();
@@ -96,6 +93,7 @@ public class ExecutablesTool extends Configured implements Tool {
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
             // TODO is this necessary?
+            FileOutputFormat.setOutputPath(job, output);
             //job.setOutputFormatClass(TextOutputFormat.class);
             //job.setOutputKeyClass(Text.class);
             //job.setOutputValueClass(Text.class);

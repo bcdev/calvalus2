@@ -12,9 +12,6 @@
   <xsl:variable name="l2gen.executable">seadas-6.1/bin/l2gen</xsl:variable>
 
   <xsl:variable name="calvalus.input.filename" select="tokenize($calvalus.input,'/')[last()]" />
-<!-- workaround for xslt 1.0
-  <xsl:variable name="calvalus.input.filename" select="substring(substring-after($calvalus.input,'/r03/'),12)" />
--->
   
   <xsl:template match="/">
     <xsl:value-of select="$calvalus.package.root" />
@@ -31,7 +28,8 @@
   <xsl:template match="wps:Input[starts-with(ows:Identifier,'calvalus.output.dir')]">
     <xsl:text> ofile=</xsl:text>
     <xsl:value-of select="$calvalus.data.root" />
-    <xsl:value-of select="substring-after(wps:Data/wps:Reference/@xlink:href,'hdfs:')" />
+    <xsl:text>/</xsl:text>
+    <xsl:value-of select="substring-after(substring-after(wps:Data/wps:Reference/@xlink:href,'hdfs://'),'/')" />
     <xsl:text>/</xsl:text>
     <xsl:choose>
       <xsl:when test="starts-with($calvalus.input.filename,'MER_')">
