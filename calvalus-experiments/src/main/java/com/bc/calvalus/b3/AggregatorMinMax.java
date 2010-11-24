@@ -67,7 +67,7 @@ public class AggregatorMinMax implements Aggregator {
     }
 
     @Override
-    public void completeSpatial(WritableVector spatialVector, int numObs) {
+    public void completeSpatial(int numObs, WritableVector numSpatialObs) {
     }
 
     @Override

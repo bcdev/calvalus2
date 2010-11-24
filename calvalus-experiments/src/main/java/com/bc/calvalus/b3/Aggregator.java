@@ -44,10 +44,10 @@ public interface Aggregator {
     /**
      * Informs this aggregation instance that no more measurement will be added.
      *
+     * @param numSpatialObs The number of observations added so far.
      * @param spatialVector The spatial aggregation to complete.
-     * @param numObs        The number of observations added so far.
      */
-    void completeSpatial(WritableVector spatialVector, int numObs);
+    void completeSpatial(int numSpatialObs, WritableVector spatialVector);
 
     /**
      * Aggregates a spatial aggregation to a temporal aggregation.

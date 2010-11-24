@@ -3,7 +3,7 @@ package com.bc.calvalus.b3;
 import java.util.Arrays;
 
 /**
- * The class is final for allowing method inlining.
+ * The class is final for allowing method in-lining.
  *
  * @author Norman Fomferra
  */
@@ -14,11 +14,7 @@ public final class VectorImpl implements WritableVector {
 
     public VectorImpl(float[] array) {
         this.array = array;
-    }
-
-    public void setOffsetAndSize(int offset, int size) {
-        this.offset = offset;
-        this.size = size;
+        this.size = array.length;
     }
 
     @Override
@@ -39,5 +35,10 @@ public final class VectorImpl implements WritableVector {
     @Override
     public String toString() {
         return Arrays.toString(Arrays.copyOfRange(array, offset, offset + size));
+    }
+
+    void setOffsetAndSize(int offset, int size) {
+        this.offset = offset;
+        this.size = size;
     }
 }

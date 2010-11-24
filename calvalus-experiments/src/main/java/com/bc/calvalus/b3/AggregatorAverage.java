@@ -8,12 +8,18 @@ public final class AggregatorAverage implements Aggregator {
     private final String[] spatialPropertyNames;
     private final String[] temporalPropertyNames;
     private final String[] outputPropertyNames;
+    private final WeightFn weightFn;
 
     public AggregatorAverage(VariableContext ctx, String varName) {
-        varIndex = ctx.getVariableIndex(varName);
-        spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
-        temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
-        outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma"};
+        this(ctx, varName, 1.0);
+    }
+
+    public AggregatorAverage(VariableContext ctx, String varName, double weightCoeff) {
+        this.varIndex = ctx.getVariableIndex(varName);
+        this.spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
+        this.temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
+        this.outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma"};
+        this.weightFn = getWeightFn(weightCoeff);
     }
 
     @Override
@@ -53,10 +59,15 @@ public final class AggregatorAverage implements Aggregator {
 
     @Override
     public void initSpatial(WritableVector vector) {
+        vector.set(0, 0.0f);
+        vector.set(1, 0.0f);
     }
 
     @Override
     public void initTemporal(WritableVector vector) {
+        vector.set(0, 0.0f);
+        vector.set(1, 0.0f);
+        vector.set(2, 0.0f);
     }
 
     @Override
@@ -67,8 +78,8 @@ public final class AggregatorAverage implements Aggregator {
     }
 
     @Override
-    public void completeSpatial(WritableVector spatialVector, int numObs) {
-        final float w = weight(numObs);
+    public void completeSpatial(int numSpatialObs, WritableVector spatialVector) {
+        final float w = weightFn.eval(numSpatialObs);
         spatialVector.set(0, spatialVector.get(0) / w);
         spatialVector.set(1, spatialVector.get(1) / w);
     }
@@ -77,7 +88,7 @@ public final class AggregatorAverage implements Aggregator {
     public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
         temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));
         temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));
-        temporalVector.set(2, temporalVector.get(2) + weight(numSpatialObs));
+        temporalVector.set(2, temporalVector.get(2) + weightFn.eval(numSpatialObs));
     }
 
     @Override
@@ -91,7 +102,38 @@ public final class AggregatorAverage implements Aggregator {
         outputVector.set(1, sigma);
     }
 
-    private static float weight(int numObs) {
-        return (float) Math.sqrt(numObs);
+    public static WeightFn getWeightFn(double c) {
+        return c == 0.5 ? new Sqrt() : c == 1.0 ? new Ident() : new Pow(c);
+    }
+
+    public static interface WeightFn {
+        float eval(int numObs);
+    }
+
+    private final static class Ident implements WeightFn {
+        @Override
+        public float eval(int numObs) {
+            return (float) numObs;
+        }
+    }
+
+    private final static class Sqrt implements WeightFn {
+        @Override
+        public float eval(int numObs) {
+            return (float) Math.sqrt(numObs);
+        }
+    }
+
+    private final static class Pow implements WeightFn {
+        private final double c;
+
+        private Pow(double c) {
+            this.c = c;
+        }
+
+        @Override
+        public float eval(int numObs) {
+            return (float) Math.pow(numObs, c);
+        }
     }
 }

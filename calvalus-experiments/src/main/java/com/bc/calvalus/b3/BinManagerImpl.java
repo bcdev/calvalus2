@@ -99,7 +99,7 @@ public class BinManagerImpl implements BinManager {
         for (int i = 0; i < aggregators.length; i++) {
             final Aggregator aggregator = aggregators[i];
             spatialVector.setOffsetAndSize(spatialPropertyOffsets[i], aggregator.getSpatialPropertyCount());
-            aggregator.completeSpatial(spatialVector, numSpatialObs);
+            aggregator.completeSpatial(numSpatialObs, spatialVector);
         }
     }
 
