@@ -23,15 +23,10 @@ public class DataSetConverter {
         taskSeriesCollection = new TaskSeriesCollection();
     }
 
-    // todo remove
-    // only to play around and look on scan results in file
-    public static void main(String[] args) {
-        new DataSetConverter().fetchInputLogFiles();
-    }
-
     private List<Trace> scanLogFiles() {
-        final String userHomeTemp = System.getProperty("user.home") + "/temp/";
-        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
+        final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
+//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
+        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
         RunTimesScanner runTimesScanner;
         try {
             runTimesScanner = new RunTimesScanner(new BufferedReader(new FileReader(userHomeTemp + fileName)));
@@ -39,34 +34,6 @@ public class DataSetConverter {
         } catch (FileNotFoundException e) {
             LOGGER.log(Level.SEVERE, "could not find file in " + userHomeTemp, e);
             return null;
-        }
-    }
-
-    // todo remove
-    //just to analyse the results -- not a part of the code
-    void fetchInputLogFiles() {
-        final String userHomeTemp = System.getProperty("user.home") + "/temp/";
-        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
-        RunTimesScanner runTimesScanner;
-        BufferedWriter bufferedWriter;
-        try {
-            runTimesScanner = new RunTimesScanner(new BufferedReader(new FileReader(userHomeTemp + fileName)));
-            runTimesScanner.scan();
-
-            //report into a file
-            bufferedWriter = new BufferedWriter(new FileWriter(userHomeTemp + "RunTimeScannerResults.txt"));
-            bufferedWriter.write("scanner start: " + runTimesScanner.start + "\n");
-            bufferedWriter.write("scanner stop: " + runTimesScanner.stop + "\n");
-            for (Trace trace : runTimesScanner.getTraces()) {
-                bufferedWriter.write((trace.isOpen() ? "*" : "") + trace.toString() + "\n");
-            }
-            bufferedWriter.write(runTimesScanner.getValids().toString() + "\n");
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        } catch (FileNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "could not find file in " + userHomeTemp, e);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "error opening FileWriter ", e);
         }
     }
 
@@ -173,13 +140,13 @@ public class DataSetConverter {
                         final TaskSeries jobTaskSeries = jobsMap.get(jobId);
 
                         final Task task = new Task("task" + taskId, //categories on category axis
-                                                   new Date(trace.getStartTime()),
-                                                   new Date(trace.getStopTime()));
+                                            new Date(trace.getStartTime()),
+                                            new Date(trace.getStopTime()));
                         if (null != jobTaskSeries) {
                             jobTaskSeries.add(task);
                         }
                     }
-                }
+            }
             }
             LOGGER.info("Number of the jobs found in the log file: " + jobsCounter);
             return jobsMap;

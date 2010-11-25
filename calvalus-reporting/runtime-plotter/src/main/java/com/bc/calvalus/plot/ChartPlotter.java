@@ -36,7 +36,7 @@ public class ChartPlotter {
     }
 
     static {
-        userHomeTemp = System.getProperty("user.home") + "/temp/";
+        userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
     }
 
     public static void main(String[] args) throws IOException {
