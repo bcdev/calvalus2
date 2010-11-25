@@ -21,15 +21,13 @@ public class DataSetConverter {
     }
 
     private List<Trace> scanLogFiles() {
-        final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
-        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
-//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
         RunTimesScanner runTimesScanner;
+        final String fileName = PlotterConfigurator.getInstance().getInputFile();
         try {
-            runTimesScanner = new RunTimesScanner(new BufferedReader(new FileReader(userHomeTemp + fileName)));
+            runTimesScanner = new RunTimesScanner(new BufferedReader(new FileReader(fileName)));
             return runTimesScanner.scan();
         } catch (FileNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "could not find file in " + userHomeTemp, e);
+            LOGGER.log(Level.SEVERE, "could not find file " + fileName, e);
             return null;
         }
     }
@@ -38,7 +36,7 @@ public class DataSetConverter {
         final Map<String, TaskSeries> jobsMap = dataFilter.filter(scanLogFiles());
         final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
         plotterConfigurator.askForNumberOfSeriesToBeShown();
-        //todo sort the series
+        
         for (TaskSeries series : jobsMap.values()) {
             if (taskSeriesCollection.getSeriesCount() < plotterConfigurator.getNumberOfSeriesToBeShown()) {
                 taskSeriesCollection.add(series);
@@ -79,7 +77,7 @@ public class DataSetConverter {
         public Map<String, TaskSeries> filter(List<Trace> traceList) {
             final Map<String, TaskSeries> hostsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
-                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { // m equates tasks
+                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { // m => tasks of type map
                     final String hostName = trace.getPropertyValue(RunTimesScanner.Keys.HOST.name());
                     final Task taskOnHost = new Task(trace.getId(),   // //categories on category axis
                                                      new Date(trace.getStartTime()),
@@ -94,12 +92,12 @@ public class DataSetConverter {
 
                 }
             }
+            PlotterConfigurator.getInstance().setNumberOfSeries(hostsMap.size());
             doSomeDebugLogging(hostsMap);
             return hostsMap;
         }
 
         private static void doSomeDebugLogging(Map<String, TaskSeries> hostsMap) {
-            LOGGER.info("Number of the hosts found in the log file: " + hostsMap.size());
             for (int i = 1; i <= hostsMap.size(); i++) {
                 if (i < 10) {
                     if (hostsMap.get("cvslave0" + i) != null) {
@@ -127,7 +125,7 @@ public class DataSetConverter {
                     jobsCounter++;
                     final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
                     jobsMap.put(trace.getId(), taskSeries);
-                } else if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { //task
+                } else if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { //task of type map
                     if (trace.getId().contains("_m_")) {
                         String jobId = trace.getId().split("_m_")[0];
                         final String taskId = groupTaskId(jobId, trace.getId().split("_m_")[1], false);
@@ -142,7 +140,7 @@ public class DataSetConverter {
                     }
                 }
             }
-            LOGGER.info("Number of the jobs found in the log file: " + jobsCounter);
+            PlotterConfigurator.getInstance().setNumberOfSeries(jobsCounter);
             return jobsMap;
         }
 

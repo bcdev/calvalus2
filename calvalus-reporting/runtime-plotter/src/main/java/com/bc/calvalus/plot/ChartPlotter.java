@@ -27,13 +27,7 @@ import java.util.logging.Logger;
 public class ChartPlotter {
     private final static Logger LOGGER = Logger.getAnonymousLogger();
     private static String userHomeTemp;
-    private PlotterConfigurator plotterConfigurator;
     private JFreeChart chart;
-
-    public ChartPlotter() {
-        super();
-        plotterConfigurator = PlotterConfigurator.getInstance();
-    }
 
     static {
         userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
@@ -47,8 +41,10 @@ public class ChartPlotter {
             System.exit(0);
         }
         final ChartPlotter chartPlotter = new ChartPlotter();
-        chartPlotter.getPlotterConfigurator().setCategory(args[0].split("=")[1]);
-        chartPlotter.getPlotterConfigurator().setColouredDimension(args[1].split("=")[1]);
+        final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
+        plotterConfigurator.setCategory(args[0].split("=")[1]);
+        plotterConfigurator.setColouredDimension(args[1].split("=")[1]);
+        plotterConfigurator.askForLogFile();
 
         // 2) execute
         chartPlotter.execute();
@@ -57,7 +53,7 @@ public class ChartPlotter {
     private void execute() throws IOException {
         //1) create Dataset
         final DataSetConverter dataSetConverter = new DataSetConverter();
-        DataSetConverter.Filter dataFilter = dataSetConverter.createDataFilter(getPlotterConfigurator());
+        DataSetConverter.Filter dataFilter = dataSetConverter.createDataFilter(PlotterConfigurator.getInstance());
 
         //2) create JFreeChart object
         createChart(dataSetConverter, dataFilter);
@@ -152,9 +148,5 @@ public class ChartPlotter {
         bufferedImage.createGraphics();
         ImageIO.write(bufferedImage, "jpg", new File(userHomeTemp + "myImage.jpg"));
         LOGGER.info("ready jpg");
-    }
-
-    public PlotterConfigurator getPlotterConfigurator() {
-        return plotterConfigurator;
     }
 }
