@@ -59,8 +59,8 @@ public class AggregatorTest {
         float mean = (0.3f + 0.1f + 0.2f + 0.1f) / (3f + 2f + 1f + 7f);
         float sigma = (float) Math.sqrt((0.09f + 0.01f + 0.04f + 0.01f) / (3f + 2f + 1f + 7f) - mean * mean);
         agg.computeOutput(tvec, out);
-        assertEquals(mean, tvec.get(0), 1e-5f);
-        assertEquals(sigma, tvec.get(1), 1e-5f);
+        assertEquals(mean, out.get(0), 1e-5f);
+        assertEquals(sigma, out.get(1), 1e-5f);
     }
 
     @Test
@@ -130,26 +130,26 @@ public class AggregatorTest {
         VectorImpl out = vec(NaN, NaN, NaN);
 
         agg.initSpatial(svec);
-        assertEquals(0.0f, svec.get(0), 0.0f);
-        assertEquals(0.0f, svec.get(1), 0.0f);
-        assertEquals(0.0f, svec.get(2), 0.0f);
+        assertEquals(Float.NEGATIVE_INFINITY, svec.get(0), 0.0f);
+        assertEquals(NaN, svec.get(1), 0.0f);
+        assertEquals(NaN, svec.get(2), 0.0f);
 
-        agg.aggregateSpatial(vec(1.1f, 0.5f, 7.3f), svec);
-        agg.aggregateSpatial(vec(1.5f, 2.5f, 0.1f), svec);
-        agg.aggregateSpatial(vec(1.4f, 4.9f, 6.3f), svec);
+        agg.aggregateSpatial(vec(7.3f, 0.5f, 1.1f), svec);
+        agg.aggregateSpatial(vec(0.1f, 2.5f, 1.5f), svec);
+        agg.aggregateSpatial(vec(5.5f, 4.9f, 1.4f), svec);
         assertEquals(1.5f, svec.get(0), 1e-5f);
-        assertEquals(2.5f, svec.get(1), 1e-5f);
-        assertEquals(0.1f, svec.get(2), 1e-5f);
+        assertEquals(0.1f, svec.get(1), 1e-5f);
+        assertEquals(2.5f, svec.get(2), 1e-5f);
 
         agg.completeSpatial(3, svec);
         assertEquals(1.5f, svec.get(0), 1e-5f);
-        assertEquals(2.5f, svec.get(1), 1e-5f);
-        assertEquals(0.1f, svec.get(2), 1e-5f);
+        assertEquals(0.1f, svec.get(1), 1e-5f);
+        assertEquals(2.5f, svec.get(2), 1e-5f);
 
         agg.initTemporal(tvec);
-        assertEquals(0.0f, tvec.get(0), 0.0f);
-        assertEquals(0.0f, tvec.get(1), 0.0f);
-        assertEquals(0.0f, tvec.get(2), 0.0f);
+        assertEquals(Float.NEGATIVE_INFINITY, tvec.get(0), 0.0f);
+        assertEquals(NaN, tvec.get(1), 0.0f);
+        assertEquals(NaN, tvec.get(2), 0.0f);
 
         agg.aggregateTemporal(vec(0.3f, 0.2f, 9.7f), 3, tvec);
         agg.aggregateTemporal(vec(1.1f, 0.1f, 0.3f), 3, tvec);
@@ -159,9 +159,9 @@ public class AggregatorTest {
         assertEquals(7.1f, tvec.get(2), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(4.7f, out.get(0), 1e-5f);
-        assertEquals(0.6f, out.get(1), 1e-5f);
-        assertEquals(7.1f, out.get(2), 1e-5f);
+        assertEquals(9.7f, out.get(0), 1e-5f);
+        assertEquals(0.3f, out.get(1), 1e-5f);
+        assertEquals(0.2f, out.get(2), 1e-5f);
     }
 
     private VectorImpl vec(float... values) {

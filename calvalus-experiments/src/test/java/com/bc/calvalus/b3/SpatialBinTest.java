@@ -66,8 +66,8 @@ public class SpatialBinTest {
         assertEquals(0.2f, agg1.get(0), 1e-5f);
         assertEquals(0.6f, agg1.get(1), 1e-5f);
 
-        assertEquals(6.9282035f, agg2.get(0), 1e-5f);
-        assertEquals(32.3316154f, agg2.get(1), 1e-5f);
+        assertEquals(4.0f, agg2.get(0), 1e-5f);
+        assertEquals(18.666667f, agg2.get(1), 1e-5f);
 
         assertEquals(2.235039f, agg3.get(0), 1e-5f);
         assertEquals(3.240475f, agg3.get(1), 1e-5f);
@@ -90,8 +90,8 @@ public class SpatialBinTest {
         assertEquals(0.6f, agg1Copy.get(1), 1e-5f);
 
         assertEquals(2, agg2Copy.size());
-        assertEquals(6.9282035f, agg2Copy.get(0), 1e-5f);
-        assertEquals(32.3316154f, agg2Copy.get(1), 1e-5f);
+        assertEquals(4f, agg2Copy.get(0), 1e-5f);
+        assertEquals(18.666667f, agg2Copy.get(1), 1e-5f);
 
         assertEquals(2, agg3Copy.size());
         assertEquals(2.235039f, agg3Copy.get(0), 1e-5f);

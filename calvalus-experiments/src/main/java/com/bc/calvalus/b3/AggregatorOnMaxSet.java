@@ -59,17 +59,17 @@ public final class AggregatorOnMaxSet implements Aggregator {
 
     @Override
     public void initSpatial(WritableVector vector) {
-        vector.set(0, -Float.MAX_VALUE);
+        vector.set(0, Float.NEGATIVE_INFINITY);
     }
 
     @Override
     public void initTemporal(WritableVector vector) {
-        vector.set(0, -Float.MAX_VALUE);
+        vector.set(0, Float.NEGATIVE_INFINITY);
     }
 
     @Override
     public void aggregateSpatial(Vector observationVector, WritableVector spatialVector) {
-        final float value = observationVector.get(0);
+        final float value = observationVector.get(varIndexes[0]);
         final float currentMax = spatialVector.get(0);
         if (value > currentMax) {
             spatialVector.set(0, value);
