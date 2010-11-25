@@ -6,10 +6,7 @@ import org.jfree.data.gantt.TaskSeries;
 import org.jfree.data.gantt.TaskSeriesCollection;
 
 import java.io.*;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,8 +22,8 @@ public class DataSetConverter {
 
     private List<Trace> scanLogFiles() {
         final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
-//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
-        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
+        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
+//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
         RunTimesScanner runTimesScanner;
         try {
             runTimesScanner = new RunTimesScanner(new BufferedReader(new FileReader(userHomeTemp + fileName)));
@@ -39,8 +36,13 @@ public class DataSetConverter {
 
     public IntervalCategoryDataset createDataSet(Filter dataFilter) {
         final Map<String, TaskSeries> jobsMap = dataFilter.filter(scanLogFiles());
+        final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
+        plotterConfigurator.askForNumberOfSeriesToBeShown();
+        //todo sort the series
         for (TaskSeries series : jobsMap.values()) {
-            taskSeriesCollection.add(series);
+            if (taskSeriesCollection.getSeriesCount() < plotterConfigurator.getNumberOfSeriesToBeShown()) {
+                taskSeriesCollection.add(series);
+            }
         }
         LOGGER.info("data set ready");
         return taskSeriesCollection;
@@ -48,18 +50,17 @@ public class DataSetConverter {
 
     //todo
     public Filter createDataFilter(PlotterConfigurator plotterConfigurator) {
-
         Filter dataFilter;
         if (plotterConfigurator == null ||  //default
                 "task".equalsIgnoreCase(plotterConfigurator.getCategory()) &&
                         "job".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
 
-            dataFilter = new SeriesJobsAndTasksTasksFilter(PlotterConfigurator.askForNumberOfJobsToBeShown());
+            dataFilter = new SeriesJobsAndTasksTasksFilter();
 
         } else if ("task".equalsIgnoreCase(plotterConfigurator.getCategory()) &&
                 "host".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
 
-            dataFilter = new SeriesHostAndTasksTasksFilter(PlotterConfigurator.askForNumberOfHostsToBeShown());
+            dataFilter = new SeriesHostAndTasksTasksFilter();
 
         } else {
             throw new IllegalArgumentException(
@@ -70,16 +71,13 @@ public class DataSetConverter {
     }
 
     public static class SeriesHostAndTasksTasksFilter implements Filter {
-        private int MAX_HOSTS_SHOWN;
-
-        public SeriesHostAndTasksTasksFilter(int maxHostsShown) {
+        public SeriesHostAndTasksTasksFilter() {
             super();
-            this.MAX_HOSTS_SHOWN = maxHostsShown;
         }
 
         @Override
         public Map<String, TaskSeries> filter(List<Trace> traceList) {
-            final HashMap<String, TaskSeries> hostsMap = new HashMap<String, TaskSeries>();
+            final Map<String, TaskSeries> hostsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
                 if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { // m equates tasks
                     final String hostName = trace.getPropertyValue(RunTimesScanner.Keys.HOST.name());
@@ -89,11 +87,9 @@ public class DataSetConverter {
                     if (hostsMap.containsKey(hostName)) {
                         hostsMap.get(hostName).add(taskOnHost);
                     } else {
-                        if (hostsMap.size() < MAX_HOSTS_SHOWN) {
-                            final TaskSeries hostTaskSeries = new TaskSeries(hostName);
-                            hostTaskSeries.add(taskOnHost);
-                            hostsMap.put(hostName, hostTaskSeries);
-                        }
+                        final TaskSeries hostTaskSeries = new TaskSeries(hostName);
+                        hostTaskSeries.add(taskOnHost);
+                        hostsMap.put(hostName, hostTaskSeries);
                     }
 
                 }
@@ -102,37 +98,35 @@ public class DataSetConverter {
             return hostsMap;
         }
 
-        private static void doSomeDebugLogging(HashMap<String, TaskSeries> hostsMap) {
+        private static void doSomeDebugLogging(Map<String, TaskSeries> hostsMap) {
             LOGGER.info("Number of the hosts found in the log file: " + hostsMap.size());
-//            for (int i = 1; i <= hostsMap.size(); i++) {
-//                if (i < 10) {
-//                    System.out.println("No of tasks in host " + i + ": " + hostsMap.get("cvslave0" + i).getItemCount());
-//                } else {
-//                    System.out.println("No. of tasks in host " + i + ": " + hostsMap.get("cvslave" + i).getItemCount());
-//                }
-//            }
+            for (int i = 1; i <= hostsMap.size(); i++) {
+                if (i < 10) {
+                    if (hostsMap.get("cvslave0" + i) != null) {
+                        System.out.println(
+                                "No of tasks in host " + i + ": " + hostsMap.get("cvslave0" + i).getItemCount());
+                    }
+                } else if (hostsMap.get("cvslave" + i) != null) {
+                    System.out.println("No. of tasks in host " + i + ": " + hostsMap.get("cvslave" + i).getItemCount());
+                }
+            }
         }
     }
 
     public static class SeriesJobsAndTasksTasksFilter implements Filter {
-        private int MAX_JOBS_SHOWN = 1;
-
-        public SeriesJobsAndTasksTasksFilter(int maxJobsShown) {
+        public SeriesJobsAndTasksTasksFilter() {
             super();
-            MAX_JOBS_SHOWN = maxJobsShown;
         }
 
         @Override
         public Map<String, TaskSeries> filter(List<Trace> traceList) {
             int jobsCounter = 0;
-            final HashMap<String, TaskSeries> jobsMap = new HashMap<String, TaskSeries>();
+            final Map<String, TaskSeries> jobsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
                 if ("job".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) {  //job
                     jobsCounter++;
-                    if (jobsMap.size() < MAX_JOBS_SHOWN) { //job
-                        final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
-                        jobsMap.put(trace.getId(), taskSeries);
-                    }
+                    final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
+                    jobsMap.put(trace.getId(), taskSeries);
                 } else if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { //task
                     if (trace.getId().contains("_m_")) {
                         String jobId = trace.getId().split("_m_")[0];
@@ -140,13 +134,13 @@ public class DataSetConverter {
                         final TaskSeries jobTaskSeries = jobsMap.get(jobId);
 
                         final Task task = new Task("task" + taskId, //categories on category axis
-                                            new Date(trace.getStartTime()),
-                                            new Date(trace.getStopTime()));
+                                                   new Date(trace.getStartTime()),
+                                                   new Date(trace.getStopTime()));
                         if (null != jobTaskSeries) {
                             jobTaskSeries.add(task);
                         }
                     }
-            }
+                }
             }
             LOGGER.info("Number of the jobs found in the log file: " + jobsCounter);
             return jobsMap;
@@ -172,10 +166,8 @@ public class DataSetConverter {
             * Equally called tasks in one series overwrites each other.
             */
 //            final String groupedTasksId = Integer.valueOf(pureTaskIdInteger % 10).toString();
-            if (Integer.valueOf(jobId.split("_")[1]) < MAX_JOBS_SHOWN) {
-                System.out.print("jobId " + jobId + " ");
-                System.out.println("taskId " + pureTaskIdInteger + "  task category " + groupedTasksId);
-            }
+            System.out.print("jobId " + jobId + " ");
+            System.out.println("taskId " + pureTaskIdInteger + "  task category " + groupedTasksId);
             return groupedTasksId;
         }
     }

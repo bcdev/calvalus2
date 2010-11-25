@@ -3,8 +3,22 @@ package com.bc.calvalus.plot;
 import java.util.Scanner;
 
 public class PlotterConfigurator {
+    //Singleton
+    private static PlotterConfigurator plotterConfigurator;
     private String category;
     private String colouredDimension;
+    private int numberOfSeriesToBeShown;
+
+    private PlotterConfigurator() {
+        super();
+    }
+
+    public static PlotterConfigurator getInstance() {
+        if (plotterConfigurator == null) {
+            plotterConfigurator = new PlotterConfigurator();
+        }
+        return plotterConfigurator;
+    }
 
     public String getCategory() {
         return category;
@@ -12,6 +26,10 @@ public class PlotterConfigurator {
 
     public String getColouredDimension() {
         return colouredDimension;
+    }
+
+    public int getNumberOfSeriesToBeShown() {
+        return numberOfSeriesToBeShown;
     }
 
     public void setCategory(String category) {
@@ -22,12 +40,8 @@ public class PlotterConfigurator {
         this.colouredDimension = colouredDimension;
     }
 
-    public static int askForNumberOfJobsToBeShown() {
-        return askForANumber("How many jobs should be shown? ");
-    }
-
-    public static int askForNumberOfHostsToBeShown() {
-        return askForANumber("How many hosts should be shown? ");
+    public void askForNumberOfSeriesToBeShown() {
+        numberOfSeriesToBeShown = askForANumber("How many " + colouredDimension + " should be shown? ");
     }
 
     private static int askForANumber(final String question) {

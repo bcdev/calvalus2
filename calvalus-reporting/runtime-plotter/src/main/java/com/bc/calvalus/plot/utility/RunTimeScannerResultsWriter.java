@@ -20,8 +20,8 @@ public class RunTimeScannerResultsWriter {
     /* just to analyse the results -- not a part of the code */
     private static void fetchInputLogFiles() {
         final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
-//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
-        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
+        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";  //all STATUS done
+//        final String fileName = "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";  //some failed, some open
         RunTimesScanner runTimesScanner;
         BufferedWriter bufferedWriter;
         try {

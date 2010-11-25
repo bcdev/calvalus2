@@ -30,9 +30,9 @@ public class ChartPlotter {
     private PlotterConfigurator plotterConfigurator;
     private JFreeChart chart;
 
-    public ChartPlotter(PlotterConfigurator plotterConfigurator) {
+    public ChartPlotter() {
         super();
-        this.plotterConfigurator = plotterConfigurator;
+        plotterConfigurator = PlotterConfigurator.getInstance();
     }
 
     static {
@@ -46,7 +46,7 @@ public class ChartPlotter {
             System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job");
             System.exit(0);
         }
-        final ChartPlotter chartPlotter = new ChartPlotter(new PlotterConfigurator());
+        final ChartPlotter chartPlotter = new ChartPlotter();
         chartPlotter.getPlotterConfigurator().setCategory(args[0].split("=")[1]);
         chartPlotter.getPlotterConfigurator().setColouredDimension(args[1].split("=")[1]);
 
