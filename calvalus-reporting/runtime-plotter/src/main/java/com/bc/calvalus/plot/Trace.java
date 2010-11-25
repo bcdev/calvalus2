@@ -14,7 +14,7 @@ public class Trace {
         this.id = id;
     }
 
-    public String getId(){
+    public String getId() {
         return id;
     }
 

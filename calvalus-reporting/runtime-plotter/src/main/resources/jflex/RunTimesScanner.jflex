@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 import java.util.TimeZone;
 import java.text.ParseException;
 
 %%
 
 %class RunTimesScanner
+%public
 %implements Scanner
 %type Trace    // return type of the scanner ist Trace
 %yylexthrow ParseException
@@ -23,11 +25,11 @@ import java.text.ParseException;
     private final Valids valids = new Valids();
 
     public enum Keys { // todo ? sinnvoll ? 
-        DATA, JOB, TYPE, HOST
+        DATA, JOB, TYPE, HOST, STATUS
     }
 
-    protected String start;
-    protected String stop;
+    private String start;
+    private String stop;
 
     private String datetime;
     private String jobId;
@@ -58,10 +60,26 @@ import java.text.ParseException;
         return valids;
     }
 
+     public String getStart() {
+        return start;
+    }
+
+     public String getStop() {
+        return stop;
+    }
+
      public List<Trace> scan() {
         this.init();
         try {
-            while (this.yylex() != null) ;
+            while (this.yylex() != null);
+            //give open traces the stop time of the file
+            for (Trace trace : traces) {
+                if(trace.getStopTime() == Long.MIN_VALUE) {
+                    trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(stop));
+                    trace.setProperty(Keys.STATUS.name(), "open");
+                    valids.add(Keys.STATUS.name(), "open");
+                }
+            }
             return traces;
         } catch (Exception e) {
             e.printStackTrace();   // todo
@@ -69,7 +87,7 @@ import java.text.ParseException;
         }
     }
 
-   static class Valids {
+   public static class Valids {
        private final Map<String, Set<String>> attributes = new HashMap<String, Set<String>>();
 
         public void clear() {
@@ -117,7 +135,7 @@ jobid=[0-9]{12}_[0-9]{4}
 taskid={jobid}_[mr]_[0-9]{6}
 attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 
-%x DATETIME, NEWJOB, JOBSIZE, LOOKFORSPLITS, NUMBEROFSPLITS, NEWTASK, LOOKFORHOST, HOSTNAME, DATALOCALTASK, RACKLOCALTASK, TASKSTOP, JOBSTOP, NEXT
+%x DATETIME, NEWJOB, JOBSIZE, LOOKFORSPLITS, NUMBEROFSPLITS, NEWTASK, LOOKFORHOST, HOSTNAME, DATALOCALTASK, RACKLOCALTASK, TASKSTOP, JOBSTOP, NEXT, JOBABORTION, TASK_ATTEMPT_ABORTION
 
 %%
 
@@ -128,12 +146,18 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 2010-10-28 10:16:46,482 INFO org.apache.hadoop.mapred.JobInProgress: Choosing data-local task task_201010281009_0001_m_000004
 2010-10-28 10:17:16,587 INFO org.apache.hadoop.mapred.JobInProgress: Task 'attempt_201010281009_0001_m_000004_0' has completed task_201010281009_0001_m_000004 successfully.
 2010-10-28 10:36:54,027 INFO org.apache.hadoop.mapred.JobInProgress: Job job_201010281009_0003 has completed successfully.
+
+2010-10-20 18:40:28,633 INFO org.apache.hadoop.mapred.TaskInProgress: Error from attempt_201010081626_0096_m_000589_0: Task attempt_201010081626_0096_m_000589_0 failed to report status for 600 seconds. Killing!
+2010-10-20 08:28:46,553 INFO org.apache.hadoop.mapred.TaskInProgress: Error from attempt_201010081626_0046_m_000007_3: Error: Java heap space
+2010-10-20 08:28:46,690 INFO org.apache.hadoop.mapred.JobInProgress: Aborting job job_201010081626_0046
 */
 
 <YYINITIAL>{datetime}	{
 			    datetime=yytext();
-                            if (start == null /* || datetime.compareTo(start) < 0 */) start = datetime;
-                            /* if (stop == null || datetime.compareTo(stop) > 0) */ stop = datetime;
+                            if (start == null) {
+                                start = datetime;
+                            }
+                            stop = datetime;
 			    yybegin(DATETIME);
 			}
 
@@ -253,6 +277,29 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
                             return trace;
 			}
 
+/* todo task abortion */
+/* java heap space error; restart of attempt after lasting too long*/
+<DATETIME>" INFO org.apache.hadoop.mapred.TaskInProgress: Error from attempt_"	{
+			    yybegin(TASK_ATTEMPT_ABORTION);
+			}
+
+<TASK_ATTEMPT_ABORTION>{attemptid}	{
+			    attemptId = yytext();
+                            taskId = attemptId.substring(0,26);
+                            trace = openTraces.get(taskId);
+                            if (trace != null) {
+                                trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
+                                trace.setProperty(Keys.STATUS.name(), "failed");
+                                valids.add(Keys.STATUS.name(), "failed");
+                                openTraces.remove(taskId);
+                            }
+                            yybegin(NEXT);
+                            if (trace != null) return trace;
+
+            }
+
+
+
 /* task stop */
 
 <DATETIME>" INFO org.apache.hadoop.mapred.JobInProgress: Task 'attempt_"	{
@@ -265,11 +312,33 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
                             trace = openTraces.get(taskId);
                             if (trace != null) {
                                 trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
+                                trace.setProperty(Keys.STATUS.name(), "done");
+                                valids.add(Keys.STATUS.name(), "done");
                                 openTraces.remove(taskId);
                             }
                             yybegin(NEXT);
                             if (trace != null) return trace;
 			}
+
+
+/* todo job abortion */
+/* after restarting tasks 4 times unsuccessfully */
+<DATETIME>" INFO org.apache.hadoop.mapred.JobInProgress: Aborting job job_"	{
+			    yybegin(JOBABORTION);
+			}
+
+<JOBABORTION>{jobid}  {
+                jobId = yytext();
+                        trace = openTraces.get(jobId);
+                            if (trace != null) {
+                               trace.setProperty(Keys.STATUS.name(), "failed");
+                               valids.add(Keys.STATUS.name(), "failed");
+                               trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
+                               openTraces.remove(jobId);
+                            }
+                        yybegin(NEXT);
+                        if (trace != null) return trace;
+            }
 
 /* job stop */
 
@@ -282,6 +351,8 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
                             trace = openTraces.get(jobId);
                             if (trace != null) {
                                 trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
+                                trace.setProperty(Keys.STATUS.name(), "done");
+                                valids.add(Keys.STATUS.name(), "done");
                                 openTraces.remove(jobId);
                             }
                             yybegin(NEXT);

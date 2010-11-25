@@ -1,6 +1,7 @@
 package com.bc.calvalus.plot;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.labels.IntervalCategoryToolTipGenerator;
@@ -16,11 +17,6 @@ import java.text.DateFormat;
  * @see org.jfree.chart.ChartFactory
  */
 public class ChartFactory {
-    /**
-     * The chart theme.
-
-    private static ChartTheme currentTheme = new StandardChartTheme("JFree");
-    */
 
     public static JFreeChart createGanttChart(String title,
                                               String categoryAxisLabel,
@@ -30,24 +26,23 @@ public class ChartFactory {
                                               boolean tooltips,
                                               boolean urls) {
 
-        CategoryAxis categoryAxis = new CategoryAxis(categoryAxisLabel);
-        DateAxis dateAxis = new DateAxis(dateAxisLabel);
-
-        GanttRenderer renderer = new GanttRenderer();
+        final GanttRenderer renderer = new GanttRenderer();
         renderer.setShadowVisible(false);
 
         if (tooltips) {
-            renderer.setBaseToolTipGenerator(new IntervalCategoryToolTipGenerator(
-                    "{3} - {4}", DateFormat.getDateInstance()));
+            renderer.setBaseToolTipGenerator(
+                    new IntervalCategoryToolTipGenerator("{3} - {4}", DateFormat.getDateInstance()));
         }
         if (urls) {
             renderer.setBaseItemURLGenerator(new StandardCategoryURLGenerator());
         }
 
-        CategoryPlot plot = new CategoryPlot(dataset, categoryAxis, dateAxis, renderer);
+        CategoryPlot plot = new CategoryPlot(dataset, new CategoryAxis(categoryAxisLabel),
+                                             new DateAxis(dateAxisLabel), renderer);
+
         plot.setOrientation(PlotOrientation.HORIZONTAL);
         JFreeChart chart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, legend);
-        //currentTheme.apply(chart);
+//        new StandardChartTheme("JFree").apply(chart);
         return chart;
     }
 }
