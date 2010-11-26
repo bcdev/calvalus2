@@ -17,6 +17,7 @@ import java.io.IOException;
  * Reduces list of spatial bins to a temporal bin.
  *
  * @author Norman Fomferra
+ * @author Marco Zuehlke
  */
 public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, TemporalBin> implements Configurable {
 
