@@ -102,6 +102,40 @@ public class AggregatorTest {
         assertEquals(2, agg.getOutputPropertyCount());
         assertEquals("a_min", agg.getOutputPropertyName(0));
         assertEquals("a_max", agg.getOutputPropertyName(1));
+
+        VectorImpl svec = vec(NaN, NaN);
+        VectorImpl tvec = vec(NaN, NaN);
+        VectorImpl out = vec(NaN, NaN);
+
+        agg.initSpatial(svec);
+        assertEquals(Float.POSITIVE_INFINITY, svec.get(0), 0.0f);
+        assertEquals(Float.NEGATIVE_INFINITY, svec.get(1), 0.0f);
+
+        agg.aggregateSpatial(vec(7.3f), svec);
+        agg.aggregateSpatial(vec(5.5f), svec);
+        agg.aggregateSpatial(vec(-0.1f), svec);
+        agg.aggregateSpatial(vec(2.0f), svec);
+        assertEquals(-0.1f, svec.get(0), 1e-5f);
+        assertEquals(7.3f, svec.get(1), 1e-5f);
+
+        agg.completeSpatial(3, svec);
+        assertEquals(-0.1f, svec.get(0), 1e-5f);
+        assertEquals(7.3f, svec.get(1), 1e-5f);
+
+        agg.initTemporal(tvec);
+        assertEquals(Float.POSITIVE_INFINITY, tvec.get(0), 0.0f);
+        assertEquals(Float.NEGATIVE_INFINITY, tvec.get(1), 0.0f);
+
+        agg.aggregateTemporal(vec(0.9f, 1.0f), 3, tvec);
+        agg.aggregateTemporal(vec(0.1f, 5.1f), 5, tvec);
+        agg.aggregateTemporal(vec(0.6f, 2.0f), 9, tvec);
+        agg.aggregateTemporal(vec(0.2f, 1.5f), 2, tvec);
+        assertEquals(0.1f, tvec.get(0), 1e-5f);
+        assertEquals(5.1f, tvec.get(1), 1e-5f);
+
+        agg.computeOutput(tvec, out);
+        assertEquals(0.1f, tvec.get(0), 1e-5f);
+        assertEquals(5.1f, tvec.get(1), 1e-5f);
     }
 
     @Test
@@ -159,9 +193,9 @@ public class AggregatorTest {
         assertEquals(7.1f, tvec.get(2), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(9.7f, out.get(0), 1e-5f);
-        assertEquals(0.3f, out.get(1), 1e-5f);
-        assertEquals(0.2f, out.get(2), 1e-5f);
+        assertEquals(4.7f, out.get(0), 1e-5f);
+        assertEquals(0.6f, out.get(1), 1e-5f);
+        assertEquals(7.1f, out.get(2), 1e-5f);
     }
 
     private VectorImpl vec(float... values) {

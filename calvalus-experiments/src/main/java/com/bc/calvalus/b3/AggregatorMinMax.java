@@ -49,14 +49,14 @@ public class AggregatorMinMax implements Aggregator {
 
     @Override
     public void initSpatial(WritableVector vector) {
-        vector.set(0, +Float.MAX_VALUE);
-        vector.set(1, -Float.MAX_VALUE);
+        vector.set(0, Float.POSITIVE_INFINITY);
+        vector.set(1, Float.NEGATIVE_INFINITY);
     }
 
     @Override
     public void initTemporal(WritableVector vector) {
-        vector.set(0, +Float.MAX_VALUE);
-        vector.set(1, -Float.MAX_VALUE);
+        vector.set(0, Float.POSITIVE_INFINITY);
+        vector.set(1, Float.NEGATIVE_INFINITY);
     }
 
     @Override

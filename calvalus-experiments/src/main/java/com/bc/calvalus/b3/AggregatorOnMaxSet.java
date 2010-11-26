@@ -97,7 +97,7 @@ public final class AggregatorOnMaxSet implements Aggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        for (int i = 1; i < numProperties; i++) {
+        for (int i = 0; i < numProperties; i++) {
             outputVector.set(i, temporalVector.get(i));
         }
     }
