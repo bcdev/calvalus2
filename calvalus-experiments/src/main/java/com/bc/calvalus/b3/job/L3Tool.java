@@ -30,11 +30,15 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Creates and runs Hadoop job for L3 processing. 
+ * Creates and runs Hadoop job for L3 processing.
+ *
+ * @author Norman Fomferra
+ * @author Marco Zuehlke
  */
 public class L3Tool extends Configured implements Tool {
 
@@ -43,7 +47,7 @@ public class L3Tool extends Configured implements Tool {
     static final String CONFNAME_L3_NUM_ROWS = "calvalus.level3.numRows";
     static final String CONFNAME_L3_NUM_DAYS = "calvalus.level3.numDays";
     static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
-    static final int DEFAULT_L3_NUM_NUM_DAYS = 64;
+    static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
     static final String MERIS_INPUT_MONTH_DIR = "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d";
 
     @Override
@@ -72,7 +76,7 @@ public class L3Tool extends Configured implements Tool {
             job.setNumReduceTasks(numReducers);
 
             if (configuration.get(CONFNAME_L3_NUM_SCANS_PER_SLICE) == null) {
-                configuration.setInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, 64);
+                configuration.setInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, DEFAULT_L3_NUM_SCANS_PER_SLICE);
             }
             if (configuration.get(CONFNAME_L3_NUM_ROWS) == null) {
                 configuration.setInt(CONFNAME_L3_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
@@ -139,6 +143,9 @@ public class L3Tool extends Configured implements Tool {
         float[] nobsData = new float[width * height];
         float[] meanData = new float[width * height];
         float[] sigmaData = new float[width * height];
+        Arrays.fill(nobsData, Float.NaN);
+        Arrays.fill(meanData, Float.NaN);
+        Arrays.fill(sigmaData, Float.NaN);
 
         int numObsMaxTotal = -1;
         int numPassesMaxTotal = -1;
@@ -161,6 +168,7 @@ public class L3Tool extends Configured implements Tool {
                     IntWritable binIndex = new IntWritable();
                     TemporalBin temporalBin = new TemporalBin();
                     if (!reader.next(binIndex, temporalBin)) {
+                        // last row
                         processBinRow(binningGrid, binManager,
                                       lastRowIndex, binRow,
                                       nobsData, meanData, sigmaData,
@@ -260,13 +268,16 @@ public class L3Tool extends Configured implements Tool {
                 //search
                 temporalBin = null;
                 for (int i = rowIndex + 1; i < binRow.size(); i++) {
-                    if (wantedBinIndex == binRow.get(i).getIndex()) {
+                    final int binIndex = binRow.get(i).getIndex();
+                    if (binIndex == wantedBinIndex) {
                         temporalBin = binRow.get(i);
                         binManager.computeOutput(temporalBin, outputVector);
                         lastMean = outputVector.get(0);
                         lastSigma = outputVector.get(1);
                         lastBinIndex = wantedBinIndex;
                         rowIndex = i;
+                        break;
+                    } else if (binIndex > wantedBinIndex) {
                         break;
                     }
                 }
