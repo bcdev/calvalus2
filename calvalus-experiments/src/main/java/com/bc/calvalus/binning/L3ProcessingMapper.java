@@ -13,7 +13,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -61,7 +60,7 @@ public class L3ProcessingMapper extends Mapper<NullWritable, NullWritable, IntWr
                                       context.getTaskAttemptID(), split));
         long startTime = System.nanoTime();
 
-        // open the single split as ImageInputStream and create a product via an Envisat product reader
+        // open the single split as ImageInputStream and get a product via an Envisat product reader
         Path path = split.getPath();
         FileSystem inputFileSystem = path.getFileSystem(context.getConfiguration());
         FSDataInputStream fsDataInputStream = inputFileSystem.open(path);

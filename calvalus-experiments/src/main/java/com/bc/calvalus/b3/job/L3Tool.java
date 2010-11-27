@@ -7,6 +7,7 @@ import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
+import com.bc.calvalus.b3.VariableContextImpl;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.processing.N1InputFormat;
 import com.bc.calvalus.experiments.util.Args;
@@ -43,9 +44,9 @@ import java.util.logging.Logger;
 public class L3Tool extends Configured implements Tool {
 
     static final Logger LOG = CalvalusLogger.getLogger();
-    static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.level3.numScansPerSlice";
-    static final String CONFNAME_L3_NUM_ROWS = "calvalus.level3.numRows";
-    static final String CONFNAME_L3_NUM_DAYS = "calvalus.level3.numDays";
+    static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.l3.numScansPerSlice";
+    static final String CONFNAME_L3_NUM_ROWS = "calvalus.l3.grid.numRows";
+    static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
     static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
     static final String MERIS_INPUT_MONTH_DIR = "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d";
@@ -133,7 +134,7 @@ public class L3Tool extends Configured implements Tool {
 
     private void processL3Output(Configuration configuration, Path output, int numParts) throws IOException {
         // todo - use config to construct the correct list of aggregators
-        AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
+        AggregatorAverage aggregator = new AggregatorAverage(new VariableContextImpl(), "ndvi");
         BinManager binManager = new BinManagerImpl(aggregator);
 
         LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", numParts));

@@ -9,9 +9,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static java.lang.Math.*;
-import static org.junit.Assert.*;
+import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class SpatialBinnerTest {
@@ -22,12 +23,12 @@ public class SpatialBinnerTest {
     @Test
     public void testThatObservationsAreAggregated() throws Exception {
 
-        VariableContext variableContext = new MyVariableContext("x");
         MyBinningGrid binningGrid = new MyBinningGrid();
-        MyBinManager binningManager = new MyBinManager(new AggregatorAverageML(variableContext, "x"));
-        TemporalBinner temporalBinner = new TemporalBinner(binningManager);
-        SpatialBinner spatialBinner = new SpatialBinner(binningGrid,
-                                                        binningManager,
+        MyVariableContext variableContext = new MyVariableContext("x");
+        MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x"));
+        final BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
+        TemporalBinner temporalBinner = new TemporalBinner(binManager);
+        SpatialBinner spatialBinner = new SpatialBinner(binningContext,
                                                         temporalBinner, 2);
 
         spatialBinner.processObservationSlice(new ObservationImpl(0, 1.1, 1.1f),
@@ -47,7 +48,7 @@ public class SpatialBinnerTest {
         assertNotNull(tbin1);
         assertEquals(3, tbin1.getNumObs());
         assertEquals(1, tbin1.getNumPasses());
-        Vector agg1 = binningManager.getTemporalVector(tbin1, 0);
+        Vector agg1 = binManager.getTemporalVector(tbin1, 0);
         assertNotNull(agg1);
         assertEquals(sqrt(3),
                      agg1.get(WEIGHT), 1e-5);
@@ -58,7 +59,7 @@ public class SpatialBinnerTest {
         assertNotNull(tbin2);
         assertEquals(5, tbin2.getNumObs());
         assertEquals(1, tbin2.getNumPasses());
-        Vector agg2 = binningManager.getTemporalVector(tbin2, 0);
+        Vector agg2 = binManager.getTemporalVector(tbin2, 0);
         assertNotNull(agg2);
         assertEquals(sqrt(5),
                      agg2.get(WEIGHT), 1e-5);
@@ -69,7 +70,7 @@ public class SpatialBinnerTest {
         assertNotNull(tbin3);
         assertEquals(1, tbin3.getNumObs());
         assertEquals(1, tbin3.getNumPasses());
-        Vector agg3 = binningManager.getTemporalVector(tbin3, 0);
+        Vector agg3 = binManager.getTemporalVector(tbin3, 0);
         assertNotNull(agg3);
         assertEquals(1.0,
                      agg3.get(WEIGHT), 1e-10);
@@ -79,10 +80,10 @@ public class SpatialBinnerTest {
 
     @Test
     public void testThatCellsAreDeterminedCorrectly() throws Exception {
-        IsinBinningGrid grid = new IsinBinningGrid();
+        IsinBinningGrid binningGrid = new IsinBinningGrid();
 
         // bin size in degree
-        double binEdgeSize = 180.0 / grid.getNumRows();
+        double binEdgeSize = 180.0 / binningGrid.getNumRows();
 
         // we want 4 x 4 pixels per bin
         int pixelsPerBinEdge = 4;
@@ -110,20 +111,22 @@ public class SpatialBinnerTest {
             }
         }
 
-        VariableContext variableContext = new MyVariableContext("x");
-        MyBinManager binningManager = new MyBinManager(new AggregatorAverageML(variableContext, "x"));
-        MyBinProcessor binProcessor = new MyBinProcessor();
-        SpatialBinner spatialBinner = new SpatialBinner(grid, binningManager, binProcessor, h);
+        MyVariableContext variableContext = new MyVariableContext("x");
+        MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x"));
+        MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
+        BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
+
+        SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor, h);
 
         for (ObservationImpl[] pixelSlice : pixelSlices) {
             spatialBinner.processObservationSlice(pixelSlice);
         }
 
-        ArrayList<SpatialBin> producedSpatialBins = binningManager.producedSpatialBins;
+        ArrayList<SpatialBin> producedSpatialBins = binManager.producedSpatialBins;
 
         int numObs = w * h;
         assertEquals(256, numObs);
-        assertEquals(256, binProcessor.numObservationsTotal);
+        assertEquals(256, spatialBinProcessor.numObservationsTotal);
         for (int i = 0; i < 16; i++) {
             assertEquals(String.format("Problem with bin[%d]", i), 16, producedSpatialBins.get(i).getNumObs());
         }
@@ -142,7 +145,7 @@ public class SpatialBinnerTest {
         }
     }
 
-    private static class MyBinProcessor implements SpatialBinProcessor {
+    private static class MySpatialBinProcessor implements SpatialBinProcessor {
         int numObservationsTotal;
         boolean verbous = false;
 

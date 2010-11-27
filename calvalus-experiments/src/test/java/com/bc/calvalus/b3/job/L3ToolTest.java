@@ -5,6 +5,7 @@ import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinManagerImpl;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.TemporalBin;
+import com.bc.calvalus.b3.VariableContextImpl;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
@@ -27,7 +28,7 @@ public class L3ToolTest {
 
     @Before
     public void init() {
-        AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
+        AggregatorAverage aggregator = new AggregatorAverage(new VariableContextImpl(), "ndvi");
         binManager = new BinManagerImpl(aggregator);
     }
 

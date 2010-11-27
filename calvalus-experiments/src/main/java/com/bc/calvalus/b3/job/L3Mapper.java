@@ -1,14 +1,10 @@
 package com.bc.calvalus.b3.job;
 
-import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.BinningContext;
-import com.bc.calvalus.b3.BinManagerImpl;
-import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.ObservationImpl;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.SpatialBinProcessor;
 import com.bc.calvalus.b3.SpatialBinner;
-import com.bc.calvalus.b3.VariableContext;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.FSImageInputStream;
 import com.bc.ceres.glevel.MultiLevelImage;
@@ -53,6 +49,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
+        SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
+
+        BinningContext ctx = L3Config.getBinningContext(context.getConfiguration());
+
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
         int tileHeight = context.getConfiguration().getInt(L3Tool.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Tool.DEFAULT_L3_NUM_SCANS_PER_SLICE);
@@ -65,14 +65,12 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                                       context.getTaskAttemptID(), split));
         long startTime = System.nanoTime();
 
-        // open the single split as ImageInputStream and create a product via an Envisat product reader
+        // open the single split as ImageInputStream and get a product via an Envisat product reader
         Path path = split.getPath();
         FileSystem inputFileSystem = path.getFileSystem(context.getConfiguration());
         FSDataInputStream fsDataInputStream = inputFileSystem.open(path);
         FileStatus status = inputFileSystem.getFileStatus(path);
         ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
-        int numObsTotal = 0;
-        int numBinsTotal = 0;
         try {
             EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
             ProductReader productReader = plugIn.createReaderInstance();
@@ -82,6 +80,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                                                "(radiance_10 - radiance_6) / (radiance_10 + radiance_6)");
             band.setValidPixelExpression("!l1_flags.INVALID && !l1_flags.BRIGHT && l1_flags.LAND_OCEAN");
             product.addBand(band);
+
             GeoCoding geoCoding = product.getGeoCoding();
             MultiLevelImage maskImage = band.getValidMaskImage();
             MultiLevelImage varImage = band.getGeophysicalImage();
@@ -89,16 +88,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
             assertThatImageIsSliced(product, varImage);
             Point[] tileIndices = varImage.getTileIndices(null);
 
-            int numBinningGridRows = context.getConfiguration().getInt(L3Tool.CONFNAME_L3_NUM_ROWS, -1);
-            SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
-
-            VariableContext variableContext = new MyVariableContext();
-
-            SpatialBinner spatialBinner
-                    = new SpatialBinner(new IsinBinningGrid(numBinningGridRows),
-                                        new BinManagerImpl(new AggregatorAverage(variableContext, "ndvi")),
-                                        spatialBinEmitter,
-                                        tileIndices.length);
+            SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter, tileIndices.length);
 
             for (Point tileIndex : tileIndices) {
                 Raster varRaster = varImage.getTile(tileIndex.x, tileIndex.y);
@@ -124,9 +114,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                                                     product.getName());
                     LOG.log(Level.SEVERE, m, e);
                 }
-
-                numObsTotal += numObs;
-                numBinsTotal += spatialBinEmitter.numBinsEmitted;
             }
         } finally {
             imageInputStream.close();
@@ -135,7 +122,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         // write final log entry for runtime measurements
         long stopTime = System.nanoTime();
         LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numObsTotal, numBinsTotal));
+                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
     }
 
     private void assertThatImageIsSliced(Product product, MultiLevelImage image) {
@@ -150,7 +137,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
     private static class SpatialBinEmitter implements SpatialBinProcessor {
         private Context context;
-        int numBinsEmitted;
+        int numObsTotal = 0;
+        int numBinsTotal = 0;
 
         public SpatialBinEmitter(Context context) {
             this.context = context;
@@ -160,8 +148,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         public void processSpatialBinSlice(BinningContext ctx, int sliceIndex, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
                 context.write(new IntWritable(spatialBin.getIndex()), spatialBin);
+                numObsTotal += spatialBin.getNumObs();
             }
-            numBinsEmitted += spatialBins.size();
+            numBinsTotal += spatialBins.size();
         }
     }
 

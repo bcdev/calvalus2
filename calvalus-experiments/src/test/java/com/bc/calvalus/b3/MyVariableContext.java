@@ -13,7 +13,7 @@ class MyVariableContext implements VariableContext {
     }
 
     @Override
-    public int getNumVariable() {
+    public int getVariableCount() {
         return varNames.length;
     }
 

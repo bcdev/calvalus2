@@ -1,11 +1,10 @@
 package com.bc.calvalus.b3.job;
 
 import com.bc.calvalus.b3.AggregatorAverage;
-import com.bc.calvalus.b3.BinManagerImpl;
-import com.bc.calvalus.b3.BinningGrid;
-import com.bc.calvalus.b3.IsinBinningGrid;
+import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
+import com.bc.calvalus.b3.VariableContextImpl;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
@@ -22,13 +21,13 @@ import java.io.IOException;
 public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, TemporalBin> implements Configurable {
 
     private Configuration conf;
-    private BinManagerImpl binningManager;
+    private BinManager binManager;
 
     @Override
     protected void reduce(IntWritable binIndex, Iterable<SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
-        TemporalBin temporalBin = binningManager.createTemporalBin(binIndex.get());
+        TemporalBin temporalBin = binManager.createTemporalBin(binIndex.get());
         for (SpatialBin spatialBin : spatialBins) {
-            binningManager.aggregateTemporalBin(spatialBin, temporalBin);
+            binManager.aggregateTemporalBin(spatialBin, temporalBin);
         }
         context.write(binIndex, temporalBin);
     }
@@ -36,9 +35,7 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        // todo - use config to construct the correct list of aggregators
-        AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
-        binningManager = new BinManagerImpl(aggregator);
+        this.binManager = L3Config.getBinManager(conf);
     }
 
     @Override

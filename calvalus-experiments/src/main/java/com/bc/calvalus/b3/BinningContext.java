@@ -9,5 +9,7 @@ public interface BinningContext {
 
     BinningGrid getBinningGrid();
 
+    VariableContext getVariableContext();
+
     BinManager getBinManager();
 }
