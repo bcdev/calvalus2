@@ -26,7 +26,7 @@ public class SpatialBinnerTest {
         MyBinningGrid binningGrid = new MyBinningGrid();
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x"));
-        final BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
+        BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
         TemporalBinner temporalBinner = new TemporalBinner(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext,
                                                         temporalBinner, 2);

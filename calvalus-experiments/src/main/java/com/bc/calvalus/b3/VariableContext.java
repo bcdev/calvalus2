@@ -2,7 +2,10 @@ package com.bc.calvalus.b3;
 
 
 public interface VariableContext {
-    int getVariableCount(); // todo - rename getVariableCount
+    int getVariableCount();
     String getVariableName(int i);
+    String getVariableExpr(int i);
     int getVariableIndex(String varName);
+
+    String getMaskExpr();
 }

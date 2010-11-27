@@ -31,4 +31,15 @@ class MyVariableContext implements VariableContext {
         }
         return -1;
     }
+
+    @Override
+    public String getVariableExpr(int i) {
+        return null;
+    }
+
+
+    @Override
+    public String getMaskExpr() {
+        return null;
+    }
 }

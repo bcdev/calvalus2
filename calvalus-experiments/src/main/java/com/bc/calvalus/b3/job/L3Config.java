@@ -24,6 +24,18 @@ import java.util.TreeSet;
  * @author Norman Fomferra
  */
 public class L3Config {
+    public static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.l3.numScansPerSlice";
+    public static final String CONFNAME_L3_GRID_NUM_ROWS = "calvalus.l3.grid.numRows";
+    public static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
+    public static final String CONFNAME_L3_AGG_i_TYPE = "calvalus.l3.aggregators.%d.type";
+    public static final String CONFNAME_L3_AGG_i_VAR_NAME = "calvalus.l3.aggregators.%d.varName";
+    public static final String CONFNAME_L3_AGG_i_VAR_NAMES_j = "calvalus.l3.aggregators.%d.varNames.%d";
+    public static final String CONFNAME_L3_AGG_i_WEIGHT_COEFF = "calvalus.l3.aggregators.%d.weightCoeff";
+    public static final String CONFNAME_L3_MASK_EXPR = "calvalus.l3.maskExpr";
+    public static final String CONFNAME_L3_VARIABLES_i_NAME = "calvalus.l3.variables.%d.name";
+    public static final String CONFNAME_L3_VARIABLES_i_EXPR = "calvalus.l3.variables.%d.expr";
+    public static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
+    public static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
 
     public static BinningContext getBinningContext(Configuration conf) {
         VariableContext varCtx = getVariableContext(conf);
@@ -33,7 +45,7 @@ public class L3Config {
     }
 
     public static BinningGrid getBinningGrid(Configuration conf) {
-        int numRows = conf.getInt("calvalus.l3.grid.numRows", 2160);
+        int numRows = conf.getInt(CONFNAME_L3_GRID_NUM_ROWS, 2160);
         return new IsinBinningGrid(numRows);
     }
 
@@ -44,20 +56,19 @@ public class L3Config {
     private static BinManager getBinManager(Configuration conf, VariableContext varCtx) {
         ArrayList<Aggregator> aggregators = new ArrayList<Aggregator>();
         for (int i = 0; ; i++) {
-            String aggPrefix = "calvalus.l3.aggregators." + i;
-            String type = conf.get(aggPrefix + ".type");
+            String type = conf.get(String.format(CONFNAME_L3_AGG_i_TYPE, i));
             if (type == null) {
                 break;
             }
-            Aggregator aggregator = null;
+            Aggregator aggregator;
             if (type.equals("AVG")) {
-                aggregator = getAggregatorAverage(conf, varCtx, aggPrefix);
+                aggregator = getAggregatorAverage(conf, varCtx, i);
             } else if (type.equals("AVG_ML")) {
-                aggregator = getAggregatorAverageML(conf, varCtx, aggPrefix);
+                aggregator = getAggregatorAverageML(conf, varCtx, i);
             } else if (type.equals("MIN_MAX")) {
-                aggregator = getAggregatorMinMax(conf, varCtx, aggPrefix);
+                aggregator = getAggregatorMinMax(conf, varCtx, i);
             } else if (type.equals("ON_MAX_SET")) {
-                aggregator = getAggregatorOnMaxSet(conf, varCtx, aggPrefix);
+                aggregator = getAggregatorOnMaxSet(conf, varCtx, i);
             } else {
                 throw new IllegalArgumentException("Unknown aggregator type: " + type);
             }
@@ -67,40 +78,49 @@ public class L3Config {
     }
 
     public static VariableContext getVariableContext(Configuration conf) {
-        TreeSet<String> varNames = new TreeSet<String>();
+        VariableContextImpl variableContext = new VariableContextImpl();
+
+        variableContext.setMaskExpr(conf.get(CONFNAME_L3_MASK_EXPR));
+
+        // define declared variables
+        //
         for (int i = 0; ; i++) {
-            String virtualBandName = conf.get("calvalus.l3.virtualBand." + i + ".name");
-            if (virtualBandName == null) {
+            String varName = conf.get(String.format(CONFNAME_L3_VARIABLES_i_NAME, i));
+            String varExpr = conf.get(String.format(CONFNAME_L3_VARIABLES_i_EXPR, i));
+            if (varName == null) {
                 break;
             }
-            varNames.add(virtualBandName);
+            variableContext.defineVariable(varName, varExpr);
         }
+
+        // define variables of all aggregators
+        //
         for (int i = 0; ; i++) {
-            String aggPrefix = "calvalus.l3.aggregators." + i;
-            String aggType = conf.get(aggPrefix + ".type");
+            String aggType = conf.get(String.format(CONFNAME_L3_AGG_i_TYPE, i));
             if (aggType == null) {
                 break;
             }
-            String varName = conf.get(aggPrefix + ".varName");
+            String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
             if (varName != null) {
-                varNames.add(varName);
+                variableContext.defineVariable(varName);
             } else {
                 for (int j = 0; ; j++) {
-                    varName = conf.get(aggPrefix + ".varNames." + j);
+                    varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
                     if (varName != null) {
-                        varNames.add(varName);
+                        variableContext.defineVariable(varName);
                     } else {
                         break;
                     }
                 }
             }
         }
-        return new VariableContextImpl(varNames.toArray(new String[0]));
+
+        return variableContext;
     }
 
-    private static Aggregator getAggregatorAverage(Configuration conf, VariableContext varCtx, String aggPrefix) {
-        String varName = conf.get(aggPrefix + ".varName");
-        String weightCoeff = conf.get(aggPrefix + ".weightCoeff");
+    private static Aggregator getAggregatorAverage(Configuration conf, VariableContext varCtx, int i) {
+        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+        String weightCoeff = conf.get(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
         if (weightCoeff == null) {
             return new AggregatorAverage(varCtx, varName);
         } else {
@@ -108,9 +128,9 @@ public class L3Config {
         }
     }
 
-    private static Aggregator getAggregatorAverageML(Configuration conf, VariableContext varCtx, String aggPrefix) {
-        String varName = conf.get(aggPrefix + ".varName");
-        String weightCoeff = conf.get(aggPrefix + ".weightCoeff");
+    private static Aggregator getAggregatorAverageML(Configuration conf, VariableContext varCtx, int i) {
+        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+        String weightCoeff = conf.get(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
         if (weightCoeff == null) {
             return new AggregatorAverageML(varCtx, varName);
         } else {
@@ -118,15 +138,15 @@ public class L3Config {
         }
     }
 
-    private static Aggregator getAggregatorMinMax(Configuration conf, VariableContext varCtx, String aggPrefix) {
-        String varName = conf.get(aggPrefix + ".varName");
+    private static Aggregator getAggregatorMinMax(Configuration conf, VariableContext varCtx, int i) {
+        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
         return new AggregatorMinMax(varCtx, varName);
     }
 
-    private static Aggregator getAggregatorOnMaxSet(Configuration conf, VariableContext varCtx, String aggPrefix) {
+    private static Aggregator getAggregatorOnMaxSet(Configuration conf, VariableContext varCtx, int i) {
         ArrayList<String> varNames = new ArrayList<String>();
-        for (int i = 0; ; i++) {
-            String varName = conf.get(aggPrefix + ".varNames." + i);
+        for (int j = 0; ; j++) {
+            String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
             if (varName == null) {
                 break;
             }

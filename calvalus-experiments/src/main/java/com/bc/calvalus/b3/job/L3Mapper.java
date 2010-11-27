@@ -18,6 +18,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -55,7 +56,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
-        int tileHeight = context.getConfiguration().getInt(L3Tool.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Tool.DEFAULT_L3_NUM_SCANS_PER_SLICE);
+        int tileHeight = context.getConfiguration().getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
         System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));
 
         FileSplit split = (FileSplit) context.getInputSplit();
@@ -76,10 +77,23 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
             ProductReader productReader = plugIn.createReaderInstance();
 
             Product product = productReader.readProductNodes(imageInputStream, null);
-            VirtualBand band = new VirtualBand("ndvi", ProductData.TYPE_FLOAT32, product.getSceneRasterWidth(), product.getSceneRasterHeight(),
-                                               "(radiance_10 - radiance_6) / (radiance_10 + radiance_6)");
-            band.setValidPixelExpression("!l1_flags.INVALID && !l1_flags.BRIGHT && l1_flags.LAND_OCEAN");
-            product.addBand(band);
+
+            Band band = null;
+            int n = ctx.getVariableContext().getVariableCount();
+            for (int i = 0; i < n; i++) {
+                String variableName = ctx.getVariableContext().getVariableName(i);
+                String variableExpr = ctx.getVariableContext().getVariableExpr(i);
+                if (variableExpr != null) {
+                    // todo - FIXME, we only can work with one band for time being!!!
+                    band = new VirtualBand(variableName,
+                                           ProductData.TYPE_FLOAT32,
+                                           product.getSceneRasterWidth(),
+                                           product.getSceneRasterHeight(),
+                                           variableExpr);
+                    band.setValidPixelExpression(ctx.getVariableContext().getMaskExpr());
+                    product.addBand(band);
+                }
+            }
 
             GeoCoding geoCoding = product.getGeoCoding();
             MultiLevelImage maskImage = band.getValidMaskImage();
@@ -91,6 +105,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
             SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter, tileIndices.length);
 
             for (Point tileIndex : tileIndices) {
+                // todo - FIXME, load tiles for all input variables!!!
                 Raster varRaster = varImage.getTile(tileIndex.x, tileIndex.y);
                 Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
                 int sliceWidth = varRaster.getWidth();

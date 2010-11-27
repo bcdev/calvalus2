@@ -30,17 +30,31 @@ public class L3ConfigTest {
     @Test
     public void testVariableContext() {
         VariableContext varCtx = L3Config.getVariableContext(loadConfig("job.properties"));
+
         assertEquals(8, varCtx.getVariableCount());
-        assertEquals(0, varCtx.getVariableIndex("algal1"));
-        assertEquals(1, varCtx.getVariableIndex("algal2"));
-        assertEquals(2, varCtx.getVariableIndex("chl"));
-        assertEquals(3, varCtx.getVariableIndex("ndvi"));
-        assertEquals(4, varCtx.getVariableIndex("reflec_3"));
-        assertEquals(5, varCtx.getVariableIndex("reflec_7"));
-        assertEquals(6, varCtx.getVariableIndex("reflec_8"));
-        assertEquals(7, varCtx.getVariableIndex("tsm"));
+
+        assertEquals(0, varCtx.getVariableIndex("ndvi"));
+        assertEquals(1, varCtx.getVariableIndex("tsm"));
+        assertEquals(2, varCtx.getVariableIndex("algal1"));
+        assertEquals(3, varCtx.getVariableIndex("algal2"));
+        assertEquals(4, varCtx.getVariableIndex("chl"));
+        assertEquals(5, varCtx.getVariableIndex("reflec_3"));
+        assertEquals(6, varCtx.getVariableIndex("reflec_7"));
+        assertEquals(7, varCtx.getVariableIndex("reflec_8"));
         assertEquals(-1, varCtx.getVariableIndex("reflec_6"));
         assertEquals(-1, varCtx.getVariableIndex("reflec_10"));
+
+        assertEquals("!l2_flags.INVALID && l2_flags.WATER", varCtx.getMaskExpr());
+
+        assertEquals("ndvi", varCtx.getVariableName(0));
+        assertEquals("(reflec_10 - reflec_6) / (reflec_10 + reflec_6)", varCtx.getVariableExpr(0));
+
+        assertEquals("algal2", varCtx.getVariableName(3));
+        assertEquals(null, varCtx.getVariableExpr(3));
+
+        assertEquals("reflec_7", varCtx.getVariableName(6));
+        assertEquals(null, varCtx.getVariableExpr(6));
+
     }
 
     @Test
