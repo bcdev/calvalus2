@@ -58,8 +58,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
 
-        final int tileHeight = context.getConfiguration().getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));
+        final int numScansPerSlice = context.getConfiguration().getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
+        // todo - must tell BEAM to use this tileHeight in all readers, not only Envisat reader
+        System.setProperty("beam.envisat.tileHeight", Integer.toString(numScansPerSlice));
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -79,7 +80,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
         try {
             final Product product = productReader.readProductNodes(imageInputStream, null);
-            process(ctx, product, spatialBinner);
+            processProduct(product, numScansPerSlice, ctx, spatialBinner);
             product.dispose();
         } finally {
             imageInputStream.close();
@@ -93,13 +94,18 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final Exception[] exceptions = spatialBinner.getExceptions();
         for (int i = 0; i < exceptions.length; i++) {
             Exception exception = exceptions[i];
-            String m = MessageFormat.format("Failed to process input slice of split {0}",
-                                            split);
+            String m = MessageFormat.format("Failed to process input slice of split {0}", split);
             LOG.log(Level.SEVERE, m, exception);
         }
     }
 
-    private void process(BinningContext ctx, Product product, SpatialBinner spatialBinner) {
+    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner) {
+        if (product.getGeoCoding() == null) {
+            throw new IllegalArgumentException("product.getGeoCoding() == null");
+        }
+
+        final int sliceWidth = product.getSceneRasterWidth();
+
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);
             String variableExpr = ctx.getVariableContext().getVariableExpr(i);
@@ -114,38 +120,30 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
             }
         }
 
-        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(ctx.getVariableContext().getMaskExpr(), product);
+        final String maskExpr = ctx.getVariableContext().getMaskExpr();
+        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
+        checkImageTileSize(MessageFormat.format("Mask image for expr ''{0}''", maskExpr),
+                           maskImage, sliceWidth, sliceHeight);
 
-        final RasterDataNode[] nodes = new RasterDataNode[ctx.getVariableContext().getVariableCount()];
-        final RenderedImage[] varImages = new RenderedImage[ctx.getVariableContext().getVariableCount()];
+        final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
-            String nodeName = ctx.getVariableContext().getVariableName(i);
-            RasterDataNode node = product.getRasterDataNode(nodeName);
-            if (node == null) {
-                throw new IllegalStateException(String.format("Can't find raster data node '%s' in product '%s'",
-                                                              nodeName, product.getName()));
-            }
+            final String nodeName = ctx.getVariableContext().getVariableName(i);
+            final RasterDataNode node = getRasterDataNode(product, nodeName);
             final MultiLevelImage varImage = node.getGeophysicalImage();
-            assertThatImageIsSliced(product, node, varImage);
-            nodes[i] = node;
+            checkImageTileSize(MessageFormat.format("Geophysical image for node ''{0}''", node.getName()),
+                               maskImage, sliceWidth, sliceHeight);
             varImages[i] = varImage;
         }
 
         final GeoCoding geoCoding = product.getGeoCoding();
-        final Point[] tileIndices = nodes[0].getSourceImage().getTileIndices(null);
-        final int sliceWidth = nodes[0].getSourceImage().getTileWidth();
-        final int sliceHeight = nodes[0].getSourceImage().getTileHeight();
-
+        final Point[] tileIndices = maskImage.getTileIndices(null);
+        ObservationSlice observationSlice;
         for (Point tileIndex : tileIndices) {
-
-            final ObservationSlice observationSlice = createObservationSlice(geoCoding,
-                                                                             maskImage, varImages,
-                                                                             tileIndex, sliceWidth, sliceHeight);
-
-            try {
-                spatialBinner.processObservationSlice(observationSlice);
-            } catch (Exception e) {
-            }
+            observationSlice = createObservationSlice(geoCoding,
+                                                      maskImage, varImages,
+                                                      tileIndex,
+                                                      sliceWidth, sliceHeight);
+            spatialBinner.processObservationSlice(observationSlice);
         }
 
         spatialBinner.complete();
@@ -165,10 +163,17 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         }
 
         final ObservationSlice observationSlice = new ObservationSlice(varRasters, sliceWidth * sliceHeight);
-        for (int y = maskRaster.getMinY(); y < maskRaster.getMinY() + maskRaster.getHeight(); y++) {
-            for (int x = maskRaster.getMinX(); x < maskRaster.getMinX() + sliceWidth; x++) {
+        final int y1 = maskRaster.getMinY();
+        final int y2 = y1 + maskRaster.getHeight();
+        final int x1 = maskRaster.getMinX();
+        final int x2 = x1 + sliceWidth;
+        final PixelPos pixelPos = new PixelPos();
+        final GeoPos geoPos = new GeoPos();
+        for (int y = y1; y < y2; y++) {
+            for (int x = x1; x < x2; x++) {
                 if (maskRaster.getSample(x, y, 0) != 0) {
-                    GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                    pixelPos.setLocation(x + 0.5f, y + 0.5f);
+                    geoCoding.getGeoPos(pixelPos, geoPos);
                     observationSlice.addObservation(geoPos.lat, geoPos.lon, x, y);
                 }
             }
@@ -177,21 +182,29 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         return observationSlice;
     }
 
-    private void assertThatImageIsSliced(Product product, RasterDataNode node, MultiLevelImage image) {
-        if (image.getTileWidth() != product.getSceneRasterWidth()) {
+    private static RasterDataNode getRasterDataNode(Product product, String nodeName) {
+        final RasterDataNode node = product.getRasterDataNode(nodeName);
+        if (node == null) {
+            throw new IllegalStateException(String.format("Can't find raster data node '%s' in product '%s'",
+                                                          nodeName, product.getName()));
+        }
+        return node;
+    }
+
+    private static void checkImageTileSize(String msg, MultiLevelImage image, int sliceWidth, int sliceHeight) {
+        if (image.getTileWidth() != sliceWidth
+                || image.getTileHeight() != sliceHeight) {
             throw new IllegalStateException(MessageFormat.format(
-                    "Internal BEAM problem: Unexpected tile size detected in node ''{0}'' of product ''{1}'': " +
-                            "product.sceneRasterSize = {2}x{3}, " +
-                            "image.tileSize = {4}x{5}, ",
-                    node.getName(),
-                    product.getName(),
-                    product.getSceneRasterWidth(),
-                    product.getSceneRasterHeight(),
+                    "{0}: unexpected slice size detected: " +
+                            "expected {1} x {2}, " +
+                            "but was image tile size was {3} x {4} pixels (BEAM reader problem?)",
+                    msg,
+                    sliceWidth,
+                    sliceHeight,
                     image.getTileWidth(),
                     image.getTileHeight()));
         }
     }
-
 
     private static class SpatialBinEmitter implements SpatialBinProcessor {
         private Context context;

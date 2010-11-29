@@ -44,6 +44,10 @@ public final class SpatialBin implements Writable {
         return properties.length;
     }
 
+    public float getProperty(int i) {
+        return properties[i];
+    }
+
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         // Note, we don't serialise the index, because it is usually the MapReduce key
