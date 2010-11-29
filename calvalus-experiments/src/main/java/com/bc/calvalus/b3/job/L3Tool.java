@@ -149,17 +149,11 @@ public class L3Tool extends Configured implements Tool {
         Arrays.fill(meanData, Float.NaN);
         Arrays.fill(sigmaData, Float.NaN);
 
-        int numObsMaxTotal = -1;
-        int numPassesMaxTotal = -1;
-
         long startTime = System.nanoTime();
 
         for (int i = 0; i < numParts; i++) {
             Path partFile = new Path(output, String.format("part-r-%05d", i));
             SequenceFile.Reader reader = new SequenceFile.Reader(partFile.getFileSystem(configuration), partFile, configuration);
-
-            int numObsMaxPart = -1;
-            int numPassesMaxPart = -1;
 
             LOG.info(MessageFormat.format("reading part {0}", partFile));
 
@@ -189,22 +183,13 @@ public class L3Tool extends Configured implements Tool {
                     }
                     temporalBin.setIndex(binIndex.get());
                     binRow.add(temporalBin);
-
-                    numObsMaxPart = Math.max(numObsMaxPart, temporalBin.getNumObs());
-                    numPassesMaxPart = Math.max(numPassesMaxPart, temporalBin.getNumPasses());
                 }
             } finally {
                 reader.close();
             }
-
-            LOG.info(MessageFormat.format("numObsMaxPart = {0}, numPassesMaxPart = {1}", numObsMaxPart, numPassesMaxPart));
-
-            numObsMaxTotal = Math.max(numObsMaxTotal, numObsMaxPart);
-            numPassesMaxTotal = Math.max(numPassesMaxTotal, numPassesMaxPart);
         }
         long stopTime = System.nanoTime();
 
-        LOG.info(MessageFormat.format("numObsMaxTotal = {0}, numPassesMaxTotal = {1}", numObsMaxTotal, numPassesMaxTotal));
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
 
         String baseName = String.format("l3_ndvi_%dd_%dr", configuration.getInt(CONFNAME_L3_NUM_DAYS, -1),
