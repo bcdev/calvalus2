@@ -78,12 +78,13 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
 
         ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
+        final Product product = productReader.readProductNodes(imageInputStream, null);
         try {
-            final Product product = productReader.readProductNodes(imageInputStream, null);
             processProduct(product, numScansPerSlice, ctx, spatialBinner);
-            product.dispose();
         } finally {
-            imageInputStream.close();
+            if (product != null) {
+                product.dispose();
+            }
         }
 
         // write final log entry for runtime measurements
@@ -92,8 +93,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
 
         final Exception[] exceptions = spatialBinner.getExceptions();
-        for (int i = 0; i < exceptions.length; i++) {
-            Exception exception = exceptions[i];
+        for (Exception exception : exceptions) {
             String m = MessageFormat.format("Failed to process input slice of split {0}", split);
             LOG.log(Level.SEVERE, m, exception);
         }
