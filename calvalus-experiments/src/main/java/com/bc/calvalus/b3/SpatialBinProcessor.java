@@ -13,9 +13,8 @@ public interface SpatialBinProcessor {
      * Processes a slice of spatial bins.
      *
      * @param ctx         The binning context.
-     * @param sliceIndex  The current slice index.
      * @param spatialBins The slice of spatial bins.
      * @throws Exception If an error occurs.
      */
-    void processSpatialBinSlice(BinningContext ctx, int sliceIndex, List<SpatialBin> spatialBins) throws Exception;
+    void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception;
 }

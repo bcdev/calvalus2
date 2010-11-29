@@ -29,7 +29,7 @@ public class SpatialBinnerTest {
         BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
         TemporalBinner temporalBinner = new TemporalBinner(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext,
-                                                        temporalBinner, 2);
+                                                        temporalBinner);
 
         spatialBinner.processObservationSlice(new ObservationImpl(0, 1.1, 1.1f),
                                               new ObservationImpl(0, 1.1, 1.2f),
@@ -41,6 +41,8 @@ public class SpatialBinnerTest {
                                               new ObservationImpl(0, 2.1, 2.3f),
                                               new ObservationImpl(0, 2.1, 2.4f),
                                               new ObservationImpl(0, 3.1, 2.5f));
+
+        spatialBinner.complete();
 
         assertEquals(3, temporalBinner.binMap.size());
 
@@ -116,11 +118,12 @@ public class SpatialBinnerTest {
         MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
         BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
 
-        SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor, h);
+        SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
 
         for (ObservationImpl[] pixelSlice : pixelSlices) {
             spatialBinner.processObservationSlice(pixelSlice);
         }
+        spatialBinner.complete();
 
         ArrayList<SpatialBin> producedSpatialBins = binManager.producedSpatialBins;
 
@@ -148,13 +151,14 @@ public class SpatialBinnerTest {
     private static class MySpatialBinProcessor implements SpatialBinProcessor {
         int numObservationsTotal;
         boolean verbous = false;
+        int sliceIndex;
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, int sliceIndex, List<SpatialBin> sliceBins) {
+        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> sliceBins) {
             if (verbous) {
                 // Sort for better readability
                 Collections.sort(sliceBins, new BinComparator());
-                System.out.println("Slice " + sliceIndex + " =================");
+                System.out.println("Slice  " + sliceIndex + " =================");
             }
             for (SpatialBin bin : sliceBins) {
                 if (verbous) {
@@ -162,6 +166,7 @@ public class SpatialBinnerTest {
                 }
                 numObservationsTotal += bin.getNumObs();
             }
+            sliceIndex++;
         }
     }
 
