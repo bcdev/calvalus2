@@ -76,27 +76,29 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
-
-        ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
+        final ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
         final Product product = productReader.readProductNodes(imageInputStream, null);
-        try {
-            processProduct(product, numScansPerSlice, ctx, spatialBinner);
-        } finally {
-            if (product != null) {
+        if (product != null) {
+            try {
+                processProduct(product, numScansPerSlice, ctx, spatialBinner);
+            } finally {
                 product.dispose();
             }
+        } else {
+            throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", path));
         }
 
-        // write final log entry for runtime measurements
         long stopTime = System.nanoTime();
-        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
 
         final Exception[] exceptions = spatialBinner.getExceptions();
         for (Exception exception : exceptions) {
             String m = MessageFormat.format("Failed to process input slice of split {0}", split);
             LOG.log(Level.SEVERE, m, exception);
         }
+        // write final log entry for runtime measurements
+        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
+                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+
     }
 
     static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner) {
