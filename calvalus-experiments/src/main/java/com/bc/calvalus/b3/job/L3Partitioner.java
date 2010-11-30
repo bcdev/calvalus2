@@ -9,9 +9,11 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 
 /**
- * Partition the bins by their binIndex.
+ * Partitions the bins by their bin index.
+ * Reduces will recive spatial bins of contiguous latitude ranges.
  *
  * @author Marco Zuehlke
+ * @author Norman Fomferra
  */
 public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implements Configurable {
 
@@ -28,9 +30,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        // todo - use config to construct a BinningGrid instance of the correct type
-        int numRows = conf.getInt(L3Tool.CONFNAME_L3_NUM_ROWS, -1);
-        binningGrid = new IsinBinningGrid(numRows);
+        this.binningGrid = L3Config.getBinningGrid(conf);
     }
 
     @Override

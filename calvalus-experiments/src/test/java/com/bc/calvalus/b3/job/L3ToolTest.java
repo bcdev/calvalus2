@@ -3,8 +3,10 @@ package com.bc.calvalus.b3.job;
 import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinManagerImpl;
+import com.bc.calvalus.b3.BinningContextImpl;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.TemporalBin;
+import com.bc.calvalus.b3.VariableContextImpl;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
@@ -19,7 +21,8 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class L3ToolTest {
     static final float NAN = Float.NaN;
@@ -27,7 +30,7 @@ public class L3ToolTest {
 
     @Before
     public void init() {
-        AggregatorAverage aggregator = new AggregatorAverage(new MyVariableContext(), "ndvi");
+        AggregatorAverage aggregator = new AggregatorAverage(new VariableContextImpl(), "ndvi");
         binManager = new BinManagerImpl(aggregator);
     }
 
@@ -66,7 +69,7 @@ public class L3ToolTest {
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData, meanData, sigmaData, width, height);
+        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
 
         assertEquals(11f, nobsData[y * width + 0], 1E-5f);
         assertEquals(12f, nobsData[y * width + 1], 1E-5f);
@@ -114,7 +117,7 @@ public class L3ToolTest {
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
+        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
         assertEquals(12f, nobsData[y * width + 1], 1E-5f);
@@ -153,7 +156,7 @@ public class L3ToolTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
+        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
 
         assertEquals(0f, nobsData[y * width + 0], 1E-5f);
         assertEquals(0f, nobsData[y * width + 1], 1E-5f);
@@ -189,7 +192,7 @@ public class L3ToolTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData,  meanData, sigmaData, width, height);
+        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
 
         assertEquals(0f, nobsData[y * width + 0], 1E-5f);
         assertEquals(0f, nobsData[y * width + 1], 1E-5f);
@@ -223,7 +226,7 @@ public class L3ToolTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(binningGrid, binManager, y, binRow, nobsData, meanData, sigmaData, width, height);
+        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
         assertEquals(NAN, nobsData[y * width + 1], 1E-5f);
@@ -270,6 +273,10 @@ public class L3ToolTest {
         TemporalBin temporalBin = binManager.createTemporalBin(idx);
         temporalBin.setNumObs(idx);
         return temporalBin;
+    }
+
+    private BinningContextImpl getCtx(IsinBinningGrid binningGrid) {
+        return new BinningContextImpl(binningGrid, new VariableContextImpl(), binManager);
     }
 
 }

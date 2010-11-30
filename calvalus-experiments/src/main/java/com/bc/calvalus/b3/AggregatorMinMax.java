@@ -7,8 +7,14 @@ public class AggregatorMinMax implements Aggregator {
     private final int varIndex;
     private String[] propertyNames;
 
-    public AggregatorMinMax(VariableContext ctx, String varName) {
-        varIndex = ctx.getVariableIndex(varName);
+    public AggregatorMinMax(VariableContext varCtx, String varName) {
+        if (varCtx == null) {
+            throw new NullPointerException("varCtx");
+        }
+        if (varName == null) {
+            throw new NullPointerException("varName");
+        }
+        varIndex = varCtx.getVariableIndex(varName);
         propertyNames = new String[]{varName + "_min", varName + "_max"};
     }
 
@@ -49,14 +55,14 @@ public class AggregatorMinMax implements Aggregator {
 
     @Override
     public void initSpatial(WritableVector vector) {
-        vector.set(0, +Float.MAX_VALUE);
-        vector.set(1, -Float.MAX_VALUE);
+        vector.set(0, Float.POSITIVE_INFINITY);
+        vector.set(1, Float.NEGATIVE_INFINITY);
     }
 
     @Override
     public void initTemporal(WritableVector vector) {
-        vector.set(0, +Float.MAX_VALUE);
-        vector.set(1, -Float.MAX_VALUE);
+        vector.set(0, Float.POSITIVE_INFINITY);
+        vector.set(1, Float.NEGATIVE_INFINITY);
     }
 
     @Override

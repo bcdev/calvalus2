@@ -8,13 +8,22 @@ public final class AggregatorOnMaxSet implements Aggregator {
     private final int numProperties;
     private final int[] varIndexes;
 
-    public AggregatorOnMaxSet(VariableContext ctx, String... varNames) {
+    public AggregatorOnMaxSet(VariableContext varCtx, String... varNames) {
+        if (varCtx == null) {
+            throw new NullPointerException("varCtx");
+        }
+        if (varNames == null) {
+            throw new NullPointerException("varName");
+        }
+        if (varNames.length == 0) {
+            throw new IllegalArgumentException("varNames.length == 0");
+        }
         propertyNames = varNames.clone();
         propertyNames[0] = varNames[0] + "_max";
         numProperties = varNames.length;
         varIndexes = new int[varNames.length];
         for (int i = 0; i < varNames.length; i++) {
-            int varIndex = ctx.getVariableIndex(varNames[i]);
+            int varIndex = varCtx.getVariableIndex(varNames[i]);
             if (varIndex < 0) {
                 throw new IllegalArgumentException("varIndex < 0");
             }
@@ -97,7 +106,7 @@ public final class AggregatorOnMaxSet implements Aggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        for (int i = 1; i < numProperties; i++) {
+        for (int i = 0; i < numProperties; i++) {
             outputVector.set(i, temporalVector.get(i));
         }
     }

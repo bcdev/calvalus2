@@ -85,13 +85,11 @@
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>saxon</artifactId>
-            <version>8.8.0.7</version>
         </dependency>
 
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>saxon-dom</artifactId>
-            <version>8.8.0.7</version>
         </dependency>
 
     </dependencies>

@@ -7,13 +7,19 @@ public interface Aggregator {
 
     String getName();
 
+    // todo - replace next 2 by PropertyContext getSpatialPropertyContext()
+
     int getSpatialPropertyCount();
 
     String getSpatialPropertyName(int i);
 
+    // todo - replace next 2 by PropertyContext getTemporalPropertyContext()
+
     int getTemporalPropertyCount();
 
     String getTemporalPropertyName(int i);
+
+    // todo - replace next 2 by PropertyContext getOutputPropertyContext()
 
     int getOutputPropertyCount();
 

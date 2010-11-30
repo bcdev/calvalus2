@@ -14,8 +14,17 @@ public final class AggregatorAverage implements Aggregator {
         this(ctx, varName, 1.0);
     }
 
-    public AggregatorAverage(VariableContext ctx, String varName, double weightCoeff) {
-        this.varIndex = ctx.getVariableIndex(varName);
+    public AggregatorAverage(VariableContext varCtx, String varName, double weightCoeff) {
+        if (varCtx == null) {
+            throw new NullPointerException("varCtx");
+        }
+        if (varName == null) {
+            throw new NullPointerException("varName");
+        }
+        if (weightCoeff <= 0.0) {
+            throw new IllegalArgumentException("weightCoeff <= 0.0");
+        }
+        this.varIndex = varCtx.getVariableIndex(varName);
         this.spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
         this.temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
         this.outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma"};

@@ -6,6 +6,8 @@ package com.bc.calvalus.b3;
  * @author Norman Fomferra
  */
 public interface BinManager {
+    // todo - add PropertyContext getInputPropertyContext()
+    // todo - add PropertyContext getOutputPropertyContext()
 
     int getAggregatorCount();
 
