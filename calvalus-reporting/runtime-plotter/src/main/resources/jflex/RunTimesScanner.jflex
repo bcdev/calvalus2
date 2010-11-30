@@ -40,10 +40,6 @@ import java.text.ParseException;
     private String taskType;
     private Trace trace;
 
-    static {
-        TimeUtils.CCSDS_UTC_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
-
     public void init() {
         traces.clear();
         openTraces.clear();
@@ -76,8 +72,8 @@ import java.text.ParseException;
             for (Trace trace : traces) {
                 if(trace.getStopTime() == Long.MIN_VALUE) {
                     trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(stop));
-                    trace.setProperty(Keys.STATUS.name(), "open");
-                    valids.add(Keys.STATUS.name(), "open");
+                    trace.setProperty(Keys.STATUS.name().toLowerCase(), "open");
+                    valids.add(Keys.STATUS.name().toLowerCase(), "open");
                 }
             }
             return traces;
@@ -149,6 +145,7 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 
 2010-10-20 18:40:28,633 INFO org.apache.hadoop.mapred.TaskInProgress: Error from attempt_201010081626_0096_m_000589_0: Task attempt_201010081626_0096_m_000589_0 failed to report status for 600 seconds. Killing!
 2010-10-20 08:28:46,553 INFO org.apache.hadoop.mapred.TaskInProgress: Error from attempt_201010081626_0046_m_000007_3: Error: Java heap space
+2010-10-20 08:28:49,751 INFO org.apache.hadoop.mapred.JobTracker: Removed completed task 'attempt_201010081626_0046_m_000003_0' from 'tracker_cvslave02.bc.local:localhost/127.0.0.1:35237'
 2010-10-20 08:28:46,690 INFO org.apache.hadoop.mapred.JobInProgress: Aborting job job_201010081626_0046
 */
 
@@ -178,11 +175,11 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 			    jobId = yytext();
                             trace = new Trace(jobId);
                             trace.setStartTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
-                            trace.setProperty(Keys.TYPE.name(), "job");
+                            trace.setProperty(Keys.TYPE.name().toLowerCase(), "job");
                             traces.add(trace);
                             openTraces.put(jobId, trace);
                             valids.add("job", jobId);
-                            valids.add(Keys.TYPE.name(), "job");
+                            valids.add(Keys.TYPE.name().toLowerCase(), "job");
 			    yybegin(NEXT);
 			}
 
@@ -234,14 +231,15 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 			    hostname = yytext();
                             trace = new Trace(attemptId);
                             trace.setStartTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
-                            trace.setProperty(Keys.TYPE.name(), taskType);
-                            trace.setProperty(Keys.HOST.name(), hostname);
+                            trace.setProperty(Keys.TYPE.name().toLowerCase(), taskType);
+                            trace.setProperty(Keys.HOST.name().toLowerCase(), hostname);
                             trace.setProperty("job", jobId);
                             traces.add(trace);
                             openTraces.put(taskId, trace);
+                            openTraces.put(attemptId, trace);
                             valids.add("job", jobId);
-                            valids.add(Keys.TYPE.name(), taskType);
-                            valids.add(Keys.HOST.name(), hostname);
+                            valids.add(Keys.TYPE.name().toLowerCase(), taskType);
+                            valids.add(Keys.HOST.name().toLowerCase(), hostname);
 			    yybegin(NEXT);
 			}
 
@@ -255,8 +253,8 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 			    taskId = yytext();
                             trace = openTraces.get(taskId);
                             if (trace != null) {
-                                trace.setProperty(Keys.DATA.name(), "local");
-                                valids.add(Keys.DATA.name(), "local");
+                                trace.setProperty(Keys.DATA.name().toLowerCase(), "local");
+                                valids.add(Keys.DATA.name().toLowerCase(), "local");
                             }
                             yybegin(NEXT);
                             return trace;
@@ -270,8 +268,8 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 			    taskId = yytext();
                             trace = openTraces.get(taskId);
                             if (trace != null) {
-                                trace.setProperty(Keys.DATA.name(), "remote");
-                                valids.add(Keys.DATA.name(), "remote");
+                                trace.setProperty(Keys.DATA.name().toLowerCase(), "remote");
+                                valids.add(Keys.DATA.name().toLowerCase(), "remote");
                             }
                             yybegin(NEXT);
                             return trace;
@@ -286,19 +284,22 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 <TASK_ATTEMPT_ABORTION>{attemptid}	{
 			    attemptId = yytext();
                             taskId = attemptId.substring(0,26);
-                            trace = openTraces.get(taskId);
+                            trace = openTraces.get(attemptId);
                             if (trace != null) {
                                 trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
-                                trace.setProperty(Keys.STATUS.name(), "failed");
-                                valids.add(Keys.STATUS.name(), "failed");
+                                trace.setProperty(Keys.STATUS.name().toLowerCase(), "failed");
+                                valids.add(Keys.STATUS.name().toLowerCase(), "failed");
                                 openTraces.remove(taskId);
+                                openTraces.remove(attemptId);
                             }
                             yybegin(NEXT);
                             if (trace != null) return trace;
 
             }
 
-
+<DATETIME>" INFO org.apache.hadoop.mapred.JobTracker: Removed completed task 'attempt_" {
+			    yybegin(TASK_ATTEMPT_ABORTION);
+            }
 
 /* task stop */
 
@@ -309,12 +310,13 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
 <TASKSTOP>{attemptid}	{
 			    attemptId = yytext();
                             taskId = attemptId.substring(0,26);
-                            trace = openTraces.get(taskId);
+                            trace = openTraces.get(attemptId);
                             if (trace != null) {
                                 trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
-                                trace.setProperty(Keys.STATUS.name(), "done");
-                                valids.add(Keys.STATUS.name(), "done");
+                                trace.setProperty(Keys.STATUS.name().toLowerCase(), "done");
+                                valids.add(Keys.STATUS.name().toLowerCase(), "done");
                                 openTraces.remove(taskId);
+                                openTraces.remove(attemptId);
                             }
                             yybegin(NEXT);
                             if (trace != null) return trace;
@@ -331,8 +333,8 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
                 jobId = yytext();
                         trace = openTraces.get(jobId);
                             if (trace != null) {
-                               trace.setProperty(Keys.STATUS.name(), "failed");
-                               valids.add(Keys.STATUS.name(), "failed");
+                               trace.setProperty(Keys.STATUS.name().toLowerCase(), "failed");
+                               valids.add(Keys.STATUS.name().toLowerCase(), "failed");
                                trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
                                openTraces.remove(jobId);
                             }
@@ -351,8 +353,8 @@ attemptid={jobid}_[mr]_[0-9]{6}_[0-9]
                             trace = openTraces.get(jobId);
                             if (trace != null) {
                                 trace.setStopTime(TimeUtils.parseCcsdsLocalTimeWithoutT(datetime));
-                                trace.setProperty(Keys.STATUS.name(), "done");
-                                valids.add(Keys.STATUS.name(), "done");
+                                trace.setProperty(Keys.STATUS.name().toLowerCase(), "done");
+                                valids.add(Keys.STATUS.name().toLowerCase(), "done");
                                 openTraces.remove(jobId);
                             }
                             yybegin(NEXT);
