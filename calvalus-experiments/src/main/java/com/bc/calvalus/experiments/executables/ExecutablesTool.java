@@ -88,6 +88,7 @@ public class ExecutablesTool extends Configured implements Tool {
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);
             job.setJarByClass(getClass());
+            job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
