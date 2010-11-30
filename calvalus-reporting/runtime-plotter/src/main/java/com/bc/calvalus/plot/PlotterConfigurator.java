@@ -1,5 +1,7 @@
 package com.bc.calvalus.plot;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Scanner;
 
 public class PlotterConfigurator {
@@ -7,9 +9,12 @@ public class PlotterConfigurator {
     private static PlotterConfigurator plotterConfigurator;
     private String inputFile;
     private String category;
-    private String colouredDimension;
+    private String colouredDimension; //series
     private int numberOfSeries;
+    private int numberOfCategories;
     private int numberOfSeriesToBeShown;
+    private long start = TimeUtils.TIME_NULL;
+    private long stop = TimeUtils.TIME_NULL;
 
     private PlotterConfigurator() {
         super();
@@ -51,8 +56,8 @@ public class PlotterConfigurator {
     }
 
     public void askForNumberOfSeriesToBeShown() {
-        System.out.println("Number of " + colouredDimension + " found in the log file: " + numberOfSeries);
-        numberOfSeriesToBeShown = askForANumber("How many " + colouredDimension + " should be shown? ");
+        System.out.println("Number of " + colouredDimension + "s found in the log file: " + numberOfSeries);
+        numberOfSeriesToBeShown = askForANumber("How many " + colouredDimension + "s should be shown? ");
     }
 
     private static int askForANumber(final String question) {
@@ -77,5 +82,53 @@ public class PlotterConfigurator {
             input = userHomeTemp + "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
         }
         inputFile = input;
+    }
+
+    public long getStart() {
+        return start;
+    }
+
+    public void setStart(long start) {
+        this.start = start;
+    }
+
+    public long getStop() {
+        return stop;
+    }
+
+    public void setStop(long stop) {
+        this.stop = stop;
+    }
+
+    public int getNumberOfSeries() {
+        return numberOfSeries;
+    }
+
+    public int getNumberOfCategories() {
+        return numberOfCategories;
+    }
+
+    public void setNumberOfCategories(int numberOfCategories) {
+        this.numberOfCategories = numberOfCategories;
+    }
+
+    public void configureStartAndStop(String scannerStart, String scannerStop) {
+        long logStart = TimeUtils.TIME_NULL;
+        long logStop = TimeUtils.TIME_NULL;
+        try {
+            logStart = TimeUtils.parseCcsdsLocalTimeWithoutT(scannerStart);
+            logStop = TimeUtils.parseCcsdsLocalTimeWithoutT(scannerStop);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (logStart != TimeUtils.TIME_NULL &&
+                (start == TimeUtils.TIME_NULL || start < logStart)) {
+            start = logStart;
+        }
+        if (logStop != TimeUtils.TIME_NULL &&
+                (stop == TimeUtils.TIME_NULL || stop > logStop)) {
+            stop = logStop;
+        }
     }
 }

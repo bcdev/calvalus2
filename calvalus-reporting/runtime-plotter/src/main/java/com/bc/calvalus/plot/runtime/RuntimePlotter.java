@@ -27,7 +27,8 @@ import java.util.List;
 /**
  * TODO add API doc
  *
- * @author
+ * program arguments:
+ * C:\Users\bettina\temp\calvalus\hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20 -start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z -category=host -colour=type
  */
 public class RuntimePlotter {
 
@@ -52,8 +53,12 @@ public class RuntimePlotter {
             final long logStart = TimeUtils.parseCcsdsLocalTimeWithoutT(scanner.getStart());
             final long logStop = TimeUtils.parseCcsdsLocalTimeWithoutT(scanner.getStop());
 
-            if (logStart != TimeUtils.TIME_NULL && (start == TimeUtils.TIME_NULL || start < logStart)) start = logStart;
-            if (logStop != TimeUtils.TIME_NULL && (stop == TimeUtils.TIME_NULL || stop > logStop)) stop = logStop;
+            if (logStart != TimeUtils.TIME_NULL && (start == TimeUtils.TIME_NULL || start < logStart)) {
+                start = logStart;
+            }
+            if (logStop != TimeUtils.TIME_NULL && (stop == TimeUtils.TIME_NULL || stop > logStop)) {
+                stop = logStop;
+            }
 
             // convert to JFreeChart task series
             final TaskSeriesCollection seriesCollection = new TaskSeriesCollection();
@@ -66,17 +71,16 @@ public class RuntimePlotter {
                 final String categoryValue = String.valueOf(trace.getPropertyValue(category));
                 final String colourValue = String.valueOf(trace.getPropertyValue(colour));
                 final int categoryIndex = categoryValids.indexOf(categoryValue);
-                final int colourIndex = colourValids.indexOf(colourValue);
-                // final int index = 25 * categoryIndex + trace.getId().hashCode() % 20; // TODO improve distribution of neighbours
-                int p1 = trace.getId().indexOf('_');
-                int p2 = trace.getId().indexOf('_', p1+1);
-                int p3 = trace.getId().indexOf('_', p2+1);
-                int p4 = trace.getId().indexOf('_', p3+1);
-                int i1 = p1 != -1 ? p2 != -1 ? Integer.parseInt(trace.getId().substring(p1+1, p2)) : Integer.parseInt(trace.getId().substring(p1+1)) : 0;
-                int i3 = p4 != -1 ? Integer.parseInt(trace.getId().substring(p3+1, p4)) : 0;
-                int i4 = p4 != -1 ? Integer.parseInt(trace.getId().substring(p4+1)) : 0;
-                int traceId = i1 + i3 + i4 * 10 / 2;              
-                final int index = 20 * categoryIndex + traceId % 10;
+//                final int colourIndex = colourValids.indexOf(colourValue);
+//                int p1 = trace.getId().indexOf('_');
+//                int p2 = trace.getId().indexOf('_', p1+1);
+//                int p3 = trace.getId().indexOf('_', p2+1);
+//                int p4 = trace.getId().indexOf('_', p3+1);
+//                int i1 = p1 != -1 ? p2 != -1 ? Integer.parseInt(trace.getId().substring(p1+1, p2)) : Integer.parseInt(trace.getId().substring(p1+1)) : 0;
+//                int i3 = p4 != -1 ? Integer.parseInt(trace.getId().substring(p3+1, p4)) : 0;
+//                int i4 = p4 != -1 ? Integer.parseInt(trace.getId().substring(p4+1)) : 0;
+//                int traceId = i1 + i3 + i4 * 10 / 2;
+//                final int index = 20 * categoryIndex + traceId % 10;
                 final TaskSeries series =  seriesCollection.getSeries(colourValue);
                 // preliminarily exclude open traces
                 //if (trace.getStartTime() == TimeUtils.TIME_NULL || trace.getStopTime() == TimeUtils.TIME_NULL) continue;
@@ -88,7 +92,7 @@ public class RuntimePlotter {
                 long traceStop = trace.getStopTime();
                 if (traceStop == TimeUtils.TIME_NULL || traceStop > stop) traceStop = stop;
                 //
-                series.add(new Task(String.valueOf(index), new Date(traceStart), new Date(traceStop)));
+                series.add(new Task(String.valueOf(categoryIndex), new Date(traceStart), new Date(traceStop)));
                 //System.out.println(trace);
             }
 

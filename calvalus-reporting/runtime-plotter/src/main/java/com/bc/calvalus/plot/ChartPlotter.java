@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,17 +34,31 @@ public class ChartPlotter {
         userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
         // 1) configure
+        //todo use CommandLineParser von Apache - http://commons.apache.org/cli/
         if (args.length < 2 || !args[0].startsWith("-category=") || !args[1].startsWith("-colour=")) {
             System.out.println("Please enter a command like: java ChartPlotter -category=task -colour=host");
             System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job");
+            System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job " +
+                    "-start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z");
+            System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job " +
+                    "-start=2010-10-28T10:20:00.000Z -stop=2010-10-28T14:00:00.000Z");
             System.exit(0);
         }
         final ChartPlotter chartPlotter = new ChartPlotter();
         final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
         plotterConfigurator.setCategory(args[0].split("=")[1]);
         plotterConfigurator.setColouredDimension(args[1].split("=")[1]);
+        if(args.length > 2) {
+            final String startTimeString = args[2].split("=")[1];
+            plotterConfigurator.setStart(TimeUtils.parseCcsdsUtcFormat(startTimeString));
+        }
+        if(args.length > 3) {
+            final String stopTimeString = args[3].split("=")[1];
+            plotterConfigurator.setStop(TimeUtils.parseCcsdsUtcFormat(stopTimeString));
+        }
+
         plotterConfigurator.askForLogFile();
 
         // 2) execute
@@ -63,8 +78,8 @@ public class ChartPlotter {
 
         //4) draw the chart to some output
         LOGGER.info("saving ...");
-        saveChartAsPng(1500, 800);
-        saveChartAsJpg(800, 300);
+//        saveChartAsPng(1500, 800);
+//        saveChartAsJpg(800, 300);
         saveChartAsPDF(1500, 800);
         saveChartOnScreen();
     }
@@ -72,7 +87,8 @@ public class ChartPlotter {
     private void createChart(DataSetConverter dataSetConverter, DataSetConverter.Filter dataFilter) {
         LOGGER.info("creating gantt chart ...");
         chart = ChartFactory.createGanttChart(
-                "Gantt Chart", "Category", "Date", dataSetConverter.createDataSet(dataFilter), true, true, true);
+                "Gantt Chart", "Category: " + PlotterConfigurator.getInstance().getCategory(), "Date",
+                dataSetConverter.createDataSet(dataFilter), true, true, true);
     }
 
     private void customiseChart() {
@@ -85,11 +101,15 @@ public class ChartPlotter {
         chart.setBorderVisible(false);
         chart.getTitle().setFont(titleFont);
         chart.setRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED));
-        final CategoryPlot categoryPlot = chart.getCategoryPlot();
 
         final CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
         categoryAxis.setLabelFont(defaultFont);
-        categoryAxis.setTickLabelsVisible(false);
+        if (PlotterConfigurator.getInstance().getNumberOfCategories() > 15 ||
+               PlotterConfigurator.getInstance().getNumberOfCategories() == 0 ) {
+            categoryAxis.setTickLabelsVisible(false);
+        } else {
+            categoryAxis.setTickLabelsVisible(true);
+        }
         final ValueAxis valueAxis = chart.getCategoryPlot().getRangeAxis();
         valueAxis.setLabelFont(defaultFont);
         valueAxis.setTickLabelFont(tickLabelFont);

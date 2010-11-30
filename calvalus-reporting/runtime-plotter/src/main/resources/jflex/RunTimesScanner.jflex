@@ -24,7 +24,7 @@ import java.text.ParseException;
     private final Map<String,Trace> openTraces = new HashMap<String,Trace>();
     private final Valids valids = new Valids();
 
-    public enum Keys { // todo ? sinnvoll ? 
+    public enum Keys {
         DATA, JOB, TYPE, HOST, STATUS
     }
 
