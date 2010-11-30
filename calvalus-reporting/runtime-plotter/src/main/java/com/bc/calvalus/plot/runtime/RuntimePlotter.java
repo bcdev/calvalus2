@@ -58,7 +58,9 @@ public class RuntimePlotter {
             // convert to JFreeChart task series
             final TaskSeriesCollection seriesCollection = new TaskSeriesCollection();
             for (String colourValue : colourValids) {
-                seriesCollection.add(new TaskSeries(colourValue));
+                TaskSeries series = new TaskSeries(colourValue);
+                series.setNotify(false);
+                seriesCollection.add(series);
             }
             for (Trace trace : traces) {
                 final String categoryValue = String.valueOf(trace.getPropertyValue(category));
@@ -87,7 +89,12 @@ public class RuntimePlotter {
                 if (traceStop == TimeUtils.TIME_NULL || traceStop > stop) traceStop = stop;
                 //
                 series.add(new Task(String.valueOf(index), new Date(traceStart), new Date(traceStop)));
-                System.out.println(trace);
+                //System.out.println(trace);
+            }
+
+            for (String colourValue : colourValids) {
+                TaskSeries series = seriesCollection.getSeries(colourValue);
+                series.setNotify(true);
             }
 
             // construct chart

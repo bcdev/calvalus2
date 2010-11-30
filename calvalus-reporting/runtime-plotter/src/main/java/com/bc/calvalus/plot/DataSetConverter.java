@@ -77,8 +77,8 @@ public class DataSetConverter {
         public Map<String, TaskSeries> filter(List<Trace> traceList) {
             final Map<String, TaskSeries> hostsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
-                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { // m => tasks of type map
-                    final String hostName = trace.getPropertyValue(RunTimesScanner.Keys.HOST.name());
+                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) { // m => tasks of type map
+                    final String hostName = trace.getPropertyValue(RunTimesScanner.Keys.HOST.name().toLowerCase());
                     final Task taskOnHost = new Task(trace.getId(),   // //categories on category axis
                                                      new Date(trace.getStartTime()),
                                                      new Date(trace.getStopTime()));
@@ -121,11 +121,11 @@ public class DataSetConverter {
             int jobsCounter = 0;
             final Map<String, TaskSeries> jobsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
-                if ("job".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) {  //job
+                if ("job".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {  //job
                     jobsCounter++;
                     final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
                     jobsMap.put(trace.getId(), taskSeries);
-                } else if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name()))) { //task of type map
+                } else if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) { //task of type map
                     if (trace.getId().contains("_m_")) {
                         String jobId = trace.getId().split("_m_")[0];
                         final String taskId = groupTaskId(jobId, trace.getId().split("_m_")[1], false);
