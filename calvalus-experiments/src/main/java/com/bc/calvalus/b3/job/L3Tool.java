@@ -8,10 +8,11 @@ import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.processing.N1InputFormat;
-import com.bc.calvalus.experiments.util.Args;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -19,6 +20,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -26,17 +28,23 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import static com.bc.calvalus.b3.job.L3Config.*;
 
 /**
  * Creates and runs Hadoop job for L3 processing.
+ * <pre>
+ *   Usage: L3Tool <i>request-file</i>
+ * </pre>
+ * where <i>request-file</i> is a Java properties file.
  *
  * @author Norman Fomferra
  * @author Marco Zuehlke
@@ -45,55 +53,27 @@ public class L3Tool extends Configured implements Tool {
 
     static final Logger LOG = CalvalusLogger.getLogger();
 
-    static final String MERIS_INPUT_MONTH_DIR = "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/%02d";
-
     @Override
     public int run(String[] args) throws Exception {
 
         try {
-            // parse command line arguments
-            Args options = new Args(args);
-            String destination = options.getArgs()[0];
-            LOG.info(MessageFormat.format("start L3 processing to {0}", destination));
-            long startTime = System.nanoTime();
+            String requestFile = args.length > 0 ? args[0] : "l3tool.properties";
 
             // construct job and set parameters and handlers
             Job job = new Job(getConf());
-            job.setJarByClass(getClass());
 
-            Configuration configuration = job.getConfiguration();
-            configuration.setInt("io.file.buffer.size", 1024 * 1024); // default is 4096
-
-            configuration.set("mapred.map.tasks.speculative.execution", "false");
-            configuration.set("mapred.reduce.tasks.speculative.execution", "false");
-            // disable reuse for now....
-            // job.getConfiguration().set("mapred.job.reuse.jvm.num.tasks", "-1");
-            configuration.set("mapred.child.java.opts", "-Xmx1024m");
-            int numReducers = 10;
-            job.setNumReduceTasks(numReducers);
-
-            if (configuration.get(CONFNAME_L3_NUM_SCANS_PER_SLICE) == null) {
-                configuration.setInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
-            }
-            if (configuration.get(CONFNAME_L3_GRID_NUM_ROWS) == null) {
-                configuration.setInt(CONFNAME_L3_GRID_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
-            }
-            if (configuration.get(CONFNAME_L3_NUM_DAYS) == null) {
-                configuration.setInt(CONFNAME_L3_NUM_DAYS, L3Config.DEFAULT_L3_NUM_NUM_DAYS);
-            }
-            configuration.set(CONFNAME_L3_MASK_EXPR, "!l1_flags.INVALID && !l1_flags.BRIGHT && l1_flags.LAND_OCEAN");
-            configuration.set(String.format(CONFNAME_L3_VARIABLES_i_NAME, 0), "ndvi");
-            configuration.set(String.format(CONFNAME_L3_VARIABLES_i_EXPR, 0), "(radiance_10 - radiance_6) / (radiance_10 + radiance_6)");
-            configuration.set(String.format(CONFNAME_L3_AGG_i_TYPE, 0), "AVG");
-            configuration.set(String.format(CONFNAME_L3_AGG_i_VAR_NAME, 0), "ndvi");
-            configuration.set(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, 0), "0.5");
+            Configuration conf = job.getConfiguration();
+            setProperties(conf, requestFile);
 
             job.setJobName(String.format("l3_ndvi_%dd_%dr",
-                                         configuration.getInt(CONFNAME_L3_NUM_DAYS, -1),
-                                         configuration.getInt(CONFNAME_L3_GRID_NUM_ROWS, -1)));
+                                         conf.getInt(CONFNAME_L3_NUM_DAYS, -1),
+                                         conf.getInt(CONFNAME_L3_GRID_NUM_ROWS, -1)));
+
+            job.setJarByClass(getClass());
+            job.setNumReduceTasks(10);
 
             job.setInputFormatClass(N1InputFormat.class);
-            configuration.setInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
+            conf.setInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
 
             job.setMapperClass(L3Mapper.class);
             job.setMapOutputKeyClass(IntWritable.class);
@@ -105,23 +85,27 @@ public class L3Tool extends Configured implements Tool {
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(TemporalBin.class);
 
-            // job.setOutputFormatClass(TextOutputFormat.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
+            if (conf.getBoolean("calvalus.l3.outputText", false)) {
+                job.setOutputFormatClass(TextOutputFormat.class);
+            } else {
+                job.setOutputFormatClass(SequenceFileOutputFormat.class);
+            }
 
             // provide input and output directories to job
-            for (int day = 1; day <= 16; day++) {
-                String pathName = String.format(MERIS_INPUT_MONTH_DIR, day);
+            for (int day = 1; day <= conf.getInt(CONFNAME_L3_NUM_DAYS, -1); day++) {
+                String pathName = String.format(conf.get(CONFNAME_L3_INPUT), day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
-            Path output = new Path(destination);
+            Path output = L3Config.getOutput(conf);
             FileOutputFormat.setOutputPath(job, output);
 
-            int result = 0;
-            result = job.waitForCompletion(true) ? 0 : 1;
+            LOG.info(MessageFormat.format("start L3 processing to {0}", output));
+            long startTime = System.nanoTime();
+            int result = job.waitForCompletion(true) ? 0 : 1;
             long stopTime = System.nanoTime();
             LOG.info(MessageFormat.format("stop L3 processing after {0} sec", (stopTime - startTime) / 1E9));
 
-            processL3Output(configuration, output, job.getNumReduceTasks());
+            writeJobConf(conf, output);
 
             return result;
 
@@ -133,6 +117,53 @@ public class L3Tool extends Configured implements Tool {
 
         }
 
+    }
+
+    private void writeJobConf(Configuration conf, Path output) throws IOException {
+        FileSystem fs = output.getFileSystem(conf);
+        FSDataOutputStream os = fs.create(new Path(output, "job-conf.xml"));
+        try {
+            conf.writeXml(os);
+        } finally {
+            os.close();
+        }
+    }
+
+    private void setProperties(Configuration conf, String requestFile) throws IOException {
+        // Overwrite configuration by request parameters
+        Properties request = loadProperties(new File(requestFile));
+        for (String key : request.stringPropertyNames()) {
+            conf.set(key, request.getProperty(key));
+        }
+        if (conf.get(CONFNAME_L3_INPUT) == null) {
+            throw new IllegalArgumentException(MessageFormat.format("No input specified. {0} = null", CONFNAME_L3_INPUT));
+        }
+        if (conf.get(CONFNAME_L3_OUTPUT) == null) {
+            throw new IllegalArgumentException(MessageFormat.format("No output specified. {0} = null", CONFNAME_L3_OUTPUT));
+        }
+        if (conf.get(String.format(CONFNAME_L3_AGG_i_TYPE, 0)) == null) {
+            throw new IllegalArgumentException(MessageFormat.format("No aggregator specified. {0} = null", String.format(CONFNAME_L3_AGG_i_TYPE, 0)));
+        }
+        if (conf.get(CONFNAME_L3_NUM_SCANS_PER_SLICE) == null) {
+            conf.setInt(CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
+        }
+        if (conf.get(CONFNAME_L3_GRID_NUM_ROWS) == null) {
+            conf.setInt(CONFNAME_L3_GRID_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
+        }
+        if (conf.get(CONFNAME_L3_NUM_DAYS) == null) {
+            conf.setInt(CONFNAME_L3_NUM_DAYS, L3Config.DEFAULT_L3_NUM_NUM_DAYS);
+        }
+    }
+
+    static Properties loadProperties(File file) throws IOException {
+        FileReader fileReader = new FileReader(file);
+        try {
+            Properties properties = new Properties();
+            properties.load(fileReader);
+            return properties;
+        } finally {
+            fileReader.close();
+        }
     }
 
     private void processL3Output(Configuration configuration, Path output, int numParts) throws IOException {

@@ -14,6 +14,7 @@ import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.VariableContext;
 import com.bc.calvalus.b3.VariableContextImpl;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -34,6 +35,8 @@ public class L3Config {
     public static final String CONFNAME_L3_MASK_EXPR = "calvalus.l3.maskExpr";
     public static final String CONFNAME_L3_VARIABLES_i_NAME = "calvalus.l3.variables.%d.name";
     public static final String CONFNAME_L3_VARIABLES_i_EXPR = "calvalus.l3.variables.%d.expr";
+    public static final String CONFNAME_L3_INPUT = "calvalus.l3.input";
+    public static final String CONFNAME_L3_OUTPUT = "calvalus.l3.output";
     public static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     public static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
 
@@ -51,6 +54,14 @@ public class L3Config {
 
     public static BinManager getBinManager(Configuration conf) {
         return getBinManager(conf, getVariableContext(conf));
+    }
+
+    public static Path getInput(Configuration conf) {
+        return new Path(conf.get(CONFNAME_L3_INPUT, null));
+    }
+
+    public static Path getOutput(Configuration conf) {
+        return new Path(conf.get(CONFNAME_L3_OUTPUT, null));
     }
 
     private static BinManager getBinManager(Configuration conf, VariableContext varCtx) {
