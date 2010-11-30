@@ -3,6 +3,7 @@ package com.bc.calvalus.b3;
 import org.junit.Test;
 
 import static java.lang.Float.NaN;
+import static java.lang.Math.*;
 import static org.junit.Assert.assertEquals;
 
 public class AggregatorTest {
@@ -57,7 +58,7 @@ public class AggregatorTest {
         assertEquals(3f + 2f + 1f + 7f, tvec.get(2), 1e-5f);
 
         float mean = (0.3f + 0.1f + 0.2f + 0.1f) / (3f + 2f + 1f + 7f);
-        float sigma = (float) Math.sqrt((0.09f + 0.01f + 0.04f + 0.01f) / (3f + 2f + 1f + 7f) - mean * mean);
+        float sigma = (float) sqrt((0.09f + 0.01f + 0.04f + 0.01f) / (3f + 2f + 1f + 7f) - mean * mean);
         agg.computeOutput(tvec, out);
         assertEquals(mean, out.get(0), 1e-5f);
         assertEquals(sigma, out.get(1), 1e-5f);
@@ -83,6 +84,50 @@ public class AggregatorTest {
         assertEquals("b_sigma", agg.getOutputPropertyName(1));
         assertEquals("b_median", agg.getOutputPropertyName(2));
         assertEquals("b_mode", agg.getOutputPropertyName(3));
+
+        VectorImpl svec = vec(NaN, NaN);
+        VectorImpl tvec = vec(NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN, NaN, NaN);
+
+        agg.initSpatial(svec);
+        assertEquals(0.0f, svec.get(0), 0.0f);
+        assertEquals(0.0f, svec.get(1), 0.0f);
+
+        agg.aggregateSpatial(vec(1.5f), svec);
+        agg.aggregateSpatial(vec(2.5f), svec);
+        agg.aggregateSpatial(vec(0.5f), svec);
+        assertEquals(log(1.5f) + log(2.5f) + log(0.5f), svec.get(0), 1e-5);
+        assertEquals(log(1.5f) * log(1.5f) + log(2.5f) * log(2.5f) + log(0.5f) * log(0.5f), svec.get(1), 1e-5f);
+
+        agg.completeSpatial(3, svec);
+        assertEquals((log(1.5f) + log(2.5f) + log(0.5f)) / sqrt(3f), svec.get(0), 1e-5f);
+        assertEquals((log(1.5f) * log(1.5f) + log(2.5f) * log(2.5f) + log(0.5f) * log(0.5f)) / sqrt(3f), svec.get(1), 1e-5f);
+
+        agg.initTemporal(tvec);
+        assertEquals(0.0f, tvec.get(0), 0.0f);
+        assertEquals(0.0f, tvec.get(1), 0.0f);
+        assertEquals(0.0f, tvec.get(2), 0.0f);
+
+        agg.aggregateTemporal(vec(0.3f, 0.09f), 3, tvec);
+        agg.aggregateTemporal(vec(0.1f, 0.01f), 2, tvec);
+        agg.aggregateTemporal(vec(0.2f, 0.04f), 1, tvec);
+        agg.aggregateTemporal(vec(0.1f, 0.01f), 7, tvec);
+        assertEquals(0.3f + 0.1f + 0.2f + 0.1f, tvec.get(0), 1e-5);
+        assertEquals(0.09f + 0.01f + 0.04f + 0.01f, tvec.get(1), 1e-5);
+        assertEquals(sqrt(3f) + sqrt(2f) + sqrt(1f) + sqrt(7f), tvec.get(2), 1e-5);
+
+        /*
+        todo - add asserts for output values
+        float mean = ...;
+        float sigma = ...;
+        float median = ...;
+        float mode = ...;
+        agg.computeOutput(tvec, out);
+        assertEquals(mean, out.get(0), 1e-5f);
+        assertEquals(sigma, out.get(1), 1e-5f);
+        assertEquals(median, out.get(2), 1e-5f);
+        assertEquals(mode, out.get(3), 1e-5f);
+         */
     }
 
     @Test
