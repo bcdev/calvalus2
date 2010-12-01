@@ -73,7 +73,6 @@ public class L3Reprojector {
                                      lastRowIndex, binRow,
                                      temporalBinProcessor,
                                      width, height);
-                        binRow.clear();
                         break;
                     }
                     int rowIndex = binningGrid.getRowIndex(binIndex.get());
@@ -82,7 +81,6 @@ public class L3Reprojector {
                                      lastRowIndex, binRow,
                                      temporalBinProcessor,
                                      width, height);
-                        binRow.clear();
                         lastRowIndex = rowIndex;
                     }
                     temporalBin.setIndex(binIndex.get());
@@ -105,6 +103,9 @@ public class L3Reprojector {
                              TemporalBinProcessor temporalBinProcessor,
                              int width,
                              int height) {
+        if (y < 0 || binRow.isEmpty()) {
+            return;
+        }
         final BinningGrid binningGrid = ctx.getBinningGrid();
         final BinManager binManager = ctx.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
@@ -137,6 +138,7 @@ public class L3Reprojector {
                 temporalBinProcessor.processMissingBin(x, y);
             }
         }
+        binRow.clear();
     }
 
     public interface TemporalBinProcessor {

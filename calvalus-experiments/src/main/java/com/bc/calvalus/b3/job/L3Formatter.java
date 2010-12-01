@@ -232,21 +232,16 @@ public class L3Formatter extends Configured implements Tool {
         v1s = Arrays.copyOf(v1s, numBands);
         v2s = Arrays.copyOf(v2s, numBands);
 
-        float[][] data = new float[indices.length][rasterWidth * rasterHeight];
-        for (int i = 0; i < indices.length; i++) {
-            Arrays.fill(data[i], Float.NaN);
-        }
-
-        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), new ImageRaster(indices, data, rasterWidth));
+        final ImageRaster raster = new ImageRaster(rasterWidth, rasterHeight, indices);
+        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), raster);
 
         if (outputType.equalsIgnoreCase("RGB")) {
-            writeRgbImage(rasterWidth, rasterHeight, data, v1s, v2s, outputFormat, outputFile);
+            writeRgbImage(rasterWidth, rasterHeight, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
         } else {
             for (int i = 0; i < numBands; i++) {
                 final String fileName = String.format("%s-%s.%s", outputFileNameBase, names[i], outputFileNameExt);
-                final File imageFile = new File(outputFile.getParentFile(),
-                                                fileName);
-                writeGrayScaleImage(rasterWidth, rasterHeight, data[i], v1s[i], v2s[i], outputFormat, imageFile);
+                final File imageFile = new File(outputFile.getParentFile(), fileName);
+                writeGrayScaleImage(rasterWidth, rasterHeight, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
             }
         }
     }
@@ -307,27 +302,43 @@ public class L3Formatter extends Configured implements Tool {
 
     private final static class ImageRaster implements L3Reprojector.TemporalBinProcessor {
 
-        private final int[] indices;
-        private final float[][] data;
         private final int rasterWidth;
+        private final int rasterHeight;
+        private final int[] bandIndices;
+        private final float[][] bandData;
+        private final int bandCount;
 
-        public ImageRaster(int[] indices, float[][] data, int rasterWidth) {
-            this.indices = indices;
-            this.data = data;
+        public ImageRaster(int rasterWidth, int rasterHeight, int[] bandIndices) {
             this.rasterWidth = rasterWidth;
+            this.rasterHeight = rasterHeight;
+            this.bandIndices = bandIndices.clone();
+            this.bandCount = bandIndices.length;
+            this.bandData = new float[bandCount][rasterWidth * rasterHeight];
+            for (int i = 0; i < bandCount; i++) {
+                Arrays.fill(bandData[i], Float.NaN);
+            }
+        }
+
+
+        public float[][] getBandData() {
+            return bandData;
+        }
+
+        public float[] getBandData(int bandIndex) {
+            return this.bandData[bandIndex];
         }
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
-            for (int i = 0; i < indices.length; i++) {
-                data[i][rasterWidth * y + x] = outputVector.get(indices[i]);
+            for (int i = 0; i < bandCount; i++) {
+                bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
             }
         }
 
         @Override
         public void processMissingBin(int x, int y) {
-            for (int i = 0; i < indices.length; i++) {
-                data[i][rasterWidth * y + x] = Float.NaN;
+            for (int i = 0; i < bandCount; i++) {
+                bandData[i][rasterWidth * y + x] = Float.NaN;
             }
         }
     }
