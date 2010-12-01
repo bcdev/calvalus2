@@ -8,6 +8,8 @@ package com.bc.calvalus.b3;
 public interface BinManager {
     // todo - add PropertyContext getInputPropertyContext()
     // todo - add PropertyContext getOutputPropertyContext()
+    int getOutputPropertyCount();
+    String getOutputPropertyName(int i);
 
     int getAggregatorCount();
 
@@ -30,4 +32,5 @@ public interface BinManager {
     void aggregateTemporalBin(SpatialBin sBin, TemporalBin tBin);
 
     void computeOutput(TemporalBin temporalBin, WritableVector outputVector);
+
 }

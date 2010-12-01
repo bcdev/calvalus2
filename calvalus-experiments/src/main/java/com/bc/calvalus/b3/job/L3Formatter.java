@@ -9,23 +9,29 @@ import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductWriter;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -45,233 +51,212 @@ public class L3Formatter extends Configured implements Tool {
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String PART_R = "part-r-";
     private static final String JOB_CONF = "job-conf.xml";
+    private Properties request;
+    private String outputType;
+    private String outputFormat;
+    private Path l3OutputDir;
+    private BinningContext binningContext;
+    private int rasterWidth;
+    private int rasterHeight;
+    private File outputFile;
+    private String outputFileNameBase;
+    private String outputFileNameExt;
 
-    @Override
-    public int run(String[] args) throws Exception {
+    public static void main(String[] args) {
+        if (Boolean.getBoolean("hadoop.debug")) {
+            waitForDebuggerToConnect();
+        }
+        int result;
         try {
-            final String requestFile = args.length > 0 ? args[0] : "l3formatter.properties";
-            final Properties request = L3Tool.loadProperties(new File(requestFile));
-
-            final Path l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
-            final File outputFile = new File(request.getProperty("calvalus.l3.formatter.output"));
-
-            final String outputType = request.getProperty("calvalus.l3.formatter.outputType");
-            if (!outputType.equalsIgnoreCase("RGB")
-                    && !outputType.equalsIgnoreCase("Grey")) {
-                throw new IllegalArgumentException("Unknown output type: " + outputType);
-            }
-
-            String outputFormat = request.getProperty("calvalus.l3.formatter.outputFormat");
-            final String fileName = outputFile.getName();
-            final int extPos = fileName.lastIndexOf(".");
-            final String fileNameBase = fileName.substring(0, extPos);
-            final String fileNameExt = fileName.substring(extPos + 1);
-            if (outputFormat == null) {
-                outputFormat = fileNameExt.toUpperCase();
-            }
-            if (!outputFormat.equalsIgnoreCase("PNG")
-                    && !outputFormat.equalsIgnoreCase("JPG")) {
-                throw new IllegalArgumentException("Unknown output format: " + outputFormat);
-            }
-
-
-            final Configuration l3Config = new Configuration();
-            l3Config.addResource(new Path(l3OutputDir, JOB_CONF));
-            l3Config.reloadConfiguration();
-            final BinningContext ctx = L3Config.getBinningContext(l3Config);
-            BinManager binManager = ctx.getBinManager();
-            int count = binManager.getAggregatorCount();
-            System.out.println("aggregators.length = " + count);
-            for (int i = 0; i < count; i++) {
-                Aggregator aggregator = binManager.getAggregator(i);
-                System.out.println("aggregators."+i+" = " + aggregator);
-            }
-
-            final Configuration conf = getConf();
-            for (String key : request.stringPropertyNames()) {
-                conf.set(key, request.getProperty(key));
-            }
-
-            final BinningGrid binningGrid = ctx.getBinningGrid();
-            final int width = binningGrid.getNumRows() * 2;
-            final int height = binningGrid.getNumRows();
-
-            int[] indices = new int[16];
-            String[] names = new String[16];
-            float[] v1s = new float[16];
-            float[] v2s = new float[16];
-            int numBands = 0;
-            for (int i = 0; i < indices.length; i++) {
-                String indexStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.index", i));
-                String nameStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.name", i));
-                String v1Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v1", i));
-                String v2Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v2", i));
-                if (indexStr == null) {
-                    break;
-                }
-                indices[numBands] = Integer.parseInt(indexStr);
-                names[numBands] = nameStr != null ? nameStr : indices[numBands] + "";
-                v1s[numBands] = Float.parseFloat(v1Str);
-                v2s[numBands] = Float.parseFloat(v2Str);
-                numBands++;
-            }
-            if (numBands == 0) {
-                throw new IllegalArgumentException("No output band given.");
-            }
-            indices = Arrays.copyOf(indices, numBands);
-            names = Arrays.copyOf(names, numBands);
-            v1s = Arrays.copyOf(v1s, numBands);
-            v2s = Arrays.copyOf(v2s, numBands);
-            final float[][] data = reprojectProperties(ctx, l3OutputDir, indices);
-
-            if (outputType.equalsIgnoreCase("RGB")) {
-                writeRgbImage(width, height, data, v1s, v2s, outputFormat, outputFile);
-            } else if (outputType.equalsIgnoreCase("Grey")) {
-                for (int i = 0; i < numBands; i++) {
-                    final File imageFile = new File(outputFile.getParentFile(),
-                                                    fileNameBase + "-" + names[i] + "." + fileNameExt);
-                    writeGrayScaleImage(width, height, data[i], v1s[i], v2s[i], outputFormat, imageFile);
-                }
-            }
-
-            return 0;
+            result = ToolRunner.run(new L3Formatter(), args);
         } catch (Exception ex) {
             System.err.println("Error: " + ex.getMessage());
             ex.printStackTrace(System.err);
-            return 1;
+            result = -1;
         }
+        System.exit(result);
     }
 
-    private float[][] reprojectProperties(BinningContext ctx, Path output, int[] indices) throws IOException {
-        BinningGrid binningGrid = ctx.getBinningGrid();
-        int width = binningGrid.getNumRows() * 2;
-        int height = binningGrid.getNumRows();
-        float[][] data = new float[indices.length][width * height];
+    @Override
+    public int run(String[] args) throws Exception {
+
+        final String requestFile = args.length > 0 ? args[0] : "l3formatter.properties";
+        request = L3Tool.loadProperties(new File(requestFile));
+
+        outputType = request.getProperty("calvalus.l3.formatter.outputType");
+        if (outputType == null) {
+            throw new IllegalArgumentException("No output type given");
+        }
+        if (!outputType.equalsIgnoreCase("Product")
+                && !outputType.equalsIgnoreCase("RGB")
+                && !outputType.equalsIgnoreCase("Grey")) {
+            throw new IllegalArgumentException("Unknown output type: " + outputType);
+        }
+
+        outputFile = new File(request.getProperty("calvalus.l3.formatter.output"));
+        final String fileName = outputFile.getName();
+        final int extPos = fileName.lastIndexOf(".");
+        outputFileNameBase = fileName.substring(0, extPos);
+        outputFileNameExt = fileName.substring(extPos + 1);
+
+        outputFormat = request.getProperty("calvalus.l3.formatter.outputFormat");
+        if (outputFormat == null) {
+            outputFormat =
+                    outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
+                            : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
+                            : outputFileNameExt.equalsIgnoreCase("png") ? "PNG"
+                            : outputFileNameExt.equalsIgnoreCase("jpg") ? "JPEG" : null;
+        }
+        if (outputFormat == null) {
+            throw new IllegalArgumentException("No output format given");
+        }
+        if (!outputFormat.equalsIgnoreCase("NetCDF")
+                && !outputFormat.equalsIgnoreCase("BEAM-DIMAP")
+                && !outputFormat.equalsIgnoreCase("PNG")
+                && !outputFormat.equalsIgnoreCase("JPEG")) {
+            throw new IllegalArgumentException("Unknown output format: " + outputFormat);
+        }
+
+
+        l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
+        final Path l3JobConfigPath = new Path(l3OutputDir, JOB_CONF);
+        final FileSystem fs = l3JobConfigPath.getFileSystem(getConf());
+        final Configuration l3Config = new Configuration();
+        l3Config.addResource(fs.open(l3JobConfigPath));
+        l3Config.reloadConfiguration();
+
+        binningContext = L3Config.getBinningContext(l3Config);
+        final BinManager binManager = binningContext.getBinManager();
+        final int aggregatorCount = binManager.getAggregatorCount();
+        if (aggregatorCount == 0) {
+            throw new IllegalArgumentException("Illegal binning context: aggregatorCount == 0");
+        }
+
+        LOG.info("aggregators.length = " + aggregatorCount);
+        for (int i = 0; i < aggregatorCount; i++) {
+            Aggregator aggregator = binManager.getAggregator(i);
+            LOG.info("aggregators." + i + " = " + aggregator);
+        }
+
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        rasterWidth = binningGrid.getNumRows() * 2;
+        rasterHeight = binningGrid.getNumRows();
+
+        if (outputType.equalsIgnoreCase("Product")) {
+            writeProductFile();
+        } else {
+            writeImageFile();
+        }
+
+        return 0;
+    }
+
+
+    private void writeProductFile() throws IOException {
+        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
+        if (productWriter == null) {
+            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
+        }
+
+        // todo
+        ProductData.UTC startTime = ProductData.UTC.create(new Date(0L), 0);
+        ProductData.UTC endTime = ProductData.UTC.create(new Date(0L), 0);
+
+        CrsGeoCoding geoCoding;
+        try {
+            geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                                         rasterWidth, rasterHeight,
+                                         -180.0, +90.0,
+                                         rasterWidth / 360.0, -rasterHeight / 180.0,
+                                         0.0, 0.0);
+        } catch (FactoryException e) {
+            throw new IllegalStateException(e);
+        } catch (TransformException e) {
+            throw new IllegalStateException(e);
+        }
+        final Product product = new Product(outputFile.getName(), "b", rasterWidth, rasterHeight);
+        product.setGeoCoding(geoCoding);
+        product.setStartTime(startTime);
+        product.setEndTime(endTime);
+
+
+        product.addBand("num_obs", ProductData.TYPE_UINT32);
+        product.addBand("num_passes", ProductData.TYPE_UINT32);
+        int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
+        for (int i = 0; i < outputPropertyCount; i++) {
+            String name = binningContext.getBinManager().getOutputPropertyName(i);
+            product.addBand(name, ProductData.TYPE_FLOAT32);
+        }
+
+        productWriter.writeProductNodes(product, outputFile);
+        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), new L3Reprojector.TemporalBinProcessor() {
+            @Override
+            public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void processMissingBin(int x, int y) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+        productWriter.close();
+    }
+
+
+    private void writeImageFile() throws IOException {
+        int[] indices = new int[16];
+        String[] names = new String[16];
+        float[] v1s = new float[16];
+        float[] v2s = new float[16];
+        int numBands = 0;
+        for (int i = 0; i < indices.length; i++) {
+            String indexStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.index", i));
+            String nameStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.name", i));
+            String v1Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v1", i));
+            String v2Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v2", i));
+            if (indexStr == null) {
+                break;
+            }
+            indices[numBands] = Integer.parseInt(indexStr);
+            names[numBands] = nameStr != null ? nameStr : indices[numBands] + "";
+            v1s[numBands] = Float.parseFloat(v1Str);
+            v2s[numBands] = Float.parseFloat(v2Str);
+            numBands++;
+        }
+        if (numBands == 0) {
+            throw new IllegalArgumentException("No output band given.");
+        }
+        indices = Arrays.copyOf(indices, numBands);
+        names = Arrays.copyOf(names, numBands);
+        v1s = Arrays.copyOf(v1s, numBands);
+        v2s = Arrays.copyOf(v2s, numBands);
+
+        float[][] data = new float[indices.length][rasterWidth * rasterHeight];
         for (int i = 0; i < indices.length; i++) {
             Arrays.fill(data[i], Float.NaN);
         }
 
-        long startTime = System.nanoTime();
+        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), new ImageRaster(indices, data, rasterWidth));
 
-        final FileStatus[] fileStati = output.getFileSystem(getConf()).listStatus(output, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().startsWith(PART_R);
-            }
-        });
-
-        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", fileStati.length));
-
-        Arrays.sort(fileStati);
-
-        for (FileStatus fileStatus : fileStati) {
-            Path partFile = fileStatus.getPath();
-            SequenceFile.Reader reader = new SequenceFile.Reader(partFile.getFileSystem(getConf()), partFile, getConf());
-
-            LOG.info(MessageFormat.format("reading part {0}", partFile));
-
-            try {
-                int lastRowIndex = -1;
-                ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
-                while (true) {
-                    IntWritable binIndex = new IntWritable();
-                    TemporalBin temporalBin = new TemporalBin();
-                    if (!reader.next(binIndex, temporalBin)) {
-                        // last row
-                        processBinRow(ctx,
-                                      lastRowIndex, binRow,
-                                      data, indices,
-                                      width, height);
-                        binRow.clear();
-                        break;
-                    }
-                    int rowIndex = binningGrid.getRowIndex(binIndex.get());
-                    if (rowIndex != lastRowIndex) {
-                        processBinRow(ctx,
-                                      lastRowIndex, binRow,
-                                      data, indices,
-                                      width, height);
-                        binRow.clear();
-                        lastRowIndex = rowIndex;
-                    }
-                    temporalBin.setIndex(binIndex.get());
-                    binRow.add(temporalBin);
-                }
-            } finally {
-                reader.close();
-            }
-        }
-        long stopTime = System.nanoTime();
-
-        LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
-
-        return data;
-    }
-
-     static void processBinRow(BinningContext ctx,
-                              int y, List<TemporalBin> binRow,
-                              float[][] data, int[] indices,
-                              int width, int height) {
-        if (y >= 0 && !binRow.isEmpty()) {
-//            LOG.info("row " + y + ": processing " + binRow.size() + " bins, bin #0 = " + binRow.get(0));
-            processBinRow0(ctx,
-                           y, binRow,
-                           data, indices,
-                           width, height);
+        if (outputType.equalsIgnoreCase("RGB")) {
+            writeRgbImage(rasterWidth, rasterHeight, data, v1s, v2s, outputFormat, outputFile);
         } else {
-//            LOG.info("row " + y + ": no bins");
+            for (int i = 0; i < numBands; i++) {
+                final String fileName = String.format("%s-%s.%s", outputFileNameBase, names[i], outputFileNameExt);
+                final File imageFile = new File(outputFile.getParentFile(),
+                                                fileName);
+                writeGrayScaleImage(rasterWidth, rasterHeight, data[i], v1s[i], v2s[i], outputFormat, imageFile);
+            }
         }
     }
 
-    static void processBinRow0(BinningContext ctx,
-                               int y,
-                               List<TemporalBin> binRow,
-                               float[][] data, int[] indices,
-                               int width,
-                               int height) {
-        final BinningGrid binningGrid = ctx.getBinningGrid();
-        final BinManager binManager = ctx.getBinManager();
-        final WritableVector outputVector = binManager.createOutputVector();
-        final int offset = y * width;
-        final double lat = -90.0 + (y + 0.5) * 180.0 / height;
-        int lastBinIndex = -1;
-        TemporalBin temporalBin = null;
-        int rowIndex = -1;
-        for (int x = 0; x < width; x++) {
-            double lon = -180.0 + (x + 0.5) * 360.0 / width;
-            int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
-            if (lastBinIndex != wantedBinIndex) {
-                //search
-                temporalBin = null;
-                for (int i = rowIndex + 1; i < binRow.size(); i++) {
-                    final int binIndex = binRow.get(i).getIndex();
-                    if (binIndex == wantedBinIndex) {
-                        temporalBin = binRow.get(i);
-                        binManager.computeOutput(temporalBin, outputVector);
-                        lastBinIndex = wantedBinIndex;
-                        rowIndex = i;
-                        break;
-                    } else if (binIndex > wantedBinIndex) {
-                        break;
-                    }
-                }
-            }
-            if (temporalBin != null) {
-                for (int i = 0; i < indices.length; i++) {
-                    data[i][offset + x] = outputVector.get(indices[i]);
-                }
-            } else {
-                for (int i = 0; i < indices.length; i++) {
-                    data[i][offset + x] = Float.NaN;
-                }
-            }
-        }
-    }
 
     private void writeGrayScaleImage(int width, int height,
                                      float[] rawData,
                                      float rawValue1, float rawValue2,
                                      String outputFormat, File outputImageFile) throws IOException {
+
         LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
@@ -301,10 +286,11 @@ public class L3Formatter extends Configured implements Tool {
         final float bG = -255f * rawValue1[1] / (rawValue2[1] - rawValue1[1]);
         final float aB = 255f / (rawValue2[2] - rawValue1[2]);
         final float bB = -255f * rawValue1[2] / (rawValue2[2] - rawValue1[2]);
-        for (int i = 0; i < rawData.length; i += 3) {
-            data[i + 2] = toByte(rawDataR[i], aR, bR);
-            data[i + 1] = toByte(rawDataG[i], aG, bG);
-            data[i] = toByte(rawDataB[i], aB, bB);
+        final int n = width * height;
+        for (int i = 0, j = 0; i < n; i++, j += 3) {
+            data[j + 2] = toByte(rawDataR[i], aR, bR);
+            data[j + 1] = toByte(rawDataG[i], aG, bG);
+            data[j] = toByte(rawDataB[i], aB, bB);
         }
         ImageIO.write(image, outputFormat, outputImageFile);
     }
@@ -319,7 +305,44 @@ public class L3Formatter extends Configured implements Tool {
         return (byte) sample;
     }
 
-    public static void main(String[] args) throws Exception {
-        System.exit(ToolRunner.run(new L3Formatter(), args));
+    private final static class ImageRaster implements L3Reprojector.TemporalBinProcessor {
+
+        private final int[] indices;
+        private final float[][] data;
+        private final int rasterWidth;
+
+        public ImageRaster(int[] indices, float[][] data, int rasterWidth) {
+            this.indices = indices;
+            this.data = data;
+            this.rasterWidth = rasterWidth;
+        }
+
+        @Override
+        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
+            for (int i = 0; i < indices.length; i++) {
+                data[i][rasterWidth * y + x] = outputVector.get(indices[i]);
+            }
+        }
+
+        @Override
+        public void processMissingBin(int x, int y) {
+            for (int i = 0; i < indices.length; i++) {
+                data[i][rasterWidth * y + x] = Float.NaN;
+            }
+        }
     }
+
+
+    private static void waitForDebuggerToConnect() {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        // Halt here so that Norman can start the IDE debugger
+        System.out.print("Connect debugger to the JVM and press return!");
+        try {
+            reader.readLine();
+        } catch (IOException e) {
+            // ?
+        }
+    }
+
 }
+

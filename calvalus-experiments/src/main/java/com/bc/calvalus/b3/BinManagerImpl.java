@@ -13,6 +13,8 @@ public class BinManagerImpl implements BinManager {
     private final int[] spatialPropertyOffsets;
     private final int[] temporalPropertyOffsets;
     private final int[] outputPropertyOffsets;
+    private final String[] outputPropertyNames;
+
 
     public BinManagerImpl(Aggregator... aggregators) {
         this.aggregators = aggregators.clone();
@@ -34,6 +36,23 @@ public class BinManagerImpl implements BinManager {
         this.spatialPropertyCount = spatialPropertyCount;
         this.temporalPropertyCount = temporalPropertyCount;
         this.outputPropertyCount = outputPropertyCount;
+        this.outputPropertyNames = new String[outputPropertyCount];
+        for (int i = 0, k = 0; i < aggregators.length; i++) {
+            Aggregator aggregator = aggregators[i];
+            for (int j = 0; j < aggregator.getOutputPropertyCount(); j++) {
+                outputPropertyNames[k++] = aggregator.getOutputPropertyName(j);
+            }
+        }
+    }
+
+    @Override
+    public int getOutputPropertyCount() {
+        return outputPropertyCount;
+    }
+
+    @Override
+    public String getOutputPropertyName(int i) {
+        return outputPropertyNames[i];
     }
 
     @Override
