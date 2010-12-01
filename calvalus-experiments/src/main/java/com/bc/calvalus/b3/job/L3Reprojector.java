@@ -36,7 +36,7 @@ public class L3Reprojector {
     public static void reproject(BinningContext ctx,
                                  Path output,
                                  Configuration conf,
-                                 TemporalBinProcessor temporalBinProcessor) throws IOException {
+                                 TemporalBinProcessor temporalBinProcessor) throws Exception {
         BinningGrid binningGrid = ctx.getBinningGrid();
         int width = binningGrid.getNumRows() * 2;
         int height = binningGrid.getNumRows();
@@ -55,6 +55,7 @@ public class L3Reprojector {
 
         Arrays.sort(fileStati);
 
+        temporalBinProcessor.begin(ctx);
         for (FileStatus fileStatus : fileStati) {
             Path partFile = fileStatus.getPath();
             SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, conf);
@@ -90,10 +91,10 @@ public class L3Reprojector {
                 reader.close();
             }
         }
+        temporalBinProcessor.end(ctx);
+
         long stopTime = System.nanoTime();
-
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
-
     }
 
 
@@ -102,7 +103,7 @@ public class L3Reprojector {
                              List<TemporalBin> binRow,
                              TemporalBinProcessor temporalBinProcessor,
                              int width,
-                             int height) {
+                             int height) throws Exception {
         if (y < 0 || binRow.isEmpty()) {
             return;
         }
@@ -135,18 +136,29 @@ public class L3Reprojector {
             if (temporalBin != null) {
                 temporalBinProcessor.processBin(x, y, temporalBin, outputVector);
             } else {
-                temporalBinProcessor.processMissingBin(x, y);
+                temporalBinProcessor.processBin(x, y, null, null);
             }
         }
         binRow.clear();
     }
 
-    public interface TemporalBinProcessor {
+    public static abstract class TemporalBinProcessor {
+        void begin(BinningContext ctx) throws Exception {
+        }
 
-        void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector);
+        /**
+         *
+         * @param x current pixel X coordinate
+         * @param y current pixel Y coordinate
+         * @param temporalBin the current temporal bin, will be null, if missing
+         * @param outputVector the current output vector, will be null, if missing
+         * @throws Exception if an error occured
+         */
+        public abstract void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception;
 
-        void processMissingBin(int x, int y);
 
+        public void end(BinningContext ctx) throws Exception {
+        }
     }
 
 }

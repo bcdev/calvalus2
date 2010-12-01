@@ -7,6 +7,7 @@ import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -15,6 +16,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -152,7 +154,7 @@ public class L3Formatter extends Configured implements Tool {
     }
 
 
-    private void writeProductFile() throws IOException {
+    private void writeProductFile() throws Exception {
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
@@ -180,31 +182,40 @@ public class L3Formatter extends Configured implements Tool {
         product.setEndTime(endTime);
 
 
-        product.addBand("num_obs", ProductData.TYPE_UINT32);
-        product.addBand("num_passes", ProductData.TYPE_UINT32);
+        final Band indexBand = product.addBand("index", ProductData.TYPE_INT32);
+        indexBand.setNoDataValue(-1);
+        final ProductData indexLine = indexBand.createCompatibleRasterData(rasterWidth, 1);
+
+        final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
+        numObsBand.setNoDataValue(-1);
+        final ProductData numObsLine = numObsBand.createCompatibleRasterData(rasterWidth, 1);
+
+        final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
+        numPassesBand.setNoDataValue(-1);
+        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(rasterWidth, 1);
+
         int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
+        final Band[] outputBands = new Band[outputPropertyCount];
+        final ProductData[] outputLines = new ProductData[outputPropertyCount];
         for (int i = 0; i < outputPropertyCount; i++) {
             String name = binningContext.getBinManager().getOutputPropertyName(i);
-            product.addBand(name, ProductData.TYPE_FLOAT32);
+            outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
+            outputBands[i].setNoDataValue(Double.NaN);
+            outputLines[i] = outputBands[i].createCompatibleRasterData(rasterWidth, 1);
         }
 
         productWriter.writeProductNodes(product, outputFile);
-        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), new L3Reprojector.TemporalBinProcessor() {
-            @Override
-            public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public void processMissingBin(int x, int y) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        });
+        final ProductDataWriter dataWriter = new ProductDataWriter(productWriter,
+                                                                   indexBand, indexLine,
+                                                                   numObsBand, numObsLine,
+                                                                   numPassesBand, numPassesLine,
+                                                                   outputBands, outputLines);
+        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), dataWriter);
         productWriter.close();
     }
 
 
-    private void writeImageFile() throws IOException {
+    private void writeImageFile() throws Exception {
         int[] indices = new int[16];
         String[] names = new String[16];
         float[] v1s = new float[16];
@@ -300,13 +311,25 @@ public class L3Formatter extends Configured implements Tool {
         return (byte) sample;
     }
 
-    private final static class ImageRaster implements L3Reprojector.TemporalBinProcessor {
+    private static void waitForDebuggerToConnect() {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        // Halt here so that Norman can start the IDE debugger
+        System.out.print("Connect debugger to the JVM and press return!");
+        try {
+            reader.readLine();
+        } catch (IOException e) {
+            // ?
+        }
+    }
 
+    private final static class ImageRaster extends L3Reprojector.TemporalBinProcessor {
         private final int rasterWidth;
         private final int rasterHeight;
         private final int[] bandIndices;
         private final float[][] bandData;
+
         private final int bandCount;
+
 
         public ImageRaster(int rasterWidth, int rasterHeight, int[] bandIndices) {
             this.rasterWidth = rasterWidth;
@@ -318,7 +341,6 @@ public class L3Formatter extends Configured implements Tool {
                 Arrays.fill(bandData[i], Float.NaN);
             }
         }
-
 
         public float[][] getBandData() {
             return bandData;
@@ -335,25 +357,93 @@ public class L3Formatter extends Configured implements Tool {
             }
         }
 
+
+    }
+
+    private final class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
+        int yLast;
+        private final int width;
+        private final int height;
+        private final ProductData indexLine;
+        private final ProductData numObsLine;
+        private final ProductData numPassesLine;
+        private final Band[] outputBands;
+        private final ProductData[] outputLines;
+        private final ProductWriter productWriter;
+        private final Band indexBand;
+        private final Band numObsBand;
+        private final Band numPassesBand;
+
+        public ProductDataWriter(ProductWriter productWriter, Band indexBand, ProductData indexLine, Band numObsBand, ProductData numObsLine, Band numPassesBand, ProductData numPassesLine, Band[] outputBands, ProductData[] outputLines) {
+            this.indexLine = indexLine;
+            this.numObsLine = numObsLine;
+            this.numPassesLine = numPassesLine;
+            this.outputBands = outputBands;
+            this.outputLines = outputLines;
+            this.productWriter = productWriter;
+            this.indexBand = indexBand;
+            this.numObsBand = numObsBand;
+            this.numPassesBand = numPassesBand;
+            this.width = indexBand.getSceneRasterWidth();
+            this.height = indexBand.getSceneRasterHeight();
+            this.yLast = 0;
+            initLine();
+        }
+
         @Override
-        public void processMissingBin(int x, int y) {
-            for (int i = 0; i < bandCount; i++) {
-                bandData[i][rasterWidth * y + x] = Float.NaN;
+        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
+            if (temporalBin != null) {
+                setData(x, temporalBin, outputVector);
+            } else {
+                setNoData(x);
+            }
+            if (y != yLast) {
+                writeLine(yLast);
+                initLine();
+                yLast = y;
             }
         }
-    }
 
-
-    private static void waitForDebuggerToConnect() {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        // Halt here so that Norman can start the IDE debugger
-        System.out.print("Connect debugger to the JVM and press return!");
-        try {
-            reader.readLine();
-        } catch (IOException e) {
-            // ?
+        @Override
+        public void end(BinningContext ctx) throws Exception {
+            writeLine(yLast);
+            initLine();
         }
-    }
 
+        private void writeLine(int y) throws IOException {
+            //To change body of implemented methods use File | Settings | File Templates.
+            productWriter.writeBandRasterData(indexBand, 0, y, rasterWidth, 1, indexLine, ProgressMonitor.NULL);
+            productWriter.writeBandRasterData(numObsBand, 0, y, rasterWidth, 1, numObsLine, ProgressMonitor.NULL);
+            productWriter.writeBandRasterData(numPassesBand, 0, y, rasterWidth, 1, numPassesLine, ProgressMonitor.NULL);
+            for (int i = 0; i < outputBands.length; i++) {
+                productWriter.writeBandRasterData(outputBands[i], 0, y, rasterWidth, 1, outputLines[i], ProgressMonitor.NULL);
+            }
+        }
+
+        private void setData(int x, TemporalBin temporalBin, WritableVector outputVector) {
+            indexLine.setElemIntAt(x, temporalBin.getIndex());
+            numObsLine.setElemIntAt(x, temporalBin.getNumObs());
+            numPassesLine.setElemIntAt(x, temporalBin.getNumPasses());
+            for (int i = 0; i < outputBands.length; i++) {
+                outputLines[i].setElemFloatAt(x, outputVector.get(i));
+            }
+        }
+
+        private void setNoData(int x) {
+            indexLine.setElemIntAt(x, -1);
+            numObsLine.setElemIntAt(x, -1);
+            numPassesLine.setElemIntAt(x, -1);
+            for (int i = 0; i < outputBands.length; i++) {
+                outputLines[i].setElemFloatAt(x, Float.NaN);
+            }
+        }
+
+        private void initLine() {
+            for (int x = 0; x < width; x++) {
+                setNoData(x);
+            }
+        }
+
+    }
 }
 

@@ -16,7 +16,7 @@ export HADOOP_HEAPSIZE=2000
 
 # Extra Java runtime options.  Empty by default.
 # export HADOOP_OPTS=-server
-# export HADOOP_OPTS="-Djava.net.preferIPv4Stack=true -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -Dhadoop.debug=true"
+#export HADOOP_OPTS="-Djava.net.preferIPv4Stack=true -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -Dhadoop.debug=true"
 export HADOOP_OPTS="-Djava.net.preferIPv4Stack=true"
 
 # Command specific options appended to HADOOP_OPTS when specified
