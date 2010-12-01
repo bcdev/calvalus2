@@ -8,6 +8,7 @@ import com.bc.calvalus.b3.SpatialBinner;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.calvalus.hadoop.io.FSImageInputStream;
 import com.bc.ceres.glevel.MultiLevelImage;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -53,12 +54,13 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
-        final BinningContext ctx = L3Config.getBinningContext(context.getConfiguration());
+        final Configuration hadoopConfiguration = context.getConfiguration();
+        final BinningContext ctx = L3Config.getBinningContext(hadoopConfiguration);
 
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
 
-        final int numScansPerSlice = context.getConfiguration().getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
+        final int numScansPerSlice = hadoopConfiguration.getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
         // todo - must tell BEAM to use this tileHeight in all readers, not only Envisat reader
         System.setProperty("beam.envisat.tileHeight", Integer.toString(numScansPerSlice));
 
@@ -70,7 +72,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
         // open the single split as ImageInputStream and get a product via an Envisat product reader
         final Path path = split.getPath();
-        final FileSystem inputFileSystem = path.getFileSystem(context.getConfiguration());
+        final FileSystem inputFileSystem = path.getFileSystem(hadoopConfiguration);
         final FSDataInputStream fsDataInputStream = inputFileSystem.open(path);
         final FileStatus status = inputFileSystem.getFileStatus(path);
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
@@ -80,7 +82,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final Product product = productReader.readProductNodes(imageInputStream, null);
         if (product != null) {
             try {
-                processProduct(product, numScansPerSlice, ctx, spatialBinner);
+                processProduct(product, numScansPerSlice, ctx, spatialBinner, hadoopConfiguration);
             } finally {
                 product.dispose();
             }
@@ -101,12 +103,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
     }
 
-    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner) {
+    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner, Configuration hadoopConfiguration) {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
 
         final int sliceWidth = product.getSceneRasterWidth();
+
+        product = L3Config.getProcessedProduct(product, hadoopConfiguration);
 
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);

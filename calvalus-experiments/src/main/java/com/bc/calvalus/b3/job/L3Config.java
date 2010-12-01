@@ -15,9 +15,13 @@ import com.bc.calvalus.b3.VariableContext;
 import com.bc.calvalus.b3.VariableContextImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 
 import java.util.ArrayList;
-import java.util.TreeSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Creates the binning context from a job's configuration.
@@ -37,8 +41,32 @@ public class L3Config {
     public static final String CONFNAME_L3_VARIABLES_i_EXPR = "calvalus.l3.variables.%d.expr";
     public static final String CONFNAME_L3_INPUT = "calvalus.l3.input";
     public static final String CONFNAME_L3_OUTPUT = "calvalus.l3.output";
+    public static final String CONFNAME_L3_OPERATOR_NAME = "calvalus.l3.operator";
+    public static final String CONFNAME_L3_OPERATOR_PARMETER_PREFIX = "calvalus.l3.operator.";
     public static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     public static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
+
+    public static Product getProcessedProduct(Product product, Configuration conf) {
+        String operatorName = conf.get(CONFNAME_L3_OPERATOR_NAME);
+        if (operatorName == null) {
+            return product;
+        } else {
+            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
+            Map<String, Object> parameterMap = new HashMap<String, Object>();
+            Iterator<Map.Entry<String,String>> confIterator = conf.iterator();
+            while (confIterator.hasNext()) {
+                Map.Entry<String, String> entry =  confIterator.next();
+                String paramName = entry.getKey();
+                if (paramName.startsWith(CONFNAME_L3_OPERATOR_PARMETER_PREFIX)) {
+                    paramName = paramName.substring(CONFNAME_L3_OPERATOR_PARMETER_PREFIX.length());
+                    String paramValue = entry.getValue();
+                    parameterMap.put(paramName, paramValue);
+                }
+            }
+            return GPF.createProduct(operatorName, parameterMap, product);
+        }
+    }
 
     public static BinningContext getBinningContext(Configuration conf) {
         VariableContext varCtx = getVariableContext(conf);
