@@ -7,6 +7,7 @@ import com.bc.calvalus.b3.BinningContextImpl;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.VariableContextImpl;
+import com.bc.calvalus.b3.WritableVector;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
@@ -24,7 +25,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class L3ToolTest {
+public class L3ReprojectorTest {
     static final float NAN = Float.NaN;
     private BinManager binManager;
 
@@ -40,7 +41,7 @@ public class L3ToolTest {
     }
 
     @Test
-    public void testProcessBinRowCompleteEquator() {
+    public void testProcessBinRowCompleteEquator() throws Exception {
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
         assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
         assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
@@ -63,13 +64,14 @@ public class L3ToolTest {
                                                  createTBin(22)
         );
 
-        float[] nobsData = new float[6 * 12];
-        float[] meanData = new float[6 * 12];
-        float[] sigmaData = new float[6 * 12];
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
+        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        float[] nobsData = binProcessor.nobsData;
+        float[] meanData = binProcessor.meanData;
+        float[] sigmaData = binProcessor.sigmaData;
 
         assertEquals(11f, nobsData[y * width + 0], 1E-5f);
         assertEquals(12f, nobsData[y * width + 1], 1E-5f);
@@ -88,7 +90,7 @@ public class L3ToolTest {
     }
 
     @Test
-    public void testProcessBinRowIncompleteEquator() {
+    public void testProcessBinRowIncompleteEquator() throws Exception {
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
         assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
         assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
@@ -111,13 +113,12 @@ public class L3ToolTest {
                                                  // createTBin(22)
         );
 
-        float[] nobsData = new float[6 * 12];
-        float[] meanData = new float[6 * 12];
-        float[] sigmaData = new float[6 * 12];
         int y = 2;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
+        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        float[] nobsData = binProcessor.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
         assertEquals(12f, nobsData[y * width + 1], 1E-5f);
@@ -137,7 +138,7 @@ public class L3ToolTest {
 
 
     @Test
-    public void testProcessBinRowCompletePolar() {
+    public void testProcessBinRowCompletePolar() throws Exception {
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
         assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
         assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
@@ -150,13 +151,14 @@ public class L3ToolTest {
                                                  createTBin(1),
                                                  createTBin(2));
 
-        float[] nobsData = new float[6 * 12];
-        float[] meanData = new float[6 * 12];
-        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
+        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        float[] nobsData = binProcessor.nobsData;
+        float[] meanData = binProcessor.meanData;
+        float[] sigmaData = binProcessor.sigmaData;
 
         assertEquals(0f, nobsData[y * width + 0], 1E-5f);
         assertEquals(0f, nobsData[y * width + 1], 1E-5f);
@@ -173,7 +175,7 @@ public class L3ToolTest {
     }
 
     @Test
-    public void testProcessBinRowIncompletePolar() {
+    public void testProcessBinRowIncompletePolar() throws Exception {
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
         assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
         assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
@@ -186,13 +188,12 @@ public class L3ToolTest {
                                                  //createTBin(1),
                                                  createTBin(2));
 
-        float[] nobsData = new float[6 * 12];
-        float[] meanData = new float[6 * 12];
-        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
+        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        float[] nobsData = binProcessor.nobsData;
 
         assertEquals(0f, nobsData[y * width + 0], 1E-5f);
         assertEquals(0f, nobsData[y * width + 1], 1E-5f);
@@ -209,7 +210,7 @@ public class L3ToolTest {
     }
 
     @Test
-    public void testProcessBinRowEmpty() {
+    public void testProcessBinRowEmpty() throws Exception {
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
         assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
         assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
@@ -220,13 +221,12 @@ public class L3ToolTest {
 
         List<TemporalBin> binRow = Arrays.asList();
 
-        float[] nobsData = new float[6 * 12];
-        float[] meanData = new float[6 * 12];
-        float[] sigmaData = new float[6 * 12];
         int y = 0;
         int width = 12;
         int height = 6;
-        L3Tool.processBinRow0(getCtx(binningGrid), y, binRow, nobsData, meanData, sigmaData, width, height);
+        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        float[] nobsData = binProcessor.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
         assertEquals(NAN, nobsData[y * width + 1], 1E-5f);
@@ -279,4 +279,32 @@ public class L3ToolTest {
         return new BinningContextImpl(binningGrid, new VariableContextImpl(), binManager);
     }
 
+    private static class MyTemporalBinProcessor extends L3Reprojector.TemporalBinProcessor {
+        float[] nobsData;
+        float[] meanData;
+        float[] sigmaData;
+        private final int w;
+        private final int h;
+
+        private MyTemporalBinProcessor(int w, int h) {
+            this.w = w;
+            this.h = h;
+            nobsData = new float[w * h];
+            meanData = new float[w * h];
+            sigmaData = new float[w * h];
+        }
+
+        @Override
+        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
+            if (temporalBin != null) {
+            nobsData[y * w + x] = temporalBin.getNumObs();
+            meanData[y * w + x] = outputVector.get(0);
+            sigmaData[y * w + x] = outputVector.get(1);
+            } else {
+                nobsData[y * w + x] = Float.NaN;
+                meanData[y * w + x] = Float.NaN;
+                sigmaData[y * w + x] = Float.NaN;
+            }
+        }
+    }
 }
