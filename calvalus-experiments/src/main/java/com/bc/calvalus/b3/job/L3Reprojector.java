@@ -14,7 +14,6 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,36 +28,36 @@ import java.util.logging.Logger;
 public class L3Reprojector {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String PART_R = "part-r-";
+    private static final String PART_FILE_PREFIX = "part-r-";
 
     // todo - no good: TemporalBinProcessor must know that width=binningGrid.getNumRows()*2 and height=binningGrid.getNumRows()
 
-    public static void reproject(BinningContext ctx,
-                                 Path output,
-                                 Configuration conf,
+    public static void reproject(Configuration configuration,
+                                 BinningContext binningContext,
+                                 Path partsDir,
                                  TemporalBinProcessor temporalBinProcessor) throws Exception {
-        BinningGrid binningGrid = ctx.getBinningGrid();
+        BinningGrid binningGrid = binningContext.getBinningGrid();
         int width = binningGrid.getNumRows() * 2;
         int height = binningGrid.getNumRows();
 
         long startTime = System.nanoTime();
 
-        final FileSystem hdfs = output.getFileSystem(conf);
-        final FileStatus[] fileStati = hdfs.listStatus(output, new PathFilter() {
+        final FileSystem hdfs = partsDir.getFileSystem(configuration);
+        final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().startsWith(PART_R);
+                return path.getName().startsWith(PART_FILE_PREFIX);
             }
         });
 
-        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", fileStati.length));
+        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", parts.length));
 
-        Arrays.sort(fileStati);
+        Arrays.sort(parts);
 
-        temporalBinProcessor.begin(ctx);
-        for (FileStatus fileStatus : fileStati) {
-            Path partFile = fileStatus.getPath();
-            SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, conf);
+        temporalBinProcessor.begin(binningContext);
+        for (FileStatus part : parts) {
+            Path partFile = part.getPath();
+            SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
 
             LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
 
@@ -70,7 +69,7 @@ public class L3Reprojector {
                     TemporalBin temporalBin = new TemporalBin();
                     if (!reader.next(binIndex, temporalBin)) {
                         // last row
-                        reprojectRow(ctx,
+                        reprojectRow(binningContext,
                                      lastRowIndex, binRow,
                                      temporalBinProcessor,
                                      width, height);
@@ -79,7 +78,7 @@ public class L3Reprojector {
                     }
                     int rowIndex = binningGrid.getRowIndex(binIndex.get());
                     if (rowIndex != lastRowIndex) {
-                        reprojectRow(ctx,
+                        reprojectRow(binningContext,
                                      lastRowIndex, binRow,
                                      temporalBinProcessor,
                                      width, height);
@@ -93,7 +92,7 @@ public class L3Reprojector {
                 reader.close();
             }
         }
-        temporalBinProcessor.end(ctx);
+        temporalBinProcessor.end(binningContext);
 
         long stopTime = System.nanoTime();
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));

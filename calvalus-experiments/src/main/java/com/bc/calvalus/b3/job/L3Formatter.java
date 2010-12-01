@@ -210,7 +210,7 @@ public class L3Formatter extends Configured implements Tool {
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
-        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), dataWriter);
+        L3Reprojector.reproject(getConf(), binningContext, l3OutputDir, dataWriter);
         productWriter.close();
     }
 
@@ -244,7 +244,7 @@ public class L3Formatter extends Configured implements Tool {
         v2s = Arrays.copyOf(v2s, numBands);
 
         final ImageRaster raster = new ImageRaster(rasterWidth, rasterHeight, indices);
-        L3Reprojector.reproject(binningContext, l3OutputDir, getConf(), raster);
+        L3Reprojector.reproject(getConf(), binningContext, l3OutputDir, raster);
 
         if (outputType.equalsIgnoreCase("RGB")) {
             writeRgbImage(rasterWidth, rasterHeight, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
@@ -352,8 +352,14 @@ public class L3Formatter extends Configured implements Tool {
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
-            for (int i = 0; i < bandCount; i++) {
-                bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
+            if (temporalBin != null) {
+                for (int i = 0; i < bandCount; i++) {
+                    bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
+                }
+            } else {
+                for (int i = 0; i < bandCount; i++) {
+                    bandData[i][rasterWidth * y + x] = Float.NaN;
+                }
             }
         }
 
