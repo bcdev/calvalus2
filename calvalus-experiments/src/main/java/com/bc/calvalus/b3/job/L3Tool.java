@@ -1,12 +1,8 @@
 package com.bc.calvalus.b3.job;
 
-import com.bc.calvalus.b3.BinManager;
-import com.bc.calvalus.b3.BinningContext;
-import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
-import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.processing.N1InputFormat;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
@@ -15,7 +11,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -24,16 +19,10 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -163,153 +152,6 @@ public class L3Tool extends Configured implements Tool {
             return properties;
         } finally {
             fileReader.close();
-        }
-    }
-
-    private void processL3Output(Configuration configuration, Path output, int numParts) throws IOException {
-        final BinningContext ctx = L3Config.getBinningContext(configuration);
-
-        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", numParts));
-        BinningGrid binningGrid = ctx.getBinningGrid();
-        int width = binningGrid.getNumRows() * 2;
-        int height = binningGrid.getNumRows();
-        float[] nobsData = new float[width * height];
-        float[] meanData = new float[width * height];
-        float[] sigmaData = new float[width * height];
-        Arrays.fill(nobsData, Float.NaN);
-        Arrays.fill(meanData, Float.NaN);
-        Arrays.fill(sigmaData, Float.NaN);
-
-        long startTime = System.nanoTime();
-
-        for (int i = 0; i < numParts; i++) {
-            Path partFile = new Path(output, String.format("part-r-%05d", i));
-            SequenceFile.Reader reader = new SequenceFile.Reader(partFile.getFileSystem(configuration), partFile, configuration);
-
-            LOG.info(MessageFormat.format("reading part {0}", partFile));
-
-            try {
-                int lastRowIndex = -1;
-                ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
-                while (true) {
-                    IntWritable binIndex = new IntWritable();
-                    TemporalBin temporalBin = new TemporalBin();
-                    if (!reader.next(binIndex, temporalBin)) {
-                        // last row
-                        processBinRow(ctx,
-                                      lastRowIndex, binRow,
-                                      nobsData, meanData, sigmaData,
-                                      width, height);
-                        binRow.clear();
-                        break;
-                    }
-                    int rowIndex = binningGrid.getRowIndex(binIndex.get());
-                    if (rowIndex != lastRowIndex) {
-                        processBinRow(ctx,
-                                      lastRowIndex, binRow,
-                                      nobsData, meanData, sigmaData,
-                                      width, height);
-                        binRow.clear();
-                        lastRowIndex = rowIndex;
-                    }
-                    temporalBin.setIndex(binIndex.get());
-                    binRow.add(temporalBin);
-                }
-            } finally {
-                reader.close();
-            }
-        }
-        long stopTime = System.nanoTime();
-
-        LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
-
-        String baseName = String.format("l3_ndvi_%dd_%dr", configuration.getInt(CONFNAME_L3_NUM_DAYS, -1),
-                                        configuration.getInt(CONFNAME_L3_GRID_NUM_ROWS, -1));
-        writeImage(width, height, nobsData, 0.5f, new File(baseName + "_nobs.png"));
-        writeImage(width, height, meanData, 255 / 0.8f, new File(baseName + "_mean.png"));
-        writeImage(width, height, sigmaData, 255 / 0.1f, new File(baseName + "_sigma.png"));
-    }
-
-    private void writeImage(int width, int height, float[] rawData, float factor, File outputImageFile) throws IOException {
-        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-        DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
-        byte[] data = dataBuffer.getData();
-        for (int i = 0; i < rawData.length; i++) {
-            int sample = (int) (factor * rawData[i]);
-            if (sample < 0) {
-                sample = 0;
-            } else if (sample > 255) {
-                sample = 255;
-            }
-            data[i] = (byte) sample;
-        }
-        ImageIO.write(image, "PNG", outputImageFile);
-    }
-
-    static void processBinRow(BinningContext ctx,
-                              int y, List<TemporalBin> binRow,
-                              float[] nobsData, float[] meanData, float[] sigmaData,
-                              int width, int height) {
-        if (y >= 0 && !binRow.isEmpty()) {
-//            LOG.info("row " + y + ": processing " + binRow.size() + " bins, bin #0 = " + binRow.get(0));
-            processBinRow0(ctx,
-                           y, binRow,
-                           nobsData, meanData, sigmaData,
-                           width, height);
-        } else {
-//            LOG.info("row " + y + ": no bins");
-        }
-    }
-
-    static void processBinRow0(BinningContext ctx,
-                               int y,
-                               List<TemporalBin> binRow,
-                               float[] nobsData,
-                               float[] meanData,
-                               float[] sigmaData,
-                               int width,
-                               int height) {
-        final BinningGrid binningGrid = ctx.getBinningGrid();
-        final BinManager binManager = ctx.getBinManager();
-        final WritableVector outputVector = binManager.createOutputVector();
-        final int offset = y * width;
-        final double lat = -90.0 + (y + 0.5) * 180.0 / height;
-        int lastBinIndex = -1;
-        TemporalBin temporalBin = null;
-        int rowIndex = -1;
-        float lastMean = Float.NaN;
-        float lastSigma = Float.NaN;
-        for (int x = 0; x < width; x++) {
-            double lon = -180.0 + (x + 0.5) * 360.0 / width;
-            int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
-            if (lastBinIndex != wantedBinIndex) {
-                //search
-                temporalBin = null;
-                for (int i = rowIndex + 1; i < binRow.size(); i++) {
-                    final int binIndex = binRow.get(i).getIndex();
-                    if (binIndex == wantedBinIndex) {
-                        temporalBin = binRow.get(i);
-                        binManager.computeOutput(temporalBin, outputVector);
-                        lastMean = outputVector.get(0);
-                        lastSigma = outputVector.get(1);
-                        lastBinIndex = wantedBinIndex;
-                        rowIndex = i;
-                        break;
-                    } else if (binIndex > wantedBinIndex) {
-                        break;
-                    }
-                }
-            }
-            if (temporalBin != null) {
-                nobsData[offset + x] = temporalBin.getNumObs();
-                meanData[offset + x] = lastMean;
-                sigmaData[offset + x] = lastSigma;
-            } else {
-                nobsData[offset + x] = Float.NaN;
-                meanData[offset + x] = Float.NaN;
-                sigmaData[offset + x] = Float.NaN;
-            }
         }
     }
 
