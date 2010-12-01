@@ -296,15 +296,16 @@ public class L3ReprojectorTest {
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
-            if (temporalBin != null) {
-            nobsData[y * w + x] = temporalBin.getNumObs();
-            meanData[y * w + x] = outputVector.get(0);
-            sigmaData[y * w + x] = outputVector.get(1);
-            } else {
-                nobsData[y * w + x] = Float.NaN;
+                nobsData[y * w + x] = temporalBin.getNumObs();
+                meanData[y * w + x] = outputVector.get(0);
+                sigmaData[y * w + x] = outputVector.get(1);
+        }
+
+        @Override
+        public void processMissingBin(int x, int y) throws Exception {
+            nobsData[y * w + x] = Float.NaN;
                 meanData[y * w + x] = Float.NaN;
                 sigmaData[y * w + x] = Float.NaN;
-            }
         }
     }
 }

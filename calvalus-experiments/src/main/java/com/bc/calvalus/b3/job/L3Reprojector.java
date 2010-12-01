@@ -73,7 +73,7 @@ public class L3Reprojector {
                                      lastRowIndex, binRow,
                                      temporalBinProcessor,
                                      width, height);
-                        binRow.clear();                        
+                        binRow.clear();
                         break;
                     }
                     int rowIndex = binningGrid.getRowIndex(binIndex.get());
@@ -110,7 +110,7 @@ public class L3Reprojector {
         }
         if (binRow.isEmpty()) {
             for (int x = 0; x < width; x++) {
-                temporalBinProcessor.processBin(x, y, null, null);
+                temporalBinProcessor.processMissingBin(x, y);
             }
             return;
         }
@@ -143,25 +143,37 @@ public class L3Reprojector {
             if (temporalBin != null) {
                 temporalBinProcessor.processBin(x, y, temporalBin, outputVector);
             } else {
-                temporalBinProcessor.processBin(x, y, null, null);
+                temporalBinProcessor.processMissingBin(x, y);
             }
         }
     }
 
+    /**
+     * Processes temporal bins.
+     */
     public static abstract class TemporalBinProcessor {
         void begin(BinningContext ctx) throws Exception {
         }
 
         /**
+         * Processes a temporal bin and its output properties.
          *
-         * @param x current pixel X coordinate
-         * @param y current pixel Y coordinate
-         * @param temporalBin the current temporal bin, will be null, if missing
-         * @param outputVector the current output vector, will be null, if missing
-         * @throws Exception if an error occured
+         * @param x            current pixel X coordinate
+         * @param y            current pixel Y coordinate
+         * @param temporalBin  the current temporal bin
+         * @param outputVector the current output vector
+         * @throws Exception if an error occurred
          */
         public abstract void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception;
 
+        /**
+         * Processes a missing bin.
+         *
+         * @param x current pixel X coordinate
+         * @param y current pixel Y coordinate
+         * @throws Exception if an error occurred
+         */
+        public abstract void processMissingBin(int x, int y) throws Exception;
 
         public void end(BinningContext ctx) throws Exception {
         }

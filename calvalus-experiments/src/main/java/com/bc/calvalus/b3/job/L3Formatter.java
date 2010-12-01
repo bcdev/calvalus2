@@ -352,18 +352,17 @@ public class L3Formatter extends Configured implements Tool {
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
-            if (temporalBin != null) {
-                for (int i = 0; i < bandCount; i++) {
-                    bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
-                }
-            } else {
-                for (int i = 0; i < bandCount; i++) {
-                    bandData[i][rasterWidth * y + x] = Float.NaN;
-                }
+            for (int i = 0; i < bandCount; i++) {
+                bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
             }
         }
 
-
+        @Override
+        public void processMissingBin(int x, int y) throws Exception {
+            for (int i = 0; i < bandCount; i++) {
+                bandData[i][rasterWidth * y + x] = Float.NaN;
+            }
+        }
     }
 
     private final class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
@@ -398,20 +397,28 @@ public class L3Formatter extends Configured implements Tool {
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
-            if (temporalBin != null) {
-                setData(x, temporalBin, outputVector);
-            } else {
-                setNoData(x);
-            }
+            setData(x, temporalBin, outputVector);
             if (y != yLast) {
-                writeLine(yLast);
-                initLine();
+                completeLine();
+                yLast = y;
+            }
+        }
+
+        @Override
+        public void processMissingBin(int x, int y) throws Exception {
+            setNoData(x);
+            if (y != yLast) {
+                completeLine();
                 yLast = y;
             }
         }
 
         @Override
         public void end(BinningContext ctx) throws Exception {
+            completeLine();
+        }
+
+        private void completeLine() throws IOException {
             writeLine(yLast);
             initLine();
         }
@@ -423,6 +430,12 @@ public class L3Formatter extends Configured implements Tool {
             productWriter.writeBandRasterData(numPassesBand, 0, y, rasterWidth, 1, numPassesLine, ProgressMonitor.NULL);
             for (int i = 0; i < outputBands.length; i++) {
                 productWriter.writeBandRasterData(outputBands[i], 0, y, rasterWidth, 1, outputLines[i], ProgressMonitor.NULL);
+            }
+        }
+
+        private void initLine() {
+            for (int x = 0; x < width; x++) {
+                setNoData(x);
             }
         }
 
@@ -441,12 +454,6 @@ public class L3Formatter extends Configured implements Tool {
             numPassesLine.setElemIntAt(x, -1);
             for (int i = 0; i < outputBands.length; i++) {
                 outputLines[i].setElemFloatAt(x, Float.NaN);
-            }
-        }
-
-        private void initLine() {
-            for (int x = 0; x < width; x++) {
-                setNoData(x);
             }
         }
 
