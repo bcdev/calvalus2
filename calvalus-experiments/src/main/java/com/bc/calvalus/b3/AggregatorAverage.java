@@ -1,5 +1,7 @@
 package com.bc.calvalus.b3;
 
+import java.util.Arrays;
+
 /**
  * An aggregator that computes an average.
  */
@@ -109,6 +111,15 @@ public final class AggregatorAverage implements Aggregator {
         float sigma = (float) Math.sqrt(sumXX / sumW - mean * mean);
         outputVector.set(0, mean);
         outputVector.set(1, sigma);
+    }
+
+    @Override
+    public String toString() {
+        return "AggregatorAverage{" +
+                "outputPropertyNames=" + (outputPropertyNames == null ? null : Arrays.toString(outputPropertyNames)) +
+                ", varIndex=" + varIndex +
+                ", weightFn=" + weightFn +
+                '}';
     }
 
     public static WeightFn getWeightFn(double c) {

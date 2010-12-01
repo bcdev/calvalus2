@@ -1,5 +1,7 @@
 package com.bc.calvalus.b3;
 
+import java.util.Arrays;
+
 /**
  * An aggregator that sets an output if an input is maximal.
  */
@@ -109,5 +111,13 @@ public final class AggregatorOnMaxSet implements Aggregator {
         for (int i = 0; i < numProperties; i++) {
             outputVector.set(i, temporalVector.get(i));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AggregatorOnMaxSet{" +
+                "varIndexes=" + Arrays.toString(varIndexes) +
+                ", propertyNames=" + (propertyNames == null ? null : Arrays.toString(propertyNames)) +
+                '}';
     }
 }

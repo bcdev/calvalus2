@@ -1,5 +1,7 @@
 package com.bc.calvalus.b3;
 
+import java.util.Arrays;
+
 /**
  * An aggregator that computes the minimum and maximum values.
  */
@@ -88,4 +90,11 @@ public class AggregatorMinMax implements Aggregator {
         outputVector.set(1, temporalVector.get(1));
     }
 
+    @Override
+    public String toString() {
+        return "AggregatorMinMax{" +
+                "varIndex=" + varIndex +
+                ", propertyNames=" + (propertyNames == null ? null : Arrays.toString(propertyNames)) +
+                '}';
+    }
 }

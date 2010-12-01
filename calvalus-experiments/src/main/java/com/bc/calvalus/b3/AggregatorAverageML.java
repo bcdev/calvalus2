@@ -1,5 +1,7 @@
 package com.bc.calvalus.b3;
 
+import java.util.Arrays;
+
 import static com.bc.calvalus.b3.AggregatorAverage.getWeightFn;
 import static java.lang.Math.exp;
 import static java.lang.Math.sqrt;
@@ -111,5 +113,14 @@ public class AggregatorAverageML implements Aggregator {
         outputVector.set(1, sigma);
         outputVector.set(2, median);
         outputVector.set(3, mode);
+    }
+
+    @Override
+    public String toString() {
+        return "AggregatorAverageML{" +
+                "varIndex=" + varIndex +
+                ", outputPropertyNames=" + (outputPropertyNames == null ? null : Arrays.toString(outputPropertyNames)) +
+                ", weightFn=" + weightFn +
+                '}';
     }
 }
