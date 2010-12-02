@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * A default implementation of the {@link com.bc.calvalus.binning.Observation} interface.
+ * A "slice" of observations. A slice is a spatially contiguous area of observations.
  *
  * @author Norman Fomferra
  */
-public class ObservationSlice implements Iterable<Observation> {
+public final class ObservationSlice implements Iterable<Observation> {
     private final Raster[] varRasters;
     private final ArrayList<Observation> observations;
 
