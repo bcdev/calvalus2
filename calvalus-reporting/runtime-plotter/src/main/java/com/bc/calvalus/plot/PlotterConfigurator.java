@@ -1,7 +1,6 @@
 package com.bc.calvalus.plot;
 
 import java.text.ParseException;
-import java.util.Date;
 import java.util.Scanner;
 
 public class PlotterConfigurator {
@@ -10,6 +9,7 @@ public class PlotterConfigurator {
     private String inputFile;
     private String category;
     private String colouredDimension; //series
+    private String categorySorting;
     private int numberOfSeries;
     private int numberOfCategories;
     private int numberOfSeriesToBeShown;
@@ -130,5 +130,13 @@ public class PlotterConfigurator {
                 (stop == TimeUtils.TIME_NULL || stop > logStop)) {
             stop = logStop;
         }
+    }
+
+    public void setCategorySorting(String categorySorting) {
+        this.categorySorting = categorySorting;
+    }
+
+    public String getCategorySorting() {
+        return categorySorting;
     }
 }

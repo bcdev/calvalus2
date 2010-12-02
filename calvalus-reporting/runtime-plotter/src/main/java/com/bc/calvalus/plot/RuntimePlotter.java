@@ -40,6 +40,8 @@ public class RuntimePlotter {
         if (args.length < 2 || !args[0].startsWith("-category=") || !args[1].startsWith("-colour=")) {
             System.out.println("Please enter a command like: java RuntimePlotter -category=task -colour=host");
             System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job");
+            System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job" +
+                    "-categorySorting=host");
             System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job " +
                     "-start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z");
             System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job " +
@@ -51,11 +53,14 @@ public class RuntimePlotter {
         plotterConfigurator.setCategory(args[0].split("=")[1]);
         plotterConfigurator.setColouredDimension(args[1].split("=")[1]);
         if (args.length > 2) {
-            final String startTimeString = args[2].split("=")[1];
-            plotterConfigurator.setStart(TimeUtils.parseCcsdsUtcFormat(startTimeString));
+            plotterConfigurator.setCategorySorting(args[2].split("=")[1]);
         }
         if (args.length > 3) {
-            final String stopTimeString = args[3].split("=")[1];
+            final String startTimeString = args[3].split("=")[1];
+            plotterConfigurator.setStart(TimeUtils.parseCcsdsUtcFormat(startTimeString));
+        }
+        if (args.length > 4) {
+            final String stopTimeString = args[4].split("=")[1];
             plotterConfigurator.setStop(TimeUtils.parseCcsdsUtcFormat(stopTimeString));
         }
 
@@ -78,7 +83,7 @@ public class RuntimePlotter {
 
         //4) draw the chart to some output
         LOGGER.info("saving ...");
-//        saveChartAsPng(1500, 800);
+        saveChartAsPng(1500, 800);
 //        saveChartAsJpg(800, 300);
         saveChartAsPDF(1500, 800);
         saveChartOnScreen();

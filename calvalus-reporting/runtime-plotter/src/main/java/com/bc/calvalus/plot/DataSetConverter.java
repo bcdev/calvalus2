@@ -71,7 +71,13 @@ public class DataSetConverter {
                 plotterConfigurator.getCategory() == null ||
                 plotterConfigurator.getColouredDimension() == null || //default
                 "task".equalsIgnoreCase(plotterConfigurator.getCategory()) &&
-                        "job".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
+                        "job".equalsIgnoreCase(plotterConfigurator.getColouredDimension()) &&
+                        "host".equalsIgnoreCase(plotterConfigurator.getCategorySorting())) {
+
+            dataFilter = new SeriesJobsAndTasksTasksAndSortFilter();
+
+        } else if ("task".equalsIgnoreCase(plotterConfigurator.getCategory()) &&
+                "job".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
 
             dataFilter = new SeriesJobsAndTasksTasksFilter();
 
@@ -79,6 +85,7 @@ public class DataSetConverter {
                 "host".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
 
             dataFilter = new SeriesHostAndTasksTasksFilter();
+
         } else {
             dataFilter = new GeneralPropertiesFilter();
         }
@@ -152,40 +159,56 @@ public class DataSetConverter {
         }
     }
 
-    public static class SeriesJobsAndTasksTasksFilter implements Filter {
+
+    public static class SeriesJobsAndTasksTasksAndSortFilter implements Filter {
         private long traceStart;
         private long traceStop;
 
         @Override
         public Map<String, TaskSeries> filter(RunTimesScanner scanner) {
             final List<Trace> traceList = scanner.getTraces();
-            int jobsCounter = 0;
             final Map<String, TaskSeries> jobsMap = new TreeMap<String, TaskSeries>();
+            final Map<String, TreeMap> jobsMapIntermediate = new HashMap<String, TreeMap>(); //to sort category axis
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            final String colour = configurator.getColouredDimension(); //job
+            final String category = configurator.getCategory(); //task
+            final String sorting = configurator.getCategorySorting(); //host
+
             for (Trace trace : traceList) {
                 if (!this.fitTraceTimeInTimeInterval(scanner, trace)) {
                     continue;
                 }
-                if ("job".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {  //job
-                    jobsCounter++;
-                    final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
-                    jobsMap.put(trace.getId(), taskSeries);
+                if (colour.equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {
+                    final TreeMap<String, Task> taskTreeMap = new TreeMap<String, Task>(); //to sort category axis
+                    jobsMapIntermediate.put(trace.getId(), taskTreeMap);
                 } else if ("m".equals(
                         trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) { //task of type map
                     if (trace.getId().contains("_m_")) {
                         String jobId = trace.getId().split("_m_")[0];
                         final String taskId = trace.getId().split("_m_")[1];
-                        final TaskSeries jobTaskSeries = jobsMap.get(jobId);
+                        final TreeMap<String, Task> taskTreeMap = jobsMapIntermediate.get(jobId);
+                        //todo give it to the configurator
+                        final String taskDesc = trace.getPropertyValue(sorting) + category + taskId;
 
-                        final Task task = new Task("task" + taskId, //categories on category axis
+                        final Task task = new Task(taskDesc, //categories on category axis
                                                    new Date(this.traceStart), //trace.getStartTime()
                                                    new Date(this.traceStop)); //trace.getStopTime()
-                        if (null != jobTaskSeries) {
-                            jobTaskSeries.add(task);
-                        }
+                        taskTreeMap.put(taskDesc, task); //to sort category axis
                     }
                 }
             }
-            PlotterConfigurator.getInstance().setNumberOfSeries(jobsCounter);
+            //get taskTreeMaps out of jobsMapIntermediate
+            //put tasks from taskTreeMap into taskSeries
+            //put taskSeries into jobsMap (jobsMap is also a TreeMap that sorts the jobs)
+            for (String key : jobsMapIntermediate.keySet()) {
+                final TreeMap taskTreeMap = jobsMapIntermediate.get(key);
+                final TaskSeries taskSeries = new TaskSeries(colour + " " + key);
+                for (Object task : taskTreeMap.values()) {
+                    taskSeries.add((Task) task);
+                }
+                jobsMap.put(key, taskSeries);
+            }
+            configurator.setNumberOfSeries(jobsMap.size());
             return jobsMap;
         }
 
@@ -206,7 +229,69 @@ public class DataSetConverter {
             if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
                 traceStop = configurator.getStop();
             }
-            return true;  //fit
+            return true;  //fits
+        }
+    }
+
+
+    public static class SeriesJobsAndTasksTasksFilter implements Filter {
+        private long traceStart;
+        private long traceStop;
+
+        @Override
+        public Map<String, TaskSeries> filter(RunTimesScanner scanner) {
+            final List<Trace> traceList = scanner.getTraces();
+            final Map<String, TaskSeries> jobsMap = new TreeMap<String, TaskSeries>();
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            final String colour = configurator.getColouredDimension(); //job
+            final String category = configurator.getCategory(); //task
+
+            for (Trace trace : traceList) {
+                if (!this.fitTraceTimeInTimeInterval(scanner, trace)) {
+                    continue;
+                }
+                if (colour.equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {
+                    final TaskSeries taskSeries = new TaskSeries(colour + " " + trace.getId());
+                    jobsMap.put(trace.getId(), taskSeries);
+                } else if ("m".equals(
+                        trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) { //task of type map
+                    if (trace.getId().contains("_m_")) {
+                        String jobId = trace.getId().split("_m_")[0];
+                        final String taskId = trace.getId().split("_m_")[1];
+                        final TaskSeries jobTaskSeries = jobsMap.get(jobId);
+                        final String taskDesc = category + taskId;
+
+                        final Task task = new Task(taskDesc, //categories on category axis
+                                                   new Date(this.traceStart), //trace.getStartTime()
+                                                   new Date(this.traceStop)); //trace.getStopTime()
+                        if (null != jobTaskSeries) {
+                            jobTaskSeries.add(task);
+                        }
+                    }
+                }
+            }
+            configurator.setNumberOfSeries(jobsMap.size());
+            return jobsMap;
+        }
+
+        private boolean fitTraceTimeInTimeInterval(RunTimesScanner scanner, Trace trace) {
+            traceStart = trace.getStartTime();
+            traceStop = trace.getStopTime();
+
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
+
+            if (traceStart != TimeUtils.TIME_NULL && traceStop < configurator.getStart() ||
+                    traceStart != TimeUtils.TIME_NULL && traceStart > configurator.getStop()) {
+                return false;   //does not fit
+            }
+            if (traceStart == TimeUtils.TIME_NULL || traceStart < configurator.getStart()) {
+                traceStart = configurator.getStart();
+            }
+            if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
+                traceStop = configurator.getStop();
+            }
+            return true;  //fits
         }
     }
 
@@ -235,6 +320,13 @@ public class DataSetConverter {
                 final String categoryValue = String.valueOf(trace.getPropertyValue(category));
                 final String colourValue = String.valueOf(trace.getPropertyValue(colour));
                 final TaskSeries series = taskSeriesMap.get(colourValue);
+
+                if (series.get(categoryValue) == null) {
+                    Task task = new Task(categoryValue, new Date(configurator.getStart()),
+                                         new Date(configurator.getStop()));
+                    series.add(task);
+                }
+
                 series.setNotify(true);
                 // check for interval
                 long traceStart = trace.getStartTime();
@@ -249,7 +341,10 @@ public class DataSetConverter {
                 if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
                     traceStop = configurator.getStop();
                 }
-                series.add(new Task(categoryValue, new Date(traceStart), new Date(traceStop)));
+                //problem was: they were all named equally (categoryValue)
+                //in the plot they got overwritten  - solution: subtasks
+                series.get(categoryValue).addSubtask(
+                        new Task(categoryValue, new Date(traceStart), new Date(traceStop)));
             }
             configurator.setNumberOfSeries(taskSeriesMap.size());
             configurator.setNumberOfCategories(categoryValids.size());
