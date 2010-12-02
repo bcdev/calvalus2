@@ -10,18 +10,18 @@ import java.util.Iterator;
  * @author Norman Fomferra
  */
 public final class ObservationSlice implements Iterable<Observation> {
-    private final Raster[] varRasters;
+    private final Raster[] sourceTiles;
     private final ArrayList<Observation> observations;
 
-    public ObservationSlice(Raster[] varRasters, int observationCapacity) {
-        this.varRasters = varRasters;
+    public ObservationSlice(Raster[] sourceTiles, int observationCapacity) {
+        this.sourceTiles = sourceTiles;
         this.observations = new ArrayList<Observation>(observationCapacity);
     }
 
     public void addObservation(double lat, double lon, int x, int y) {
-        final float[] samples = new float[varRasters.length];
+        final float[] samples = new float[sourceTiles.length];
         for (int i = 0; i < samples.length; i++) {
-            samples[i] = varRasters[i].getSampleFloat(x, y, 0);
+            samples[i] = sourceTiles[i].getSampleFloat(x, y, 0);
         }
         observations.add(new ObservationImpl(lat, lon, samples));
     }
