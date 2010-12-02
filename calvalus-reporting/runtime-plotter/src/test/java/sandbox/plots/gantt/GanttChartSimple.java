@@ -3,6 +3,7 @@ package sandbox.plots.gantt;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,7 +68,7 @@ public class GanttChartSimple {
 
     private static void saveChartAsPDF(final JFreeChart chart, int width, int height) throws IOException {
 
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(userHomeTemp + "myImage.pdf")));
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(userHomeTemp + "GanttChartSimple.pdf")));
         Document document = new Document(new Rectangle(width, height));
         try {
             PdfWriter pdfWriter = PdfWriter.getInstance(document, out);
@@ -96,24 +97,25 @@ public class GanttChartSimple {
         // To workaround set property:
 //        System.setProperty("java.awt.headless","true");
         final BufferedImage bufferedImage = chart.createBufferedImage(width, height);
-        ImageIO.write(bufferedImage, "png", new File(userHomeTemp + "myImage.png"));
+        ImageIO.write(bufferedImage, "png", new File(userHomeTemp + "GanttChartSimple.png"));
     }
 
     private static void saveChartAsJpg(JFreeChart chart, int width, int height) throws IOException {
         final BufferedImage bufferedImage = chart.createBufferedImage(width, height);
 //        chart.draw();
         bufferedImage.createGraphics();
-//        ImageIO.write(bufferedImage, "jpg", new File(userHomeTemp + "myImage.jpg"));
-        ImageIO.write(bufferedImage, "jpg", new File(userHomeTemp + "myImage.jpg"));
+//        ImageIO.write(bufferedImage, "jpg", new File(userHomeTemp + "GanttChartSimple.jpg"));
+        ImageIO.write(bufferedImage, "jpg", new File(userHomeTemp + "GanttChartSimple.jpg"));
     }
 
     /*create jobs*/
     private static TaskSeries createTaskSeries1() {
         final TaskSeries taskSeries1 = new TaskSeries("job1");
-        taskSeries1.add(new Task("task1", date(1, Calendar.JANUARY, 2009), date(1, Calendar.FEBRUARY, 2009)));
-        taskSeries1.add(new Task("task2", date(11, Calendar.JANUARY, 2009), date(11, Calendar.FEBRUARY, 2009)));
+        taskSeries1.add(new Task("task11", date(1, Calendar.JANUARY, 2009), date(1, Calendar.FEBRUARY, 2009)));
+        taskSeries1.add(new Task("task25", date(11, Calendar.JANUARY, 2009), date(11, Calendar.FEBRUARY, 2009)));
         taskSeries1.add(new Task("task3", date(20, Calendar.MARCH, 2009), date(31, Calendar.MARCH, 2009)));
 
+        final List listOfTask = taskSeries1.getTasks();
         return taskSeries1;
     }
 
@@ -123,9 +125,9 @@ public class GanttChartSimple {
          * Tasks with the same name across different task series are plotted inside the same category
          * (grouped along the y-axis/category axis)
          */
-        taskSeries2.add(new Task("task1", date(1, 5, 2009), date(1, 6, 2009)));
-        taskSeries2.add(new Task("task2", date(11, 5, 2009), date(11, 6, 2009)));
-        taskSeries2.add(new Task("task3", date(20, 7, 2009), date(31, 7, 2009)));
+        taskSeries2.add(new Task("task3", date(1, 5, 2009), date(1, 6, 2009)));
+        taskSeries2.add(new Task("task25", date(11, 5, 2009), date(11, 6, 2009)));
+        taskSeries2.add(new Task("task11", date(20, 7, 2009), date(31, 7, 2009)));
 
         return taskSeries2;
     }
