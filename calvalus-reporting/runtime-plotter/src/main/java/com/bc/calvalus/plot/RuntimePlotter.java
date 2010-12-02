@@ -12,7 +12,6 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.CategoryPlot;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -25,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class ChartPlotter {
+public class RuntimePlotter {
     private final static Logger LOGGER = Logger.getAnonymousLogger();
     private static String userHomeTemp;
     private JFreeChart chart;
@@ -37,24 +36,25 @@ public class ChartPlotter {
     public static void main(String[] args) throws IOException, ParseException {
         // 1) configure
         //todo use CommandLineParser von Apache - http://commons.apache.org/cli/
+        //todo better idea: ask for directory with a argument's file
         if (args.length < 2 || !args[0].startsWith("-category=") || !args[1].startsWith("-colour=")) {
-            System.out.println("Please enter a command like: java ChartPlotter -category=task -colour=host");
-            System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job");
-            System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job " +
+            System.out.println("Please enter a command like: java RuntimePlotter -category=task -colour=host");
+            System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job");
+            System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job " +
                     "-start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z");
-            System.out.println("Or enter a command like: java ChartPlotter -category=task -colour=job " +
+            System.out.println("Or enter a command like: java RuntimePlotter -category=task -colour=job " +
                     "-start=2010-10-28T10:20:00.000Z -stop=2010-10-28T14:00:00.000Z");
             System.exit(0);
         }
-        final ChartPlotter chartPlotter = new ChartPlotter();
+        final RuntimePlotter chartPlotter = new RuntimePlotter();
         final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
         plotterConfigurator.setCategory(args[0].split("=")[1]);
         plotterConfigurator.setColouredDimension(args[1].split("=")[1]);
-        if(args.length > 2) {
+        if (args.length > 2) {
             final String startTimeString = args[2].split("=")[1];
             plotterConfigurator.setStart(TimeUtils.parseCcsdsUtcFormat(startTimeString));
         }
-        if(args.length > 3) {
+        if (args.length > 3) {
             final String stopTimeString = args[3].split("=")[1];
             plotterConfigurator.setStop(TimeUtils.parseCcsdsUtcFormat(stopTimeString));
         }
@@ -105,7 +105,7 @@ public class ChartPlotter {
         final CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
         categoryAxis.setLabelFont(defaultFont);
         if (PlotterConfigurator.getInstance().getNumberOfCategories() > 15 ||
-               PlotterConfigurator.getInstance().getNumberOfCategories() == 0 ) {
+                PlotterConfigurator.getInstance().getNumberOfCategories() == 0) {
             categoryAxis.setTickLabelsVisible(false);
         } else {
             categoryAxis.setTickLabelsVisible(true);
