@@ -162,22 +162,22 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                                                            int sliceWidth,
                                                            int sliceHeight) {
 
-        final Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
-        final Raster[] varRasters = new Raster[varImages.length];
+        final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
+        final Raster[] varTiles = new Raster[varImages.length];
         for (int i = 0; i < varImages.length; i++) {
-            varRasters[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
+            varTiles[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
         }
 
-        final ObservationSlice observationSlice = new ObservationSlice(varRasters, sliceWidth * sliceHeight);
-        final int y1 = maskRaster.getMinY();
-        final int y2 = y1 + maskRaster.getHeight();
-        final int x1 = maskRaster.getMinX();
+        final ObservationSlice observationSlice = new ObservationSlice(varTiles, sliceWidth * sliceHeight);
+        final int y1 = maskTile.getMinY();
+        final int y2 = y1 + maskTile.getHeight();
+        final int x1 = maskTile.getMinX();
         final int x2 = x1 + sliceWidth;
         final PixelPos pixelPos = new PixelPos();
         final GeoPos geoPos = new GeoPos();
         for (int y = y1; y < y2; y++) {
             for (int x = x1; x < x2; x++) {
-                if (maskRaster.getSample(x, y, 0) != 0) {
+                if (maskTile.getSample(x, y, 0) != 0) {
                     pixelPos.setLocation(x + 0.5f, y + 0.5f);
                     geoCoding.getGeoPos(pixelPos, geoPos);
                     observationSlice.addObservation(geoPos.lat, geoPos.lon, x, y);
