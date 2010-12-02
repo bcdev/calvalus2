@@ -97,20 +97,23 @@ public final class IsinBinningGrid implements BinningGrid {
      *       return row;
      * </pre>
      *
-     * @param binId The bin ID.
+     * @param binIndex The bin ID.
      * @return The row index.
      */
-    public int getRowIndex(int binId) {
+    public int getRowIndex(int binIndex) {
+        // compute max constant
         final int max = baseBin.length - 1;
+        // avoid field access from the while loop
+        final int[] rowBinIds = this.baseBin;
         int low = 0;
         int high = max;
         while (true) {
             int mid = (low + high) >>> 1;
-            if (binId < baseBin[mid]) {
+            if (binIndex < rowBinIds[mid]) {
                 high = mid - 1;
             } else if (mid == max) {
                 return mid;
-            } else if (binId < baseBin[mid + 1]) {
+            } else if (binIndex < rowBinIds[mid + 1]) {
                 return mid;
             } else {
                 low = mid + 1;
@@ -118,11 +121,11 @@ public final class IsinBinningGrid implements BinningGrid {
         }
     }
 
-    public double[] getCenterLatLon(int binId) {
-        final int row = getRowIndex(binId);
+    public double[] getCenterLatLon(int binIndex) {
+        final int row = getRowIndex(binIndex);
         return new double[]{
                 latBin[row],
-                getCenterLon(row, binId - baseBin[row])
+                getCenterLon(row, binIndex - baseBin[row])
         };
     }
 
