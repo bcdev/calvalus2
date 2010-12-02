@@ -16,7 +16,6 @@ import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -28,7 +27,7 @@ public class L3MapperTest {
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-            L3Mapper.processProduct(new Product("p", "t", 32, 256), 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new L3Config(new Properties()));
+            L3Mapper.processProduct(new Product("p", "t", 32, 256), 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // ok
@@ -50,7 +49,7 @@ public class L3MapperTest {
         product.setPreferredTileSize(32, 16);
 
         MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-        L3Mapper.processProduct(product, 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor),  new L3Config(new Properties()));
+        L3Mapper.processProduct(product, 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
         assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
 
@@ -70,6 +69,7 @@ public class L3MapperTest {
 
     private static class MySpatialBinProcessor implements SpatialBinProcessor {
         int numObs;
+
         @Override
         public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
             // System.out.println("spatialBins = " + Arrays.toString(spatialBins.toArray()));

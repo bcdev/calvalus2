@@ -80,10 +80,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final ProductReader productReader = plugIn.createReaderInstance();
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
         final ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
-        final Product product = productReader.readProductNodes(imageInputStream, null);
+        final Product product = l3Config.getProcessedProduct(productReader.readProductNodes(imageInputStream, null));
         if (product != null) {
             try {
-                processProduct(product, numScansPerSlice, ctx, spatialBinner, l3Config);
+                processProduct(product, numScansPerSlice, ctx, spatialBinner);
             } finally {
                 product.dispose();
             }
@@ -104,14 +104,15 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
     }
 
-    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner, L3Config l3Config) {
+    static void processProduct(Product product,
+                               int sliceHeight,
+                               BinningContext ctx,
+                               SpatialBinner spatialBinner) {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
 
         final int sliceWidth = product.getSceneRasterWidth();
-
-        product = l3Config.getProcessedProduct(product);
 
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);
