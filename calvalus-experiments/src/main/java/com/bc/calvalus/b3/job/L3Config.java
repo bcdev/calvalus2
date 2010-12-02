@@ -32,6 +32,7 @@ public class L3Config {
     public static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.l3.numScansPerSlice";
     public static final String CONFNAME_L3_GRID_NUM_ROWS = "calvalus.l3.grid.numRows";
     public static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
+    public static final String CONFNAME_L3_START_DAY = "calvalus.l3.startDay";
     public static final String CONFNAME_L3_AGG_i_TYPE = "calvalus.l3.aggregators.%d.type";
     public static final String CONFNAME_L3_AGG_i_VAR_NAME = "calvalus.l3.aggregators.%d.varName";
     public static final String CONFNAME_L3_AGG_i_VAR_NAMES_j = "calvalus.l3.aggregators.%d.varNames.%d";

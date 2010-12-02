@@ -81,12 +81,16 @@ public class L3Tool extends Configured implements Tool {
             }
 
             // provide input and output directories to job
-            for (int day = 1; day <= conf.getInt(CONFNAME_L3_NUM_DAYS, -1); day++) {
+            final int day1 = conf.getInt(CONFNAME_L3_START_DAY, 1);
+            final int day2 = day1 - 1 + conf.getInt(CONFNAME_L3_NUM_DAYS, 4);
+            for (int day = day1; day <= day2; day++) {
                 String pathName = String.format(conf.get(CONFNAME_L3_INPUT), day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
             Path output = L3Config.getOutput(conf);
             FileOutputFormat.setOutputPath(job, output);
+
+            // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
 
             LOG.info(MessageFormat.format("start L3 processing to {0}", output));
             long startTime = System.nanoTime();
