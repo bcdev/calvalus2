@@ -96,8 +96,12 @@ public class L3Tool extends Configured implements Tool {
 
             writeJobConf(conf, output);
 
-            if (conf.get("calvalus.l3.formatter.outputType") != null) {
+            final String formatterOutput = conf.get("calvalus.l3.formatter.output");
+            if (formatterOutput != null) {
+                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
                 ToolRunner.run(new L3Formatter(), args);
+            } else {
+                LOG.info(MessageFormat.format("no formatting performed", formatterOutput));
             }
 
             return result;
