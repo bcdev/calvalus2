@@ -20,12 +20,14 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,6 +38,7 @@ import java.util.Properties;
  * Creates the binning context from a job's configuration.
  *
  * @author Norman Fomferra
+ * @author Marco Zuehlke
  */
 public class L3Config {
 
@@ -43,6 +46,7 @@ public class L3Config {
     public static final String CONFNAME_L3_GRID_NUM_ROWS = "calvalus.l3.grid.numRows";
     public static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
     public static final String CONFNAME_L3_START_DAY = "calvalus.l3.startDay";
+    public static final String CONFNAME_L3_BBOX = "calvalus.l3.bbox";
     public static final String CONFNAME_L3_AGG_i_TYPE = "calvalus.l3.aggregators.%d.type";
     public static final String CONFNAME_L3_AGG_i_VAR_NAME = "calvalus.l3.aggregators.%d.varName";
     public static final String CONFNAME_L3_AGG_i_VAR_NAMES_j = "calvalus.l3.aggregators.%d.varNames.%d";
@@ -68,10 +72,15 @@ public class L3Config {
     public void copyToConfiguration(Configuration configuration) {
         for (String key : properties.stringPropertyNames()) {
             configuration.set(key, properties.getProperty(key));
-        }    
+        }
     }
 
     public Product getProcessedProduct(Product product) {
+        final Rectangle2D bbox = getBBox();
+        if (bbox != null) {
+            // todo - compute firstLine / lastLine
+            // todo - use either ProductSubsetBuilder / SubsetOp
+        }
         String operatorName = properties.getProperty(CONFNAME_L3_OPERATOR_NAME);
         if (operatorName == null) {
             return product;
@@ -79,7 +88,7 @@ public class L3Config {
             GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
             Map<String, Object> parameterMap = new HashMap<String, Object>();
-            for(String propertyName : properties.stringPropertyNames()) {
+            for (String propertyName : properties.stringPropertyNames()) {
                 if (propertyName.startsWith(CONFNAME_L3_OPERATOR_PARMETER_PREFIX)) {
                     String paramName = propertyName.substring(CONFNAME_L3_OPERATOR_PARMETER_PREFIX.length());
                     String paramValue = properties.getProperty(propertyName);
@@ -117,6 +126,32 @@ public class L3Config {
     public Path getOutput() {
         return new Path(properties.getProperty(CONFNAME_L3_OUTPUT));
     }
+
+    /**
+     * @return The bounding box, null refers to BBOX=-180.0,-90.0,180.0,90.0
+     */
+    public Rectangle2D getBBox() {
+        final String bboxStr = properties.getProperty(CONFNAME_L3_BBOX);
+        if (bboxStr == null) {
+            return null;
+        }
+        final String[] strings = bboxStr.split(",");
+        if (strings.length != 4) {
+            throw new IllegalArgumentException(MessageFormat.format("Illegal BBOX value: {0}", bboxStr));
+        }
+        final double lonMin = Double.parseDouble(strings[0]);
+        final double latMin = Double.parseDouble(strings[1]);
+        final double lonMax = Double.parseDouble(strings[2]);
+        final double latMax = Double.parseDouble(strings[3]);
+        final Rectangle2D.Double bbox = new Rectangle2D.Double(lonMin, latMin, lonMax - lonMin, latMax - latMin);
+        final double EPS = 1e-10;
+        final Rectangle2D.Double GLOBE = new Rectangle2D.Double(-180 + EPS, -90 + EPS, 360 - 2 * EPS, 180 - 2 * EPS);
+        if (bbox.contains(GLOBE)) {
+            return null;
+        }
+        return bbox;
+    }
+
 
     private BinManager getBinManager(VariableContext varCtx) {
         ArrayList<Aggregator> aggregators = new ArrayList<Aggregator>();
@@ -225,7 +260,7 @@ public class L3Config {
     }
 
     static L3Config create(Configuration conf) {
-        Iterator<Map.Entry<String,String>> entryIterator = conf.iterator();
+        Iterator<Map.Entry<String, String>> entryIterator = conf.iterator();
         Properties properties = new Properties();
         while (entryIterator.hasNext()) {
             Map.Entry<String, String> configEntry = entryIterator.next();
