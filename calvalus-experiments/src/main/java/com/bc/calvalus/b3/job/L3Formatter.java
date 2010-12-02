@@ -147,7 +147,7 @@ public class L3Formatter extends Configured implements Tool {
         if (outputType.equalsIgnoreCase("Product")) {
             writeProductFile();
         } else {
-            writeImageFile();
+            writeImageFiles();
         }
 
         return 0;
@@ -215,7 +215,7 @@ public class L3Formatter extends Configured implements Tool {
     }
 
 
-    private void writeImageFile() throws Exception {
+    private void writeImageFiles() throws Exception {
         int[] indices = new int[16];
         String[] names = new String[16];
         float[] v1s = new float[16];
@@ -230,7 +230,7 @@ public class L3Formatter extends Configured implements Tool {
                 break;
             }
             indices[numBands] = Integer.parseInt(indexStr);
-            names[numBands] = nameStr != null ? nameStr : indices[numBands] + "";
+            names[numBands] = nameStr != null ? nameStr : binningContext.getBinManager().getOutputPropertyName(indices[numBands]);
             v1s[numBands] = Float.parseFloat(v1Str);
             v2s[numBands] = Float.parseFloat(v2Str);
             numBands++;
@@ -250,7 +250,7 @@ public class L3Formatter extends Configured implements Tool {
             writeRgbImage(rasterWidth, rasterHeight, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
         } else {
             for (int i = 0; i < numBands; i++) {
-                final String fileName = String.format("%s-%s.%s", outputFileNameBase, names[i], outputFileNameExt);
+                final String fileName = String.format("%s_%s.%s", outputFileNameBase, names[i], outputFileNameExt);
                 final File imageFile = new File(outputFile.getParentFile(), fileName);
                 writeGrayScaleImage(rasterWidth, rasterHeight, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
             }

@@ -4,10 +4,14 @@ import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
 
 /**
- * Implementation of the ISIN (Integerized Sinusoidal) binnning grid as used for NASA
+ * Implementation of the ISIN (Integerized Sinusoidal) binning grid as used for NASA
  * SeaDAS and MODIS L3 products.
+ * <p/>
+ * The only difference to the original NASA binning grid is, that the bin indices increase from top left to bottom right starting from zero.
+ * The NASA grid counts the opposite way. The conversion is thus: {@code idxNasa = numBins - (idx + 1)}.
  *
  * @author Norman Fomferra
+ * @author Marco Zühlke
  * @see <a href="http://oceancolor.gsfc.nasa.gov/SeaWiFS/TECH_REPORTS/PreLPDF/PreLVol32.pdf">SeaWiFS Technical Report Series Volume 32, Level-3 SeaWiFS Data</a>
  * @see <a href="http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf">Ocean Level-3 Binned Data Products</a>
  */
@@ -38,7 +42,7 @@ public final class IsinBinningGrid implements BinningGrid {
         numBin = new int[numRows];
         baseBin[0] = 0;
         for (int row = 0; row < numRows; row++) {
-            latBin[row] = ((row + 0.5) * 180.0 / numRows) - 90.0;
+            latBin[row] = 90.0 - ((row + 0.5) * 180.0 / numRows);
             numBin[row] = (int) (0.5 + (2 * numRows * cos(toRadians(latBin[row]))));
             if (row > 0) {
                 baseBin[row] = baseBin[row - 1] + numBin[row - 1];
@@ -79,12 +83,12 @@ public final class IsinBinningGrid implements BinningGrid {
 
     public int getRowIndex(double lat) {
         if (lat <= -90.0) {
-            return 0;
-        }
-        if (lat >= 90.0) {
             return numRows - 1;
         }
-        return (int) ((90.0 + lat) * (numRows / 180.0));
+        if (lat >= 90.0) {
+            return 0;
+        }
+        return (numRows - 1) - (int) ((90.0 + lat) * (numRows / 180.0));
     }
 
     /**

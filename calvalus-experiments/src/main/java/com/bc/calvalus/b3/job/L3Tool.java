@@ -59,7 +59,7 @@ public class L3Tool extends Configured implements Tool {
                                          conf.getInt(CONFNAME_L3_GRID_NUM_ROWS, -1)));
 
             job.setJarByClass(getClass());
-            job.setNumReduceTasks(10);
+            job.setNumReduceTasks(16);
 
             job.setInputFormatClass(N1InputFormat.class);
             conf.setInt(N1InputFormat.NUMBER_OF_SPLITS, 1);
@@ -94,12 +94,18 @@ public class L3Tool extends Configured implements Tool {
             long stopTime = System.nanoTime();
             LOG.info(MessageFormat.format("stop L3 processing after {0} sec", (stopTime - startTime) / 1E9));
 
+            if (result != 0) {
+                return result;
+            }
+
             writeJobConf(conf, output);
 
             final String formatterOutput = conf.get("calvalus.l3.formatter.output");
             if (formatterOutput != null) {
                 LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
-                ToolRunner.run(new L3Formatter(), args);
+                L3Formatter formatter = new L3Formatter();
+                formatter.setConf(conf);
+                result = formatter.run(args);
             } else {
                 LOG.info(MessageFormat.format("no formatting performed", formatterOutput));
             }

@@ -138,10 +138,10 @@ public class SpatialBinnerTest {
         assertEquals(16, numBins);
         assertEquals(16, producedSpatialBins.size());
         int[] expectedIndexes = new int[]{
-                2963729, 2963730, 2963731, 2963732,
-                2968049, 2968050, 2968051, 2968052,
-                2972369, 2972370, 2972371, 2972372,
                 2976689, 2976690, 2976691, 2976692,
+                2972369, 2972370, 2972371, 2972372,
+                2968049, 2968050, 2968051, 2968052,
+                2963729, 2963730, 2963731, 2963732,
         };
         for (int i = 0; i < 16; i++) {
             assertEquals(String.format("Problem with bin[%d]", i), expectedIndexes[i], producedSpatialBins.get(i).getIndex());

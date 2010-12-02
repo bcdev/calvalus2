@@ -3,7 +3,6 @@ package com.bc.calvalus.b3;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
 
 public class IsinBinningGridTest {
     @Test
@@ -43,17 +42,27 @@ public class IsinBinningGridTest {
     public void testGrid() {
         IsinBinningGrid grid = new IsinBinningGrid();
 
+        final int N = 5940422;
+
         assertEquals(2160, grid.getNumRows());
-        assertEquals(5940422, grid.getNumBins());
+        assertEquals(N, grid.getNumBins());
 
         assertEquals(3, grid.getNumCols(0));
         assertEquals(2 * 2160, grid.getNumCols(2160 / 2));
         assertEquals(2 * 2160, grid.getNumCols(2160 / 2 + 1));
         assertEquals(3, grid.getNumCols(2160 - 1));
 
-        assertEquals(0, grid.getBinIndex(-90.0, -180.0));
-        assertEquals(2972371, grid.getBinIndex(0.0, 0.0));
-        assertEquals(5940421, grid.getBinIndex(+90.0, +180.0));
+        final double W = 360.0 / (2 * 2160);
+        final double H = 180.0 / 2160;
+
+        assertEquals(0, grid.getBinIndex(+90.0, -180.0));
+        assertEquals(1, grid.getBinIndex(+90.0, 0.0));
+        assertEquals(2, grid.getBinIndex(+90.0, +180.0));
+        assertEquals(N - 3, grid.getBinIndex(-90.0, -180.0));
+        assertEquals(N - 2, grid.getBinIndex(-90.0, 0.0));
+        assertEquals(N - 1, grid.getBinIndex(-90.0, +180.0));
+        assertEquals(N / 2 - 1, grid.getBinIndex(+H/2, +180.0));
+        assertEquals(N / 2, grid.getBinIndex(-H/2, -180.0));
 
     }
 

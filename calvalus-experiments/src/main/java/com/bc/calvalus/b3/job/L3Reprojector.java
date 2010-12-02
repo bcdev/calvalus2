@@ -133,7 +133,7 @@ public class L3Reprojector {
         final BinningGrid binningGrid = ctx.getBinningGrid();
         final BinManager binManager = ctx.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
-        final double lat = -90.0 + (y + 0.5) * 180.0 / height;
+        final double lat = 90.0 - (y + 0.5) * 180.0 / height;
         int lastBinIndex = -1;
         TemporalBin temporalBin = null;
         int rowIndex = -1;
