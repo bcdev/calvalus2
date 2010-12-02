@@ -118,7 +118,7 @@ public class L3Formatter extends Configured implements Tool {
 
 
         l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
-        L3Config l3Config = L3Config.loadFromProperties(getConf(), l3OutputDir);
+        L3Config l3Config = L3Config.load(getConf(), l3OutputDir);
 
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();

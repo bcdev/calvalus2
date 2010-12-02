@@ -29,7 +29,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binningGrid = L3Config.loadFromCalvalusProperties(conf).getBinningGrid();
+        this.binningGrid = L3Config.create(conf).getBinningGrid();
     }
 
     @Override

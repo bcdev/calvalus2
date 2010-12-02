@@ -220,24 +220,24 @@ public class L3Config {
         return new AggregatorOnMaxSet(varCtx, varNames.toArray(new String[varNames.size()]));
     }
 
-    static L3Config loadProperties(File file) throws IOException {
+    static L3Config load(File file) throws IOException {
         return new L3Config(readProperties(new FileReader(file)));
     }
 
-    static L3Config loadFromCalvalusProperties(Configuration hadoopConfiguration) {
-        Iterator<Map.Entry<String,String>> entryIterator = hadoopConfiguration.iterator();
+    static L3Config create(Configuration conf) {
+        Iterator<Map.Entry<String,String>> entryIterator = conf.iterator();
         Properties properties = new Properties();
         while (entryIterator.hasNext()) {
             Map.Entry<String, String> configEntry = entryIterator.next();
             String name = configEntry.getKey();
-            if (name.startsWith("calvalus.l3")) {
+            if (name.startsWith("calvalus.l3.")) {
                 properties.put(name, configEntry.getValue());
             }
         }
         return new L3Config(properties);
     }
 
-    static L3Config loadFromProperties(Configuration conf, Path output) throws IOException {
+    static L3Config load(Configuration conf, Path output) throws IOException {
         FileSystem fs = output.getFileSystem(conf);
         InputStream inputStream = fs.open(new Path(output, L3_REQUEST_PROPERTIES_FILENAME));
         return new L3Config(readProperties(new InputStreamReader(inputStream)));

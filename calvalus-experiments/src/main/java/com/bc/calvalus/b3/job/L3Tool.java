@@ -46,13 +46,14 @@ public class L3Tool extends Configured implements Tool {
 
             // construct job and set parameters and handlers
             Job job = new Job(getConf());
-            L3Config l3Config = L3Config.loadProperties(new File(requestFile));
+            L3Config l3Config = L3Config.load(new File(requestFile));
 
             Configuration conf = job.getConfiguration();
             l3Config.copyToConfiguration(conf);
 
             validateConfiguration(conf);
 
+            // todo - generalise job naming
             job.setJobName(String.format("l3_ndvi_%dd_%dr",
                                          conf.getInt(CONFNAME_L3_NUM_DAYS, -1),
                                          conf.getInt(CONFNAME_L3_GRID_NUM_ROWS, -1)));
