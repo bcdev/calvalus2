@@ -10,13 +10,13 @@ import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.SpatialBinProcessor;
 import com.bc.calvalus.b3.SpatialBinner;
 import com.bc.calvalus.b3.VariableContextImpl;
-import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -28,7 +28,7 @@ public class L3MapperTest {
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-            L3Mapper.processProduct(new Product("p", "t", 32, 256), 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new Configuration());
+            L3Mapper.processProduct(new Product("p", "t", 32, 256), 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new L3Config(new Properties()));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // ok
@@ -50,7 +50,7 @@ public class L3MapperTest {
         product.setPreferredTileSize(32, 16);
 
         MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-        L3Mapper.processProduct(product, 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor),  new Configuration());
+        L3Mapper.processProduct(product, 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor),  new L3Config(new Properties()));
         assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
 

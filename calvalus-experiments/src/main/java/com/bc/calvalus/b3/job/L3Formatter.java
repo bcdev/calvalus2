@@ -8,9 +8,7 @@ import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.ceres.core.ProgressMonitor;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -29,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
@@ -51,8 +50,6 @@ import java.util.logging.Logger;
 public class L3Formatter extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String PART_R = "part-r-";
-    private static final String JOB_CONF = "job-conf.xml";
     private Properties request;
     private String outputType;
     private String outputFormat;
@@ -83,7 +80,7 @@ public class L3Formatter extends Configured implements Tool {
     public int run(String[] args) throws Exception {
 
         final String requestFile = args.length > 0 ? args[0] : "l3formatter.properties";
-        request = L3Tool.loadProperties(new File(requestFile));
+        request = L3Config.readProperties(new FileReader(requestFile));
 
         outputType = request.getProperty("calvalus.l3.formatter.outputType");
         if (outputType == null) {
@@ -121,13 +118,9 @@ public class L3Formatter extends Configured implements Tool {
 
 
         l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
-        final Path l3JobConfigPath = new Path(l3OutputDir, JOB_CONF);
-        final FileSystem fs = l3JobConfigPath.getFileSystem(getConf());
-        final Configuration l3Config = new Configuration();
-        l3Config.addResource(fs.open(l3JobConfigPath));
-        l3Config.reloadConfiguration();
+        L3Config l3Config = L3Config.loadFromProperties(getConf(), l3OutputDir);
 
-        binningContext = L3Config.getBinningContext(l3Config);
+        binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {

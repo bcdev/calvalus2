@@ -7,8 +7,6 @@ import com.bc.calvalus.experiments.processing.N1InputFormat;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -20,10 +18,8 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import static com.bc.calvalus.b3.job.L3Config.*;
@@ -50,9 +46,12 @@ public class L3Tool extends Configured implements Tool {
 
             // construct job and set parameters and handlers
             Job job = new Job(getConf());
+            L3Config l3Config = L3Config.loadProperties(new File(requestFile));
 
             Configuration conf = job.getConfiguration();
-            setProperties(conf, requestFile);
+            l3Config.copyToConfiguration(conf);
+
+            validateConfiguration(conf);
 
             job.setJobName(String.format("l3_ndvi_%dd_%dr",
                                          conf.getInt(CONFNAME_L3_NUM_DAYS, -1),
@@ -87,7 +86,7 @@ public class L3Tool extends Configured implements Tool {
                 String pathName = String.format(conf.get(CONFNAME_L3_INPUT), day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
-            Path output = L3Config.getOutput(conf);
+            Path output = l3Config.getOutput();
             FileOutputFormat.setOutputPath(job, output);
 
             // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
@@ -102,7 +101,7 @@ public class L3Tool extends Configured implements Tool {
                 return result;
             }
 
-            writeJobConf(conf, output);
+            l3Config.writeProperties(conf, output);
 
             final String formatterOutput = conf.get("calvalus.l3.formatter.output");
             if (formatterOutput != null) {
@@ -126,22 +125,8 @@ public class L3Tool extends Configured implements Tool {
 
     }
 
-    private void writeJobConf(Configuration conf, Path output) throws IOException {
-        FileSystem fs = output.getFileSystem(conf);
-        FSDataOutputStream os = fs.create(new Path(output, "job-conf.xml"));
-        try {
-            conf.writeXml(os);
-        } finally {
-            os.close();
-        }
-    }
-
-    private void setProperties(Configuration conf, String requestFile) throws IOException {
+    private void validateConfiguration(Configuration conf) throws IOException {
         // Overwrite configuration by request parameters
-        Properties request = loadProperties(new File(requestFile));
-        for (String key : request.stringPropertyNames()) {
-            conf.set(key, request.getProperty(key));
-        }
         if (conf.get(CONFNAME_L3_INPUT) == null) {
             throw new IllegalArgumentException(MessageFormat.format("No input specified. {0} = null", CONFNAME_L3_INPUT));
         }
@@ -159,17 +144,6 @@ public class L3Tool extends Configured implements Tool {
         }
         if (conf.get(CONFNAME_L3_NUM_DAYS) == null) {
             conf.setInt(CONFNAME_L3_NUM_DAYS, L3Config.DEFAULT_L3_NUM_NUM_DAYS);
-        }
-    }
-
-    static Properties loadProperties(File file) throws IOException {
-        FileReader fileReader = new FileReader(file);
-        try {
-            Properties properties = new Properties();
-            properties.load(fileReader);
-            return properties;
-        } finally {
-            fileReader.close();
         }
     }
 

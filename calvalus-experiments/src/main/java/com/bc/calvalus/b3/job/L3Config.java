@@ -14,14 +14,23 @@ import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.VariableContext;
 import com.bc.calvalus.b3.VariableContextImpl;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Creates the binning context from a job's configuration.
@@ -29,6 +38,7 @@ import java.util.Map;
  * @author Norman Fomferra
  */
 public class L3Config {
+
     public static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.l3.numScansPerSlice";
     public static final String CONFNAME_L3_GRID_NUM_ROWS = "calvalus.l3.grid.numRows";
     public static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
@@ -47,21 +57,32 @@ public class L3Config {
     public static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     public static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
 
-    public static Product getProcessedProduct(Product product, Configuration conf) {
-        String operatorName = conf.get(CONFNAME_L3_OPERATOR_NAME);
+    private static final String L3_REQUEST_PROPERTIES_FILENAME = "l3request.properties";
+
+    private final Properties properties;
+
+    public L3Config(Properties properties) {
+        this.properties = properties;
+    }
+
+    public void copyToConfiguration(Configuration configuration) {
+        for (String key : properties.stringPropertyNames()) {
+            configuration.set(key, properties.getProperty(key));
+        }    
+    }
+
+    public Product getProcessedProduct(Product product) {
+        String operatorName = properties.getProperty(CONFNAME_L3_OPERATOR_NAME);
         if (operatorName == null) {
             return product;
         } else {
             GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
             Map<String, Object> parameterMap = new HashMap<String, Object>();
-            Iterator<Map.Entry<String,String>> confIterator = conf.iterator();
-            while (confIterator.hasNext()) {
-                Map.Entry<String, String> entry =  confIterator.next();
-                String paramName = entry.getKey();
-                if (paramName.startsWith(CONFNAME_L3_OPERATOR_PARMETER_PREFIX)) {
-                    paramName = paramName.substring(CONFNAME_L3_OPERATOR_PARMETER_PREFIX.length());
-                    String paramValue = entry.getValue();
+            for(String propertyName : properties.stringPropertyNames()) {
+                if (propertyName.startsWith(CONFNAME_L3_OPERATOR_PARMETER_PREFIX)) {
+                    String paramName = propertyName.substring(CONFNAME_L3_OPERATOR_PARMETER_PREFIX.length());
+                    String paramValue = properties.getProperty(propertyName);
                     parameterMap.put(paramName, paramValue);
                 }
             }
@@ -69,64 +90,68 @@ public class L3Config {
         }
     }
 
-    public static BinningContext getBinningContext(Configuration conf) {
-        VariableContext varCtx = getVariableContext(conf);
-        return new BinningContextImpl(getBinningGrid(conf),
+    public BinningContext getBinningContext() {
+        VariableContext varCtx = getVariableContext();
+        return new BinningContextImpl(getBinningGrid(),
                                       varCtx,
-                                      getBinManager(conf, varCtx));
+                                      getBinManager(varCtx));
     }
 
-    public static BinningGrid getBinningGrid(Configuration conf) {
-        int numRows = conf.getInt(CONFNAME_L3_GRID_NUM_ROWS, 2160);
+    public BinningGrid getBinningGrid() {
+        String stringValue = properties.getProperty(CONFNAME_L3_GRID_NUM_ROWS);
+        int numRows = 2160;
+        if (stringValue != null) {
+            numRows = Integer.parseInt(stringValue);
+        }
         return new IsinBinningGrid(numRows);
     }
 
-    public static BinManager getBinManager(Configuration conf) {
-        return getBinManager(conf, getVariableContext(conf));
+    public BinManager getBinManager() {
+        return getBinManager(getVariableContext());
     }
 
-    public static Path getInput(Configuration conf) {
-        return new Path(conf.get(CONFNAME_L3_INPUT, null));
+    public Path getInput() {
+        return new Path(properties.getProperty(CONFNAME_L3_INPUT));
     }
 
-    public static Path getOutput(Configuration conf) {
-        return new Path(conf.get(CONFNAME_L3_OUTPUT, null));
+    public Path getOutput() {
+        return new Path(properties.getProperty(CONFNAME_L3_OUTPUT));
     }
 
-    private static BinManager getBinManager(Configuration conf, VariableContext varCtx) {
+    private BinManager getBinManager(VariableContext varCtx) {
         ArrayList<Aggregator> aggregators = new ArrayList<Aggregator>();
         for (int i = 0; ; i++) {
-            String type = conf.get(String.format(CONFNAME_L3_AGG_i_TYPE, i));
+            String type = properties.getProperty(String.format(CONFNAME_L3_AGG_i_TYPE, i));
             if (type == null) {
                 break;
             }
             Aggregator aggregator;
             if (type.equals("AVG")) {
-                aggregator = getAggregatorAverage(conf, varCtx, i);
+                aggregator = getAggregatorAverage(varCtx, i);
             } else if (type.equals("AVG_ML")) {
-                aggregator = getAggregatorAverageML(conf, varCtx, i);
+                aggregator = getAggregatorAverageML(varCtx, i);
             } else if (type.equals("MIN_MAX")) {
-                aggregator = getAggregatorMinMax(conf, varCtx, i);
+                aggregator = getAggregatorMinMax(varCtx, i);
             } else if (type.equals("ON_MAX_SET")) {
-                aggregator = getAggregatorOnMaxSet(conf, varCtx, i);
+                aggregator = getAggregatorOnMaxSet(varCtx, i);
             } else {
                 throw new IllegalArgumentException("Unknown aggregator type: " + type);
             }
             aggregators.add(aggregator);
         }
-        return new BinManagerImpl(aggregators.toArray(new Aggregator[0]));
+        return new BinManagerImpl(aggregators.toArray(new Aggregator[aggregators.size()]));
     }
 
-    public static VariableContext getVariableContext(Configuration conf) {
+    public VariableContext getVariableContext() {
         VariableContextImpl variableContext = new VariableContextImpl();
 
-        variableContext.setMaskExpr(conf.get(CONFNAME_L3_MASK_EXPR));
+        variableContext.setMaskExpr(properties.getProperty(CONFNAME_L3_MASK_EXPR));
 
         // define declared variables
         //
         for (int i = 0; ; i++) {
-            String varName = conf.get(String.format(CONFNAME_L3_VARIABLES_i_NAME, i));
-            String varExpr = conf.get(String.format(CONFNAME_L3_VARIABLES_i_EXPR, i));
+            String varName = properties.getProperty(String.format(CONFNAME_L3_VARIABLES_i_NAME, i));
+            String varExpr = properties.getProperty(String.format(CONFNAME_L3_VARIABLES_i_EXPR, i));
             if (varName == null) {
                 break;
             }
@@ -136,16 +161,16 @@ public class L3Config {
         // define variables of all aggregators
         //
         for (int i = 0; ; i++) {
-            String aggType = conf.get(String.format(CONFNAME_L3_AGG_i_TYPE, i));
+            String aggType = properties.getProperty(String.format(CONFNAME_L3_AGG_i_TYPE, i));
             if (aggType == null) {
                 break;
             }
-            String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+            String varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
             if (varName != null) {
                 variableContext.defineVariable(varName);
             } else {
                 for (int j = 0; ; j++) {
-                    varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
+                    varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
                     if (varName != null) {
                         variableContext.defineVariable(varName);
                     } else {
@@ -158,9 +183,9 @@ public class L3Config {
         return variableContext;
     }
 
-    private static Aggregator getAggregatorAverage(Configuration conf, VariableContext varCtx, int i) {
-        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
-        String weightCoeff = conf.get(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
+    private Aggregator getAggregatorAverage(VariableContext varCtx, int i) {
+        String varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+        String weightCoeff = properties.getProperty(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
         if (weightCoeff == null) {
             return new AggregatorAverage(varCtx, varName);
         } else {
@@ -168,9 +193,9 @@ public class L3Config {
         }
     }
 
-    private static Aggregator getAggregatorAverageML(Configuration conf, VariableContext varCtx, int i) {
-        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
-        String weightCoeff = conf.get(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
+    private Aggregator getAggregatorAverageML(VariableContext varCtx, int i) {
+        String varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+        String weightCoeff = properties.getProperty(String.format(CONFNAME_L3_AGG_i_WEIGHT_COEFF, i));
         if (weightCoeff == null) {
             return new AggregatorAverageML(varCtx, varName);
         } else {
@@ -178,20 +203,63 @@ public class L3Config {
         }
     }
 
-    private static Aggregator getAggregatorMinMax(Configuration conf, VariableContext varCtx, int i) {
-        String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
+    private Aggregator getAggregatorMinMax(VariableContext varCtx, int i) {
+        String varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAME, i));
         return new AggregatorMinMax(varCtx, varName);
     }
 
-    private static Aggregator getAggregatorOnMaxSet(Configuration conf, VariableContext varCtx, int i) {
+    private Aggregator getAggregatorOnMaxSet(VariableContext varCtx, int i) {
         ArrayList<String> varNames = new ArrayList<String>();
         for (int j = 0; ; j++) {
-            String varName = conf.get(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
+            String varName = properties.getProperty(String.format(CONFNAME_L3_AGG_i_VAR_NAMES_j, i, j));
             if (varName == null) {
                 break;
             }
             varNames.add(varName);
         }
-        return new AggregatorOnMaxSet(varCtx, varNames.toArray(new String[0]));
+        return new AggregatorOnMaxSet(varCtx, varNames.toArray(new String[varNames.size()]));
+    }
+
+    static L3Config loadProperties(File file) throws IOException {
+        return new L3Config(readProperties(new FileReader(file)));
+    }
+
+    static L3Config loadFromCalvalusProperties(Configuration hadoopConfiguration) {
+        Iterator<Map.Entry<String,String>> entryIterator = hadoopConfiguration.iterator();
+        Properties properties = new Properties();
+        while (entryIterator.hasNext()) {
+            Map.Entry<String, String> configEntry = entryIterator.next();
+            String name = configEntry.getKey();
+            if (name.startsWith("calvalus.l3")) {
+                properties.put(name, configEntry.getValue());
+            }
+        }
+        return new L3Config(properties);
+    }
+
+    static L3Config loadFromProperties(Configuration conf, Path output) throws IOException {
+        FileSystem fs = output.getFileSystem(conf);
+        InputStream inputStream = fs.open(new Path(output, L3_REQUEST_PROPERTIES_FILENAME));
+        return new L3Config(readProperties(new InputStreamReader(inputStream)));
+    }
+
+    static Properties readProperties(Reader reader) throws IOException {
+        try {
+            Properties properties = new Properties();
+            properties.load(reader);
+            return properties;
+        } finally {
+            reader.close();
+        }
+    }
+
+    void writeProperties(Configuration conf, Path output) throws IOException {
+        FileSystem fs = output.getFileSystem(conf);
+        FSDataOutputStream os = fs.create(new Path(output, L3_REQUEST_PROPERTIES_FILENAME));
+        try {
+            properties.store(os, "");
+        } finally {
+            os.close();
+        }
     }
 }

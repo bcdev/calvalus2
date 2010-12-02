@@ -8,28 +8,33 @@ import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.VariableContext;
-import org.apache.hadoop.conf.Configuration;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
 public class L3ConfigTest {
+    private L3Config l3Config;
+
+    @Before
+    public void createL3Config() {
+        l3Config = loadConfig("job.properties");
+    }
 
     @Test
     public void testBinningGrid() {
-        BinningGrid grid = L3Config.getBinningGrid(loadConfig("job.properties"));
+        BinningGrid grid = l3Config.getBinningGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
     }
 
     @Test
     public void testVariableContext() {
-        VariableContext varCtx = L3Config.getVariableContext(loadConfig("job.properties"));
+        VariableContext varCtx = l3Config.getVariableContext();
 
         assertEquals(8, varCtx.getVariableCount());
 
@@ -59,7 +64,7 @@ public class L3ConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = L3Config.getBinManager(loadConfig("job.properties"));
+        BinManager binManager = l3Config.getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
         assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());
@@ -69,13 +74,8 @@ public class L3ConfigTest {
         assertEquals(AggregatorMinMax.class, binManager.getAggregator(5).getClass());
     }
 
-    private Configuration loadConfig(String configPath) {
-        final Properties properties = loadConfigProperties(configPath);
-        Configuration configuration = new Configuration();
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            configuration.set(entry.getKey().toString(), entry.getValue().toString());
-        }
-        return configuration;
+    private L3Config loadConfig(String configPath) {
+        return new L3Config(loadConfigProperties(configPath));
     }
 
     private Properties loadConfigProperties(String configPath) {

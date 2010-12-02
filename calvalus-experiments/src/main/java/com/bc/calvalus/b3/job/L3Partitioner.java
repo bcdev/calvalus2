@@ -1,7 +1,6 @@
 package com.bc.calvalus.b3.job;
 
 import com.bc.calvalus.b3.BinningGrid;
-import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.SpatialBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -30,7 +29,7 @@ public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implemen
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binningGrid = L3Config.getBinningGrid(conf);
+        this.binningGrid = L3Config.loadFromCalvalusProperties(conf).getBinningGrid();
     }
 
     @Override

@@ -55,7 +55,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
         final Configuration hadoopConfiguration = context.getConfiguration();
-        final BinningContext ctx = L3Config.getBinningContext(hadoopConfiguration);
+        L3Config l3Config = L3Config.loadFromCalvalusProperties(hadoopConfiguration);
+        final BinningContext ctx = l3Config.getBinningContext();
 
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
@@ -82,7 +83,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final Product product = productReader.readProductNodes(imageInputStream, null);
         if (product != null) {
             try {
-                processProduct(product, numScansPerSlice, ctx, spatialBinner, hadoopConfiguration);
+                processProduct(product, numScansPerSlice, ctx, spatialBinner, l3Config);
             } finally {
                 product.dispose();
             }
@@ -103,14 +104,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
     }
 
-    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner, Configuration hadoopConfiguration) {
+    static void processProduct(Product product, int sliceHeight, BinningContext ctx, SpatialBinner spatialBinner, L3Config l3Config) {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
 
         final int sliceWidth = product.getSceneRasterWidth();
 
-        product = L3Config.getProcessedProduct(product, hadoopConfiguration);
+        product = l3Config.getProcessedProduct(product);
 
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);

@@ -1,10 +1,8 @@
 package com.bc.calvalus.b3.job;
 
-import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.SpatialBin;
 import com.bc.calvalus.b3.TemporalBin;
-import com.bc.calvalus.b3.VariableContextImpl;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
@@ -35,7 +33,7 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binManager = L3Config.getBinManager(conf);
+        this.binManager = L3Config.loadFromCalvalusProperties(conf).getBinManager();
     }
 
     @Override
