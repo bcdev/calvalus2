@@ -60,7 +60,6 @@ public class DataSetConverter {
             }
 
         }
-
         LOGGER.info("data set ready");
         return datasets;
     }
@@ -80,7 +79,6 @@ public class DataSetConverter {
                 "host".equalsIgnoreCase(plotterConfigurator.getColouredDimension())) {
 
             dataFilter = new SeriesHostAndTasksTasksFilter();
-
         } else {
             dataFilter = new GeneralPropertiesFilter();
         }
@@ -96,13 +94,11 @@ public class DataSetConverter {
             final List<Trace> traceList = scanner.getTraces();
             final Map<String, TaskSeries> hostsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
-                if ("m".equals(trace.getPropertyValue(
-                        RunTimesScanner.Keys.TYPE.name().toLowerCase()))) { // m => tasks of type map
-
-                    if(! fitTraceTimeInTimeInterval(scanner, trace)) {
+                // m => tasks of type map
+                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {
+                    if (!fitTraceTimeInTimeInterval(scanner, trace)) {
                         continue;
                     }
-
                     final String hostName = trace.getPropertyValue(RunTimesScanner.Keys.HOST.name().toLowerCase());
                     final Task taskOnHost = new Task(trace.getId(),   // //categories on category axis
                                                      new Date(traceStart), //trace.getStartTime()
@@ -114,7 +110,6 @@ public class DataSetConverter {
                         hostTaskSeries.add(taskOnHost);
                         hostsMap.put(hostName, hostTaskSeries);
                     }
-
                 }
             }
             PlotterConfigurator.getInstance().setNumberOfSeries(hostsMap.size());
@@ -158,6 +153,8 @@ public class DataSetConverter {
     }
 
     public static class SeriesJobsAndTasksTasksFilter implements Filter {
+        private long traceStart;
+        private long traceStop;
 
         @Override
         public Map<String, TaskSeries> filter(RunTimesScanner scanner) {
@@ -165,6 +162,9 @@ public class DataSetConverter {
             int jobsCounter = 0;
             final Map<String, TaskSeries> jobsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
+                if (!this.fitTraceTimeInTimeInterval(scanner, trace)) {
+                    continue;
+                }
                 if ("job".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {  //job
                     jobsCounter++;
                     final TaskSeries taskSeries = new TaskSeries("job " + trace.getId());
@@ -177,8 +177,8 @@ public class DataSetConverter {
                         final TaskSeries jobTaskSeries = jobsMap.get(jobId);
 
                         final Task task = new Task("task" + taskId, //categories on category axis
-                                                   new Date(trace.getStartTime()),
-                                                   new Date(trace.getStopTime()));
+                                                   new Date(this.traceStart), //trace.getStartTime()
+                                                   new Date(this.traceStop)); //trace.getStopTime()
                         if (null != jobTaskSeries) {
                             jobTaskSeries.add(task);
                         }
@@ -187,6 +187,26 @@ public class DataSetConverter {
             }
             PlotterConfigurator.getInstance().setNumberOfSeries(jobsCounter);
             return jobsMap;
+        }
+
+        private boolean fitTraceTimeInTimeInterval(RunTimesScanner scanner, Trace trace) {
+            traceStart = trace.getStartTime();
+            traceStop = trace.getStopTime();
+
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
+
+            if (traceStart != TimeUtils.TIME_NULL && traceStop < configurator.getStart() ||
+                    traceStart != TimeUtils.TIME_NULL && traceStart > configurator.getStop()) {
+                return false;   //does not fit
+            }
+            if (traceStart == TimeUtils.TIME_NULL || traceStart < configurator.getStart()) {
+                traceStart = configurator.getStart();
+            }
+            if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
+                traceStop = configurator.getStop();
+            }
+            return true;  //fit
         }
     }
 
@@ -205,18 +225,16 @@ public class DataSetConverter {
 
             configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
 
-            final TaskSeriesCollection seriesCollection = new TaskSeriesCollection();
-            final Map<String, TaskSeries> taskSeriesMap = new TreeMap<String, TaskSeries>(); //todo - map or taskSeriesCollection?
+            final Map<String, TaskSeries> taskSeriesMap = new TreeMap<String, TaskSeries>();
             for (String colourValue : colourValids) {
                 TaskSeries series = new TaskSeries(colourValue);
                 series.setNotify(false);
-                seriesCollection.add(series);
-                taskSeriesMap.put(colourValue, series); //todo - map or taskSeriesCollection?
+                taskSeriesMap.put(colourValue, series);
             }
             for (Trace trace : traceList) {
                 final String categoryValue = String.valueOf(trace.getPropertyValue(category));
                 final String colourValue = String.valueOf(trace.getPropertyValue(colour));
-                final TaskSeries series = seriesCollection.getSeries(colourValue);
+                final TaskSeries series = taskSeriesMap.get(colourValue);
                 series.setNotify(true);
                 // check for interval
                 long traceStart = trace.getStartTime();
@@ -235,7 +253,7 @@ public class DataSetConverter {
             }
             configurator.setNumberOfSeries(taskSeriesMap.size());
             configurator.setNumberOfCategories(categoryValids.size());
-            return taskSeriesMap; //todo - map or taskSeriesCollection?
+            return taskSeriesMap;
         }
     }
 
@@ -243,5 +261,33 @@ public class DataSetConverter {
 
         // todo why not returning taskSeriesCollection???
         Map<String, TaskSeries> filter(RunTimesScanner scanner);
+    }
+
+    public static abstract class AbstractFilter {
+        long traceStart;
+        long traceStop;
+
+        abstract Map<String, TaskSeries> filter(RunTimesScanner scanner);
+
+        boolean fitTraceTimeInTimeInterval(RunTimesScanner scanner, Trace trace) {
+            traceStart = trace.getStartTime();
+            traceStop = trace.getStopTime();
+
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
+
+            if (traceStart != TimeUtils.TIME_NULL && traceStop < configurator.getStart() ||
+                    traceStart != TimeUtils.TIME_NULL && traceStart > configurator.getStop()) {
+                return false;   //does not fit
+            }
+
+            if (traceStart == TimeUtils.TIME_NULL || traceStart < configurator.getStart()) {
+                traceStart = configurator.getStart();
+            }
+            if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
+                traceStop = configurator.getStop();
+            }
+            return true;  //fit
+        }
     }
 }
