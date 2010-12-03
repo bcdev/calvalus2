@@ -182,6 +182,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
                 if (maskTile.getSample(x, y, 0) != 0) {
                     pixelPos.setLocation(x + 0.5f, y + 0.5f);
                     geoCoding.getGeoPos(pixelPos, geoPos);
+                    // todo - use BBOX filter here
                     observationSlice.addObservation(geoPos.lat, geoPos.lon, x, y);
                 }
             }

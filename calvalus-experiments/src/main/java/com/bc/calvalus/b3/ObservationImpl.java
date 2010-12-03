@@ -1,11 +1,11 @@
 package com.bc.calvalus.b3;
 
 /**
- * A default implementation of the {@link com.bc.calvalus.binning.Observation} interface.
+ * A default implementation of the {@link Observation} interface.
  *
  * @author Norman Fomferra
  */
-public class ObservationImpl implements Observation {
+public final class ObservationImpl implements Observation {
     private final double latitude;
     private final double longitude;
     private final float[] measurements;
