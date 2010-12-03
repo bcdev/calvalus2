@@ -11,11 +11,12 @@ import com.bc.calvalus.b3.VariableContext;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class L3ConfigTest {
     private L3Config l3Config;
@@ -30,6 +31,45 @@ public class L3ConfigTest {
         BinningGrid grid = l3Config.getBinningGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
+    }
+
+    @Test
+    public void testBBoxParameter() {
+        final Properties properties = new Properties();
+        final L3Config l3Config = new L3Config(properties);
+         Rectangle2D boundingBox;
+
+        boundingBox = l3Config.getBoundingBox();
+        assertNull(boundingBox); // null means full globe
+
+        properties.setProperty("calvalus.l3.bbox", "-60.0, 13.4, -20.0, 23.4");
+        boundingBox = l3Config.getBoundingBox();
+        assertEquals(-60.0, boundingBox.getX(), 1e-6);
+        assertEquals(13.4, boundingBox.getY(), 1e-6);
+        assertEquals(40.0, boundingBox.getWidth(), 1e-6);
+        assertEquals(10.0, boundingBox.getHeight(), 1e-6);
+
+        properties.remove("calvalus.l3.bbox");
+        boundingBox = l3Config.getBoundingBox();
+        assertNull(boundingBox); // null means full globe
+
+        properties.setProperty("calvalus.l3.bbox", "-180,-90,+180,+90");
+        boundingBox = l3Config.getBoundingBox();
+        assertNull(boundingBox); // null means full globe
+
+        try {
+            properties.setProperty("calvalus.l3.bbox", "-60.0, 13.4, 23.4");
+            l3Config.getBoundingBox();
+            fail("IllegalArgumentException?");
+        } catch (IllegalArgumentException e) {
+        }
+
+        try {
+            properties.setProperty("calvalus.l3.bbox", "-60.0, 13.A, -20.0, 23.A");
+            l3Config.getBoundingBox();
+            fail("IllegalArgumentException?");
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     @Test

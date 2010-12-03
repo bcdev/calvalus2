@@ -76,7 +76,7 @@ public class L3Config {
     }
 
     public Product getProcessedProduct(Product product) {
-        final Rectangle2D bbox = getBBox();
+        final Rectangle2D bbox = getBoundingBox();
         if (bbox != null) {
             // todo - compute firstLine / lastLine --> see EOChildGen or old BEAM binner
             // todo - use either ProductSubsetBuilder / SubsetOp
@@ -130,7 +130,7 @@ public class L3Config {
     /**
      * @return The bounding box, null refers to BBOX=-180.0,-90.0,180.0,90.0
      */
-    public Rectangle2D getBBox() {
+    public Rectangle2D getBoundingBox() {
         final String bboxStr = properties.getProperty(CONFNAME_L3_BBOX);
         if (bboxStr == null) {
             return null;
@@ -139,11 +139,16 @@ public class L3Config {
         if (strings.length != 4) {
             throw new IllegalArgumentException(MessageFormat.format("Illegal BBOX value: {0}", bboxStr));
         }
-        final double lonMin = Double.parseDouble(strings[0]);
-        final double latMin = Double.parseDouble(strings[1]);
-        final double lonMax = Double.parseDouble(strings[2]);
-        final double latMax = Double.parseDouble(strings[3]);
-        final Rectangle2D.Double bbox = new Rectangle2D.Double(lonMin, latMin, lonMax - lonMin, latMax - latMin);
+        final Rectangle2D.Double bbox;
+        try {
+            final double lonMin = Double.parseDouble(strings[0].trim());
+            final double latMin = Double.parseDouble(strings[1].trim());
+            final double lonMax = Double.parseDouble(strings[2].trim());
+            final double latMax = Double.parseDouble(strings[3].trim());
+            bbox = new Rectangle2D.Double(lonMin, latMin, lonMax - lonMin, latMax - latMin);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(MessageFormat.format("Illegal BBOX value: {0}", bboxStr));
+        }
         final double EPS = 1e-10;
         final Rectangle2D.Double GLOBE = new Rectangle2D.Double(-180 + EPS, -90 + EPS, 360 - 2 * EPS, 180 - 2 * EPS);
         if (bbox.contains(GLOBE)) {
