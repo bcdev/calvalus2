@@ -55,7 +55,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
         final Configuration hadoopConfiguration = context.getConfiguration();
-        L3Config l3Config = L3Config.create(hadoopConfiguration);
+        L3Config l3Config = L3Config.createFromJobConfig(hadoopConfiguration);
         final BinningContext ctx = l3Config.getBinningContext();
 
         JAI.enableDefaultTileCache();

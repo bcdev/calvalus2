@@ -33,7 +33,7 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binManager = L3Config.create(conf).getBinManager();
+        this.binManager = L3Config.createFromJobConfig(conf).getBinManager();
     }
 
     @Override

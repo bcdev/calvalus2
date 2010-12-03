@@ -9,6 +9,7 @@ import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -118,7 +119,8 @@ public class L3Formatter extends Configured implements Tool {
 
 
         l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
-        L3Config l3Config = L3Config.load(getConf(), l3OutputDir);
+        L3Config l3Config = L3Config.load(l3OutputDir.getFileSystem(getConf()),
+                                          new Path(l3OutputDir, L3Config.L3_REQUEST_PROPERTIES_FILENAME));
 
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();

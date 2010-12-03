@@ -61,7 +61,7 @@ public class L3Config {
     public static final int DEFAULT_L3_NUM_SCANS_PER_SLICE = 64;
     public static final int DEFAULT_L3_NUM_NUM_DAYS = 16;
 
-    private static final String L3_REQUEST_PROPERTIES_FILENAME = "l3request.properties";
+    public static final String L3_REQUEST_PROPERTIES_FILENAME = "l3request.properties";
 
     private final Properties properties;
 
@@ -78,7 +78,7 @@ public class L3Config {
     public Product getProcessedProduct(Product product) {
         final Rectangle2D bbox = getBBox();
         if (bbox != null) {
-            // todo - compute firstLine / lastLine
+            // todo - compute firstLine / lastLine --> see EOChildGen or old BEAM binner
             // todo - use either ProductSubsetBuilder / SubsetOp
         }
         String operatorName = properties.getProperty(CONFNAME_L3_OPERATOR_NAME);
@@ -255,11 +255,7 @@ public class L3Config {
         return new AggregatorOnMaxSet(varCtx, varNames.toArray(new String[varNames.size()]));
     }
 
-    static L3Config load(File file) throws IOException {
-        return new L3Config(readProperties(new FileReader(file)));
-    }
-
-    static L3Config create(Configuration conf) {
+    static L3Config createFromJobConfig(Configuration conf) {
         Iterator<Map.Entry<String, String>> entryIterator = conf.iterator();
         Properties properties = new Properties();
         while (entryIterator.hasNext()) {
@@ -272,12 +268,31 @@ public class L3Config {
         return new L3Config(properties);
     }
 
-    static L3Config load(Configuration conf, Path output) throws IOException {
-        FileSystem fs = output.getFileSystem(conf);
-        InputStream inputStream = fs.open(new Path(output, L3_REQUEST_PROPERTIES_FILENAME));
+    static L3Config load(File file) throws IOException {
+        return new L3Config(readProperties(new FileReader(file)));
+    }
+
+    public static L3Config load(FileSystem fs, Path file) throws IOException {
+        InputStream inputStream = fs.open(file);
         return new L3Config(readProperties(new InputStreamReader(inputStream)));
     }
 
+    public void store(FileSystem fs, Path file) throws IOException {
+        FSDataOutputStream os = fs.create(file);
+        try {
+            properties.store(os, "");
+        } finally {
+            os.close();
+        }
+    }
+
+    /**
+     * Reads properties and closes the reader.
+     *
+     * @param reader The reader
+     * @return properties
+     * @throws IOException on    I/O error
+     */
     static Properties readProperties(Reader reader) throws IOException {
         try {
             Properties properties = new Properties();
@@ -285,16 +300,6 @@ public class L3Config {
             return properties;
         } finally {
             reader.close();
-        }
-    }
-
-    void writeProperties(Configuration conf, Path output) throws IOException {
-        FileSystem fs = output.getFileSystem(conf);
-        FSDataOutputStream os = fs.create(new Path(output, L3_REQUEST_PROPERTIES_FILENAME));
-        try {
-            properties.store(os, "");
-        } finally {
-            os.close();
         }
     }
 }

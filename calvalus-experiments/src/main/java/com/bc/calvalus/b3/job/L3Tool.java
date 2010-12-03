@@ -87,12 +87,12 @@ public class L3Tool extends Configured implements Tool {
                 String pathName = String.format(conf.get(CONFNAME_L3_INPUT), day);
                 FileInputFormat.addInputPath(job, new Path(pathName));
             }
-            Path output = l3Config.getOutput();
-            FileOutputFormat.setOutputPath(job, output);
+            Path outputDir = l3Config.getOutput();
+            FileOutputFormat.setOutputPath(job, outputDir);
 
             // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
 
-            LOG.info(MessageFormat.format("start L3 processing to {0}", output));
+            LOG.info(MessageFormat.format("start L3 processing to {0}", outputDir));
             long startTime = System.nanoTime();
             int result = job.waitForCompletion(true) ? 0 : 1;
             long stopTime = System.nanoTime();
@@ -102,7 +102,8 @@ public class L3Tool extends Configured implements Tool {
                 return result;
             }
 
-            l3Config.writeProperties(conf, output);
+            l3Config.store(outputDir.getFileSystem(conf),
+                           new Path(outputDir, L3_REQUEST_PROPERTIES_FILENAME));
 
             final String formatterOutput = conf.get("calvalus.l3.formatter.output");
             if (formatterOutput != null) {
