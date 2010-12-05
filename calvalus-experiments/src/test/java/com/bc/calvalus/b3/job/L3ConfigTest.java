@@ -8,14 +8,29 @@ import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinningGrid;
 import com.bc.calvalus.b3.IsinBinningGrid;
 import com.bc.calvalus.b3.VariableContext;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
-import java.awt.geom.Rectangle2D;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import static com.bc.calvalus.b3.job.L3Config.CONFNAME_L3_BBOX;
+import static com.bc.calvalus.b3.job.L3Config.CONFNAME_L3_REGION;
 import static org.junit.Assert.*;
 
 public class L3ConfigTest {
@@ -34,42 +49,91 @@ public class L3ConfigTest {
     }
 
     @Test
-    public void testBBoxParameter() {
-        final Properties properties = new Properties();
-        final L3Config l3Config = new L3Config(properties);
-         Rectangle2D boundingBox;
+    public void testGetRegionOfInterest() {
+        Properties properties = new Properties();
+        L3Config l3Config = new L3Config(properties);
+        Geometry regionOfInterest;
 
-        boundingBox = l3Config.getBoundingBox();
-        assertNull(boundingBox); // null means full globe
+        regionOfInterest = l3Config.getRegionOfInterest();
+        assertNull(regionOfInterest);
 
-        properties.setProperty("calvalus.l3.bbox", "-60.0, 13.4, -20.0, 23.4");
-        boundingBox = l3Config.getBoundingBox();
-        assertEquals(-60.0, boundingBox.getX(), 1e-6);
-        assertEquals(13.4, boundingBox.getY(), 1e-6);
-        assertEquals(40.0, boundingBox.getWidth(), 1e-6);
-        assertEquals(10.0, boundingBox.getHeight(), 1e-6);
+        properties.setProperty(CONFNAME_L3_BBOX, "-60.0, 13.4, -20.0, 23.4");
+        regionOfInterest = l3Config.getRegionOfInterest();
+        assertTrue(regionOfInterest instanceof Polygon);
+        assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());
 
-        properties.remove("calvalus.l3.bbox");
-        boundingBox = l3Config.getBoundingBox();
-        assertNull(boundingBox); // null means full globe
+        properties.setProperty(CONFNAME_L3_REGION, "POINT(-60.0 13.4)");
+        regionOfInterest = l3Config.getRegionOfInterest();
+        assertTrue(regionOfInterest instanceof Point);
+        assertEquals("POINT (-60 13.4)", regionOfInterest.toString());
 
-        properties.setProperty("calvalus.l3.bbox", "-180,-90,+180,+90");
-        boundingBox = l3Config.getBoundingBox();
-        assertNull(boundingBox); // null means full globe
+        properties.setProperty(CONFNAME_L3_REGION, "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))");
+        regionOfInterest = l3Config.getRegionOfInterest();
+        assertTrue(regionOfInterest instanceof Polygon);
+        assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionOfInterest.toString());
 
-        try {
-            properties.setProperty("calvalus.l3.bbox", "-60.0, 13.4, 23.4");
-            l3Config.getBoundingBox();
-            fail("IllegalArgumentException?");
-        } catch (IllegalArgumentException e) {
-        }
+        properties.remove(CONFNAME_L3_REGION);
+        properties.remove(CONFNAME_L3_BBOX);
+        regionOfInterest = l3Config.getRegionOfInterest();
+        assertNull(regionOfInterest);
+    }
 
-        try {
-            properties.setProperty("calvalus.l3.bbox", "-60.0, 13.A, -20.0, 23.A");
-            l3Config.getBoundingBox();
-            fail("IllegalArgumentException?");
-        } catch (IllegalArgumentException e) {
-        }
+    @Test
+    public void testComputationOfProductGeometriesAndPixelRegions() throws TransformException, FactoryException {
+        Geometry geometry;
+
+        Product product = new Product("N", "T", 360, 180);
+        AffineTransform at = AffineTransform.getTranslateInstance(-180, -90);
+        CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, new Rectangle(360, 180), at);
+        product.setGeoCoding(geoCoding);
+        geometry = L3Config.computeProductGeometry(product);
+        assertTrue(geometry instanceof Polygon);
+        assertEquals("POLYGON ((-179.5 -89.5, -179.5 89.5, 179.5 89.5, 179.5 -89.5, -179.5 -89.5))", geometry.toString());
+
+        Rectangle rectangle;
+
+        rectangle = L3Config.computePixelRegion(product, geometry);
+        assertEquals(new Rectangle(360, 180), rectangle);
+
+        SubsetOp op = new SubsetOp();
+        op.setSourceProduct(product);
+        op.setRegion(new Rectangle(180 - 50, 90 - 25, 100, 50));
+        product = op.getTargetProduct();
+        geometry = L3Config.computeProductGeometry(product);
+        assertTrue(geometry instanceof Polygon);
+        assertEquals("POLYGON ((-49.5 -24.5, -49.5 24.5, 49.5 24.5, 49.5 -24.5, -49.5 -24.5))", geometry.toString());
+
+        // BBOX fully contained, with border=0
+        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 0);
+        assertEquals(new Rectangle(50, 25, 11, 11), rectangle);
+
+        // BBOX fully contained, with border=1
+        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 1);
+        assertEquals(new Rectangle(49, 24, 13, 13), rectangle);
+
+        // BBOX intersects product rect in upper left
+        rectangle = L3Config.computePixelRegion(product, createBBOX(45.5, 20.5, 100.0, 50.0), 0);
+        assertEquals(new Rectangle(95, 45, 5, 5), rectangle);
+
+        // Product bounds fully contained in BBOX
+        rectangle = L3Config.computePixelRegion(product, createBBOX(-180, -90, 360, 180), 0);
+        assertEquals(new Rectangle(0, 0, 100, 50), rectangle);
+
+        // BBOX not contained
+        rectangle = L3Config.computePixelRegion(product, createBBOX(60.0, 0.0, 10.0, 10.0));
+        assertEquals(null, rectangle);
+    }
+
+    private Polygon createBBOX(double x, double y, double w, double h) {
+        GeometryFactory factory = new GeometryFactory();
+        final LinearRing ring = factory.createLinearRing(new Coordinate[]{
+                new Coordinate(x, y),
+                new Coordinate(x + w, y),
+                new Coordinate(x + w, y + h),
+                new Coordinate(x, y + h),
+                new Coordinate(x, y)
+        });
+        return factory.createPolygon(ring, null);
     }
 
     @Test
