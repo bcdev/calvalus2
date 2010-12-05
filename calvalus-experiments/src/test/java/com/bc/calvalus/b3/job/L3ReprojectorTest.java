@@ -16,6 +16,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -68,7 +69,7 @@ public class L3ReprojectorTest {
         int width = 12;
         int height = 6;
         MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
-        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
         float[] nobsData = binProcessor.nobsData;
         float[] meanData = binProcessor.meanData;
         float[] sigmaData = binProcessor.sigmaData;
@@ -117,7 +118,7 @@ public class L3ReprojectorTest {
         int width = 12;
         int height = 6;
         MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
-        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
         float[] nobsData = binProcessor.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
@@ -155,7 +156,7 @@ public class L3ReprojectorTest {
         int width = 12;
         int height = 6;
         MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
-        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
         float[] nobsData = binProcessor.nobsData;
         float[] meanData = binProcessor.meanData;
         float[] sigmaData = binProcessor.sigmaData;
@@ -192,7 +193,7 @@ public class L3ReprojectorTest {
         int width = 12;
         int height = 6;
         MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
-        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
         float[] nobsData = binProcessor.nobsData;
 
         assertEquals(0f, nobsData[y * width + 0], 1E-5f);
@@ -225,7 +226,7 @@ public class L3ReprojectorTest {
         int width = 12;
         int height = 6;
         MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
-        L3Reprojector.reprojectRow(getCtx(binningGrid), y, binRow, binProcessor, width, height);
+        L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
         float[] nobsData = binProcessor.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0], 1E-5f);

@@ -8,8 +8,9 @@ import com.bc.calvalus.b3.TemporalBin;
 import com.bc.calvalus.b3.WritableVector;
 import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.ceres.core.ProgressMonitor;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -24,6 +25,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.ImageIO;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.BufferedReader;
@@ -56,11 +58,11 @@ public class L3Formatter extends Configured implements Tool {
     private String outputFormat;
     private Path l3OutputDir;
     private BinningContext binningContext;
-    private int rasterWidth;
-    private int rasterHeight;
     private File outputFile;
     private String outputFileNameBase;
     private String outputFileNameExt;
+    private double pixelSize;
+    private Rectangle pixelRegion;
 
     public static void main(String[] args) {
         if (Boolean.getBoolean("hadoop.debug")) {
@@ -135,9 +137,26 @@ public class L3Formatter extends Configured implements Tool {
             LOG.info("aggregators." + i + " = " + aggregator);
         }
 
+
+        final Geometry roiGeometry = l3Config.getRegionOfInterest();
         final BinningGrid binningGrid = binningContext.getBinningGrid();
-        rasterWidth = binningGrid.getNumRows() * 2;
-        rasterHeight = binningGrid.getNumRows();
+
+        final int gridWidth = binningGrid.getNumRows() * 2;
+        final int gridHeight = binningGrid.getNumRows();
+        pixelSize = 180.0 / gridHeight;
+        pixelRegion = new Rectangle(gridWidth, gridHeight);
+        if (roiGeometry != null) {
+            final Coordinate[] coordinates = roiGeometry.getBoundary().getCoordinates();
+            final double gx1 = coordinates[0].x;
+            final double gy1 = coordinates[0].y;
+            final double gx2 = coordinates[2].x;
+            final double gy2 = coordinates[2].y;
+            final int x = (int) Math.floor((gx1 - 180.0) / pixelSize);
+            final int y = (int) Math.floor((90.0 - gy2) / pixelSize);
+            final int width = (int) Math.ceil((gx2 - gx1) / pixelSize);
+            final int height = (int) Math.ceil((gy2 - gy1) / pixelSize);
+            pixelRegion = pixelRegion.intersection(new Rectangle(x, y, width, height));
+        }
 
         if (outputType.equalsIgnoreCase("Product")) {
             writeProductFile();
@@ -162,32 +181,34 @@ public class L3Formatter extends Configured implements Tool {
         CrsGeoCoding geoCoding;
         try {
             geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                         rasterWidth, rasterHeight,
-                                         -180.0, +90.0,
-                                         rasterWidth / 360.0, -rasterHeight / 180.0,
+                                         pixelRegion.width,
+                                         pixelRegion.height,
+                                         180.0 + pixelSize * pixelRegion.x,
+                                         90.0 - pixelSize * pixelRegion.y,
+                                         pixelSize,
+                                         -pixelSize,
                                          0.0, 0.0);
         } catch (FactoryException e) {
             throw new IllegalStateException(e);
         } catch (TransformException e) {
             throw new IllegalStateException(e);
         }
-        final Product product = new Product(outputFile.getName(), "b", rasterWidth, rasterHeight);
+        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", pixelRegion.width, pixelRegion.height);
         product.setGeoCoding(geoCoding);
         product.setStartTime(startTime);
         product.setEndTime(endTime);
 
-
         final Band indexBand = product.addBand("index", ProductData.TYPE_INT32);
         indexBand.setNoDataValue(-1);
-        final ProductData indexLine = indexBand.createCompatibleRasterData(rasterWidth, 1);
+        final ProductData indexLine = indexBand.createCompatibleRasterData(pixelRegion.width, 1);
 
         final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
         numObsBand.setNoDataValue(-1);
-        final ProductData numObsLine = numObsBand.createCompatibleRasterData(rasterWidth, 1);
+        final ProductData numObsLine = numObsBand.createCompatibleRasterData(pixelRegion.width, 1);
 
         final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
         numPassesBand.setNoDataValue(-1);
-        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(rasterWidth, 1);
+        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(pixelRegion.width, 1);
 
         int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
         final Band[] outputBands = new Band[outputPropertyCount];
@@ -196,7 +217,7 @@ public class L3Formatter extends Configured implements Tool {
             String name = binningContext.getBinManager().getOutputPropertyName(i);
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
             outputBands[i].setNoDataValue(Double.NaN);
-            outputLines[i] = outputBands[i].createCompatibleRasterData(rasterWidth, 1);
+            outputLines[i] = outputBands[i].createCompatibleRasterData(pixelRegion.width, 1);
         }
 
         productWriter.writeProductNodes(product, outputFile);
@@ -205,10 +226,9 @@ public class L3Formatter extends Configured implements Tool {
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
-        L3Reprojector.reproject(getConf(), binningContext, l3OutputDir, dataWriter);
+        L3Reprojector.reproject(getConf(), binningContext, pixelRegion, l3OutputDir, dataWriter);
         productWriter.close();
     }
-
 
     private void writeImageFiles() throws Exception {
         int[] indices = new int[16];
@@ -238,25 +258,25 @@ public class L3Formatter extends Configured implements Tool {
         v1s = Arrays.copyOf(v1s, numBands);
         v2s = Arrays.copyOf(v2s, numBands);
 
-        final ImageRaster raster = new ImageRaster(rasterWidth, rasterHeight, indices);
-        L3Reprojector.reproject(getConf(), binningContext, l3OutputDir, raster);
+        final ImageRaster raster = new ImageRaster(pixelRegion.width, pixelRegion.height, indices);
+        L3Reprojector.reproject(getConf(), binningContext, pixelRegion, l3OutputDir, raster);
 
         if (outputType.equalsIgnoreCase("RGB")) {
-            writeRgbImage(rasterWidth, rasterHeight, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
+            writeRgbImage(pixelRegion.width, pixelRegion.height, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
         } else {
             for (int i = 0; i < numBands; i++) {
                 final String fileName = String.format("%s_%s.%s", outputFileNameBase, names[i], outputFileNameExt);
                 final File imageFile = new File(outputFile.getParentFile(), fileName);
-                writeGrayScaleImage(rasterWidth, rasterHeight, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
+                writeGrayScaleImage(pixelRegion.width, pixelRegion.height, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
             }
         }
     }
 
 
-    private void writeGrayScaleImage(int width, int height,
-                                     float[] rawData,
-                                     float rawValue1, float rawValue2,
-                                     String outputFormat, File outputImageFile) throws IOException {
+    private static void writeGrayScaleImage(int width, int height,
+                                            float[] rawData,
+                                            float rawValue1, float rawValue2,
+                                            String outputFormat, File outputImageFile) throws IOException {
 
         LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
@@ -270,10 +290,10 @@ public class L3Formatter extends Configured implements Tool {
         ImageIO.write(image, outputFormat, outputImageFile);
     }
 
-    private void writeRgbImage(int width, int height,
-                               float[][] rawData,
-                               float[] rawValue1, float[] rawValue2,
-                               String outputFormat, File outputImageFile) throws IOException {
+    private static void writeRgbImage(int width, int height,
+                                      float[][] rawData,
+                                      float[] rawValue1, float[] rawValue2,
+                                      String outputFormat, File outputImageFile) throws IOException {
         LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
@@ -319,7 +339,6 @@ public class L3Formatter extends Configured implements Tool {
 
     private final static class ImageRaster extends L3Reprojector.TemporalBinProcessor {
         private final int rasterWidth;
-        private final int rasterHeight;
         private final int[] bandIndices;
         private final float[][] bandData;
 
@@ -328,7 +347,6 @@ public class L3Formatter extends Configured implements Tool {
 
         public ImageRaster(int rasterWidth, int rasterHeight, int[] bandIndices) {
             this.rasterWidth = rasterWidth;
-            this.rasterHeight = rasterHeight;
             this.bandIndices = bandIndices.clone();
             this.bandCount = bandIndices.length;
             this.bandData = new float[bandCount][rasterWidth * rasterHeight];
@@ -360,10 +378,8 @@ public class L3Formatter extends Configured implements Tool {
         }
     }
 
-    private final class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
-        int yLast;
+    private final static class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
         private final int width;
-        private final int height;
         private final ProductData indexLine;
         private final ProductData numObsLine;
         private final ProductData numPassesLine;
@@ -373,6 +389,7 @@ public class L3Formatter extends Configured implements Tool {
         private final Band indexBand;
         private final Band numObsBand;
         private final Band numPassesBand;
+        int yLast;
 
         public ProductDataWriter(ProductWriter productWriter, Band indexBand, ProductData indexLine, Band numObsBand, ProductData numObsLine, Band numPassesBand, ProductData numPassesLine, Band[] outputBands, ProductData[] outputLines) {
             this.indexLine = indexLine;
@@ -385,7 +402,6 @@ public class L3Formatter extends Configured implements Tool {
             this.numObsBand = numObsBand;
             this.numPassesBand = numPassesBand;
             this.width = indexBand.getSceneRasterWidth();
-            this.height = indexBand.getSceneRasterHeight();
             this.yLast = 0;
             initLine();
         }
@@ -420,11 +436,11 @@ public class L3Formatter extends Configured implements Tool {
 
         private void writeLine(int y) throws IOException {
             //To change body of implemented methods use File | Settings | File Templates.
-            productWriter.writeBandRasterData(indexBand, 0, y, rasterWidth, 1, indexLine, ProgressMonitor.NULL);
-            productWriter.writeBandRasterData(numObsBand, 0, y, rasterWidth, 1, numObsLine, ProgressMonitor.NULL);
-            productWriter.writeBandRasterData(numPassesBand, 0, y, rasterWidth, 1, numPassesLine, ProgressMonitor.NULL);
+            productWriter.writeBandRasterData(indexBand, 0, y, width, 1, indexLine, ProgressMonitor.NULL);
+            productWriter.writeBandRasterData(numObsBand, 0, y, width, 1, numObsLine, ProgressMonitor.NULL);
+            productWriter.writeBandRasterData(numPassesBand, 0, y, width, 1, numPassesLine, ProgressMonitor.NULL);
             for (int i = 0; i < outputBands.length; i++) {
-                productWriter.writeBandRasterData(outputBands[i], 0, y, rasterWidth, 1, outputLines[i], ProgressMonitor.NULL);
+                productWriter.writeBandRasterData(outputBands[i], 0, y, width, 1, outputLines[i], ProgressMonitor.NULL);
             }
         }
 

@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 
+import java.awt.Rectangle;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,11 +51,12 @@ public class L3Reprojector {
 
     public static void reproject(Configuration configuration,
                                  BinningContext binningContext,
+                                 Rectangle pixelRegion,
                                  Path partsDir,
                                  TemporalBinProcessor temporalBinProcessor) throws Exception {
         BinningGrid binningGrid = binningContext.getBinningGrid();
-        int width = binningGrid.getNumRows() * 2;
-        int height = binningGrid.getNumRows();
+        int gridWidth = binningGrid.getNumRows() * 2;
+        int gridHeight = binningGrid.getNumRows();
 
         long startTime = System.nanoTime();
 
@@ -70,6 +72,9 @@ public class L3Reprojector {
 
         Arrays.sort(parts);
 
+        final int y1 = pixelRegion.y;
+        final int y2 = pixelRegion.y + pixelRegion.height - 1;
+
         temporalBinProcessor.begin(binningContext);
         for (FileStatus part : parts) {
             Path partFile = part.getPath();
@@ -84,20 +89,24 @@ public class L3Reprojector {
                     IntWritable binIndex = new IntWritable();
                     TemporalBin temporalBin = new TemporalBin();
                     if (!reader.next(binIndex, temporalBin)) {
-                        // last row
-                        reprojectRow(binningContext,
-                                     lastRowIndex, binRow,
-                                     temporalBinProcessor,
-                                     width, height);
+                        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+                            // last row
+                            reprojectRow(binningContext,
+                                         pixelRegion, lastRowIndex, binRow,
+                                         temporalBinProcessor,
+                                         gridWidth, gridHeight);
+                        }
                         binRow.clear();
                         break;
                     }
                     int rowIndex = binningGrid.getRowIndex(binIndex.get());
                     if (rowIndex != lastRowIndex) {
-                        reprojectRow(binningContext,
-                                     lastRowIndex, binRow,
-                                     temporalBinProcessor,
-                                     width, height);
+                        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+                            reprojectRow(binningContext,
+                                         pixelRegion, lastRowIndex, binRow,
+                                         temporalBinProcessor,
+                                         gridWidth, gridHeight);
+                        }
                         binRow.clear();
                         lastRowIndex = rowIndex;
                     }
@@ -116,29 +125,30 @@ public class L3Reprojector {
 
 
     static void reprojectRow(BinningContext ctx,
+                             Rectangle rectangle,
                              int y,
                              List<TemporalBin> binRow,
                              TemporalBinProcessor temporalBinProcessor,
-                             int width,
-                             int height) throws Exception {
-        if (y < 0 || y >= height) {
-            return;
-        }
+                             int gridWidth,
+                             int gridHeight) throws Exception {
+        final int x1 = rectangle.x;
+        final int x2 = rectangle.x + rectangle.width - 1;
+        final int y1 = rectangle.y;
         if (binRow.isEmpty()) {
-            for (int x = 0; x < width; x++) {
-                temporalBinProcessor.processMissingBin(x, y);
+            for (int x = x1; x <= x2; x++) {
+                temporalBinProcessor.processMissingBin(x - x1, y - y1);
             }
             return;
         }
         final BinningGrid binningGrid = ctx.getBinningGrid();
         final BinManager binManager = ctx.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
-        final double lat = 90.0 - (y + 0.5) * 180.0 / height;
+        final double lat = 90.0 - (y + 0.5) * 180.0 / gridHeight;
         int lastBinIndex = -1;
         TemporalBin temporalBin = null;
         int rowIndex = -1;
-        for (int x = 0; x < width; x++) {
-            double lon = -180.0 + (x + 0.5) * 360.0 / width;
+        for (int x = x1; x <= x2; x++) {
+            double lon = -180.0 + (x + 0.5) * 360.0 / gridWidth;
             int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
             if (lastBinIndex != wantedBinIndex) {
                 // search temporalBin for wantedBinIndex
@@ -157,9 +167,9 @@ public class L3Reprojector {
                 }
             }
             if (temporalBin != null) {
-                temporalBinProcessor.processBin(x, y, temporalBin, outputVector);
+                temporalBinProcessor.processBin(x - x1, y - y1, temporalBin, outputVector);
             } else {
-                temporalBinProcessor.processMissingBin(x, y);
+                temporalBinProcessor.processMissingBin(x - x1, y - y1);
             }
         }
     }
