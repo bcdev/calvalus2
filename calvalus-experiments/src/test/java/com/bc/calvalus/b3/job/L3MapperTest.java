@@ -27,7 +27,7 @@ public class L3MapperTest {
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-            L3Mapper.processProduct(new Product("p", "t", 32, 256), 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
+            L3Mapper.processProduct(new Product("p", "t", 32, 256), ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // ok
@@ -49,7 +49,7 @@ public class L3MapperTest {
         product.setPreferredTileSize(32, 16);
 
         MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-        L3Mapper.processProduct(product, 16, ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
+        L3Mapper.processProduct(product, ctx, new SpatialBinner(ctx, mySpatialBinProcessor));
         assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
 

@@ -80,15 +80,19 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         final ProductReader productReader = plugIn.createReaderInstance();
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
         final ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
-        final Product product = l3Config.getProcessedProduct(productReader.readProductNodes(imageInputStream, null));
+        final Product source = productReader.readProductNodes(imageInputStream, null);
+        if (source == null) {
+            throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", path));
+        }
+        final Product product = l3Config.getProcessedProduct(source);
         if (product != null) {
             try {
-                processProduct(product, numScansPerSlice, ctx, spatialBinner);
+                processProduct(product, ctx, spatialBinner);
             } finally {
                 product.dispose();
             }
         } else {
-            throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", path));
+            LOG.info("product not used");
         }
 
         long stopTime = System.nanoTime();
@@ -105,7 +109,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
     }
 
     static void processProduct(Product product,
-                               int sliceHeight,
                                BinningContext ctx,
                                SpatialBinner spatialBinner) {
         if (product.getGeoCoding() == null) {
@@ -130,6 +133,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
         final String maskExpr = ctx.getVariableContext().getMaskExpr();
         final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
+        final int sliceHeight = maskImage.getTileHeight();
         checkImageTileSize(MessageFormat.format("Mask image for expr ''{0}''", maskExpr),
                            maskImage, sliceWidth, sliceHeight);
 
