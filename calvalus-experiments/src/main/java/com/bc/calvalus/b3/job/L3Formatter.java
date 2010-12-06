@@ -147,16 +147,24 @@ public class L3Formatter extends Configured implements Tool {
         pixelRegion = new Rectangle(gridWidth, gridHeight);
         if (roiGeometry != null) {
             final Coordinate[] coordinates = roiGeometry.getBoundary().getCoordinates();
-            final double gx1 = coordinates[0].x;
-            final double gy1 = coordinates[0].y;
-            final double gx2 = coordinates[2].x;
-            final double gy2 = coordinates[2].y;
-            final int x = (int) Math.floor((gx1 - 180.0) / pixelSize);
-            final int y = (int) Math.floor((90.0 - gy2) / pixelSize);
-            final int width = (int) Math.ceil((gx2 - gx1) / pixelSize);
-            final int height = (int) Math.ceil((gy2 - gy1) / pixelSize);
+            double gxmin = Double.POSITIVE_INFINITY;
+            double gxmax = Double.NEGATIVE_INFINITY;
+            double gymin = Double.POSITIVE_INFINITY;
+            double gymax = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < coordinates.length; i++) {
+                Coordinate coordinate = coordinates[i];
+                gxmin = Math.min(gxmin, coordinate.x);
+                gxmax = Math.max(gxmax, coordinate.y);
+                gymin = Math.min(gymin, coordinate.x);
+                gymax = Math.max(gymax, coordinate.y);
+            }
+            final int x = (int) Math.floor((180.0 + gxmin) / pixelSize);
+            final int y = (int) Math.floor((90.0 - gymax) / pixelSize);
+            final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
+            final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
             pixelRegion = pixelRegion.intersection(new Rectangle(x, y, width, height));
         }
+        LOG.info("pixelRegion = " + pixelRegion);
 
         if (outputType.equalsIgnoreCase("Product")) {
             writeProductFile();
