@@ -145,8 +145,13 @@ public class L3Config {
         regionIntersection.apply(pixelRegionFinder);
         final Rectangle pixelRegion = pixelRegionFinder.getPixelRegion();
         pixelRegion.grow(numBorderPixels, numBorderPixels);
-        return pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
-                                                      product.getSceneRasterHeight()));
+        Rectangle result = pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
+                                                                        product.getSceneRasterHeight()));
+        if (true) { // TODO add option for full swath subsets
+            return new Rectangle(0, result.y, product.getSceneRasterWidth(), result.height);    
+        } else {
+            return result;
+        }
     }
 
     static Geometry computeProductGeometry(Product product) {
