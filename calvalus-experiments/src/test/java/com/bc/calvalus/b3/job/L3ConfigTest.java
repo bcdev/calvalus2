@@ -140,11 +140,14 @@ public class L3ConfigTest {
         Properties properties = new Properties();
         L3Config l3Config = new L3Config(properties);
 
-        String[] inputPath = l3Config.getInputPath();
-        assertNull(inputPath);
+        try {
+            l3Config.getInputPath();
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+        }
 
         properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
-        inputPath = l3Config.getInputPath();
+        String[] inputPath = l3Config.getInputPath();
         assertNotNull(inputPath);
         assertEquals(16, inputPath.length);
         assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);

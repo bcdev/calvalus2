@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -217,7 +218,7 @@ public class L3Config {
         if (startDateString == null) {
             throw new IllegalArgumentException(MessageFormat.format("Parameter: ''{0}'' not given.", CONFNAME_L3_START_DATE));
         }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
         Date startDate;
         try {
             startDate = dateFormat.parse(startDateString);
@@ -228,7 +229,7 @@ public class L3Config {
         calendar.setTime(startDate);
         for (int i = 0; i < inputPaths.length; i++) {
             int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
+            int month = calendar.get(Calendar.MONTH) + 1;
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             inputPaths[i] = String.format(EODATA_PATH, year, month, day);
             calendar.add(Calendar.DAY_OF_MONTH, 1);
