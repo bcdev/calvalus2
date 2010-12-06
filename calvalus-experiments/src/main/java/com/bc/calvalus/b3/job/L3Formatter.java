@@ -151,11 +151,10 @@ public class L3Formatter extends Configured implements Tool {
             double gxmax = Double.NEGATIVE_INFINITY;
             double gymin = Double.POSITIVE_INFINITY;
             double gymax = Double.NEGATIVE_INFINITY;
-            for (int i = 0; i < coordinates.length; i++) {
-                Coordinate coordinate = coordinates[i];
+            for (Coordinate coordinate : coordinates) {
                 gxmin = Math.min(gxmin, coordinate.x);
-                gxmax = Math.max(gxmax, coordinate.y);
-                gymin = Math.min(gymin, coordinate.x);
+                gxmax = Math.max(gxmax, coordinate.x);
+                gymin = Math.min(gymin, coordinate.y);
                 gymax = Math.max(gymax, coordinate.y);
             }
             final int x = (int) Math.floor((180.0 + gxmin) / pixelSize);
@@ -163,7 +162,7 @@ public class L3Formatter extends Configured implements Tool {
             final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
             final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
             final Rectangle unclippedPixelRegion = new Rectangle(x, y, width, height);
-            LOG.info("unclippedPixelRegion = " + pixelRegion);
+            LOG.info("unclippedPixelRegion = " + unclippedPixelRegion);
             pixelRegion = unclippedPixelRegion.intersection(pixelRegion);
         }
         LOG.info("pixelRegion = " + pixelRegion);
