@@ -24,10 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.ProductUtils;
@@ -43,11 +40,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static java.lang.Math.*;
 
@@ -59,10 +54,11 @@ import static java.lang.Math.*;
  */
 public class L3Config {
 
+    private static final String EODATA_PATH = "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/%04d/%02d/%02d";
     public static final String CONFNAME_L3_NUM_SCANS_PER_SLICE = "calvalus.l3.numScansPerSlice";
     public static final String CONFNAME_L3_GRID_NUM_ROWS = "calvalus.l3.grid.numRows";
+    public static final String CONFNAME_L3_START_DATE = "calvalus.l3.startDate";
     public static final String CONFNAME_L3_NUM_DAYS = "calvalus.l3.numDays";
-    public static final String CONFNAME_L3_START_DAY = "calvalus.l3.startDay";
     public static final String CONFNAME_L3_BBOX = "calvalus.l3.bbox";
     public static final String CONFNAME_L3_REGION = "calvalus.l3.region";
     public static final String CONFNAME_L3_AGG_i_TYPE = "calvalus.l3.aggregators.%d.type";
@@ -72,7 +68,6 @@ public class L3Config {
     public static final String CONFNAME_L3_MASK_EXPR = "calvalus.l3.maskExpr";
     public static final String CONFNAME_L3_VARIABLES_i_NAME = "calvalus.l3.variables.%d.name";
     public static final String CONFNAME_L3_VARIABLES_i_EXPR = "calvalus.l3.variables.%d.expr";
-    public static final String CONFNAME_L3_INPUT = "calvalus.l3.input";
     public static final String CONFNAME_L3_OUTPUT = "calvalus.l3.output";
     public static final String CONFNAME_L3_OPERATOR_NAME = "calvalus.l3.operator";
     public static final String CONFNAME_L3_OPERATOR_PARMETER_PREFIX = "calvalus.l3.operator.";
@@ -209,8 +204,36 @@ public class L3Config {
         return getBinManager(getVariableContext());
     }
 
-    public Path getInput() {
-        return new Path(properties.getProperty(CONFNAME_L3_INPUT));
+    public String[] getInputPath() {
+        String numDaysString = properties.getProperty(CONFNAME_L3_NUM_DAYS);
+        final int numDays;
+        if (numDaysString != null) {
+            numDays = Integer.parseInt(numDaysString);
+        } else {
+            numDays = DEFAULT_L3_NUM_NUM_DAYS;
+        }
+        String[] inputPaths = new String[numDays];
+        String startDateString = properties.getProperty(CONFNAME_L3_START_DATE);
+        if (startDateString == null) {
+            throw new IllegalArgumentException(MessageFormat.format("Parameter: ''{0}'' not given.", CONFNAME_L3_START_DATE));
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate;
+        try {
+            startDate = dateFormat.parse(startDateString);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Illegal start date format.", e);
+        }
+        Calendar calendar = ProductData.UTC.createCalendar();
+        calendar.setTime(startDate);
+        for (int i = 0; i < inputPaths.length; i++) {
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            inputPaths[i] = String.format(EODATA_PATH, year, month, day);
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return inputPaths;
     }
 
     public Path getOutput() {

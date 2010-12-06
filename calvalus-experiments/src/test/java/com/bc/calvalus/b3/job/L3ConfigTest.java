@@ -29,8 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static com.bc.calvalus.b3.job.L3Config.CONFNAME_L3_BBOX;
-import static com.bc.calvalus.b3.job.L3Config.CONFNAME_L3_REGION;
+import static com.bc.calvalus.b3.job.L3Config.*;
 import static org.junit.Assert.*;
 
 public class L3ConfigTest {
@@ -134,6 +133,29 @@ public class L3ConfigTest {
                 new Coordinate(x, y)
         });
         return factory.createPolygon(ring, null);
+    }
+
+    @Test
+    public void testInputPath() {
+        Properties properties = new Properties();
+        L3Config l3Config = new L3Config(properties);
+
+        String[] inputPath = l3Config.getInputPath();
+        assertNull(inputPath);
+
+        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
+        inputPath = l3Config.getInputPath();
+        assertNotNull(inputPath);
+        assertEquals(16, inputPath.length);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/02", inputPath[1]);
+
+        properties.setProperty(CONFNAME_L3_NUM_DAYS, "1");
+        inputPath = l3Config.getInputPath();
+        assertNotNull(inputPath);
+        assertEquals(1, inputPath.length);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);
+
     }
 
     @Test

@@ -81,11 +81,9 @@ public class L3Tool extends Configured implements Tool {
             }
 
             // provide input and output directories to job
-            final int day1 = conf.getInt(CONFNAME_L3_START_DAY, 1);
-            final int day2 = day1 - 1 + conf.getInt(CONFNAME_L3_NUM_DAYS, 4);
-            for (int day = day1; day <= day2; day++) {
-                String pathName = String.format(conf.get(CONFNAME_L3_INPUT), day);
-                FileInputFormat.addInputPath(job, new Path(pathName));
+            String[] inputPaths = l3Config.getInputPath();
+            for (String inputPath : inputPaths) {
+                FileInputFormat.addInputPath(job, new Path(inputPath));
             }
             Path outputDir = l3Config.getOutput();
             FileOutputFormat.setOutputPath(job, outputDir);
@@ -129,9 +127,6 @@ public class L3Tool extends Configured implements Tool {
 
     private void validateConfiguration(Configuration conf) throws IOException {
         // Overwrite configuration by request parameters
-        if (conf.get(CONFNAME_L3_INPUT) == null) {
-            throw new IllegalArgumentException(MessageFormat.format("No input specified. {0} = null", CONFNAME_L3_INPUT));
-        }
         if (conf.get(CONFNAME_L3_OUTPUT) == null) {
             throw new IllegalArgumentException(MessageFormat.format("No output specified. {0} = null", CONFNAME_L3_OUTPUT));
         }
@@ -143,9 +138,6 @@ public class L3Tool extends Configured implements Tool {
         }
         if (conf.get(CONFNAME_L3_GRID_NUM_ROWS) == null) {
             conf.setInt(CONFNAME_L3_GRID_NUM_ROWS, IsinBinningGrid.DEFAULT_NUM_ROWS);
-        }
-        if (conf.get(CONFNAME_L3_NUM_DAYS) == null) {
-            conf.setInt(CONFNAME_L3_NUM_DAYS, L3Config.DEFAULT_L3_NUM_NUM_DAYS);
         }
     }
 
