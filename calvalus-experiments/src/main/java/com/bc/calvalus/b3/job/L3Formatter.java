@@ -162,7 +162,9 @@ public class L3Formatter extends Configured implements Tool {
             final int y = (int) Math.floor((90.0 - gymax) / pixelSize);
             final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
             final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
-            pixelRegion = pixelRegion.intersection(new Rectangle(x, y, width, height));
+            final Rectangle unclippedPixelRegion = new Rectangle(x, y, width, height);
+            LOG.info("unclippedPixelRegion = " + pixelRegion);
+            pixelRegion = unclippedPixelRegion.intersection(pixelRegion);
         }
         LOG.info("pixelRegion = " + pixelRegion);
 
