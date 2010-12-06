@@ -1,6 +1,5 @@
 package com.bc.calvalus.b3.job;
 
-import com.bc.calvalus.b3.AggregatorAverage;
 import com.bc.calvalus.b3.BinManager;
 import com.bc.calvalus.b3.BinManagerImpl;
 import com.bc.calvalus.b3.BinningContextImpl;
@@ -13,32 +12,46 @@ import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class L3ReprojectorTest {
-    static final float NAN = Float.NaN;
-    private BinManager binManager;
+    static final int NAN = -1;
+    private BinManager binManager = new BinManagerImpl();
 
-    @Before
-    public void init() {
-        AggregatorAverage aggregator = new AggregatorAverage(new VariableContextImpl(), "ndvi");
-        binManager = new BinManagerImpl(aggregator);
+    @Test
+    public void testPathExpansion() {
+        assertEquals("part-r-00004", String.format("part-r-%05d", 4));
     }
 
     @Test
-    public void testPath() {
-        assertEquals("part-r-00004", String.format("part-r-%05d", 4));
+    public void testReprojector() throws Exception {
+        final IsinBinningGrid grid = new IsinBinningGrid(6);
+        final BinningContextImpl context = new BinningContextImpl(grid,
+                                                                  new VariableContextImpl(),
+                                                                  binManager);
+        final Rectangle rectangle = new Rectangle(12, 6);
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        for (int i= 0; i < grid.getNumBins(); i++) {
+            bins.add(createTBin(i));
+        }
+        final NobsRaster binProcessor = new NobsRaster(12, 6);
+        L3Reprojector.reprojectPart(context,
+                                    rectangle,
+                                    bins.iterator(),
+                                    binProcessor);
     }
 
     @Test
@@ -68,24 +81,22 @@ public class L3ReprojectorTest {
         int y = 2;
         int width = 12;
         int height = 6;
-        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        NobsRaster binProcessor = new NobsRaster(width, height);
         L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
-        float[] nobsData = binProcessor.nobsData;
-        float[] meanData = binProcessor.meanData;
-        float[] sigmaData = binProcessor.sigmaData;
+        int[] nobsData = binProcessor.nobsData;
 
-        assertEquals(11f, nobsData[y * width + 0], 1E-5f);
-        assertEquals(12f, nobsData[y * width + 1], 1E-5f);
-        assertEquals(13f, nobsData[y * width + 2], 1E-5f);
-        assertEquals(14f, nobsData[y * width + 3], 1E-5f);
-        assertEquals(15f, nobsData[y * width + 4], 1E-5f);
-        assertEquals(16f, nobsData[y * width + 5], 1E-5f);
-        assertEquals(17f, nobsData[y * width + 6], 1E-5f);
-        assertEquals(18f, nobsData[y * width + 7], 1E-5f);
-        assertEquals(19f, nobsData[y * width + 8], 1E-5f);
-        assertEquals(20f, nobsData[y * width + 9], 1E-5f);
-        assertEquals(21f, nobsData[y * width + 10], 1E-5f);
-        assertEquals(22f, nobsData[y * width + 11], 1E-5f);
+        assertEquals(11, nobsData[y * width + 0]);
+        assertEquals(12, nobsData[y * width + 1]);
+        assertEquals(13, nobsData[y * width + 2]);
+        assertEquals(14, nobsData[y * width + 3]);
+        assertEquals(15, nobsData[y * width + 4]);
+        assertEquals(16, nobsData[y * width + 5]);
+        assertEquals(17, nobsData[y * width + 6]);
+        assertEquals(18, nobsData[y * width + 7]);
+        assertEquals(19, nobsData[y * width + 8]);
+        assertEquals(20, nobsData[y * width + 9]);
+        assertEquals(21, nobsData[y * width + 10]);
+        assertEquals(22, nobsData[y * width + 11]);
 
 
     }
@@ -117,22 +128,22 @@ public class L3ReprojectorTest {
         int y = 2;
         int width = 12;
         int height = 6;
-        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        NobsRaster binProcessor = new NobsRaster(width, height);
         L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
-        float[] nobsData = binProcessor.nobsData;
+        int[] nobsData = binProcessor.nobsData;
 
-        assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
-        assertEquals(12f, nobsData[y * width + 1], 1E-5f);
-        assertEquals(13f, nobsData[y * width + 2], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 3], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
-        assertEquals(16f, nobsData[y * width + 5], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
-        assertEquals(18f, nobsData[y * width + 7], 1E-5f);
-        assertEquals(19f, nobsData[y * width + 8], 1E-5f);
-        assertEquals(20f, nobsData[y * width + 9], 1E-5f);
-        assertEquals(21f, nobsData[y * width + 10], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 11], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 0]);
+        assertEquals(12, nobsData[y * width + 1]);
+        assertEquals(13, nobsData[y * width + 2]);
+        assertEquals(NAN, nobsData[y * width + 3]);
+        assertEquals(NAN, nobsData[y * width + 4]);
+        assertEquals(16, nobsData[y * width + 5]);
+        assertEquals(NAN, nobsData[y * width + 6]);
+        assertEquals(18, nobsData[y * width + 7]);
+        assertEquals(19, nobsData[y * width + 8]);
+        assertEquals(20, nobsData[y * width + 9]);
+        assertEquals(21, nobsData[y * width + 10]);
+        assertEquals(NAN, nobsData[y * width + 11]);
 
 
     }
@@ -155,24 +166,22 @@ public class L3ReprojectorTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        NobsRaster binProcessor = new NobsRaster(width, height);
         L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
-        float[] nobsData = binProcessor.nobsData;
-        float[] meanData = binProcessor.meanData;
-        float[] sigmaData = binProcessor.sigmaData;
+        int[] nobsData = binProcessor.nobsData;
 
-        assertEquals(0f, nobsData[y * width + 0], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 1], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 2], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 3], 1E-5f);
-        assertEquals(1f, nobsData[y * width + 4], 1E-5f);
-        assertEquals(1f, nobsData[y * width + 5], 1E-5f);
-        assertEquals(1f, nobsData[y * width + 6], 1E-5f);
-        assertEquals(1f, nobsData[y * width + 7], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 8], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 9], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 10], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 11], 1E-5f);
+        assertEquals(0, nobsData[y * width + 0]);
+        assertEquals(0, nobsData[y * width + 1]);
+        assertEquals(0, nobsData[y * width + 2]);
+        assertEquals(0, nobsData[y * width + 3]);
+        assertEquals(1, nobsData[y * width + 4]);
+        assertEquals(1, nobsData[y * width + 5]);
+        assertEquals(1, nobsData[y * width + 6]);
+        assertEquals(1, nobsData[y * width + 7]);
+        assertEquals(2, nobsData[y * width + 8]);
+        assertEquals(2, nobsData[y * width + 9]);
+        assertEquals(2, nobsData[y * width + 10]);
+        assertEquals(2, nobsData[y * width + 11]);
     }
 
     @Test
@@ -192,22 +201,22 @@ public class L3ReprojectorTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        NobsRaster binProcessor = new NobsRaster(width, height);
         L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
-        float[] nobsData = binProcessor.nobsData;
+        int[] nobsData = binProcessor.nobsData;
 
-        assertEquals(0f, nobsData[y * width + 0], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 1], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 2], 1E-5f);
-        assertEquals(0f, nobsData[y * width + 3], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 5], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 7], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 8], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 9], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 10], 1E-5f);
-        assertEquals(2f, nobsData[y * width + 11], 1E-5f);
+        assertEquals(0, nobsData[y * width + 0]);
+        assertEquals(0, nobsData[y * width + 1]);
+        assertEquals(0, nobsData[y * width + 2]);
+        assertEquals(0, nobsData[y * width + 3]);
+        assertEquals(NAN, nobsData[y * width + 4]);
+        assertEquals(NAN, nobsData[y * width + 5]);
+        assertEquals(NAN, nobsData[y * width + 6]);
+        assertEquals(NAN, nobsData[y * width + 7]);
+        assertEquals(2, nobsData[y * width + 8]);
+        assertEquals(2, nobsData[y * width + 9]);
+        assertEquals(2, nobsData[y * width + 10]);
+        assertEquals(2, nobsData[y * width + 11]);
     }
 
     @Test
@@ -225,22 +234,22 @@ public class L3ReprojectorTest {
         int y = 0;
         int width = 12;
         int height = 6;
-        MyTemporalBinProcessor binProcessor = new MyTemporalBinProcessor(width, height);
+        NobsRaster binProcessor = new NobsRaster(width, height);
         L3Reprojector.reprojectRow(getCtx(binningGrid), new Rectangle(width, height), y, binRow, binProcessor, width, height);
-        float[] nobsData = binProcessor.nobsData;
+        int[] nobsData = binProcessor.nobsData;
 
-        assertEquals(NAN, nobsData[y * width + 0], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 1], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 2], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 3], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 4], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 5], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 6], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 7], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 8], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 9], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 10], 1E-5f);
-        assertEquals(NAN, nobsData[y * width + 11], 1E-5f);
+        assertEquals(NAN, nobsData[y * width + 0]);
+        assertEquals(NAN, nobsData[y * width + 1]);
+        assertEquals(NAN, nobsData[y * width + 2]);
+        assertEquals(NAN, nobsData[y * width + 3]);
+        assertEquals(NAN, nobsData[y * width + 4]);
+        assertEquals(NAN, nobsData[y * width + 5]);
+        assertEquals(NAN, nobsData[y * width + 6]);
+        assertEquals(NAN, nobsData[y * width + 7]);
+        assertEquals(NAN, nobsData[y * width + 8]);
+        assertEquals(NAN, nobsData[y * width + 9]);
+        assertEquals(NAN, nobsData[y * width + 10]);
+        assertEquals(NAN, nobsData[y * width + 11]);
     }
 
     @Test
@@ -270,6 +279,9 @@ public class L3ReprojectorTest {
         assertTrue(msg, tileWidth == sceneRasterWidth);
     }
 
+    /**
+      * Creates a test bin whose #obs = ID.
+      */
     private TemporalBin createTBin(int idx) {
         TemporalBin temporalBin = binManager.createTemporalBin(idx);
         temporalBin.setNumObs(idx);
@@ -280,33 +292,23 @@ public class L3ReprojectorTest {
         return new BinningContextImpl(binningGrid, new VariableContextImpl(), binManager);
     }
 
-    private static class MyTemporalBinProcessor extends L3Reprojector.TemporalBinProcessor {
-        float[] nobsData;
-        float[] meanData;
-        float[] sigmaData;
+     private static class NobsRaster extends L3Reprojector.TemporalBinProcessor {
+        int[] nobsData;
         private final int w;
-        private final int h;
 
-        private MyTemporalBinProcessor(int w, int h) {
+        private NobsRaster(int w, int h) {
             this.w = w;
-            this.h = h;
-            nobsData = new float[w * h];
-            meanData = new float[w * h];
-            sigmaData = new float[w * h];
+            nobsData = new int[w * h];
         }
 
         @Override
         public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
             nobsData[y * w + x] = temporalBin.getNumObs();
-            meanData[y * w + x] = outputVector.get(0);
-            sigmaData[y * w + x] = outputVector.get(1);
         }
 
         @Override
         public void processMissingBin(int x, int y) throws Exception {
-            nobsData[y * w + x] = Float.NaN;
-            meanData[y * w + x] = Float.NaN;
-            sigmaData[y * w + x] = Float.NaN;
+            nobsData[y * w + x] = -1;
         }
     }
 }

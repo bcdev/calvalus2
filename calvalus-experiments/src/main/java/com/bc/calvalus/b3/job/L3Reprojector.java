@@ -31,10 +31,13 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 
 import java.awt.Rectangle;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 /**
@@ -54,9 +57,6 @@ public class L3Reprojector {
                                  Rectangle pixelRegion,
                                  Path partsDir,
                                  TemporalBinProcessor temporalBinProcessor) throws Exception {
-        BinningGrid binningGrid = binningContext.getBinningGrid();
-        int gridWidth = binningGrid.getNumRows() * 2;
-        int gridHeight = binningGrid.getNumRows();
 
         long startTime = System.nanoTime();
 
@@ -72,47 +72,15 @@ public class L3Reprojector {
 
         Arrays.sort(parts);
 
-        final int y1 = pixelRegion.y;
-        final int y2 = pixelRegion.y + pixelRegion.height - 1;
-
         temporalBinProcessor.begin(binningContext);
         for (FileStatus part : parts) {
             Path partFile = part.getPath();
             SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
-
             LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
-
             try {
-                int lastRowIndex = -1;
-                ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
-                while (true) {
-                    IntWritable binIndex = new IntWritable();
-                    TemporalBin temporalBin = new TemporalBin();
-                    if (!reader.next(binIndex, temporalBin)) {
-                        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
-                            // last row
-                            reprojectRow(binningContext,
-                                         pixelRegion, lastRowIndex, binRow,
-                                         temporalBinProcessor,
-                                         gridWidth, gridHeight);
-                        }
-                        binRow.clear();
-                        break;
-                    }
-                    int rowIndex = binningGrid.getRowIndex(binIndex.get());
-                    if (rowIndex != lastRowIndex) {
-                        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
-                            reprojectRow(binningContext,
-                                         pixelRegion, lastRowIndex, binRow,
-                                         temporalBinProcessor,
-                                         gridWidth, gridHeight);
-                        }
-                        binRow.clear();
-                        lastRowIndex = rowIndex;
-                    }
-                    temporalBin.setIndex(binIndex.get());
-                    binRow.add(temporalBin);
-                }
+                reprojectPart(binningContext, pixelRegion, reader, temporalBinProcessor);
+                // todo - use instead the following method, it can be tested! (nf)
+                // reprojectPart(binningContext, pixelRegion, new TemporalBinIterator(reader), temporalBinProcessor);
             } finally {
                 reader.close();
             }
@@ -123,6 +91,142 @@ public class L3Reprojector {
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
     }
 
+    static void reprojectPart(BinningContext binningContext,
+                              Rectangle pixelRegion,
+                              SequenceFile.Reader temporalBinReader,
+                              TemporalBinProcessor temporalBinProcessor) throws Exception {
+        final int y1 = pixelRegion.y;
+        final int y2 = pixelRegion.y + pixelRegion.height - 1;
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final int gridWidth = binningGrid.getNumRows() * 2;
+        final int gridHeight = binningGrid.getNumRows();
+
+        int lastRowIndex = -1;
+        final ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
+        while (true) {
+            IntWritable binIndex = new IntWritable();
+            TemporalBin temporalBin = new TemporalBin();
+            if (!temporalBinReader.next(binIndex, temporalBin)) {
+                if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+                    // last row
+                    reprojectRow(binningContext,
+                                 pixelRegion, lastRowIndex, binRow,
+                                 temporalBinProcessor,
+                                 gridWidth, gridHeight);
+                }
+                binRow.clear();
+                break;
+            }
+            int rowIndex = binningGrid.getRowIndex(binIndex.get());
+            if (rowIndex != lastRowIndex) {
+                if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+                    reprojectRow(binningContext,
+                                 pixelRegion, lastRowIndex, binRow,
+                                 temporalBinProcessor,
+                                 gridWidth, gridHeight);
+                }
+                binRow.clear();
+                lastRowIndex = rowIndex;
+            }
+            temporalBin.setIndex(binIndex.get());
+            binRow.add(temporalBin);
+        }
+    }
+
+    // todo - use instead the following method, it can be tested! (nf)
+    static void reprojectPart(BinningContext binningContext,
+                              Rectangle pixelRegion,
+                              Iterator<TemporalBin> temporalBins,
+                              TemporalBinProcessor temporalBinProcessor) throws Exception {
+        final int y1 = pixelRegion.y;
+        final int y2 = pixelRegion.y + pixelRegion.height - 1;
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final int gridWidth = binningGrid.getNumRows() * 2;
+        final int gridHeight = binningGrid.getNumRows();
+
+        int lastRowIndex = -1;
+        final ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
+        while (temporalBins.hasNext()) {
+            TemporalBin temporalBin = temporalBins.next();
+            int rowIndex = binningGrid.getRowIndex(temporalBin.getIndex());
+            if (rowIndex != lastRowIndex) {
+                if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+                    reprojectRow(binningContext,
+                                 pixelRegion, lastRowIndex, binRow,
+                                 temporalBinProcessor,
+                                 gridWidth, gridHeight);
+                }
+                binRow.clear();
+                lastRowIndex = rowIndex;
+            }
+            binRow.add(temporalBin);
+        }
+
+        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+            // last row
+            reprojectRow(binningContext,
+                         pixelRegion, lastRowIndex, binRow,
+                         temporalBinProcessor,
+                         gridWidth, gridHeight);
+        }
+    }
+
+    static final class TemporalBinIterator implements Iterator<TemporalBin> {
+        private final SequenceFile.Reader reader;
+        private IntWritable binIndex;
+        private TemporalBin temporalBin;
+        private boolean mustRead;
+        private boolean lastItemValid;
+        private IOException ioException;
+
+        TemporalBinIterator(SequenceFile.Reader reader) {
+            this.reader = reader;
+            mustRead = true;
+            lastItemValid = true;
+        }
+
+        public IOException getIOException() {
+            return ioException;
+        }
+
+        @Override
+        public boolean hasNext() {
+            maybeReadNext();
+            return lastItemValid;
+        }
+
+        @Override
+        public TemporalBin next() {
+            maybeReadNext();
+            if (!lastItemValid) {
+                throw new NoSuchElementException();
+            }
+            mustRead = true;
+            return temporalBin;
+        }
+
+        private void maybeReadNext() {
+            if (mustRead && lastItemValid) {
+                mustRead = false;
+                try {
+                    binIndex = new IntWritable();
+                    temporalBin = new TemporalBin();
+                    lastItemValid = reader.next(binIndex, temporalBin);
+                    if (lastItemValid) {
+                        temporalBin.setIndex(binIndex.get());
+                    }
+                } catch (IOException e) {
+                    ioException = e;
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new IllegalStateException("remove() not supported");
+        }
+    }
 
     static void reprojectRow(BinningContext ctx,
                              Rectangle rectangle,
