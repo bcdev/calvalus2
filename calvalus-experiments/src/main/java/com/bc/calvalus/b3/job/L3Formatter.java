@@ -62,7 +62,7 @@ public class L3Formatter extends Configured implements Tool {
     private String outputFileNameBase;
     private String outputFileNameExt;
     private double pixelSize;
-    private Rectangle pixelRegion;
+    private Rectangle outputRegion;
 
     public static void main(String[] args) {
         if (Boolean.getBoolean("hadoop.debug")) {
@@ -138,13 +138,25 @@ public class L3Formatter extends Configured implements Tool {
         }
 
 
+        computeOutputRegion(l3Config);
+
+        if (outputType.equalsIgnoreCase("Product")) {
+            writeProductFile();
+        } else {
+            writeImageFiles();
+        }
+
+        return 0;
+    }
+
+    private void computeOutputRegion(L3Config l3Config) {
         final Geometry roiGeometry = l3Config.getRegionOfInterest();
         final BinningGrid binningGrid = binningContext.getBinningGrid();
 
         final int gridWidth = binningGrid.getNumRows() * 2;
         final int gridHeight = binningGrid.getNumRows();
         pixelSize = 180.0 / gridHeight;
-        pixelRegion = new Rectangle(gridWidth, gridHeight);
+        outputRegion = new Rectangle(gridWidth, gridHeight);
         if (roiGeometry != null) {
             final Coordinate[] coordinates = roiGeometry.getBoundary().getCoordinates();
             double gxmin = Double.POSITIVE_INFINITY;
@@ -161,19 +173,11 @@ public class L3Formatter extends Configured implements Tool {
             final int y = (int) Math.floor((90.0 - gymax) / pixelSize);
             final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
             final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
-            final Rectangle unclippedPixelRegion = new Rectangle(x, y, width, height);
-            LOG.info("unclippedPixelRegion = " + unclippedPixelRegion);
-            pixelRegion = unclippedPixelRegion.intersection(pixelRegion);
+            final Rectangle unclippedOutputRegion = new Rectangle(x, y, width, height);
+            LOG.info("unclippedOutputRegion = " + unclippedOutputRegion);
+            outputRegion = unclippedOutputRegion.intersection(outputRegion);
         }
-        LOG.info("pixelRegion = " + pixelRegion);
-
-        if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile();
-        } else {
-            writeImageFiles();
-        }
-
-        return 0;
+        LOG.info("outputRegion = " + outputRegion);
     }
 
 
@@ -190,10 +194,10 @@ public class L3Formatter extends Configured implements Tool {
         CrsGeoCoding geoCoding;
         try {
             geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                         pixelRegion.width,
-                                         pixelRegion.height,
-                                         180.0 + pixelSize * pixelRegion.x,
-                                         90.0 - pixelSize * pixelRegion.y,
+                                         outputRegion.width,
+                                         outputRegion.height,
+                                         180.0 + pixelSize * outputRegion.x,
+                                         90.0 - pixelSize * outputRegion.y,
                                          pixelSize,
                                          -pixelSize,
                                          0.0, 0.0);
@@ -202,22 +206,22 @@ public class L3Formatter extends Configured implements Tool {
         } catch (TransformException e) {
             throw new IllegalStateException(e);
         }
-        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", pixelRegion.width, pixelRegion.height);
+        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", outputRegion.width, outputRegion.height);
         product.setGeoCoding(geoCoding);
         product.setStartTime(startTime);
         product.setEndTime(endTime);
 
         final Band indexBand = product.addBand("index", ProductData.TYPE_INT32);
         indexBand.setNoDataValue(-1);
-        final ProductData indexLine = indexBand.createCompatibleRasterData(pixelRegion.width, 1);
+        final ProductData indexLine = indexBand.createCompatibleRasterData(outputRegion.width, 1);
 
         final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
         numObsBand.setNoDataValue(-1);
-        final ProductData numObsLine = numObsBand.createCompatibleRasterData(pixelRegion.width, 1);
+        final ProductData numObsLine = numObsBand.createCompatibleRasterData(outputRegion.width, 1);
 
         final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
         numPassesBand.setNoDataValue(-1);
-        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(pixelRegion.width, 1);
+        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
 
         int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
         final Band[] outputBands = new Band[outputPropertyCount];
@@ -226,7 +230,7 @@ public class L3Formatter extends Configured implements Tool {
             String name = binningContext.getBinManager().getOutputPropertyName(i);
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
             outputBands[i].setNoDataValue(Double.NaN);
-            outputLines[i] = outputBands[i].createCompatibleRasterData(pixelRegion.width, 1);
+            outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
         }
 
         productWriter.writeProductNodes(product, outputFile);
@@ -235,7 +239,7 @@ public class L3Formatter extends Configured implements Tool {
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
-        L3Reprojector.reproject(getConf(), binningContext, pixelRegion, l3OutputDir, dataWriter);
+        L3Reprojector.reproject(getConf(), binningContext, outputRegion, l3OutputDir, dataWriter);
         productWriter.close();
     }
 
@@ -267,16 +271,16 @@ public class L3Formatter extends Configured implements Tool {
         v1s = Arrays.copyOf(v1s, numBands);
         v2s = Arrays.copyOf(v2s, numBands);
 
-        final ImageRaster raster = new ImageRaster(pixelRegion.width, pixelRegion.height, indices);
-        L3Reprojector.reproject(getConf(), binningContext, pixelRegion, l3OutputDir, raster);
+        final ImageRaster raster = new ImageRaster(outputRegion.width, outputRegion.height, indices);
+        L3Reprojector.reproject(getConf(), binningContext, outputRegion, l3OutputDir, raster);
 
         if (outputType.equalsIgnoreCase("RGB")) {
-            writeRgbImage(pixelRegion.width, pixelRegion.height, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
+            writeRgbImage(outputRegion.width, outputRegion.height, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
         } else {
             for (int i = 0; i < numBands; i++) {
                 final String fileName = String.format("%s_%s.%s", outputFileNameBase, names[i], outputFileNameExt);
                 final File imageFile = new File(outputFile.getParentFile(), fileName);
-                writeGrayScaleImage(pixelRegion.width, pixelRegion.height, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
+                writeGrayScaleImage(outputRegion.width, outputRegion.height, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
             }
         }
     }
