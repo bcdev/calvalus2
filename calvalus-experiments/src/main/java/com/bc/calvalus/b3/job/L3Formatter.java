@@ -141,7 +141,7 @@ public class L3Formatter extends Configured implements Tool {
         computeOutputRegion(l3Config);
 
         if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile();
+            writeProductFile(l3Config.getStartTime(), l3Config.getEndTime());
         } else {
             writeImageFiles();
         }
@@ -181,15 +181,11 @@ public class L3Formatter extends Configured implements Tool {
     }
 
 
-    private void writeProductFile() throws Exception {
+    private void writeProductFile(ProductData.UTC startTime, ProductData.UTC endTime) throws Exception {
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
         }
-
-        // todo
-        ProductData.UTC startTime = ProductData.UTC.create(new Date(0L), 0);
-        ProductData.UTC endTime = ProductData.UTC.create(new Date(0L), 0);
 
         CrsGeoCoding geoCoding;
         try {

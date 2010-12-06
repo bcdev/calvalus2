@@ -206,27 +206,10 @@ public class L3Config {
     }
 
     public String[] getInputPath() {
-        String numDaysString = properties.getProperty(CONFNAME_L3_NUM_DAYS);
-        final int numDays;
-        if (numDaysString != null) {
-            numDays = Integer.parseInt(numDaysString);
-        } else {
-            numDays = DEFAULT_L3_NUM_NUM_DAYS;
-        }
+        final int numDays = getNumDays();
         String[] inputPaths = new String[numDays];
-        String startDateString = properties.getProperty(CONFNAME_L3_START_DATE);
-        if (startDateString == null) {
-            throw new IllegalArgumentException(MessageFormat.format("Parameter: ''{0}'' not given.", CONFNAME_L3_START_DATE));
-        }
-        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
-        Date startDate;
-        try {
-            startDate = dateFormat.parse(startDateString);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Illegal start date format.", e);
-        }
-        Calendar calendar = ProductData.UTC.createCalendar();
-        calendar.setTime(startDate);
+        ProductData.UTC startTime = getStartTime();
+        Calendar calendar = startTime.getAsCalendar();
         for (int i = 0; i < inputPaths.length; i++) {
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH) + 1;
@@ -235,6 +218,36 @@ public class L3Config {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
         return inputPaths;
+    }
+
+    private int getNumDays() {
+        String numDaysString = properties.getProperty(CONFNAME_L3_NUM_DAYS);
+        final int numDays;
+        if (numDaysString != null) {
+            numDays = Integer.parseInt(numDaysString);
+        } else {
+            numDays = DEFAULT_L3_NUM_NUM_DAYS;
+        }
+        return numDays;
+    }
+
+    public ProductData.UTC getStartTime() {
+        String startDateString = properties.getProperty(CONFNAME_L3_START_DATE);
+        if (startDateString == null) {
+            throw new IllegalArgumentException(MessageFormat.format("Parameter: ''{0}'' not given.", CONFNAME_L3_START_DATE));
+        }
+        try {
+            return ProductData.UTC.parse(startDateString, "yyyy-MM-dd");
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Illegal start date format.", e);
+        }
+    }
+
+    public ProductData.UTC getEndTime() {
+        ProductData.UTC start = getStartTime();
+        Calendar calendar = start.getAsCalendar();
+        calendar.add(Calendar.DAY_OF_MONTH, getNumDays()-1);
+        return ProductData.UTC.create(calendar.getTime(), 0);
     }
 
     public Path getOutput() {

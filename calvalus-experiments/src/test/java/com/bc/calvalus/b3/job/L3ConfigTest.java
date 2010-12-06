@@ -16,6 +16,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
@@ -27,10 +28,13 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Properties;
 
 import static com.bc.calvalus.b3.job.L3Config.*;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class L3ConfigTest {
     private L3Config l3Config;
@@ -158,7 +162,28 @@ public class L3ConfigTest {
         assertNotNull(inputPath);
         assertEquals(1, inputPath.length);
         assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);
+    }
 
+    @Test
+    public void testStartEndTime() throws ParseException {
+        Properties properties = new Properties();
+        L3Config l3Config = new L3Config(properties);
+        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
+        ProductData.UTC startTime = l3Config.getStartTime();
+        assertNotNull(startTime);
+        Calendar expectedStart = ProductData.UTC.parse("01-JUN-2008 00:00:00").getAsCalendar();
+        assertEqualsCalendar(expectedStart, startTime.getAsCalendar());
+
+        ProductData.UTC endTime = l3Config.getEndTime();
+        assertNotNull(endTime);
+        Calendar expectedEnd = ProductData.UTC.parse("16-JUN-2008 00:00:00").getAsCalendar();
+        assertEqualsCalendar(expectedEnd, endTime.getAsCalendar());
+    }
+
+    private static void assertEqualsCalendar(Calendar expected, Calendar actual) {
+        assertEquals(expected.get(Calendar.YEAR), actual.get(Calendar.YEAR));
+        assertEquals(expected.get(Calendar.MONTH), actual.get(Calendar.MONTH));
+        assertEquals(expected.get(Calendar.DAY_OF_MONTH), actual.get(Calendar.DAY_OF_MONTH));
     }
 
     @Test
