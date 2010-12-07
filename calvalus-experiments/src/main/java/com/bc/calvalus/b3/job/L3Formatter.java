@@ -192,10 +192,10 @@ public class L3Formatter extends Configured implements Tool {
             geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
                                          outputRegion.width,
                                          outputRegion.height,
-                                         180.0 + pixelSize * outputRegion.x,
+                                         -180.0 + pixelSize * outputRegion.x,
                                          90.0 - pixelSize * outputRegion.y,
                                          pixelSize,
-                                         -pixelSize,
+                                         pixelSize,
                                          0.0, 0.0);
         } catch (FactoryException e) {
             throw new IllegalStateException(e);
