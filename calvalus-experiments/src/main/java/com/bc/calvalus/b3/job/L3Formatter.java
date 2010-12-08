@@ -209,14 +209,17 @@ public class L3Formatter extends Configured implements Tool {
 
         final Band indexBand = product.addBand("index", ProductData.TYPE_INT32);
         indexBand.setNoDataValue(-1);
+        indexBand.setNoDataValueUsed(true);
         final ProductData indexLine = indexBand.createCompatibleRasterData(outputRegion.width, 1);
 
         final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
         numObsBand.setNoDataValue(-1);
+        numObsBand.setNoDataValueUsed(true);
         final ProductData numObsLine = numObsBand.createCompatibleRasterData(outputRegion.width, 1);
 
         final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
         numPassesBand.setNoDataValue(-1);
+        numPassesBand.setNoDataValueUsed(true);
         final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
 
         int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
@@ -226,6 +229,7 @@ public class L3Formatter extends Configured implements Tool {
             String name = binningContext.getBinManager().getOutputPropertyName(i);
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
             outputBands[i].setNoDataValue(Double.NaN);
+            outputBands[i].setNoDataValueUsed(true);
             outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
         }
 
