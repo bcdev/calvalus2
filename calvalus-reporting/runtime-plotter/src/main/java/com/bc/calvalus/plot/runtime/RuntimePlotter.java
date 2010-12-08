@@ -92,7 +92,8 @@ public class RuntimePlotter {
                 long traceStop = trace.getStopTime();
                 if (traceStop == TimeUtils.TIME_NULL || traceStop > stop) traceStop = stop;
                 //
-                series.add(new Task(String.valueOf(categoryIndex), new Date(traceStart), new Date(traceStop)));
+//                series.add(new Task(String.valueOf(categoryIndex), new Date(traceStart), new Date(traceStop)));
+                series.add(new Task(categoryValue + "-" + trace.getId(), new Date(traceStart), new Date(traceStop)));
                 //System.out.println(trace);
             }
 
