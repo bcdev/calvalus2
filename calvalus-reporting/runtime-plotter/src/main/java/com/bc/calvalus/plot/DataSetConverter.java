@@ -102,7 +102,9 @@ public class DataSetConverter {
             final Map<String, TaskSeries> hostsMap = new TreeMap<String, TaskSeries>();
             for (Trace trace : traceList) {
                 // m => tasks of type map
-                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {
+                if ("m".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase())) ||
+                        "r".equals(trace.getPropertyValue(RunTimesScanner.Keys.TYPE.name().toLowerCase()))) {
+
                     if (!fitTraceTimeInTimeInterval(scanner, trace)) {
                         continue;
                     }

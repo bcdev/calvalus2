@@ -72,7 +72,7 @@ public class PlotterConfigurator {
 
     public void askForLogFile() {
         Scanner in = new Scanner(System.in);
-        System.out.println("Please enter the full name of the log file you want to plot. " +
+        System.out.println("Please enter the full name and path of the log file you want to plot. " +
                 "There are 2 defaults: type \"default\" or \"errors\".");
         String input = in.next();
         final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";

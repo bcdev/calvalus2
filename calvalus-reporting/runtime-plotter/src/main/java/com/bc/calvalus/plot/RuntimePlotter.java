@@ -83,9 +83,9 @@ public class RuntimePlotter {
 
         //4) draw the chart to some output
         LOGGER.info("saving ...");
-        saveChartAsPng(1500, 800);
+//        saveChartAsPng(1500, 800);
 //        saveChartAsJpg(800, 300);
-        saveChartAsPDF(1500, 800);
+//        saveChartAsPDF(1500, 800);
         saveChartOnScreen();
     }
 
@@ -109,7 +109,7 @@ public class RuntimePlotter {
 
         final CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
         categoryAxis.setLabelFont(defaultFont);
-        if (PlotterConfigurator.getInstance().getNumberOfCategories() > 15 ||
+        if (PlotterConfigurator.getInstance().getNumberOfCategories() > 100 ||
                 PlotterConfigurator.getInstance().getNumberOfCategories() == 0) {
             categoryAxis.setTickLabelsVisible(false);
         } else {
@@ -164,7 +164,10 @@ public class RuntimePlotter {
         // To workaround set property:
 //        System.setProperty("java.awt.headless","true");
         final BufferedImage bufferedImage = chart.createBufferedImage(width, height);
-        ImageIO.write(bufferedImage, "png", new File(userHomeTemp + "myImage.png"));
+        final String fileName = PlotterConfigurator.getInstance().getInputFile();
+        System.out.println("fileName = " + fileName);//todo remove
+        final String dateFromLogfile = fileName.split(".log.")[1];
+        ImageIO.write(bufferedImage, "png", new File(userHomeTemp + dateFromLogfile + ".png"));
         LOGGER.info("ready png");
     }
 
