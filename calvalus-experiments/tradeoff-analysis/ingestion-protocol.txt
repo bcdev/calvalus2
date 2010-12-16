@@ -1,0 +1,219 @@
+hadoop@bcserver13:~/experiments$ date
+Mo 18. Okt 17:06:19 CEST 2010
+hadoop@bcserver13:~/experiments$ bin/runtransfer ../samples/MERIS-RR-product sliced
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-RR-product
+
+real    0m8.779s
+user    0m6.150s
+sys     0m1.210s
+transfer-MERIS-RR-product-sliced-2010-10-18T17:11:41.tmp
+hadoop@bcserver13:~/experiments$ bin/runtransfer ../samples/MERIS-RR-2010-08 n1
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08: No such file or directory.
+ bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+ bin/runtransfer ../samples/MERIS-RR-2010-08 sliced
+
+real    14m52.913s
+user    5m37.830s
+sys     1m24.010s
+transfer-MERIS-RR-2010-08-n1-2010-10-18T17:14:54.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08: No such file or directory.
+
+real    123m15.236s
+user    5m59.900s
+sys     2m44.640s
+transfer-MERIS-RR-2010-08-lineinterleaved-2010-10-18T17:29:48.tmp
+hadoop@bcserver13:~/experiments$ bin/runtransfer ../samples/MERIS-RR-product sliced
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+hadoop@bcserver13:~/experiments$ bin/runtransfer ../samples/MERIS-RR-2010-08 n1
+Deleted hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08
+ bin/runtransfer ../samples/MERIS-RR-product sliced
+ bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+
+real    15m30.099s
+user    5m42.030s
+sys     1m26.850s
+transfer-MERIS-RR-2010-08-n1-2010-10-18T19:33:48.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-product sliced
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-RR-product
+
+real    0m14.752s
+user    0m7.300s
+sys     0m1.710s
+transfer-MERIS-RR-product-sliced-2010-10-18T19:49:19.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+Deleted hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08
+
+real    206m39.637s
+user    10m25.250s
+sys     4m39.070s
+transfer-MERIS-RR-2010-08-lineinterleaved-2010-10-18T19:49:35.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 sliced
+FAILED
+
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+Deleted hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08
+
+real    32m7.380s
+user    5m46.690s
+sys     1m32.420s
+transfer-MERIS-RR-2010-08-lineinterleaved-2010-10-19T12:12:02.tmp
+
+
+hadoop@bcserver13:~/samples/MERIS-RR-2010-08$ time ~/bin/pushtomaster \*
+Interactive mode off.
+
+real    12m10.235s
+user    0m0.760s
+sys     0m50.570s
+
+
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 sliced
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-RR-2010-08
+
+real    23m25.918s
+user    7m30.770s
+sys     1m28.390s
+transfer-MERIS-RR-2010-08-sliced-2010-10-19T14:11:48.tmp
+
+
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-2010-08 lineinterleaved
+Deleted hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08
+
+real    27m55.940s
+user    5m38.880s
+sys     1m27.490s
+transfer-MERIS-RR-2010-08-lineinterleaved-2010-10-19T15:23:28.tmp
+
+
+
+
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-product lineinterleaved
+Deleted hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-product
+
+real    0m16.835s
+user    0m6.030s
+sys     0m1.060s
+transfer-MERIS-RR-product-lineinterleaved-2010-10-19T16:04:30.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-product n1
+Deleted hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-product
+
+real    0m5.904s
+user    0m5.310s
+sys     0m0.790s
+transfer-MERIS-RR-product-n1-2010-10-19T16:05:01.tmp
+hadoop@bcserver13:~/experiments$  bin/runtransfer ../samples/MERIS-RR-product sliced
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-RR-product
+
+real    0m8.692s
+user    0m6.510s
+sys     0m1.330s
+transfer-MERIS-RR-product-sliced-2010-10-19T16:05:12.tmp
+hadoop@bcserver13:~/experiments$ 
+
+
+Transfer 20.10.2010 and ...
+===========================
+
+hadoop@bcserver13:~/samples/MERIS-RR-product$ time ../../bin/pushtomaster \* samples/MERIS-RR-product
+Interactive mode off.
+
+real    0m4.848s
+user    0m0.000s
+sys     0m0.360s
+
+hadoop@bcserver13:~/samples/MERIS-FRS-product$ time ../../bin/pushtomaster \* samples/MERIS-FRS-product
+Interactive mode off.
+
+real    0m15.205s
+user    0m0.010s
+sys     0m1.040s
+
+hadoop@bcserver13:~/samples/MERIS-RR-2010-08$ time ~/bin/pushtomaster \*
+Interactive mode off.
+
+real    12m10.235s
+user    0m0.760s
+sys     0m50.570s
+
+hadoop@bcserver13:~/samples/MERIS-FRS-2008-03$  time ../../bin/pushtomaster \* samples/MERIS-FRS-2008-03
+Interactive mode off.
+
+real    61m17.158s
+user    0m4.260s
+sys     5m34.870s
+
+
+export JAVA_HOME=/opt/java/jdk1.6.0_21
+export PATH=$PATH:~/opt/hadoop-0.20.2/bin
+( date ; sleep 21 ; date ; bin/runtransfer ~/samples/MERIS-FRS-product n1 ; bin/runtransfer ~/samples/MERIS-FRS-product sliced ; bin/runtransfer ~/samples/MERIS-FRS-product lineinterleaved ; date ) 2>&1 | tee output.list-2010-10-21
+
+Deleted hdfs://cvmaster00:9000/data/experiments/n1/MERIS-FRS-product
+
+real    0m17.733s
+user    0m11.950s
+sys     0m2.470s
+transfer-MERIS-FRS-product-n1-2010-10-21T17:18:36.tmp
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-FRS-product
+
+real    0m30.448s
+user    0m18.990s
+sys     0m3.400s
+transfer-MERIS-FRS-product-sliced-2010-10-21T17:18:54.tmp
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-FRS-product: No such file or directory.
+
+real    0m21.711s
+user    0m12.750s
+sys     0m2.610s
+transfer-MERIS-FRS-product-lineinterleaved-2010-10-21T17:16:17.tmp
+
+
+export JAVA_HOME=/opt/java/jdk1.6.0_21 ; export PATH=$PATH:~/opt/hadoop-0.20.2/bin ; ( date ; sleep 21600 ; date ; bin/runtransfer ~/samples/MERIS-FRS-product n1 ; bin/runtransfer ~/samples/MERIS-FRS-product sliced ; bin/runtransfer ~/samples/MERIS-FRS-product lineinterleaved ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 n1 ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 sliced ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 lineinterleaved ; date ) 2>&1 | tee output.list-2010-10-21
+
+Deleted hdfs://cvmaster00:9000/data/experiments/n1/MERIS-FRS-product
+
+real	0m37.679s
+user	0m12.450s
+sys	0m2.680s
+transfer-MERIS-FRS-product-n1-2010-10-22T01:52:36.tmp
+Deleted hdfs://cvmaster00:9000/data/experiments/sliced/MERIS-FRS-product
+
+real	0m47.689s
+user	0m18.060s
+sys	0m3.080s
+transfer-MERIS-FRS-product-sliced-2010-10-22T01:53:14.tmp
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-FRS-product: No such file or directory.
+
+real	0m43.825s
+user	0m14.180s
+sys	0m2.270s
+transfer-MERIS-FRS-product-lineinterleaved-2010-10-22T01:54:02.tmp
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/n1/MERIS-FRS-2008-03: No such file or directory.
+
+real	80m19.387s
+user	22m31.550s
+sys	7m41.500s
+transfer-MERIS-FRS-2008-03-n1-2010-10-22T01:54:47.tmp
+
+hadoop@bcserver13:~/experiments$ bin/runtransfer ~/samples/MERIS-FRS-2008-03 n1
+Deleted hdfs://cvmaster00:9000/data/experiments/n1/MERIS-FRS-2008-03
+
+real    86m41.001s
+user    32m20.550s
+sys     10m50.700s
+
+hadoop@bcserver13:~/experiments$ bin/runtransfer ~/samples/MERIS-FRS-2008-03 lineinterleaved
+rmr: cannot remove hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-FRS-2008-03: No such file or directory.
+
+real    109m5.968s
+user    32m8.520s
+sys     8m5.590s
+transfer-MERIS-FRS-2008-03-lineinterleaved-2010-10-22T14:05:42.tmp
+
+
+Transfer 25.10.2010
+-------------------
+
+export JAVA_HOME=/opt/java/jdk1.6.0_21
+export PATH=$PATH:~/opt/hadoop-0.20.2/bin
+( date ; sleep 21 ; date ; bin/runtransfer ~/samples/MERIS-RR-product n1 ; bin/runtransfer ~/samples/MERIS-RR-product sliced ; bin/runtransfer ~/samples/MERIS-RR-product lineinterleaved ; date ; sleep 21 ; date ; bin/runtransfer ~/samples/MERIS-FRS-product n1 ; bin/runtransfer ~/samples/MERIS-FRS-product sliced ; bin/runtransfer ~/samples/MERIS-FRS-product lineinterleaved ; date ; bin/runtransfer ~/samples/MERIS-RR-2010-08 n1 ; bin/runtransfer ~/samples/MERIS-RR-2010-08 sliced ; bin/runtransfer ~/samples/MERIS-RR-2010-08 lineinterleaved ; date ; sleep 21 ; date ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 n1 ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 sliced ; bin/runtransfer ~/samples/MERIS-FRS-2008-03 lineinterleaved ; date ) 2>&1 | tee output.list-2010-10-25

@@ -1,0 +1,55 @@
+Demo (1) shell inputs
+---------------------
+
+ssh -X boe@10.3.0.220
+cd /home/boe/20101210-MTR
+
+# view request
+less /home/boe/20101210-MTR/l3tool-request-1.properties
+
+# remove output dir
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs
+hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -rmr hdfs://cvmaster00:9000/calvalus/outputs/meris-c2rl3-1/
+rm -r ~/20101210-MTR/meris-c2rl3-1
+
+# submit request
+/home/boe/modules/calvalus/calvalus-experiments/bin/runl3tool.sh /home/boe/20101210-MTR/l3tool-request-1.properties
+
+# show map-reduce engine
+firefox http://cvmaster00:50030/
+# navigate to "Running Jobs", select it
+# select running map task, select its output, show command line, show process trace
+# navigate back to list of map tasks
+
+# show output directory
+hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs/meris-c2rl3-1/
+
+# -----
+
+# view request for product formatting
+less /home/boe/20101210-MTR/l3formatter-product-1.properties
+
+# convert output into product
+mkdir -p ~/20101210-MTR/meris-c2rl3-1
+cd /home/boe/20101210-MTR/meris-c2rl3-1
+# convert output into product
+/home/boe/modules/calvalus/calvalus-experiments/bin/runl3formatter.sh /home/boe/20101210-MTR/l3formatter-product-1.properties
+
+# visualise product
+/home/boe/modules/beam/target/beam-bin.dir/bin/visat-d.sh /home/boe/20101210-MTR/meris-c2rl3-1/meris-c2rl3-1.dim
+
+# -----
+
+# show precomputed NDVI global image
+
+# view request for product formatting
+less /home/boe/20101210-MTR/l3tool-ndvi-1.properties
+# submit request
+/home/boe/modules/calvalus/calvalus-experiments/bin/runl3tool.sh /home/boe/20101210-MTR/l3tool-ndvi-1.properties
+# visualise image
+gnome-open /home/boe/20101210-MTR/results/meris-ndvi-rgb.png
+
+# -----
+
+# show precomputed time series
+
