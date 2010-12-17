@@ -113,6 +113,8 @@ public class PlotterConfigurator {
     }
 
     public void configureStartAndStop(String scannerStart, String scannerStop) {
+        System.out.println("scannerStart = " + scannerStart);
+        System.out.println("scannerStop = " + scannerStop);
         long logStart = TimeUtils.TIME_NULL;
         long logStop = TimeUtils.TIME_NULL;
         try {

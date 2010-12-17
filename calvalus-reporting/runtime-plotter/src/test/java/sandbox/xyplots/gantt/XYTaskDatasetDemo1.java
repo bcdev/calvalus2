@@ -1,4 +1,4 @@
-package sandbox.plots.gantt;
+package sandbox.xyPlots.gantt;
 /* -----------------------
  * XYTaskDatasetDemo1.java
  * -----------------------

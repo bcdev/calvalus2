@@ -12,6 +12,7 @@
 
     <modules>
         <module>runtime-plotter</module>
+        <module>plots</module>
     </modules>
 
     <build>

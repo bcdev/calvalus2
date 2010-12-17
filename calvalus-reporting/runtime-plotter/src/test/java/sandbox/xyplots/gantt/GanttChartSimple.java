@@ -1,4 +1,4 @@
-package sandbox.plots.gantt;
+package sandbox.xyPlots.gantt;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;

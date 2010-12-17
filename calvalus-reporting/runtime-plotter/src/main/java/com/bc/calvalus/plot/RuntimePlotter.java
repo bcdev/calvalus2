@@ -7,7 +7,6 @@ import com.lowagie.text.pdf.DefaultFontMapper;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfTemplate;
 import com.lowagie.text.pdf.PdfWriter;
-//import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -35,6 +34,22 @@ public class RuntimePlotter {
 
     public static void main(String[] args) throws IOException, ParseException {
         // 1) configure
+        final RuntimePlotter chartPlotter = new RuntimePlotter();
+        configureViaCommandLine(args, chartPlotter);
+
+//        final String path = args[0];
+//        final BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
+//
+//        do {
+//
+//        } while()
+//        bufferedReader.readLine()
+
+        // 2) execute
+        chartPlotter.execute();
+    }
+
+    private static RuntimePlotter configureViaCommandLine(String[] args, RuntimePlotter chartPlotter) throws ParseException {
         //todo use CommandLineParser von Apache - http://commons.apache.org/cli/
         //todo better idea: ask for directory with a argument's file
         if (args.length < 2 || !args[0].startsWith("-category=") || !args[1].startsWith("-colour=")) {
@@ -48,7 +63,6 @@ public class RuntimePlotter {
                     "-start=2010-10-28T10:20:00.000Z -stop=2010-10-28T14:00:00.000Z");
             System.exit(0);
         }
-        final RuntimePlotter chartPlotter = new RuntimePlotter();
         final PlotterConfigurator plotterConfigurator = PlotterConfigurator.getInstance();
         plotterConfigurator.setCategory(args[0].split("=")[1]);
         plotterConfigurator.setColouredDimension(args[1].split("=")[1]);
@@ -65,13 +79,12 @@ public class RuntimePlotter {
         }
 
         plotterConfigurator.askForLogFile();
-
-        // 2) execute
-        chartPlotter.execute();
+        return chartPlotter;
     }
 
     private void execute() throws IOException {
         //1) create Dataset
+        //todo review org.jfree.data.gantt.XYTaskDataset
         final DataSetConverter dataSetConverter = new DataSetConverter();
         DataSetConverter.Filter dataFilter = dataSetConverter.createDataFilter(PlotterConfigurator.getInstance());
 
@@ -109,7 +122,7 @@ public class RuntimePlotter {
 
         final CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
         categoryAxis.setLabelFont(defaultFont);
-        if (PlotterConfigurator.getInstance().getNumberOfCategories() > 100 ||
+        if (PlotterConfigurator.getInstance().getNumberOfCategories() > 50 ||
                 PlotterConfigurator.getInstance().getNumberOfCategories() == 0) {
             categoryAxis.setTickLabelsVisible(false);
         } else {

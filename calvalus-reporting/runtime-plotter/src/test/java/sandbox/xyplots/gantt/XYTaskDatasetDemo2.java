@@ -1,4 +1,4 @@
-package sandbox.plots.gantt;/* -----------------------
+package sandbox.xyPlots.gantt;/* -----------------------
  * XYTaskDatasetDemo2.java
  * -----------------------
  * (C) Copyright 2008, by Object Refinery Limited.

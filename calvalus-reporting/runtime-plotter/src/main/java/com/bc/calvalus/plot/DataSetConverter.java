@@ -5,7 +5,9 @@ import org.jfree.data.gantt.Task;
 import org.jfree.data.gantt.TaskSeries;
 import org.jfree.data.gantt.TaskSeriesCollection;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -298,6 +300,8 @@ public class DataSetConverter {
     }
 
     public static class GeneralPropertiesFilter implements Filter {
+        private long traceStart;
+        private long traceStop;
 
         @Override
         public Map<String, TaskSeries> filter(RunTimesScanner scanner) {
@@ -311,7 +315,8 @@ public class DataSetConverter {
             final List<String> colourValids = new ArrayList<String>(scanner.getValids().get(colour));
 
             configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
-
+            System.out.println("configurator.getStart() = " + new Date(configurator.getStart()).toString());
+            System.out.println("configurator.getStop() = " + new Date(configurator.getStop()).toString());
             final Map<String, TaskSeries> taskSeriesMap = new TreeMap<String, TaskSeries>();
             for (String colourValue : colourValids) {
                 TaskSeries series = new TaskSeries(colourValue);
@@ -331,8 +336,11 @@ public class DataSetConverter {
 
                 series.setNotify(true);
                 // check for interval
-                long traceStart = trace.getStartTime();
-                long traceStop = trace.getStopTime();
+//                if (!this.fitTraceTimeInTimeInterval(scanner, trace)) {
+//                    continue;
+//                }
+                traceStart = trace.getStartTime();
+                traceStop = trace.getStopTime();
                 if (traceStart != TimeUtils.TIME_NULL && traceStop < configurator.getStart() ||
                         traceStart != TimeUtils.TIME_NULL && traceStart > configurator.getStop()) {
                     continue;
@@ -343,6 +351,7 @@ public class DataSetConverter {
                 if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
                     traceStop = configurator.getStop();
                 }
+
                 //problem was: they were all named equally (categoryValue)
                 //in the plot they got overwritten  - solution: subtasks
                 series.get(categoryValue).addSubtask(
@@ -351,6 +360,26 @@ public class DataSetConverter {
             configurator.setNumberOfSeries(taskSeriesMap.size());
             configurator.setNumberOfCategories(categoryValids.size());
             return taskSeriesMap;
+        }
+
+        private boolean fitTraceTimeInTimeInterval(RunTimesScanner scanner, Trace trace) {
+            traceStart = trace.getStartTime();
+            traceStop = trace.getStopTime();
+
+            final PlotterConfigurator configurator = PlotterConfigurator.getInstance();
+            configurator.configureStartAndStop(scanner.getStart(), scanner.getStop());
+
+            if (traceStart != TimeUtils.TIME_NULL && traceStop < configurator.getStart() ||
+                    traceStart != TimeUtils.TIME_NULL && traceStart > configurator.getStop()) {
+                return false;   //does not fit
+            }
+            if (traceStart == TimeUtils.TIME_NULL || traceStart < configurator.getStart()) {
+                traceStart = configurator.getStart();
+            }
+            if (traceStop == TimeUtils.TIME_NULL || traceStop > configurator.getStop()) {
+                traceStop = configurator.getStop();
+            }
+            return true;  //fits
         }
     }
 

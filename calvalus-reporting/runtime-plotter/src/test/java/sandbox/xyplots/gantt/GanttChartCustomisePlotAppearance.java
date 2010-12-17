@@ -1,4 +1,4 @@
-package sandbox.plots.gantt;
+package sandbox.xyPlots.gantt;
 
 import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartFactory;
