@@ -33,8 +33,6 @@ public final class Utils {
      */
     private static JPanel createDemoPanel(JFreeChart chart) {
         ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setVerticalAxisTrace(true);
-        chartPanel.setHorizontalAxisTrace(true);
         chartPanel.setPopupMenu(null);
         chartPanel.setDomainZoomable(true);
         chartPanel.setRangeZoomable(true);

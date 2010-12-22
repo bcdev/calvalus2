@@ -15,7 +15,7 @@ import java.awt.*;
 public class Example_XYLinePlotSimple {
 
     public static void main(String[] args) {
-        JFreeChart chart = createChart(new Example_XYDataset2());
+        JFreeChart chart = createChart(new Example_XYDatasetContinuous(30));
         Utils.saveChartOnScreen(600, 600, chart);
 //        Utils.saveChartAsPng(600, 600, chart, "myXYLinePlot");
     }
@@ -52,10 +52,14 @@ public class Example_XYLinePlotSimple {
 
     private static void customiseAxisToEqualScales(XYPlot plot, XYDataset dataset) {
         //find range for quadratic plot
-        final Range rangeRange = ((Example_XYDataset2) dataset).getRange();
-        final Range domainRange = ((Example_XYDataset2) dataset).getDomainRange();
-        final double max = Math.max(rangeRange.getUpperBound(), domainRange.getUpperBound());
-        final double min = Math.min(rangeRange.getLowerBound(), domainRange.getLowerBound());
+        double max = 0;
+        double min = 0;
+        if (dataset instanceof Example_XYDatasetContinuous) {
+            final Range rangeRange = ((Example_XYDatasetContinuous) dataset).getRangeRange();
+            final Range domainRange = ((Example_XYDatasetContinuous) dataset).getDomainRange();
+            max = Math.max(rangeRange.getUpperBound(), domainRange.getUpperBound());
+            min = Math.min(rangeRange.getLowerBound(), domainRange.getLowerBound());
+        }
 
         //configure x axis
         NumberAxis domainAxis = (NumberAxis) plot.getDomainAxis();
@@ -63,7 +67,9 @@ public class Example_XYLinePlotSimple {
         domainAxis.setTickMarkInsideLength(5.0f);
         domainAxis.setTickMarkOutsideLength(0.0f);
         domainAxis.setMinorTickMarksVisible(false);
-        domainAxis.setRange(min, max);
+        if (dataset instanceof Example_XYDatasetContinuous) {
+            domainAxis.setRange(min, max);
+        }
 
         //configure y axis
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();

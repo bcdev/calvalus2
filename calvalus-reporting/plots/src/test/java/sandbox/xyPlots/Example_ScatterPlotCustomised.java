@@ -22,8 +22,8 @@ public class Example_ScatterPlotCustomised {
 
     public static void main(String[] args) {
         JFreeChart chart = createChart(new Example_XYDatasetSimple());
-//        Utils.saveChartOnScreen(600, 600, chart);
-        Utils.saveChartAsPng(600, 600, chart, "myScatter");
+        Utils.saveChartOnScreen(600, 600, chart);
+//        Utils.saveChartAsPng(600, 600, chart, "myScatter");
     }
 
     private static JFreeChart createChart(XYDataset dataset) {
@@ -65,6 +65,8 @@ public class Example_ScatterPlotCustomised {
         customiseAxis(plot);
         customiseLegend(chart);
         chart.setBackgroundPaint(new Color(255, 255, 255));
+        plot.setDomainCrosshairVisible(true);
+        plot.setRangeCrosshairVisible(true);
         return chart;
     }
 

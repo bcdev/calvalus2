@@ -2,6 +2,7 @@ package sandbox.boxWhiskerPlots;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBoxAndWhiskerRenderer;
@@ -19,8 +20,8 @@ public class Example_ChartFactory {
 
         XYItemRenderer renderer = new XYBoxAndWhiskerRenderer();
 
-//        LogAxis rangeAxis = new LogAxis(yAxisLabel); //logarithmic axis
-        NumberAxis rangeAxis = new NumberAxis(yAxisLabel);
+        LogAxis rangeAxis = new LogAxis(yAxisLabel); //logarithmic axis
+//        NumberAxis rangeAxis = new NumberAxis(yAxisLabel);
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         XYPlot plot;
         if (dataset instanceof DefaultBoxAndWhiskerXYDataset) {
