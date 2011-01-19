@@ -1,7 +1,5 @@
 package com.bc.calvalus.experiments.format;
 
-import org.esa.beam.framework.gpf.internal.PerformanceMetric;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
