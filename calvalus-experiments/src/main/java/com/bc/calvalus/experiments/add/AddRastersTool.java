@@ -1,6 +1,6 @@
 package com.bc.calvalus.experiments.add;
 
-import com.bc.calvalus.hadoop.io.ByteArrayWritable;
+import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;

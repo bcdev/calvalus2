@@ -4,20 +4,57 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>com.bc.calvalus</groupId>
+        <artifactId>calvalus</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-binning</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>${calvalus.version}</version>
 
     <name>Calvalus L3 Binning</name>
-    <description>Simple L3 Binning API</description>
+    <description>Level-3 Binning</description>
 
     <dependencies>
         <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-commons</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-processing</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envisat-reader</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+        </dependency>
+
+        <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
-            <version>4.5</version>
         </dependency>
     </dependencies>
 
-    
+
 </project>

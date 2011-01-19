@@ -1,7 +1,7 @@
 package com.bc.calvalus.experiments.transfer;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
-import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGeneratorImpl;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;

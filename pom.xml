@@ -7,14 +7,45 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Calvalus</name>
+    <name>Calvalus Parent</name>
     <description>Calvalus root module</description>
 
+    <properties>
+        <hadoop.version>0.20.2</hadoop.version>
+        <calvalus.version>0.1-SNAPSHOT</calvalus.version>
+        <beam.version>4.9-SNAPSHOT</beam.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+<!--
+    <profiles>
+        <profile>
+            <id>hadoop</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
+-->
+
+
     <modules>
-        <module>calvalus-hadoop</module>
-        <module>calvalus-experiments</module>
+        <module>calvalus-portal</module>
+        <module>calvalus-exchange</module>
+        <module>calvalus-inventory</module>
+        <module>calvalus-production</module>
+        <module>calvalus-mc</module>
+        <module>calvalus-processing</module>
+        <module>calvalus-commons</module>
+
+        <!-- Plug-ins to Calvalus (todo - names to be confirmed in Feb 2011) -->
         <module>calvalus-binning</module>
-        <module>calvalus-reporting</module>
+        <module>calvalus-l2gen</module>
+        <!--<module>calvalus-matchup</module>-->
+        <!--<module>calvalus-trend</module>-->
+
+        <!-- Experimental code. Parts may become productive code later. -->
+        <module>calvalus-experiments</module>
     </modules>
 
     <distributionManagement>
@@ -70,23 +101,50 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>cluster2</name>
+                            <value>${cluster}</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <dependencyManagement>
         <dependencies>
 
+            <!--  Calvalus Modules -->
+
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-commons</artifactId>
+                <version>${calvalus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-processing</artifactId>
+                <version>${calvalus.version}</version>
+            </dependency>
+
+
             <!--  BEAM -->
-            
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>4.9-SNAPSHOT</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
-                <version>4.9-SNAPSHOT</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -94,38 +152,12 @@
                 <version>1.4-SNAPSHOT</version>
             </dependency>
 
-            <!--  BEAM Processors -->
-
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-meris-radiometry</artifactId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-meris-glint</artifactId>
-                <version>1.2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-meris-case2-water</artifactId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-
-            <!--  Envisat N1 Childgen -->
-            
-            <dependency>
-                <groupId>com.bc.eo</groupId>
-                <artifactId>eo-childgen-N1</artifactId>
-                <version>2.0-SNAPSHOT</version>
-            </dependency>
-
             <!--  JUnit -->
-            
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.5</version>
+                <version>4.7</version>
                 <scope>test</scope>
             </dependency>
 
@@ -134,16 +166,16 @@
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
-                <version>0.20.2</version>
+                <version>${hadoop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-test</artifactId>
-                <version>0.20.2</version>
+                <version>${hadoop.version}</version>
             </dependency>
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
-            
+
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
@@ -209,7 +241,7 @@
                 <artifactId>saxon</artifactId>
                 <version>8.8.0.7</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>net.sf.saxon</groupId>
                 <artifactId>saxon-dom</artifactId>

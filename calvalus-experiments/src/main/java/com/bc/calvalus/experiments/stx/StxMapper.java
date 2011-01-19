@@ -1,6 +1,6 @@
 package com.bc.calvalus.experiments.stx;
 
-import com.bc.calvalus.hadoop.io.FSImageInputStream;
+import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;

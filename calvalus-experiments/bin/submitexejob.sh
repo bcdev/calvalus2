@@ -21,8 +21,8 @@ logfile=exejob-`basename ${request%.xml}`-${now}
 
 echo ${commandline}
 
-echo hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.experiments.executables.ExecutablesTool ${request} $@
-time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.experiments.executables.ExecutablesTool ${request} $@ > ${logfile}.tmp 2>&1
+echo hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.shellexec.ExecutablesTool ${request} $@
+time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.shellexec.ExecutablesTool ${request} $@ > ${logfile}.tmp 2>&1
 
 job_number=`cat ${logfile}.tmp | awk "/ Running job: / { print substr(\\$7,5) }"`
 

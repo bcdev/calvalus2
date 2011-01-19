@@ -1,7 +1,7 @@
 package com.bc.calvalus.experiments.format;
 
-import com.bc.calvalus.experiments.util.CalvalusLogger;
-import com.bc.calvalus.hadoop.io.ByteArrayWritable;
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
 import com.bc.childgen.ChildGeneratorFactory;
 import com.bc.childgen.ChildGeneratorImpl;
 import org.apache.hadoop.conf.Configuration;

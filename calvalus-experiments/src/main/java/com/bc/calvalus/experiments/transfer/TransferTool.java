@@ -1,11 +1,11 @@
 package com.bc.calvalus.experiments.transfer;
 
+import com.bc.calvalus.commons.Args;
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.experiments.format.CopyConverter;
 import com.bc.calvalus.experiments.format.FileConverter;
 import com.bc.calvalus.experiments.format.FormatPerformanceMetrics;
 import com.bc.calvalus.experiments.format.N1ToLineInterleavedConverter;
-import com.bc.calvalus.experiments.util.Args;
-import com.bc.calvalus.experiments.util.CalvalusLogger;
 import com.bc.childgen.ChildGenException;
 import com.bc.childgen.ChildGeneratorFactory;
 import com.bc.childgen.ChildGeneratorImpl;
