@@ -1,0 +1,29 @@
+/** Add css rules here for your application. */
+
+/** Example rules used by the template application (remove for your app) */
+h1 {
+    font-size: 2em;
+    font-weight: bold;
+    color: #777777;
+    margin: 30px 10px 30px;
+    text-align: left;
+}
+
+
+.formPanel {
+    margin: 10px;
+    padding: 5px;
+}
+
+
+/** Most GWT widgets already have a style name defined */
+
+.gwt-DialogBox {
+    width: 400px;
+}
+
+.gwt-Button {
+    display: block;
+    font-size: 32pt;
+}
+

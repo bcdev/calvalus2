@@ -13,16 +13,173 @@
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-portal</artifactId>
     <version>${calvalus.version}</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <gwt.version>2.1.0</gwt.version>
+    </properties>
 
     <name>Calvalus Portal</name>
     <description>The frontend for Calvalus.</description>
 
     <dependencies>
         <dependency>
-            <artifactId>junit</artifactId>
-            <groupId>junit</groupId>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-servlet</artifactId>
+            <version>${gwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <version>${gwt.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.gwtopenmaps.openlayers</groupId>
+            <artifactId>gwt-openlayers-client</artifactId>
+            <version>0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartgwt</groupId>
+            <artifactId>smartgwt</artifactId>
+            <version>2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartgwt</groupId>
+            <artifactId>smartgwt-skins</artifactId>
+            <version>2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
     </dependencies>
 
-    
+
+    <repositories>
+        <repository>
+            <id>SmartGWT</id>
+            <name>SmartGWT Maven Repository</name>
+            <url>http://www.smartclient.com/maven2</url>
+        </repository>
+    </repositories>
+
+
+    <build>
+        <!-- Generate compiled stuff in the folder used for developing mode -->
+        <outputDirectory>target/www/WEB-INF/classes</outputDirectory>
+
+        <plugins>
+
+            <!-- GWT Maven Plugin-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>gwt-maven-plugin</artifactId>
+                <!-- JS is only needed in the package phase, this speeds up testing -->
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <!-- Plugin configuration. There are many available options,
+           see gwt-maven-plugin documentation at codehaus.org -->
+                <configuration>
+                    <!-- URL that should be automatically opened in the GWT shell (gwt:run). -->
+                    <runTarget>CalvalusApp.html</runTarget>
+                    <!-- Location of the develop-mode web application structure (gwt:run). -->
+                    <hostedWebapp>target/www</hostedWebapp>
+                    <!-- Ask GWT to create the Story of Your Compile (SOYC) (gwt:compile) -->
+                    <soyc>true</soyc>
+                </configuration>
+            </plugin>
+
+            <!-- Add source folders to test classpath in order to run gwt-tests as normal junit-tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.build.sourceDirectory}</additionalClasspathElement>
+                        <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
+                    </additionalClasspathElements>
+                    <useManifestOnlyJar>false</useManifestOnlyJar>
+                    <forkMode>always</forkMode>
+
+                    <!-- Folder for generated testing stuff -->
+                    <systemProperties>
+                        <property>
+                            <name>gwt.args</name>
+                            <value>-out target/www</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+
+            <!-- Copy static web files before executing gwt:run -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Delete gwt generated stuff -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>src/main/webapp/calvalusapp</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/main/webapp/WEB-INF/classes</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>tomcat</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>www-test</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>.gwt-tmp</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 </project>
