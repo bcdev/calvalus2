@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Martin Boettcher
  */
+@Ignore
 public class HdfsTransferToolTest {
     private static final String TMP_INPUT = "/tmp/input";
     private static final String HDFS_OUTPUT = "hdfs://localhost:9000/output";

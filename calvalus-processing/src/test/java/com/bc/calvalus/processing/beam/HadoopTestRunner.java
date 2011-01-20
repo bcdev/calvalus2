@@ -22,7 +22,7 @@ import java.util.Set;
                 <activeByDefault>true</activeByDefault>
             </activation>
 			<properties>
-			    <calvalus.hadoopAvailable>true</calvalus.hadoopAvailable>
+			    <calvalus.testrunner.hadoopAvailable>true</calvalus.testrunner.hadoopAvailable>
 			</properties>
         </profile>
     </profiles>
@@ -32,7 +32,7 @@ import java.util.Set;
  */
 public class HadoopTestRunner extends BlockJUnit4ClassRunner {
 
-    public static final String CALVALUS_HADOOP_AVAILABLE = "calvalus.hadoopAvailable";
+    public static final String CALVALUS_HADOOP_AVAILABLE = "calvalus.testrunner.hadoopAvailable";
     private boolean hadoopAvailable = Boolean.getBoolean(CALVALUS_HADOOP_AVAILABLE);
 
     public HadoopTestRunner(Class<?> testClass) throws InitializationError {

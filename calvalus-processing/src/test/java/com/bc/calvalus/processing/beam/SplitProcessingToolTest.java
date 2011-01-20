@@ -10,7 +10,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -28,6 +30,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Martin Boettcher
  */
+@Ignore
 public class SplitProcessingToolTest {
     private static final String TMP_INPUT = "hdfs://localhost:9000/user/boe/meris-l1";
     private static final String TMP_OUTPUT = "hdfs://localhost:9000/user/boe/meris-l2";

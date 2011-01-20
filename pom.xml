@@ -17,16 +17,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-<!--
-    <profiles>
-        <profile>
-            <id>hadoop</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-    </profiles>
--->
+    <!--
+        <profiles>
+            <profile>
+                <id>hadoop</id>
+                <activation>
+                    <activeByDefault>true</activeByDefault>
+                </activation>
+            </profile>
+        </profiles>
+    -->
 
 
     <modules>
@@ -106,9 +106,17 @@
                 <version>2.4.3</version>
                 <configuration>
                     <systemProperties>
+                        <!--
+                             This property is set in your <user>/.m2/settings.xml file.
+                             Set to 'true', if you have a Hadoop cluster up and running.
+
+    private static final String TMP_INPUT = "hdfs://localhost:9000/input";
+    private static final String TMP_OUTPUT = "hdfs://localhost:9000/output";
+
+                         -->
                         <property>
-                            <name>cluster2</name>
-                            <value>${cluster}</value>
+                            <name>calvalus.testrunner.hadoopAvailable</name>
+                            <value>${calvalus.testrunner.hadoopAvailable}</value>
                         </property>
                     </systemProperties>
                 </configuration>

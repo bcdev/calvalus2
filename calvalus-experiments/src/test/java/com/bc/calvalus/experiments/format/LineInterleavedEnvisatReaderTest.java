@@ -5,6 +5,7 @@ import org.esa.beam.dataio.envisat.ProductFile;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.Stx;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.imageio.stream.FileImageInputStream;
@@ -18,7 +19,7 @@ import java.io.OutputStream;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-
+@Ignore
 public class LineInterleavedEnvisatReaderTest {
     private static final int ONE_MB = 1024 * 1024;
 
