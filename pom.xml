@@ -113,8 +113,34 @@
                     </systemProperties>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <links>
+                        <link>http://download.oracle.com/javase/6/docs/api/</link>
+                        <link>http://hadoop.apache.org/mapreduce/docs/r0.21.0/api/</link>
+                    </links>
+                    <aggregate>true</aggregate>
+                    <subpackages>
+                        com.bc.calvalus
+                    </subpackages>
+                    <excludePackageNames>
+                        *.internal
+                    </excludePackageNames>
+                    <maxmemory>512M</maxmemory>
+                    <quiet>false</quiet>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <dependencyManagement>
         <dependencies>
