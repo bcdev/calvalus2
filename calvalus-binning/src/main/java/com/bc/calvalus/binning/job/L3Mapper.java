@@ -84,7 +84,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         if (source == null) {
             throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", path));
         }
-        final Product product = l3Config.getProcessedProduct(source);
+        final Product product = l3Config.getPreProcessedProduct(source);
         if (product != null) {
             try {
                 processProduct(product, ctx, spatialBinner);

@@ -87,7 +87,7 @@ public class L3Config {
         }
     }
 
-    public Product getProcessedProduct(Product product) {
+    public Product getPreProcessedProduct(Product product) {
 
         product = getProductSpatialSubset(product);
         if (product == null) {
@@ -145,7 +145,7 @@ public class L3Config {
         pixelRegion.grow(numBorderPixels, numBorderPixels);
         Rectangle result = pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
                                                                         product.getSceneRasterHeight()));
-        if (true) { // TODO add option for full swath subsets
+        if (true) { // TODO add option for full swath subsets which are required for case2r (angular correction)
             return new Rectangle(0, result.y, product.getSceneRasterWidth(), result.height);    
         } else {
             return result;
