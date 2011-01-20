@@ -13,10 +13,14 @@
     <version>${calvalus.version}</version>
     <packaging>jar</packaging>
 
-    <name>Calvalus Hadoop-Processor Adapter</name>
-    <description>The glue that brings together processors (e.g. from BEAM) and Hadoop</description>
+    <name>Calvalus Processing</name>
+    <description>
+        Provides various Processor-to-Hadoop adapters, the glue that brings together EO data
+        processors (e.g. from BEAM and shell executables) and Hadoop.
+    </description>
 
     <dependencies>
+
         <!--  Calvalus -->
 
         <dependency>
@@ -24,14 +28,12 @@
             <artifactId>calvalus-commons</artifactId>
         </dependency>
 
-
         <!--  BEAM -->
 
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
@@ -54,7 +56,6 @@
             <artifactId>beam-meris-case2-water</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
 
         <!--  Hadoop -->
         
