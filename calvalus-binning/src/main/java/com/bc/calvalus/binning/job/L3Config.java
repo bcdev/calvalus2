@@ -24,7 +24,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.ProductUtils;
@@ -41,7 +45,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 import static java.lang.Math.*;
 
@@ -143,13 +152,8 @@ public class L3Config {
         regionIntersection.apply(pixelRegionFinder);
         final Rectangle pixelRegion = pixelRegionFinder.getPixelRegion();
         pixelRegion.grow(numBorderPixels, numBorderPixels);
-        Rectangle result = pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
-                                                                        product.getSceneRasterHeight()));
-        if (true) { // TODO add option for full swath subsets which are required for case2r (angular correction)
-            return new Rectangle(0, result.y, product.getSceneRasterWidth(), result.height);    
-        } else {
-            return result;
-        }
+        return pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
+                                                      product.getSceneRasterHeight()));
     }
 
     static Geometry computeProductGeometry(Product product) {
@@ -249,7 +253,7 @@ public class L3Config {
     public ProductData.UTC getEndTime() {
         ProductData.UTC start = getStartTime();
         Calendar calendar = start.getAsCalendar();
-        calendar.add(Calendar.DAY_OF_MONTH, getNumDays()-1);
+        calendar.add(Calendar.DAY_OF_MONTH, getNumDays() - 1);
         return ProductData.UTC.create(calendar.getTime(), 0);
     }
 
