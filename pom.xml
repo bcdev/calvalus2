@@ -36,43 +36,8 @@
         <module>calvalus-experiments</module>
     </modules>
 
-<!-- todo - enable, once distribution of Calvalus we this make sense-->
-<!--
-    <distributionManagement>
-        <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <uniqueVersion>false</uniqueVersion>
-        </repository>
-        <snapshotRepository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Snapshot Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <uniqueVersion>false</uniqueVersion>
-        </snapshotRepository>
-    </distributionManagement>
--->
-
     <repositories>
-        <!-- todo - enable, once we need closed-source dependencies -->
-<!--
-        <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
--->
-
-        <repository>
+       <repository>
             <id>bc-mvn-repo-http</id>
             <name>Public Maven Repository at Brockmann Consult</name>
             <url>http://www.brockmann-consult.de/mvn/os</url>
@@ -112,13 +77,22 @@
                     </systemProperties>
                 </configuration>
             </plugin>
+
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
                 <configuration>
                     <links>
                         <link>http://download.oracle.com/javase/6/docs/api/</link>
                         <link>http://hadoop.apache.org/mapreduce/docs/r0.21.0/api/</link>
+                        <link>http://hadoop.apache.org/hdfs/docs/r0.21.0/api/</link>
+                        <link>http://www.brockmann-consult.de/beam/doc/apidocs/</link>
+                        <!-- check: really need this? -->
+                        <link>http://google-web-toolkit.googlecode.com/svn/javadoc/1.5/</link>
                     </links>
+                    <linksource>true</linksource>
+                    <detectLinks>true</detectLinks>
+                    <detectJavaApiLink>true</detectJavaApiLink>
                     <aggregate>true</aggregate>
                     <subpackages>com.bc.calvalus</subpackages>
                     <excludePackageNames>*.internal</excludePackageNames>
