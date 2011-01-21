@@ -24,7 +24,7 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-commons</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-processing</artifactId>
@@ -43,7 +43,7 @@
         </dependency>
 
         <!--  Hadoop -->
-        
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
@@ -62,7 +62,7 @@
         </dependency>
 
         <!--  JUnit -->
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -81,6 +81,25 @@
         </dependency>
 
     </dependencies>
+
+    <!--
+        todo - this repo is for eo-child-gen only, remove it once we don't need eo-child-gen anymore
+    -->
+    <repositories>
+        <repository>
+            <id>bc-mvn-repo-closed</id>
+            <name>Private Maven Repository at Brockmann Consult</name>
+            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
