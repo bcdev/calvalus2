@@ -7,7 +7,7 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Calvalus Parent</name>
+    <name>Calvalus</name>
     <description>Calvalus root module</description>
 
     <properties>
@@ -16,18 +16,6 @@
         <beam.version>4.9-SNAPSHOT</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <!--
-        <profiles>
-            <profile>
-                <id>hadoop</id>
-                <activation>
-                    <activeByDefault>true</activeByDefault>
-                </activation>
-            </profile>
-        </profiles>
-    -->
-
 
     <modules>
         <module>calvalus-portal</module>
@@ -48,6 +36,8 @@
         <module>calvalus-experiments</module>
     </modules>
 
+<!-- todo - enable, once distribution of Calvalus we this make sense-->
+<!--
     <distributionManagement>
         <repository>
             <id>bc-mvn-repo-closed</id>
@@ -62,12 +52,15 @@
             <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
+-->
 
     <repositories>
+        <!-- todo - enable, once we need closed-source dependencies -->
+<!--
         <repository>
-            <id>bc-mvn-repo-http</id>
-            <name>Public Maven Repository at Brockmann Consult</name>
-            <url>http://www.brockmann-consult.de/mvn/os</url>
+            <id>bc-mvn-repo-closed</id>
+            <name>Private Maven Repository at Brockmann Consult</name>
+            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -77,10 +70,12 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+-->
+
         <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <id>bc-mvn-repo-http</id>
+            <name>Public Maven Repository at Brockmann Consult</name>
+            <url>http://www.brockmann-consult.de/mvn/os</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -109,10 +104,6 @@
                         <!--
                              This property is set in your <user>/.m2/settings.xml file.
                              Set to 'true', if you have a Hadoop cluster up and running.
-
-    private static final String TMP_INPUT = "hdfs://localhost:9000/input";
-    private static final String TMP_OUTPUT = "hdfs://localhost:9000/output";
-
                          -->
                         <property>
                             <name>calvalus.testrunner.hadoopAvailable</name>
@@ -129,12 +120,8 @@
                         <link>http://hadoop.apache.org/mapreduce/docs/r0.21.0/api/</link>
                     </links>
                     <aggregate>true</aggregate>
-                    <subpackages>
-                        com.bc.calvalus
-                    </subpackages>
-                    <excludePackageNames>
-                        *.internal
-                    </excludePackageNames>
+                    <subpackages>com.bc.calvalus</subpackages>
+                    <excludePackageNames>*.internal</excludePackageNames>
                     <maxmemory>512M</maxmemory>
                     <quiet>false</quiet>
                 </configuration>
