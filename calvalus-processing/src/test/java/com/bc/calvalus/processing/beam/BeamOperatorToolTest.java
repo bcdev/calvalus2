@@ -15,8 +15,8 @@ import static org.junit.Assert.*;
  * Test for {@link BeamOperatorTool}.
  */
 public class BeamOperatorToolTest {
-    private static final String REQUEST = "calvalus-processing/src/test/resources/l2gen-local-request.xml";
-    private static final String OUTPUT_DIR = "file:///tmp/meris-l2gen-99";
+    private static final String REQUEST = "calvalus-processing/src/test/resources/beam-l2-sample-request.xml";
+    private static final String OUTPUT_DIR = "file:///tmp/meris-l2beam-99";
 
     @Test
     public void testCommandLine() throws Exception {
@@ -27,7 +27,7 @@ public class BeamOperatorToolTest {
                    ! outputFile.getFileSystem(new Configuration()).exists(outputFile));
 
         // Run the job
-        ToolRunner.run(new ExecutablesTool(), new String[] { REQUEST });
+        ToolRunner.run(new BeamOperatorTool(), new String[] { REQUEST });
 
         assertTrue("Shall now exist: " + outputFile,
                    outputFile.getFileSystem(new Configuration()).exists(outputFile));

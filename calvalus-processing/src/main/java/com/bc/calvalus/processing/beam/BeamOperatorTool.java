@@ -10,9 +10,13 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -53,6 +57,9 @@ public class BeamOperatorTool extends Configured implements Tool {
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
 
     private static Options options;
+    private static final String PROCESSOR_PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
+    private static final String PROCESSOR_VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
+
     static {
         options = new Options();
     }
@@ -97,8 +104,20 @@ public class BeamOperatorTool extends Configured implements Tool {
             Job job = new Job(getConf(), requestPath);  // TODO improve job identification
             job.getConfiguration().set("calvalus.request", requestContent);
             job.setInputFormatClass(ExecutablesInputFormat.class);
-            job.setMapperClass(ExecutablesMapper.class);
+            job.setMapperClass(BeamOperatorMapper.class);
+
             job.setJarByClass(getClass());
+
+            // put processor onto the classpath
+            final String processorPackage = request.getString(PROCESSOR_PACKAGE_XPATH);
+            final String processorVersion = request.getString(PROCESSOR_VERSION_XPATH);
+            addPackageToClassPath(processorPackage + "-" + processorVersion, job.getConfiguration());
+
+            // put BEAM and BEAM 3rd party-libs onto the classpath
+            final String beamPackage = "beam";
+            final String beamVersion = "4.9-SNAPSHOT";
+            addPackageToClassPath(beamPackage + "-" + beamVersion, job.getConfiguration());
+
             job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
@@ -124,10 +143,10 @@ public class BeamOperatorTool extends Configured implements Tool {
         } catch (ArrayIndexOutOfBoundsException e) {
 
             HelpFormatter helpFormatter = new HelpFormatter();
-            helpFormatter.printHelp("shellexec <request-file>",
-                                    "submit a processing request for an executable processor",
+            helpFormatter.printHelp("beamexec <request-file>",
+                                    "submit a processing request for a BEAM operator processor",
                                     options,
-                                    "Example: shellexec l2gen-request.xml");
+                                    "Example: beamexec beam-l2-sample-request.xml");
             return 1;
 
         } catch (FileNotFoundException e) {
@@ -137,9 +156,23 @@ public class BeamOperatorTool extends Configured implements Tool {
 
         } catch (IOException e) {
 
-            System.err.println("failed reading request file " + requestPath + ": " + e.getMessage());
+            System.err.println("failed handling request file " + requestPath + ": " + e.getMessage());
             return 1;
 
+        }
+    }
+
+    private void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
+        final Path beamPath = new Path("hdfs://cvmaster00:9000/calvalus/software/" + packageName);
+        final FileSystem beamFileSystem = beamPath.getFileSystem(configuration);
+        final FileStatus[] beamJars = beamFileSystem.listStatus(beamPath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith("jar");
+            }
+        });
+        for (FileStatus beamJar : beamJars) {
+            DistributedCache.addFileToClassPath(beamJar.getPath(), configuration);
         }
     }
 }

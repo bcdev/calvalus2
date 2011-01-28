@@ -57,6 +57,21 @@ public class XmlDoc {
     }
 
     /**
+     * Returns XPath value for document as string,
+     * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
+     * @return  string content of addressed element or attribute, null if path does not exist in document
+     * @throws XPathExpressionException  XPath expression not well formed
+     */
+    public String getString(String path, String defaultValue) throws XPathExpressionException {
+        String result = xpath.evaluate(path, doc);
+        if (result == null) {
+            return defaultValue;
+        } else {
+            return result;
+        }
+    }
+
+    /**
      * Returns XPath value starting at node as string, verifies that path exists
      * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
      * @param node  start node to apply path to
@@ -69,6 +84,23 @@ public class XmlDoc {
         if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
         return result;
     }
+
+    /**
+     * Returns XPath value starting at node as string.
+     * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
+     * @param node  start node to apply path to
+     * @return  string content of addressed element or attribute, null if path does not exist
+     * @throws XPathExpressionException  XPath expression not well formed
+     */
+    public String getString(String path, Node node, String defaultValue) throws IllegalArgumentException, XPathExpressionException {
+        String result = xpath.evaluate(path, node);
+        if (result == null) {
+            return defaultValue;
+        } else {
+            return result;
+        }
+    }
+
 
     /**
      * Returns list of nodes at XPath expression in document
