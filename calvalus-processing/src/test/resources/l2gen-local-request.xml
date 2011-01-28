@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?> 
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ../wpsExecute_request.xsd">
+  <ows:Identifier>l2gen</ows:Identifier> 
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier> 
+      <ows:Title>software installation package name</ows:Title> 
+      <wps:Data>
+        <wps:LiteralData>seadas</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.version</ows:Identifier> 
+      <ows:Title>software installation package version</ows:Title> 
+      <wps:Data>
+        <wps:LiteralData>6.1</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier> 
+      <ows:Title>output directory</ows:Title> 
+      <wps:Data>
+        <wps:Reference xlink:href="file:///tmp/meris-l3gen-99" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1" /> 
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_025842_000026382028_00333_12411_0000.N1" /> 
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_043918_000026382028_00334_12412_0000.N1" /> 
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_061955_000026382028_00335_12413_0000.N1" /> 
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_080031_000026382028_00336_12414_0000.N1" /> 
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> 
+      <ows:Title>MERIS L1B input</ows:Title> 
+      <wps:Reference xlink:href="hdfs://localhost:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_094107_000026382028_00337_12415_0000.N1" /> 
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>eline</ows:Identifier> 
+      <ows:Title>Ending scan line number to be processed. (Default=0, meaning the last line of the file)</ows:Title> 
+      <wps:Data>
+        <wps:LiteralData>100</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier> 
+        <ows:Title>directory of l2 output files</ows:Title> 
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>

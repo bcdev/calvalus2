@@ -2,6 +2,11 @@ package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.Args;
 import com.bc.calvalus.commons.CalvalusLogger;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -47,6 +52,11 @@ public class ExecutablesTool extends Configured implements Tool {
     private static final String TYPE_XPATH = "/Execute/Identifier";
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
 
+    private static Options options;
+    static {
+        options = new Options();
+    }
+
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new ExecutablesTool(), args));
     }
@@ -64,11 +74,12 @@ public class ExecutablesTool extends Configured implements Tool {
         String requestPath = null;
         try {
             // parse command line arguments
-            final Args options = new Args(args);
-            requestPath = options.getArgs()[0];
+            CommandLineParser commandLineParser = new PosixParser();
+            final CommandLine commandLine = commandLineParser.parse(options, args);
+            requestPath = commandLine.getArgs()[0];
 
             // parse request
-            final String requestContent = readFile(requestPath);  // we need the content later on
+            final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
             final XmlDoc request = new XmlDoc(requestContent);
             final String requestType = request.getString(TYPE_XPATH);
             final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
@@ -112,8 +123,11 @@ public class ExecutablesTool extends Configured implements Tool {
 
         } catch (ArrayIndexOutOfBoundsException e) {
 
-            System.err.println("usage:   ExecutablesTool <request>");
-            System.err.println("example: ExecutablesTool l2gen-request.xml");
+            HelpFormatter helpFormatter = new HelpFormatter();
+            helpFormatter.printHelp("shellexec <request-file>",
+                                    "submit a processing request for an executable processor",
+                                    options,
+                                    "Example: shellexec l2gen-request.xml");
             return 1;
 
         } catch (FileNotFoundException e) {
@@ -127,13 +141,5 @@ public class ExecutablesTool extends Configured implements Tool {
             return 1;
 
         }
-    }
-
-    private String readFile(String path) throws IOException, FileNotFoundException {
-        File file = new File(path);
-        Reader in = new FileReader(file);
-        char[] buffer = new char[(int) file.length()];
-        in.read(buffer);
-        return new String(buffer);
     }
 }
