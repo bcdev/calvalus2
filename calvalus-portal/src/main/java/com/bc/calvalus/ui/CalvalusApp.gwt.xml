@@ -15,7 +15,12 @@
     <!-- Other module inherits                                      -->
 
     <!-- Specify the app entry point class.                         -->
-    <entry-point class='com.bc.calvalus.ui.client.SmartCalvalusApp'/>
+
+    <!-- Uncomment to test the plain GWT version of the CalvalusApp        -->
+    <entry-point class='com.bc.calvalus.ui.client.CalvalusApp'/>
+
+    <!-- Uncomment to test the SmartGWT version of the CalvalusApp        -->
+    <!--<entry-point class='com.bc.calvalus.ui.client.SmartCalvalusApp'/>-->
 
     <!-- Specify the paths for translatable code                    -->
     <source path='client'/>
