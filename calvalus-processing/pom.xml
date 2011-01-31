@@ -41,24 +41,24 @@
 
         <!--  BEAM Processors -->
 
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-radiometry</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-glint</artifactId>
-            <version>1.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-case2-water</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--<groupId>org.esa.beam</groupId>-->
+        <!--<artifactId>beam-meris-radiometry</artifactId>-->
+        <!--<version>1.0-SNAPSHOT</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--<groupId>org.esa.beam</groupId>-->
+        <!--<artifactId>beam-meris-glint</artifactId>-->
+        <!--<version>1.2-SNAPSHOT</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--<groupId>org.esa.beam</groupId>-->
+        <!--<artifactId>beam-meris-case2-water</artifactId>-->
+        <!--<version>1.0-SNAPSHOT</version>-->
+        <!--</dependency>-->
 
         <!--  Hadoop -->
-        
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
@@ -88,7 +88,7 @@
         </dependency>
 
         <!--  JUnit -->
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -96,5 +96,32 @@
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-jars</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>false</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.esa.beam</groupId>
+                                    <artifactId>beam-meris-radiometry</artifactId>
+                                    <version>1.0-SNAPSHOT</version>
+                                    <outputDirectory>/tmp/calvalus/software/beam-meris-radiometry-1.0-SNAPSHOT</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

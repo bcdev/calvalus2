@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?> 
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+  <ows:Identifier>Meris.CorrectRadiometry</ows:Identifier>
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier> 
+      <ows:Title>software installation package name</ows:Title> 
+      <wps:Data>
+        <wps:LiteralData>beam-meris-radiometry</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.version</ows:Identifier> 
+      <ows:Title>software installation package version</ows:Title> 
+      <wps:Data>
+        <wps:LiteralData>1.0-SNAPSHOT</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier> 
+      <ows:Title>output directory</ows:Title> 
+      <wps:Data>
+        <wps:Reference xlink:href="file:///tmp/meris-l2beam-99" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="file:///home/boe/modules/calvalus/calvalus-processing/src/test/resources/MER_RR__1P.N1" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>doCalibration</ows:Identifier>
+      <ows:Title>Whether to perform the calibration. Default value is 'true'.</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>true</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <!--
+    <wps:Input>
+      <ows:Identifier>sourceRacFile</ows:Identifier>
+      <ows:Title>The radiometric correction auxiliary file for the source product</ows:Title>
+      <wps:Data>
+        <wps:LiteralData></wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    -->
+    <!--
+    <wps:Input>
+      <ows:Identifier>targetRacFile</ows:Identifier>
+      <ows:Title>The radiometric correction auxiliary file for the target product</ows:Title>
+      <wps:Data>
+        <wps:LiteralData></wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    -->
+    <wps:Input>
+      <ows:Identifier>doSmile</ows:Identifier>
+      <ows:Title>Whether to perform SMILE correction. Default value is 'true'.</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>true</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>reproVersion</ows:Identifier>
+      <ows:Title>The version of the reprocessing the product comes from. Is only used if equalisation is enabled. Value must be one of 'AUTO_DETECT', 'REPROCESSING_2', 'REPROCESSING_3'. Default value is 'AUTO_DETECT'.</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>AUTO_DETECT</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>doEqualization</ows:Identifier>
+      <ows:Title>Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products. Default value is 'true'.</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>true</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>doRadToRefl</ows:Identifier>
+      <ows:Title>Whether to perform radiance-to-reflectance conversion. Default value is 'true'.</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>true</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+ <!--   <wps:Input>
+      <ows:Identifier>variables</ows:Identifier>
+      <ows:Title></ows:Title>
+      <wps:Data>
+        <wps:ComplexData>
+            <variables>
+                <variable>
+                    <name>string1</name>
+                    <type>string</type>
+                    <value>string1</value>
+                </variable>
+                <variable>
+                    <name>string2</name>
+                    <type>string</type>
+                    <value>string2</value>
+                </variable>
+            </variables>
+        </wps:ComplexData>
+      </wps:Data>
+    </wps:Input>-->
+
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier> 
+        <ows:Title>directory of l2 output files</ows:Title> 
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>

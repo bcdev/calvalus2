@@ -14,6 +14,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.dataio.envisat.ProductFile;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -46,6 +47,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
     private static final String INPUT_IDENTIFIER_XPATH = "Identifier";
     private static final String INPUT_LITERAL_DATA_XPATH = "Data/LiteralData";
     private static final String INPUT_COMPLEX_DATA_XPATH = "Data/ComplexData";
+    private static final int TILE_HEIGHT = 512;
 
     /**
      * Mapper implementation method. See class comment.
@@ -96,21 +98,20 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             final FileStatus        status           = fs.getFileStatus(input);
             final FSDataInputStream in               = fs.open(input);
             final ImageInputStream  imageInputStream = new FSImageInputStream(in, status.getLen());
-            //System.setProperty("beam.envisat.tileHeight", Integer.toString(tileHeight));  // TODO handle tile height or use default
+            System.setProperty("beam.envisat.tileHeight", Integer.toString(TILE_HEIGHT));
             final EnvisatProductReaderPlugIn plugIn  = new EnvisatProductReaderPlugIn();
             final ProductReader     productReader    = plugIn.createReaderInstance();
-            final ProductFile       productFile      = ProductFile.open(null, imageInputStream);
-            final Product           sourceProduct    = productReader.readProductNodes(productFile, null);
+            final Product           sourceProduct    = productReader.readProductNodes(imageInputStream, null);
 
             // set up operator and target product
+            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
             final Product targetProduct = GPF.createProduct(requestType, parameters, sourceProduct);
             LOG.info(context.getTaskAttemptID() + " target product created");
 
             // process input and write target product
             final String outputFileName = "L2_of_" + input.getName() + ".seq";
             final Path outputProductPath = new Path(requestOutputPath, outputFileName);
-            //StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, tileHeight);
-            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, 1024);  // TODO use proper writer, maybe use request parameter to select output format
+            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, TILE_HEIGHT);
 
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();
