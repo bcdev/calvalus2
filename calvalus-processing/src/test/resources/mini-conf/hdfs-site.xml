@@ -1,6 +1,7 @@
 <configuration>
-  <property>
-    <name>fs.default.name</name>
-    <value>hdfs://localhost:9000</value>
-  </property>
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
 </configuration>
+
