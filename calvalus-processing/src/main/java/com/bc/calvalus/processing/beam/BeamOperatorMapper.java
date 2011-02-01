@@ -4,6 +4,13 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
+import com.bc.ceres.binding.ConversionException;
+import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.PropertySet;
+import com.bc.ceres.binding.ValidationException;
+import com.bc.ceres.binding.dom.DefaultDomConverter;
+import com.bc.ceres.binding.dom.DomElement;
+import com.thoughtworks.xstream.io.xml.xppdom.Xpp3Dom;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -13,17 +20,24 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.dataio.envisat.ProductFile;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.imageio.stream.ImageInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,32 +76,19 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
 
         try {
+            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
             final FileSplit split = (FileSplit) context.getInputSplit();
             final Path input = split.getPath();
 
             // parse request
             final String requestContent = context.getConfiguration().get("calvalus.request");
             final XmlDoc request = new XmlDoc(requestContent);
-            final String requestType = request.getString(TYPE_XPATH);
+            final String operatorName = request.getString(TYPE_XPATH);
             final String requestOutputPath = request.getString(OUTPUT_DIR_XPATH);
 
             // transform request into parameter objects
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            NodeList nodes = request.getNodes(INPUTS_XPATH);
-            for (int i = 0; i < nodes.getLength(); ++i) {
-                Node node = nodes.item(i);
-                String name = request.getString(INPUT_IDENTIFIER_XPATH, node);
-                String literalValue = request.getString(INPUT_LITERAL_DATA_XPATH, node, null);
-                if (literalValue != null) {
-                    parameters.put(name, literalValue);
-                } else {
-                    // TODO replace with proper conversion of complex nodes
-                    //NodeList complexNodes = request.getNodes(INPUT_COMPLEX_DATA_XPATH, node);
-                    // ...
-                    String complexValue = request.getString(INPUT_COMPLEX_DATA_XPATH, node);
-                    parameters.put(name, complexValue);
-                }
-            }
+            Map<String, Object> parameters = getOperatorParameters(request);
 
             // write initial log entry for runtime measurements
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
@@ -104,8 +105,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             final Product           sourceProduct    = productReader.readProductNodes(imageInputStream, null);
 
             // set up operator and target product
-            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-            final Product targetProduct = GPF.createProduct(requestType, parameters, sourceProduct);
+            final Product targetProduct = GPF.createProduct(operatorName, parameters, sourceProduct);
             LOG.info(context.getTaskAttemptID() + " target product created");
 
             // process input and write target product
@@ -123,6 +123,155 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "ExecutablesMapper exception: " + e.toString(), e);
             throw new ProcessorException("ExecutablesMapper exception: " + e.toString(), e);
+        }
+    }
+
+    /**
+     * Transforms request into parameter objects.
+     *
+     * @param request the XML request
+     * @return map of opererator parameters
+     */
+    static Map<String, Object> getOperatorParameters(XmlDoc request) throws XPathExpressionException, ValidationException, ConversionException {
+        Map<String, Object> parameterMap = new HashMap<String, Object>();
+        NodeList calvalusNodes = request.getNodes(INPUTS_XPATH);
+        for (int i = 0; i < calvalusNodes.getLength(); ++i) {
+            Node node = calvalusNodes.item(i);
+            String name = request.getString(INPUT_IDENTIFIER_XPATH, node);
+            String literalValue = request.getString(INPUT_LITERAL_DATA_XPATH, node);
+            // TODO literalValue is never null !!!! mz
+            if (literalValue != null && !literalValue.isEmpty()) {
+                parameterMap.put(name, literalValue);
+            } else {
+                // TODO replace with proper conversion of complex nodes
+                //NodeList complexNodes = request.getNodes(INPUT_COMPLEX_DATA_XPATH, node);
+                // ...
+
+                Node complexNode = request.getNode(INPUT_COMPLEX_DATA_XPATH, node);
+                String operatorName = request.getString(TYPE_XPATH);
+                OperatorSpi operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
+                Class<? extends Operator> operatorClass = operatorSpi.getOperatorClass();
+                DomElement complexDomElement = new NodeDomElement(complexNode);
+                ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+                PropertySet parameterSet = PropertyContainer.createMapBacked(parameterMap, operatorClass, parameterDescriptorFactory);
+                DefaultDomConverter domConverter = new DefaultDomConverter(operatorClass, parameterDescriptorFactory);
+                domConverter.convertDomToValue(complexDomElement, parameterSet);
+            }
+        }
+
+
+        return parameterMap;
+    }
+
+    private static class NodeDomElement implements DomElement {
+        private final Node node;
+
+        public NodeDomElement(Node node) {
+            this.node = node;
+        }
+
+        @Override
+        public void setParent(DomElement parent) {
+            throw new IllegalStateException("NodeDomElement is immutable.");
+        }
+
+        @Override
+        public int getChildCount() {
+            return node.getChildNodes().getLength();
+        }
+
+        @Override
+        public DomElement getChild(int index) {
+            return new NodeDomElement(node.getChildNodes().item(index));
+        }
+
+        @Override
+        public void setAttribute(String name, String value) {
+            throw new IllegalStateException("NodeDomElement is immutable.");
+        }
+
+        @Override
+        public DomElement createChild(String name) {
+            throw new IllegalStateException("NodeDomElement is immutable.");
+        }
+
+        @Override
+        public void addChild(DomElement childElement) {
+            throw new IllegalStateException("NodeDomElement is immutable.");
+        }
+
+        @Override
+        public void setValue(String value) {
+            throw new IllegalStateException("NodeDomElement is immutable.");
+        }
+
+        @Override
+        public String toXml() {
+            return "";
+        }
+
+        @Override
+        public String getName() {
+            return node.getNodeName();
+        }
+
+        @Override
+        public String getValue() {
+            return node.getNodeValue();
+        }
+
+        @Override
+        public String getAttribute(String attributeName) {
+            return node.getAttributes().getNamedItem(attributeName).getNodeValue();
+        }
+
+        @Override
+        public String[] getAttributeNames() {
+            NamedNodeMap attributes = node.getAttributes();
+            String[] attributeNames = new String[attributes.getLength()];
+            for (int i = 0; i < attributeNames.length; i++) {
+                attributeNames[i] = attributes.item(i).getNodeName();
+            }
+            return attributeNames;
+        }
+
+        @Override
+        public DomElement getParent() {
+            return new NodeDomElement(node.getParentNode());
+        }
+
+        @Override
+        public DomElement getChild(String elementName) {
+            NodeList childNodes = node.getChildNodes();
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node childNode = childNodes.item(i);
+                if (childNode.getNodeName().equals(elementName)) {
+                    return new NodeDomElement(childNode);
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public DomElement[] getChildren() {
+            DomElement[] children = new DomElement[getChildCount()];
+            for (int i = 0; i < children.length; i++) {
+                children[i] = getChild(i);
+            }
+            return children;
+        }
+
+        @Override
+        public DomElement[] getChildren(String elementName) {
+            NodeList childNodes = node.getChildNodes();
+            List<DomElement> children = new ArrayList<DomElement>(childNodes.getLength());
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node child = childNodes.item(i);
+                if (child.getNodeName().equals(elementName)) {
+                    children.add(new NodeDomElement(child));
+                }
+            }
+            return children.toArray(new NodeDomElement[children.size()]);
         }
     }
 }

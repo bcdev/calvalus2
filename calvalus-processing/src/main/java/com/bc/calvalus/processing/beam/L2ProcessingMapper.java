@@ -19,8 +19,6 @@ import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.gpf.operators.meris.NdviOp;
-import org.esa.beam.meris.case2.MerisCase2IOPOperator;
-import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
@@ -113,19 +111,19 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         }
 
         // apply operator to product
-        Product resultProduct;
+        Product resultProduct = null;
         if ("ndvi".equals(operatorName)) {
             Operator op = new NdviOp();
             op.setSourceProduct(sourceProduct);
             resultProduct = op.getTargetProduct();
         } else if ("radiometry".equals(operatorName)) {
-            Operator op = new MerisRadiometryCorrectionOp();
-            op.setSourceProduct("sourceProduct", sourceProduct);
-            resultProduct = op.getTargetProduct();
+//            Operator op = new MerisRadiometryCorrectionOp();
+//            op.setSourceProduct("sourceProduct", sourceProduct);
+//            resultProduct = op.getTargetProduct();
         } else if ("c2r".equals(operatorName)) {
-            Operator op = new MerisCase2IOPOperator();
-            op.setSourceProduct("sourceProduct", sourceProduct);
-            resultProduct = op.getTargetProduct();
+//            Operator op = new MerisCase2IOPOperator();
+//            op.setSourceProduct("sourceProduct", sourceProduct);
+//            resultProduct = op.getTargetProduct();
         } else {
             throw new IllegalArgumentException("unknown operator " + operatorName + ". One of ndvi, radiometry expected");
         }
