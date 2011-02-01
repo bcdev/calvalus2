@@ -31,7 +31,11 @@ public class BeamOperatorToolTest {
         assertTrue("Shall not exist: " + outputDir, !fileSystem.exists(outputDir));
 
         // Run the job
-        ToolRunner.run(new BeamOperatorTool(), new String[] { REQUEST });
+        Configuration conf = new Configuration();
+        conf.addResource("mini-conf/core-site.xml");
+        conf.addResource("mini-conf/hdfs-site.xml");
+        conf.addResource("mini-conf/mapred-site.xml");
+        ToolRunner.run(conf, new BeamOperatorTool(), new String[] { REQUEST });
 
         assertTrue("Shall now exist: " + outputDir, fileSystem.exists(outputDir));
         final FileStatus[] outputFiles = fileSystem.listStatus(outputDir, new PathFilter() {
@@ -46,6 +50,8 @@ public class BeamOperatorToolTest {
     @Before
     public void init() throws IOException {
         clearWorkingDirs();
+        //installJars(src, "beam-4.9-SNAPSHOT");
+        installJars(System.getProperty("user.home") + "/.m2/repository/org/esa/beam/beam-meris-radiometry/1.0-SNAPSHOT", "beam-meris-radiometry-1.0-SNAPSHOT");
     }
 
 //    @After
@@ -58,4 +64,19 @@ public class BeamOperatorToolTest {
         outputDir.getFileSystem(new Configuration()).delete(outputDir, true);
     }
 
+    private void installJars(String sourceDir, String packageName) throws IOException {
+        final Path targetPath = new Path("hdfs://localhost:9000/calvalus/software/0.5/" + packageName);
+        final FileSystem targetFileSystem = targetPath.getFileSystem(new Configuration());
+        final Path sourcePath = new Path("file://" + sourceDir);
+        final FileSystem sourceFileSystem = sourcePath.getFileSystem(new Configuration());
+        final FileStatus[] jars = sourceFileSystem.listStatus(sourcePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith("jar") && ! path.getName().endsWith("sources.jar");
+            }
+        });
+        for (FileStatus jar : jars) {
+            targetFileSystem.copyFromLocalFile(jar.getPath(), new Path(targetPath, jar.getPath().getName()));
+        }
+    }
 }

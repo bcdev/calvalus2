@@ -106,7 +106,8 @@ public class BeamOperatorTool extends Configured implements Tool {
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(BeamOperatorMapper.class);
 
-            job.setJarByClass(getClass());
+            //job.setJarByClass(getClass());
+            job.getConfiguration().set("mapred.jar", "target/");
 
             // put processor onto the classpath
             final String processorPackage = request.getString(PROCESSOR_PACKAGE_XPATH);
@@ -163,8 +164,7 @@ public class BeamOperatorTool extends Configured implements Tool {
     }
 
     private void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
-        //final Path beamPath = new Path("hdfs://cvmaster00:9000/calvalus/software/" + packageName);
-        final Path beamPath = new Path("file:///tmp/calvalus/software/" + packageName);
+        final Path beamPath = new Path("hdfs://localhost:9000/calvalus/software/0.5/" + packageName);
         final FileSystem beamFileSystem = beamPath.getFileSystem(configuration);
         final FileStatus[] beamJars = beamFileSystem.listStatus(beamPath, new PathFilter() {
             @Override
