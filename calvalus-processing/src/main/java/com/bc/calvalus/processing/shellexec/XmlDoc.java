@@ -81,7 +81,9 @@ public class XmlDoc {
      */
     public String getString(String path, Node node) throws IllegalArgumentException, XPathExpressionException {
         String result = xpath.evaluate(path, node);
-        if (result == null) throw new IllegalArgumentException("xpath " + path + " not found");
+        if (result == null) {
+            throw new IllegalArgumentException("xpath " + path + " not found");
+        }
         return result;
     }
 
