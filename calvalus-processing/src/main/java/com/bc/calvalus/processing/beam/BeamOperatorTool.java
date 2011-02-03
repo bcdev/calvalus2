@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
-import com.bc.calvalus.processing.shellexec.ExecutablesMapper;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import org.apache.commons.cli.CommandLine;
@@ -107,7 +106,7 @@ public class BeamOperatorTool extends Configured implements Tool {
             job.setMapperClass(BeamOperatorMapper.class);
 
             //job.setJarByClass(getClass());
-            job.getConfiguration().set("mapred.jar", "target/");
+            job.getConfiguration().set("mapred.jar", "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar");
 
             // put processor onto the classpath
             final String processorPackage = request.getString(PROCESSOR_PACKAGE_XPATH);
@@ -122,6 +121,7 @@ public class BeamOperatorTool extends Configured implements Tool {
             job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
+            //job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
             // TODO is this necessary?
@@ -173,7 +173,9 @@ public class BeamOperatorTool extends Configured implements Tool {
             }
         });
         for (FileStatus beamJar : beamJars) {
-            DistributedCache.addFileToClassPath(beamJar.getPath(), configuration);
+            final Path path = beamJar.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());  // for hadoops sake!
+            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration);
         }
     }
 }

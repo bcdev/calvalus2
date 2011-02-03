@@ -9,7 +9,9 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
@@ -17,7 +19,9 @@ import static org.junit.Assert.*;
 
 /**
  * Test for {@link BeamOperatorTool}.
+ *
  */
+@RunWith(HadoopStandaloneTestRunner.class)
 public class BeamOperatorToolTest {
     private static final String REQUEST = "calvalus-processing/src/test/resources/beam-l2-mini-request.xml";
     private static final String OUTPUT_DIR = "file:///tmp/meris-l2beam-99";
@@ -50,8 +54,8 @@ public class BeamOperatorToolTest {
     @Before
     public void init() throws IOException {
         clearWorkingDirs();
-        //installJars(src, "beam-4.9-SNAPSHOT");
-        installJars(System.getProperty("user.home") + "/.m2/repository/org/esa/beam/beam-meris-radiometry/1.0-SNAPSHOT", "beam-meris-radiometry-1.0-SNAPSHOT");
+        installJars(new File("calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-beam"), "beam-4.9-SNAPSHOT");
+        installJars(new File("calvalus-processing/target/beam-meris-radiometry-1.0-SNAPSHOT"), "beam-meris-radiometry-1.0-SNAPSHOT");
     }
 
 //    @After
@@ -64,19 +68,27 @@ public class BeamOperatorToolTest {
         outputDir.getFileSystem(new Configuration()).delete(outputDir, true);
     }
 
-    private void installJars(String sourceDir, String packageName) throws IOException {
-        final Path targetPath = new Path("hdfs://localhost:9000/calvalus/software/0.5/" + packageName);
-        final FileSystem targetFileSystem = targetPath.getFileSystem(new Configuration());
-        final Path sourcePath = new Path("file://" + sourceDir);
-        final FileSystem sourceFileSystem = sourcePath.getFileSystem(new Configuration());
-        final FileStatus[] jars = sourceFileSystem.listStatus(sourcePath, new PathFilter() {
+    /**
+     * Copies jars of source dir to HDFS software installation dir for package
+     * @param sourceDir  local directory of package jar files
+     * @param packageName   name and version of package, must be the same as later in the request
+     * @throws IOException  if copying fails
+     */
+    private void installJars(File sourceDir, String packageName) throws IOException {
+        // determine jars of package
+        final File[] jars = sourceDir.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept(Path path) {
-                return path.getName().endsWith("jar") && ! path.getName().endsWith("sources.jar");
+            public boolean accept(File file, String name) {
+                return name.endsWith("jar") && ! name.endsWith("sources.jar");
             }
         });
-        for (FileStatus jar : jars) {
-            targetFileSystem.copyFromLocalFile(jar.getPath(), new Path(targetPath, jar.getPath().getName()));
+        // define destination in HDFS software dir
+        final Path targetPath = new Path("hdfs://localhost:9000/calvalus/software/0.5/" + packageName);
+        final FileSystem targetFileSystem = targetPath.getFileSystem(new Configuration());
+        // copy jars of package to destination
+        for (File jar : jars) {
+            Path sourcePath = new Path("file://" + jar.getAbsolutePath());
+            targetFileSystem.copyFromLocalFile(sourcePath, new Path(targetPath, jar.getName()));
         }
     }
 }
