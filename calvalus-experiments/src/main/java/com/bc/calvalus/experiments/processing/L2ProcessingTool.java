@@ -1,7 +1,8 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
 import com.bc.calvalus.commons.Args;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.beam.N1InputFormat;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -22,7 +23,7 @@ import java.util.logging.Logger;
  * Call with:
  * <pre>
  *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
- *    com.bc.calvalus.processing.beam.L2ProcessingTool \
+ *    com.bc.calvalus.experiments.processing.L2ProcessingTool \
  *    hdfs://cvmaster00:9000/input \
  *    hdfs://cvmaster00:9000/output \
  *    (n1|n3|sliced|lineinterleaved) \

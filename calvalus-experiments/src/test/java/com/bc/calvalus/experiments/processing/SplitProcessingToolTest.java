@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
@@ -12,7 +12,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

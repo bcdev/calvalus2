@@ -1,5 +1,6 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
+import com.bc.calvalus.processing.beam.UnixTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;

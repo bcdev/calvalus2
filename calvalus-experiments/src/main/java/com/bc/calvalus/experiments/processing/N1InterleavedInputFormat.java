@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.fs.Path;

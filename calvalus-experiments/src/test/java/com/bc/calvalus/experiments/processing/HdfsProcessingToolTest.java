@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;

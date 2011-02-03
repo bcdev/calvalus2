@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.experiments.processing;
 
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
