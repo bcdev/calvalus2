@@ -1,5 +1,5 @@
 # switch from DHCP to a static IP address
-# edit "/etc/network/intertfaces"
+# edit "/etc/network/interfaces"
 # replace "dhcp" with "static and# add the following lines:
       address 10.3.0.XXX  ## here use the correct IP address
       gateway 10.3.0.1
