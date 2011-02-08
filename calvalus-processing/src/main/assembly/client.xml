@@ -26,6 +26,11 @@
             <outputDirectory>lib</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>target/calvalus-processing-0.1-SNAPSHOT-beam</directory>
+            <includes><include>*.jar</include></includes>
+            <outputDirectory>lib/beam</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>conf</directory>
             <includes><include>*</include></includes>
             <outputDirectory>conf</outputDirectory>

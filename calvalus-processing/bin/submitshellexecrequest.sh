@@ -17,18 +17,7 @@ if [ ! -r $jobJar ] ; then
     jobJar=${baseDir}/target/calvalus-processing-0.1-SNAPSHOT-job.jar
 fi
 
-commandline="$0 $*"
-command=$0
 request=$1
-shift 1
-now=`date '+%Y-%m-%dT%H:%M:%S'`
-logfile=exejob-`basename ${request%.xml}`-${now}
-
-echo ${commandline}
 
 echo hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.shellexec.ExecutablesTool ${request} $@
-time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.shellexec.ExecutablesTool ${request} $@ > ${logfile}.tmp 2>&1
-
-job_number=`cat ${logfile}.tmp | awk "/ Running job: / { print substr(\\$7,5) }"`
-
-echo ${job_number}
+time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.shellexec.ExecutablesTool ${request} $@

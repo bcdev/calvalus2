@@ -1,19 +1,19 @@
 package com.bc.calvalus.experiments.processing;
 
-import com.bc.calvalus.processing.beam.UnixTestRunner;
+//import com.bc.calvalus.processing.beam.UnixTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+//import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-@RunWith(UnixTestRunner.class)
+//@RunWith(UnixTestRunner.class)
 public class LocalProcessingToolTest {
     private static final String TMP_INPUT = "/tmp/input";
     private static final String TMP_OUTPUT = "/tmp/output";
