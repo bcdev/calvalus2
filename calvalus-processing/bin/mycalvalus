@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# pins a shell to a certain calvalus instance
+# usage: . mycalvalus
+
+HADOOP_DIR=/opt/hpc/hadoop-0.20.2
+JAVA_DIR=/usr/java1.6
+HADOOP_HOST=cvmaster00
+INSTANCE_DIR=`dirname $0`
+INSTANCE_DIR=`( cd $INSTANCE_DIR ; pwd )`
+
+export HADOOP_CONF_DIR=$INSTANCE_DIR/conf
+export PATH=$INSTANCE_DIR/bin:$HADOOP_DIR/bin:$JAVA_DIR/bin:$PATH
+
+echo "using `which hadoop`"
+echo "using `which java`"
+echo "using instance $INSTANCE_DIR"
+
+$*

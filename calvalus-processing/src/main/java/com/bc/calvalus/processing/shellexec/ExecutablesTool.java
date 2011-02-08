@@ -98,7 +98,6 @@ public class ExecutablesTool extends Configured implements Tool {
             job.getConfiguration().set("calvalus.request", requestContent);
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);
-            job.setJarByClass(getClass());
             job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
             job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
@@ -109,6 +108,17 @@ public class ExecutablesTool extends Configured implements Tool {
             //job.setOutputFormatClass(TextOutputFormat.class);
             //job.setOutputKeyClass(Text.class);
             //job.setOutputValueClass(Text.class);
+
+            // look up job jar either by class (if deployed) or by path (idea)
+            //job.setJarByClass(getClass());
+            String pathname = "lib/calvalus-processing-0.1-SNAPSHOT-job.jar";
+            if (!new File(pathname).exists()) {
+                pathname = "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar";
+                if (!new File(pathname).exists()) {
+                    throw new IllegalArgumentException("Cannot find job jar");
+                }
+            }
+            job.getConfiguration().set("mapred.jar", pathname);
 
             int result = job.waitForCompletion(true) ? 0 : 1;
 

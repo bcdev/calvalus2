@@ -18,7 +18,7 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link BeamOperatorTool}.
+ * Test for {@link BeamOperatorTool}, tests deployment of BEAM and the MERIS.Radiometry operator on a local Hadoop instance.
  *
  */
 @RunWith(HadoopStandaloneTestRunner.class)

@@ -129,6 +129,7 @@
                     <descriptors>
                         <descriptor>src/main/assembly/job.xml</descriptor>
                         <descriptor>src/main/assembly/beam.xml</descriptor>
+                        <descriptor>src/main/assembly/client.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>

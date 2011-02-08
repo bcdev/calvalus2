@@ -9,8 +9,13 @@ then
 fi
 
 baseDir="`dirname ${0}`/.."
-configDir=${baseDir}/bin/conf
-jobJar=${baseDir}/target/calvalus-processing-0.1-SNAPSHOT-job.jar
+baseDir=`( cd $baseDir ; pwd )`
+configDir=${baseDir}/conf
+jobJar=${baseDir}/lib/calvalus-processing-0.1-SNAPSHOT-job.jar
+if [ ! -r $jobJar ] ; then
+    # maven development environment
+    jobJar=${baseDir}/target/calvalus-processing-0.1-SNAPSHOT-job.jar
+fi
 
 commandline="$0 $*"
 command=$0
