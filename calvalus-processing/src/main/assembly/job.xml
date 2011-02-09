@@ -16,6 +16,7 @@
                 <exclude>org.apache.hadoop:*</exclude>
                 <exclude>org.esa.beam:*</exclude>
             </excludes>
+            <!-- exclude transitive dependencies of hadoop and beam, too -->
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
         </dependencySet>

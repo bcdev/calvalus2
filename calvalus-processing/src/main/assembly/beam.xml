@@ -9,11 +9,6 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <dependencySets>
         <dependencySet>
-            <!--<excludes>
-                <exclude>org.apache.hadoop:hadoop-*</exclude>
-                <exclude>calvalus-*</exclude>
-                <exclude>saxon-*</exclude>
-            </excludes>-->
             <includes>
                 <include>org.esa.beam:beam-gpf</include>
                 <include>org.esa.beam:beam-envisat-reader</include>
