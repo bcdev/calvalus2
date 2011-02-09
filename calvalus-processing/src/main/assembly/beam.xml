@@ -13,6 +13,9 @@
                 <include>org.esa.beam:beam-gpf</include>
                 <include>org.esa.beam:beam-envisat-reader</include>
             </includes>
+            <excludes>
+                <exclude>org.esa.beam:beam-ui</exclude>
+            </excludes>
             <scope>runtime</scope>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
