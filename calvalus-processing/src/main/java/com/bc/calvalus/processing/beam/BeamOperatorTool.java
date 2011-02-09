@@ -173,7 +173,7 @@ public class BeamOperatorTool extends Configured implements Tool {
 
     private void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
         final FileSystem beamFileSystem = FileSystem.get(configuration);
-        final Path beamPath = new Path("calvalus/software/0.5/" + packageName);
+        final Path beamPath = new Path("/calvalus/software/0.5/" + packageName);
 
         final FileStatus[] beamJars = beamFileSystem.listStatus(beamPath, new PathFilter() {
             @Override
