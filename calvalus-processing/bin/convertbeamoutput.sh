@@ -10,7 +10,6 @@ fi
 
 baseDir="`dirname ${0}`/.."
 baseDir=`( cd $baseDir ; pwd )`
-configDir=${baseDir}/conf
 jobJar=${baseDir}/lib/calvalus-processing-0.1-SNAPSHOT-job.jar
 if [ ! -r $jobJar ] ; then
     # maven development environment
@@ -20,8 +19,9 @@ fi
 export HADOOP_CLASSPATH=`echo ${baseDir}/lib/beam/* | tr ' ' ':'`
 
 input=$1
+shift
 output=${2:-$1}
 
-#echo hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
-time hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
+#echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
+time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
 
