@@ -26,11 +26,13 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
+import org.esa.beam.util.SystemUtils;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.imageio.stream.ImageInputStream;
+import javax.media.jai.JAI;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -56,6 +58,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
     private static final int TILE_HEIGHT = 512;
+
+    static {
+        SystemUtils.init3rdPartyLibs(BeamOperatorMapper.class.getClassLoader());
+        JAI.enableDefaultTileCache();
+        //TODO make this an option
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
+    }
 
     /**
      * Mapper implementation method. See class comment.
