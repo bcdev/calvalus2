@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.bc.calvalus.processing.shellexec.FileUtil;
-import com.bc.calvalus.processing.shellexec.XmlDoc;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -51,14 +50,7 @@ public class BeamOperatorTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    //private static final String TYPE_XPATH = "/wps:Execute/ows:Identifier";
-    //private static final String OUTPUT_DIR_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:LiteralData";
-    private static final String TYPE_XPATH = "/Execute/Identifier";
-    private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
-
     private static Options options;
-    private static final String PROCESSOR_PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
-    private static final String PROCESSOR_VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
 
     static {
         options = new Options();
@@ -87,9 +79,10 @@ public class BeamOperatorTool extends Configured implements Tool {
 
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
-            final XmlDoc request = new XmlDoc(requestContent);
-            final String requestType = request.getString(TYPE_XPATH);
-            final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
+            BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(requestContent);
+
+            final String requestType = opConfig.getOperatorName();
+            final String requestOutputDir = opConfig.getRequestOutputDir();
 
             // clear output directory
             final Path output = new Path(requestOutputDir);
@@ -117,9 +110,7 @@ public class BeamOperatorTool extends Configured implements Tool {
             job.getConfiguration().set("mapred.jar", pathname);
 
             // put processor onto the classpath
-            final String processorPackage = request.getString(PROCESSOR_PACKAGE_XPATH);
-            final String processorVersion = request.getString(PROCESSOR_VERSION_XPATH);
-            addPackageToClassPath(processorPackage + "-" + processorVersion, job.getConfiguration());
+            addPackageToClassPath(opConfig.getProcessorPackage(), job.getConfiguration());
 
             // put BEAM and BEAM 3rd party-libs onto the classpath
             final String beamPackage = "beam";

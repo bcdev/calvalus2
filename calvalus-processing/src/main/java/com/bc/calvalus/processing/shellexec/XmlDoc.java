@@ -115,13 +115,12 @@ public class XmlDoc {
     }
 
     /**
-     * Returns XPath value starting at node as node, verifies that path exists
+     * Returns node at XPath expression in document
      * @param path  XPath expression, e.g. "//someelement[@someattribute='somevalue']"
-     * @param node  start node to apply path to
      * @return  node of addressed element
      * @throws XPathExpressionException  XPath expression not well formed
      */
-    public Node getNode(String path, Node node) throws XPathExpressionException {
-        return (Node) xpath.evaluate(path, node, XPathConstants.NODE);
+    public Node getNode(String path) throws XPathExpressionException {
+        return (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
     }
 }

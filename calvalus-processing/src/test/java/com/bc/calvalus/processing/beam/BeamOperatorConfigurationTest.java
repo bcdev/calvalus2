@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,9 +31,9 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link BeamOperatorMapper}.
+ * Test for {@link BeamOperatorConfiguration}.
  */
-public class BeamOperatorMapperTest {
+public class BeamOperatorConfigurationTest {
 
     @Before
     public void before() {
@@ -43,9 +44,9 @@ public class BeamOperatorMapperTest {
     public void convertSimpleRequestToParametersMap() throws Exception {
         InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("radiometry-request.xml"));
         String wpsXML = FileUtils.readText(inputStreamReader).trim();
-        XmlDoc request = new XmlDoc(wpsXML);
 
-        DomElement element = BeamOperatorMapper.getProcessingParametersElement(request);
+        BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(wpsXML);
+        DomElement element = opConfig.getOperatorParametersDomElement();
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());
@@ -56,19 +57,19 @@ public class BeamOperatorMapperTest {
         assertEquals("reproVersion", child2.getName());
         assertEquals("AUTO_DETECT", child2.getValue());
 
-        Map<String,Object> operatorParameters = BeamOperatorMapper.getProcessingParameters(request);
+        Map<String,Object> operatorParameters = opConfig.getOperatorParameters();
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 
         Object doSmileObj = operatorParameters.get("doSmile");
         assertNotNull(doSmileObj);
-        assertSame(String.class, doSmileObj.getClass());
-        assertEquals(true, Boolean.parseBoolean((String) doSmileObj));
+        assertSame(Boolean.class, doSmileObj.getClass());
+        assertEquals(true, doSmileObj);
 
         Object reproVersionObj = operatorParameters.get("reproVersion");
         assertNotNull(reproVersionObj);
-        assertSame(String.class, reproVersionObj.getClass());
-        assertEquals("AUTO_DETECT", reproVersionObj);
+        assertSame(ReprocessingVersion.class, reproVersionObj.getClass());
+        assertEquals(ReprocessingVersion.AUTO_DETECT, reproVersionObj);
 
     }
 
@@ -79,8 +80,8 @@ public class BeamOperatorMapperTest {
         XmlDoc request = new XmlDoc(wpsXML);
 
         // Check if we can extract parameters element
-
-        DomElement element = BeamOperatorMapper.getProcessingParametersElement(request);
+        BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(wpsXML);
+        DomElement element = opConfig.getOperatorParametersDomElement();
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());
@@ -115,7 +116,7 @@ public class BeamOperatorMapperTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String,Object> operatorParameters = BeamOperatorMapper.getProcessingParameters(request);
+        Map<String,Object> operatorParameters = opConfig.getOperatorParameters();
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 

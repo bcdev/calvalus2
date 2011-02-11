@@ -41,23 +41,26 @@
         </wps:Input>
 
         <wps:Input>
-            <ows:Identifier>doSmile</ows:Identifier>
-            <ows:Title>Whether to perform SMILE correction. Default value is 'true'.</ows:Title>
+            <ows:Identifier>calvalus.l2.operator</ows:Identifier>
+            <ows:Title>the name of the GPF operator</ows:Title>
             <wps:Data>
-                <wps:LiteralData>true</wps:LiteralData>
+                <wps:LiteralData>Meris.CorrectRadiometry</wps:LiteralData>
             </wps:Data>
         </wps:Input>
+
         <wps:Input>
-            <ows:Identifier>reproVersion</ows:Identifier>
-            <ows:Title>The version of the reprocessing the product comes from. Is only used if equalisation is enabled.
-                Value must be one of 'AUTO_DETECT', 'REPROCESSING_2', 'REPROCESSING_3'. Default value is 'AUTO_DETECT'.
-            </ows:Title>
+            <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
+            <ows:Title></ows:Title>
             <wps:Data>
-                <wps:LiteralData>AUTO_DETECT</wps:LiteralData>
+                <wps:ComplexData>
+                    <parameters>
+                        <doSmile>true</doSmile>
+                        <reproVersion>AUTO_DETECT</reproVersion>
+                    </parameters>
+                </wps:ComplexData>
             </wps:Data>
         </wps:Input>
     </wps:DataInputs>
-
 
     <wps:ResponseForm>
         <wps:ResponseDocument storeExecuteResponse="true">
