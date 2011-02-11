@@ -3,12 +3,13 @@
 # pins a shell to a certain Calvalus instance
 # usage: . mycalvalus
 
-if [[ $0 == -* ]]; then
-  INSTANCE_DIR=`pwd`
-else
- INSTANCE_DIR=`( cd `dirname $0`; pwd )`
-fi
+#if [[ $0 == -* ]]; then
+#  INSTANCE_DIR=`pwd`
+#else
+# INSTANCE_DIR=`( cd `dirname $0`; pwd )`
+#fi
 
+INSTANCE_DIR=`pwd`
 export HADOOP_CONF_DIR=$INSTANCE_DIR/conf
 export PATH=$INSTANCE_DIR/bin:$PATH
 
