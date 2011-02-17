@@ -1,6 +1,9 @@
-package com.bc.calvalus.ui.client;
+package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.ui.shared.ProcessingRequest;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.PortalProductionRequest;
+import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -26,12 +29,12 @@ import java.util.LinkedHashMap;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class SmartCalvalusApp implements EntryPoint {
+public class FrontendEntryPointSmart implements EntryPoint {
 
-    static final String PROCESS_ACTION_URL = GWT.getModuleBaseURL() + "process";
+    static final String PROCESS_ACTION_URL = GWT.getModuleBaseURL() + "backend";
     static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
-    private final ProcessingServiceAsync processingService = GWT.create(ProcessingService.class);
+    private final BackendServiceAsync processingService = GWT.create(BackendService.class);
 
     private ComboBoxItem processorListBox;
     private ComboBoxItem inputPsListBox;
@@ -200,13 +203,14 @@ public class SmartCalvalusApp implements EntryPoint {
             String outputProductSet = (String) outputPsTextBox.getValue();
             String processorName = (String) processorListBox.getValue();
             String processingParameters = (String) parametersTextArea.getValue();
-            ProcessingRequest request = new ProcessingRequest(inputProductSet,
+            PortalProductionRequest request = new PortalProductionRequest(inputProductSet,
                                                               outputProductSet,
                                                               processorName,
+                                                              "1.0",
                                                               processingParameters);
-            processingService.process(request, new AsyncCallback<String>() {
-                public void onSuccess(String result) {
-                    SC.say("Success!\n" + result);
+            processingService.orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
+                public void onSuccess(PortalProductionResponse response) {
+                    SC.say("Success!\n" + response.getMessage());
                 }
 
                 public void onFailure(Throwable caught) {

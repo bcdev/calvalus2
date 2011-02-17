@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module>
   <!-- Inherit our applications main module.                      -->
-  <inherits name='com.bc.calvalus.ui.CalvalusApp'/>
+  <inherits name='com.bc.calvalus.portal.CalvalusPortal'/>
 
   <!-- Specify the path to any remote services.                   -->
-  <servlet path="/calvalusapp/process" class="com.bc.calvalus.ui.server.ProcessingServiceImpl" />
+  <servlet path="/calvalusapp/backend" class="com.bc.calvalus.portal.server.BackendServiceImpl" />
 
 </module>

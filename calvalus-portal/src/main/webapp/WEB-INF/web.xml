@@ -5,31 +5,34 @@
 
 <web-app>
 
-    <!-- Servlets -->
+    <!-- Backend servlet -->
+
     <servlet>
-        <servlet-name>processingServlet</servlet-name>
-        <servlet-class>com.bc.calvalus.ui.server.ProcessingServiceImpl</servlet-class>
+        <servlet-name>backendServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.BackendServiceImpl</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>processingServlet</servlet-name>
-        <url-pattern>/calvalusapp/process</url-pattern>
+        <servlet-name>backendServlet</servlet-name>
+        <url-pattern>/calvalus/backend</url-pattern>
     </servlet-mapping>
 
+    <!-- File upload & echo servlet -->
+
     <servlet>
         <servlet-name>uploadServlet</servlet-name>
-        <servlet-class>com.bc.calvalus.ui.server.FileUploadServlet</servlet-class>
+        <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
         <servlet-name>uploadServlet</servlet-name>
-        <url-pattern>/calvalusapp/upload</url-pattern>
+        <url-pattern>/calvalus/upload</url-pattern>
     </servlet-mapping>
 
     <!-- Default page to serve -->
+
     <welcome-file-list>
-        <!--<welcome-file>CalvalusApp.html</welcome-file>-->
-        <welcome-file>SmartCalvalusApp.html</welcome-file>
+        <welcome-file>calvalus.html</welcome-file>
     </welcome-file-list>
 
 </web-app>

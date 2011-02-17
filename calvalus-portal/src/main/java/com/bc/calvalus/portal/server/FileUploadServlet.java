@@ -1,4 +1,4 @@
-package com.bc.calvalus.ui.server;
+package com.bc.calvalus.portal.server;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;

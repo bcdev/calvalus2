@@ -23,6 +23,17 @@
     <description>The frontend for Calvalus.</description>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-production</artifactId>
+        </dependency>
+
+
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>

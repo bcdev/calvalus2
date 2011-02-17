@@ -1,0 +1,17 @@
+package com.bc.calvalus.portal.shared;
+
+import com.google.gwt.user.client.rpc.RemoteService;
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+
+/**
+ * The client side stub for the RPC service.
+ */
+@RemoteServiceRelativePath("backend")
+public interface BackendService extends RemoteService {
+
+    PortalProductSet[] getProductSets(String type) throws BackendServiceException;
+
+    PortalProcessor[] getProcessors(String type) throws BackendServiceException;
+
+    PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException;
+}

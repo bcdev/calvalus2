@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module rename-to='calvalusapp'>
+<module rename-to='calvalus'>
+
     <!-- Inherit the core Web Toolkit stuff.                        -->
     <inherits name='com.google.gwt.user.User'/>
     <inherits name='org.gwtopenmaps.openlayers.OpenLayers'/>
     <inherits name='com.smartgwt.SmartGwt'/>
 
     <!-- Inherit the default GWT style sheet.  You can change       -->
-    <!-- the theme of your GWT application by uncommenting          -->
+    <!-- the theme of your GWT application by un-commenting         -->
     <!-- any one of the following lines.                            -->
     <inherits name='com.google.gwt.user.theme.standard.Standard'/>
     <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
@@ -16,11 +17,11 @@
 
     <!-- Specify the app entry point class.                         -->
 
-    <!-- Uncomment to test the plain GWT version of the CalvalusApp        -->
-    <entry-point class='com.bc.calvalus.ui.client.CalvalusApp'/>
+    <!-- Uncomment to test the plain GWT version of the FrontendEntryPoint        -->
+    <entry-point class='com.bc.calvalus.portal.client.FrontendEntryPoint'/>
 
-    <!-- Uncomment to test the SmartGWT version of the CalvalusApp        -->
-    <!--<entry-point class='com.bc.calvalus.ui.client.SmartCalvalusApp'/>-->
+    <!-- Uncomment to test the SmartGWT version of the FrontendEntryPoint        -->
+    <!--<entry-point class='com.bc.calvalus.portal.client.FrontendEntryPointSmart'/>-->
 
     <!-- Specify the paths for translatable code                    -->
     <source path='client'/>
