@@ -22,6 +22,10 @@
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
         </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-processing</artifactId>
+        </dependency>
     </dependencies>
 
     
