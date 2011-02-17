@@ -25,6 +25,7 @@ import com.bc.calvalus.binning.WritableVector;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.io.IOUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configured;
@@ -155,7 +156,7 @@ public class L3Formatter extends Configured implements Tool {
         FileSystem fs = l3OutputDir.getFileSystem(getConf());
         InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        com.bc.io.IOUtils.copyBytes(is, baos);
+        IOUtils.copyBytes(is, baos);
         String wpsContent = baos.toString();
         BeamL3Config l3Config = BeamL3Config.create(new XmlDoc(wpsContent));
         l3Config.validateConfiguration();
