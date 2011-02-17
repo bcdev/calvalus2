@@ -1,4 +1,20 @@
-package com.bc.calvalus.binning.job;
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.Aggregator;
 import com.bc.calvalus.binning.BinManager;
@@ -7,10 +23,12 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -29,10 +47,13 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Properties;
@@ -78,11 +99,22 @@ public class L3Formatter extends Configured implements Tool {
         System.exit(result);
     }
 
+    private static Properties readProperties(Reader reader) throws IOException {
+        try {
+            Properties properties = new Properties();
+            properties.load(reader);
+            return properties;
+        } finally {
+            reader.close();
+        }
+    }
+
+
     @Override
     public int run(String[] args) throws Exception {
 
         final String requestFile = args.length > 0 ? args[0] : "l3formatter.properties";
-        request = L3Config.readProperties(new FileReader(requestFile));
+        request = readProperties(new FileReader(requestFile));
 
         outputType = request.getProperty("calvalus.l3.formatter.outputType");
         if (outputType == null) {
@@ -119,9 +151,14 @@ public class L3Formatter extends Configured implements Tool {
         }
 
 
-        l3OutputDir = new Path(request.getProperty(L3Config.CONFNAME_L3_OUTPUT));
-        L3Config l3Config = L3Config.load(l3OutputDir.getFileSystem(getConf()),
-                                          new Path(l3OutputDir, L3Config.L3_REQUEST_PROPERTIES_FILENAME));
+        l3OutputDir = new Path(request.getProperty("calvalus.l3.output"));
+        FileSystem fs = l3OutputDir.getFileSystem(getConf());
+        InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        com.bc.io.IOUtils.copyBytes(is, baos);
+        String wpsContent = baos.toString();
+        BeamL3Config l3Config = BeamL3Config.create(new XmlDoc(wpsContent));
+        l3Config.validateConfiguration();
 
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();
@@ -140,7 +177,8 @@ public class L3Formatter extends Configured implements Tool {
         computeOutputRegion(l3Config);
 
         if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile(l3Config.getStartTime(), l3Config.getEndTime());
+            // TODO
+//            writeProductFile(l3Config.getStartTime(), l3Config.getEndTime());
         } else {
             writeImageFiles();
         }
@@ -148,7 +186,7 @@ public class L3Formatter extends Configured implements Tool {
         return 0;
     }
 
-    private void computeOutputRegion(L3Config l3Config) {
+    private void computeOutputRegion(BeamL3Config l3Config) {
         final Geometry roiGeometry = l3Config.getRegionOfInterest();
         final BinningGrid binningGrid = binningContext.getBinningGrid();
 

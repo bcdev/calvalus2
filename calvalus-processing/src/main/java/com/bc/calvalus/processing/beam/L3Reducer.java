@@ -1,4 +1,20 @@
-package com.bc.calvalus.binning.job;
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.SpatialBin;
@@ -33,7 +49,10 @@ public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, Tem
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binManager = L3Config.createFromJobConfig(conf).getBinManager();
+        WpsConfig wpsConfig = WpsConfig.createFromJobConfig(conf);
+        BeamL3Config l3Config = BeamL3Config.create(wpsConfig.getRequestXmlDoc());
+        l3Config.validateConfiguration();
+        this.binManager = l3Config.getBinningContext().getBinManager();
     }
 
     @Override

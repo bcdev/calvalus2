@@ -1,4 +1,20 @@
-package com.bc.calvalus.binning.job;
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.AggregatorAverage;
 import com.bc.calvalus.binning.AggregatorAverageML;
@@ -8,6 +24,7 @@ import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
+import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -16,114 +33,117 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
-import java.io.InputStream;
-import java.text.ParseException;
+import java.io.InputStreamReader;
 import java.util.Calendar;
-import java.util.Properties;
 
-import static com.bc.calvalus.binning.job.L3Config.*;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
-public class L3ConfigTest {
-    private L3Config l3Config;
+public class BeamL3ConfigTest {
+
+    private BeamL3Config l3Config;
 
     @Before
-    public void createL3Config() {
-        l3Config = loadConfig("job.properties");
+    public void createL3Config() throws IOException, SAXException, ParserConfigurationException {
+        l3Config = loadConfig("l3-request.xml");
     }
 
     @Test
     public void testBinningGrid() {
-        BinningGrid grid = l3Config.getBinningGrid();
+        BinningGrid grid = new BeamL3Config().getBinningGrid();
+        assertEquals(2160, grid.getNumRows());
+        assertEquals(IsinBinningGrid.class, grid.getClass());
+
+        grid = l3Config.getBinningGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
+
     }
 
     @Test
     public void testGetRegionOfInterest() {
-        Properties properties = new Properties();
-        L3Config l3Config = new L3Config(properties);
+        BeamL3Config l3Config = new BeamL3Config();
         Geometry regionOfInterest;
 
         regionOfInterest = l3Config.getRegionOfInterest();
         assertNull(regionOfInterest);
 
-        properties.setProperty(CONFNAME_L3_BBOX, "-60.0, 13.4, -20.0, 23.4");
+        l3Config.bbox = "-60.0, 13.4, -20.0, 23.4";
         regionOfInterest = l3Config.getRegionOfInterest();
         assertTrue(regionOfInterest instanceof Polygon);
         assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());
 
-        properties.setProperty(CONFNAME_L3_REGION, "POINT(-60.0 13.4)");
+        l3Config.regionWkt = "POINT(-60.0 13.4)";
         regionOfInterest = l3Config.getRegionOfInterest();
         assertTrue(regionOfInterest instanceof Point);
         assertEquals("POINT (-60 13.4)", regionOfInterest.toString());
 
-        properties.setProperty(CONFNAME_L3_REGION, "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))");
+        l3Config.regionWkt = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))";
         regionOfInterest = l3Config.getRegionOfInterest();
         assertTrue(regionOfInterest instanceof Polygon);
         assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionOfInterest.toString());
 
-        properties.remove(CONFNAME_L3_REGION);
-        properties.remove(CONFNAME_L3_BBOX);
+        l3Config.regionWkt = null;
+        l3Config.bbox = null;
         regionOfInterest = l3Config.getRegionOfInterest();
         assertNull(regionOfInterest);
     }
 
     @Test
-    public void testComputationOfProductGeometriesAndPixelRegions() throws TransformException, FactoryException {
+    public void testComputationOfProductGeometriesAndPixelRegions() throws FactoryException, TransformException {
         Geometry geometry;
 
         Product product = new Product("N", "T", 360, 180);
         AffineTransform at = AffineTransform.getTranslateInstance(-180, -90);
         CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, new Rectangle(360, 180), at);
         product.setGeoCoding(geoCoding);
-        geometry = L3Config.computeProductGeometry(product);
+        geometry = BeamL3Config.computeProductGeometry(product);
         assertTrue(geometry instanceof Polygon);
         assertEquals("POLYGON ((-179.5 -89.5, -179.5 89.5, 179.5 89.5, 179.5 -89.5, -179.5 -89.5))", geometry.toString());
 
         Rectangle rectangle;
 
-        rectangle = L3Config.computePixelRegion(product, geometry);
+        rectangle = BeamL3Config.computePixelRegion(product, geometry);
         assertEquals(new Rectangle(360, 180), rectangle);
 
         SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);
         op.setRegion(new Rectangle(180 - 50, 90 - 25, 100, 50));
         product = op.getTargetProduct();
-        geometry = L3Config.computeProductGeometry(product);
+        geometry = BeamL3Config.computeProductGeometry(product);
         assertTrue(geometry instanceof Polygon);
         assertEquals("POLYGON ((-49.5 -24.5, -49.5 24.5, 49.5 24.5, 49.5 -24.5, -49.5 -24.5))", geometry.toString());
 
         // BBOX fully contained, with border=0
-        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 0);
+        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 0);
         assertEquals(new Rectangle(50, 25, 11, 11), rectangle);
 
         // BBOX fully contained, with border=1
-        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 1);
+        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 1);
         assertEquals(new Rectangle(49, 24, 13, 13), rectangle);
 
         // BBOX intersects product rect in upper left
-        rectangle = L3Config.computePixelRegion(product, createBBOX(45.5, 20.5, 100.0, 50.0), 0);
+        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(45.5, 20.5, 100.0, 50.0), 0);
         assertEquals(new Rectangle(95, 45, 5, 5), rectangle);
 
         // Product bounds fully contained in BBOX
-        rectangle = L3Config.computePixelRegion(product, createBBOX(-180, -90, 360, 180), 0);
+        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(-180, -90, 360, 180), 0);
         assertEquals(new Rectangle(0, 0, 100, 50), rectangle);
 
         // BBOX not contained
-        rectangle = L3Config.computePixelRegion(product, createBBOX(60.0, 0.0, 10.0, 10.0));
+        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(60.0, 0.0, 10.0, 10.0));
         assertEquals(null, rectangle);
     }
 
@@ -139,46 +159,21 @@ public class L3ConfigTest {
         return factory.createPolygon(ring, null);
     }
 
-    @Test
-    public void testInputPath() {
-        Properties properties = new Properties();
-        L3Config l3Config = new L3Config(properties);
-
-        try {
-            l3Config.getInputPath();
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-        }
-
-        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
-        String[] inputPath = l3Config.getInputPath();
-        assertNotNull(inputPath);
-        assertEquals(16, inputPath.length);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/02", inputPath[1]);
-
-        properties.setProperty(CONFNAME_L3_NUM_DAYS, "1");
-        inputPath = l3Config.getInputPath();
-        assertNotNull(inputPath);
-        assertEquals(1, inputPath.length);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2008/06/01", inputPath[0]);
-    }
-
-    @Test
-    public void testStartEndTime() throws ParseException {
-        Properties properties = new Properties();
-        L3Config l3Config = new L3Config(properties);
-        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
-        ProductData.UTC startTime = l3Config.getStartTime();
-        assertNotNull(startTime);
-        Calendar expectedStart = ProductData.UTC.parse("01-JUN-2008 00:00:00").getAsCalendar();
-        assertEqualsCalendar(expectedStart, startTime.getAsCalendar());
-
-        ProductData.UTC endTime = l3Config.getEndTime();
-        assertNotNull(endTime);
-        Calendar expectedEnd = ProductData.UTC.parse("16-JUN-2008 00:00:00").getAsCalendar();
-        assertEqualsCalendar(expectedEnd, endTime.getAsCalendar());
-    }
+//    @Test
+//    public void testStartEndTime() throws ParseException {
+//        Properties properties = new Properties();
+//        com.bc.calvalus.binning.job.BeamL3Config l3Config = new com.bc.calvalus.binning.job.BeamL3Config(properties);
+//        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
+//        ProductData.UTC startTime = l3Config.getStartTime();
+//        assertNotNull(startTime);
+//        Calendar expectedStart = ProductData.UTC.parse("01-JUN-2008 00:00:00").getAsCalendar();
+//        assertEqualsCalendar(expectedStart, startTime.getAsCalendar());
+//
+//        ProductData.UTC endTime = l3Config.getEndTime();
+//        assertNotNull(endTime);
+//        Calendar expectedEnd = ProductData.UTC.parse("16-JUN-2008 00:00:00").getAsCalendar();
+//        assertEqualsCalendar(expectedEnd, endTime.getAsCalendar());
+//    }
 
     private static void assertEqualsCalendar(Calendar expected, Calendar actual) {
         assertEquals(expected.get(Calendar.YEAR), actual.get(Calendar.YEAR));
@@ -218,7 +213,7 @@ public class L3ConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = l3Config.getBinManager();
+        BinManager binManager = l3Config.getBinningContext().getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
         assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());
@@ -228,23 +223,18 @@ public class L3ConfigTest {
         assertEquals(AggregatorMinMax.class, binManager.getAggregator(5).getClass());
     }
 
-    private L3Config loadConfig(String configPath) {
-        return new L3Config(loadConfigProperties(configPath));
+        @Test
+    public void testNumRows() {
+            assertEquals(4320, l3Config.numRows);
+        }
+
+    private BeamL3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
+        return BeamL3Config.create(new XmlDoc(loadConfigProperties(configPath)));
     }
 
-    private Properties loadConfigProperties(String configPath) {
-        final InputStream is = getClass().getResourceAsStream(configPath);
-        try {
-            try {
-                final Properties properties = new Properties();
-                properties.load(is);
-                return properties;
-            } finally {
-                is.close();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+    private String loadConfigProperties(String configPath) throws IOException {
+        InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(configPath));
+        return FileUtils.readText(inputStreamReader).trim();
     }
 
 }

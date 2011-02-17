@@ -11,6 +11,7 @@
         <dependencySet>
             <includes>
                 <include>org.esa.beam:beam-gpf</include>
+                <include>org.esa.beam:beam-core</include>
                 <include>org.esa.beam:beam-envisat-reader</include>
             </includes>
             <excludes>

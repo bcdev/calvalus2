@@ -27,6 +27,10 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-commons</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-binning</artifactId>
+        </dependency>
 
         <!--  BEAM -->
 
@@ -127,8 +131,8 @@
                 <version>2.2</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/job.xml</descriptor>
                         <descriptor>src/main/assembly/beam.xml</descriptor>
+                        <descriptor>src/main/assembly/job.xml</descriptor>
                         <descriptor>src/main/assembly/client.xml</descriptor>
                     </descriptors>
                 </configuration>

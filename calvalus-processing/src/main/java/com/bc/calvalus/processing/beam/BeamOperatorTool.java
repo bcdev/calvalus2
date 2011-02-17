@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.binning.SpatialBin;
+import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.bc.calvalus.processing.shellexec.FileUtil;
@@ -10,11 +12,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -23,6 +24,7 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.logging.Logger;
 
 /**
@@ -39,22 +41,19 @@ import java.util.logging.Logger;
  * Call with:
  * <pre>
  *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
- *    com.bc.calvalus.processing.shellexec.ExecutablesTool \
- *    l2gen-request.xml \
+ *    com.bc.calvalus.processing.beam.BeamOperatorTool \
+ *    request.xml \
  *    [-wait=false]
  * </pre>
  *
  * @author Boe
+* @author Norman Fomferra
+ * @author Marco Zuehlke
  */
 public class BeamOperatorTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-
-    private static Options options;
-
-    static {
-        options = new Options();
-    }
+    private static Options options = new Options();
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new BeamOperatorTool(), args));
@@ -69,37 +68,28 @@ public class BeamOperatorTool extends Configured implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
-
-        String requestPath = null;
+        // parse command line arguments
+        CommandLineParser commandLineParser = new PosixParser();
+        final CommandLine commandLine = commandLineParser.parse(options, args);
+        String[] remainingArgs = commandLine.getArgs();
+        if (remainingArgs.length == 0) {
+            throw new IllegalStateException("No request file specified.");
+        }
+        String requestPath = remainingArgs[0];
         try {
-            // parse command line arguments
-            CommandLineParser commandLineParser = new PosixParser();
-            final CommandLine commandLine = commandLineParser.parse(options, args);
-            requestPath = commandLine.getArgs()[0];
-
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
-            BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(requestContent);
-
-            final String requestType = opConfig.getOperatorName();
-            final String requestOutputDir = opConfig.getRequestOutputDir();
-
-            // clear output directory
-            final Path output = new Path(requestOutputDir);
-            final FileSystem fileSystem = output.getFileSystem(getConf());
-            fileSystem.delete(output, true);
-            //fileSystem.mkdirs(output);
-
-            LOG.info("start processing " + requestType + " (" + requestPath + ")");
-            long startTime = System.nanoTime();
+            WpsConfig wpsConfig = new WpsConfig(requestContent);
+            String requestOutputDir = wpsConfig.getRequestOutputDir();
+            String identifier = wpsConfig.getIdentifier();
 
             // construct job and set parameters and handlers
-            Job job = new Job(getConf(), requestPath);  // TODO improve job identification
-            job.getConfiguration().set("calvalus.request", requestContent);
-            job.setInputFormatClass(ExecutablesInputFormat.class);
-            job.setMapperClass(BeamOperatorMapper.class);
+            Job job = new Job(getConf(), identifier);
+            Configuration conf = job.getConfiguration();
+            conf.set("calvalus.request", requestContent);
 
             // look up job jar either by class (if deployed) or by path (idea)
+            // job.setJarByClass(getClass());
             String pathname = "lib/calvalus-processing-0.1-SNAPSHOT-job.jar";
             if (!new File(pathname).exists()) {
                 pathname = "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar";
@@ -107,32 +97,68 @@ public class BeamOperatorTool extends Configured implements Tool {
                     throw new IllegalArgumentException("Cannot find job jar");
                 }
             }
-            job.getConfiguration().set("mapred.jar", pathname);
+            conf.set("mapred.jar", pathname);
 
-            // put processor onto the classpath
-            addPackageToClassPath(opConfig.getProcessorPackage(), job.getConfiguration());
 
-            // put BEAM and BEAM 3rd party-libs onto the classpath
-            final String beamPackage = "beam";
-            final String beamVersion = "4.9-SNAPSHOT";
-            addPackageToClassPath(beamPackage + "-" + beamVersion, job.getConfiguration());
+            // clear output directory
+            final Path outputPath = new Path(requestOutputDir);
+            final FileSystem fileSystem = outputPath.getFileSystem(getConf());
+            fileSystem.delete(outputPath, true);
+             FileOutputFormat.setOutputPath(job, outputPath);
 
-            job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
-            job.getConfiguration().set("mapred.map.tasks.speculative.execution", "false");
-            job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
-            //job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
-            job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
-            job.getConfiguration().set("mapred.reduce.tasks", "0");
-            // TODO is this necessary?
-            FileOutputFormat.setOutputPath(job, output);
-            //job.setOutputFormatClass(TextOutputFormat.class);
-            //job.setOutputKeyClass(Text.class);
-            //job.setOutputValueClass(Text.class);
+            job.setInputFormatClass(ExecutablesInputFormat.class);
 
-            int result = job.waitForCompletion(true) ? 0 : 1;
+            if (wpsConfig.isLevel3()) {
+                job.setNumReduceTasks(16);
 
+                job.setMapperClass(L3Mapper.class);
+                job.setMapOutputKeyClass(IntWritable.class);
+                job.setMapOutputValueClass(SpatialBin.class);
+
+                job.setPartitionerClass(L3Partitioner.class);
+
+                job.setReducerClass(L3Reducer.class);
+                job.setOutputKeyClass(IntWritable.class);
+                job.setOutputValueClass(TemporalBin.class);
+
+                // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
+            } else {
+                job.setMapperClass(BeamOperatorMapper.class);
+                job.setNumReduceTasks(0);
+                //job.setOutputFormatClass(TextOutputFormat.class);
+                //job.setOutputKeyClass(Text.class);
+                //job.setOutputValueClass(Text.class);
+            }
+            conf.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
+            conf.set("mapred.map.tasks.speculative.execution", "false");
+            conf.set("mapred.reduce.tasks.speculative.execution", "false");
+            //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+            conf.set("mapred.child.java.opts", "-Xmx1024m");
+
+            BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), conf);
+
+            LOG.info("start processing " + identifier + " (" + requestPath + ")");
+            long startTime = System.nanoTime();
+            boolean success = job.waitForCompletion(true);
+            int result = success ? 0 : 1;
             long stopTime = System.nanoTime();
-            LOG.info("stop  processing "  + requestType + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) +  " sec");
+            LOG.info("stop  processing "  + identifier + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) +  " sec");
+
+            if (success && wpsConfig.isLevel3()) {
+                FileSystem outputPathFileSystem = outputPath.getFileSystem(conf);
+                FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, BeamL3Config.L3_REQUEST_FILENAME));
+                os.writeBytes(requestContent);
+
+                final String formatterOutput = conf.get("calvalus.l3.formatter.output");
+                if (formatterOutput != null) {
+    //                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
+    //                L3Formatter formatter = new L3Formatter();
+    //                formatter.setConf(conf);
+    //                result = formatter.run(args);
+                } else {
+                    LOG.info(MessageFormat.format("no formatting performed", formatterOutput));
+                }
+            }
             return result;
 
         } catch (IllegalArgumentException e) {
@@ -159,23 +185,6 @@ public class BeamOperatorTool extends Configured implements Tool {
             System.err.println("failed handling request file " + requestPath + ": " + e.getMessage());
             return 1;
 
-        }
-    }
-
-    private void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
-        final FileSystem beamFileSystem = FileSystem.get(configuration);
-        final Path beamPath = new Path("/calvalus/software/0.5/" + packageName);
-
-        final FileStatus[] beamJars = beamFileSystem.listStatus(beamPath, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().endsWith("jar");
-            }
-        });
-        for (FileStatus beamJar : beamJars) {
-            final Path path = beamJar.getPath();
-            final Path pathWithoutProtocol = new Path(path.toUri().getPath());  // for hadoops sake!
-            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration);
         }
     }
 }

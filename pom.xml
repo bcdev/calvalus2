@@ -128,6 +128,11 @@
                 <version>${calvalus.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-binning</artifactId>
+                <version>${calvalus.version}</version>
+            </dependency>
 
             <!--  BEAM -->
 

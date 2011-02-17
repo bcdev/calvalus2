@@ -1,25 +1,16 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.util.SystemUtils;
 
-import javax.imageio.stream.ImageInputStream;
-import javax.media.jai.JAI;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -38,16 +29,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    //TODO make this an option
-    private static final int TILE_HEIGHT = 128;
-    private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
 
-    static {
-        SystemUtils.init3rdPartyLibs(BeamOperatorMapper.class.getClassLoader());
-        JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(TILE_CACHE_SIZE_M * 1024 * 1024);
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-    }
 
     /**
      * Mapper implementation method. See class comment.
@@ -60,18 +42,18 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
      */
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-
+        BeamProductHandler.init();
         try {
             final FileSplit split = (FileSplit) context.getInputSplit();
             final Path input = split.getPath();
 
             // parse request
             Configuration configuration = context.getConfiguration();
-            final String requestContent = configuration.get("calvalus.request");
-            BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(requestContent);
+            WpsConfig wpsConfig = WpsConfig.createFromJobConfig(configuration);
+            BeamL2Config opConfig = new BeamL2Config(wpsConfig);
 
             final String operatorName = opConfig.getOperatorName();
-            final String requestOutputPath = opConfig.getRequestOutputDir();
+            final String requestOutputPath = opConfig.getWpsConfig().getRequestOutputDir();
 
             // transform request into parameter objects
             Map<String, Object> parameters = opConfig.getOperatorParameters();
@@ -81,7 +63,8 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             final long startTime = System.nanoTime();
 
             // set up input reader
-            final Product sourceProduct = readProduct(input, configuration);
+            BeamProductHandler beamProductHandler = new BeamProductHandler();
+            final Product sourceProduct = beamProductHandler.readProduct(input, configuration);
 
             // set up operator and target product
             final Product targetProduct = GPF.createProduct(operatorName, parameters, sourceProduct);
@@ -90,7 +73,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             // process input and write target product
             final String outputFileName = "L2_of_" + input.getName() + ".seq";
             final Path outputProductPath = new Path(requestOutputPath, outputFileName);
-            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, TILE_HEIGHT);
+            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, beamProductHandler.getTileHeight());
 
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();
@@ -105,24 +88,6 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
         }
     }
 
-    /**
-     * Reads a product from the distributed file system.
-     *
-     * @param input         The input path
-     * @param configuration the configuration
-     * @return The product
-     * @throws IOException
-     */
-    private Product readProduct(Path input, Configuration configuration) throws IOException {
-        final FileSystem fs = input.getFileSystem(configuration);
-        final FileStatus status = fs.getFileStatus(input);
-        final FSDataInputStream in = fs.open(input);
-        final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(TILE_HEIGHT));
-        final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
-        final ProductReader productReader = plugIn.createReaderInstance();
-        return productReader.readProductNodes(imageInputStream, null);
-    }
 
 
 }

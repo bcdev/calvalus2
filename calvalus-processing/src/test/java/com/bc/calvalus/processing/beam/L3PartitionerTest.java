@@ -1,7 +1,22 @@
-package com.bc.calvalus.binning.job;
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.BinningGrid;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
 
@@ -14,12 +29,10 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
 
         assertNull(l3Partitioner.getBinningGrid());
-
-        Configuration conf = new Configuration();
-        int numRows = 113;
-        conf.setInt(L3Config.CONFNAME_L3_GRID_NUM_ROWS, numRows);
+        BeamL3Config l3Config = new BeamL3Config();
+        l3Config.numRows = 113;
         try {
-            l3Partitioner.setConf(conf);
+            l3Partitioner.setL3Config(l3Config);
             fail("IllegalArgumentException?");
         } catch (IllegalArgumentException e) {
         }
@@ -28,16 +41,16 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows2Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        Configuration conf = new Configuration();
+        BeamL3Config l3Config = new BeamL3Config();
         int numRows = 6;
-        conf.setInt(L3Config.CONFNAME_L3_GRID_NUM_ROWS, numRows);
-        l3Partitioner.setConf(conf);
+        l3Config.numRows = numRows;
+        l3Partitioner.setL3Config(l3Config);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));
         assertEquals(8, binningGrid.getNumCols(1));
         assertEquals(12, binningGrid.getNumCols(2));
-        
+
         assertEquals(12, binningGrid.getNumCols(3));
         assertEquals(8, binningGrid.getNumCols(4));
         assertEquals(3, binningGrid.getNumCols(5));
@@ -60,10 +73,10 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows3Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        Configuration conf = new Configuration();
+        BeamL3Config l3Config = new BeamL3Config();
         int numRows = 6;
-        conf.setInt(L3Config.CONFNAME_L3_GRID_NUM_ROWS, numRows);
-        l3Partitioner.setConf(conf);
+        l3Config.numRows = numRows;
+        l3Partitioner.setL3Config(l3Config);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));
@@ -93,10 +106,10 @@ public class L3PartitionerTest {
     @Test
     public void test8Rows3Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        Configuration conf = new Configuration();
+        BeamL3Config l3Config = new BeamL3Config();
         int numRows = 8;
-        conf.setInt(L3Config.CONFNAME_L3_GRID_NUM_ROWS, numRows);
-        l3Partitioner.setConf(conf);
+        l3Config.numRows = numRows;
+        l3Partitioner.setL3Config(l3Config);
         BinningGrid binningGrid = l3Partitioner.getBinningGrid();
 
         assertEquals(3, binningGrid.getNumCols(0));

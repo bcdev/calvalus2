@@ -1,4 +1,20 @@
-package com.bc.calvalus.binning.job;
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.ObservationSlice;
@@ -6,19 +22,13 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -28,8 +38,6 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.VirtualBand;
 import org.esa.beam.jai.ImageManager;
 
-import javax.imageio.stream.ImageInputStream;
-import javax.media.jai.JAI;
 import java.awt.Point;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
@@ -51,19 +59,16 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-
-        final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
-
+        BeamProductHandler.init();
         final Configuration hadoopConfiguration = context.getConfiguration();
-        L3Config l3Config = L3Config.createFromJobConfig(hadoopConfiguration);
+        WpsConfig wpsConfig = WpsConfig.createFromJobConfig(hadoopConfiguration);
+        BeamL3Config l3Config = BeamL3Config.create(wpsConfig.getRequestXmlDoc());
+        l3Config.validateConfiguration();
+        BeamL2Config beamConfig = new BeamL2Config(wpsConfig);
+
         final BinningContext ctx = l3Config.getBinningContext();
-
-        JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1024); // 512 MB
-
-        final int numScansPerSlice = hadoopConfiguration.getInt(L3Config.CONFNAME_L3_NUM_SCANS_PER_SLICE, L3Config.DEFAULT_L3_NUM_SCANS_PER_SLICE);
-        // todo - must tell BEAM to use this tileHeight in all readers, not only Envisat reader
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(numScansPerSlice));
+        final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
+        final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -71,20 +76,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
         final long startTime = System.nanoTime();
 
-        // open the single split as ImageInputStream and get a product via an Envisat product reader
-        final Path path = split.getPath();
-        final FileSystem inputFileSystem = path.getFileSystem(hadoopConfiguration);
-        final FSDataInputStream fsDataInputStream = inputFileSystem.open(path);
-        final FileStatus status = inputFileSystem.getFileStatus(path);
-        final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
-        final ProductReader productReader = plugIn.createReaderInstance();
-        final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
-        final ImageInputStream imageInputStream = new FSImageInputStream(fsDataInputStream, status.getLen());
-        final Product source = productReader.readProductNodes(imageInputStream, null);
-        if (source == null) {
-            throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", path));
-        }
-        final Product product = l3Config.getPreProcessedProduct(source);
+        final Path inputPath = split.getPath();
+        BeamProductHandler beamProductHandler = new BeamProductHandler();
+        Product source = beamProductHandler.readProduct(inputPath, hadoopConfiguration);
+
+        final Product product = l3Config.getPreProcessedProduct(source, beamConfig);
         if (product != null) {
             try {
                 processProduct(product, ctx, spatialBinner);

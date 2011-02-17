@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
@@ -24,28 +23,35 @@ import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link BeamOperatorConfiguration}.
+ * Test for {@link BeamL2Config}.
  */
-public class BeamOperatorConfigurationTest {
+public class BeamL2ConfigTest {
 
     @Before
     public void before() {
          GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 
+    private BeamL2Config createFromResource(String name) throws IOException, SAXException, ParserConfigurationException {
+        InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(name));
+        String wpsXML = FileUtils.readText(inputStreamReader).trim();
+        return new BeamL2Config(new WpsConfig(wpsXML));
+    }
+
     @Test
     public void convertSimpleRequestToParametersMap() throws Exception {
-        InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("radiometry-request.xml"));
-        String wpsXML = FileUtils.readText(inputStreamReader).trim();
+        BeamL2Config opConfig = createFromResource("radiometry-request.xml");
 
-        BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(wpsXML);
         DomElement element = opConfig.getOperatorParametersDomElement();
         assertNotNull(element);
         assertEquals("parameters", element.getName());
@@ -75,12 +81,9 @@ public class BeamOperatorConfigurationTest {
 
     @Test
     public void convertComplexRequestToParametersMap() throws Exception {
-        InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("bandmaths-request.xml"));
-        String wpsXML = FileUtils.readText(inputStreamReader).trim();
-        XmlDoc request = new XmlDoc(wpsXML);
+        BeamL2Config opConfig = createFromResource("bandmaths-request.xml");
 
         // Check if we can extract parameters element
-        BeamOperatorConfiguration opConfig = new BeamOperatorConfiguration(wpsXML);
         DomElement element = opConfig.getOperatorParametersDomElement();
         assertNotNull(element);
         assertEquals("parameters", element.getName());

@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.NoRecordReader;
+import com.bc.calvalus.processing.beam.WpsConfig;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -13,8 +14,6 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,11 +31,6 @@ public class ExecutablesInputFormat extends InputFormat {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    //private static final String INPUTS_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.input']";
-    //private static final String INPUT_HREF_XPATH = "wps:Reference/@xlink:href";
-    private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
-    private static final String INPUT_HREF_XPATH = "Reference/@href";
-
     /**
      * Generate the list of files and make them into FileSplits.
      */
@@ -44,18 +38,15 @@ public class ExecutablesInputFormat extends InputFormat {
     public List<FileSplit> getSplits(JobContext job) throws IOException {
 
         try {
-
             // parse request
-            final String requestContent = job.getConfiguration().get("calvalus.request");
-            final XmlDoc request = new XmlDoc(requestContent);
-            NodeList nodes = request.getNodes(INPUTS_XPATH);
+            WpsConfig wpsConfig = WpsConfig.createFromJobConfig(job.getConfiguration());
+            String[] requestInputPaths = wpsConfig.getRequestInputPaths();
 
             // create splits for each calvalus.input in request
-            List<FileSplit> splits = new ArrayList<FileSplit>(nodes.getLength());
-            for (int i = 0; i < nodes.getLength(); ++i) {
+            List<FileSplit> splits = new ArrayList<FileSplit>(requestInputPaths.length);
+            for (int i = 0; i < requestInputPaths.length; ++i) {
                 // get input out of request
-                Node node = nodes.item(i);
-                String inputUrl = request.getString(INPUT_HREF_XPATH, node);
+                String inputUrl = requestInputPaths[i];
                 // inquire "status" of file from HDFS
                 Path input = new Path(inputUrl);
                 FileSystem fs = input.getFileSystem(job.getConfiguration());
