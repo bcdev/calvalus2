@@ -10,6 +10,9 @@ public class PortalProductionRequest implements IsSerializable {
     String processorVersion;
     String processingParameters;
 
+    /**
+     * No-arg constructor as required by {@link IsSerializable}.
+     */
     public PortalProductionRequest() {
     }
 
@@ -21,6 +24,7 @@ public class PortalProductionRequest implements IsSerializable {
         this.inputProductSetId = inputProductSetId;
         this.outputProductSetName = outputProductSetName;
         this.processorId = processorId;
+        this.processorVersion = processorVersion;
         this.processingParameters = processingParameters;
     }
 
@@ -47,6 +51,10 @@ public class PortalProductionRequest implements IsSerializable {
 
     public String getProcessorId() {
         return processorId;
+    }
+
+    public String getProcessorVersion() {
+        return processorVersion;
     }
 
     public String getProcessingParameters() {

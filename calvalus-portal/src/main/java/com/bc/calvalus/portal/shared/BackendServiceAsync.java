@@ -8,9 +8,11 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendServiceAsync {
-    void getProductSets(String type, AsyncCallback<PortalProductSet[]> async);
+    void getProductSets(String type, AsyncCallback<PortalProductSet[]> callback);
 
-    void getProcessors(String type, AsyncCallback<PortalProcessor[]> async);
+    void getProcessors(String type, AsyncCallback<PortalProcessor[]> callback);
 
     void orderProduction(PortalProductionRequest request, AsyncCallback<PortalProductionResponse> callback);
+
+    void getProductionStatus(String productionId, AsyncCallback<WorkStatus> callback);
 }

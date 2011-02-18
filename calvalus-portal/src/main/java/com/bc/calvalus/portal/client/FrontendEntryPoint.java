@@ -6,27 +6,39 @@ import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
+import com.google.gwt.cell.client.ActionCell;
+import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.NumberCell;
+import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.smartgwt.client.widgets.Label;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.MultiSelectionModel;
+import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.SelectionModel;
 import org.gwtopenmaps.openlayers.client.LonLat;
 import org.gwtopenmaps.openlayers.client.MapOptions;
 import org.gwtopenmaps.openlayers.client.MapWidget;
@@ -40,8 +52,13 @@ import org.gwtopenmaps.openlayers.client.layer.WMS;
 import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
 import org.gwtopenmaps.openlayers.client.layer.WMSParams;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
+ *
+ * @author Norman
  */
 public class FrontendEntryPoint implements EntryPoint {
 
@@ -60,10 +77,12 @@ public class FrontendEntryPoint implements EntryPoint {
     private PortalProductSet[] productSets;
     private PortalProcessor[] processors;
     private boolean initialised;
+    private DecoratedTabPanel tabPanel;
 
     /**
      * This is the entry point method.
      */
+    @Override
     public void onModuleLoad() {
 
         final DialogBox splashScreen = createSplashScreen();
@@ -120,6 +139,21 @@ public class FrontendEntryPoint implements EntryPoint {
     }
 
     private void initFrontend() {
+        tabPanel = new DecoratedTabPanel();
+        tabPanel.setWidth("400px");
+        tabPanel.setAnimationEnabled(true);
+
+        tabPanel.add(createQueryPanel(), "Query");
+        tabPanel.add(createLevel2Panel(), "Level 2");
+        tabPanel.add(createJobsPanel(), "Jobs");
+
+        tabPanel.selectTab(1);
+        tabPanel.ensureDebugId("cwTabPanel");
+
+        RootPanel.get("mainPanel").add(tabPanel);
+    }
+
+    private Widget createLevel2Panel() {
         inputPsListBox = new ListBox();
         inputPsListBox.setName("productSetListBox");
         for (PortalProductSet productSet : productSets) {
@@ -165,6 +199,62 @@ public class FrontendEntryPoint implements EntryPoint {
         Button submitButton = new Button("Submit", new SubmitHandler());
 
 
+        VerticalPanel productSetPanelA = new VerticalPanel();
+        productSetPanelA.setSpacing(4);
+        productSetPanelA.add(new Label("Input Level 1 product set:"));
+        productSetPanelA.add(inputPsListBox);
+        VerticalPanel productSetPanelB = new VerticalPanel();
+        productSetPanelB.setSpacing(4);
+        productSetPanelB.add(new Label("Output Level 2 product set:"));
+        productSetPanelB.add(outputPsTextBox);
+        HorizontalPanel productSetPanel = new HorizontalPanel();
+        productSetPanel.setSpacing(4);
+        productSetPanel.add(productSetPanelA);
+        productSetPanel.add(productSetPanelB);
+
+        VerticalPanel processorPanelA = new VerticalPanel();
+        processorPanelA.setSpacing(4);
+        processorPanelA.add(new Label("Processor:"));
+        processorPanelA.add(processorListBox);
+        VerticalPanel processorPanelB = new VerticalPanel();
+        processorPanelB.setSpacing(4);
+        processorPanelB.add(new Label("Version:"));
+        processorPanelB.add(processorVersionListBox);
+        HorizontalPanel processorPanel = new HorizontalPanel();
+        processorPanel.setSpacing(4);
+        processorPanel.add(processorPanelA);
+        processorPanel.add(processorPanelB);
+
+        // Create a panel to hold all of the form widgets.
+        final VerticalPanel formPanel = new VerticalPanel();
+        formPanel.setStyleName("formPanel");
+
+        formPanel.add(productSetPanel);
+        formPanel.add(processorPanel);
+        formPanel.add(new Label("Processing parameters:"));
+        formPanel.add(parametersTextArea);
+        formPanel.add(new Label("Parameter file:"));
+        formPanel.add(parametersFileUpload);
+        formPanel.add(submitButton);
+
+        form = new FormPanel();
+        form.setWidget(formPanel);
+
+        form.addSubmitHandler(new FormPanel.SubmitHandler() {
+            public void onSubmit(FormPanel.SubmitEvent event) {
+                // todo - check inputs
+            }
+        });
+        form.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
+                parametersTextArea.setText(event.getResults());
+            }
+        });
+
+        return form;
+    }
+
+    private Widget createQueryPanel() {
         //Defining a WMSLayer and adding it to a Map
         WMSParams wmsParams = new WMSParams();
         wmsParams.setFormat("image/png");
@@ -203,62 +293,69 @@ public class FrontendEntryPoint implements EntryPoint {
         int zoom = 5;
         mapWidget.getMap().setCenter(new LonLat(lon, lat), zoom);
 
-        VerticalPanel productSetPanelA = new VerticalPanel();
-        productSetPanelA.setSpacing(4);
-        productSetPanelA.add(new Label("Input Level 1 product set:"));
-        productSetPanelA.add(inputPsListBox);
-        VerticalPanel productSetPanelB = new VerticalPanel();
-        productSetPanelB.setSpacing(4);
-        productSetPanelB.add(new Label("Output Level 2 product set:"));
-        productSetPanelB.add(outputPsTextBox);
-        HorizontalPanel productSetPanel = new HorizontalPanel();
-        productSetPanel.setSpacing(4);
-        productSetPanel.add(productSetPanelA);
-        productSetPanel.add(productSetPanelB);
+        return mapWidget;
+    }
 
-        VerticalPanel processorPanelA = new VerticalPanel();
-        processorPanelA.setSpacing(4);
-        processorPanelA.add(new Label("Processor:"));
-        processorPanelA.add(processorListBox);
-        VerticalPanel processorPanelB = new VerticalPanel();
-        processorPanelB.setSpacing(4);
-        processorPanelB.add(new Label("Version:"));
-        processorPanelB.add(processorVersionListBox);
-        HorizontalPanel processorPanel = new HorizontalPanel();
-        processorPanel.setSpacing(4);
-        processorPanel.add(processorPanelA);
-        processorPanel.add(processorPanelB);
+    private Widget createJobsPanel() {
+        // Create a CellTable.
 
-        // Create a panel to hold all of the form widgets.
-        final VerticalPanel formPanel = new VerticalPanel();
-        formPanel.setStyleName("formPanel");
+        // Set a key provider that provides a unique key for each contact. If key is
+        // used to identify contacts when fields (such as the name and address)
+        // change.
+        CellTable cellTable = new CellTable<JobInfo>(JOB_KEY_PROVIDER);
+        cellTable.setWidth("100%");
 
-        formPanel.add(productSetPanel);
-        formPanel.add(processorPanel);
-        formPanel.add(new Label("<b>Processing parameters:"));
-        formPanel.add(parametersTextArea);
-        formPanel.add(new Label("<b>Parameter file:"));
-        formPanel.add(parametersFileUpload);
-        formPanel.add(submitButton);
-        formPanel.add(new HTML("<p/><p/><p/>"));
-        formPanel.add(new Label("Map:"));
-        formPanel.add(mapWidget);
 
-        form = new FormPanel();
-        form.setWidget(formPanel);
-        form.addSubmitHandler(new FormPanel.SubmitHandler() {
-            public void onSubmit(FormPanel.SubmitEvent event) {
-                // todo - check inputs
-                //Window.alert(GWT.getModuleBaseURL());
+        final SelectionModel<JobInfo> selectionModel = new MultiSelectionModel<JobInfo>(JOB_KEY_PROVIDER);
+        cellTable.setSelectionModel(selectionModel);
+
+        Column<JobInfo, Boolean> checkColumn = new Column<JobInfo, Boolean>(new CheckboxCell(true)) {
+            @Override
+            public Boolean getValue(JobInfo object) {
+                // Get the value from the selection model.
+                return selectionModel.isSelected(object);
             }
-        });
-        form.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
-            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-                parametersTextArea.setText(event.getResults());
-            }
-        });
+        };
+        cellTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
 
-        RootPanel.get().add(form);
+        // First name.
+        Column<JobInfo, String> nameColumn = new Column<JobInfo, String>(new TextCell()) {
+            @Override
+            public String getValue(JobInfo object) {
+                return object.getName();
+            }
+        };
+
+        cellTable.addColumn(nameColumn, "Production Name");
+
+        // Last name.
+        Column<JobInfo, Number> percentColumn = new Column<JobInfo, Number>(new NumberCell()) {
+            @Override
+            public Number getValue(JobInfo object) {
+                return object.getPercent();
+            }
+        };
+        cellTable.addColumn(percentColumn,  "Percent complete");
+
+        ActionCell actionCell = new ActionCell("see",
+                                         new ActionCell.Delegate() {
+                                             @Override
+                                             public void execute(Object object) {
+                                                 // TODO
+                                                  Window.alert("Here are your results:");
+                                             }
+                                         }
+        );
+        Column<JobInfo, JobInfo> resultColumn = new IdentityColumn<JobInfo>(actionCell);
+        cellTable.addColumn(resultColumn,  "Result");
+
+        List<JobInfo> jobInfoList = Arrays.asList(
+                new JobInfo("id1", "name1", 5),
+                new JobInfo("id2", "name2", 15),
+                new JobInfo("id3", "name3", 25)
+        );
+        cellTable.setRowData(0, jobInfoList);
+        return cellTable;
     }
 
     private void updateProcessorVersionsListBox() {
@@ -290,8 +387,11 @@ public class FrontendEntryPoint implements EntryPoint {
                                                                           processorVersionListBox.getValue(processorVersionIndex),
                                                                           parametersTextArea.getText().trim());
             backendService.orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
-                public void onSuccess(PortalProductionResponse response) {
-                    Window.alert("Success!\n" + response.getMessage());
+                public void onSuccess(final PortalProductionResponse response) {
+                   tabPanel.selectTab(2);
+                    Worker worker = new Worker(new ProductionReporter(backendService, response),
+                                               new ProductionObserver(response));
+                    worker.start(500);
                 }
 
                 public void onFailure(Throwable caught) {
@@ -299,6 +399,7 @@ public class FrontendEntryPoint implements EntryPoint {
                 }
             });
         }
+
     }
 
     private class FileUploadChangeHandler implements ChangeHandler {
@@ -315,6 +416,40 @@ public class FrontendEntryPoint implements EntryPoint {
             }
         }
     }
+
+    /**
+     * The key provider that provides the unique ID of a contact.
+     */
+    public static final ProvidesKey<JobInfo> JOB_KEY_PROVIDER = new ProvidesKey<JobInfo>() {
+        public Object getKey(JobInfo item) {
+            return item == null ? null : item.getId();
+        }
+    };
+
+    public static class JobInfo {
+        private String id;
+        String name;
+        int percent;
+
+        public JobInfo(String id, String name, int percent) {
+            this.id = id;
+            this.name = name;
+            this.percent = percent;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getPercent() {
+            return percent;
+        }
+    }
+
 }
 
 

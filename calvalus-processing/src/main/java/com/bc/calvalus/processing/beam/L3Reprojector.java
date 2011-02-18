@@ -229,15 +229,15 @@ public class L3Reprojector {
     }
 
     static void reprojectRow(BinningContext ctx,
-                             Rectangle rectangle,
+                             Rectangle pixelRegion,
                              int y,
                              List<TemporalBin> binRow,
                              TemporalBinProcessor temporalBinProcessor,
                              int gridWidth,
                              int gridHeight) throws Exception {
-        final int x1 = rectangle.x;
-        final int x2 = rectangle.x + rectangle.width - 1;
-        final int y1 = rectangle.y;
+        final int x1 = pixelRegion.x;
+        final int x2 = pixelRegion.x + pixelRegion.width - 1;
+        final int y1 = pixelRegion.y;
         if (binRow.isEmpty()) {
             for (int x = x1; x <= x2; x++) {
                 temporalBinProcessor.processMissingBin(x - x1, y - y1);
