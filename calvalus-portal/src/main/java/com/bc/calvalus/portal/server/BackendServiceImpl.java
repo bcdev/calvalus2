@@ -8,9 +8,9 @@ import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import org.apache.commons.collections.map.HashedMap;
 
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,7 +23,7 @@ import java.util.TimerTask;
 @SuppressWarnings("serial")
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
     // for testing only...
-    Map<String, Production> productions = new HashedMap();
+    Map<String, Production> productions = new HashMap<String, Production>();
 
     @Override
     public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
@@ -50,18 +50,18 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
 
     @Override
-    public PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException {
+    public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
 
-        if (!PortalProductionRequest.isValid(request)) {
+        if (!PortalProductionRequest.isValid(productionRequest)) {
             throw new BackendServiceException("Invalid processing request.");
         }
 
         String productionId = Long.toHexString(System.nanoTime());
-        String message = MessageFormat.format("About to process {0} to {1} using {2}, version {3}.",
-                                              request.getInputProductSetId(),
-                                              request.getOutputProductSetName(),
-                                              request.getProcessorId(),
-                                              request.getProcessorVersion());
+        String productionName = MessageFormat.format("Processing {0} to {1} using {2}, version {3}.",
+                                                     productionRequest.getInputProductSetId(),
+                                                     productionRequest.getOutputProductSetName(),
+                                                     productionRequest.getProcessorId(),
+                                                     productionRequest.getProcessorVersion());
 
         long totalTime = 10 * 1000; // 10 seconds
         Production production = new Production(totalTime);
@@ -69,7 +69,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
         productions.put(productionId, production);
 
-        return new PortalProductionResponse(productionId, message);
+        return new PortalProductionResponse(productionId, productionName, productionRequest);
     }
 
     @Override

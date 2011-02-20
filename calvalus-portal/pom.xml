@@ -16,7 +16,7 @@
     <packaging>war</packaging>
 
     <properties>
-        <gwt.version>2.1.0</gwt.version>
+        <gwt.version>2.2.0</gwt.version>
     </properties>
 
     <name>Calvalus Portal</name>
@@ -52,7 +52,13 @@
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-dev</artifactId>
             <version>${gwt.version}</version>
-            <scope>test</scope>
+            <!--
+            Actually 'test' is correct, but with GWT 2.2.0 'mvn gwt:run' doesn't work and produces the following error:
+            00:00:00,016 [ERROR] Unexpected error while processing XML
+            java.lang.NoClassDefFoundError: com/google/gwt/core/ext/GeneratorExt
+            -->
+            <!--<scope>test</scope>-->
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -97,10 +103,9 @@
            see gwt-maven-plugin documentation at codehaus.org -->
                 <configuration>
                     <!-- URL that should be automatically opened in the GWT shell (gwt:run). -->
-                    <runTarget>CalvalusApp.html</runTarget>
+                    <runTarget>calvalus.html</runTarget>
                     <!-- Location of the develop-mode web application structure (gwt:run). -->
                     <hostedWebapp>target/www</hostedWebapp>
-                    <!-- Ask GWT to create the Story of Your Compile (SOYC) (gwt:compile) -->
                     <soyc>true</soyc>
                 </configuration>
             </plugin>
@@ -153,7 +158,7 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>src/main/webapp/calvalusapp</directory>
+                            <directory>src/main/webapp/calvalus</directory>
                         </fileset>
                         <fileset>
                             <directory>src/main/webapp/WEB-INF/classes</directory>

@@ -8,8 +8,6 @@ import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.CheckboxCell;
-import com.google.gwt.cell.client.NumberCell;
-import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -20,14 +18,17 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.IdentityColumn;
+import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FileUpload;
+import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
@@ -36,6 +37,7 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
@@ -52,15 +54,12 @@ import org.gwtopenmaps.openlayers.client.layer.WMS;
 import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
 import org.gwtopenmaps.openlayers.client.layer.WMSParams;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  *
  * @author Norman
  */
-public class FrontendEntryPoint implements EntryPoint {
+public class CalvalusPortal implements EntryPoint {
 
     static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
@@ -78,6 +77,7 @@ public class FrontendEntryPoint implements EntryPoint {
     private PortalProcessor[] processors;
     private boolean initialised;
     private DecoratedTabPanel tabPanel;
+    private ListDataProvider<JobInfo> jobDataProvider;
 
     /**
      * This is the entry point method.
@@ -85,55 +85,38 @@ public class FrontendEntryPoint implements EntryPoint {
     @Override
     public void onModuleLoad() {
 
-        final DialogBox splashScreen = createSplashScreen();
-
         backendService.getProductSets(null, new AsyncCallback<PortalProductSet[]>() {
             @Override
             public void onSuccess(PortalProductSet[] productSets) {
-                FrontendEntryPoint.this.productSets = productSets;
-                maybeInitFrontend(splashScreen);
+                CalvalusPortal.this.productSets = productSets;
+                maybeInitFrontend();
             }
 
             @Override
             public void onFailure(Throwable caught) {
                 Window.alert("Error!\n" + caught.getMessage());
-                FrontendEntryPoint.this.productSets = new PortalProductSet[0];
+                CalvalusPortal.this.productSets = new PortalProductSet[0];
             }
         });
 
         backendService.getProcessors(null, new AsyncCallback<PortalProcessor[]>() {
             @Override
             public void onSuccess(PortalProcessor[] processors) {
-                FrontendEntryPoint.this.processors = processors;
-                maybeInitFrontend(splashScreen);
+                CalvalusPortal.this.processors = processors;
+                maybeInitFrontend();
             }
 
             @Override
             public void onFailure(Throwable caught) {
                 Window.alert("Error!\n" + caught.getMessage());
-                FrontendEntryPoint.this.processors = new PortalProcessor[0];
+                CalvalusPortal.this.processors = new PortalProcessor[0];
             }
         });
     }
 
-    private DialogBox createSplashScreen() {
-        final DialogBox splashScreen = new DialogBox();
-        splashScreen.setText("Calvalus");
-        splashScreen.add(new Label("Please wait, while Calvalus is loading..."));
-        splashScreen.setModal(true);
-        splashScreen.setAnimationEnabled(true);
-        splashScreen.setGlassEnabled(true);
-        splashScreen.setSize("320", "200");
-        splashScreen.showRelativeTo(RootPanel.get());
-        return splashScreen;
-    }
-
-
-    private void maybeInitFrontend(DialogBox splashScreen) {
+    private void maybeInitFrontend() {
         if (!initialised && isAllInputDataAvailable()) {
             initialised = true;
-            splashScreen.hide();
-            DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("loading"));
             initFrontend();
         }
     }
@@ -150,6 +133,7 @@ public class FrontendEntryPoint implements EntryPoint {
         tabPanel.selectTab(1);
         tabPanel.ensureDebugId("cwTabPanel");
 
+        DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
         RootPanel.get("mainPanel").add(tabPanel);
     }
 
@@ -198,47 +182,38 @@ public class FrontendEntryPoint implements EntryPoint {
 
         Button submitButton = new Button("Submit", new SubmitHandler());
 
-
-        VerticalPanel productSetPanelA = new VerticalPanel();
-        productSetPanelA.setSpacing(4);
-        productSetPanelA.add(new Label("Input Level 1 product set:"));
-        productSetPanelA.add(inputPsListBox);
-        VerticalPanel productSetPanelB = new VerticalPanel();
-        productSetPanelB.setSpacing(4);
-        productSetPanelB.add(new Label("Output Level 2 product set:"));
-        productSetPanelB.add(outputPsTextBox);
-        HorizontalPanel productSetPanel = new HorizontalPanel();
+        VerticalPanel productSetPanel = new VerticalPanel();
         productSetPanel.setSpacing(4);
-        productSetPanel.add(productSetPanelA);
-        productSetPanel.add(productSetPanelB);
+        productSetPanel.add(createLabeledWidget("Input Level 1 product set:", inputPsListBox));
+        productSetPanel.add(createLabeledWidget("Output Level 2 product set:", outputPsTextBox));
 
-        VerticalPanel processorPanelA = new VerticalPanel();
-        processorPanelA.setSpacing(4);
-        processorPanelA.add(new Label("Processor:"));
-        processorPanelA.add(processorListBox);
-        VerticalPanel processorPanelB = new VerticalPanel();
-        processorPanelB.setSpacing(4);
-        processorPanelB.add(new Label("Version:"));
-        processorPanelB.add(processorVersionListBox);
         HorizontalPanel processorPanel = new HorizontalPanel();
         processorPanel.setSpacing(4);
-        processorPanel.add(processorPanelA);
-        processorPanel.add(processorPanelB);
+        processorPanel.add(createLabeledWidget("Processor:", processorListBox));
+        processorPanel.add(createLabeledWidget("Version:", processorVersionListBox));
 
-        // Create a panel to hold all of the form widgets.
-        final VerticalPanel formPanel = new VerticalPanel();
-        formPanel.setStyleName("formPanel");
+        VerticalPanel processorAndParamsPanel = new VerticalPanel();
+        processorPanel.setSpacing(4);
+        processorAndParamsPanel.add(processorPanel);
+        processorAndParamsPanel.add(createLabeledWidget("Processing parameters:", parametersTextArea));
+        processorAndParamsPanel.add(createLabeledWidget("Parameter file:", parametersFileUpload));
 
-        formPanel.add(productSetPanel);
-        formPanel.add(processorPanel);
-        formPanel.add(new Label("Processing parameters:"));
-        formPanel.add(parametersTextArea);
-        formPanel.add(new Label("Parameter file:"));
-        formPanel.add(parametersFileUpload);
-        formPanel.add(submitButton);
+        FlexTable flexTable = new FlexTable();
+        flexTable.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
+        flexTable.getFlexCellFormatter().setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_TOP);
+        flexTable.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexTable.getFlexCellFormatter().setColSpan(1, 0, 2);
+        flexTable.ensureDebugId("cwFlexTable");
+        flexTable.addStyleName("cw-FlexTable");
+        flexTable.setWidth("32em");
+        flexTable.setCellSpacing(2);
+        flexTable.setCellPadding(2);
+        flexTable.setWidget(0, 0, productSetPanel);
+        flexTable.setWidget(0, 1, processorAndParamsPanel);
+        flexTable.setWidget(1, 0, submitButton);
 
         form = new FormPanel();
-        form.setWidget(formPanel);
+        form.setWidget(flexTable);
 
         form.addSubmitHandler(new FormPanel.SubmitHandler() {
             public void onSubmit(FormPanel.SubmitEvent event) {
@@ -252,6 +227,14 @@ public class FrontendEntryPoint implements EntryPoint {
         });
 
         return form;
+    }
+
+    private VerticalPanel createLabeledWidget(String labelText, Widget widget) {
+        VerticalPanel panel = new VerticalPanel();
+        panel.setSpacing(2);
+        panel.add(new Label(labelText));
+        panel.add(widget);
+        return panel;
     }
 
     private Widget createQueryPanel() {
@@ -302,12 +285,11 @@ public class FrontendEntryPoint implements EntryPoint {
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
         // change.
-        CellTable cellTable = new CellTable<JobInfo>(JOB_KEY_PROVIDER);
-        cellTable.setWidth("100%");
-
+        CellTable jobTable = new CellTable<JobInfo>(JOB_KEY_PROVIDER);
+        jobTable.setWidth("100%");
 
         final SelectionModel<JobInfo> selectionModel = new MultiSelectionModel<JobInfo>(JOB_KEY_PROVIDER);
-        cellTable.setSelectionModel(selectionModel);
+        jobTable.setSelectionModel(selectionModel);
 
         Column<JobInfo, Boolean> checkColumn = new Column<JobInfo, Boolean>(new CheckboxCell(true)) {
             @Override
@@ -316,46 +298,49 @@ public class FrontendEntryPoint implements EntryPoint {
                 return selectionModel.isSelected(object);
             }
         };
-        cellTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
 
         // First name.
-        Column<JobInfo, String> nameColumn = new Column<JobInfo, String>(new TextCell()) {
+        TextColumn<JobInfo> nameColumn = new TextColumn<JobInfo>() {
             @Override
             public String getValue(JobInfo object) {
                 return object.getName();
             }
         };
+        nameColumn.setSortable(true);
 
-        cellTable.addColumn(nameColumn, "Production Name");
-
-        // Last name.
-        Column<JobInfo, Number> percentColumn = new Column<JobInfo, Number>(new NumberCell()) {
+        // First name.
+        TextColumn<JobInfo> statusColumn = new TextColumn<JobInfo>() {
             @Override
-            public Number getValue(JobInfo object) {
-                return object.getPercent();
+            public String getValue(JobInfo object) {
+                return object.getStatus();
             }
         };
-        cellTable.addColumn(percentColumn,  "Percent complete");
+        statusColumn.setSortable(true);
 
-        ActionCell actionCell = new ActionCell("see",
-                                         new ActionCell.Delegate() {
-                                             @Override
-                                             public void execute(Object object) {
-                                                 // TODO
-                                                  Window.alert("Here are your results:");
-                                             }
-                                         }
+        ActionCell actionCell = new ActionCell("Download",
+                                               new ActionCell.Delegate() {
+                                                   @Override
+                                                   public void execute(Object object) {
+                                                       Window.alert("The file size is bigger than 1 PB and\n" +
+                                                                            "downloading it will take approx. 5 years.");
+                                                   }
+                                               }
         );
         Column<JobInfo, JobInfo> resultColumn = new IdentityColumn<JobInfo>(actionCell);
-        cellTable.addColumn(resultColumn,  "Result");
 
-        List<JobInfo> jobInfoList = Arrays.asList(
-                new JobInfo("id1", "name1", 5),
-                new JobInfo("id2", "name2", 15),
-                new JobInfo("id3", "name3", 25)
-        );
-        cellTable.setRowData(0, jobInfoList);
-        return cellTable;
+        jobTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        jobTable.addColumn(nameColumn, "Job Name");
+        jobTable.addColumn(statusColumn, "Production Status");
+        jobTable.addColumn(resultColumn, "Product");
+
+
+        // Create a data provider.
+        jobDataProvider = new ListDataProvider<JobInfo>();
+
+        // Connect the table to the data provider.
+        jobDataProvider.addDataDisplay(jobTable);
+
+        return jobTable;
     }
 
     private void updateProcessorVersionsListBox() {
@@ -388,9 +373,9 @@ public class FrontendEntryPoint implements EntryPoint {
                                                                           parametersTextArea.getText().trim());
             backendService.orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
                 public void onSuccess(final PortalProductionResponse response) {
-                   tabPanel.selectTab(2);
+                    tabPanel.selectTab(2);
                     Worker worker = new Worker(new ProductionReporter(backendService, response),
-                                               new ProductionObserver(response));
+                                               new ProductionObserver(jobDataProvider, response));
                     worker.start(500);
                 }
 
@@ -427,14 +412,14 @@ public class FrontendEntryPoint implements EntryPoint {
     };
 
     public static class JobInfo {
-        private String id;
+        String id;
         String name;
-        int percent;
+        String status;
 
-        public JobInfo(String id, String name, int percent) {
+        public JobInfo(String id, String name, String status) {
             this.id = id;
             this.name = name;
-            this.percent = percent;
+            this.status = status;
         }
 
         public String getId() {
@@ -445,8 +430,8 @@ public class FrontendEntryPoint implements EntryPoint {
             return name;
         }
 
-        public int getPercent() {
-            return percent;
+        public String getStatus() {
+            return status;
         }
     }
 

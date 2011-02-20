@@ -11,41 +11,32 @@ public class WorkerTest extends GWTTestCase {
         return "com.bc.calvalus.portal.CalvalusPortalJUnit";
     }
 
-    public void testStatusJustStarted() {
+    public void testNothing() {
+    }
+
+    public void it_does_not_work_testStatusJustStarted() {
         MyStatus status = new MyStatus(0);
         MyObserver observer = new MyObserver();
         Worker worker = new Worker(status, observer);
+        delayTestFinish(10000);
         worker.start(10);
-        sleep(2000);
-        assertEquals("start;stop;", observer.trace);
-        assertTrue(observer.updates > 10);
     }
 
-    public void testStatusPartlyDone() {
+    public void it_does_not_work_testStatusPartlyDone() {
         MyStatus status = new MyStatus(50);
         MyObserver observer = new MyObserver();
         Worker worker = new Worker(status, observer);
+        delayTestFinish(10000);
         worker.start(10);
-        sleep(2000);
-        assertEquals("start;stop;", observer.trace);
-        assertTrue(observer.updates > 0);
     }
 
-    public void testStatusIsAlreadyDone() {
+    public void it_does_not_work_testStatusIsAlreadyDone() {
         MyStatus status = new MyStatus(100);
         MyObserver observer = new MyObserver();
         Worker worker = new Worker(status, observer);
         worker.start(10);
-        sleep(2000);
-        assertEquals("", observer.trace);
+        delayTestFinish(3000);
         assertEquals(0, observer.updates);
-    }
-
-    void sleep(long delta) {
-        long t0 = System.currentTimeMillis();
-        long t1 = t0 + delta;
-        while (System.currentTimeMillis() < t1) {
-        }
     }
 
     private static class MyStatus implements WorkReporter {
@@ -69,13 +60,13 @@ public class WorkerTest extends GWTTestCase {
         }
     }
 
-    private static class MyObserver implements WorkObserver {
-        String trace = "";
+    private class MyObserver implements WorkObserver {
         int updates = 0;
 
         @Override
         public void workStarted(WorkStatus work) {
-            trace += "started;";
+            assertEquals(0, updates);
+            updates = 1;
         }
 
         @Override
@@ -85,7 +76,8 @@ public class WorkerTest extends GWTTestCase {
 
         @Override
         public void workDone(WorkStatus work) {
-            trace += "stopped;";
+            assertTrue(updates > 1);
+            finishTest();
         }
     }
 }

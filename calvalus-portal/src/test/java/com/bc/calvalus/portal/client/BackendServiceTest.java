@@ -29,14 +29,12 @@ public class BackendServiceTest extends GWTTestCase {
     }
 
     /**
-     * This test will send a request to the server using the greetServer method in
+     * This test will send a request to the server using the 'orderProduction' method in
      * BackendService and verify the response.
      */
-    public void testProcessingService() {
+    public void testOrderProduction() {
         // Create the service that we will test.
-        BackendServiceAsync backendService = GWT.create(BackendService.class);
-        ServiceDefTarget target = (ServiceDefTarget) backendService;
-        target.setServiceEntryPoint(GWT.getModuleBaseURL() + "calvalus/backend");
+        BackendServiceAsync backendService = createBackendService();
 
         // Since RPC calls are asynchronous, we will need to wait for a response
         // after this test method returns. This line tells the test runner to wait
@@ -45,24 +43,35 @@ public class BackendServiceTest extends GWTTestCase {
 
         // Send a request to the server.
         backendService.orderProduction(new PortalProductionRequest("a", "b", "u", "1.0", "c=d\ne=f"),
-                                       new AsyncCallback<PortalProductionResponse>() {
-                                           public void onSuccess(PortalProductionResponse response) {
-                                               // Verify that the response is correct.
-                                               assertTrue(response.getMessage().startsWith("About to process"));
+                                       new PortalProductionResponseAsyncCallback());
+    }
 
-                                               // Now that we have received a response, we need to tell the test runner
-                                               // that the test is complete. You must call finishTest() after an
-                                               // asynchronous test finishes successfully, or the test will time out.
-                                               finishTest();
-                                           }
-
-                                           public void onFailure(Throwable caught) {
-                                               // The request resulted in an unexpected error.
-                                               fail("Request failure: " + caught.getMessage());
-                                           }
-
-                                       });
+    private BackendServiceAsync createBackendService() {
+        BackendServiceAsync backendService = GWT.create(BackendService.class);
+        ServiceDefTarget target = (ServiceDefTarget) backendService;
+        target.setServiceEntryPoint(GWT.getModuleBaseURL() + "calvalus/backend");
+        return backendService;
     }
 
 
+    private class PortalProductionResponseAsyncCallback implements AsyncCallback<PortalProductionResponse> {
+        public void onSuccess(PortalProductionResponse response) {
+            // Verify that the response is correct.
+            assertNotNull(response);
+            assertNotNull(response.getProductionId());
+            assertNotNull(response.getProductionName());
+            assertNotNull(response.getProductionRequest());
+
+            // Now that we have received a response, we need to tell the test runner
+            // that the test is complete. You must call finishTest() after an
+            // asynchronous test finishes successfully, or the test will time out.
+            finishTest();
+        }
+
+        public void onFailure(Throwable caught) {
+            // The request resulted in an unexpected error.
+            fail("Request failure: " + caught.getMessage());
+        }
+
+    }
 }

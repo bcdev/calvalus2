@@ -5,21 +5,27 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class PortalProductionResponse implements IsSerializable {
     String productionId;
-    String message;
+    String productionName;
+    PortalProductionRequest productionRequest;
 
     public PortalProductionResponse() {
     }
 
-    public PortalProductionResponse(String productionId, String message) {
+    public PortalProductionResponse(String productionId, String productionName, PortalProductionRequest productionRequest) {
         this.productionId = productionId;
-        this.message = message;
+        this.productionName = productionName;
+        this.productionRequest = productionRequest;
     }
 
     public String getProductionId() {
         return productionId;
     }
 
-    public String getMessage() {
-        return message;
+    public String getProductionName() {
+        return productionName;
+    }
+
+    public PortalProductionRequest getProductionRequest() {
+        return productionRequest;
     }
 }
