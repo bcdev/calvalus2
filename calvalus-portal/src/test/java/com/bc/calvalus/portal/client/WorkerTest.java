@@ -75,7 +75,7 @@ public class WorkerTest extends GWTTestCase {
         }
 
         @Override
-        public void workDone(WorkStatus work) {
+        public void workStopped(WorkStatus work) {
             assertTrue(updates > 1);
             finishTest();
         }

@@ -16,6 +16,7 @@ public class WorkStatus implements IsSerializable {
         WAITING,
         IN_PROGRESS,
         DONE,
+        CANCELLED,
         ERROR,
     }
 
@@ -23,6 +24,7 @@ public class WorkStatus implements IsSerializable {
      * No-arg constructor as required by {@link IsSerializable}.
      */
     public WorkStatus() {
+        this(State.WAITING, "", 0.0);
     }
 
     public WorkStatus(State state, String message, double progress) {
@@ -36,7 +38,7 @@ public class WorkStatus implements IsSerializable {
     }
 
     public boolean isDone() {
-        return state == State.DONE || state == State.ERROR;
+        return state == State.DONE || state == State.ERROR  || state == State.CANCELLED;
     }
 
     public String getMessage() {
@@ -45,5 +47,14 @@ public class WorkStatus implements IsSerializable {
 
     public double getProgress() {
         return progress;
+    }
+
+    @Override
+    public String toString() {
+        return "WorkStatus{" +
+                "state=" + state +
+                ", message='" + message + '\'' +
+                ", progress=" + progress +
+                '}';
     }
 }

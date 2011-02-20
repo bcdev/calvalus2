@@ -4,8 +4,10 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
+import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
+import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.EntryPoint;
@@ -54,6 +56,9 @@ import org.gwtopenmaps.openlayers.client.layer.WMS;
 import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
 import org.gwtopenmaps.openlayers.client.layer.WMSParams;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  *
@@ -73,18 +78,19 @@ public class CalvalusPortal implements EntryPoint {
     private FileUpload parametersFileUpload;
     private TextBox outputPsTextBox;
 
+    private boolean initialised;
+
+    private DecoratedTabPanel tabPanel;
     private PortalProductSet[] productSets;
     private PortalProcessor[] processors;
-    private boolean initialised;
-    private DecoratedTabPanel tabPanel;
-    private ListDataProvider<JobInfo> jobDataProvider;
+    private ListDataProvider<PortalProduction> productions;
 
     /**
      * This is the entry point method.
      */
     @Override
     public void onModuleLoad() {
-
+         productions = new ListDataProvider<PortalProduction>();
         backendService.getProductSets(null, new AsyncCallback<PortalProductSet[]>() {
             @Override
             public void onSuccess(PortalProductSet[] productSets) {
@@ -112,6 +118,19 @@ public class CalvalusPortal implements EntryPoint {
                 CalvalusPortal.this.processors = new PortalProcessor[0];
             }
         });
+
+        backendService.getProductions(null, new AsyncCallback<PortalProduction[]>() {
+            @Override
+            public void onSuccess(PortalProduction[] productions) {
+                CalvalusPortal.this.productions.getList().addAll(Arrays.asList(productions));
+                maybeInitFrontend();
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+               Window.alert("Error!\n" + caught.getMessage());
+            }
+        });
     }
 
     private void maybeInitFrontend() {
@@ -123,18 +142,28 @@ public class CalvalusPortal implements EntryPoint {
 
     private void initFrontend() {
         tabPanel = new DecoratedTabPanel();
-        tabPanel.setWidth("400px");
+        tabPanel.setWidth("600px");
         tabPanel.setAnimationEnabled(true);
 
-        tabPanel.add(createQueryPanel(), "Query");
-        tabPanel.add(createLevel2Panel(), "Level 2");
-        tabPanel.add(createJobsPanel(), "Jobs");
+        tabPanel.add(createQueryPanel(), "Create Product Sets");
+        tabPanel.add(createLevel2Panel(), "Level 2 Processor");
+        tabPanel.add(createJobsPanel(), "Productions");
 
         tabPanel.selectTab(1);
         tabPanel.ensureDebugId("cwTabPanel");
 
         DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
         RootPanel.get("mainPanel").add(tabPanel);
+
+        // Start observing any ongoing productions:
+        List<PortalProduction> productionList = productions.getList();
+        for (PortalProduction production : productionList) {
+            if (!production.getWorkStatus().isDone()) {
+                Worker worker = new Worker(new ProductionReporter(backendService, production),
+                                           new ProductionObserver(productions, production));
+                worker.start(500);
+            }
+        }
     }
 
     private Widget createLevel2Panel() {
@@ -285,39 +314,52 @@ public class CalvalusPortal implements EntryPoint {
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
         // change.
-        CellTable jobTable = new CellTable<JobInfo>(JOB_KEY_PROVIDER);
-        jobTable.setWidth("100%");
+        CellTable productionTable = new CellTable<PortalProduction>(JOB_KEY_PROVIDER);
+        productionTable.setWidth("100%");
 
-        final SelectionModel<JobInfo> selectionModel = new MultiSelectionModel<JobInfo>(JOB_KEY_PROVIDER);
-        jobTable.setSelectionModel(selectionModel);
+        final SelectionModel<PortalProduction> selectionModel = new MultiSelectionModel<PortalProduction>(JOB_KEY_PROVIDER);
+        productionTable.setSelectionModel(selectionModel);
 
-        Column<JobInfo, Boolean> checkColumn = new Column<JobInfo, Boolean>(new CheckboxCell(true)) {
+        Column<PortalProduction, Boolean> checkColumn = new Column<PortalProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
-            public Boolean getValue(JobInfo object) {
+            public Boolean getValue(PortalProduction production) {
                 // Get the value from the selection model.
-                return selectionModel.isSelected(object);
+                return selectionModel.isSelected(production);
             }
         };
 
         // First name.
-        TextColumn<JobInfo> nameColumn = new TextColumn<JobInfo>() {
+        TextColumn<PortalProduction> nameColumn = new TextColumn<PortalProduction>() {
             @Override
-            public String getValue(JobInfo object) {
-                return object.getName();
+            public String getValue(PortalProduction production) {
+                return production.getName();
             }
         };
         nameColumn.setSortable(true);
 
         // First name.
-        TextColumn<JobInfo> statusColumn = new TextColumn<JobInfo>() {
+        TextColumn<PortalProduction> statusColumn = new TextColumn<PortalProduction>() {
             @Override
-            public String getValue(JobInfo object) {
-                return object.getStatus();
+            public String getValue(PortalProduction production) {
+                WorkStatus status = production.getWorkStatus();
+                WorkStatus.State state = status.getState();
+                if (state == WorkStatus.State.WAITING) {
+                    return "Waiting to start...";
+                } else if (state == WorkStatus.State.IN_PROGRESS) {
+                    return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "% done)";
+                } else if (state == WorkStatus.State.CANCELLED) {
+                    return "Cancelled";
+                } else if (state == WorkStatus.State.ERROR) {
+                    return "Error: " + status.getMessage();
+                } else if (state == WorkStatus.State.DONE) {
+                    return "Done";
+                }
+                return "?";
             }
         };
         statusColumn.setSortable(true);
 
-        ActionCell actionCell = new ActionCell("Download",
+        ActionCell actionCell = new ActionCell("Info",
                                                new ActionCell.Delegate() {
                                                    @Override
                                                    public void execute(Object object) {
@@ -326,21 +368,18 @@ public class CalvalusPortal implements EntryPoint {
                                                    }
                                                }
         );
-        Column<JobInfo, JobInfo> resultColumn = new IdentityColumn<JobInfo>(actionCell);
+        Column<PortalProduction, PortalProduction> resultColumn = new IdentityColumn<PortalProduction>(actionCell);
 
-        jobTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        jobTable.addColumn(nameColumn, "Job Name");
-        jobTable.addColumn(statusColumn, "Production Status");
-        jobTable.addColumn(resultColumn, "Product");
+        productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(nameColumn, "Production Name");
+        productionTable.addColumn(statusColumn, "Production Status");
+        productionTable.addColumn(resultColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
 
-
-        // Create a data provider.
-        jobDataProvider = new ListDataProvider<JobInfo>();
 
         // Connect the table to the data provider.
-        jobDataProvider.addDataDisplay(jobTable);
+        productions.addDataDisplay(productionTable);
 
-        return jobTable;
+        return productionTable;
     }
 
     private void updateProcessorVersionsListBox() {
@@ -374,8 +413,8 @@ public class CalvalusPortal implements EntryPoint {
             backendService.orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
                 public void onSuccess(final PortalProductionResponse response) {
                     tabPanel.selectTab(2);
-                    Worker worker = new Worker(new ProductionReporter(backendService, response),
-                                               new ProductionObserver(jobDataProvider, response));
+                    Worker worker = new Worker(new ProductionReporter(backendService, response.getProduction()),
+                                               new ProductionObserver(productions, response.getProduction()));
                     worker.start(500);
                 }
 
@@ -405,35 +444,11 @@ public class CalvalusPortal implements EntryPoint {
     /**
      * The key provider that provides the unique ID of a contact.
      */
-    public static final ProvidesKey<JobInfo> JOB_KEY_PROVIDER = new ProvidesKey<JobInfo>() {
-        public Object getKey(JobInfo item) {
+    public static final ProvidesKey<PortalProduction> JOB_KEY_PROVIDER = new ProvidesKey<PortalProduction>() {
+        public Object getKey(PortalProduction item) {
             return item == null ? null : item.getId();
         }
     };
-
-    public static class JobInfo {
-        String id;
-        String name;
-        String status;
-
-        public JobInfo(String id, String name, String status) {
-            this.id = id;
-            this.name = name;
-            this.status = status;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-    }
 
 }
 

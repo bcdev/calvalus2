@@ -12,6 +12,8 @@ public interface BackendServiceAsync {
 
     void getProcessors(String type, AsyncCallback<PortalProcessor[]> callback);
 
+    void getProductions(String type, AsyncCallback<PortalProduction[]> callback);
+
     void orderProduction(PortalProductionRequest request, AsyncCallback<PortalProductionResponse> callback);
 
     void getProductionStatus(String productionId, AsyncCallback<WorkStatus> callback);

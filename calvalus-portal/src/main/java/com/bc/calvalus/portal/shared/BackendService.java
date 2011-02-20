@@ -13,7 +13,10 @@ public interface BackendService extends RemoteService {
 
     PortalProcessor[] getProcessors(String type) throws BackendServiceException;
 
+    PortalProduction[] getProductions(String type) throws BackendServiceException;
+
     PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException;
 
     WorkStatus getProductionStatus(String productionId) throws BackendServiceException;
+
 }

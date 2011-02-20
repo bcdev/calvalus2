@@ -8,6 +8,9 @@ public class PortalProcessor implements IsSerializable {
     private String type;
     private String[] versions;
 
+    /**
+     * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
+     */
     public PortalProcessor() {
     }
 

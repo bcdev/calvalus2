@@ -4,6 +4,7 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
+import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -42,7 +43,8 @@ public class BackendServiceTest extends GWTTestCase {
         delayTestFinish(10000);
 
         // Send a request to the server.
-        backendService.orderProduction(new PortalProductionRequest("a", "b", "u", "1.0", "c=d\ne=f"),
+        backendService.orderProduction(new PortalProductionRequest("ipsid", "opsname",
+                                                                   "procid", "1.0", "x=3\ny=-1"),
                                        new PortalProductionResponseAsyncCallback());
     }
 
@@ -58,9 +60,17 @@ public class BackendServiceTest extends GWTTestCase {
         public void onSuccess(PortalProductionResponse response) {
             // Verify that the response is correct.
             assertNotNull(response);
-            assertNotNull(response.getProductionId());
-            assertNotNull(response.getProductionName());
             assertNotNull(response.getProductionRequest());
+            assertEquals("ipsid", response.getProductionRequest().getInputProductSetId());
+            assertEquals("opsname", response.getProductionRequest().getOutputProductSetName());
+            assertEquals("procid", response.getProductionRequest().getProcessorId());
+            assertEquals("1.0", response.getProductionRequest().getProcessorVersion());
+            assertEquals("x=3\ny=-1", response.getProductionRequest().getProcessingParameters());
+            assertNotNull(response.getProduction());
+            assertNotNull(response.getProduction().getId());
+            assertNotNull(response.getProduction().getName());
+            assertNotNull(response.getProduction().getWorkStatus());
+            assertEquals(WorkStatus.State.WAITING, response.getProduction().getWorkStatus().getState());
 
             // Now that we have received a response, we need to tell the test runner
             // that the test is complete. You must call finishTest() after an

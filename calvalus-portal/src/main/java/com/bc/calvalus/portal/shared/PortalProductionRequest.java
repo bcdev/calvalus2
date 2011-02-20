@@ -3,6 +3,11 @@ package com.bc.calvalus.portal.shared;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
+/**
+ * A production request. Production requests are submitted to the backend service.
+ *
+ * @author Norman
+ */
 public class PortalProductionRequest implements IsSerializable {
     String inputProductSetId;
     String outputProductSetName;
@@ -11,7 +16,7 @@ public class PortalProductionRequest implements IsSerializable {
     String processingParameters;
 
     /**
-     * No-arg constructor as required by {@link IsSerializable}.
+     * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
     public PortalProductionRequest() {
     }

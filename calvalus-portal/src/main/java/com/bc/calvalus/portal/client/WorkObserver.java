@@ -12,5 +12,5 @@ public interface WorkObserver {
 
     void workProgressing(WorkStatus workStatus);
 
-    void workDone(WorkStatus workStatus);
+    void workStopped(WorkStatus workStatus);
 }

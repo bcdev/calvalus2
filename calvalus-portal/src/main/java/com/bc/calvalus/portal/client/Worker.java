@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 
 import com.bc.calvalus.portal.shared.WorkStatus;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Timer;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public final class Worker {
     private final List<WorkObserver> observerList;
 
     private Timer timer;
-    boolean observed;
+    boolean firedStart;
 
     public Worker(WorkReporter reporter) {
         this.reporter = reporter;
@@ -46,10 +47,6 @@ public final class Worker {
         return observerList.toArray(new WorkObserver[observerList.size()]);
     }
 
-    public boolean isDone() {
-        return timer == null;
-    }
-
     public void start(int updatePeriod) {
         WorkStatus workStatus = reporter.getWorkStatus();
         if (!workStatus.isDone()) {
@@ -71,22 +68,23 @@ public final class Worker {
                 timer.cancel();
                 timer = null;
             }
-            if (observed) {
+            if (firedStart) {
                 for (WorkObserver observer : observers) {
-                    observer.workDone(workStatus);
+                    observer.workStopped(workStatus);
                 }
-                observed = false;
+                firedStart = false;
             }
         } else {
-            if (!observed) {
+            if (!firedStart) {
                 for (WorkObserver observer : observers) {
                     observer.workStarted(workStatus);
                 }
+                firedStart = true;
             }
+            // todo - only fire progress events, if status really has changed
             for (WorkObserver observer : observers) {
                 observer.workProgressing(workStatus);
             }
-            observed = true;
         }
     }
 

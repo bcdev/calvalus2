@@ -4,14 +4,17 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
+import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,11 +25,24 @@ import java.util.TimerTask;
  */
 @SuppressWarnings("serial")
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
-    // for testing only...
-    Map<String, Production> productions = new HashMap<String, Production>();
+
+    final List<Production> productionList;
+
+    public BackendServiceImpl() {
+        super();
+        productionList = Collections.synchronizedList(new ArrayList<Production>(32));
+        // Add some dummy productions
+        productionList.add(new Production("Formatting all harddrives", 40 * 1000));
+        productionList.add(new Production("Drying CD slots", 20 * 1000));
+        productionList.add(new Production("Rewriting kernel ", 30 * 1000));
+        for (Production production : productionList) {
+            production.start();
+        }
+    }
 
     @Override
     public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
+        // Return some dummy product sets
         return new PortalProductSet[]{
                 new PortalProductSet("ps1", "MERIS-L1B", "MERIS RR 2004-2009"),
                 new PortalProductSet("ps2", "MERIS-L1B", "MERIS RR 2004"),
@@ -40,6 +56,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public PortalProcessor[] getProcessors(String type) throws BackendServiceException {
+        // Return some dummy processors
         return new PortalProcessor[]{
                 new PortalProcessor("pc1", "MERIS-L2", "MERIS IOP Case2R",
                                     new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
@@ -48,6 +65,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         };
     }
 
+    @Override
+    public PortalProduction[] getProductions(String type) throws BackendServiceException {
+        PortalProduction[] productions = new PortalProduction[productionList.size()];
+        for (int i = 0; i < productions.length; i++) {
+            productions[i] = new PortalProduction(productionList.get(i).getId(),
+                                                  productionList.get(i).getName());
+
+        }
+        return productions;
+    }
 
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
@@ -56,44 +83,74 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             throw new BackendServiceException("Invalid processing request.");
         }
 
-        String productionId = Long.toHexString(System.nanoTime());
         String productionName = MessageFormat.format("Processing {0} to {1} using {2}, version {3}.",
                                                      productionRequest.getInputProductSetId(),
                                                      productionRequest.getOutputProductSetName(),
                                                      productionRequest.getProcessorId(),
                                                      productionRequest.getProcessorVersion());
 
-        long totalTime = 10 * 1000; // 10 seconds
-        Production production = new Production(totalTime);
+        long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
+        Production production = new Production(productionName, secondsToRun * 1000);
         production.start();
 
-        productions.put(productionId, production);
+        productionList.add(production);
 
-        return new PortalProductionResponse(productionId, productionName, productionRequest);
+        return new PortalProductionResponse(new PortalProduction(production.getId(),
+                                                                 productionName),
+                                            productionRequest);
     }
 
     @Override
     public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
-        log("Someone wants update on production " + productionId);
-        Production production = productions.get(productionId);
+        Production production = getProduction(productionId);
         if (production == null) {
             throw new BackendServiceException("Unknown production ID: " + productionId);
         }
         return new WorkStatus(production.isDone() ? WorkStatus.State.DONE : WorkStatus.State.IN_PROGRESS,
-                              "Production " + production.getProgress() + "% completed",
+                              production.getName(),
                               production.getProgress());
     }
 
+    private Production getProduction(String productionId) {
+        for (Production production : productionList) {
+            if (productionId.equals(production.getId())) {
+                return production;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Dummy production that simulates progress over a given amount of time.
+     */
     private static class Production {
+        private static final Random idGen = new Random();
+        private final String id;
         private final long startTime;
         private final long totalTime;
         private Timer timer;
         private double progress;
-        private boolean done;
+        private final String name;
 
-        public Production(long totalTime) {
+        /**
+         * Constructs a new dummy production.
+         *
+         * @param name
+         * @param totalTime The total time in ms to run.
+         */
+        public Production(String name, long totalTime) {
+            this.id = Long.toHexString(idGen.nextLong());
+            this.name = name;
             this.totalTime = totalTime;
             this.startTime = System.currentTimeMillis();
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public void start() {
@@ -105,12 +162,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                         timer.cancel();
                         timer = null;
                         progress = 1.0;
-                        done = true;
                     }
                 }
             };
             timer = new Timer();
-            timer.scheduleAtFixedRate(task, 0, 10);
+            timer.scheduleAtFixedRate(task, 0, 250);
         }
 
         public double getProgress() {
@@ -118,7 +174,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
 
         public boolean isDone() {
-            return done;
+            return timer == null;
         }
     }
 }

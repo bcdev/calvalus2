@@ -13,9 +13,10 @@ public class PortalProductSet implements IsSerializable {
     private String name;
 
     /**
-     * No-arg constructor as required by {@link IsSerializable}.
+     * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
     public PortalProductSet() {
+        this(null, "", "");
     }
 
     public PortalProductSet(String id, String type, String name) {
