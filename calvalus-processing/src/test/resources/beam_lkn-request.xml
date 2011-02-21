@@ -135,7 +135,7 @@
                       <reproVersion>AUTO_DETECT</reproVersion>
                       -->
                       <useIdepix>true</useIdepix>
-                      <landExpression>(toa_reflec_9  > toa_reflec_8 OR toa_reflec10 > toa_reflec_8) AND toa_reflec_13 > 0.015</landExpression>
+                      <landExpression>(toa_reflec_9  > toa_reflec_8 OR toa_reflec_10 > toa_reflec_8) AND toa_reflec_13 > 0.015</landExpression>
                   </parameters>
               </wps:ComplexData>
           </wps:Data>
@@ -146,10 +146,10 @@
             <ows:Title></ows:Title>
             <wps:Data>
                 <wps:ComplexData>
-                    <numRows>66792</numRows>
+                    <!--<numRows>66792</numRows>-->
                     <!--<bbox>9.0, 53.0, 14.5, 56.5</bbox> &lt;!&ndash;baltic_sea_scene&ndash;&gt;-->
                     <bbox>3.0, 52.0, 9.5, 56.5</bbox> <!--north_scene-->
-                    <maskExpr>NOT l2_flags.INVALID</maskExpr>
+                    <maskExpr>NOT case2_flags.INVALID</maskExpr>
                     <aggregators>
                         <aggregator>
                             <type>AVG</type>
