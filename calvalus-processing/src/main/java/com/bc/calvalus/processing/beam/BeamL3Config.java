@@ -66,7 +66,6 @@ import static java.lang.Math.*;
 class BeamL3Config {
     static final String L3_REQUEST_FILENAME = "wps-request.xml";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
-    private static final int DEFAULT_NUM_ROWS = 2160;
 
     public static class VariableConfiguration {
         String name;
@@ -122,7 +121,7 @@ class BeamL3Config {
 
     public BinningGrid getBinningGrid() {
         if (numRows == 0) {
-            numRows = DEFAULT_NUM_ROWS;
+            numRows = IsinBinningGrid.DEFAULT_NUM_ROWS;
         }
         return new IsinBinningGrid(numRows);
     }
@@ -150,7 +149,9 @@ class BeamL3Config {
 
     public VariableContext getVariableContext() {
         VariableContextImpl variableContext = new VariableContextImpl();
-
+        if (maskExpr == null) {
+            maskExpr = "";
+        }
         variableContext.setMaskExpr(maskExpr);
 
         // define declared variables
@@ -332,12 +333,6 @@ class BeamL3Config {
     void validateConfiguration() {
         if (aggregators == null || aggregators.length == 0) {
             throw new IllegalArgumentException("No aggregator specified.");
-        }
-        if (numRows == 0) {
-            numRows = IsinBinningGrid.DEFAULT_NUM_ROWS;
-        }
-        if (maskExpr == null) {
-            maskExpr = "";
         }
     }
 
