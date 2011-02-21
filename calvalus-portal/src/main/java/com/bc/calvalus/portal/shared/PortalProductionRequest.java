@@ -9,11 +9,8 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class PortalProductionRequest implements IsSerializable {
-    String inputProductSetId;
-    String outputProductSetName;
-    String processorId;
-    String processorVersion;
-    String processingParameters;
+    private String productionType;
+    private PortalParameter[] productionParameters;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -21,48 +18,25 @@ public class PortalProductionRequest implements IsSerializable {
     public PortalProductionRequest() {
     }
 
-    public PortalProductionRequest(String inputProductSetId,
-                                   String outputProductSetName,
-                                   String processorId,
-                                   String processorVersion,
-                                   String processingParameters) {
-        this.inputProductSetId = inputProductSetId;
-        this.outputProductSetName = outputProductSetName;
-        this.processorId = processorId;
-        this.processorVersion = processorVersion;
-        this.processingParameters = processingParameters;
+    public PortalProductionRequest(String productionType,
+                                   PortalParameter... productionParameters) {
+        this.productionType = productionType;
+        this.productionParameters = productionParameters;
     }
 
     public static boolean isValid(PortalProductionRequest req) {
-        if (req.getInputProductSetId() == null || req.getInputProductSetId().isEmpty()) {
-            return false;
-        }
-        if (req.getOutputProductSetName() == null || req.getOutputProductSetName().isEmpty()) {
-            return false;
-        }
-        if (req.getProcessorId() == null || req.getProcessorId().isEmpty()) {
+        if (req.getProductionType() == null || req.getProductionType().isEmpty()) {
             return false;
         }
         return true;
     }
 
-    public String getInputProductSetId() {
-        return inputProductSetId;
+    public String getProductionType() {
+        return productionType;
     }
 
-    public String getOutputProductSetName() {
-        return outputProductSetName;
+    public PortalParameter[] getProductionParameters() {
+        return productionParameters;
     }
 
-    public String getProcessorId() {
-        return processorId;
-    }
-
-    public String getProcessorVersion() {
-        return processorVersion;
-    }
-
-    public String getProcessingParameters() {
-        return processingParameters;
-    }
 }

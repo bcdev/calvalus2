@@ -79,7 +79,6 @@ public class ManageProductSetsView extends PortalView {
         return ID;
     }
 
-
     @Override
     public String getTitle() {
         return "Manage Product Sets";

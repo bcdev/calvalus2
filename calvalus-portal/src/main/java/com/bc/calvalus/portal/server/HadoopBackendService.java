@@ -9,50 +9,44 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
- * The server side implementation of the RPC processing service.
+ * An BackendService implementation that delegates to a Hadoop cluster.
  */
-@SuppressWarnings("serial")
-public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
-
-    private final BackendService delegate;
-
-    public BackendServiceImpl() {
-        super();
-        // todo - configure portal so that we can switch between different delegates
-        delegate = new DummyBackendService();
-    }
+public class HadoopBackendService implements BackendService {
 
     @Override
     public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
-        return delegate.getProductSets(type);
+        // todo - implement me
+        throw new BackendServiceException("Method 'getProductSets' not implemented");
     }
 
     @Override
     public PortalProcessor[] getProcessors(String type) throws BackendServiceException {
-        return delegate.getProcessors(type);
+        // todo - implement me
+        throw new BackendServiceException("Method 'getProcessors' not implemented");
     }
 
     @Override
     public PortalProduction[] getProductions(String type) throws BackendServiceException {
-        return delegate.getProductions(type);
+        // todo - implement me
+        throw new BackendServiceException("Method 'getProductions' not implemented");
     }
 
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
-        return delegate.orderProduction(productionRequest);
+        // todo - implement me
+        throw new BackendServiceException("Method 'orderProduction' not implemented");
     }
 
     @Override
     public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
-        return delegate.getProductionStatus(productionId);
+        // todo - implement me
+        throw new BackendServiceException("Method 'getProductionStatus' not implemented");
     }
 }

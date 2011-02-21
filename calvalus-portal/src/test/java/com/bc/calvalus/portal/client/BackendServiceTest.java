@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
@@ -23,10 +24,9 @@ public class BackendServiceTest extends GWTTestCase {
      * Tests the ProcessingRequestVerifier.
      */
     public void testFieldVerifier() {
-        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest(null, null, null, "ignored", "ignored")));
-        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest("", null, "", "ignored", "ignored")));
-        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest("", null, null, "ignored", "ignored")));
-        assertTrue(PortalProductionRequest.isValid(new PortalProductionRequest("a", "b", "c", "ignored", "ignored")));
+        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest(null)));
+        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest("")));
+        assertTrue(PortalProductionRequest.isValid(new PortalProductionRequest("ice cream")));
     }
 
     /**
@@ -43,8 +43,9 @@ public class BackendServiceTest extends GWTTestCase {
         delayTestFinish(10000);
 
         // Send a request to the server.
-        backendService.orderProduction(new PortalProductionRequest("ipsid", "opsname",
-                                                                   "procid", "1.0", "x=3\ny=-1"),
+        backendService.orderProduction(new PortalProductionRequest("x*y",
+                                                                   new PortalParameter("x", "3"),
+                                                                   new PortalParameter("y", "-1")),
                                        new PortalProductionResponseAsyncCallback());
     }
 
@@ -61,11 +62,13 @@ public class BackendServiceTest extends GWTTestCase {
             // Verify that the response is correct.
             assertNotNull(response);
             assertNotNull(response.getProductionRequest());
-            assertEquals("ipsid", response.getProductionRequest().getInputProductSetId());
-            assertEquals("opsname", response.getProductionRequest().getOutputProductSetName());
-            assertEquals("procid", response.getProductionRequest().getProcessorId());
-            assertEquals("1.0", response.getProductionRequest().getProcessorVersion());
-            assertEquals("x=3\ny=-1", response.getProductionRequest().getProcessingParameters());
+            assertEquals("x*y", response.getProductionRequest().getProductionType());
+            assertNotNull(response.getProductionRequest().getProductionParameters());
+            assertEquals(2, response.getProductionRequest().getProductionParameters().length);
+            assertEquals("x", response.getProductionRequest().getProductionParameters()[0].getName());
+            assertEquals("3", response.getProductionRequest().getProductionParameters()[0].getValue());
+            assertEquals("y", response.getProductionRequest().getProductionParameters()[1].getName());
+            assertEquals("-1", response.getProductionRequest().getProductionParameters()[1].getValue());
             assertNotNull(response.getProduction());
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());

@@ -26,7 +26,7 @@ import java.util.List;
  * @author Norman
  */
 public class ManageProductionsView extends PortalView {
-    public static final int ID = 2;
+    public static final int ID = 3;
     private static final int PRODUCTION_UPDATE_PERIOD = 500;
 
     private CellTable productionTable;

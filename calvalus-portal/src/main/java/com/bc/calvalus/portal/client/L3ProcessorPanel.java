@@ -1,0 +1,163 @@
+package com.bc.calvalus.portal.client;
+
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.ui.DecoratorPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.datepicker.client.DateBox;
+
+/**
+ * Demo view that lets users submit a new L2 production.
+ *
+ * @author Norman
+ */
+public class L3ProcessorPanel implements IsWidget {
+    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
+
+    private TextBox variables;
+    private TextBox validMask;
+    private ListBox aggregator;
+    private DateBox fromDate;
+    private DateBox toDate;
+    private TextBox period;
+    private TextBox fromLon;
+    private TextBox toLon;
+    private TextBox fromLat;
+    private TextBox toLat;
+    private TextBox resolution;
+    private DecoratorPanel widget;
+
+    public L3ProcessorPanel() {
+
+        variables = new TextBox();
+        variables.setText("chl, tsm, gelb");
+
+        validMask = new TextBox();
+        validMask.setText("!l1_flags.INVALID && !l1p_flags.LAND && !l1p_flags.CLOUD");
+
+        aggregator = new ListBox();
+        aggregator.addItem("Average", "AVG");
+        aggregator.addItem("Max. Likelihood Average", "AVG_ML");
+        aggregator.addItem("Minimum + Maximum", "MIN_MAX");
+        aggregator.setVisibleItemCount(1);
+        aggregator.setSelectedIndex(0);
+
+        FlexTable contentParams = new FlexTable();
+        contentParams.setWidth("100%");
+        contentParams.setCellSpacing(2);
+        contentParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        contentParams.getFlexCellFormatter().setColSpan(0, 0, 3);
+        contentParams.setWidget(0, 0, new HTML("<b>Content Properties</b>"));
+        contentParams.setWidget(1, 0, new Label("Input variable(s):"));
+        contentParams.setWidget(1, 1, variables);
+        contentParams.setWidget(2, 0, new Label("Aggregation:"));
+        contentParams.setWidget(2, 1, this.aggregator);
+        contentParams.setWidget(3, 0, new Label("Valid mask:"));
+        contentParams.setWidget(3, 1, validMask);
+
+        fromDate = new DateBox();
+        fromDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        fromDate.setValue(DATE_FORMAT.parse("2008-06-01"));
+
+        toDate = new DateBox();
+        toDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        toDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+
+        period = new TextBox();
+        period.setText("7");
+
+        FlexTable temporalParams = new FlexTable();
+        temporalParams.setWidth("100%");
+        temporalParams.setCellSpacing(2);
+        temporalParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        temporalParams.getFlexCellFormatter().setColSpan(0, 0, 3);
+        temporalParams.setWidget(0, 0, new HTML("<b>Temporal Properties</b>"));
+        temporalParams.setWidget(1, 0, new Label("From time:"));
+        temporalParams.setWidget(1, 1, fromDate);
+        temporalParams.setWidget(2, 0, new Label("To time:"));
+        temporalParams.setWidget(2, 1, toDate);
+        temporalParams.setWidget(3, 0, new Label("Aggr. period:"));
+        temporalParams.setWidget(3, 1, period);
+        temporalParams.setWidget(3, 2, new Label("days/product"));
+
+        fromLon = new TextBox();
+        fromLon.setValue("-180");
+        toLon = new TextBox();
+        toLon.setValue("+180");
+
+        fromLat = new TextBox();
+        fromLat.setValue("-90");
+        toLat = new TextBox();
+        toLat.setValue("+90");
+
+        resolution = new TextBox();
+        resolution.setValue("0.0416667");
+
+        FlexTable spatialParams = new FlexTable();
+        spatialParams.setWidth("100%");
+        spatialParams.setCellSpacing(2);
+        spatialParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        spatialParams.getFlexCellFormatter().setColSpan(0, 0, 3);
+        spatialParams.setWidget(0, 0, new HTML("<b>Spatial Properties</b>"));
+        spatialParams.setWidget(1, 0, new Label("From longitude:"));
+        spatialParams.setWidget(1, 1, fromLon);
+        spatialParams.setWidget(1, 2, new Label("degree"));
+        spatialParams.setWidget(2, 0, new Label("To longitude:"));
+        spatialParams.setWidget(2, 1, toLon);
+        spatialParams.setWidget(2, 2, new Label("degree"));
+        spatialParams.setWidget(3, 0, new Label("From latitude:"));
+        spatialParams.setWidget(3, 1, fromLat);
+        spatialParams.setWidget(3, 2, new Label("degree"));
+        spatialParams.setWidget(4, 0, new Label("To latitude:"));
+        spatialParams.setWidget(4, 1, toLat);
+        spatialParams.setWidget(4, 2, new Label("degree"));
+        spatialParams.setWidget(5, 0, new Label("Resolution:"));
+        spatialParams.setWidget(5, 1, resolution);
+        spatialParams.setWidget(5, 2, new Label("degree/pixel"));
+
+        VerticalPanel panel = new VerticalPanel();
+        panel.setSpacing(4);
+        panel.add(temporalParams);
+        panel.add(spatialParams);
+
+        // Wrap the contents in a DecoratorPanel
+        widget = new DecoratorPanel();
+        widget.setTitle("L3 Parameters");
+        widget.setWidget(panel);
+    }
+
+    @Override
+    public Widget asWidget() {
+        return widget;
+    }
+
+    public String getProcessorParameters() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<parameters>");
+        sb.append(createParameterElement("variables", variables.getText()));
+        sb.append(createParameterElement("validMask", validMask.getText()));
+        sb.append(createParameterElement("aggregator", aggregator.getValue(aggregator.getSelectedIndex())));
+        sb.append(createParameterElement("fromDate", fromDate.getFormat().format(fromDate, fromDate.getValue())));
+        sb.append(createParameterElement("toDate", toDate.getFormat().format(toDate, toDate.getValue())));
+        sb.append(createParameterElement("period", period.getText()));
+        sb.append(createParameterElement("fromLon", fromLon.getText()));
+        sb.append(createParameterElement("toLon", toLon.getText()));
+        sb.append(createParameterElement("fromLat", fromLat.getText()));
+        sb.append(createParameterElement("toLat", toLat.getText()));
+        sb.append(createParameterElement("resolution", resolution.getText()));
+        sb.append("</parameters>");
+        return sb.toString();
+    }
+
+    private String createParameterElement(String s1, String s2) {
+        return "<" + s1 + ">" + s2 + "</" + s1 + ">";
+    }
+
+}

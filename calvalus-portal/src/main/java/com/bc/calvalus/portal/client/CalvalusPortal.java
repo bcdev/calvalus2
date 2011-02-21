@@ -11,6 +11,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -28,7 +29,7 @@ public class CalvalusPortal implements EntryPoint {
 
     private final BackendServiceAsync backendService;
     private boolean initialised;
-    private DecoratedTabPanel tabPanel;
+    private DecoratedTabPanel mainPanel;
 
     // Data provided by various external services
     private PortalProductSet[] productSets;
@@ -67,7 +68,7 @@ public class CalvalusPortal implements EntryPoint {
     }
 
     public void showView(int id) {
-        tabPanel.selectTab(id);
+        mainPanel.selectTab(id);
     }
 
     public PortalView getView(int id) {
@@ -85,30 +86,46 @@ public class CalvalusPortal implements EntryPoint {
         views = new PortalView[]{
                 new ManageProductSetsView(this),
                 new OrderL2ProductionView(this),
+                new OrderL3ProductionView(this),
                 new ManageProductionsView(this),
         };
 
-        tabPanel = new DecoratedTabPanel();
-        tabPanel.setWidth("640px");
-        tabPanel.setAnimationEnabled(true);
-        tabPanel.ensureDebugId("cwTabPanel");
+        mainPanel = new DecoratedTabPanel();
+        mainPanel.setWidth("640px");
+        mainPanel.setAnimationEnabled(true);
+        mainPanel.ensureDebugId("cwTabPanel");
 
         for (PortalView view : views) {
-            tabPanel.add(view, view.getTitle());
+            mainPanel.add(view, view.getTitle());
         }
 
+        removeSplashScreen();
         showView(OrderL2ProductionView.ID);
-
-        DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
-        RootPanel.get("mainPanel").add(tabPanel);
+        showMainPanel();
 
         for (PortalView view : views) {
             view.handlePortalStartedUp();
         }
     }
 
-    static VerticalPanel createLabeledWidget(String labelText, Widget widget) {
+    private void showMainPanel() {
+        RootPanel.get("mainPanel").add(mainPanel);
+    }
+
+    private void removeSplashScreen() {
+        DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
+    }
+
+    static VerticalPanel createLabeledWidgetV(String labelText, Widget widget) {
         VerticalPanel panel = new VerticalPanel();
+        panel.setSpacing(2);
+        panel.add(new Label(labelText));
+        panel.add(widget);
+        return panel;
+    }
+
+    static HorizontalPanel createLabeledWidgetH(String labelText, Widget widget) {
+        HorizontalPanel panel = new HorizontalPanel();
         panel.setSpacing(2);
         panel.add(new Label(labelText));
         panel.add(widget);
