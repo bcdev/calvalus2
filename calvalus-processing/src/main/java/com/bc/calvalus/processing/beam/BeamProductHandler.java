@@ -64,6 +64,7 @@ public class BeamProductHandler {
         final FSDataInputStream in = fs.open(inputPath);
         final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
         System.setProperty("beam.envisat.tileHeight", Integer.toString(getTileHeight()));
+        System.setProperty("beam.envisat.tileWidth", "*");
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         Product product = productReader.readProductNodes(imageInputStream, null);
