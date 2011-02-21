@@ -14,7 +14,7 @@
       <ows:Identifier>calvalus.processor.package</ows:Identifier>
       <ows:Title>software installation package name</ows:Title>
       <wps:Data>
-        <wps:LiteralData>beam-meris-radiometry</wps:LiteralData>
+        <wps:LiteralData>beam-lkn</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -134,6 +134,7 @@
                       <doRadToRefl>true</doRadToRefl>
                       <reproVersion>AUTO_DETECT</reproVersion>
                       -->
+                      <useIdepix>true</useIdepix>
                       <landExpression>(toa_reflec_9  > toa_reflec_8 OR toa_reflec10 > toa_reflec_8) AND toa_reflec_13 > 0.015</landExpression>
                   </parameters>
               </wps:ComplexData>
