@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+  <ows:Identifier>LKN Truebung</ows:Identifier>
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier>
+      <ows:Title>software installation package name</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>beam-meris-radiometry</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.version</ows:Identifier>
+      <ows:Title>software installation package version</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>1.0-SNAPSHOT</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <ows:Title>output directory</ows:Title>
+      <wps:Data>
+        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-mz" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_025842_000026382028_00333_12411_0000.N1" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_043918_000026382028_00334_12412_0000.N1" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_061955_000026382028_00335_12413_0000.N1" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_080031_000026382028_00336_12414_0000.N1" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_094107_000026382028_00337_12415_0000.N1" />
+    </wps:Input>
+
+      <wps:Input>
+          <ows:Identifier>calvalus.l2.operator</ows:Identifier>
+          <ows:Title>the name of the GPF operator</ows:Title>
+          <wps:Data>
+              <wps:LiteralData>Meris.CorrectRadiometry</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+      <wps:Input>
+          <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
+          <ows:Title></ows:Title>
+          <wps:Data>
+              <wps:ComplexData>
+                  <parameters>
+                      <doCalibration>true</doCalibration>
+                      <doSmile>true</doSmile>
+                      <doEqualization>true</doEqualization>
+                      <doRadToRefl>true</doRadToRefl>
+                      <reproVersion>AUTO_DETECT</reproVersion>
+                  </parameters>
+              </wps:ComplexData>
+          </wps:Data>
+      </wps:Input>
+      
+        <wps:Input>
+            <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
+            <ows:Title></ows:Title>
+            <wps:Data>
+                <wps:ComplexData>
+                    <numRows>66792</numRows>
+                    <!--<bbox>9.0, 53.0, 14.5, 56.5</bbox> &lt;!&ndash;baltic_sea_scene&ndash;&gt;-->
+                    <bbox>3.0, 52.0, 9.5, 56.5</bbox> <!--north_scene-->
+                    <maskExpr>NOT l2_flags.INVALID</maskExpr>
+                    <aggregators>
+                        <aggregator>
+                            <type>AVG</type>
+                            <varName>Z90_max</varName>
+                        </aggregator>
+                    </aggregators>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>  
+      
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier>
+        <ows:Title>directory of l2 output files</ows:Title>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>
