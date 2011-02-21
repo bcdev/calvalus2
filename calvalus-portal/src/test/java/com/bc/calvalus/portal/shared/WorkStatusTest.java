@@ -1,10 +1,6 @@
 package com.bc.calvalus.portal.shared;
 
-import com.bc.calvalus.portal.client.WorkObserver;
-import com.bc.calvalus.portal.client.WorkReporter;
-import com.bc.calvalus.portal.client.Worker;
 import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.user.client.Timer;
 
 public class WorkStatusTest extends GWTTestCase {
 

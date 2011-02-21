@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Norman
  */
-public final class Worker {
+public final class WorkMonitor {
 
     private final WorkReporter reporter;
     private final List<WorkObserver> observerList;
@@ -21,12 +21,12 @@ public final class Worker {
     private Timer timer;
     boolean firedStart;
 
-    public Worker(WorkReporter reporter) {
+    public WorkMonitor(WorkReporter reporter) {
         this.reporter = reporter;
         this.observerList = new ArrayList<WorkObserver>();
     }
 
-    public Worker(WorkReporter reporter, WorkObserver observer) {
+    public WorkMonitor(WorkReporter reporter, WorkObserver observer) {
         this(reporter);
         addObserver(observer);
     }
@@ -50,6 +50,7 @@ public final class Worker {
     public void start(int updatePeriod) {
         WorkStatus workStatus = reporter.getWorkStatus();
         if (!workStatus.isDone()) {
+            GWT.log("Worker monitor started for reporter " + reporter + ". Updating all " + updatePeriod + " ms");
             this.timer = new Timer() {
                 @Override
                 public void run() {
@@ -57,12 +58,14 @@ public final class Worker {
                 }
             };
             this.timer.scheduleRepeating(updatePeriod);
+        } else {
+            GWT.log("Worker monitor NOT started for reporter " + reporter + " because it's already done.");
         }
     }
 
     private void update() {
-        WorkObserver[] observers = getObservers();
         WorkStatus workStatus = reporter.getWorkStatus();
+        WorkObserver[] observers = getObservers();
         if (workStatus.isDone()) {
             if (timer != null) {
                 timer.cancel();

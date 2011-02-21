@@ -39,4 +39,13 @@ public class PortalProduction implements IsSerializable {
     public WorkStatus getWorkStatus() {
         return workStatus;
     }
+
+    @Override
+    public String toString() {
+        return "PortalProduction{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", workStatus=" + workStatus +
+                '}';
+    }
 }

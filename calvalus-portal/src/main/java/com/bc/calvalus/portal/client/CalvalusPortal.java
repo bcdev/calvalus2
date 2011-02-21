@@ -159,9 +159,9 @@ public class CalvalusPortal implements EntryPoint {
         List<PortalProduction> productionList = productions.getList();
         for (PortalProduction production : productionList) {
             if (!production.getWorkStatus().isDone()) {
-                Worker worker = new Worker(new ProductionReporter(backendService, production),
+                WorkMonitor workMonitor = new WorkMonitor(new ProductionReporter(backendService, production),
                                            new ProductionObserver(productions, production));
-                worker.start(500);
+                workMonitor.start(500);
             }
         }
     }
@@ -413,9 +413,9 @@ public class CalvalusPortal implements EntryPoint {
             backendService.orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
                 public void onSuccess(final PortalProductionResponse response) {
                     tabPanel.selectTab(2);
-                    Worker worker = new Worker(new ProductionReporter(backendService, response.getProduction()),
+                    WorkMonitor workMonitor = new WorkMonitor(new ProductionReporter(backendService, response.getProduction()),
                                                new ProductionObserver(productions, response.getProduction()));
-                    worker.start(500);
+                    workMonitor.start(500);
                 }
 
                 public void onFailure(Throwable caught) {

@@ -1,11 +1,27 @@
-/** Add css rules here for your application. */
 
 /** Example rules used by the template application (remove for your app) */
+
+#splashScreen {
+	display: block;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	text-align: center;
+    margin: -100px;
+}
+
+#mainPanel {
+	display: block;
+	position: relative;
+	top: 10px;
+	left: 10px;
+}
+
 h1 {
     font-size: 2em;
     font-weight: bold;
     color: #777777;
-    margin: 30px 10px 30px;
+    margin: 0 0 30px;
     text-align: left;
 }
 
@@ -27,18 +43,10 @@ h1 {
     font-size: 32pt;
 }
 
-#loading {
-	display: block;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	text-align: center;
-	margin-left: -100px;
-}
-
 .cw-FlexTable td {
   border: 0px;
 }
+
 
 
 

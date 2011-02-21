@@ -14,9 +14,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 // todo - use ProductionService interface from calvalus-production
 
@@ -32,9 +29,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         super();
         productionList = Collections.synchronizedList(new ArrayList<Production>(32));
         // Add some dummy productions
-        productionList.add(new Production("Formatting all harddrives", 40 * 1000));
+        productionList.add(new Production("Formatting all hard drives", 40 * 1000));
         productionList.add(new Production("Drying CD slots", 20 * 1000));
-        productionList.add(new Production("Rewriting kernel ", 30 * 1000));
+        productionList.add(new Production("Rewriting kernel using BASIC", 30 * 1000));
         for (Production production : productionList) {
             production.start();
         }
@@ -89,7 +86,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                      productionRequest.getProcessorId(),
                                                      productionRequest.getProcessorVersion());
 
-        long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
+        long secondsToRun = (int) (10 + 30 * Math.random()); // 10...40 seconds
         Production production = new Production(productionName, secondsToRun * 1000);
         production.start();
 
@@ -120,61 +117,4 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return null;
     }
 
-    /**
-     * Dummy production that simulates progress over a given amount of time.
-     */
-    private static class Production {
-        private static final Random idGen = new Random();
-        private final String id;
-        private final long startTime;
-        private final long totalTime;
-        private Timer timer;
-        private double progress;
-        private final String name;
-
-        /**
-         * Constructs a new dummy production.
-         *
-         * @param name
-         * @param totalTime The total time in ms to run.
-         */
-        public Production(String name, long totalTime) {
-            this.id = Long.toHexString(idGen.nextLong());
-            this.name = name;
-            this.totalTime = totalTime;
-            this.startTime = System.currentTimeMillis();
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void start() {
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    progress = (double) (System.currentTimeMillis() - startTime) / (double) totalTime;
-                    if (progress >= 1.0) {
-                        timer.cancel();
-                        timer = null;
-                        progress = 1.0;
-                    }
-                }
-            };
-            timer = new Timer();
-            timer.scheduleAtFixedRate(task, 0, 250);
-        }
-
-        public double getProgress() {
-            return progress;
-        }
-
-        public boolean isDone() {
-            return timer == null;
-        }
-    }
 }

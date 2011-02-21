@@ -4,7 +4,7 @@ import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.Timer;
 
-public class WorkerTest extends GWTTestCase {
+public class WorkMonitorTest extends GWTTestCase {
 
     @Override
     public String getModuleName() {
@@ -17,24 +17,24 @@ public class WorkerTest extends GWTTestCase {
     public void it_does_not_work_testStatusJustStarted() {
         MyStatus status = new MyStatus(0);
         MyObserver observer = new MyObserver();
-        Worker worker = new Worker(status, observer);
+        WorkMonitor workMonitor = new WorkMonitor(status, observer);
         delayTestFinish(10000);
-        worker.start(10);
+        workMonitor.start(10);
     }
 
     public void it_does_not_work_testStatusPartlyDone() {
         MyStatus status = new MyStatus(50);
         MyObserver observer = new MyObserver();
-        Worker worker = new Worker(status, observer);
+        WorkMonitor workMonitor = new WorkMonitor(status, observer);
         delayTestFinish(10000);
-        worker.start(10);
+        workMonitor.start(10);
     }
 
     public void it_does_not_work_testStatusIsAlreadyDone() {
         MyStatus status = new MyStatus(100);
         MyObserver observer = new MyObserver();
-        Worker worker = new Worker(status, observer);
-        worker.start(10);
+        WorkMonitor workMonitor = new WorkMonitor(status, observer);
+        workMonitor.start(10);
         delayTestFinish(3000);
         assertEquals(0, observer.updates);
     }
