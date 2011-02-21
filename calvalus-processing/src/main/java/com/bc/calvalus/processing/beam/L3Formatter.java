@@ -23,11 +23,16 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.io.IOUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,22 +47,21 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+import org.xml.sax.SAXException;
 
 import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
@@ -72,9 +76,9 @@ import java.util.logging.Logger;
  * @author Norman Fomferra
  */
 public class L3Formatter extends Configured implements Tool {
-
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private Properties request;
+    private static Options options = new Options();
+
     private String outputType;
     private String outputFormat;
     private Path l3OutputDir;
@@ -84,6 +88,7 @@ public class L3Formatter extends Configured implements Tool {
     private String outputFileNameExt;
     private double pixelSize;
     private Rectangle outputRegion;
+    private FormatterL3Config formatterL3Config;
 
     public static void main(String[] args) {
         if (Boolean.getBoolean("hadoop.debug")) {
@@ -100,43 +105,32 @@ public class L3Formatter extends Configured implements Tool {
         System.exit(result);
     }
 
-    private static Properties readProperties(Reader reader) throws IOException {
-        try {
-            Properties properties = new Properties();
-            properties.load(reader);
-            return properties;
-        } finally {
-            reader.close();
-        }
-    }
-
-
     @Override
     public int run(String[] args) throws Exception {
-
-        final String requestFile = args.length > 0 ? args[0] : "l3formatter.properties";
-        request = readProperties(new FileReader(requestFile));
-
-        outputType = request.getProperty("calvalus.l3.formatter.outputType");
-        if (outputType == null) {
-            throw new IllegalArgumentException("No output type given");
+        // parse command line arguments
+        CommandLineParser commandLineParser = new PosixParser();
+        final CommandLine commandLine = commandLineParser.parse(options, args);
+        String[] remainingArgs = commandLine.getArgs();
+        if (remainingArgs.length == 0) {
+            throw new IllegalStateException("No request file specified.");
         }
-        if (!outputType.equalsIgnoreCase("Product")
-                && !outputType.equalsIgnoreCase("RGB")
-                && !outputType.equalsIgnoreCase("Grey")) {
-            throw new IllegalArgumentException("Unknown output type: " + outputType);
-        }
+        String requestPath = remainingArgs[0];
 
-        outputFile = new File(request.getProperty("calvalus.l3.formatter.output"));
+        // parse request
+        final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
+        WpsConfig wpsConfig = new WpsConfig(requestContent);
+        formatterL3Config = FormatterL3Config.create(wpsConfig.getRequestXmlDoc());
+        outputType = formatterL3Config.getOutputType();
+
+        outputFile = new File(formatterL3Config.getOutputFile());
         final String fileName = outputFile.getName();
         final int extPos = fileName.lastIndexOf(".");
         outputFileNameBase = fileName.substring(0, extPos);
         outputFileNameExt = fileName.substring(extPos + 1);
 
-        outputFormat = request.getProperty("calvalus.l3.formatter.outputFormat");
+        outputFormat = formatterL3Config.getOutputFormat();
         if (outputFormat == null) {
-            outputFormat =
-                    outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
+            outputFormat = outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
                             : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
                             : outputFileNameExt.equalsIgnoreCase("png") ? "PNG"
                             : outputFileNameExt.equalsIgnoreCase("jpg") ? "JPEG" : null;
@@ -151,15 +145,8 @@ public class L3Formatter extends Configured implements Tool {
             throw new IllegalArgumentException("Unknown output format: " + outputFormat);
         }
 
-
-        l3OutputDir = new Path(request.getProperty("calvalus.l3.output"));
-        FileSystem fs = l3OutputDir.getFileSystem(getConf());
-        InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        IOUtils.copyBytes(is, baos);
-        String wpsContent = baos.toString();
-        BeamL3Config l3Config = BeamL3Config.create(new XmlDoc(wpsContent));
-        l3Config.validateConfiguration();
+        l3OutputDir = new Path(wpsConfig.getRequestOutputDir());
+        BeamL3Config l3Config = readL3Config();
 
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();
@@ -174,17 +161,24 @@ public class L3Formatter extends Configured implements Tool {
             LOG.info("aggregators." + i + " = " + aggregator);
         }
 
-
         computeOutputRegion(l3Config);
 
         if (outputType.equalsIgnoreCase("Product")) {
-            // TODO
-//            writeProductFile(l3Config.getStartTime(), l3Config.getEndTime());
+            writeProductFile(formatterL3Config.getStartTime(), formatterL3Config.getEndTime());
         } else {
             writeImageFiles();
         }
 
         return 0;
+    }
+
+    private BeamL3Config readL3Config() throws IOException, SAXException, ParserConfigurationException {
+        FileSystem fs = l3OutputDir.getFileSystem(getConf());
+        InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copyBytes(is, baos);
+        String wpsContent = baos.toString();
+        return BeamL3Config.create(new XmlDoc(wpsContent));
     }
 
     private void computeOutputRegion(BeamL3Config l3Config) {
@@ -217,7 +211,6 @@ public class L3Formatter extends Configured implements Tool {
         }
         LOG.info("outputRegion = " + outputRegion);
     }
-
 
     private void writeProductFile(ProductData.UTC startTime, ProductData.UTC endTime) throws Exception {
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
@@ -282,32 +275,24 @@ public class L3Formatter extends Configured implements Tool {
     }
 
     private void writeImageFiles() throws Exception {
-        int[] indices = new int[16];
-        String[] names = new String[16];
-        float[] v1s = new float[16];
-        float[] v2s = new float[16];
-        int numBands = 0;
-        for (int i = 0; i < indices.length; i++) {
-            String indexStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.index", i));
-            String nameStr = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.name", i));
-            String v1Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v1", i));
-            String v2Str = request.getProperty(String.format("calvalus.l3.formatter.bands.%d.v2", i));
-            if (indexStr == null) {
-                break;
-            }
-            indices[numBands] = Integer.parseInt(indexStr);
-            names[numBands] = nameStr != null ? nameStr : binningContext.getBinManager().getOutputPropertyName(indices[numBands]);
-            v1s[numBands] = Float.parseFloat(v1Str);
-            v2s[numBands] = Float.parseFloat(v2Str);
-            numBands++;
-        }
+        FormatterL3Config.BandConfiguration[] bandConfigurations = formatterL3Config.getBands();
+        int numBands = bandConfigurations.length;
         if (numBands == 0) {
             throw new IllegalArgumentException("No output band given.");
         }
-        indices = Arrays.copyOf(indices, numBands);
-        names = Arrays.copyOf(names, numBands);
-        v1s = Arrays.copyOf(v1s, numBands);
-        v2s = Arrays.copyOf(v2s, numBands);
+        int[] indices = new int[numBands];
+        String[] names = new String[numBands];
+        float[] v1s = new float[numBands];
+        float[] v2s = new float[numBands];
+        for (int i = 0; i < numBands; i++) {
+            FormatterL3Config.BandConfiguration bandConfiguration = bandConfigurations[i];
+            String nameStr = bandConfiguration.name;
+
+            indices[i] = Integer.parseInt(bandConfiguration.index);
+            names[i] = nameStr != null ? nameStr : binningContext.getBinManager().getOutputPropertyName(indices[i]);
+            v1s[i] = Float.parseFloat(bandConfiguration.v1);
+            v2s[i] = Float.parseFloat(bandConfiguration.v2);
+        }
 
         final ImageRaster raster = new ImageRaster(outputRegion.width, outputRegion.height, indices);
         L3Reprojector.reproject(getConf(), binningContext, outputRegion, l3OutputDir, raster);
