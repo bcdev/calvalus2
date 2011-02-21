@@ -13,7 +13,7 @@ public class WorkStatusTest extends GWTTestCase {
         assertEquals(false, new WorkStatus(WorkStatus.State.WAITING, "", 0).isDone());
         assertEquals(false, new WorkStatus(WorkStatus.State.IN_PROGRESS, "", 0).isDone());
         assertEquals(true, new WorkStatus(WorkStatus.State.CANCELLED, "", 0).isDone());
-        assertEquals(true, new WorkStatus(WorkStatus.State.DONE, "", 0).isDone());
+        assertEquals(true, new WorkStatus(WorkStatus.State.COMPLETED, "", 0).isDone());
         assertEquals(true, new WorkStatus(WorkStatus.State.ERROR, "", 0).isDone());
     }
 }

@@ -20,20 +20,26 @@
 </noscript>
 
 <h1>Calvalus Portal</h1>
+
 <p>EO Cal/Val and User Services</p>
 
 <hr/>
 
-<div id="mainPanel">Main panel goes here.</div>
+<div id="mainPanel"></div>
 
 <div id="splashScreen">
     Loading Calvalus Portal, please wait...<br/>
     <img src="images/progress-bar.gif"/>
 </div>
 
+<!--
+  I load the JavaScript stuff only here (usual place is header),
+  because otherwise progress-bar.gif will not animate.
+ (Firefox does not react while loading JavaScript)
+ -- Norman.
+ -->
 <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
 <script type="text/javascript" language="javascript" src="http://openlayers.org/api/2.9/OpenLayers.js"></script>
-
 
 </body>
 </html>

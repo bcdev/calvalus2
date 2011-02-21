@@ -103,7 +103,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         if (production == null) {
             throw new BackendServiceException("Unknown production ID: " + productionId);
         }
-        return new WorkStatus(production.isDone() ? WorkStatus.State.DONE : WorkStatus.State.IN_PROGRESS,
+        return new WorkStatus(production.isDone() ? WorkStatus.State.COMPLETED : WorkStatus.State.IN_PROGRESS,
                               production.getName(),
                               production.getProgress());
     }

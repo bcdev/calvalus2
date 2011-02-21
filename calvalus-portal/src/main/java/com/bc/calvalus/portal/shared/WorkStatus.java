@@ -13,10 +13,29 @@ public class WorkStatus implements IsSerializable {
     private double progress;
 
     public enum State {
+        /**
+         * Indicates that the work unit has not yet started.
+         */
         WAITING,
+        /**
+         * Indicates that the work unit is in progress.
+         */
         IN_PROGRESS,
-        DONE,
+        /**
+         * Indicates that the work unit has been successfully completed.
+         */
+        COMPLETED,
+        /**
+         * Indicates that the work unit has been cancelled, e.g. on user request.
+         */
         CANCELLED,
+        /**
+         * Indicates an unknown state, e.g. could not be retrieved.
+         */
+        UNKNOWN,
+        /**
+         * Indicates a server-side problem, e.g. missing input files.
+         */
         ERROR,
     }
 
@@ -38,7 +57,7 @@ public class WorkStatus implements IsSerializable {
     }
 
     public boolean isDone() {
-        return state == State.DONE || state == State.ERROR  || state == State.CANCELLED;
+        return !(state == State.WAITING || state == State.IN_PROGRESS);
     }
 
     public String getMessage() {
