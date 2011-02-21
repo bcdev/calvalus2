@@ -18,6 +18,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -121,6 +122,7 @@ public class BeamOperatorTool extends Configured implements Tool {
                 job.setOutputKeyClass(IntWritable.class);
                 job.setOutputValueClass(TemporalBin.class);
 
+                job.setOutputFormatClass(SequenceFileOutputFormat.class);
                 // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
             } else {
                 job.setMapperClass(BeamOperatorMapper.class);
