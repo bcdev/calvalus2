@@ -20,7 +20,7 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.SpatialBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 
 /**
@@ -30,14 +30,14 @@ import org.apache.hadoop.mapreduce.Partitioner;
  * @author Marco Zuehlke
  * @author Norman Fomferra
  */
-public class L3Partitioner extends Partitioner<IntWritable, SpatialBin> implements Configurable {
+public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> implements Configurable {
 
     private Configuration conf;
     private BinningGrid binningGrid;
 
     @Override
-    public int getPartition(IntWritable binIndex, SpatialBin spatialBin, int numPartitions) {
-        int idx = binIndex.get();
+    public int getPartition(LongWritable binIndex, SpatialBin spatialBin, int numPartitions) {
+        long idx = binIndex.get();
         int row = binningGrid.getRowIndex(idx);
         return (row * numPartitions) / binningGrid.getNumRows();
     }

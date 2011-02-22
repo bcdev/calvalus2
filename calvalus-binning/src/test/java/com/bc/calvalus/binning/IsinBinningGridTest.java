@@ -3,6 +3,7 @@ package com.bc.calvalus.binning;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class IsinBinningGridTest {
     @Test
@@ -39,31 +40,44 @@ public class IsinBinningGridTest {
     }
 
     @Test
-    public void testGrid() {
+    public void testDefaultGrid() {
+        int NUM_ROWS = 2160;
+        final int NUM_BINS = 5940422;
         IsinBinningGrid grid = new IsinBinningGrid();
 
-        final int N = 5940422;
+        testGrid(grid, NUM_ROWS, NUM_BINS);
+    }
 
-        assertEquals(2160, grid.getNumRows());
-        assertEquals(N, grid.getNumBins());
+    @Test
+    public void testMerisFRGrid() {
+        //300m resolution
+        final int NUM_ROWS = 66792;
+        final long NUM_BINS = 5680139712L;
+        IsinBinningGrid  grid = new IsinBinningGrid(NUM_ROWS);
+
+        testGrid(grid, NUM_ROWS, NUM_BINS);
+    }
+
+    private static void testGrid(IsinBinningGrid grid, int numRows, long numBins) {
+        assertEquals(numRows, grid.getNumRows());
+        assertEquals(numBins, grid.getNumBins());
 
         assertEquals(3, grid.getNumCols(0));
-        assertEquals(2 * 2160, grid.getNumCols(2160 / 2));
-        assertEquals(2 * 2160, grid.getNumCols(2160 / 2 + 1));
-        assertEquals(3, grid.getNumCols(2160 - 1));
+        assertEquals(2 * numRows, grid.getNumCols(numRows / 2));
+        assertEquals(2 * numRows, grid.getNumCols(numRows / 2 + 1));
+        assertEquals(3, grid.getNumCols(numRows - 1));
 
-        final double W = 360.0 / (2 * 2160);
-        final double H = 180.0 / 2160;
+        final double W = 360.0 / (2 * numRows);
+        final double H = 180.0 / numRows;
 
         assertEquals(0, grid.getBinIndex(+90.0, -180.0));
         assertEquals(1, grid.getBinIndex(+90.0, 0.0));
         assertEquals(2, grid.getBinIndex(+90.0, +180.0));
-        assertEquals(N - 3, grid.getBinIndex(-90.0, -180.0));
-        assertEquals(N - 2, grid.getBinIndex(-90.0, 0.0));
-        assertEquals(N - 1, grid.getBinIndex(-90.0, +180.0));
-        assertEquals(N / 2 - 1, grid.getBinIndex(+H/2, +180.0));
-        assertEquals(N / 2, grid.getBinIndex(-H/2, -180.0));
-
+        assertEquals(numBins - 3, grid.getBinIndex(-90.0, -180.0));
+        assertEquals(numBins - 2, grid.getBinIndex(-90.0, 0.0));
+        assertEquals(numBins - 1, grid.getBinIndex(-90.0, +180.0));
+        assertEquals(numBins / 2 - 1, grid.getBinIndex(+H/2, +180.0));
+        assertEquals(numBins / 2, grid.getBinIndex(-H/2, -180.0));
     }
 
     @Test

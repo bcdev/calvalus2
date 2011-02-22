@@ -238,11 +238,6 @@ public class L3Formatter extends Configured implements Tool {
         product.setStartTime(startTime);
         product.setEndTime(endTime);
 
-        final Band indexBand = product.addBand("index", ProductData.TYPE_INT32);
-        indexBand.setNoDataValue(-1);
-        indexBand.setNoDataValueUsed(true);
-        final ProductData indexLine = indexBand.createCompatibleRasterData(outputRegion.width, 1);
-
         final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
         numObsBand.setNoDataValue(-1);
         numObsBand.setNoDataValueUsed(true);
@@ -266,7 +261,6 @@ public class L3Formatter extends Configured implements Tool {
 
         productWriter.writeProductNodes(product, outputFile);
         final ProductDataWriter dataWriter = new ProductDataWriter(productWriter,
-                                                                   indexBand, indexLine,
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
@@ -416,28 +410,24 @@ public class L3Formatter extends Configured implements Tool {
 
     private final static class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
         private final int width;
-        private final ProductData indexLine;
         private final ProductData numObsLine;
         private final ProductData numPassesLine;
         private final Band[] outputBands;
         private final ProductData[] outputLines;
         private final ProductWriter productWriter;
-        private final Band indexBand;
         private final Band numObsBand;
         private final Band numPassesBand;
         int yLast;
 
-        public ProductDataWriter(ProductWriter productWriter, Band indexBand, ProductData indexLine, Band numObsBand, ProductData numObsLine, Band numPassesBand, ProductData numPassesLine, Band[] outputBands, ProductData[] outputLines) {
-            this.indexLine = indexLine;
+        public ProductDataWriter(ProductWriter productWriter, Band numObsBand, ProductData numObsLine, Band numPassesBand, ProductData numPassesLine, Band[] outputBands, ProductData[] outputLines) {
             this.numObsLine = numObsLine;
             this.numPassesLine = numPassesLine;
             this.outputBands = outputBands;
             this.outputLines = outputLines;
             this.productWriter = productWriter;
-            this.indexBand = indexBand;
             this.numObsBand = numObsBand;
             this.numPassesBand = numPassesBand;
-            this.width = indexBand.getSceneRasterWidth();
+            this.width = numObsBand.getSceneRasterWidth();
             this.yLast = 0;
             initLine();
         }
@@ -471,8 +461,6 @@ public class L3Formatter extends Configured implements Tool {
         }
 
         private void writeLine(int y) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
-            productWriter.writeBandRasterData(indexBand, 0, y, width, 1, indexLine, ProgressMonitor.NULL);
             productWriter.writeBandRasterData(numObsBand, 0, y, width, 1, numObsLine, ProgressMonitor.NULL);
             productWriter.writeBandRasterData(numPassesBand, 0, y, width, 1, numPassesLine, ProgressMonitor.NULL);
             for (int i = 0; i < outputBands.length; i++) {
@@ -487,7 +475,6 @@ public class L3Formatter extends Configured implements Tool {
         }
 
         private void setData(int x, TemporalBin temporalBin, WritableVector outputVector) {
-            indexLine.setElemIntAt(x, temporalBin.getIndex());
             numObsLine.setElemIntAt(x, temporalBin.getNumObs());
             numPassesLine.setElemIntAt(x, temporalBin.getNumPasses());
             for (int i = 0; i < outputBands.length; i++) {
@@ -496,7 +483,6 @@ public class L3Formatter extends Configured implements Tool {
         }
 
         private void setNoData(int x) {
-            indexLine.setElemIntAt(x, -1);
             numObsLine.setElemIntAt(x, -1);
             numPassesLine.setElemIntAt(x, -1);
             for (int i = 0; i < outputBands.length; i++) {

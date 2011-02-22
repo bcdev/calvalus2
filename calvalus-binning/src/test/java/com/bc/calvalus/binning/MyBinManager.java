@@ -10,7 +10,7 @@ class MyBinManager extends BinManagerImpl {
     }
 
     @Override
-    public SpatialBin createSpatialBin(int binIndex) {
+    public SpatialBin createSpatialBin(long binIndex) {
         SpatialBin spatialBin = super.createSpatialBin(binIndex);
         producedSpatialBins.add(spatialBin);
         return spatialBin;

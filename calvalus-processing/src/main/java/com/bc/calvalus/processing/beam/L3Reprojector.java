@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 
 import java.awt.Rectangle;
@@ -104,7 +104,7 @@ public class L3Reprojector {
         int lastRowIndex = -1;
         final ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
         while (true) {
-            IntWritable binIndex = new IntWritable();
+            LongWritable binIndex = new LongWritable();
             TemporalBin temporalBin = new TemporalBin();
             if (!temporalBinReader.next(binIndex, temporalBin)) {
                 if (lastRowIndex >= y1 && lastRowIndex <= y2) {
@@ -126,6 +126,14 @@ public class L3Reprojector {
                                  gridWidth, gridHeight);
                 }
                 binRow.clear();
+                if (lastRowIndex >= y1 && lastRowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
+                    for (int currentRowIndex = lastRowIndex+1; currentRowIndex < rowIndex; currentRowIndex++) {
+                        reprojectRow(binningContext,
+                                 pixelRegion, currentRowIndex, binRow,
+                                 temporalBinProcessor,
+                                 gridWidth, gridHeight);
+                    }
+                }
                 lastRowIndex = rowIndex;
             }
             temporalBin.setIndex(binIndex.get());
@@ -173,7 +181,7 @@ public class L3Reprojector {
 
     static final class TemporalBinIterator implements Iterator<TemporalBin> {
         private final SequenceFile.Reader reader;
-        private IntWritable binIndex;
+        private LongWritable binIndex;
         private TemporalBin temporalBin;
         private boolean mustRead;
         private boolean lastItemValid;
@@ -209,7 +217,7 @@ public class L3Reprojector {
             if (mustRead && lastItemValid) {
                 mustRead = false;
                 try {
-                    binIndex = new IntWritable();
+                    binIndex = new LongWritable();
                     temporalBin = new TemporalBin();
                     lastItemValid = reader.next(binIndex, temporalBin);
                     if (lastItemValid) {
@@ -248,17 +256,17 @@ public class L3Reprojector {
         final BinManager binManager = ctx.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
         final double lat = 90.0 - (y + 0.5) * 180.0 / gridHeight;
-        int lastBinIndex = -1;
+        long lastBinIndex = -1;
         TemporalBin temporalBin = null;
         int rowIndex = -1;
         for (int x = x1; x <= x2; x++) {
             double lon = -180.0 + (x + 0.5) * 360.0 / gridWidth;
-            int wantedBinIndex = binningGrid.getBinIndex(lat, lon);
+            long wantedBinIndex = binningGrid.getBinIndex(lat, lon);
             if (lastBinIndex != wantedBinIndex) {
                 // search temporalBin for wantedBinIndex
                 temporalBin = null;
                 for (int i = rowIndex + 1; i < binRow.size(); i++) {
-                    final int binIndex = binRow.get(i).getIndex();
+                    final long binIndex = binRow.get(i).getIndex();
                     if (binIndex == wantedBinIndex) {
                         temporalBin = binRow.get(i);
                         binManager.computeOutput(temporalBin, outputVector);

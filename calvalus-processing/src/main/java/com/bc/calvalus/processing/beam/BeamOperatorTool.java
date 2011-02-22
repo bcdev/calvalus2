@@ -15,7 +15,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -113,13 +113,13 @@ public class BeamOperatorTool extends Configured implements Tool {
                 job.setNumReduceTasks(16);
 
                 job.setMapperClass(L3Mapper.class);
-                job.setMapOutputKeyClass(IntWritable.class);
+                job.setMapOutputKeyClass(LongWritable.class);
                 job.setMapOutputValueClass(SpatialBin.class);
 
                 job.setPartitionerClass(L3Partitioner.class);
 
                 job.setReducerClass(L3Reducer.class);
-                job.setOutputKeyClass(IntWritable.class);
+                job.setOutputKeyClass(LongWritable.class);
                 job.setOutputValueClass(TemporalBin.class);
 
                 job.setOutputFormatClass(SequenceFileOutputFormat.class);

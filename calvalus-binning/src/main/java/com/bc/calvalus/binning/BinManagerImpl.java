@@ -87,14 +87,14 @@ public class BinManagerImpl implements BinManager {
     }
 
     @Override
-    public SpatialBin createSpatialBin(int binIndex) {
+    public SpatialBin createSpatialBin(long binIndex) {
         final SpatialBin spatialBin = new SpatialBin(binIndex, spatialPropertyCount);
         initSpatialBin(spatialBin);
         return spatialBin;
     }
 
     @Override
-    public TemporalBin createTemporalBin(int binIndex) {
+    public TemporalBin createTemporalBin(long binIndex) {
         final TemporalBin temporalBin = new TemporalBin(binIndex, temporalPropertyCount);
         initTemporalBin(temporalBin);
         return temporalBin;

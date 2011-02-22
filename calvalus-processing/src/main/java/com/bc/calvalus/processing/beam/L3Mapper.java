@@ -25,7 +25,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -53,7 +53,7 @@ import java.util.logging.Logger;
  * @author Marco Zuehlke
  * @author Norman Fomferra
  */
-public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, SpatialBin> {
+public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, SpatialBin> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -226,7 +226,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, IntWritable, Sp
         @Override
         public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
-                context.write(new IntWritable(spatialBin.getIndex()), spatialBin);
+                context.write(new LongWritable(spatialBin.getIndex()), spatialBin);
                 numObsTotal += spatialBin.getNumObs();
                 numBinsTotal++;
             }

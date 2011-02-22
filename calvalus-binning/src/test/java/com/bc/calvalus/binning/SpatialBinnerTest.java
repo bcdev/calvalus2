@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
@@ -44,9 +45,10 @@ public class SpatialBinnerTest {
 
         spatialBinner.complete();
 
-        assertEquals(3, temporalBinner.binMap.size());
+        Map<Long,TemporalBin> binMap = temporalBinner.binMap;
+        assertEquals(3, binMap.size());
 
-        TemporalBin tbin1 = temporalBinner.binMap.get(1);
+        TemporalBin tbin1 = binMap.get(1L);
         assertNotNull(tbin1);
         assertEquals(3, tbin1.getNumObs());
         assertEquals(1, tbin1.getNumPasses());
@@ -57,18 +59,18 @@ public class SpatialBinnerTest {
         assertEquals((log(1.1) + log(1.2) + log(2.1)) / sqrt(3),
                      agg1.get(SUM_X), 1e-5);
 
-        TemporalBin tbin2 = temporalBinner.binMap.get(2);
+        TemporalBin tbin2 = binMap.get(2L);
         assertNotNull(tbin2);
         assertEquals(5, tbin2.getNumObs());
         assertEquals(1, tbin2.getNumPasses());
         Vector agg2 = binManager.getTemporalVector(tbin2, 0);
         assertNotNull(agg2);
         assertEquals(sqrt(5),
-                     agg2.get(WEIGHT), 1e-5);
+                agg2.get(WEIGHT), 1e-5);
         assertEquals((log(1.3) + log(1.4) + log(2.2) + log(2.3) + log(2.4)) / sqrt(5),
                      agg2.get(SUM_X), 1e-5);
 
-        TemporalBin tbin3 = temporalBinner.binMap.get(3);
+        TemporalBin tbin3 = binMap.get(3L);
         assertNotNull(tbin3);
         assertEquals(1, tbin3.getNumObs());
         assertEquals(1, tbin3.getNumPasses());
@@ -173,7 +175,7 @@ public class SpatialBinnerTest {
     private static class BinComparator implements Comparator<SpatialBin> {
         @Override
         public int compare(SpatialBin b1, SpatialBin b2) {
-            return b1.getIndex() - b2.getIndex();
+            return (int) (b1.getIndex() - b2.getIndex());
         }
     }
 }

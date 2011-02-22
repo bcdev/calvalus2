@@ -20,8 +20,8 @@ public class SpatialBinner {
     private final SpatialBinProcessor processor;
 
     // State variables
-    private final Map<Integer, SpatialBin> activeBinMap;
-    private final Map<Integer, SpatialBin> finalizedBinMap;
+    private final Map<Long, SpatialBin> activeBinMap;
+    private final Map<Long, SpatialBin> finalizedBinMap;
     private final ArrayList<Exception> exceptions;
 
     /**
@@ -35,8 +35,8 @@ public class SpatialBinner {
         this.binningGrid = ctx.getBinningGrid();
         this.binManager = ctx.getBinManager();
         this.processor = processor;
-        this.activeBinMap = new HashMap<Integer, SpatialBin>();
-        this.finalizedBinMap = new HashMap<Integer, SpatialBin>();
+        this.activeBinMap = new HashMap<Long, SpatialBin>();
+        this.finalizedBinMap = new HashMap<Long, SpatialBin>();
         this.exceptions = new ArrayList<Exception>();
     }
 
@@ -58,7 +58,7 @@ public class SpatialBinner {
         finalizedBinMap.putAll(activeBinMap);
 
         for (Observation observation : observations) {
-            Integer binIndex = binningGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
+            Long binIndex = binningGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
             SpatialBin bin = activeBinMap.get(binIndex);
             if (bin == null) {
                 bin = binManager.createSpatialBin(binIndex);
@@ -70,7 +70,7 @@ public class SpatialBinner {
 
         if (!finalizedBinMap.isEmpty()) {
             emitSliceBins(finalizedBinMap);
-            for (Integer key : finalizedBinMap.keySet()) {
+            for (Long key : finalizedBinMap.keySet()) {
                 activeBinMap.remove(key);
             }
             finalizedBinMap.clear();
@@ -99,7 +99,7 @@ public class SpatialBinner {
         finalizedBinMap.clear();
     }
 
-    private void emitSliceBins(Map<Integer, SpatialBin> binMap) {
+    private void emitSliceBins(Map<Long, SpatialBin> binMap) {
         List<SpatialBin> bins = new ArrayList<SpatialBin>(binMap.values());
         for (SpatialBin bin : bins) {
             binManager.completeSpatialBin(bin);

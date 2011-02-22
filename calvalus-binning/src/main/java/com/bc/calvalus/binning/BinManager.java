@@ -15,9 +15,9 @@ public interface BinManager {
 
     Aggregator getAggregator(int aggIndex);
 
-    SpatialBin createSpatialBin(int binIndex);
+    SpatialBin createSpatialBin(long binIndex);
 
-    TemporalBin createTemporalBin(int binIndex);
+    TemporalBin createTemporalBin(long binIndex);
 
     WritableVector createOutputVector();
 

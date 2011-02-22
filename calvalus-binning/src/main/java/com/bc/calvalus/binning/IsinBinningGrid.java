@@ -20,9 +20,9 @@ public final class IsinBinningGrid implements BinningGrid {
 
     private final int numRows;
     private final double[] latBin;
-    private final int[] baseBin;
-    private final int[] numBin;
-    private final int numBins;
+    private final long[] baseBin; // bin-index of the first bin in this row
+    private final int[] numBin;  // number of bins in this row
+    private final long numBins;
 
     public IsinBinningGrid() {
         this(DEFAULT_NUM_ROWS);
@@ -38,7 +38,7 @@ public final class IsinBinningGrid implements BinningGrid {
 
         this.numRows = numRows;
         latBin = new double[numRows];
-        baseBin = new int[numRows];
+        baseBin = new long[numRows];
         numBin = new int[numRows];
         baseBin[0] = 0;
         for (int row = 0; row < numRows; row++) {
@@ -60,12 +60,12 @@ public final class IsinBinningGrid implements BinningGrid {
         return numBin[row];
     }
 
-    public int getNumBins() {
+    public long getNumBins() {
         return numBins;
     }
 
     @Override
-    public int getBinIndex(double lat, double lon) {
+    public long getBinIndex(double lat, double lon) {
         final int row = getRowIndex(lat);
         final int col = getColIndex(lon, row);
         return baseBin[row] + col;
@@ -104,11 +104,11 @@ public final class IsinBinningGrid implements BinningGrid {
      * @param binIndex The bin ID.
      * @return The row index.
      */
-    public int getRowIndex(int binIndex) {
+    public int getRowIndex(long binIndex) {
         // compute max constant
         final int max = baseBin.length - 1;
         // avoid field access from the while loop
-        final int[] rowBinIds = this.baseBin;
+        final long[] rowBinIds = this.baseBin;
         int low = 0;
         int high = max;
         while (true) {
@@ -125,11 +125,11 @@ public final class IsinBinningGrid implements BinningGrid {
         }
     }
 
-    public double[] getCenterLatLon(int binIndex) {
+    public double[] getCenterLatLon(long binIndex) {
         final int row = getRowIndex(binIndex);
         return new double[]{
                 latBin[row],
-                getCenterLon(row, binIndex - baseBin[row])
+                getCenterLon(row, (int) (binIndex - baseBin[row]))
         };
     }
 

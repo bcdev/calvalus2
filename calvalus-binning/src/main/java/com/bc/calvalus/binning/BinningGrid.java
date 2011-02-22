@@ -13,7 +13,7 @@ public interface BinningGrid {
      * @param lon The longitude in degrees.
      * @return The unique bin index.
      */
-    int getBinIndex(double lat, double lon);
+    long getBinIndex(double lat, double lon);
 
     /**
      * Gets the row index for the given bin index.
@@ -21,7 +21,7 @@ public interface BinningGrid {
      * @param bin The bin index.
      * @return The row index.
      */
-    int getRowIndex(int bin);
+    int getRowIndex(long bin);
 
     /**
      * Gets the number of rows in this grid.

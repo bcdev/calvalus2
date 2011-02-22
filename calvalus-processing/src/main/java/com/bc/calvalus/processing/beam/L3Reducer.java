@@ -21,7 +21,7 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
@@ -32,13 +32,13 @@ import java.io.IOException;
  * @author Norman Fomferra
  * @author Marco Zuehlke
  */
-public class L3Reducer extends Reducer<IntWritable, SpatialBin, IntWritable, TemporalBin> implements Configurable {
+public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, TemporalBin> implements Configurable {
 
     private Configuration conf;
     private BinManager binManager;
 
     @Override
-    protected void reduce(IntWritable binIndex, Iterable<SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
+    protected void reduce(LongWritable binIndex, Iterable<SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
         TemporalBin temporalBin = binManager.createTemporalBin(binIndex.get());
         for (SpatialBin spatialBin : spatialBins) {
             binManager.aggregateTemporalBin(spatialBin, temporalBin);

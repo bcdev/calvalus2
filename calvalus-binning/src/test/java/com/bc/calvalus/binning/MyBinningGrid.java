@@ -3,12 +3,12 @@ package com.bc.calvalus.binning;
 
 class MyBinningGrid implements BinningGrid {
     @Override
-    public int getBinIndex(double lat, double lon) {
+    public long getBinIndex(double lat, double lon) {
         return (int) lon;
     }
 
     @Override
-    public int getRowIndex(int bin) {
+    public int getRowIndex(long bin) {
         return 0;
     }
 

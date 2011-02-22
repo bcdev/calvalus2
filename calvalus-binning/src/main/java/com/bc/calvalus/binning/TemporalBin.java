@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public final class TemporalBin implements Writable {
 
-    int index;
+    long index;
     int numObs;
     int numPasses;
     float[] properties;
@@ -25,7 +25,7 @@ public final class TemporalBin implements Writable {
         this.index = -1;
     }
 
-    public TemporalBin(int index, int numProperties) {
+    public TemporalBin(long index, int numProperties) {
         if (numProperties < 0) {
             throw new IllegalArgumentException("numProperties < 0");
         }
@@ -33,11 +33,11 @@ public final class TemporalBin implements Writable {
         this.properties = new float[numProperties];
     }
 
-    public int getIndex() {
+    public long getIndex() {
         return index;
     }
 
-    public void setIndex(int index) {
+    public void setIndex(long index) {
         this.index = index;
     }
 

@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.BinningGrid;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -57,17 +57,17 @@ public class L3PartitionerTest {
 
         int numPartitions = 2;
 
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(0), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3 + 8 - 1), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3 + 8), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 - 1), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(0), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3 + 8 - 1), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3 + 8), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 - 1), null, numPartitions));
 
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 - 1), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 + 8), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 + 8 + 3 - 1), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 - 1), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8 + 3 - 1), null, numPartitions));
     }
 
     @Test
@@ -90,17 +90,17 @@ public class L3PartitionerTest {
 
         int numPartitions = 3;
 
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(0), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3 + 8 - 1), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(0), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3 + 8 - 1), null, numPartitions));
 
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 - 1), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 - 1), null, numPartitions));
 
-        assertEquals(2, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12), null, numPartitions));
-        assertEquals(2, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 + 8), null, numPartitions));
-        assertEquals(2, l3Partitioner.getPartition(new IntWritable(3 + 8 + 12 + 12 + 8 + 3 - 1), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8 + 3 - 1), null, numPartitions));
     }
 
     @Test
@@ -125,13 +125,13 @@ public class L3PartitionerTest {
 
         int numPartitions = 3;
 
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(0), null, numPartitions));
-        assertEquals(0, l3Partitioner.getPartition(new IntWritable(3 + 9 + 13 - 1), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(0), null, numPartitions));
+        assertEquals(0, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 - 1), null, numPartitions));
 
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 9 + 13), null, numPartitions));
-        assertEquals(1, l3Partitioner.getPartition(new IntWritable(3 + 9 + 13 + 16 + 16 + 13 - 1), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13), null, numPartitions));
+        assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13 - 1), null, numPartitions));
 
-        assertEquals(2, l3Partitioner.getPartition(new IntWritable(3 + 9 + 13 + 16 + 16 + 13), null, numPartitions));
-        assertEquals(2, l3Partitioner.getPartition(new IntWritable(3 + 9 + 13 + 16 + 16 + 13 + 9 + 3 -1), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13 + 9 + 3 -1), null, numPartitions));
     }
 }

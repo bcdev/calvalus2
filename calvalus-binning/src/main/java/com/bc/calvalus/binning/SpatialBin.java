@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public final class SpatialBin implements Writable {
 
-    int index;
+    long index;
     int numObs;
     float[] properties;
 
@@ -24,7 +24,7 @@ public final class SpatialBin implements Writable {
         this.index = -1;
     }
 
-    public SpatialBin(int index, int numProperties) {
+    public SpatialBin(long index, int numProperties) {
         if (numProperties < 0) {
             throw new IllegalArgumentException("numProperties < 0");
         }
@@ -32,7 +32,7 @@ public final class SpatialBin implements Writable {
         this.properties = new float[numProperties];
     }
 
-    public int getIndex() {
+    public long getIndex() {
         return index;
     }
 

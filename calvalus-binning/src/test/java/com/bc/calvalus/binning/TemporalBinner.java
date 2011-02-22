@@ -9,11 +9,11 @@ import java.util.Map;
  */
 class TemporalBinner implements SpatialBinProcessor {
     private final BinManager binManager;
-    final Map<Integer, TemporalBin> binMap ;
+    final Map<Long, TemporalBin> binMap ;
 
     TemporalBinner(BinManager binManager) {
         this.binManager = binManager;
-        this.binMap = new HashMap<Integer, TemporalBin>();
+        this.binMap = new HashMap<Long, TemporalBin>();
     }
 
     @Override
