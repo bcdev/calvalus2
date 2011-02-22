@@ -21,7 +21,7 @@
         <url-pattern>/calvalus/backend</url-pattern>
     </servlet-mapping>
 
-    <!-- File upload & echo servlet -->
+    <!-- File upload & echo  servlet -->
 
     <servlet>
         <servlet-name>uploadServlet</servlet-name>
@@ -31,6 +31,18 @@
     <servlet-mapping>
         <servlet-name>uploadServlet</servlet-name>
         <url-pattern>/calvalus/upload</url-pattern>
+    </servlet-mapping>
+
+    <!-- File download servlet -->
+
+    <servlet>
+        <servlet-name>downloadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>downloadServlet</servlet-name>
+        <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
 
     <!-- Default page to serve -->

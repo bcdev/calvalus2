@@ -29,9 +29,9 @@ public class DummyBackendService implements BackendService {
     public DummyBackendService() {
         productionList = Collections.synchronizedList(new ArrayList<Production>(32));
         // Add some dummy productions
-        productionList.add(new Production("Formatting all hard drives", 40 * 1000));
-        productionList.add(new Production("Drying CD slots", 20 * 1000));
-        productionList.add(new Production("Rewriting kernel using BASIC", 30 * 1000));
+        productionList.add(new Production("Formatting all hard drives", 20 * 1000));
+        productionList.add(new Production("Drying CD slots", 10 * 1000));
+        productionList.add(new Production("Rewriting kernel using BASIC", 5 * 1000));
         for (Production production : productionList) {
             production.start();
         }
@@ -93,7 +93,7 @@ public class DummyBackendService implements BackendService {
                                                      inputProductSetId,
                                                      productionType);
 
-        long secondsToRun = (int) (10 + 50 * Math.random()); // 10...60 seconds
+        long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
         Production production = new Production(productionName, secondsToRun * 1000);
         production.start();
 

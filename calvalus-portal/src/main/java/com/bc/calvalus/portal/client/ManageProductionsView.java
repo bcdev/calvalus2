@@ -5,6 +5,7 @@ import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -33,6 +34,7 @@ import java.util.List;
  * @author Norman
  */
 public class ManageProductionsView extends PortalView {
+    public static final String DOWNLOAD_ACTION_URL = GWT.getModuleBaseURL() + "download";
     public static final int ID = 3;
     private static final int PRODUCTION_UPDATE_PERIOD = 500;
     private static final String RESTART = "Restart";
@@ -89,7 +91,7 @@ public class ManageProductionsView extends PortalView {
                 if (state == WorkStatus.State.WAITING) {
                     return "Waiting to start...";
                 } else if (state == WorkStatus.State.IN_PROGRESS) {
-                    return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "% done)";
+                    return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
                 } else if (state == WorkStatus.State.CANCELLED) {
                     return "Cancelled";
                 } else if (state == WorkStatus.State.ERROR) {
@@ -97,7 +99,7 @@ public class ManageProductionsView extends PortalView {
                 } else if (state == WorkStatus.State.UNKNOWN) {
                     return "Unknown: " + status.getMessage();
                 } else if (state == WorkStatus.State.COMPLETED) {
-                    return "Done";
+                    return "Completed";
                 }
                 return "?";
             }
@@ -197,9 +199,8 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(PortalProduction production) {
-        // todo - implement
-        Window.alert("Not implemented yet:\n" +
-                             "Download " + production);
+        Window.open(DOWNLOAD_ACTION_URL + "?productionId=" + production.getId(),
+                    "_blank","");
     }
 
     private void showProductionInfo(PortalProduction production) {
