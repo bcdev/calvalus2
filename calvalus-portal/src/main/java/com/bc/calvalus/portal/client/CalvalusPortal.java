@@ -7,6 +7,8 @@ import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.cellview.client.CellTree;
+import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -17,6 +19,8 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SelectionChangeEvent;
+import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.Arrays;
 
@@ -29,13 +33,14 @@ public class CalvalusPortal implements EntryPoint {
 
     private final BackendServiceAsync backendService;
     private boolean initialised;
-    private DecoratedTabPanel mainPanel;
+    private DecoratedTabPanel tabPanel;
 
     // Data provided by various external services
     private PortalProductSet[] productSets;
     private PortalProcessor[] processors;
     private ListDataProvider<PortalProduction> productions;
     private PortalView[] views;
+    private HorizontalPanel mainPanel;
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
@@ -68,7 +73,7 @@ public class CalvalusPortal implements EntryPoint {
     }
 
     public void showView(int id) {
-        mainPanel.selectTab(id);
+        tabPanel.selectTab(id);
     }
 
     public PortalView getView(int id) {
@@ -88,16 +93,24 @@ public class CalvalusPortal implements EntryPoint {
                 new OrderL2ProductionView(this),
                 new OrderL3ProductionView(this),
                 new ManageProductionsView(this),
+                new FrameView(this, 4, "File System", "http://cvmaster00:50070/dfshealth.jsp"),
+                new FrameView(this, 5, "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
         };
 
-        mainPanel = new DecoratedTabPanel();
-        mainPanel.setWidth("640px");
-        mainPanel.setAnimationEnabled(true);
-        mainPanel.ensureDebugId("cwTabPanel");
+        tabPanel = new DecoratedTabPanel();
+        tabPanel.setWidth("640px");
+        tabPanel.setWidth("480px");
+        tabPanel.setAnimationEnabled(true);
+        tabPanel.ensureDebugId("cwTabPanel");
 
         for (PortalView view : views) {
-            mainPanel.add(view, view.getTitle());
+            tabPanel.add(view, view.getTitle());
         }
+
+
+        mainPanel = new HorizontalPanel();
+        //mainPanel.add(createMainMenu()); // test, test, test
+        mainPanel.add(tabPanel);
 
         removeSplashScreen();
         showView(OrderL2ProductionView.ID);
@@ -106,6 +119,26 @@ public class CalvalusPortal implements EntryPoint {
         for (PortalView view : views) {
             view.handlePortalStartedUp();
         }
+    }
+
+    // test, test, test
+    private CellTree createMainMenu() {
+        final SingleSelectionModel<PortalView> selectionModel = new SingleSelectionModel<PortalView>();
+        final MainMenuModel treeModel = new MainMenuModel(this, selectionModel);
+        // Create the cell tree.
+        CellTree mainMenu = new CellTree(treeModel, null);
+        mainMenu.setAnimationEnabled(true);
+        mainMenu.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.DISABLED);
+        selectionModel.addSelectionChangeHandler(
+                new SelectionChangeEvent.Handler() {
+                    public void onSelectionChange(SelectionChangeEvent event) {
+                        PortalView selected = selectionModel.getSelectedObject();
+                        if (selected != null) {
+                            Window.alert("About to show " + selected.getTitle());
+                        }
+                    }
+                });
+        return mainMenu;
     }
 
     private void showMainPanel() {
