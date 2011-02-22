@@ -16,6 +16,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.CellPreviewEvent;
 import com.google.gwt.view.client.DefaultSelectionEventManager;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
@@ -55,15 +56,20 @@ public class ManageProductionsView extends PortalView {
 
         CellTable<PortalProduction> productionTable = new CellTable<PortalProduction>(keyProvider);
         productionTable.setWidth("100%");
-        productionTable.setSelectionModel(selectionModel, DefaultSelectionEventManager.<PortalProduction>createCheckboxManager());
+        productionTable.setSelectionModel(selectionModel);
 
         Column<PortalProduction, Boolean> checkColumn = new Column<PortalProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
             public Boolean getValue(PortalProduction production) {
-                // Get the value from the selection model.
                 return selectionModel.isSelected(production);
             }
         };
+        checkColumn.setFieldUpdater(new FieldUpdater<PortalProduction, Boolean>() {
+            @Override
+            public void update(int index, PortalProduction object, Boolean value) {
+                selectionModel.setSelected(object, value);
+            }
+        });
 
         // First name.
         TextColumn<PortalProduction> nameColumn = new TextColumn<PortalProduction>() {
