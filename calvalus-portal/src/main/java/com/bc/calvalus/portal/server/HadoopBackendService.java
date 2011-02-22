@@ -2,18 +2,12 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
-import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
-
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * An BackendService implementation that delegates to a Hadoop cluster.
@@ -48,5 +42,11 @@ public class HadoopBackendService implements BackendService {
     public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
         // todo - implement me
         throw new BackendServiceException("Method 'getProductionStatus' not implemented");
+    }
+
+    @Override
+    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
+        // todo - implement me
+        throw new BackendServiceException("Method 'deleteProductions' not implemented");
     }
 }

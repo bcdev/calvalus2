@@ -9,12 +9,14 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * An BackendService implementation that is useful for developing the portal.
@@ -57,6 +59,8 @@ public class DummyBackendService implements BackendService {
                                     new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
                 new PortalProcessor("pc2", "MERIS-L2", "MERIS IOP QAA",
                                     new String[]{"1.2-SNAPSHOT", "1.1.3", "1.0.1"}),
+                new PortalProcessor("pc3", "General", "Band Maths",
+                                    new String[]{"4.8"}),
         };
     }
 
@@ -81,8 +85,8 @@ public class DummyBackendService implements BackendService {
         String productionType = productionRequest.getProductionType();
         String outputFileName = getProductionParameter(productionRequest, "outputFileName")
                 .replace("${user}", System.getProperty("user.name", "hadoop"))
-                        .replace("${type}", productionType)
-                                .replace("${num}", (++counter) + "");
+                .replace("${type}", productionType)
+                .replace("${num}", (++counter) + "");
         String inputProductSetId = getProductionParameter(productionRequest, "inputProductSetId");
         String productionName = MessageFormat.format("Producing file ''{0}'' from ''{1}'' using workflow ''{2}''",
                                                      outputFileName,
@@ -106,9 +110,30 @@ public class DummyBackendService implements BackendService {
         if (production == null) {
             throw new BackendServiceException("Unknown production ID: " + productionId);
         }
-        return new WorkStatus(production.isDone() ? WorkStatus.State.COMPLETED : WorkStatus.State.IN_PROGRESS,
+        WorkStatus.State state;
+        if (production.isCancelled()) {
+            state = WorkStatus.State.CANCELLED;
+        } else if (production.isDone()) {
+            state = WorkStatus.State.COMPLETED;
+        } else {
+            state = WorkStatus.State.IN_PROGRESS;
+        }
+        return new WorkStatus(state,
                               production.getName(),
                               production.getProgress());
+    }
+
+    @Override
+    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
+        boolean[] states = new boolean[productionIds.length];
+        for (int i = 0; i < productionIds.length; i++) {
+            Production production = getProduction(productionIds[i]);
+            if (production != null) {
+                productionList.remove(production);
+                states[i] = true;
+            }
+        }
+        return states;
     }
 
     private Production getProduction(String productionId) {
@@ -128,5 +153,78 @@ public class DummyBackendService implements BackendService {
             }
         }
         return null;
+    }
+
+    /**
+     * Dummy production that simulates progress over a given amount of time.
+     */
+    static class Production {
+        private static final Random idGen = new Random();
+        private final String id;
+        private final String name;
+        private final long startTime;
+        private final long totalTime;
+        private Timer timer;
+        private double progress;
+        private boolean cancelled;
+
+        /**
+         * Constructs a new dummy production.
+         *
+         * @param name      Some name.
+         * @param totalTime The total time in ms to run.
+         */
+        public Production(String name, long totalTime) {
+            this.id = Long.toHexString(idGen.nextLong());
+            this.name = name;
+            this.totalTime = totalTime;
+            this.startTime = System.currentTimeMillis();
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getProgress() {
+            return progress;
+        }
+
+        public boolean isDone() {
+            return timer == null;
+        }
+
+        public boolean isCancelled() {
+            return cancelled;
+        }
+
+        public void start() {
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    progress = (double) (System.currentTimeMillis() - startTime) / (double) totalTime;
+                    if (progress >= 1.0) {
+                        stop();
+                    }
+                }
+            };
+            timer = new Timer();
+            timer.scheduleAtFixedRate(task, 0, 100);
+            cancelled = false;
+        }
+
+        public void cancel() {
+            cancelled = true;
+            stop();
+        }
+
+        private void stop() {
+            timer.cancel();
+            timer = null;
+            progress = 1.0;
+        }
     }
 }

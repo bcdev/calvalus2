@@ -55,4 +55,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
         return delegate.getProductionStatus(productionId);
     }
+
+    @Override
+    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
+        return delegate.deleteProductions(productionIds);
+    }
 }

@@ -18,7 +18,6 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-
 import static com.bc.calvalus.portal.client.CalvalusPortal.*;
 
 /**
@@ -79,15 +78,16 @@ public class GeneralProcessorPanel implements IsWidget {
         uploadForm = new FormPanel();
         uploadForm.setWidget(createLabeledWidgetH("From file:", fileUpload));
         uploadForm.addSubmitHandler(new FormPanel.SubmitHandler() {
-             public void onSubmit(FormPanel.SubmitEvent event) {
-                 // todo - check inputs
-             }
-         });
-         uploadForm.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
-             public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-                 processorParameters.setText(event.getResults());
-             }
-         });
+            public void onSubmit(FormPanel.SubmitEvent event) {
+                // todo - check inputs
+            }
+        });
+        uploadForm.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
+                String results = event.getResults();
+                processorParameters.setText(results != null ? results : "");
+            }
+        });
 
 
         VerticalPanel processorParamsPanel = new VerticalPanel();
@@ -113,7 +113,11 @@ public class GeneralProcessorPanel implements IsWidget {
         widget = new DecoratorPanel();
         widget.setTitle(title); //todo - check why title doesn't show
         widget.setWidget(layout);
-     }
+    }
+
+    private String cleanFromHtml(String results) {
+        return results.replace("<pre>", "").replace("</pre>", "").replace("&lt;", "<").replace("&gt;", ">");
+    }
 
     public String getProcessorId() {
         int processorIndex = processor.getSelectedIndex();
@@ -155,7 +159,7 @@ public class GeneralProcessorPanel implements IsWidget {
             if (filename != null && !filename.isEmpty()) {
                 // Because we're going to add a FileUpload widget, we'll need to set the
                 // form to use the POST method, and multi-part MIME encoding.
-                uploadForm.setAction(UPLOAD_ACTION_URL);
+                uploadForm.setAction(UPLOAD_ACTION_URL + "?echo=1");
                 uploadForm.setEncoding(FormPanel.ENCODING_MULTIPART);
                 uploadForm.setMethod(FormPanel.METHOD_POST);
                 uploadForm.submit();

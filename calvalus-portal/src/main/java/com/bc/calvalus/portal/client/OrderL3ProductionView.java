@@ -22,17 +22,14 @@ public class OrderL3ProductionView extends PortalView {
     public static final int ID = 2;
     private FlexTable widget;
     private InputOutputPanel inputOutputPanel;
-    private GeneralProcessorPanel preProcessingPanel;
-    private GeneralProcessorPanel postProcessingPanel;
+    private GeneralProcessorPanel l2ProcessorPanel;
     private L3ProcessorPanel l3ProcessorPanel;
-
 
     public OrderL3ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
         inputOutputPanel = new InputOutputPanel(calvalusPortal, "L3 Input/Output");
-        preProcessingPanel = new GeneralProcessorPanel(getPortal(), "L3 Pre-Processor");
-        postProcessingPanel = new GeneralProcessorPanel(getPortal(), "L3 Post-Processor");
+        l2ProcessorPanel = new GeneralProcessorPanel(getPortal(), "L2 Processor");
         l3ProcessorPanel = new L3ProcessorPanel();
 
         widget = new FlexTable();
@@ -42,16 +39,16 @@ public class OrderL3ProductionView extends PortalView {
         widget.getFlexCellFormatter().setVerticalAlignment(1, 1, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.getFlexCellFormatter().setColSpan(2, 0, 2);
+        widget.getFlexCellFormatter().setRowSpan(0, 1, 2);
         widget.ensureDebugId("cwFlexTable");
         widget.addStyleName("cw-FlexTable");
         widget.setWidth("32em");
         widget.setCellSpacing(2);
         widget.setCellPadding(2);
         widget.setWidget(0, 0, inputOutputPanel.asWidget());
+        widget.setWidget(1, 0, l2ProcessorPanel.asWidget());
         widget.setWidget(0, 1, l3ProcessorPanel.asWidget());
-        widget.setWidget(1, 0, preProcessingPanel.asWidget());
-        widget.setWidget(1, 1, postProcessingPanel.asWidget());
-        widget.setWidget(2, 0, new Button("Submit", new SubmitHandler()));
+        widget.setWidget(2, 0, new Button("Order Production", new SubmitHandler()));
     }
 
     @Override
@@ -69,7 +66,6 @@ public class OrderL3ProductionView extends PortalView {
         return "Order L3 Production";
     }
 
-    // todo - this is still wrong
     private class SubmitHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
@@ -78,20 +74,14 @@ public class OrderL3ProductionView extends PortalView {
                                                                                               inputOutputPanel.getInputProductSetId()),
                                                                           new PortalParameter("outputFileName",
                                                                                               inputOutputPanel.getOutputFileName()),
-                                                                          new PortalParameter("processorParameters",
+                                                                          new PortalParameter("l3ProcessorParameters",
                                                                                               l3ProcessorPanel.getProcessorParameters()),
-                                                                          new PortalParameter("preProcessorId",
-                                                                                              preProcessingPanel.getProcessorId()),
-                                                                          new PortalParameter("preProcessorVersion",
-                                                                                              preProcessingPanel.getProcessorVersion()),
-                                                                          new PortalParameter("preProcessorParameters",
-                                                                                              preProcessingPanel.getProcessorParameters()),
-                                                                          new PortalParameter("postProcessorId",
-                                                                                              postProcessingPanel.getProcessorId()),
-                                                                          new PortalParameter("postProcessorVersion",
-                                                                                              postProcessingPanel.getProcessorVersion()),
-                                                                          new PortalParameter("postProcessorParameters",
-                                                                                              postProcessingPanel.getProcessorParameters())
+                                                                          new PortalParameter("l2ProcessorId",
+                                                                                              l2ProcessorPanel.getProcessorId()),
+                                                                          new PortalParameter("l2ProcessorVersion",
+                                                                                              l2ProcessorPanel.getProcessorVersion()),
+                                                                          new PortalParameter("l2ProcessorParameters",
+                                                                                              l2ProcessorPanel.getProcessorParameters())
             );
             getPortal().getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
                 public void onSuccess(final PortalProductionResponse response) {

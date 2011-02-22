@@ -2,21 +2,27 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.WorkStatus;
-import com.google.gwt.cell.client.ActionCell;
+import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.DefaultSelectionEventManager;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,29 +34,28 @@ import java.util.List;
 public class ManageProductionsView extends PortalView {
     public static final int ID = 3;
     private static final int PRODUCTION_UPDATE_PERIOD = 500;
+    private static final String RESTART = "Restart";
+    private static final String CANCEL = "Cancel";
+    private static final String DOWNLOAD = "Download";
+    private static final String INFO = "Info";
 
-    private CellTable productionTable;
+    private VerticalPanel widget;
+    private SelectionModel<PortalProduction> selectionModel;
 
-    public ManageProductionsView(CalvalusPortal calvalusPortal) {
-        super(calvalusPortal);
+    public ManageProductionsView(CalvalusPortal portal) {
+        super(portal);
 
-        /**
-          * The key provider that provides the unique ID of a contact.
-          */
         ProvidesKey<PortalProduction> keyProvider = new ProvidesKey<PortalProduction>() {
-             public Object getKey(PortalProduction production) {
-                 return production == null ? null : production.getId();
-             }
-         };
+            public Object getKey(PortalProduction production) {
+                return production == null ? null : production.getId();
+            }
+        };
 
-        // Set a key provider that provides a unique key for each contact. If key is
-        // used to identify contacts when fields (such as the name and address)
-        // change.
-        this.productionTable = new CellTable<PortalProduction>(keyProvider);
-        this.productionTable.setWidth("100%");
+        selectionModel = new MultiSelectionModel<PortalProduction>(keyProvider);
 
-        final SelectionModel<PortalProduction> selectionModel = new MultiSelectionModel<PortalProduction>(keyProvider);
-        this.productionTable.setSelectionModel(selectionModel);
+        CellTable<PortalProduction> productionTable = new CellTable<PortalProduction>(keyProvider);
+        productionTable.setWidth("100%");
+        productionTable.setSelectionModel(selectionModel, DefaultSelectionEventManager.<PortalProduction>createCheckboxManager());
 
         Column<PortalProduction, Boolean> checkColumn = new Column<PortalProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
@@ -93,31 +98,40 @@ public class ManageProductionsView extends PortalView {
         };
         statusColumn.setSortable(true);
 
-        ActionCell actionCell = new ActionCell("Info",
-                                               new ActionCell.Delegate() {
-                                                   @Override
-                                                   public void execute(Object object) {
-                                                       Window.alert("The file size is bigger than 1 PB and\n" +
-                                                                            "downloading it will take approx. 5 years.");
-                                                   }
-                                               }
-        );
-        Column<PortalProduction, PortalProduction> resultColumn = new IdentityColumn<PortalProduction>(actionCell);
+        Column<PortalProduction, String> actionColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+            @Override
+            public String getValue(PortalProduction production) {
+                return production.getWorkStatus().isDone() ? RESTART : CANCEL;
+            }
+        };
+        actionColumn.setFieldUpdater(new ProductionActionUpdater());
 
-        this.productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        this.productionTable.addColumn(nameColumn, "Production Name");
-        this.productionTable.addColumn(statusColumn, "Production Status");
-        this.productionTable.addColumn(resultColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+            @Override
+            public String getValue(PortalProduction production) {
+                return production.getWorkStatus().getState() == WorkStatus.State.COMPLETED ? DOWNLOAD : INFO;
+            }
+        };
+        resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
+        productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(nameColumn, "Production Name");
+        productionTable.addColumn(statusColumn, "Production Status");
+        productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(resultColumn, "Production Result");
 
         // Connect the table to the data provider.
-        calvalusPortal.getProductions().addDataDisplay(this.productionTable);
+        portal.getProductions().addDataDisplay(productionTable);
 
+        widget = new VerticalPanel();
+        widget.setSpacing(4);
+        widget.add(productionTable);
+        widget.add(new Button("Delete Selected", new DeleteProductionsAction()));
     }
 
     @Override
     public Widget asWidget() {
-        return productionTable;
+        return widget;
     }
 
     @Override
@@ -154,6 +168,82 @@ public class ManageProductionsView extends PortalView {
             workMonitor.start(PRODUCTION_UPDATE_PERIOD);
         }
     }
+
+    private class ProductionActionUpdater implements FieldUpdater<PortalProduction, String> {
+        @Override
+        public void update(int index, PortalProduction production, String value) {
+            if (RESTART.equals(value)) {
+                restartProduction(production);
+            } else if (CANCEL.equals(value)) {
+                cancelProduction(production);
+            } else if (DOWNLOAD.equals(value)) {
+                downloadProduction(production);
+            } else if (INFO.equals(value)) {
+                showProductionInfo(production);
+            }
+        }
+
+    }
+
+    private void restartProduction(PortalProduction production) {
+        // todo - implement
+        Window.alert("About to restart " + production);
+    }
+
+    private void cancelProduction(PortalProduction production) {
+        // todo - implement
+        Window.alert("About to cancel " + production);
+    }
+
+    private void downloadProduction(PortalProduction production) {
+        // todo - implement
+        Window.alert("About to download " + production);
+    }
+
+    private void showProductionInfo(PortalProduction production) {
+        // todo - implement
+        Window.alert("About to shown info on " + production);
+    }
+
+    private void deleteProductions(final List<PortalProduction> toDeleteList) {
+        if (toDeleteList.isEmpty()) {
+            Window.alert("Nothing selected.");
+            return;
+        }
+        boolean confirm = Window.confirm(toDeleteList.size() + " production(s) will be deleted and\n" +
+                                                 "associated files will be removed from server.\n" +
+                                                 "This operation cannot be undone.\n" +
+                                                 "\n" +
+                                                 "Do you wish to continue?");
+        if (confirm) {
+            final String[] productionIds = new String[toDeleteList.size()];
+            for (int i = 0; i < productionIds.length; i++) {
+                productionIds[i] = toDeleteList.get(i).getId();
+            }
+            getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<boolean[]>() {
+                @Override
+                public void onSuccess(boolean[] result) {
+                    List<PortalProduction> list1 = getPortal().getProductions().getList();
+                    int deleteCount = 0;
+                    for (int i = 0; i < result.length; i++) {
+                        if (result[i]) {
+                            deleteCount++;
+                            PortalProduction production = toDeleteList.get(i);
+                            list1.remove(production);
+                        }
+                    }
+                    getPortal().getProductions().refresh();
+                    Window.alert(deleteCount + " of " + result.length + " production(s) successfully deleted.");
+                }
+
+                @Override
+                public void onFailure(Throwable caught) {
+                    Window.alert("Deletion failed:\n" + caught.getMessage());
+                }
+            });
+        }
+    }
+
 
     /**
      * A reporter for production status.
@@ -213,6 +303,21 @@ public class ManageProductionsView extends PortalView {
                     "production=" + production +
                     ", reportedStatus=" + reportedStatus +
                     '}';
+        }
+    }
+
+    private class DeleteProductionsAction implements ClickHandler {
+        @Override
+        public void onClick(ClickEvent event) {
+            final List<PortalProduction> availableList = getPortal().getProductions().getList();
+            final List<PortalProduction> toDeleteList = new ArrayList<PortalProduction>();
+            for (PortalProduction production : availableList) {
+                // todo - check, this doesn't work?!?
+                if (selectionModel.isSelected(production)) {
+                    toDeleteList.add(production);
+                }
+            }
+            deleteProductions(toDeleteList);
         }
     }
 }

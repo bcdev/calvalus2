@@ -42,7 +42,7 @@ public class OrderL2ProductionView extends PortalView {
         widget.setCellPadding(2);
         widget.setWidget(0, 0, inputOutputPanel.asWidget());
         widget.setWidget(0, 1, processingPanel.asWidget());
-        widget.setWidget(1, 0, new Button("Submit", new SubmitHandler()));
+        widget.setWidget(1, 0, new Button("Order Production", new SubmitHandler()));
     }
 
     @Override

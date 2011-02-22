@@ -2,6 +2,8 @@ package com.bc.calvalus.portal.client;
 
 import com.google.gwt.user.client.ui.IsWidget;
 
+// todo - lets this class be a 'LazyPanel'
+
 /**
  * Base class for portal views.
  *
