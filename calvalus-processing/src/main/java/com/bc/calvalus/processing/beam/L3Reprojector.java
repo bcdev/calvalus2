@@ -127,11 +127,12 @@ public class L3Reprojector {
                 }
                 binRow.clear();
                 if (lastRowIndex >= y1 && rowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
-                    for (int currentRowIndex = lastRowIndex+1; currentRowIndex < rowIndex; currentRowIndex++) {
-                        reprojectRow(binningContext,
-                                 pixelRegion, currentRowIndex, binRow,
-                                 temporalBinProcessor,
-                                 gridWidth, gridHeight);
+                    final int x1 = pixelRegion.x;
+                    final int x2 = pixelRegion.x + pixelRegion.width - 1;
+                    for (int y = lastRowIndex + 1; y < rowIndex; y++) {
+                        for (int x = x1; x <= x2; x++) {
+                            temporalBinProcessor.processMissingBin(x - x1, y - y1);
+                        }
                     }
                 }
                 lastRowIndex = rowIndex;
