@@ -38,6 +38,7 @@ public class InputOutputPanel implements IsWidget {
         FlexTable layout = new FlexTable();
         layout.setWidth("100%");
         layout.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        layout.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
         layout.setCellSpacing(4);
         layout.setWidget(0, 0, new HTML("<b>Input</b>"));
         layout.setWidget(1, 0, createLabeledWidgetV("Input product set:", inputProductSet));

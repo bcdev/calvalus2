@@ -96,7 +96,7 @@ public class GeneralProcessorPanel implements IsWidget {
         processorParamsPanel.add(uploadForm);
 
         // Add advanced options to form in a disclosure panel
-        DisclosurePanel advancedDisclosure = new DisclosurePanel("Processing parameters");
+        DisclosurePanel advancedDisclosure = new DisclosurePanel("Parameters");
         advancedDisclosure.setAnimationEnabled(true);
         advancedDisclosure.ensureDebugId("cwDisclosurePanel");
         advancedDisclosure.setContent(processorParamsPanel);

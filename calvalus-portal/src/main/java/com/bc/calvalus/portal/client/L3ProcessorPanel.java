@@ -54,7 +54,7 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.setCellSpacing(2);
         contentParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         contentParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        contentParams.setWidget(0, 0, new HTML("<b>Content Properties</b>"));
+        contentParams.setWidget(0, 0, new HTML("<b>Content Parameters</b>"));
         contentParams.setWidget(1, 0, new Label("Input variable(s):"));
         contentParams.setWidget(1, 1, variables);
         contentParams.setWidget(2, 0, new Label("Aggregation:"));
@@ -78,7 +78,7 @@ public class L3ProcessorPanel implements IsWidget {
         temporalParams.setCellSpacing(2);
         temporalParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         temporalParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        temporalParams.setWidget(0, 0, new HTML("<b>Temporal Properties</b>"));
+        temporalParams.setWidget(0, 0, new HTML("<b>Temporal Parameters</b>"));
         temporalParams.setWidget(1, 0, new Label("From time:"));
         temporalParams.setWidget(1, 1, fromDate);
         temporalParams.setWidget(2, 0, new Label("To time:"));
@@ -105,7 +105,7 @@ public class L3ProcessorPanel implements IsWidget {
         spatialParams.setCellSpacing(2);
         spatialParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         spatialParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        spatialParams.setWidget(0, 0, new HTML("<b>Spatial Properties</b>"));
+        spatialParams.setWidget(0, 0, new HTML("<b>Spatial Parameters</b>"));
         spatialParams.setWidget(1, 0, new Label("From longitude:"));
         spatialParams.setWidget(1, 1, fromLon);
         spatialParams.setWidget(1, 2, new Label("degree"));
@@ -124,6 +124,7 @@ public class L3ProcessorPanel implements IsWidget {
 
         VerticalPanel panel = new VerticalPanel();
         panel.setSpacing(4);
+        panel.add(contentParams);
         panel.add(temporalParams);
         panel.add(spatialParams);
 
