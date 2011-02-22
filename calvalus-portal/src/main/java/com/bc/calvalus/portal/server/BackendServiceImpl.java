@@ -57,6 +57,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
+        return delegate.cancelProductions(productionIds);
+    }
+
+    @Override
     public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
         return delegate.deleteProductions(productionIds);
     }

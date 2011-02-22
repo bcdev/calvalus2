@@ -124,16 +124,30 @@ public class DummyBackendService implements BackendService {
     }
 
     @Override
-    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
-        boolean[] states = new boolean[productionIds.length];
+    public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
+        boolean[] results = new boolean[productionIds.length];
         for (int i = 0; i < productionIds.length; i++) {
             Production production = getProduction(productionIds[i]);
             if (production != null) {
-                productionList.remove(production);
-                states[i] = true;
+                production.cancel();
+                results[i] = true;
             }
         }
-        return states;
+        return results;
+    }
+
+    @Override
+    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
+        boolean[] results = new boolean[productionIds.length];
+        for (int i = 0; i < productionIds.length; i++) {
+            Production production = getProduction(productionIds[i]);
+            if (production != null) {
+                production.cancel();
+                productionList.remove(production);
+                results[i] = true;
+            }
+        }
+        return results;
     }
 
     private Production getProduction(String productionId) {
@@ -207,7 +221,10 @@ public class DummyBackendService implements BackendService {
                 public void run() {
                     progress = (double) (System.currentTimeMillis() - startTime) / (double) totalTime;
                     if (progress >= 1.0) {
-                        stop();
+                        progress = 1.0;
+                        if (timer != null) {
+                            stopTimer();
+                        }
                     }
                 }
             };
@@ -217,14 +234,16 @@ public class DummyBackendService implements BackendService {
         }
 
         public void cancel() {
-            cancelled = true;
-            stop();
+            if (timer != null) {
+                stopTimer();
+                cancelled = true;
+            }
         }
 
-        private void stop() {
+        private void stopTimer() {
             timer.cancel();
             timer = null;
-            progress = 1.0;
         }
+
     }
 }

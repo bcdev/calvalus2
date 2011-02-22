@@ -18,5 +18,7 @@ public interface BackendServiceAsync {
 
     void getProductionStatus(String productionId, AsyncCallback<WorkStatus> callback);
 
-    void deleteProductions(String[] id, AsyncCallback<boolean[]> callback);
+    void cancelProductions(String[] productionIds, AsyncCallback<boolean[]> callback);
+
+    void deleteProductions(String[] productionIds, AsyncCallback<boolean[]> callback);
 }

@@ -45,6 +45,12 @@ public class HadoopBackendService implements BackendService {
     }
 
     @Override
+    public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
+        // todo - implement me
+        throw new BackendServiceException("Method 'cancelProductions' not implemented");
+    }
+
+    @Override
     public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
         // todo - implement me
         throw new BackendServiceException("Method 'deleteProductions' not implemented");

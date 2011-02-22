@@ -188,27 +188,48 @@ public class ManageProductionsView extends PortalView {
                 showProductionInfo(production);
             }
         }
-
     }
 
     private void restartProduction(PortalProduction production) {
         // todo - implement
-        Window.alert("About to restart " + production);
-    }
-
-    private void cancelProduction(PortalProduction production) {
-        // todo - implement
-        Window.alert("About to cancel " + production);
+        Window.alert("Not implemented yet:\n" +
+                             "Restart " + production);
     }
 
     private void downloadProduction(PortalProduction production) {
         // todo - implement
-        Window.alert("About to download " + production);
+        Window.alert("Not implemented yet:\n" +
+                             "Download " + production);
     }
 
     private void showProductionInfo(PortalProduction production) {
         // todo - implement
-        Window.alert("About to shown info on " + production);
+        Window.alert("Not implemented yet:\n" +
+                             "Show info on " + production);
+    }
+
+    private void cancelProduction(PortalProduction production) {
+        boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
+                                                 "This operation cannot be undone.\n" +
+                                                 "\n" +
+                                                 "Do you wish to continue?");
+        if (!confirm) {
+            return;
+        }
+
+        getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, new AsyncCallback<boolean[]>() {
+            @Override
+            public void onSuccess(boolean[] result) {
+                // ok
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Cancellation failed:\n" + caught.getMessage());
+            }
+        });
+
+
     }
 
     private void deleteProductions(final List<PortalProduction> toDeleteList) {
@@ -216,38 +237,41 @@ public class ManageProductionsView extends PortalView {
             Window.alert("Nothing selected.");
             return;
         }
+
         boolean confirm = Window.confirm(toDeleteList.size() + " production(s) will be deleted and\n" +
                                                  "associated files will be removed from server.\n" +
                                                  "This operation cannot be undone.\n" +
                                                  "\n" +
                                                  "Do you wish to continue?");
-        if (confirm) {
-            final String[] productionIds = new String[toDeleteList.size()];
-            for (int i = 0; i < productionIds.length; i++) {
-                productionIds[i] = toDeleteList.get(i).getId();
-            }
-            getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<boolean[]>() {
-                @Override
-                public void onSuccess(boolean[] result) {
-                    List<PortalProduction> list1 = getPortal().getProductions().getList();
-                    int deleteCount = 0;
-                    for (int i = 0; i < result.length; i++) {
-                        if (result[i]) {
-                            deleteCount++;
-                            PortalProduction production = toDeleteList.get(i);
-                            list1.remove(production);
-                        }
-                    }
-                    getPortal().getProductions().refresh();
-                    Window.alert(deleteCount + " of " + result.length + " production(s) successfully deleted.");
-                }
-
-                @Override
-                public void onFailure(Throwable caught) {
-                    Window.alert("Deletion failed:\n" + caught.getMessage());
-                }
-            });
+        if (!confirm) {
+            return;
         }
+
+        final String[] productionIds = new String[toDeleteList.size()];
+        for (int i = 0; i < productionIds.length; i++) {
+            productionIds[i] = toDeleteList.get(i).getId();
+        }
+        getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<boolean[]>() {
+            @Override
+            public void onSuccess(boolean[] result) {
+                List<PortalProduction> list1 = getPortal().getProductions().getList();
+                int deleteCount = 0;
+                for (int i = 0; i < result.length; i++) {
+                    if (result[i]) {
+                        deleteCount++;
+                        PortalProduction production = toDeleteList.get(i);
+                        list1.remove(production);
+                    }
+                }
+                getPortal().getProductions().refresh();
+                Window.alert(deleteCount + " of " + result.length + " production(s) successfully deleted.");
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Deletion failed:\n" + caught.getMessage());
+            }
+        });
     }
 
 
