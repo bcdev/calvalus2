@@ -126,7 +126,7 @@ public class L3Reprojector {
                                  gridWidth, gridHeight);
                 }
                 binRow.clear();
-                if (lastRowIndex >= y1 && lastRowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
+                if (lastRowIndex >= y1 && rowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
                     for (int currentRowIndex = lastRowIndex+1; currentRowIndex < rowIndex; currentRowIndex++) {
                         reprojectRow(binningContext,
                                  pixelRegion, currentRowIndex, binRow,
