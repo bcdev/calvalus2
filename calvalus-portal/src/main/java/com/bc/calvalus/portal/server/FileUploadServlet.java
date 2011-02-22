@@ -15,6 +15,8 @@ import java.util.List;
 
 /**
  * Servlet to handle file upload requests.
+ * If the parameter "echo" is set to any value, the servlet
+ * echoes the upload file back in its response.
  *
  * @author Norman
  */
@@ -40,7 +42,7 @@ public class FileUploadServlet extends HttpServlet {
         }
 
         final FileHandler fileHandler;
-        if (req.getIntHeader("echo") != 0) {
+        if (req.getParameter("echo") != null) {
             fileHandler = new FileEchoHandler();
         } else {
             fileHandler = new FileStoreHandler(UPLOAD_DIR);
