@@ -63,31 +63,31 @@ public class BeamL3ConfigTest {
     @Test
     public void testSuperSampling() {
         BeamL3Config config = new BeamL3Config();
-        float[] supersamplingSteps = config.getSupersamplingSteps();
-        assertNotNull(supersamplingSteps);
-        assertEquals(1, supersamplingSteps.length);
-        assertEquals(0.5f, supersamplingSteps[0], 0.0001);
+        float[] superSamplingSteps = config.getSuperSamplingSteps();
+        assertNotNull(superSamplingSteps);
+        assertEquals(1, superSamplingSteps.length);
+        assertEquals(0.5f, superSamplingSteps[0], 0.0001);
 
         config.superSampling = 1;
-        supersamplingSteps = config.getSupersamplingSteps();
-        assertNotNull(supersamplingSteps);
-        assertEquals(1, supersamplingSteps.length);
-        assertEquals(0.5f, supersamplingSteps[0], 0.0001);
+        superSamplingSteps = config.getSuperSamplingSteps();
+        assertNotNull(superSamplingSteps);
+        assertEquals(1, superSamplingSteps.length);
+        assertEquals(0.5f, superSamplingSteps[0], 0.0001);
 
         config.superSampling = 2;
-        supersamplingSteps = config.getSupersamplingSteps();
-        assertNotNull(supersamplingSteps);
-        assertEquals(2, supersamplingSteps.length);
-        assertEquals(0.25f, supersamplingSteps[0], 0.0001);
-        assertEquals(0.75f, supersamplingSteps[1], 0.0001);
+        superSamplingSteps = config.getSuperSamplingSteps();
+        assertNotNull(superSamplingSteps);
+        assertEquals(2, superSamplingSteps.length);
+        assertEquals(0.25f, superSamplingSteps[0], 0.0001);
+        assertEquals(0.75f, superSamplingSteps[1], 0.0001);
 
         config.superSampling = 3;
-        supersamplingSteps = config.getSupersamplingSteps();
-        assertNotNull(supersamplingSteps);
-        assertEquals(3, supersamplingSteps.length);
-        assertEquals(1f/6, supersamplingSteps[0], 0.0001);
-        assertEquals(3f/6, supersamplingSteps[1], 0.0001);
-        assertEquals(5f/6, supersamplingSteps[2], 0.0001);
+        superSamplingSteps = config.getSuperSamplingSteps();
+        assertNotNull(superSamplingSteps);
+        assertEquals(3, superSamplingSteps.length);
+        assertEquals(1f/6, superSamplingSteps[0], 0.0001);
+        assertEquals(3f/6, superSamplingSteps[1], 0.0001);
+        assertEquals(5f/6, superSamplingSteps[2], 0.0001);
     }
 
     @Test

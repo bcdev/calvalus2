@@ -114,7 +114,7 @@ class BeamL3Config {
         }
     }
 
-    public float[] getSupersamplingSteps() {
+    public float[] getSuperSamplingSteps() {
         if (superSampling == null || superSampling < 1) {
             return new float[]{0.5f};
         } else {
