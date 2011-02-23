@@ -3,11 +3,13 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.cell.client.ButtonCell;
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
@@ -86,22 +88,7 @@ public class ManageProductionsView extends PortalView {
         TextColumn<PortalProduction> statusColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
-                WorkStatus status = production.getWorkStatus();
-                WorkStatus.State state = status.getState();
-                if (state == WorkStatus.State.WAITING) {
-                    return "Waiting to start...";
-                } else if (state == WorkStatus.State.IN_PROGRESS) {
-                    return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
-                } else if (state == WorkStatus.State.CANCELLED) {
-                    return "Cancelled";
-                } else if (state == WorkStatus.State.ERROR) {
-                    return "Error: " + status.getMessage();
-                } else if (state == WorkStatus.State.UNKNOWN) {
-                    return "Unknown: " + status.getMessage();
-                } else if (state == WorkStatus.State.COMPLETED) {
-                    return "Completed";
-                }
-                return "?";
+                return getWorkStatusText(production);
             }
         };
         statusColumn.setSortable(true);
@@ -115,6 +102,15 @@ public class ManageProductionsView extends PortalView {
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
 
         Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+            @Override
+            public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
+                if (production.getWorkStatus().getState() == WorkStatus.State.COMPLETED) {
+                    super.render(context, production, sb);
+                } else {
+                    sb.appendHtmlConstant("<br/>");
+                }
+            }
+
             @Override
             public String getValue(PortalProduction production) {
                 return production.getWorkStatus().getState() == WorkStatus.State.COMPLETED ? DOWNLOAD : INFO;
@@ -136,6 +132,7 @@ public class ManageProductionsView extends PortalView {
         widget.add(productionTable);
         widget.add(new Button("Delete Selected", new DeleteProductionsAction()));
     }
+
 
     @Override
     public Widget asWidget() {
@@ -174,21 +171,6 @@ public class ManageProductionsView extends PortalView {
             ProductionHandler productionHandler = new ProductionHandler(production);
             WorkMonitor workMonitor = new WorkMonitor(productionHandler, productionHandler);
             workMonitor.start(PRODUCTION_UPDATE_PERIOD);
-        }
-    }
-
-    private class ProductionActionUpdater implements FieldUpdater<PortalProduction, String> {
-        @Override
-        public void update(int index, PortalProduction production, String value) {
-            if (RESTART.equals(value)) {
-                restartProduction(production);
-            } else if (CANCEL.equals(value)) {
-                cancelProduction(production);
-            } else if (DOWNLOAD.equals(value)) {
-                downloadProduction(production);
-            } else if (INFO.equals(value)) {
-                showProductionInfo(production);
-            }
         }
     }
 
@@ -273,6 +255,40 @@ public class ManageProductionsView extends PortalView {
                 Window.alert("Deletion failed:\n" + caught.getMessage());
             }
         });
+    }
+
+    private String getWorkStatusText(PortalProduction production) {
+        WorkStatus status = production.getWorkStatus();
+        WorkStatus.State state = status.getState();
+        if (state == WorkStatus.State.WAITING) {
+            return "Waiting to start...";
+        } else if (state == WorkStatus.State.IN_PROGRESS) {
+            return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
+        } else if (state == WorkStatus.State.CANCELLED) {
+            return "Cancelled";
+        } else if (state == WorkStatus.State.ERROR) {
+            return "Error: " + status.getMessage();
+        } else if (state == WorkStatus.State.UNKNOWN) {
+            return "Unknown: " + status.getMessage();
+        } else if (state == WorkStatus.State.COMPLETED) {
+            return "Completed";
+        }
+        return "?";
+    }
+
+    private class ProductionActionUpdater implements FieldUpdater<PortalProduction, String> {
+        @Override
+        public void update(int index, PortalProduction production, String value) {
+            if (RESTART.equals(value)) {
+                restartProduction(production);
+            } else if (CANCEL.equals(value)) {
+                cancelProduction(production);
+            } else if (DOWNLOAD.equals(value)) {
+                downloadProduction(production);
+            } else if (INFO.equals(value)) {
+                showProductionInfo(production);
+            }
+        }
     }
 
 
