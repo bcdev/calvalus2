@@ -36,7 +36,7 @@ import java.text.MessageFormat;
 
 public class BeamProductHandler {
         //TODO make this an option
-    private static final int TILE_HEIGHT = 128;
+    private static final int TILE_HEIGHT = 64;
     private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
 
     static void init() {

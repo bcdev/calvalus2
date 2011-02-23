@@ -18,11 +18,15 @@ public final class ObservationSlice implements Iterable<Observation> {
         this.observations = new ArrayList<Observation>(observationCapacity);
     }
 
-    public void addObservation(double lat, double lon, int x, int y) {
+    public float[] createObservationSamples(int x, int y, float weight) {
         final float[] samples = new float[sourceTiles.length];
         for (int i = 0; i < samples.length; i++) {
-            samples[i] = sourceTiles[i].getSampleFloat(x, y, 0);
+            samples[i] = sourceTiles[i].getSampleFloat(x, y, 0) * weight;
         }
+        return samples;
+    }
+
+    public void addObservation(double lat, double lon, float[] samples) {
         observations.add(new ObservationImpl(lat, lon, samples));
     }
 

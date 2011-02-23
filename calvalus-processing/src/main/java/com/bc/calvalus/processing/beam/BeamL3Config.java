@@ -85,6 +85,8 @@ class BeamL3Config {
     @Parameter
     int numRows;
     @Parameter
+    Integer superSampling;
+    @Parameter
     String bbox;
     @Parameter
     String regionWkt;
@@ -109,6 +111,18 @@ class BeamL3Config {
             return l3Config;
         } catch (Exception e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    public float[] getSupersamplingSteps() {
+        if (superSampling == null || superSampling < 1) {
+            return new float[]{0.5f};
+        } else {
+            float[] samplingStep = new float[superSampling];
+            for (int i = 0; i < samplingStep.length; i++) {
+                samplingStep[i] = (i*2+1f)/(2f*superSampling);
+            }
+            return samplingStep;
         }
     }
 

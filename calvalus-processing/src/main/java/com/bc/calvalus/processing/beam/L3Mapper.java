@@ -83,7 +83,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final Product product = l3Config.getPreProcessedProduct(source, beamConfig);
         if (product != null) {
             try {
-                processProduct(product, ctx, spatialBinner);
+                float[] supersamplingSteps = l3Config.getSupersamplingSteps();
+                processProduct(product, ctx, spatialBinner, supersamplingSteps);
             } finally {
                 product.dispose();
             }
@@ -106,7 +107,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     static void processProduct(Product product,
                                BinningContext ctx,
-                               SpatialBinner spatialBinner) {
+                               SpatialBinner spatialBinner,
+                               float[] supersamplingSteps) {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
@@ -145,12 +147,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
         final GeoCoding geoCoding = product.getGeoCoding();
         final Point[] tileIndices = maskImage.getTileIndices(null);
+
         ObservationSlice observationSlice;
         for (Point tileIndex : tileIndices) {
             observationSlice = createObservationSlice(geoCoding,
-                                                      maskImage, varImages,
-                                                      tileIndex,
-                                                      sliceWidth, sliceHeight);
+                    maskImage, varImages,
+                    tileIndex,
+                    sliceWidth, sliceHeight,
+                    supersamplingSteps);
             spatialBinner.processObservationSlice(observationSlice);
         }
 
@@ -162,7 +166,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                            RenderedImage[] varImages,
                                                            Point tileIndex,
                                                            int sliceWidth,
-                                                           int sliceHeight) {
+                                                           int sliceHeight,
+                                                           float[] supersamplingSteps) {
+        final float weight = supersamplingSteps.length * supersamplingSteps.length;
 
         final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
         final Raster[] varTiles = new Raster[varImages.length];
@@ -180,9 +186,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         for (int y = y1; y < y2; y++) {
             for (int x = x1; x < x2; x++) {
                 if (maskTile.getSample(x, y, 0) != 0) {
-                    pixelPos.setLocation(x + 0.5f, y + 0.5f);
-                    geoCoding.getGeoPos(pixelPos, geoPos);
-                    observationSlice.addObservation(geoPos.lat, geoPos.lon, x, y);
+                    final float[] samples = observationSlice.createObservationSamples(x, y, weight);
+                    for (int sy = 0; sy < supersamplingSteps.length; sy++) {
+                        for (int sx = 0; sx < supersamplingSteps.length; sx++) {
+                            pixelPos.setLocation(x + supersamplingSteps[sx], y + supersamplingSteps[sy]);
+                            geoCoding.getGeoPos(pixelPos, geoPos);
+                            observationSlice.addObservation(geoPos.lat, geoPos.lon, samples);
+                        }
+                    }
                 }
             }
         }
