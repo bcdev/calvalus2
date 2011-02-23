@@ -95,50 +95,51 @@ public class L3Reprojector {
                               Rectangle pixelRegion,
                               SequenceFile.Reader temporalBinReader,
                               TemporalBinProcessor temporalBinProcessor) throws Exception {
-        final int y1 = pixelRegion.y;
         final int y2 = pixelRegion.y + pixelRegion.height - 1;
         final BinningGrid binningGrid = binningContext.getBinningGrid();
-        final int gridWidth = binningGrid.getNumRows() * 2;
-        final int gridHeight = binningGrid.getNumRows();
 
         int lastRowIndex = -1;
-        final ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
+        final List<TemporalBin> binRow = new ArrayList<TemporalBin>();
         while (true) {
             LongWritable binIndex = new LongWritable();
             TemporalBin temporalBin = new TemporalBin();
             if (!temporalBinReader.next(binIndex, temporalBin)) {
-                if (lastRowIndex >= y1 && lastRowIndex <= y2) {
-                    // last row
-                    reprojectRow(binningContext,
-                                 pixelRegion, lastRowIndex, binRow,
-                                 temporalBinProcessor,
-                                 gridWidth, gridHeight);
-                }
+                handleRow(binningContext, pixelRegion, temporalBinProcessor, binRow, lastRowIndex, y2);
                 binRow.clear();
                 break;
             }
             int rowIndex = binningGrid.getRowIndex(binIndex.get());
             if (rowIndex != lastRowIndex) {
-                if (lastRowIndex >= y1 && lastRowIndex <= y2) {
-                    reprojectRow(binningContext,
-                                 pixelRegion, lastRowIndex, binRow,
-                                 temporalBinProcessor,
-                                 gridWidth, gridHeight);
-                }
+                handleRow(binningContext, pixelRegion, temporalBinProcessor, binRow, lastRowIndex, rowIndex);
                 binRow.clear();
-                if (lastRowIndex >= y1 && rowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
-                    final int x1 = pixelRegion.x;
-                    final int x2 = pixelRegion.x + pixelRegion.width - 1;
-                    for (int y = lastRowIndex + 1; y < rowIndex; y++) {
-                        for (int x = x1; x <= x2; x++) {
-                            temporalBinProcessor.processMissingBin(x - x1, y - y1);
-                        }
-                    }
-                }
                 lastRowIndex = rowIndex;
             }
             temporalBin.setIndex(binIndex.get());
             binRow.add(temporalBin);
+        }
+    }
+
+    private static void handleRow(BinningContext binningContext, Rectangle pixelRegion, TemporalBinProcessor temporalBinProcessor, List<TemporalBin> binRow, int lastRowIndex, int rowIndex) throws Exception {
+        final int y1 = pixelRegion.y;
+        final int y2 = pixelRegion.y + pixelRegion.height - 1;
+        final int x1 = pixelRegion.x;
+        final int x2 = pixelRegion.x + pixelRegion.width - 1;
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final int gridWidth = binningGrid.getNumRows() * 2;
+        final int gridHeight = binningGrid.getNumRows();
+
+        if (lastRowIndex >= y1 && lastRowIndex <= y2) {
+            reprojectRow(binningContext,
+                         pixelRegion, lastRowIndex, binRow,
+                         temporalBinProcessor,
+                         gridWidth, gridHeight);
+        }
+        if (lastRowIndex >= y1 && rowIndex <= y2 && rowIndex != (lastRowIndex+1)) {
+            for (int y = lastRowIndex + 1; y < rowIndex; y++) {
+                for (int x = x1; x <= x2; x++) {
+                    temporalBinProcessor.processMissingBin(x - x1, y - y1);
+                }
+            }
         }
     }
 

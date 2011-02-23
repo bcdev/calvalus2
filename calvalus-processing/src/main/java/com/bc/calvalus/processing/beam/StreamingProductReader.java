@@ -27,6 +27,8 @@ import org.esa.beam.dataio.dimap.DimapProductHelpers;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.PixelGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGrid;
@@ -113,6 +115,7 @@ public class StreamingProductReader extends AbstractProductReader {
         Document dom = DimapProductHelpers.createDom(inputStream);
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
+        initGeoCodings(dom, product);
         buildKeyIndex();
         return product;
     }
@@ -137,6 +140,26 @@ public class StreamingProductReader extends AbstractProductReader {
             tpg.setData(productData);
         }
     }
+
+    private void initGeoCodings(Document dom, Product product) {
+        final GeoCoding[] geoCodings = DimapProductHelpers.createGeoCoding(dom, product);
+        if (geoCodings != null) {
+            if (geoCodings.length == 1) {
+                product.setGeoCoding(geoCodings[0]);
+            } else {
+                for (int i = 0; i < geoCodings.length; i++) {
+                    product.getBandAt(i).setGeoCoding(geoCodings[i]);
+                }
+            }
+        } else {
+            final Band lonBand = product.getBand("longitude");
+            final Band latBand = product.getBand("latitude");
+            if (latBand != null && lonBand != null) {
+                product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 6));
+            }
+        }
+    }
+
 
     private void buildKeyIndex() throws IOException {
         Text key = new Text();
