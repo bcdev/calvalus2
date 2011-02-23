@@ -118,19 +118,19 @@ public class L3ProcessorPanel implements IsWidget {
         temporalParams.setCellSpacing(2);
         temporalParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         temporalParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        temporalParams.getFlexCellFormatter().setColSpan(4, 0, 3);
+        temporalParams.getFlexCellFormatter().setColSpan(3, 0, 3);
         temporalParams.setWidget(0, 0, new HTML("<b>L3 Temporal Parameters</b>"));
-        temporalParams.setWidget(1, 0, new Label("From time:"));
+        temporalParams.setWidget(1, 0, new Label("From date:"));
         temporalParams.setWidget(1, 1, fromDate);
-        temporalParams.setWidget(2, 0, new Label("To time:"));
+        temporalParams.setWidget(2, 0, new Label("To date:"));
         temporalParams.setWidget(2, 1, toDate);
-        temporalParams.setWidget(3, 0, new Label("Period length:"));
-        temporalParams.setWidget(3, 1, periodLength);
-        temporalParams.setWidget(3, 2, new Label("days"));
-        temporalParams.setWidget(4, 0, multiPeriodOn);
-        temporalParams.setWidget(5, 0, new Label("Period count:"));
-        temporalParams.setWidget(5, 1, periodCount);
-        temporalParams.setWidget(5, 2, new Label("periods"));
+        temporalParams.setWidget(3, 0, multiPeriodOn);
+        temporalParams.setWidget(4, 0, new Label("Period count:"));
+        temporalParams.setWidget(4, 1, periodCount);
+        temporalParams.setWidget(4, 2, new Label("periods"));
+        temporalParams.setWidget(5, 0, new Label("Period length:"));
+        temporalParams.setWidget(5, 1, periodLength);
+        temporalParams.setWidget(5, 2, new Label("days"));
 
         fromLon = new DoubleBox();
         fromLon.setValue(-180.0);
@@ -187,7 +187,7 @@ public class L3ProcessorPanel implements IsWidget {
         }
         long millisPerDay = 24L * 60L * 60L * 1000L;
         long deltaMillis = toDate.getValue().getTime() - fromDate.getValue().getTime();
-        int deltaDays = 1 + (int)(1 + (deltaMillis - 1) / millisPerDay);
+        int deltaDays = (int)((millisPerDay + deltaMillis - 1) / millisPerDay);;
 
         if (endTimeAdjusted) {
             if (multiPeriodOn.getValue()) {
