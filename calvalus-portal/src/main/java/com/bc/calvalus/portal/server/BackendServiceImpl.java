@@ -64,6 +64,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return delegate.deleteProductions(productionIds);
     }
 
+    @Override
+    public String stageProductionOutput(String productionId) throws BackendServiceException {
+        return delegate.stageProductionOutput(productionId);
+    }
+
     private void initService() throws ServletException {
 
         if (delegate == null) {

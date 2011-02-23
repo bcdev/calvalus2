@@ -198,8 +198,17 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(PortalProduction production) {
-        Window.open(DOWNLOAD_ACTION_URL + "?productionId=" + production.getId(),
+        getPortal().getBackendService().stageProductionOutput(production.getId(), new AsyncCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                Window.open(DOWNLOAD_ACTION_URL + "?file=" + result,
                     "_blank", "");
+            }
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Staging failed:\n" + caught.getMessage());
+            }
+        });
     }
 
     private void showProductionInfo(PortalProduction production) {

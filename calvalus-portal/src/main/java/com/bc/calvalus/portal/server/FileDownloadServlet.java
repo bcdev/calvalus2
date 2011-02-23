@@ -21,8 +21,10 @@ import java.util.Arrays;
  */
 public class FileDownloadServlet extends HttpServlet {
 
+    public static final String STAGING_DIR = ".";
+
     public BackendService getBackendService() {
-         return (BackendService) getServletContext().getAttribute("calvalusPortal.backendService");
+         return (BackendService) getServletContext().getAttribute("calvalus.portal.backendService");
     }
 
     @Override
@@ -33,12 +35,12 @@ public class FileDownloadServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        String productionId = req.getParameter("productionId");
-        if (productionId == null) {
-            throw new ServletException("Missing parameter 'productionId'");
+        String filePath = req.getParameter("file");
+        if (filePath == null) {
+            throw new ServletException("Missing query parameter 'file'");
         }
 
-        File file = getOutputFile(productionId);
+        File file = new File(STAGING_DIR, filePath);
         if (file.length() > Integer.MAX_VALUE) {
             throw new ServletException("File size too big (expected < 2 GB, but got " + file.length() + " bytes).");
         }

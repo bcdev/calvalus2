@@ -151,6 +151,11 @@ public class DummyBackendService implements BackendService {
         return results;
     }
 
+    @Override
+    public String stageProductionOutput(String productionId) throws BackendServiceException {
+        return productionId + ".zip";
+    }
+
     private Production getProduction(String productionId) {
         for (Production production : productionList) {
             if (productionId.equals(production.getId())) {

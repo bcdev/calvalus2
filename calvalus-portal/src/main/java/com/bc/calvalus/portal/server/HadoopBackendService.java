@@ -8,14 +8,23 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.processing.beam.StreamingProductReader;
+import com.bc.calvalus.processing.shellexec.XmlDoc;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.net.NetUtils;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Product;
 
 import javax.servlet.ServletContext;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -48,7 +57,7 @@ public class HadoopBackendService implements BackendService {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 String hadoopValue = servletContext.getInitParameter(name);
                 hadoopConf.set(hadoopName, hadoopValue);
-                servletContext.log("Using Hadoop configuration: " + hadoopName + " = " + hadoopValue);
+                System.out.println("Using Hadoop configuration: " + hadoopName + " = " + hadoopValue);
             }
         }
     }
@@ -120,7 +129,7 @@ public class HadoopBackendService implements BackendService {
             }
             return result;
         } catch (IOException e) {
-            throw new  BackendServiceException("Failed to cancel jobs", e);
+            throw new BackendServiceException("Failed to cancel jobs", e);
         }
     }
 
@@ -128,6 +137,42 @@ public class HadoopBackendService implements BackendService {
     public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
         // todo - delete productions as well.
         return cancelProductions(productionIds);
+    }
+
+    @Override
+    public String stageProductionOutput(String productionId) throws BackendServiceException {
+        // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
+        try {
+            RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.forName(productionId));
+            String jobFile = job.getJobFile();
+            System.out.printf("jobFile = %n%s%n", jobFile);
+            Configuration configuration = new Configuration(hadoopConf);
+            configuration.addResource(new Path(jobFile));
+
+            String jobOutputDir = configuration.get("mapred.output.dir");
+            System.out.println("mapred.output.dir = " + jobOutputDir);
+            Path outputPath = new Path(jobOutputDir);
+            FileSystem fileSystem = outputPath.getFileSystem(hadoopConf);
+            FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    return path.getName().endsWith(".seq");
+                }
+            });
+            for (FileStatus seqFile : seqFiles) {
+                Path seqProductPath = seqFile.getPath();
+                System.out.println("seqProductPath = " + seqProductPath);
+                StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConf);
+                Product product = reader.readProductNodes(null, null);
+                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");
+                System.out.println("dimapProductName = " + dimapProductName);
+                ProductIO.writeProduct(product, new File(FileDownloadServlet.STAGING_DIR, dimapProductName), ProductIO.DEFAULT_FORMAT_NAME, false);
+            }
+            return jobOutputDir + ".zip";
+        } catch (Exception e) {
+            throw new BackendServiceException("Error: " + e.getMessage(), e);
+        }
+
     }
 
     private JobStatus getJobStatus(String productionId) throws IOException {
