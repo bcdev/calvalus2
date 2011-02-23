@@ -81,7 +81,7 @@ public class HadoopBackendService implements BackendService {
                 String productionId = jobStatus.getJobID().toString();
                 System.out.printf("Production %d: %s (id=%s)%n", (i + 1), runningJob.getJobName(), productionId);
                 productions.add(new PortalProduction(productionId,
-                                                     runningJob.getJobName(),
+                                                     runningJob.getJobName() + " (ID=" + productionId + ")",
                                                      createWorkStatus(productionId, jobStatus)));
             }
             return productions.toArray(new PortalProduction[productions.size()]);
