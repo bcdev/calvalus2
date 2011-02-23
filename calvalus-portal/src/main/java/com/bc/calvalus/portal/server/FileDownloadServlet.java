@@ -1,5 +1,7 @@
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.portal.shared.BackendService;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +20,11 @@ import java.util.Arrays;
  * @author Norman
  */
 public class FileDownloadServlet extends HttpServlet {
+
+    public BackendService getBackendService() {
+         return (BackendService) getServletContext().getAttribute("calvalusPortal.backendService");
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);

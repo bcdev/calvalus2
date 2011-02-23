@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.portal.shared.BackendService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -23,6 +24,11 @@ import java.util.List;
 public class FileUploadServlet extends HttpServlet {
     // TODO - get from server configuration
     private static final File UPLOAD_DIR = new File(".");
+
+
+    public BackendService getBackendService() {
+         return (BackendService) getServletContext().getAttribute("calvalusPortal.backendService");
+    }
 
 
     @Override
