@@ -10,6 +10,7 @@ import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 
+import javax.servlet.ServletContext;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +27,7 @@ public class DummyBackendService implements BackendService {
     final List<Production> productionList;
     long counter;
 
-    public DummyBackendService() {
+    public DummyBackendService(ServletContext servletContext) {
         productionList = Collections.synchronizedList(new ArrayList<Production>(32));
         // Add some dummy productions
         productionList.add(new Production("Formatting all hard drives", 20 * 1000));

@@ -78,6 +78,14 @@
             <artifactId>junit</artifactId>
         </dependency>
 
+        <!-- todo - remove this dependency once decoupled from Hadoop -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

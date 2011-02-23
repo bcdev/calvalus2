@@ -24,6 +24,12 @@ public class PortalProduction implements IsSerializable {
         this.workStatus = new WorkStatus(WorkStatus.State.WAITING, "", 0.0);
     }
 
+    public PortalProduction(String id, String name, WorkStatus workStatus) {
+        this.id = id;
+        this.name = name;
+        this.workStatus = workStatus;
+    }
+
     public String getId() {
         return id;
     }

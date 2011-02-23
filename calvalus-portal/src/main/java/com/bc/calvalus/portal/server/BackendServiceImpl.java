@@ -10,6 +10,7 @@ import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -24,7 +25,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-        initDelegate();
+        initService();
         super.service(req, res);
     }
 
@@ -63,20 +64,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return delegate.deleteProductions(productionIds);
     }
 
-    private void initDelegate() throws ServletException {
+    private void initService() throws ServletException {
+
         if (delegate == null) {
-            String className = getServletContext().getInitParameter("calvalusPortal.backendService.class");
+            // String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
+            // String className = DummyBackendService.class.getName();
+            String className = HadoopBackendService.class.getName();
             if (className != null) {
                 try {
-                    delegate = (BackendService) Class.forName(className).newInstance();
+                    delegate = (BackendService) Class.forName(className).getConstructor(ServletContext.class).newInstance(getServletContext());
                 } catch (Exception e) {
-                    delegate = new DummyBackendService();
                     throw new ServletException(e);
                 }
             } else {
-                delegate = new DummyBackendService();
+                throw new ServletException(String.format("Missing servlet initialisation parameter '%s'",
+                                                         "calvalus.portal.backendService.class"));
             }
-            getServletContext().setAttribute("calvalusPortal.backendService", delegate);
+            // Make the service available to other servlets.
+            getServletContext().setAttribute("calvalus.portal.backendService", delegate);
         }
     }
 }

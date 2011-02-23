@@ -51,4 +51,16 @@
         <welcome-file>calvalus.html</welcome-file>
     </welcome-file-list>
 
+    <!-- Hadoop parameters -->
+
+    <context-param>
+        <param-name>calvalus.hadoop.fs.default.name</param-name>
+        <param-value>hdfs://cvmaster00:9000</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>calvalus.hadoop.mapred.job.tracker</param-name>
+        <param-value>cvmaster00:9001</param-value>
+    </context-param>
+
 </web-app>

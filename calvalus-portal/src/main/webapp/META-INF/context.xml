@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<!-- The contents of this file will be loaded for Calvalus. -->
+
+<Context>
+    <!--
+        The "Parameter" elements will be presented to the application when
+        requested by calling ServletContext.getInitParameter().
+    -->
+    <Parameter name="calvalus.portal.backendService.class"
+               value="com.bc.calvalus.portal.server.HadoopBackendService"
+               override="true"/>
+
+    <Parameter name="calvalus.hadoop.fs.default.name"
+               value="hdfs://cvmaster00:9000"
+            override="true"/>
+
+    <Parameter name="calvalus.hadoop.mapred.job.tracker"
+               value="cvmaster00:9001"
+            override="true"/>
+
+</Context>

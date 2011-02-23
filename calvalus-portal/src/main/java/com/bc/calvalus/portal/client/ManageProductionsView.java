@@ -13,14 +13,14 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.CellPreviewEvent;
-import com.google.gwt.view.client.DefaultSelectionEventManager;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
@@ -44,7 +44,7 @@ public class ManageProductionsView extends PortalView {
     private static final String DOWNLOAD = "Download";
     private static final String INFO = "Info";
 
-    private VerticalPanel widget;
+    private FlexTable widget;
     private SelectionModel<PortalProduction> selectionModel;
 
     public ManageProductionsView(CalvalusPortal portal) {
@@ -75,7 +75,6 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
-        // First name.
         TextColumn<PortalProduction> nameColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
@@ -84,7 +83,6 @@ public class ManageProductionsView extends PortalView {
         };
         nameColumn.setSortable(true);
 
-        // First name.
         TextColumn<PortalProduction> statusColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
@@ -92,6 +90,14 @@ public class ManageProductionsView extends PortalView {
             }
         };
         statusColumn.setSortable(true);
+
+        TextColumn<PortalProduction> messageColumn = new TextColumn<PortalProduction>() {
+            @Override
+            public String getValue(PortalProduction production) {
+                return production.getWorkStatus().getMessage();
+            }
+        };
+        messageColumn.setSortable(true);
 
         Column<PortalProduction, String> actionColumn = new Column<PortalProduction, String>(new ButtonCell()) {
             @Override
@@ -120,17 +126,28 @@ public class ManageProductionsView extends PortalView {
 
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
         productionTable.addColumn(nameColumn, "Production Name");
-        productionTable.addColumn(statusColumn, "Production Status");
+        productionTable.addColumn(statusColumn, "Status");
+        productionTable.addColumn(messageColumn, "Message");
         productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
         productionTable.addColumn(resultColumn, "Production Result");
 
         // Connect the table to the data provider.
         portal.getProductions().addDataDisplay(productionTable);
 
-        widget = new VerticalPanel();
-        widget.setSpacing(4);
-        widget.add(productionTable);
-        widget.add(new Button("Delete Selected", new DeleteProductionsAction()));
+        // Create a Pager to control the table.
+        SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
+        SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, false, 0, true);
+        pager.setDisplay(productionTable);
+
+        widget = new FlexTable();
+        widget.setWidth("100%");
+        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        widget.setCellSpacing(4);
+        widget.setWidget(0, 0, productionTable);
+        widget.setWidget(1, 0, pager);
+        widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
     }
 
 
@@ -182,7 +199,7 @@ public class ManageProductionsView extends PortalView {
 
     private void downloadProduction(PortalProduction production) {
         Window.open(DOWNLOAD_ACTION_URL + "?productionId=" + production.getId(),
-                    "_blank","");
+                    "_blank", "");
     }
 
     private void showProductionInfo(PortalProduction production) {
