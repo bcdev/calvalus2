@@ -127,13 +127,6 @@
           <wps:Data>
               <wps:ComplexData>
                   <parameters>
-                      <!-- L1P parameters ...
-                      <doCalibration>true</doCalibration>
-                      <doSmile>true</doSmile>
-                      <doEqualization>true</doEqualization>
-                      <doRadToRefl>true</doRadToRefl>
-                      <reproVersion>AUTO_DETECT</reproVersion>
-                      -->
                       <!--<useIdepix>true</useIdepix>-->
                       <landExpression>(toa_reflec_9  > toa_reflec_8 OR toa_reflec_10 > toa_reflec_8) AND toa_reflec_13 > 0.015</landExpression>
                   </parameters>
@@ -157,11 +150,6 @@
                             <type>AVG</type>
                             <varName>Z90_max</varName>
                         </aggregator>
-                        <!--<aggregator>-->
-                            <!--<type>AVG</type>-->
-                            <!--<varName>chl_conc</varName>-->
-                            <!--<weightCoeff>0.5</weightCoeff>-->
-                        <!--</aggregator>-->
                     </aggregators>
                 </wps:ComplexData>
             </wps:Data>

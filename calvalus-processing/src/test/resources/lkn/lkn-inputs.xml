@@ -78,6 +78,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_113122_000001662079_00295_37924_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
@@ -163,6 +164,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/06/MER_FRS_1PNMAP20090606_103650_000001942079_00366_37995_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
@@ -243,6 +245,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/13/MER_FRS_1PNMAP20090613_115127_000001382079_00467_38096_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
@@ -328,6 +331,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/17/MER_FRS_1PNMAP20090617_113127_000001042080_00023_38153_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
@@ -418,6 +422,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/22/MER_FRS_1PNMAP20090622_120842_000000342080_00095_38225_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
@@ -503,6 +508,7 @@
       <ows:Title>MERIS L1B input</ows:Title>
       <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_114000_000000992080_00109_38239_0001.N1" />
     </wps:Input>
+
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
