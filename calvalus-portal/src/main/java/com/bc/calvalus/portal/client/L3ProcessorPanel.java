@@ -33,6 +33,7 @@ public class L3ProcessorPanel implements IsWidget {
     private TextBox variables;
     private TextBox validMask;
     private ListBox aggregator;
+    private DoubleBox weightCoeff;
     private DateBox fromDate;
     private DateBox toDate;
     private IntegerBox periodLength;
@@ -43,6 +44,7 @@ public class L3ProcessorPanel implements IsWidget {
     private DoubleBox resolution;
     private CheckBox multiPeriodOn;
     private IntegerBox periodCount;
+    private IntegerBox superSampling;
 
     public L3ProcessorPanel() {
 
@@ -57,7 +59,13 @@ public class L3ProcessorPanel implements IsWidget {
         aggregator.addItem("Max. Likelihood Average", "AVG_ML");
         aggregator.addItem("Minimum + Maximum", "MIN_MAX");
         aggregator.setVisibleItemCount(1);
-        aggregator.setSelectedIndex(0);
+        aggregator.setSelectedIndex(1);
+
+        weightCoeff = new DoubleBox(); // todo - validate against 0 <= x <= 1.0
+        weightCoeff.setValue(0.5);
+
+        superSampling = new IntegerBox();  // todo - validate against 1 <= x <= 33
+        superSampling.setValue(1);
 
         FlexTable contentParams = new FlexTable();
         contentParams.setWidth("100%");
@@ -67,10 +75,14 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.setWidget(0, 0, new HTML("<b>L3 Content Parameters</b>"));
         contentParams.setWidget(1, 0, new Label("Input variable(s):"));
         contentParams.setWidget(1, 1, variables);
-        contentParams.setWidget(2, 0, new Label("Aggregation:"));
-        contentParams.setWidget(2, 1, this.aggregator);
-        contentParams.setWidget(3, 0, new Label("Valid mask:"));
-        contentParams.setWidget(3, 1, validMask);
+        contentParams.setWidget(2, 0, new Label("Valid mask:"));
+        contentParams.setWidget(2, 1, validMask);
+        contentParams.setWidget(3, 0, new Label("Aggregation:"));
+        contentParams.setWidget(3, 1, this.aggregator);
+        contentParams.setWidget(4, 0, new Label("Weight coeff.:"));
+        contentParams.setWidget(4, 1, this.weightCoeff);
+        contentParams.setWidget(5, 0, new Label("Super-sampling:"));
+        contentParams.setWidget(5, 1, this.superSampling);
 
         fromDate = new DateBox();
         fromDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
@@ -86,15 +98,6 @@ public class L3ProcessorPanel implements IsWidget {
             }
         });
 
-        periodLength = new IntegerBox();
-        periodLength.setValue(7);
-        periodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Integer> event) {
-                updateTimeParams(false);
-            }
-        });
-
         multiPeriodOn = new CheckBox("Multi-period (time-series)");
         multiPeriodOn.setValue(false);
         multiPeriodOn.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
@@ -104,9 +107,18 @@ public class L3ProcessorPanel implements IsWidget {
             }
         });
 
-        periodCount = new IntegerBox();
+        periodCount = new IntegerBox();  // todo - validate against 1 <= x <= 1000 (?)
         periodCount.setValue(1);
         periodCount.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Integer> event) {
+                updateTimeParams(false);
+            }
+        });
+
+        periodLength = new IntegerBox(); // todo - validate against 1 <= x <= 365 (?)
+        periodLength.setValue(7);
+        periodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
                 updateTimeParams(false);
@@ -132,17 +144,17 @@ public class L3ProcessorPanel implements IsWidget {
         temporalParams.setWidget(5, 1, periodLength);
         temporalParams.setWidget(5, 2, new Label("days"));
 
-        fromLon = new DoubleBox();
+        fromLon = new DoubleBox();  // todo - validate against -180 <= x <= 180
         fromLon.setValue(-180.0);
-        toLon = new DoubleBox();
+        toLon = new DoubleBox();   // todo - validate against -180 <= x <= 180
         toLon.setValue(180.0);
 
-        fromLat = new DoubleBox();
+        fromLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
         fromLat.setValue(90.0);
-        toLat = new DoubleBox();
+        toLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
         toLat.setValue(90.0);
 
-        resolution = new DoubleBox();
+        resolution = new DoubleBox();   // todo - validate against 0 < x <= 10
         resolution.setValue(0.0416667);
 
         FlexTable spatialParams = new FlexTable();
@@ -187,13 +199,14 @@ public class L3ProcessorPanel implements IsWidget {
         }
         long millisPerDay = 24L * 60L * 60L * 1000L;
         long deltaMillis = toDate.getValue().getTime() - fromDate.getValue().getTime();
-        int deltaDays = (int)((millisPerDay + deltaMillis - 1) / millisPerDay);;
+        int deltaDays = (int) ((millisPerDay + deltaMillis - 1) / millisPerDay);
+        ;
 
         if (endTimeAdjusted) {
             if (multiPeriodOn.getValue()) {
                 // fix 'fromDate', 'toDate' and 'periodLength'
-                periodCount.setValue(1 + (deltaDays - 1)/ periodLength.getValue());
-            }  else {
+                periodCount.setValue(1 + (deltaDays - 1) / periodLength.getValue());
+            } else {
                 // fix 'fromDate', 'toDate'. 'periodCount' is one.
                 periodCount.setValue(1);
                 periodLength.setValue(deltaDays);
@@ -205,7 +218,7 @@ public class L3ProcessorPanel implements IsWidget {
                     // fix 'fromDate' and 'periodLength'
                     periodCount.setValue(deltaDays / periodLength.getValue());
                     toDate.setValue(new Date(fromDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
-                }  else {
+                } else {
                     // fix 'fromDate' and 'periodLength'. 'periodCount' is one.
                     periodCount.setValue(1);
                     toDate.setValue(new Date(fromDate.getValue().getTime() + periodLength.getValue() * millisPerDay));
@@ -227,6 +240,8 @@ public class L3ProcessorPanel implements IsWidget {
         sb.append(createParameterElement("variables", variables.getText()));
         sb.append(createParameterElement("validMask", validMask.getText()));
         sb.append(createParameterElement("aggregator", aggregator.getValue(aggregator.getSelectedIndex())));
+        sb.append(createParameterElement("weightCoeff", weightCoeff.getText()));
+        sb.append(createParameterElement("superSampling", superSampling.getText()));
         sb.append(createParameterElement("fromDate", fromDate.getFormat().format(fromDate, fromDate.getValue())));
         sb.append(createParameterElement("toDate", toDate.getFormat().format(toDate, toDate.getValue())));
         sb.append(createParameterElement("periodLength", periodLength.getText()));
