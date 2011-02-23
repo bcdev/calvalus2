@@ -1,10 +1,15 @@
 package com.bc.calvalus.portal.client;
 
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DecoratorPanel;
+import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
@@ -12,6 +17,8 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
+
+import java.util.Date;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -21,18 +28,21 @@ import com.google.gwt.user.datepicker.client.DateBox;
 public class L3ProcessorPanel implements IsWidget {
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
+    private DecoratorPanel widget;
+
     private TextBox variables;
     private TextBox validMask;
     private ListBox aggregator;
     private DateBox fromDate;
     private DateBox toDate;
-    private TextBox period;
-    private TextBox fromLon;
-    private TextBox toLon;
-    private TextBox fromLat;
-    private TextBox toLat;
-    private TextBox resolution;
-    private DecoratorPanel widget;
+    private IntegerBox periodLength;
+    private DoubleBox fromLon;
+    private DoubleBox toLon;
+    private DoubleBox fromLat;
+    private DoubleBox toLat;
+    private DoubleBox resolution;
+    private CheckBox multiPeriodOn;
+    private IntegerBox periodCount;
 
     public L3ProcessorPanel() {
 
@@ -54,7 +64,7 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.setCellSpacing(2);
         contentParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         contentParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        contentParams.setWidget(0, 0, new HTML("<b>Content Parameters</b>"));
+        contentParams.setWidget(0, 0, new HTML("<b>L3 Content Parameters</b>"));
         contentParams.setWidget(1, 0, new Label("Input variable(s):"));
         contentParams.setWidget(1, 1, variables);
         contentParams.setWidget(2, 0, new Label("Aggregation:"));
@@ -69,43 +79,78 @@ public class L3ProcessorPanel implements IsWidget {
         toDate = new DateBox();
         toDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         toDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+        toDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Date> event) {
+                updateTimeParams(true);
+            }
+        });
 
-        period = new TextBox();
-        period.setText("7");
+        periodLength = new IntegerBox();
+        periodLength.setValue(7);
+        periodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Integer> event) {
+                updateTimeParams(false);
+            }
+        });
+
+        multiPeriodOn = new CheckBox("Multi-period (time-series)");
+        multiPeriodOn.setValue(false);
+        multiPeriodOn.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> event) {
+                updateTimeParams(false);
+            }
+        });
+
+        periodCount = new IntegerBox();
+        periodCount.setValue(1);
+        periodCount.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Integer> event) {
+                updateTimeParams(false);
+            }
+        });
 
         FlexTable temporalParams = new FlexTable();
         temporalParams.setWidth("100%");
         temporalParams.setCellSpacing(2);
         temporalParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         temporalParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        temporalParams.setWidget(0, 0, new HTML("<b>Temporal Parameters</b>"));
+        temporalParams.getFlexCellFormatter().setColSpan(4, 0, 3);
+        temporalParams.setWidget(0, 0, new HTML("<b>L3 Temporal Parameters</b>"));
         temporalParams.setWidget(1, 0, new Label("From time:"));
         temporalParams.setWidget(1, 1, fromDate);
         temporalParams.setWidget(2, 0, new Label("To time:"));
         temporalParams.setWidget(2, 1, toDate);
-        temporalParams.setWidget(3, 0, new Label("Aggr. period:"));
-        temporalParams.setWidget(3, 1, period);
-        temporalParams.setWidget(3, 2, new Label("days/product"));
+        temporalParams.setWidget(3, 0, new Label("Period length:"));
+        temporalParams.setWidget(3, 1, periodLength);
+        temporalParams.setWidget(3, 2, new Label("days"));
+        temporalParams.setWidget(4, 0, multiPeriodOn);
+        temporalParams.setWidget(5, 0, new Label("Period count:"));
+        temporalParams.setWidget(5, 1, periodCount);
+        temporalParams.setWidget(5, 2, new Label("periods"));
 
-        fromLon = new TextBox();
-        fromLon.setValue("-180");
-        toLon = new TextBox();
-        toLon.setValue("+180");
+        fromLon = new DoubleBox();
+        fromLon.setValue(-180.0);
+        toLon = new DoubleBox();
+        toLon.setValue(180.0);
 
-        fromLat = new TextBox();
-        fromLat.setValue("-90");
-        toLat = new TextBox();
-        toLat.setValue("+90");
+        fromLat = new DoubleBox();
+        fromLat.setValue(90.0);
+        toLat = new DoubleBox();
+        toLat.setValue(90.0);
 
-        resolution = new TextBox();
-        resolution.setValue("0.0416667");
+        resolution = new DoubleBox();
+        resolution.setValue(0.0416667);
 
         FlexTable spatialParams = new FlexTable();
         spatialParams.setWidth("100%");
         spatialParams.setCellSpacing(2);
         spatialParams.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         spatialParams.getFlexCellFormatter().setColSpan(0, 0, 3);
-        spatialParams.setWidget(0, 0, new HTML("<b>Spatial Parameters</b>"));
+        spatialParams.setWidget(0, 0, new HTML("<b>L3 Spatial Parameters</b>"));
         spatialParams.setWidget(1, 0, new Label("From longitude:"));
         spatialParams.setWidget(1, 1, fromLon);
         spatialParams.setWidget(1, 2, new Label("degree"));
@@ -134,6 +179,43 @@ public class L3ProcessorPanel implements IsWidget {
         widget.setWidget(panel);
     }
 
+    boolean adjustingEndTime;
+
+    private void updateTimeParams(boolean endTimeAdjusted) {
+        if (adjustingEndTime) {
+            return;
+        }
+        long millisPerDay = 24L * 60L * 60L * 1000L;
+        long deltaMillis = toDate.getValue().getTime() - fromDate.getValue().getTime();
+        int deltaDays = 1 + (int)(1 + (deltaMillis - 1) / millisPerDay);
+
+        if (endTimeAdjusted) {
+            if (multiPeriodOn.getValue()) {
+                // fix 'fromDate', 'toDate' and 'periodLength'
+                periodCount.setValue(1 + (deltaDays - 1)/ periodLength.getValue());
+            }  else {
+                // fix 'fromDate', 'toDate'. 'periodCount' is one.
+                periodCount.setValue(1);
+                periodLength.setValue(deltaDays);
+            }
+        } else {
+            try {
+                adjustingEndTime = true;
+                if (multiPeriodOn.getValue()) {
+                    // fix 'fromDate' and 'periodLength'
+                    periodCount.setValue(deltaDays / periodLength.getValue());
+                    toDate.setValue(new Date(fromDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
+                }  else {
+                    // fix 'fromDate' and 'periodLength'. 'periodCount' is one.
+                    periodCount.setValue(1);
+                    toDate.setValue(new Date(fromDate.getValue().getTime() + periodLength.getValue() * millisPerDay));
+                }
+            } finally {
+                adjustingEndTime = false;
+            }
+        }
+    }
+
     @Override
     public Widget asWidget() {
         return widget;
@@ -147,7 +229,8 @@ public class L3ProcessorPanel implements IsWidget {
         sb.append(createParameterElement("aggregator", aggregator.getValue(aggregator.getSelectedIndex())));
         sb.append(createParameterElement("fromDate", fromDate.getFormat().format(fromDate, fromDate.getValue())));
         sb.append(createParameterElement("toDate", toDate.getFormat().format(toDate, toDate.getValue())));
-        sb.append(createParameterElement("period", period.getText()));
+        sb.append(createParameterElement("periodLength", periodLength.getText()));
+        sb.append(createParameterElement("periodCount", periodCount.getText()));
         sb.append(createParameterElement("fromLon", fromLon.getText()));
         sb.append(createParameterElement("toLon", toLon.getText()));
         sb.append(createParameterElement("fromLat", fromLat.getText()));
