@@ -1,9 +1,6 @@
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,14 +12,11 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -80,79 +74,26 @@ public class BeamOperatorTool extends Configured implements Tool {
         try {
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
-            WpsConfig wpsConfig = new WpsConfig(requestContent);
-            String requestOutputDir = wpsConfig.getRequestOutputDir();
-            String identifier = wpsConfig.getIdentifier();
+            BeamJobService beamJobService = new BeamJobService();
+            Configuration conf = getConf();
+            Job job = beamJobService.createBeamHadoopJob(conf, requestContent);
 
-            // construct job and set parameters and handlers
-            Job job = new Job(getConf(), identifier);
-            Configuration conf = job.getConfiguration();
-            conf.set("calvalus.request", requestContent);
-
-            // look up job jar either by class (if deployed) or by path (idea)
-            // job.setJarByClass(getClass());
-            String pathname = "lib/calvalus-processing-0.1-SNAPSHOT-job.jar";
-            if (!new File(pathname).exists()) {
-                pathname = "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar";
-                if (!new File(pathname).exists()) {
-                    throw new IllegalArgumentException("Cannot find job jar");
-                }
-            }
-            conf.set("mapred.jar", pathname);
-
-
-            // clear output directory
-            final Path outputPath = new Path(requestOutputDir);
-            final FileSystem fileSystem = outputPath.getFileSystem(getConf());
-            fileSystem.delete(outputPath, true);
-             FileOutputFormat.setOutputPath(job, outputPath);
-
-            job.setInputFormatClass(ExecutablesInputFormat.class);
-
-            if (wpsConfig.isLevel3()) {
-                job.setNumReduceTasks(16);
-
-                job.setMapperClass(L3Mapper.class);
-                job.setMapOutputKeyClass(LongWritable.class);
-                job.setMapOutputValueClass(SpatialBin.class);
-
-                job.setPartitionerClass(L3Partitioner.class);
-
-                job.setReducerClass(L3Reducer.class);
-                job.setOutputKeyClass(LongWritable.class);
-                job.setOutputValueClass(TemporalBin.class);
-
-                job.setOutputFormatClass(SequenceFileOutputFormat.class);
-                // todo - scan all input paths, collect all products and compute min start/ max stop sensing time
-            } else {
-                job.setMapperClass(BeamOperatorMapper.class);
-                job.setNumReduceTasks(0);
-                //job.setOutputFormatClass(TextOutputFormat.class);
-                //job.setOutputKeyClass(Text.class);
-                //job.setOutputValueClass(Text.class);
-            }
-            conf.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
-            conf.set("mapred.map.tasks.speculative.execution", "false");
-            conf.set("mapred.reduce.tasks.speculative.execution", "false");
-            //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
-            conf.set("mapred.child.java.opts", "-Xmx1024m");
-
-            BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), conf);
-
-            LOG.info("start processing " + identifier + " (" + requestPath + ")");
+            LOG.info("start processing " + job.getJobName() + " (" + requestPath + ")");
             long startTime = System.nanoTime();
             boolean success = job.waitForCompletion(true);
             int result = success ? 0 : 1;
             long stopTime = System.nanoTime();
-            LOG.info("stop  processing "  + identifier + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) +  " sec");
+            LOG.info("stop  processing "  + job.getJobName() + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) +  " sec");
 
-            if (success && wpsConfig.isLevel3()) {
+            if (success) {
+                Path outputPath = FileOutputFormat.getOutputPath(job);
                 FileSystem outputPathFileSystem = outputPath.getFileSystem(conf);
                 FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, BeamL3Config.L3_REQUEST_FILENAME));
                 os.writeBytes(requestContent);
 
                 final String formatterOutput = conf.get("calvalus.l3.formatter.output");
                 if (formatterOutput != null) {
+                    //TODO enable direct formatting
     //                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
     //                L3Formatter formatter = new L3Formatter();
     //                formatter.setConf(conf);
