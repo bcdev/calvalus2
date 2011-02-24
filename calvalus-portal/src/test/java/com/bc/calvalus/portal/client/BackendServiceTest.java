@@ -61,14 +61,6 @@ public class BackendServiceTest extends GWTTestCase {
         public void onSuccess(PortalProductionResponse response) {
             // Verify that the response is correct.
             assertNotNull(response);
-            assertNotNull(response.getProductionRequest());
-            assertEquals("x*y", response.getProductionRequest().getProductionType());
-            assertNotNull(response.getProductionRequest().getProductionParameters());
-            assertEquals(2, response.getProductionRequest().getProductionParameters().length);
-            assertEquals("x", response.getProductionRequest().getProductionParameters()[0].getName());
-            assertEquals("3", response.getProductionRequest().getProductionParameters()[0].getValue());
-            assertEquals("y", response.getProductionRequest().getProductionParameters()[1].getName());
-            assertEquals("-1", response.getProductionRequest().getProductionParameters()[1].getValue());
             assertNotNull(response.getProduction());
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());

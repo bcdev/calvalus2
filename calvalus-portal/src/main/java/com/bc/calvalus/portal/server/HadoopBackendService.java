@@ -102,7 +102,14 @@ public class HadoopBackendService implements BackendService {
 
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
-        throw new BackendServiceException("Method 'orderProduction' not implemented");
+        String productionType = productionRequest.getProductionType();
+        if (!"calvalus.level3".equals(productionType)) {
+            return new PortalProductionResponse(1, "Unhandled production type '" + productionType + "'");
+        }
+
+
+
+        return new PortalProductionResponse(new PortalProduction("", "", null));
     }
 
     @Override

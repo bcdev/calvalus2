@@ -103,7 +103,7 @@ public class DummyBackendService implements BackendService {
 
         productionList.add(production);
 
-        return new PortalProductionResponse(createPortalProduction(production), productionRequest);
+        return new PortalProductionResponse(createPortalProduction(production));
     }
 
     @Override

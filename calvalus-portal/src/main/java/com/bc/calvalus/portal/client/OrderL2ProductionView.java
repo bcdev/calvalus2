@@ -2,11 +2,8 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
-import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -74,17 +71,9 @@ public class OrderL2ProductionView extends PortalView {
                                                                                               processingPanel.getProcessorVersion()),
                                                                           new PortalParameter("processorParameters",
                                                                                               processingPanel.getProcessorParameters()));
-            getPortal().getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
-                public void onSuccess(final PortalProductionResponse response) {
-                    ManageProductionsView view = (ManageProductionsView) getPortal().getView(ManageProductionsView.ID);
-                    view.show();
-                }
-
-                public void onFailure(Throwable caught) {
-                    Window.alert("Error!\n" + caught.getMessage());
-                }
-            });
+            getPortal().orderProduction(request);
         }
+
 
     }
 

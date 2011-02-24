@@ -5,6 +5,8 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
+import com.bc.calvalus.portal.shared.PortalProductionRequest;
+import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.cellview.client.CellTree;
@@ -222,6 +224,24 @@ public class CalvalusPortal implements EntryPoint {
             productions.refresh();
         }
     }
+
+    public void orderProduction(PortalProductionRequest request) {
+        getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
+            public void onSuccess(final PortalProductionResponse response) {
+                if (response.getStatusCode() == 0) {
+                    ManageProductionsView view = (ManageProductionsView) getView(ManageProductionsView.ID);
+                    view.show();
+                } else {
+                    Window.alert("Failed to order production:\n" + response.getStatusMessage());
+                }
+            }
+
+            public void onFailure(Throwable caught) {
+                Window.alert("Failed to order production:\n" + caught.getMessage());
+            }
+        });
+    }
+
 
     private class InitProductSetsCallback implements AsyncCallback<PortalProductSet[]> {
         @Override

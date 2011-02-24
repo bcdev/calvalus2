@@ -9,8 +9,9 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class PortalProductionResponse implements IsSerializable {
-    PortalProduction production;
-    PortalProductionRequest productionRequest;
+    private PortalProduction production;
+    private int statusCode;
+    private String statusMessage;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -18,16 +19,27 @@ public class PortalProductionResponse implements IsSerializable {
     public PortalProductionResponse() {
     }
 
-    public PortalProductionResponse(PortalProduction production, PortalProductionRequest productionRequest) {
+    public PortalProductionResponse(PortalProduction production) {
         this.production = production;
-        this.productionRequest = productionRequest;
+        this.statusCode = 0;
+        this.statusMessage = "";
+    }
+
+    public PortalProductionResponse(int statusCode, String statusMessage) {
+        this.production = null;
+        this.statusCode = statusCode;
+        this.statusMessage = statusMessage;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
     }
 
     public PortalProduction getProduction() {
         return production;
-    }
-
-    public PortalProductionRequest getProductionRequest() {
-        return productionRequest;
     }
 }
