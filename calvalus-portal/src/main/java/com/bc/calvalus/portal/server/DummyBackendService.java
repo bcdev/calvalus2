@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * An BackendService implementation that is useful for developing the portal.
@@ -30,17 +27,17 @@ import java.util.TimerTask;
 public class DummyBackendService implements BackendService {
 
     private final ServletContext servletContext;
-    private final List<Production> productionList;
+    private final List<DummyProduction> productionList;
     private long counter;
 
     public DummyBackendService(ServletContext servletContext) {
         this.servletContext = servletContext;
-        productionList = Collections.synchronizedList(new ArrayList<Production>(32));
+        productionList = Collections.synchronizedList(new ArrayList<DummyProduction>(32));
         // Add some dummy productions
-        productionList.add(new Production("Formatting all hard drives", 20 * 1000));
-        productionList.add(new Production("Drying CD slots", 10 * 1000));
-        productionList.add(new Production("Rewriting kernel using BASIC", 5 * 1000));
-        for (Production production : productionList) {
+        productionList.add(new DummyProduction("Formatting all hard drives", 20 * 1000));
+        productionList.add(new DummyProduction("Drying CD slots", 10 * 1000));
+        productionList.add(new DummyProduction("Rewriting kernel using BASIC", 5 * 1000));
+        for (DummyProduction production : productionList) {
             production.start();
         }
     }
@@ -101,7 +98,7 @@ public class DummyBackendService implements BackendService {
                                                      productionType);
 
         long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
-        Production production = new Production(productionName, secondsToRun * 1000);
+        DummyProduction production = new DummyProduction(productionName, secondsToRun * 1000);
         production.start();
 
         productionList.add(production);
@@ -113,7 +110,7 @@ public class DummyBackendService implements BackendService {
     public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
         boolean[] results = new boolean[productionIds.length];
         for (int i = 0; i < productionIds.length; i++) {
-            Production production = getProduction(productionIds[i]);
+            DummyProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
                 results[i] = true;
@@ -126,7 +123,7 @@ public class DummyBackendService implements BackendService {
     public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
         boolean[] results = new boolean[productionIds.length];
         for (int i = 0; i < productionIds.length; i++) {
-            Production production = getProduction(productionIds[i]);
+            DummyProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
                 productionList.remove(production);
@@ -146,7 +143,7 @@ public class DummyBackendService implements BackendService {
     }
 
     private PortalProductionStatus getProductionStatus(String productionId) throws BackendServiceException {
-        Production production = getProduction(productionId);
+        DummyProduction production = getProduction(productionId);
         if (production == null) {
             throw new BackendServiceException("Unknown production ID: " + productionId);
         }
@@ -158,17 +155,17 @@ public class DummyBackendService implements BackendService {
         } else {
             state = PortalProductionStatus.State.IN_PROGRESS;
         }
-        return new PortalProductionStatus(state, "", production.getProgress());
+        return new PortalProductionStatus(state, production.getProgress());
     }
 
-    private PortalProduction createPortalProduction(Production production) throws BackendServiceException {
+    private PortalProduction createPortalProduction(DummyProduction production) throws BackendServiceException {
         return new PortalProduction(production.getId(),
                                          production.getName(),
                                          getProductionStatus(production.getId()));
     }
 
-    private Production getProduction(String productionId) {
-        for (Production production : productionList) {
+    private DummyProduction getProduction(String productionId) {
+        for (DummyProduction production : productionList) {
             if (productionId.equals(production.getId())) {
                 return production;
             }
@@ -206,81 +203,4 @@ public class DummyBackendService implements BackendService {
         return fileName;
     }
 
-    /**
-     * Dummy production that simulates progress over a given amount of time.
-     */
-    static class Production {
-        private static final Random idGen = new Random();
-        private final String id;
-        private final String name;
-        private final long startTime;
-        private final long totalTime;
-        private Timer timer;
-        private float progress;
-        private boolean cancelled;
-
-        /**
-         * Constructs a new dummy production.
-         *
-         * @param name      Some name.
-         * @param totalTime The total time in ms to run.
-         */
-        public Production(String name, long totalTime) {
-            this.id = Long.toHexString(idGen.nextLong());
-            this.name = name;
-            this.totalTime = totalTime;
-            this.startTime = System.currentTimeMillis();
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public float getProgress() {
-            return progress;
-        }
-
-        public boolean isDone() {
-            return timer == null;
-        }
-
-        public boolean isCancelled() {
-            return cancelled;
-        }
-
-        public void start() {
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    progress = (float) (System.currentTimeMillis() - startTime) / (float) totalTime;
-                    if (progress >= 1.0f) {
-                        progress = 1.0f;
-                        if (timer != null) {
-                            stopTimer();
-                        }
-                    }
-                }
-            };
-            timer = new Timer();
-            timer.scheduleAtFixedRate(task, 0, 100);
-            cancelled = false;
-        }
-
-        public void cancel() {
-            if (timer != null) {
-                stopTimer();
-                cancelled = true;
-            }
-        }
-
-        private void stopTimer() {
-            timer.cancel();
-            timer = null;
-        }
-
-    }
 }

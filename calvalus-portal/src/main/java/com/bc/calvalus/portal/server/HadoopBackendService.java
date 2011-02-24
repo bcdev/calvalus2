@@ -175,11 +175,6 @@ public class HadoopBackendService implements BackendService {
 
     }
 
-    private JobStatus getJobStatus(String productionId) throws IOException {
-        JobStatus[] jobsStatuses = jobClient.getAllJobs();
-        return findJobStatus(jobsStatuses, productionId);
-    }
-
     private static JobStatus findJobStatus(JobStatus[] jobsStatuses, String productionId) {
         JobID jobID = JobID.forName(productionId);
         for (JobStatus jobStatus : jobsStatuses) {
@@ -194,17 +189,19 @@ public class HadoopBackendService implements BackendService {
         if (job != null) {
             float progress = (job.setupProgress() + job.cleanupProgress() + job.mapProgress() + job.reduceProgress()) / 4.0f;
             if (job.getRunState() == JobStatus.FAILED) {
-                return new PortalProductionStatus(PortalProductionStatus.State.ERROR, "Job failed.", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.ERROR, progress);
             } else if (job.getRunState() == JobStatus.KILLED) {
-                return new PortalProductionStatus(PortalProductionStatus.State.CANCELLED, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.CANCELLED, progress);
             } else if (job.getRunState() == JobStatus.PREP) {
-                return new PortalProductionStatus(PortalProductionStatus.State.WAITING, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.WAITING, progress);
             } else if (job.getRunState() == JobStatus.RUNNING) {
-                return new PortalProductionStatus(PortalProductionStatus.State.IN_PROGRESS, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.IN_PROGRESS, progress);
             } else if (job.getRunState() == JobStatus.SUCCEEDED) {
                 return new PortalProductionStatus(PortalProductionStatus.State.COMPLETED);
             }
         }
         return new PortalProductionStatus(PortalProductionStatus.State.UNKNOWN);
     }
+
+
 }

@@ -7,13 +7,14 @@ import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -31,8 +32,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-        initService();
+        initDelegate();
         super.service(req, res);
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        initDelegate();
+        super.service(req, resp);
     }
 
     @Override
@@ -70,8 +77,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return delegate.stageProductionOutput(productionId);
     }
 
-    private void initService() throws ServletException {
-
+    private void initDelegate() throws ServletException {
         if (delegate == null) {
             String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
             if (className != null) {

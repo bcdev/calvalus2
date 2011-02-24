@@ -48,7 +48,11 @@ public class PortalProductionStatus implements IsSerializable {
     }
 
     public PortalProductionStatus(State state) {
-        this(state, "", 0.0f);
+        this(state, 0.0f);
+    }
+
+    public PortalProductionStatus(State state, float progress) {
+        this(state, "", progress);
     }
 
     public PortalProductionStatus(State state, String message, float progress) {
