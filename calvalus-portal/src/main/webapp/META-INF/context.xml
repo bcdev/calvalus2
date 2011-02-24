@@ -6,7 +6,14 @@
     <!--
         The "Parameter" elements will be presented to the application when
         requested by calling ServletContext.getInitParameter().
+        todo - check why IDEA's GWT support does not recognize context.xml,
+               init-parameters are currently read from web.xml (but that may
+               be not ok for the Hadoop parameters) (nf)
+        note: since Tomcat 7, context.xml is not automatically copied to
+              <tomcat7>/conf/<engine>/<host>/calvalus.xml   (nf)
     -->
+
+    <!--
     <Parameter name="calvalus.portal.backendService.class"
                value="com.bc.calvalus.portal.server.HadoopBackendService"
                override="true"/>
@@ -18,5 +25,5 @@
     <Parameter name="calvalus.hadoop.mapred.job.tracker"
                value="cvmaster00:9001"
             override="true"/>
-
+    -->
 </Context>

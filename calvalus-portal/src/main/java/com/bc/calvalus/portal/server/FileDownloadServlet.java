@@ -10,9 +10,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Servlet to handle file download requests.
@@ -21,10 +19,8 @@ import java.util.Arrays;
  */
 public class FileDownloadServlet extends HttpServlet {
 
-    public static final String STAGING_DIR = ".";
-
     public BackendService getBackendService() {
-         return (BackendService) getServletContext().getAttribute("calvalus.portal.backendService");
+        return (BackendService) getServletContext().getAttribute("calvalus.portal.backendService");
     }
 
     @Override
@@ -40,9 +36,11 @@ public class FileDownloadServlet extends HttpServlet {
             throw new ServletException("Missing query parameter 'file'");
         }
 
-        File file = new File(STAGING_DIR, filePath);
+        File downloadDir = new PortalConfig(getServletContext()).getLocalDownloadDir();
+        File file = new File(downloadDir, filePath);
+        // todo - check: do we need to set contentLength on resp (which is an int)? (nf)
         if (file.length() > Integer.MAX_VALUE) {
-            throw new ServletException("File size too big (expected < 2 GB, but got " + file.length() + " bytes).");
+            throw new ServletException(String.format("File size too big (expected less than 2 GB, but got %d bytes).", file.length()));
         }
         int contentLength = (int) file.length();
 
@@ -51,7 +49,8 @@ public class FileDownloadServlet extends HttpServlet {
             resp.reset();
             resp.setContentType("application/octet-stream");
             resp.setContentLength(contentLength);
-            resp.setHeader("Content-disposition", String.format("attachment; filename=\"%s\"", file.getName()));
+            resp.setHeader("Content-disposition",
+                           String.format("attachment; filename=\"%s\"", file.getName()));
             BufferedOutputStream output = new BufferedOutputStream(resp.getOutputStream(), 4 * 1024 * 1024);
             byte[] buffer = new byte[1024 * 1024];
             int bytesRead, bytesWritten = 0;
@@ -66,22 +65,5 @@ public class FileDownloadServlet extends HttpServlet {
         }
     }
 
-    private File getOutputFile(String productionId) throws IOException {
-        // todo - get real file for productionId
-        File file = new File(System.getProperty("java.io.tmpdir", "."), "calvalus-" + productionId + ".dat");
-        if (!file.exists()) {
-            FileOutputStream stream = new FileOutputStream(file);
-            byte[] buffer = new byte[1024 * 1024];
-            try {
-                for (int i = 0; i < 32; i++) {
-                    Arrays.fill(buffer, (byte) i);
-                    stream.write(buffer);
-                }
-            } finally {
-                stream.close();
-            }
-        }
-        return file;
-    }
 
 }

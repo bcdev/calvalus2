@@ -22,14 +22,10 @@ import java.util.List;
  * @author Norman
  */
 public class FileUploadServlet extends HttpServlet {
-    // TODO - get from server configuration
-    private static final File UPLOAD_DIR = new File(".");
-
 
     public BackendService getBackendService() {
          return (BackendService) getServletContext().getAttribute("calvalusPortal.backendService");
     }
-
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -46,12 +42,12 @@ public class FileUploadServlet extends HttpServlet {
                            "Request contents type is not supported by the servlet.");
             return;
         }
-
+        PortalConfig portalConfig = new PortalConfig(getServletContext());
         final FileHandler fileHandler;
         if (req.getParameter("echo") != null) {
             fileHandler = new FileEchoHandler();
         } else {
-            fileHandler = new FileStoreHandler(UPLOAD_DIR);
+            fileHandler = new FileStoreHandler(portalConfig.getLocalUploadDir());
         }
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         try {

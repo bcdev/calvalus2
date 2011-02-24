@@ -18,6 +18,12 @@ import java.io.IOException;
 
 /**
  * The server side implementation of the RPC processing service.
+ * <p/>
+ * The actual service is implemented by a class given by
+ * the servlet initialisation parameter 'calvalus.portal.backendService.class'
+ * (in context.xml or web.xml). Its value must be the name of a class that
+ * implements the {@link BackendService} interface and has a one-argument constructor
+ * taking the current {@link javax.servlet.ServletContext}.
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
@@ -72,9 +78,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void initService() throws ServletException {
 
         if (delegate == null) {
-            // String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
-            // String className = DummyBackendService.class.getName();
-            String className = HadoopBackendService.class.getName();
+            String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
             if (className != null) {
                 try {
                     delegate = (BackendService) Class.forName(className).getConstructor(ServletContext.class).newInstance(getServletContext());

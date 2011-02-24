@@ -11,8 +11,12 @@ import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 
 import javax.servlet.ServletContext;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -21,13 +25,17 @@ import java.util.TimerTask;
 
 /**
  * An BackendService implementation that is useful for developing the portal.
+ * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
+ * (context.xml or web.xml)
  */
 public class DummyBackendService implements BackendService {
 
-    final List<Production> productionList;
-    long counter;
+    private final ServletContext servletContext;
+    private final List<Production> productionList;
+    private long counter;
 
     public DummyBackendService(ServletContext servletContext) {
+        this.servletContext = servletContext;
         productionList = Collections.synchronizedList(new ArrayList<Production>(32));
         // Add some dummy productions
         productionList.add(new Production("Formatting all hard drives", 20 * 1000));
@@ -120,7 +128,7 @@ public class DummyBackendService implements BackendService {
             state = WorkStatus.State.IN_PROGRESS;
         }
         return new WorkStatus(state,
-                              production.getName(),
+                              "",
                               production.getProgress());
     }
 
@@ -153,7 +161,11 @@ public class DummyBackendService implements BackendService {
 
     @Override
     public String stageProductionOutput(String productionId) throws BackendServiceException {
-        return productionId + ".zip";
+        try {
+            return getOutputFile(productionId);
+        } catch (Exception e) {
+            throw new BackendServiceException("Staging failed: " + e.getMessage(), e);
+        }
     }
 
     private Production getProduction(String productionId) {
@@ -173,6 +185,26 @@ public class DummyBackendService implements BackendService {
             }
         }
         return null;
+    }
+
+    private String getOutputFile(String productionId) throws Exception {
+        File localDownloadDir = new PortalConfig(servletContext).getLocalDownloadDir();
+        String fileName = "test-" + productionId + ".dat";
+        File file = new File(localDownloadDir, fileName);
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            FileOutputStream stream = new FileOutputStream(file);
+            byte[] buffer = new byte[1024 * 1024];
+            try {
+                for (int i = 0; i < 32; i++) {
+                    Arrays.fill(buffer, (byte) i);
+                    stream.write(buffer);
+                }
+            } finally {
+                stream.close();
+            }
+        }
+        return fileName;
     }
 
     /**

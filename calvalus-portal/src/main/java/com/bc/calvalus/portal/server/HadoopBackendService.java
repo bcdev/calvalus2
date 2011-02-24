@@ -9,7 +9,6 @@ import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.WorkStatus;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.shellexec.XmlDoc;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,6 +31,8 @@ import java.util.Enumeration;
 
 /**
  * An BackendService implementation that delegates to a Hadoop cluster.
+ * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
+ * (context.xml or web.xml)
  */
 public class HadoopBackendService implements BackendService {
 
@@ -159,6 +160,13 @@ public class HadoopBackendService implements BackendService {
                     return path.getName().endsWith(".seq");
                 }
             });
+
+
+            File downloadDir = new File(new PortalConfig(servletContext).getLocalDownloadDir(),
+                                        outputPath.getName());
+            if (!downloadDir.exists()) {
+                downloadDir.mkdirs();
+            }
             for (FileStatus seqFile : seqFiles) {
                 Path seqProductPath = seqFile.getPath();
                 System.out.println("seqProductPath = " + seqProductPath);
@@ -166,9 +174,11 @@ public class HadoopBackendService implements BackendService {
                 Product product = reader.readProductNodes(null, null);
                 String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");
                 System.out.println("dimapProductName = " + dimapProductName);
-                ProductIO.writeProduct(product, new File(FileDownloadServlet.STAGING_DIR, dimapProductName), ProductIO.DEFAULT_FORMAT_NAME, false);
+                File productFile = new File(downloadDir, dimapProductName);
+                ProductIO.writeProduct(product, productFile, ProductIO.DEFAULT_FORMAT_NAME, false);
             }
-            return jobOutputDir + ".zip";
+            // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
+            return outputPath.getName() + ".zip";
         } catch (Exception e) {
             throw new BackendServiceException("Error: " + e.getMessage(), e);
         }

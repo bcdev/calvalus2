@@ -54,6 +54,32 @@
     <!-- Hadoop parameters -->
 
     <context-param>
+        <param-name>calvalus.portal.backendService.class</param-name>
+        <param-value>com.bc.calvalus.portal.server.DummyBackendService</param-value>
+        <!--<param-value>com.bc.calvalus.portal.server.HadoopBackendService</param-value>-->
+    </context-param>
+
+    <!-- value defaults to ${user.home}/.calvalus -->
+<!--
+    <context-param>
+        <param-name>calvalus.portal.base.dir</param-name>
+        <param-value>${user.home}/.calvalus</param-value>
+    </context-param>
+-->
+
+    <!-- value is relative to ${calvalus.portal.base.dir} -->
+    <context-param>
+        <param-name>calvalus.portal.download.dir</param-name>
+        <param-value>downloads</param-value>
+    </context-param>
+
+    <!-- value is relative to ${calvalus.portal.base.dir} -->
+    <context-param>
+        <param-name>calvalus.portal.upload.dir</param-name>
+        <param-value>uploads</param-value>
+    </context-param>
+
+    <context-param>
         <param-name>calvalus.hadoop.fs.default.name</param-name>
         <param-value>hdfs://cvmaster00:9000</param-value>
     </context-param>
