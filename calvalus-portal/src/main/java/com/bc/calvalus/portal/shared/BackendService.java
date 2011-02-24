@@ -8,16 +8,41 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendService extends RemoteService {
+    /**
+     * Gets all known product sets.
+     *
+     * @param filter A filter expression (not yet used).
+     * @return The product sets.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    PortalProductSet[] getProductSets(String filter) throws BackendServiceException;
 
-    PortalProductSet[] getProductSets(String type) throws BackendServiceException;
+    /**
+     * Gets all known processors.
+     *
+     * @param filter A filter expression (not yet used).
+     * @return The processors.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    PortalProcessor[] getProcessors(String filter) throws BackendServiceException;
 
-    PortalProcessor[] getProcessors(String type) throws BackendServiceException;
+    /**
+     * Gets all known productions.
+     *
+     * @param filter A filter expression (not yet used).
+     * @return The productions.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    PortalProduction[] getProductions(String filter) throws BackendServiceException;
 
-    PortalProduction[] getProductions(String type) throws BackendServiceException;
-
+    /**
+     * Orders a new productions.
+     *
+     * @param request The request.
+     * @return The response.
+     * @throws BackendServiceException If a server error occurred.
+     */
     PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException;
-
-    WorkStatus getProductionStatus(String productionId) throws BackendServiceException;
 
     boolean[] cancelProductions(String[] productionIds) throws BackendServiceException;
 

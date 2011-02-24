@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
@@ -21,7 +21,6 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
@@ -38,7 +37,6 @@ import java.util.List;
 public class ManageProductionsView extends PortalView {
     public static final String DOWNLOAD_ACTION_URL = GWT.getModuleBaseURL() + "download";
     public static final int ID = 3;
-    private static final int PRODUCTION_UPDATE_PERIOD = 500;
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
     private static final String DOWNLOAD = "Download";
@@ -94,7 +92,7 @@ public class ManageProductionsView extends PortalView {
         TextColumn<PortalProduction> messageColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
-                return production.getWorkStatus().getMessage();
+                return production.getStatus().getMessage();
             }
         };
         messageColumn.setSortable(true);
@@ -102,7 +100,7 @@ public class ManageProductionsView extends PortalView {
         Column<PortalProduction, String> actionColumn = new Column<PortalProduction, String>(new ButtonCell()) {
             @Override
             public String getValue(PortalProduction production) {
-                return production.getWorkStatus().isDone() ? RESTART : CANCEL;
+                return production.getStatus().isDone() ? RESTART : CANCEL;
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -110,7 +108,7 @@ public class ManageProductionsView extends PortalView {
         Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
             @Override
             public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
-                if (production.getWorkStatus().getState() == WorkStatus.State.COMPLETED) {
+                if (production.getStatus().getState() == PortalProductionStatus.State.COMPLETED) {
                     super.render(context, production, sb);
                 } else {
                     sb.appendHtmlConstant("<br/>");
@@ -119,7 +117,7 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(PortalProduction production) {
-                return production.getWorkStatus().getState() == WorkStatus.State.COMPLETED ? DOWNLOAD : INFO;
+                return production.getStatus().getState() == PortalProductionStatus.State.COMPLETED ? DOWNLOAD : INFO;
             }
         };
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -171,24 +169,6 @@ public class ManageProductionsView extends PortalView {
      */
     @Override
     public void handlePortalStartedUp() {
-        ListDataProvider<PortalProduction> productions = getPortal().getProductions();
-        List<PortalProduction> productionList = productions.getList();
-        for (PortalProduction production : productionList) {
-            addProduction(production);
-        }
-    }
-
-    public void addProduction(PortalProduction production) {
-        List<PortalProduction> list = getPortal().getProductions().getList();
-        if (!list.contains(production)) {
-            list.add(production);
-        }
-
-        if (!production.getWorkStatus().isDone()) {
-            ProductionHandler productionHandler = new ProductionHandler(production);
-            WorkMonitor workMonitor = new WorkMonitor(productionHandler, productionHandler);
-            workMonitor.start(PRODUCTION_UPDATE_PERIOD);
-        }
     }
 
     private void restartProduction(PortalProduction production) {
@@ -197,24 +177,25 @@ public class ManageProductionsView extends PortalView {
                              "Restart " + production);
     }
 
+    private void showProductionInfo(PortalProduction production) {
+        // todo - implement
+        Window.alert("Not implemented yet:\n" +
+                             "Show info on " + production);
+    }
+
     private void downloadProduction(PortalProduction production) {
         getPortal().getBackendService().stageProductionOutput(production.getId(), new AsyncCallback<String>() {
             @Override
             public void onSuccess(String result) {
                 Window.open(DOWNLOAD_ACTION_URL + "?file=" + result,
-                    "_blank", "");
+                            "_blank", "");
             }
+
             @Override
             public void onFailure(Throwable caught) {
                 Window.alert("Staging failed:\n" + caught.getMessage());
             }
         });
-    }
-
-    private void showProductionInfo(PortalProduction production) {
-        // todo - implement
-        Window.alert("Not implemented yet:\n" +
-                             "Show info on " + production);
     }
 
     private void cancelProduction(PortalProduction production) {
@@ -228,17 +209,15 @@ public class ManageProductionsView extends PortalView {
 
         getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, new AsyncCallback<boolean[]>() {
             @Override
-            public void onSuccess(boolean[] result) {
-                // ok
+            public void onSuccess(boolean[] results) {
+                Window.alert(countTruths(results) + " of " + results.length + " production(s) successfully cancelled.");
             }
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Cancellation failed:\n" + caught.getMessage());
+                Window.alert("Deletion failed:\n" + caught.getMessage());
             }
         });
-
-
     }
 
     private void deleteProductions(final List<PortalProduction> toDeleteList) {
@@ -262,18 +241,8 @@ public class ManageProductionsView extends PortalView {
         }
         getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<boolean[]>() {
             @Override
-            public void onSuccess(boolean[] result) {
-                List<PortalProduction> list1 = getPortal().getProductions().getList();
-                int deleteCount = 0;
-                for (int i = 0; i < result.length; i++) {
-                    if (result[i]) {
-                        deleteCount++;
-                        PortalProduction production = toDeleteList.get(i);
-                        list1.remove(production);
-                    }
-                }
-                getPortal().getProductions().refresh();
-                Window.alert(deleteCount + " of " + result.length + " production(s) successfully deleted.");
+            public void onSuccess(boolean[] results) {
+                Window.alert(countTruths(results) + " of " + results.length + " production(s) successfully deleted.");
             }
 
             @Override
@@ -283,20 +252,30 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
+    private int countTruths(boolean[] results) {
+        int deleteCount = 0;
+        for (boolean result : results) {
+            if (result) {
+                deleteCount++;
+            }
+        }
+        return deleteCount;
+    }
+
     private String getWorkStatusText(PortalProduction production) {
-        WorkStatus status = production.getWorkStatus();
-        WorkStatus.State state = status.getState();
-        if (state == WorkStatus.State.WAITING) {
+        PortalProductionStatus status = production.getStatus();
+        PortalProductionStatus.State state = status.getState();
+        if (state == PortalProductionStatus.State.WAITING) {
             return "Waiting to start...";
-        } else if (state == WorkStatus.State.IN_PROGRESS) {
+        } else if (state == PortalProductionStatus.State.IN_PROGRESS) {
             return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
-        } else if (state == WorkStatus.State.CANCELLED) {
+        } else if (state == PortalProductionStatus.State.CANCELLED) {
             return "Cancelled";
-        } else if (state == WorkStatus.State.ERROR) {
+        } else if (state == PortalProductionStatus.State.ERROR) {
             return "Error: " + status.getMessage();
-        } else if (state == WorkStatus.State.UNKNOWN) {
+        } else if (state == PortalProductionStatus.State.UNKNOWN) {
             return "Unknown: " + status.getMessage();
-        } else if (state == WorkStatus.State.COMPLETED) {
+        } else if (state == PortalProductionStatus.State.COMPLETED) {
             return "Completed";
         }
         return "?";
@@ -314,68 +293,6 @@ public class ManageProductionsView extends PortalView {
             } else if (INFO.equals(value)) {
                 showProductionInfo(production);
             }
-        }
-    }
-
-
-    /**
-     * A reporter for production status.
-     *
-     * @author Norman
-     */
-    public class ProductionHandler implements WorkReporter, WorkObserver {
-        private final PortalProduction production;
-        private WorkStatus reportedStatus;
-
-        public ProductionHandler(PortalProduction production) {
-            this.production = production;
-            this.reportedStatus = production.getWorkStatus();
-        }
-
-        @Override
-        public WorkStatus getWorkStatus() {
-            getPortal().getBackendService().getProductionStatus(production.getId(), new AsyncCallback<WorkStatus>() {
-                @Override
-                public void onSuccess(WorkStatus result) {
-                    reportedStatus = result;
-                    production.setWorkStatus(reportedStatus);
-                }
-
-                @Override
-                public void onFailure(Throwable caught) {
-                    reportedStatus = new WorkStatus(WorkStatus.State.UNKNOWN, caught.getMessage(), 0.0);
-                    production.setWorkStatus(reportedStatus);
-                }
-            });
-            return reportedStatus;
-        }
-
-        @Override
-        public void workStarted(WorkStatus status) {
-            processWorkStatus(status);
-        }
-
-        @Override
-        public void workProgressing(WorkStatus status) {
-            processWorkStatus(status);
-        }
-
-        @Override
-        public void workStopped(WorkStatus status) {
-            processWorkStatus(status);
-        }
-
-        private void processWorkStatus(WorkStatus status) {
-            getPortal().getProductions().refresh();
-            // GWT.log("processWorkStatus: status=" + status);
-        }
-
-        @Override
-        public String toString() {
-            return "ProductionReporter{" +
-                    "production=" + production +
-                    ", reportedStatus=" + reportedStatus +
-                    '}';
         }
     }
 

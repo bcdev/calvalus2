@@ -9,8 +9,6 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class PortalProductionRequest implements IsSerializable {
-    // todo - String userName;
-    // todo - Date creationDate;
     private String productionType;
     private PortalParameter[] productionParameters;
 

@@ -7,10 +7,11 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class WorkStatus implements IsSerializable {
+public class PortalProductionStatus implements IsSerializable {
+    private static final float EPS = 1.0E-04f;
     private State state;
     private String message;
-    private double progress;
+    private float progress;
 
     public enum State {
         /**
@@ -42,11 +43,15 @@ public class WorkStatus implements IsSerializable {
     /**
      * No-arg constructor as required by {@link IsSerializable}.
      */
-    public WorkStatus() {
-        this(State.WAITING, "", 0.0);
+    public PortalProductionStatus() {
+        this(State.WAITING);
     }
 
-    public WorkStatus(State state, String message, double progress) {
+    public PortalProductionStatus(State state) {
+        this(state, "", 0.0f);
+    }
+
+    public PortalProductionStatus(State state, String message, float progress) {
         this.state = state;
         this.message = message;
         this.progress = progress;
@@ -64,13 +69,42 @@ public class WorkStatus implements IsSerializable {
         return message;
     }
 
-    public double getProgress() {
+    public float getProgress() {
         return progress;
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        PortalProductionStatus that = (PortalProductionStatus) o;
+
+        float delta = that.progress - progress;
+        if (delta < 0) {
+            delta = -delta;
+        }
+
+        return delta <= EPS
+                && message.equals(that.message)
+                && state == that.state;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = state.hashCode();
+        result = 31 * result + message.hashCode();
+        result = 31 * result + (int) (progress / EPS);
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return "WorkStatus{" +
+        return "PortalProductionStatus{" +
                 "state=" + state +
                 ", message='" + message + '\'' +
                 ", progress=" + progress +

@@ -86,7 +86,6 @@ public class OrderL3ProductionView extends PortalView {
             getPortal().getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
                 public void onSuccess(final PortalProductionResponse response) {
                     ManageProductionsView view = (ManageProductionsView) getPortal().getView(ManageProductionsView.ID);
-                    view.addProduction(response.getProduction());
                     view.show();
                 }
 

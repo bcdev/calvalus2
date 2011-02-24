@@ -55,8 +55,8 @@
 
     <context-param>
         <param-name>calvalus.portal.backendService.class</param-name>
-        <param-value>com.bc.calvalus.portal.server.DummyBackendService</param-value>
-        <!--<param-value>com.bc.calvalus.portal.server.HadoopBackendService</param-value>-->
+        <!--<param-value>com.bc.calvalus.portal.server.DummyBackendService</param-value>-->
+        <param-value>com.bc.calvalus.portal.server.HadoopBackendService</param-value>
     </context-param>
 
     <!-- value defaults to ${user.home}/.calvalus -->

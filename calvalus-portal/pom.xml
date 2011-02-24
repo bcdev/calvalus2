@@ -53,7 +53,8 @@
             <artifactId>gwt-dev</artifactId>
             <version>${gwt.version}</version>
             <!--
-            Actually 'test' is correct, but with GWT 2.2.0 'mvn gwt:run' doesn't work and produces the following error:
+            todo - frequently check whether the following note still applies (nf)
+            Actually scope 'test' is correct, but with GWT 2.2.0 'mvn gwt:run' doesn't work and produces the following error:
             00:00:00,016 [ERROR] Unexpected error while processing XML
             java.lang.NoClassDefFoundError: com/google/gwt/core/ext/GeneratorExt
             -->
@@ -78,13 +79,32 @@
             <artifactId>junit</artifactId>
         </dependency>
 
-        <!-- todo - remove this dependency once decoupled from Hadoop -->
+        <!-- todo - remove these dependencies once decoupled from Hadoop -->
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-processing</artifactId>
+            <version>${calvalus.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envisat-reader</artifactId>
+            <version>1.4-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 

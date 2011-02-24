@@ -7,7 +7,7 @@ import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -64,7 +64,7 @@ public class HadoopBackendService implements BackendService {
     }
 
     @Override
-    public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
+    public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
         return new PortalProductSet[]{
                 new PortalProductSet("id1", "MERIS_RR__1P", "All MERIS RR L1b"),
                 new PortalProductSet("id2", "MERIS_RR__1P", "MERIS RR L1b 2004"),
@@ -72,14 +72,14 @@ public class HadoopBackendService implements BackendService {
     }
 
     @Override
-    public PortalProcessor[] getProcessors(String type) throws BackendServiceException {
+    public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
         return new PortalProcessor[]{
                 new PortalProcessor("id1", "MERIS_RR__1P", "MERIS Case2R", new String[]{"1.0"}),
         };
     }
 
     @Override
-    public PortalProduction[] getProductions(String type) throws BackendServiceException {
+    public PortalProduction[] getProductions(String filter) throws BackendServiceException {
         try {
             // todo - this is still wrong, must first load all (persistent) productions,
             //        then retrieve its Hadoop queue-ID and then call jobClient.getJobsFromQueue();
@@ -89,24 +89,14 @@ public class HadoopBackendService implements BackendService {
                 JobStatus jobStatus = jobStatuses[i];
                 RunningJob runningJob = jobClient.getJob(jobStatus.getJobID());
                 String productionId = jobStatus.getJobID().toString();
-                System.out.printf("Production %d: %s (id=%s)%n", (i + 1), runningJob.getJobName(), productionId);
+                // System.out.printf("Production %d: %s (id=%s)%n", (i + 1), runningJob.getJobName(), productionId);
                 productions.add(new PortalProduction(productionId,
                                                      runningJob.getJobName() + " (ID=" + productionId + ")",
-                                                     createWorkStatus(productionId, jobStatus)));
+                                                     createWorkStatus(jobStatus)));
             }
             return productions.toArray(new PortalProduction[productions.size()]);
         } catch (IOException e) {
             throw new BackendServiceException("Failed to retrieve job list from Hadoop.", e);
-        }
-    }
-
-    @Override
-    public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
-        try {
-            JobStatus jobStatus = getJobStatus(productionId);
-            return createWorkStatus(productionId, jobStatus);
-        } catch (IOException e) {
-            throw new BackendServiceException("Failed to retrieve job status from Hadoop.", e);
         }
     }
 
@@ -200,22 +190,21 @@ public class HadoopBackendService implements BackendService {
         return null;
     }
 
-    private WorkStatus createWorkStatus(String productionId, JobStatus job) throws IOException {
+    private PortalProductionStatus createWorkStatus(JobStatus job) throws IOException {
         if (job != null) {
-            float progress = (job.setupProgress() + job.cleanupProgress()
-                    + job.mapProgress() + job.reduceProgress()) / 4.0f;
+            float progress = (job.setupProgress() + job.cleanupProgress() + job.mapProgress() + job.reduceProgress()) / 4.0f;
             if (job.getRunState() == JobStatus.FAILED) {
-                return new WorkStatus(WorkStatus.State.ERROR, "Job failed.", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.ERROR, "Job failed.", progress);
             } else if (job.getRunState() == JobStatus.KILLED) {
-                return new WorkStatus(WorkStatus.State.CANCELLED, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.CANCELLED, "", progress);
             } else if (job.getRunState() == JobStatus.PREP) {
-                return new WorkStatus(WorkStatus.State.WAITING, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.WAITING, "", progress);
             } else if (job.getRunState() == JobStatus.RUNNING) {
-                return new WorkStatus(WorkStatus.State.IN_PROGRESS, "", progress);
+                return new PortalProductionStatus(PortalProductionStatus.State.IN_PROGRESS, "", progress);
             } else if (job.getRunState() == JobStatus.SUCCEEDED) {
-                return new WorkStatus(WorkStatus.State.COMPLETED, "", 1.0);
+                return new PortalProductionStatus(PortalProductionStatus.State.COMPLETED);
             }
         }
-        return new WorkStatus(WorkStatus.State.UNKNOWN, "", 0.0);
+        return new PortalProductionStatus(PortalProductionStatus.State.UNKNOWN);
     }
 }

@@ -5,7 +5,7 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -72,8 +72,8 @@ public class BackendServiceTest extends GWTTestCase {
             assertNotNull(response.getProduction());
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());
-            assertNotNull(response.getProduction().getWorkStatus());
-            assertEquals(WorkStatus.State.WAITING, response.getProduction().getWorkStatus().getState());
+            assertNotNull(response.getProduction().getStatus());
+            assertEquals(PortalProductionStatus.State.WAITING, response.getProduction().getStatus().getState());
 
             // Now that we have received a response, we need to tell the test runner
             // that the test is complete. You must call finishTest() after an

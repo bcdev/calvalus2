@@ -7,7 +7,7 @@ import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
@@ -36,28 +36,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
-        return delegate.getProductSets(type);
+    public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
+        return delegate.getProductSets(filter);
     }
 
     @Override
-    public PortalProcessor[] getProcessors(String type) throws BackendServiceException {
-        return delegate.getProcessors(type);
+    public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
+        return delegate.getProcessors(filter);
     }
 
     @Override
-    public PortalProduction[] getProductions(String type) throws BackendServiceException {
-        return delegate.getProductions(type);
+    public PortalProduction[] getProductions(String filter) throws BackendServiceException {
+        return delegate.getProductions(filter);
     }
 
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
         return delegate.orderProduction(productionRequest);
-    }
-
-    @Override
-    public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
-        return delegate.getProductionStatus(productionId);
     }
 
     @Override

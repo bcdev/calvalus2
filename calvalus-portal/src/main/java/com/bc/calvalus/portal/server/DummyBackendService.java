@@ -8,12 +8,11 @@ import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.WorkStatus;
+import com.bc.calvalus.portal.shared.PortalProductionStatus;
 
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +46,7 @@ public class DummyBackendService implements BackendService {
     }
 
     @Override
-    public PortalProductSet[] getProductSets(String type) throws BackendServiceException {
+    public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
         // Return some dummy product sets
         return new PortalProductSet[]{
                 new PortalProductSet("ps1", "MERIS-L1B", "MERIS RR 2004-2009"),
@@ -61,7 +60,7 @@ public class DummyBackendService implements BackendService {
     }
 
     @Override
-    public PortalProcessor[] getProcessors(String type) throws BackendServiceException {
+    public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
         // Return some dummy processors
         return new PortalProcessor[]{
                 new PortalProcessor("pc1", "MERIS-L2", "MERIS IOP Case2R",
@@ -74,14 +73,13 @@ public class DummyBackendService implements BackendService {
     }
 
     @Override
-    public PortalProduction[] getProductions(String type) throws BackendServiceException {
-        PortalProduction[] productions = new PortalProduction[productionList.size()];
-        for (int i = 0; i < productions.length; i++) {
-            productions[i] = new PortalProduction(productionList.get(i).getId(),
-                                                  productionList.get(i).getName());
+    public PortalProduction[] getProductions(String filter) throws BackendServiceException {
+        PortalProduction[] result = new PortalProduction[productionList.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = createPortalProduction(productionList.get(i));
 
         }
-        return productions;
+        return result;
     }
 
     @Override
@@ -108,28 +106,7 @@ public class DummyBackendService implements BackendService {
 
         productionList.add(production);
 
-        return new PortalProductionResponse(new PortalProduction(production.getId(),
-                                                                 productionName),
-                                            productionRequest);
-    }
-
-    @Override
-    public WorkStatus getProductionStatus(String productionId) throws BackendServiceException {
-        Production production = getProduction(productionId);
-        if (production == null) {
-            throw new BackendServiceException("Unknown production ID: " + productionId);
-        }
-        WorkStatus.State state;
-        if (production.isCancelled()) {
-            state = WorkStatus.State.CANCELLED;
-        } else if (production.isDone()) {
-            state = WorkStatus.State.COMPLETED;
-        } else {
-            state = WorkStatus.State.IN_PROGRESS;
-        }
-        return new WorkStatus(state,
-                              "",
-                              production.getProgress());
+        return new PortalProductionResponse(createPortalProduction(production), productionRequest);
     }
 
     @Override
@@ -166,6 +143,28 @@ public class DummyBackendService implements BackendService {
         } catch (Exception e) {
             throw new BackendServiceException("Staging failed: " + e.getMessage(), e);
         }
+    }
+
+    private PortalProductionStatus getProductionStatus(String productionId) throws BackendServiceException {
+        Production production = getProduction(productionId);
+        if (production == null) {
+            throw new BackendServiceException("Unknown production ID: " + productionId);
+        }
+        PortalProductionStatus.State state;
+        if (production.isCancelled()) {
+            state = PortalProductionStatus.State.CANCELLED;
+        } else if (production.isDone()) {
+            state = PortalProductionStatus.State.COMPLETED;
+        } else {
+            state = PortalProductionStatus.State.IN_PROGRESS;
+        }
+        return new PortalProductionStatus(state, "", production.getProgress());
+    }
+
+    private PortalProduction createPortalProduction(Production production) throws BackendServiceException {
+        return new PortalProduction(production.getId(),
+                                         production.getName(),
+                                         getProductionStatus(production.getId()));
     }
 
     private Production getProduction(String productionId) {
@@ -217,7 +216,7 @@ public class DummyBackendService implements BackendService {
         private final long startTime;
         private final long totalTime;
         private Timer timer;
-        private double progress;
+        private float progress;
         private boolean cancelled;
 
         /**
@@ -241,7 +240,7 @@ public class DummyBackendService implements BackendService {
             return name;
         }
 
-        public double getProgress() {
+        public float getProgress() {
             return progress;
         }
 
@@ -257,9 +256,9 @@ public class DummyBackendService implements BackendService {
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    progress = (double) (System.currentTimeMillis() - startTime) / (double) totalTime;
-                    if (progress >= 1.0) {
-                        progress = 1.0;
+                    progress = (float) (System.currentTimeMillis() - startTime) / (float) totalTime;
+                    if (progress >= 1.0f) {
+                        progress = 1.0f;
                         if (timer != null) {
                             stopTimer();
                         }

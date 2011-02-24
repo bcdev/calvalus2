@@ -10,6 +10,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
@@ -22,7 +23,9 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -30,6 +33,8 @@ import java.util.Arrays;
  * @author Norman
  */
 public class CalvalusPortal implements EntryPoint {
+
+    private static final int UPDATE_PERIOD_MILLIS = 1000;
 
     private final BackendServiceAsync backendService;
     private boolean initialised;
@@ -39,6 +44,7 @@ public class CalvalusPortal implements EntryPoint {
     private PortalProductSet[] productSets;
     private PortalProcessor[] processors;
     private ListDataProvider<PortalProduction> productions;
+    private Map<String, PortalProduction> productionsMap;
     private PortalView[] views;
     private HorizontalPanel mainPanel;
 
@@ -51,9 +57,9 @@ public class CalvalusPortal implements EntryPoint {
      */
     @Override
     public void onModuleLoad() {
-        backendService.getProductSets(null, new GetProductSetsCallback());
-        backendService.getProcessors(null, new GetProcessorsCallback());
-        backendService.getProductions(null, new GetProductionsCallback());
+        backendService.getProductSets(null, new InitProductSetsCallback());
+        backendService.getProcessors(null, new InitProcessorsCallback());
+        backendService.getProductions(null, new InitProductionsCallback());
     }
 
     public PortalProductSet[] getProductSets() {
@@ -119,6 +125,15 @@ public class CalvalusPortal implements EntryPoint {
         for (PortalView view : views) {
             view.handlePortalStartedUp();
         }
+
+        // Start a timer that periodically retrieves production statuses from server
+        Timer timer = new Timer() {
+            @Override
+            public void run() {
+                backendService.getProductions(null, new UpdateProductionsCallback());
+            }
+        };
+        timer.scheduleRepeating(UPDATE_PERIOD_MILLIS);
     }
 
     // test, test, test
@@ -171,7 +186,44 @@ public class CalvalusPortal implements EntryPoint {
                 && productions != null;
     }
 
-    private class GetProductSetsCallback implements AsyncCallback<PortalProductSet[]> {
+    private synchronized void updateProductions(PortalProduction[] unknownProductions) {
+        if (productions == null) {
+            productions = new ListDataProvider<PortalProduction>();
+            productionsMap = new HashMap<String, PortalProduction>();
+        }
+        boolean listChange = false;
+        boolean propertyChange = false;
+        ArrayList<PortalProduction> deletedProductions = new ArrayList<PortalProduction>(productions.getList());
+        for (int i = 0; i < unknownProductions.length; i++) {
+            PortalProduction unknownProduction = unknownProductions[i];
+            PortalProduction knownProduction = productionsMap.get(unknownProduction.getId());
+            if (knownProduction != null) {
+                if (!unknownProduction.getStatus().equals(knownProduction.getStatus())) {
+                    knownProduction.setStatus(unknownProduction.getStatus());
+                    propertyChange = true;
+                }
+                deletedProductions.remove(knownProduction);
+            } else {
+                productions.getList().add(i, unknownProduction);
+                productionsMap.put(unknownProduction.getId(), unknownProduction);
+                listChange = true;
+            }
+        }
+        for (PortalProduction deletedProduction : deletedProductions) {
+            productions.getList().remove(deletedProduction);
+            productionsMap.remove(deletedProduction.getId());
+            listChange = true;
+        }
+        // GWT.log("Updated productions: got " + productions.getList().size() + ",  listChange = " + listChange + ", propertyChange = " + propertyChange);
+        if (listChange) {
+            productions.flush();
+        }
+        if (propertyChange) {
+            productions.refresh();
+        }
+    }
+
+    private class InitProductSetsCallback implements AsyncCallback<PortalProductSet[]> {
         @Override
         public void onSuccess(PortalProductSet[] productSets) {
             CalvalusPortal.this.productSets = productSets;
@@ -185,7 +237,7 @@ public class CalvalusPortal implements EntryPoint {
         }
     }
 
-    private class GetProcessorsCallback implements AsyncCallback<PortalProcessor[]> {
+    private class InitProcessorsCallback implements AsyncCallback<PortalProcessor[]> {
         @Override
         public void onSuccess(PortalProcessor[] processors) {
             CalvalusPortal.this.processors = processors;
@@ -199,11 +251,10 @@ public class CalvalusPortal implements EntryPoint {
         }
     }
 
-    private class GetProductionsCallback implements AsyncCallback<PortalProduction[]> {
+    private class InitProductionsCallback implements AsyncCallback<PortalProduction[]> {
         @Override
         public void onSuccess(PortalProduction[] productions) {
-            CalvalusPortal.this.productions = new ListDataProvider<PortalProduction>();
-            CalvalusPortal.this.productions.getList().addAll(Arrays.asList(productions));
+            updateProductions(productions);
             maybeInitFrontend();
         }
 
@@ -211,6 +262,18 @@ public class CalvalusPortal implements EntryPoint {
         public void onFailure(Throwable caught) {
             Window.alert("Error!\n" + caught.getMessage());
             CalvalusPortal.this.productions = new ListDataProvider<PortalProduction>();
+        }
+    }
+
+    private class UpdateProductionsCallback implements AsyncCallback<PortalProduction[]> {
+        @Override
+        public void onSuccess(PortalProduction[] unknownProductions) {
+            updateProductions(unknownProductions);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("Failed to get productions from server", caught);
         }
     }
 }

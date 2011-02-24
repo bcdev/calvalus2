@@ -10,7 +10,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class PortalProduction implements IsSerializable {
     String id;
     String name;
-    WorkStatus workStatus;
+    PortalProductionStatus status;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -18,16 +18,19 @@ public class PortalProduction implements IsSerializable {
     public PortalProduction() {
     }
 
-    public PortalProduction(String id, String name) {
+    public PortalProduction(String id, String name, PortalProductionStatus status) {
+        if (id == null) {
+            throw new NullPointerException("id");
+        }
+        if (name == null) {
+            throw new NullPointerException("name");
+        }
+        if (status == null) {
+            throw new NullPointerException("status");
+        }
         this.id = id;
         this.name = name;
-        this.workStatus = new WorkStatus(WorkStatus.State.WAITING, "", 0.0);
-    }
-
-    public PortalProduction(String id, String name, WorkStatus workStatus) {
-        this.id = id;
-        this.name = name;
-        this.workStatus = workStatus;
+        this.status = status;
     }
 
     public String getId() {
@@ -38,12 +41,12 @@ public class PortalProduction implements IsSerializable {
         return name;
     }
 
-    public void setWorkStatus(WorkStatus workStatus) {
-        this.workStatus = workStatus;
+    public void setStatus(PortalProductionStatus status) {
+        this.status = status;
     }
 
-    public WorkStatus getWorkStatus() {
-        return workStatus;
+    public PortalProductionStatus getStatus() {
+        return status;
     }
 
     @Override
@@ -51,7 +54,7 @@ public class PortalProduction implements IsSerializable {
         return "PortalProduction{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", workStatus=" + workStatus +
+                ", status=" + status +
                 '}';
     }
 }
