@@ -3,9 +3,9 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class PortalProcessor implements IsSerializable {
-    private String id;
+    private String operator;
     private String name;
-    private String type;
+    private String bundle;
     private String[] versions;
 
     /**
@@ -14,23 +14,23 @@ public class PortalProcessor implements IsSerializable {
     public PortalProcessor() {
     }
 
-    public PortalProcessor(String id, String type, String name, String[] versions) {
-        this.id = id;
+    public PortalProcessor(String operator, String name, String bundle, String[] versions) {
+        this.operator = operator;
         this.name = name;
-        this.type = type;
+        this.bundle = bundle;
         this.versions = versions;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public String getType() {
-        return type;
+    public String getOperator() {
+        return operator;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getBundle() {
+        return bundle;
     }
 
     public String[] getVersions() {

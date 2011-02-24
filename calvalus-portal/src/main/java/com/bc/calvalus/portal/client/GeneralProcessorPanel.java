@@ -41,7 +41,7 @@ public class GeneralProcessorPanel implements IsWidget {
         processor = new ListBox();
         processor.setName("processorListBox");
         for (PortalProcessor processor : portal.getProcessors()) {
-            this.processor.addItem(processor.getName(), processor.getId());
+            this.processor.addItem(processor.getName(), processor.getOperator());
         }
         if (portal.getProcessors().length > 0) {
             processor.setSelectedIndex(0);

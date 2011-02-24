@@ -60,11 +60,11 @@ public class DummyBackendService implements BackendService {
     public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
         // Return some dummy processors
         return new PortalProcessor[]{
-                new PortalProcessor("pc1", "MERIS-L2", "MERIS IOP Case2R",
+                new PortalProcessor("pc1", "MERIS IOP Case2R", "MERIS-L2",
                                     new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
-                new PortalProcessor("pc2", "MERIS-L2", "MERIS IOP QAA",
+                new PortalProcessor("pc2", "MERIS IOP QAA", "MERIS-L2",
                                     new String[]{"1.2-SNAPSHOT", "1.1.3", "1.0.1"}),
-                new PortalProcessor("pc3", "General", "Band Maths",
+                new PortalProcessor("pc3", "Band Maths", "General",
                                     new String[]{"4.8"}),
         };
     }

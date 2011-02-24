@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
+import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
@@ -19,15 +20,21 @@ import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An BackendService implementation that delegates to a Hadoop cluster.
@@ -74,7 +81,7 @@ public class HadoopBackendService implements BackendService {
     @Override
     public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
         return new PortalProcessor[]{
-                new PortalProcessor("id1", "MERIS_RR__1P", "MERIS Case2R", new String[]{"1.0"}),
+                new PortalProcessor("CoastColour.L2W", "MERIS CoastColour", "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
         };
     }
 
@@ -107,9 +114,56 @@ public class HadoopBackendService implements BackendService {
             return new PortalProductionResponse(1, "Unhandled production type '" + productionType + "'");
         }
 
+        Map<String, String> productionParameters = getProductionParametersMap(productionRequest);
 
+        VelocityEngine ve = new VelocityEngine();
+        try {
+            ve.init();
+        } catch (Exception e) {
+            servletContext.log(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
+        }
+
+        String productionId = Long.toHexString(System.nanoTime());
+
+        VelocityContext context = new VelocityContext();
+        context.put("productionId", productionId);
+        context.put("processorPackage", "beam-lkn");
+        context.put("processorVersion", "1.0-SNAPSHOT");
+        context.put("outputDir", "output-" + productionId);
+        context.put("inputFiles", getInputFiles(productionParameters));
+        context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
+        context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
+        context.put("l3Parameters", getLevel3Parameters(productionParameters));
+
+        String wpsXml;
+        try {
+            Template temp = ve.getTemplate("level3-wps-request.xml.vm");
+            StringWriter writer = new StringWriter();
+            temp.merge(context, writer);
+            wpsXml = writer.toString();
+        } catch (Exception e) {
+            throw new BackendServiceException("Failed to generate WPS XML request", e);
+        }
+        System.out.println("wpsXml = " + wpsXml);
 
         return new PortalProductionResponse(new PortalProduction("", "", null));
+    }
+
+    private String[] getInputFiles(Map<String, String> productionParameters) {
+        return new String[0];
+    }
+
+    private String getLevel3Parameters(Map<String, String> productionParameters) {
+        return "";  // todo
+    }
+
+    private Map<String, String> getProductionParametersMap(PortalProductionRequest productionRequest) {
+        HashMap<String, String> productionParametersMap = new HashMap<String, String>();
+        PortalParameter[] productionParameters = productionRequest.getProductionParameters();
+        for (PortalParameter productionParameter : productionParameters) {
+            productionParametersMap.put(productionParameter.getName(), productionParameter.getValue());
+        }
+        return productionParametersMap;
     }
 
     @Override

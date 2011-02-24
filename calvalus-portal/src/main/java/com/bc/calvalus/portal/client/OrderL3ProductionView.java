@@ -10,6 +10,10 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Demo view that lets users submit a new L2 production.
  *
@@ -66,19 +70,19 @@ public class OrderL3ProductionView extends PortalView {
     private class SubmitHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
+            ArrayList<PortalParameter> parameters = new ArrayList<PortalParameter>();
+            parameters.addAll(Arrays.asList(new PortalParameter("inputProductSetId",
+                                                                inputOutputPanel.getInputProductSetId()),
+                                            new PortalParameter("outputFileName",
+                                                                inputOutputPanel.getOutputFileName()),
+                                            new PortalParameter("l2OperatorName",
+                                                                l2ProcessorPanel.getProcessorId()),
+                                            new PortalParameter("l2OperatorParameters",
+                                                                l2ProcessorPanel.getProcessorParameters())));
+            parameters.addAll(l3ProcessorPanel.getParameterList());
             PortalProductionRequest request = new PortalProductionRequest("calvalus.level3",
-                                                                          new PortalParameter("inputProductSetId",
-                                                                                              inputOutputPanel.getInputProductSetId()),
-                                                                          new PortalParameter("outputFileName",
-                                                                                              inputOutputPanel.getOutputFileName()),
-                                                                          new PortalParameter("l3ProcessorParameters",
-                                                                                              l3ProcessorPanel.getProcessorParameters()),
-                                                                          new PortalParameter("l2ProcessorId",
-                                                                                              l2ProcessorPanel.getProcessorId()),
-                                                                          new PortalParameter("l2ProcessorVersion",
-                                                                                              l2ProcessorPanel.getProcessorVersion()),
-                                                                          new PortalParameter("l2ProcessorParameters",
-                                                                                              l2ProcessorPanel.getProcessorParameters()));
+                                                                          parameters.toArray(new PortalParameter[parameters.size()]));
+
             getPortal().orderProduction(request);
         }
 

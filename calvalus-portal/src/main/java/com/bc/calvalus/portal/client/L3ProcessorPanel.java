@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.PortalParameter;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -18,7 +19,9 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -180,7 +183,7 @@ public class L3ProcessorPanel implements IsWidget {
         spatialParams.setWidget(2, 2, new Label("deg"));
         spatialParams.setWidget(3, 0, new Label("Resolution:"));
         spatialParams.setWidget(3, 1, resolution);
-        spatialParams.setWidget(3, 2, new Label("deg/pixel"));
+        spatialParams.setWidget(3, 2, new Label("km/pixel"));
 
         VerticalPanel panel = new VerticalPanel();
         panel.setSpacing(4);
@@ -220,29 +223,21 @@ public class L3ProcessorPanel implements IsWidget {
         return widget;
     }
 
-    public String getProcessorParameters() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<parameters>");
-        sb.append(createParameterElement("variables", variables.getText()));
-        sb.append(createParameterElement("validMask", validMask.getText()));
-        sb.append(createParameterElement("aggregator", aggregator.getValue(aggregator.getSelectedIndex())));
-        sb.append(createParameterElement("weightCoeff", weightCoeff.getText()));
-        sb.append(createParameterElement("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue())));
-        sb.append(createParameterElement("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue())));
-        sb.append(createParameterElement("periodCount", periodCount.getText()));
-        sb.append(createParameterElement("periodLength", periodLength.getText()));
-        sb.append(createParameterElement("lonMin", lonMin.getText()));
-        sb.append(createParameterElement("lonMax", lonMax.getText()));
-        sb.append(createParameterElement("latMin", latMin.getText()));
-        sb.append(createParameterElement("latMax", latMax.getText()));
-        sb.append(createParameterElement("resolution", resolution.getText()));
-        sb.append(createParameterElement("superSampling", superSampling.getText()));
-        sb.append("</parameters>");
-        return sb.toString();
+    public List<PortalParameter> getParameterList() {
+       return  Arrays.asList(
+                new PortalParameter("variables", variables.getText()),
+                new PortalParameter("validMask", validMask.getText()),
+                new PortalParameter("aggregator", aggregator.getValue(aggregator.getSelectedIndex())),
+                new PortalParameter("weightCoeff", weightCoeff.getText()),
+                new PortalParameter("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue())),
+                new PortalParameter("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue())),
+                new PortalParameter("periodCount", periodCount.getText()),
+                new PortalParameter("periodLength", periodLength.getText()),
+                new PortalParameter("lonMin", lonMin.getText()),
+                new PortalParameter("lonMax", lonMax.getText()),
+                new PortalParameter("latMin", latMin.getText()),
+                new PortalParameter("latMax", latMax.getText()),
+                new PortalParameter("resolution", resolution.getText()),
+                new PortalParameter("superSampling", superSampling.getText()));
     }
-
-    private String createParameterElement(String s1, String s2) {
-        return "<" + s1 + ">" + s2 + "</" + s1 + ">";
-    }
-
 }
