@@ -108,7 +108,8 @@ public class ManageProductionsView extends PortalView {
         Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
             @Override
             public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
-                if (production.getStatus().getState() == PortalProductionStatus.State.COMPLETED) {
+                if (production.getOutputPath() != null
+                        && PortalProductionStatus.State.COMPLETED.equals(production.getStatus().getState())) {
                     super.render(context, production, sb);
                 } else {
                     sb.appendHtmlConstant("<br/>");
@@ -117,7 +118,7 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(PortalProduction production) {
-                return production.getStatus().getState() == PortalProductionStatus.State.COMPLETED ? DOWNLOAD : INFO;
+                return DOWNLOAD;
             }
         };
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -184,18 +185,8 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(PortalProduction production) {
-        getPortal().getBackendService().stageProductionOutput(production.getId(), new AsyncCallback<String>() {
-            @Override
-            public void onSuccess(String result) {
-                Window.open(DOWNLOAD_ACTION_URL + "?file=" + result,
-                            "_blank", "");
-            }
-
-            @Override
-            public void onFailure(Throwable caught) {
-                Window.alert("Staging failed:\n" + caught.getMessage());
-            }
-        });
+        Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputPath(),
+                     "_blank", "");
     }
 
     private void cancelProduction(PortalProduction production) {
@@ -207,10 +198,10 @@ public class ManageProductionsView extends PortalView {
             return;
         }
 
-        getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, new AsyncCallback<boolean[]>() {
+        getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
             @Override
-            public void onSuccess(boolean[] results) {
-                Window.alert(countTruths(results) + " of " + results.length + " production(s) successfully cancelled.");
+            public void onSuccess(Void ignored) {
+                // ok, result will display soon
             }
 
             @Override
@@ -239,10 +230,10 @@ public class ManageProductionsView extends PortalView {
         for (int i = 0; i < productionIds.length; i++) {
             productionIds[i] = toDeleteList.get(i).getId();
         }
-        getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<boolean[]>() {
+        getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<Void>() {
             @Override
-            public void onSuccess(boolean[] results) {
-                Window.alert(countTruths(results) + " of " + results.length + " production(s) successfully deleted.");
+            public void onSuccess(Void ignored) {
+                // ok, result will display soon
             }
 
             @Override
@@ -252,29 +243,19 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private int countTruths(boolean[] results) {
-        int deleteCount = 0;
-        for (boolean result : results) {
-            if (result) {
-                deleteCount++;
-            }
-        }
-        return deleteCount;
-    }
-
     private String getWorkStatusText(PortalProduction production) {
         PortalProductionStatus status = production.getStatus();
         PortalProductionStatus.State state = status.getState();
         if (state == PortalProductionStatus.State.WAITING) {
-            return "Waiting to start...";
+            return "Waiting";
         } else if (state == PortalProductionStatus.State.IN_PROGRESS) {
             return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
         } else if (state == PortalProductionStatus.State.CANCELLED) {
             return "Cancelled";
         } else if (state == PortalProductionStatus.State.ERROR) {
-            return "Error: " + status.getMessage();
+            return "Error";
         } else if (state == PortalProductionStatus.State.UNKNOWN) {
-            return "Unknown: " + status.getMessage();
+            return "Unknown";
         } else if (state == PortalProductionStatus.State.COMPLETED) {
             return "Completed";
         }

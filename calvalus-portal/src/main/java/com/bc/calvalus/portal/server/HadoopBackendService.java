@@ -50,7 +50,7 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
 
 /**
  * An BackendService implementation that delegates to a Hadoop cluster.
@@ -63,14 +63,11 @@ public class HadoopBackendService implements BackendService {
     private final ServletContext servletContext;
     private final Configuration hadoopConf;
     private final JobClient jobClient;
-    private final Timer hadoopObservationTimer;
     // todo - Persist
     private final List<HadoopProduction> productionsList;
     // todo - Persist
     private final Map<String, HadoopProduction> productionsMap;
     private final VelocityEngine velocityEngine;
-
-    private Exception updateError;
     // todo - Persist
     private static long outputFileNum = 0;
 
@@ -79,7 +76,7 @@ public class HadoopBackendService implements BackendService {
         this.hadoopConf = new Configuration();
         this.productionsList = new ArrayList<HadoopProduction>();
         this.productionsMap = new HashMap<String, HadoopProduction>();
-        this.hadoopObservationTimer = new Timer(true);
+        Timer hadoopObservationTimer = new Timer(true);
         this.velocityEngine = new VelocityEngine();
 
         initVelocityEngine();
@@ -89,9 +86,9 @@ public class HadoopBackendService implements BackendService {
         InetSocketAddress trackerAddr = NetUtils.createSocketAddr(target);
         this.jobClient = new JobClient(trackerAddr, hadoopConf);
 
-        this.hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
-                                                        HADOOP_OBSERVATION_PERIOD / 2,
-                                                        HADOOP_OBSERVATION_PERIOD);
+        hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
+                                                   HADOOP_OBSERVATION_PERIOD / 2,
+                                                   HADOOP_OBSERVATION_PERIOD);
     }
 
     @Override
@@ -128,6 +125,7 @@ public class HadoopBackendService implements BackendService {
                 HadoopProduction hadoopProduction = productionsList.get(i);
                 portalProductions[i] = new PortalProduction(hadoopProduction.getId(),
                                                             hadoopProduction.getName(),
+                                                            hadoopProduction.getOutputPath(),
                                                             getPortalProductionStatus(hadoopProduction.getJobStatus()));
             }
             return portalProductions;
@@ -146,31 +144,36 @@ public class HadoopBackendService implements BackendService {
     }
 
     @Override
-    public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
-        try {
-            boolean[] result = new boolean[productionIds.length];
-            synchronized (productionsList) {
-                for (int i = 0; i < productionIds.length; i++) {
-                    HadoopProduction hadoopProduction = productionsMap.get(productionIds);
-                    if (hadoopProduction != null) {
+    public void cancelProductions(String[] productionIds) throws BackendServiceException {
+        requestProductionKill(productionIds, HadoopProduction.Request.CANCEL);
+    }
+
+    @Override
+    public void deleteProductions(String[] productionIds) throws BackendServiceException {
+        requestProductionKill(productionIds, HadoopProduction.Request.DELETE);
+    }
+
+    private void requestProductionKill(String[] productionIds, HadoopProduction.Request request) throws BackendServiceException {
+        synchronized (productionsList) {
+            int count = 0;
+            for (int i = 0; i < productionIds.length; i++) {
+                HadoopProduction hadoopProduction = productionsMap.get(productionIds);
+                if (hadoopProduction != null) {
+                    hadoopProduction.setRequest(request);
+                    try {
                         hadoopProduction.getJob().killJob();
-                        result[i] = true;
+                        count++;
+                    } catch (IOException e) {
+                        // nothing to do here
                     }
                 }
             }
-            return result;
-        } catch (IOException e) {
-            throw new BackendServiceException("Failed to cancel jobs", e);
+            if (count < productionIds.length) {
+                throw new BackendServiceException(String.format("Only %d of %d production(s) have been deleted.", count, productionIds.length));
+            }
         }
     }
 
-    @Override
-    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
-        // todo - delete productions as well.
-        return cancelProductions(productionIds);
-    }
-
-    @Override
     public String stageProductionOutput(String productionId) throws BackendServiceException {
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
         try {
@@ -222,12 +225,14 @@ public class HadoopBackendService implements BackendService {
                                               productionType,
                                               productionParameters.get("inputProductSetId"),
                                               productionParameters.get("l2OperatorName"));
-        String wpsXml = createL3WpsXml(productionId, productionType, productionName, productionParameters);
+        String outputDir = getOutputDir(productionType, productionParameters);
+        String wpsXml = createL3WpsXml(productionId, productionName, productionParameters, outputDir);
         Job job = submitL3Job(wpsXml);
-        HadoopProduction hadoopProduction = new HadoopProduction(productionId, productionName, job);
+        HadoopProduction hadoopProduction = new HadoopProduction(productionId, productionName, outputDir, job);
         addProduction(hadoopProduction);
         return new PortalProductionResponse(new PortalProduction(hadoopProduction.getId(),
                                                                  hadoopProduction.getName(),
+                                                                 hadoopProduction.getOutputPath(),
                                                                  new PortalProductionStatus(PortalProductionStatus.State.WAITING)));
     }
 
@@ -245,7 +250,7 @@ public class HadoopBackendService implements BackendService {
         }
     }
 
-    private String createL3WpsXml(String productionId, String productionType, String productionName, Map<String, String> productionParameters) throws BackendServiceException {
+    private String createL3WpsXml(String productionId, String productionName, Map<String, String> productionParameters, String outputDir) throws BackendServiceException {
         String[] inputFiles;
         try {
             inputFiles = getInputFiles(productionParameters);
@@ -259,9 +264,8 @@ public class HadoopBackendService implements BackendService {
         context.put("productionName", productionName);
         context.put("processorPackage", "beam-lkn");
         context.put("processorVersion", "1.0-SNAPSHOT");
-        context.put("outputDir", "output-" + productionId);
         context.put("inputFiles", inputFiles);
-        context.put("outputDir", getOutputDir(productionType, productionParameters));
+        context.put("outputDir", outputDir);
         context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
         context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
         context.put("superSampling", productionParameters.get("superSampling"));
@@ -380,16 +384,6 @@ public class HadoopBackendService implements BackendService {
     }
 
 
-    private static JobStatus findJobStatus(JobStatus[] jobsStatuses, String productionId) {
-        JobID jobID = JobID.forName(productionId);
-        for (JobStatus jobStatus : jobsStatuses) {
-            if (jobStatus.getJobID().equals(jobID)) {
-                return jobStatus;
-            }
-        }
-        return null;
-    }
-
     private PortalProductionStatus getPortalProductionStatus(JobStatus job) {
         if (job != null) {
             float progress = (job.setupProgress() + job.cleanupProgress() + job.mapProgress() + job.reduceProgress()) / 4.0f;
@@ -458,24 +452,52 @@ public class HadoopBackendService implements BackendService {
     private void updateProductionsState() throws IOException {
         Map<JobID, JobStatus> jobStatusMap = getJobStatusMap();
         synchronized (productionsList) {
-            for (HadoopProduction production : productionsList) {
+            HadoopProduction[] productions = productionsList.toArray(new HadoopProduction[0]);
+
+            // Update state of all registered productions
+            for (HadoopProduction production : productions) {
                 production.setJobStatus(jobStatusMap.get(production.getJob().getJobID()));
             }
 
-            // todo - delete productions where deletetion was requested and JobStatus is done
+            // Now try to delete productions
+            for (HadoopProduction production : productions) {
+                if (HadoopProduction.Request.DELETE.equals(production.getRequest())) {
+                    JobStatus jobStatus = production.getJobStatus();
+                    if (isDone(jobStatus)) {
+                        removeProduction(production);
+                    }
+                }
+            }
         }
     }
 
+    private boolean isDone(JobStatus jobStatus) {
+        return !isRunning(jobStatus);
+    }
+
+    private boolean isRunning(JobStatus jobStatus) {
+        return jobStatus.getRunState() == JobStatus.PREP
+                || jobStatus.getRunState() == JobStatus.RUNNING;
+    }
+
     private class HadoopObservationTask extends TimerTask {
+        private long lastLog;
+
         @Override
         public void run() {
             try {
                 updateProductionsState();
             } catch (IOException e) {
-                updateError = e;
+                logError(e);
+            }
+        }
+
+        private void logError(IOException e) {
+            long time = System.currentTimeMillis();
+            if (time - lastLog > 120 * 1000L) {
+                servletContext.log("Failed to update production state:" + e.getMessage(), e);
+                lastLog = time;
             }
         }
     }
-
-
 }

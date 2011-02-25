@@ -10,6 +10,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class PortalProduction implements IsSerializable {
     String id;
     String name;
+    String outputPath;
     PortalProductionStatus status;
 
     /**
@@ -18,7 +19,7 @@ public class PortalProduction implements IsSerializable {
     public PortalProduction() {
     }
 
-    public PortalProduction(String id, String name, PortalProductionStatus status) {
+    public PortalProduction(String id, String name,  String outputPath, PortalProductionStatus status) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -30,6 +31,7 @@ public class PortalProduction implements IsSerializable {
         }
         this.id = id;
         this.name = name;
+        this.outputPath = outputPath;
         this.status = status;
     }
 
@@ -45,6 +47,10 @@ public class PortalProduction implements IsSerializable {
         this.status = status;
     }
 
+    public String getOutputPath() {
+        return outputPath;
+    }
+
     public PortalProductionStatus getStatus() {
         return status;
     }
@@ -57,4 +63,5 @@ public class PortalProduction implements IsSerializable {
                 ", status=" + status +
                 '}';
     }
+
 }

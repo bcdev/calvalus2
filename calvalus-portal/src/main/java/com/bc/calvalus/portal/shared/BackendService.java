@@ -44,9 +44,7 @@ public interface BackendService extends RemoteService {
      */
     PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException;
 
-    boolean[] cancelProductions(String[] productionIds) throws BackendServiceException;
+    void cancelProductions(String[] productionIds) throws BackendServiceException;
 
-    boolean[] deleteProductions(String[] productionIds) throws BackendServiceException;
-
-    String stageProductionOutput(String productionId) throws BackendServiceException;
+    void deleteProductions(String[] productionIds) throws BackendServiceException;
 }

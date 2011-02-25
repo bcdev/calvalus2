@@ -13,15 +13,23 @@ import java.io.IOException;
  * @author Norman
  */
 class HadoopProduction {
+   public static enum Request {
+       CANCEL,
+       DELETE,
+       RESTART,
+   }
 
     private final String id;
     private final String name;
+    private final String outputPath;
     private final Job job;
     private JobStatus jobStatus;
+    private Request request;
 
-    public HadoopProduction(String id, String name, Job job) {
+    public HadoopProduction(String id, String name, String outputPath, Job job) {
         this.id = id;
         this.name = name;
+        this.outputPath = outputPath;
         this.job = job;
     }
 
@@ -31,6 +39,10 @@ class HadoopProduction {
 
     public String getName() {
         return name;
+    }
+
+    public String getOutputPath() {
+        return outputPath;
     }
 
     public Job getJob() {
@@ -45,4 +57,11 @@ class HadoopProduction {
         this.jobStatus = jobStatus;
     }
 
+    public Request getRequest() {
+        return request;
+    }
+
+    public void setRequest(Request request) {
+        this.request = request;
+    }
 }

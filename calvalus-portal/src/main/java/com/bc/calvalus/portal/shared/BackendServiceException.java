@@ -1,6 +1,8 @@
 package com.bc.calvalus.portal.shared;
 
-public class BackendServiceException extends Exception {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class BackendServiceException extends Exception implements IsSerializable {
     BackendServiceException() {
     }
 
@@ -10,5 +12,9 @@ public class BackendServiceException extends Exception {
 
     public BackendServiceException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public BackendServiceException(Throwable cause) {
+        super(cause);
     }
 }

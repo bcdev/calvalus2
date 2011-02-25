@@ -11,11 +11,10 @@ import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,9 +33,9 @@ public class DummyBackendService implements BackendService {
         this.servletContext = servletContext;
         productionList = Collections.synchronizedList(new ArrayList<DummyProduction>(32));
         // Add some dummy productions
-        productionList.add(new DummyProduction("Formatting all hard drives", 20 * 1000));
-        productionList.add(new DummyProduction("Drying CD slots", 10 * 1000));
-        productionList.add(new DummyProduction("Rewriting kernel using BASIC", 5 * 1000));
+        productionList.add(new DummyProduction("Formatting all hard drives", 20 * 1000, null));
+        productionList.add(new DummyProduction("Drying CD slots", 10 * 1000, null));
+        productionList.add(new DummyProduction("Rewriting kernel using BASIC", 5 * 1000, null));
         for (DummyProduction production : productionList) {
             production.start();
         }
@@ -91,12 +90,15 @@ public class DummyBackendService implements BackendService {
         if (!PortalProductionRequest.isValid(productionRequest)) {
             throw new BackendServiceException("Invalid processing request.");
         }
+        File downloadDir;
+        try {
+            downloadDir = new PortalConfig(servletContext).getLocalDownloadDir();
+        } catch (ServletException e) {
+            throw new BackendServiceException(e);
+        }
 
         String productionType = productionRequest.getProductionType();
-        String outputFileName = getProductionParameter(productionRequest, "outputFileName")
-                .replace("${user}", System.getProperty("user.name", "hadoop"))
-                .replace("${type}", productionType)
-                .replace("${num}", (++counter) + "");
+        String outputFileName = getOutputFile(productionRequest, productionType);
         String inputProductSetId = getProductionParameter(productionRequest, "inputProductSetId");
         String productionName = MessageFormat.format("Producing file ''{0}'' from ''{1}'' using workflow ''{2}''",
                                                      outputFileName,
@@ -104,47 +106,48 @@ public class DummyBackendService implements BackendService {
                                                      productionType);
 
         long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
-        DummyProduction production = new DummyProduction(productionName, secondsToRun * 1000);
+        DummyProduction production = new DummyProduction(productionName, secondsToRun * 1000,
+                                                         new File(downloadDir, outputFileName));
         production.start();
-
         productionList.add(production);
-
         return new PortalProductionResponse(createPortalProduction(production));
     }
 
+    private String getOutputFile(PortalProductionRequest productionRequest, String productionType) {
+        return getProductionParameter(productionRequest, "outputFileName")
+                .replace("${user}", System.getProperty("user.name", "Mrs Dummy"))
+                .replace("${type}", productionType)
+                .replace("${num}", (++counter) + "");
+    }
+
     @Override
-    public boolean[] cancelProductions(String[] productionIds) throws BackendServiceException {
-        boolean[] results = new boolean[productionIds.length];
+    public void cancelProductions(String[] productionIds) throws BackendServiceException {
+        int count = 0;
         for (int i = 0; i < productionIds.length; i++) {
             DummyProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
-                results[i] = true;
+                count++;
             }
         }
-        return results;
+        if (count < productionIds.length) {
+            throw new BackendServiceException(String.format("Only %d of %d production(s) have been cancelled.", count, productionIds.length));
+        }
     }
 
     @Override
-    public boolean[] deleteProductions(String[] productionIds) throws BackendServiceException {
-        boolean[] results = new boolean[productionIds.length];
+    public void deleteProductions(String[] productionIds) throws BackendServiceException {
+        int count = 0;
         for (int i = 0; i < productionIds.length; i++) {
             DummyProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
                 productionList.remove(production);
-                results[i] = true;
+                count++;
             }
         }
-        return results;
-    }
-
-    @Override
-    public String stageProductionOutput(String productionId) throws BackendServiceException {
-        try {
-            return getOutputFile(productionId);
-        } catch (Exception e) {
-            throw new BackendServiceException("Staging failed: " + e.getMessage(), e);
+        if (count < productionIds.length) {
+            throw new BackendServiceException(String.format("Only %d of %d production(s) have been deleted.", count, productionIds.length));
         }
     }
 
@@ -166,8 +169,9 @@ public class DummyBackendService implements BackendService {
 
     private PortalProduction createPortalProduction(DummyProduction production) throws BackendServiceException {
         return new PortalProduction(production.getId(),
-                                         production.getName(),
-                                         getProductionStatus(production.getId()));
+                                    production.getName(),
+                                    production.getOutputPath(),
+                                    getProductionStatus(production.getId()));
     }
 
     private DummyProduction getProduction(String productionId) {
@@ -187,26 +191,6 @@ public class DummyBackendService implements BackendService {
             }
         }
         return null;
-    }
-
-    private String getOutputFile(String productionId) throws Exception {
-        File localDownloadDir = new PortalConfig(servletContext).getLocalDownloadDir();
-        String fileName = "test-" + productionId + ".dat";
-        File file = new File(localDownloadDir, fileName);
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            FileOutputStream stream = new FileOutputStream(file);
-            byte[] buffer = new byte[1024 * 1024];
-            try {
-                for (int i = 0; i < 32; i++) {
-                    Arrays.fill(buffer, (byte) i);
-                    stream.write(buffer);
-                }
-            } finally {
-                stream.close();
-            }
-        }
-        return fileName;
     }
 
 }

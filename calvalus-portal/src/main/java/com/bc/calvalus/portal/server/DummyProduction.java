@@ -1,5 +1,8 @@
 package com.bc.calvalus.portal.server;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -13,8 +16,9 @@ class DummyProduction {
     private static final Random idGen = new Random();
     private final String id;
     private final String name;
+    private final File outputFile;
     private final long startTime;
-    private final long totalTime;
+    private final long duration;
     private Timer timer;
     private float progress;
     private boolean cancelled;
@@ -22,13 +26,14 @@ class DummyProduction {
     /**
      * Constructs a new dummy production.
      *
-     * @param name      Some name.
-     * @param totalTime The total time in ms to run.
+     * @param name     Some name.
+     * @param duration The total time in ms to run.
      */
-    public DummyProduction(String name, long totalTime) {
+    public DummyProduction(String name, long duration, File outputFile) {
         this.id = Long.toHexString(idGen.nextLong());
         this.name = name;
-        this.totalTime = totalTime;
+        this.outputFile = outputFile;
+        this.duration = duration;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -38,6 +43,10 @@ class DummyProduction {
 
     public String getName() {
         return name;
+    }
+
+    public String getOutputPath() {
+        return outputFile != null ? outputFile.getName() : null;
     }
 
     public float getProgress() {
@@ -56,10 +65,17 @@ class DummyProduction {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                progress = (float) (System.currentTimeMillis() - startTime) / (float) totalTime;
+                progress = (float) (System.currentTimeMillis() - startTime) / (float) duration;
                 if (progress >= 1.0f) {
                     progress = 1.0f;
                     if (timer != null) {
+                        if (outputFile != null) {
+                            try {
+                                writeOutputFile();
+                            } catch (Exception e) {
+                                // shit
+                            }
+                        }
                         stopTimer();
                     }
                 }
@@ -81,4 +97,22 @@ class DummyProduction {
         timer.cancel();
         timer = null;
     }
+
+    private void writeOutputFile() throws Exception {
+        if (!outputFile.exists()) {
+            outputFile.getParentFile().mkdirs();
+            FileOutputStream stream = new FileOutputStream(outputFile);
+            byte[] buffer = new byte[1024 * 1024];
+            try {
+                for (int i = 0; i < 32; i++) {
+                    Arrays.fill(buffer, (byte) i);
+                    stream.write(buffer);
+                }
+            } finally {
+                stream.close();
+            }
+        }
+    }
+
+
 }
