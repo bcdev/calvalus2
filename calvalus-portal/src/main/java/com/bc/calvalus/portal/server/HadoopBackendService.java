@@ -96,6 +96,7 @@ public class HadoopBackendService implements BackendService {
 
     @Override
     public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
+        // todo - load & update from persistent storage
         return new PortalProductSet[]{
                 new PortalProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
                 new PortalProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
@@ -106,6 +107,7 @@ public class HadoopBackendService implements BackendService {
 
     @Override
     public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
+        // todo - load & update from persistent storage
         return new PortalProcessor[]{
                 new PortalProcessor("CoastColour.L2W", "MERIS CoastColour",
                                     "<parameters>\n" +
@@ -132,7 +134,6 @@ public class HadoopBackendService implements BackendService {
         }
     }
 
-
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
         String productionType = productionRequest.getProductionType();
@@ -140,7 +141,7 @@ public class HadoopBackendService implements BackendService {
         if ("calvalus-level3".equals(productionType)) {
             return orderL3Production(productionType, productionParameters);
         } else {
-            return new PortalProductionResponse(1, "Unhandled production type '" + productionType + "'");
+            throw new BackendServiceException(String.format("Unhandled production type '%s'", productionType));
         }
     }
 

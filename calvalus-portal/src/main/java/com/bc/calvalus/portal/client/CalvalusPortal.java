@@ -228,12 +228,8 @@ public class CalvalusPortal implements EntryPoint {
     public void orderProduction(PortalProductionRequest request) {
         getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
             public void onSuccess(final PortalProductionResponse response) {
-                if (response.getStatusCode() == 0) {
-                    ManageProductionsView view = (ManageProductionsView) getView(ManageProductionsView.ID);
-                    view.show();
-                } else {
-                    Window.alert("Failed to order production:\n" + response.getStatusMessage());
-                }
+                ManageProductionsView view = (ManageProductionsView) getView(ManageProductionsView.ID);
+                view.show();
             }
 
             public void onFailure(Throwable caught) {
