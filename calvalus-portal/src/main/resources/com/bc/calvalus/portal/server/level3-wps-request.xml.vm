@@ -38,7 +38,7 @@
             <wps:Input>
                 <ows:Identifier>calvalus.input</ows:Identifier>
                 <ows:Title>MERIS L1B input</ows:Title>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/${inputFile}"/>
+                <wps:Reference xlink:href="${inputFile}"/>
             </wps:Input>
         #end
 
