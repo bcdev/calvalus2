@@ -1,4 +1,4 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.portal.server.test;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,7 +12,7 @@ import java.util.TimerTask;
  *
  * @author Norman
  */
-class DummyProduction {
+class TestProduction {
     private static final Random idGen = new Random();
     private final String id;
     private final String name;
@@ -29,7 +29,7 @@ class DummyProduction {
      * @param name     Some name.
      * @param duration The total time in ms to run.
      */
-    public DummyProduction(String name, long duration, File outputFile) {
+    public TestProduction(String name, long duration, File outputFile) {
         this.id = Long.toHexString(idGen.nextLong());
         this.name = name;
         this.outputFile = outputFile;

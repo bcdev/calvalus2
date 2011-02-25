@@ -1,5 +1,6 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.portal.server.hadoop;
 
+import com.bc.calvalus.portal.server.hadoop.HadoopBackendService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;

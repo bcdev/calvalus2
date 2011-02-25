@@ -15,7 +15,7 @@
 
     <!--
     <Parameter name="calvalus.portal.backendService.class"
-               value="com.bc.calvalus.portal.server.HadoopBackendService"
+               value="com.bc.calvalus.portal.server.hadoop.HadoopBackendService"
                override="true"/>
 
     <Parameter name="calvalus.hadoop.fs.default.name"

@@ -1,5 +1,6 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.portal.server.test;
 
+import com.bc.calvalus.portal.server.PortalConfig;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.PortalParameter;
@@ -23,20 +24,20 @@ import java.util.List;
  * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
  * (context.xml or web.xml)
  */
-public class DummyBackendService implements BackendService {
+public class TestBackendService implements BackendService {
 
     private final ServletContext servletContext;
-    private final List<DummyProduction> productionList;
+    private final List<TestProduction> productionList;
     private long counter;
 
-    public DummyBackendService(ServletContext servletContext) {
+    public TestBackendService(ServletContext servletContext) {
         this.servletContext = servletContext;
-        productionList = Collections.synchronizedList(new ArrayList<DummyProduction>(32));
+        productionList = Collections.synchronizedList(new ArrayList<TestProduction>(32));
         // Add some dummy productions
-        productionList.add(new DummyProduction("Formatting all hard drives", 20 * 1000, null));
-        productionList.add(new DummyProduction("Drying CD slots", 10 * 1000, null));
-        productionList.add(new DummyProduction("Rewriting kernel using BASIC", 5 * 1000, null));
-        for (DummyProduction production : productionList) {
+        productionList.add(new TestProduction("Formatting all hard drives", 20 * 1000, null));
+        productionList.add(new TestProduction("Drying CD slots", 10 * 1000, null));
+        productionList.add(new TestProduction("Rewriting kernel using BASIC", 5 * 1000, null));
+        for (TestProduction production : productionList) {
             production.start();
         }
     }
@@ -106,7 +107,7 @@ public class DummyBackendService implements BackendService {
                                                      productionType);
 
         long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
-        DummyProduction production = new DummyProduction(productionName, secondsToRun * 1000,
+        TestProduction production = new TestProduction(productionName, secondsToRun * 1000,
                                                          new File(downloadDir, outputFileName));
         production.start();
         productionList.add(production);
@@ -124,7 +125,7 @@ public class DummyBackendService implements BackendService {
     public void cancelProductions(String[] productionIds) throws BackendServiceException {
         int count = 0;
         for (int i = 0; i < productionIds.length; i++) {
-            DummyProduction production = getProduction(productionIds[i]);
+            TestProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
                 count++;
@@ -139,7 +140,7 @@ public class DummyBackendService implements BackendService {
     public void deleteProductions(String[] productionIds) throws BackendServiceException {
         int count = 0;
         for (int i = 0; i < productionIds.length; i++) {
-            DummyProduction production = getProduction(productionIds[i]);
+            TestProduction production = getProduction(productionIds[i]);
             if (production != null) {
                 production.cancel();
                 productionList.remove(production);
@@ -152,7 +153,7 @@ public class DummyBackendService implements BackendService {
     }
 
     private PortalProductionStatus getProductionStatus(String productionId) throws BackendServiceException {
-        DummyProduction production = getProduction(productionId);
+        TestProduction production = getProduction(productionId);
         if (production == null) {
             throw new BackendServiceException("Unknown production ID: " + productionId);
         }
@@ -167,15 +168,15 @@ public class DummyBackendService implements BackendService {
         return new PortalProductionStatus(state, production.getProgress());
     }
 
-    private PortalProduction createPortalProduction(DummyProduction production) throws BackendServiceException {
+    private PortalProduction createPortalProduction(TestProduction production) throws BackendServiceException {
         return new PortalProduction(production.getId(),
                                     production.getName(),
                                     production.getOutputPath(),
                                     getProductionStatus(production.getId()));
     }
 
-    private DummyProduction getProduction(String productionId) {
-        for (DummyProduction production : productionList) {
+    private TestProduction getProduction(String productionId) {
+        for (TestProduction production : productionList) {
             if (productionId.equals(production.getId())) {
                 return production;
             }

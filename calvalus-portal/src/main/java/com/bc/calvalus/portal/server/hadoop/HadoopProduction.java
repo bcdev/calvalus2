@@ -1,11 +1,7 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.portal.server.hadoop;
 
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapreduce.Job;
-
-import java.io.IOException;
+import org.apache.hadoop.mapreduce.JobID;
 
 /**
  * A Hadoop workflow.
@@ -22,15 +18,15 @@ class HadoopProduction {
     private final String id;
     private final String name;
     private final String outputPath;
-    private final Job job;
+    private final JobID jobId;
     private JobStatus jobStatus;
     private Request request;
 
-    public HadoopProduction(String id, String name, String outputPath, Job job) {
+    public HadoopProduction(String id, String name, String outputPath, JobID jobId) {
         this.id = id;
         this.name = name;
         this.outputPath = outputPath;
-        this.job = job;
+        this.jobId = jobId;
     }
 
     public String getId() {
@@ -45,8 +41,8 @@ class HadoopProduction {
         return outputPath;
     }
 
-    public Job getJob() {
-        return job;
+    public JobID getJobId() {
+        return jobId;
     }
 
     public JobStatus getJobStatus() {
