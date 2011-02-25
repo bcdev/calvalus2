@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,6 +33,16 @@ import static org.junit.Assert.assertNotNull;
  */
 public class WpsConfigTest {
 
+    @Test
+    public void parametersMap() throws Exception {
+        WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
+        Map<String,String> parametersMap = wpsConfig.getParametersMap();
+        assertNotNull(parametersMap);
+        assertEquals("Meris.CorrectRadiometry", parametersMap.get(Config.CALVALUS_IDENTIFIER));
+        assertEquals("beam-meris-radiometry-1.0-SNAPSHOT", parametersMap.get(Config.CALVALUS_BUNDLE));
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", parametersMap.get(Config.CALVALUS_INPUT));
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/meris-l2beam-99", parametersMap.get(Config.CALVALUS_OUTPUT));
+    }
     @Test
     public void singleInputProduct() throws Exception {
         WpsConfig wpsConfig = createFromResource("radiometry-request.xml");

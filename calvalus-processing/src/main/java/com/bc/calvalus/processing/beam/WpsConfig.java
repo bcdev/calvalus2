@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.util.StringUtils;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -25,6 +26,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulation the WPS XML configuration
@@ -34,6 +37,8 @@ public class WpsConfig {
     private static final String PROCESSOR_PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
     private static final String PROCESSOR_VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
+    private static final String OPERATOR_NAME_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.operator']/Data/LiteralData";
+    private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.parameters']/Data/ComplexData/parameters";
     private static final String L3_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
     private static final String INPUT_HREF_XPATH = "Reference/@href";
@@ -44,11 +49,25 @@ public class WpsConfig {
         requestXmlDoc = new XmlDoc(requestContent);
     }
 
+    public Map<String, String> getParametersMap() {
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put(Config.CALVALUS_IDENTIFIER, getIdentifier());
+        map.put(Config.CALVALUS_BUNDLE, getProcessorPackage());
+        String[] requestInputPaths = getRequestInputPaths();
+        String inputs = StringUtils.join(requestInputPaths, ",");
+        map.put(Config.CALVALUS_INPUT, inputs);
+        map.put(Config.CALVALUS_OUTPUT, getRequestOutputDir());
+        map.put(Config.CALVALUS_L2_OPERATOR, getOperatorName());
+        map.put(Config.CALVALUS_L2_PARAMETER, getLevel2Paramter());
+        map.put(Config.CALVALUS_L3_PARAMETER, getLevel3Paramter());
+        return map;
+    }
+
     public XmlDoc getRequestXmlDoc() {
         return requestXmlDoc;
     }
 
-    public String getIdentifier() {
+    String getIdentifier() {
         try {
             return requestXmlDoc.getString(TYPE_XPATH);
         } catch (XPathExpressionException e) {
@@ -56,13 +75,17 @@ public class WpsConfig {
         }
     }
 
-    public String getProcessorPackage() throws XPathExpressionException {
-        final String processorPackage = requestXmlDoc.getString(PROCESSOR_PACKAGE_XPATH);
-        final String processorVersion = requestXmlDoc.getString(PROCESSOR_VERSION_XPATH);
-        return processorPackage + "-" + processorVersion;
+    String getProcessorPackage() {
+        try {
+            final String processorPackage = requestXmlDoc.getString(PROCESSOR_PACKAGE_XPATH);
+            final String processorVersion = requestXmlDoc.getString(PROCESSOR_VERSION_XPATH);
+            return processorPackage + "-" + processorVersion;
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression", e);
+        }
     }
 
-    public String[] getRequestInputPaths() {
+    String[] getRequestInputPaths() {
         try {
             NodeList nodes = requestXmlDoc.getNodes(INPUTS_XPATH);
             String[] inputPaths = new String[nodes.getLength()];
@@ -79,7 +102,7 @@ public class WpsConfig {
     }
 
 
-    public String getRequestOutputDir() {
+    String getRequestOutputDir() {
         try {
             return requestXmlDoc.getString(OUTPUT_DIR_XPATH);
         } catch (XPathExpressionException e) {
@@ -87,7 +110,15 @@ public class WpsConfig {
         }
     }
 
-    public boolean isLevel3() {
+    String getOperatorName() {
+        try {
+            return requestXmlDoc.getString(OPERATOR_NAME_XPATH);
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression", e);
+        }
+    }
+
+    boolean isLevel3() {
         try {
             Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
             if (node != null) {
@@ -98,12 +129,45 @@ public class WpsConfig {
         return false;
     }
 
+    private String getLevel2Paramter() {
+        try {
+            Node node = requestXmlDoc.getNode(OPERATOR_PARAMETERS_XPATH);
+            NodeDomElement nodeDomElement = new NodeDomElement(node);
+            return nodeDomElement.toXml();
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression", e);
+        }
+    }
+
+    private String getLevel3Paramter() {
+        try {
+            Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
+            if (node != null) {
+                NodeDomElement nodeDomElement = new NodeDomElement(node);
+                return nodeDomElement.toXml();
+            } else {
+                return null;
+            }
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression", e);
+        }
+    }
+
    public static WpsConfig createFromJobConfig(Configuration hadoopConfiguration) {
         final String requestContent = hadoopConfiguration.get("calvalus.request");
         try {
             return new WpsConfig(requestContent);
         } catch (Exception e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    public static void addToConfiguration(Map<String, String> parametersMap, Configuration configuration) {
+        for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
+            String value = entry.getValue();
+            if (value != null) {
+                configuration.set(entry.getKey(), value);
+            }
         }
     }
 }
