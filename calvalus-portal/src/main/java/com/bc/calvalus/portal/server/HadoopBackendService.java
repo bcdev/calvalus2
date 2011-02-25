@@ -9,6 +9,7 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
+import com.bc.calvalus.processing.beam.BeamJobService;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -18,6 +19,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.velocity.Template;
@@ -27,6 +29,7 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -46,14 +49,29 @@ public class HadoopBackendService implements BackendService {
     private final ServletContext servletContext;
     private final Configuration hadoopConf;
     private final JobClient jobClient;
+    private ArrayList<HadoopProduction> productions;
+    private VelocityEngine velocityEngine;
 
-    public HadoopBackendService(ServletContext servletContext) throws IOException {
+    public HadoopBackendService(ServletContext servletContext) throws ServletException, IOException {
         this.servletContext = servletContext;
         this.hadoopConf = new Configuration();
+
+        velocityEngine = new VelocityEngine();
+        try {
+            velocityEngine.init();
+        } catch (Exception e) {
+            throw new ServletException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
+        }
+
         initHadoopConf(servletContext);
         String target = hadoopConf.get("mapred.job.tracker", "localhost:9001");
         InetSocketAddress trackerAddr = NetUtils.createSocketAddr(target);
         this.jobClient = new JobClient(trackerAddr, hadoopConf);
+        productions = new ArrayList<HadoopProduction>();
+    }
+
+    public ServletContext getServletContext() {
+        return servletContext;
     }
 
     private void initHadoopConf(ServletContext servletContext) {
@@ -98,8 +116,8 @@ public class HadoopBackendService implements BackendService {
                 String productionId = jobStatus.getJobID().toString();
                 // System.out.printf("Production %d: %s (id=%s)%n", (i + 1), runningJob.getJobName(), productionId);
                 productions.add(new PortalProduction(productionId,
-                                                     runningJob.getJobName() + " (ID=" + productionId + ")",
-                                                     createWorkStatus(jobStatus)));
+                                                     runningJob.getJobName(),
+                                                     getPortalProductionStatus(jobStatus)));
             }
             return productions.toArray(new PortalProduction[productions.size()]);
         } catch (IOException e) {
@@ -116,14 +134,11 @@ public class HadoopBackendService implements BackendService {
 
         Map<String, String> productionParameters = getProductionParametersMap(productionRequest);
 
-        VelocityEngine ve = new VelocityEngine();
-        try {
-            ve.init();
-        } catch (Exception e) {
-            servletContext.log(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
-        }
+        String inputProductSetId = productionParameters.get("inputProductSetId");
+        String l2OperatorName = productionParameters.get("l2OperatorName");
 
-        String productionId = Long.toHexString(System.nanoTime());
+        String productionName = "L3(L2("  + inputProductSetId + ", " + l2OperatorName + "))";
+        String productionId = productionName + "-" + Long.toHexString(System.nanoTime());
 
         VelocityContext context = new VelocityContext();
         context.put("productionId", productionId);
@@ -131,13 +146,13 @@ public class HadoopBackendService implements BackendService {
         context.put("processorVersion", "1.0-SNAPSHOT");
         context.put("outputDir", "output-" + productionId);
         context.put("inputFiles", getInputFiles(productionParameters));
-        context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
+        context.put("l2OperatorName", l2OperatorName);
         context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
-        context.put("l3Parameters", getLevel3Parameters(productionParameters));
+        // todo - add l3 params to context (bbox, aggegators ...)
 
         String wpsXml;
         try {
-            Template temp = ve.getTemplate("level3-wps-request.xml.vm");
+            Template temp = velocityEngine.getTemplate("level3-wps-request.xml.vm");// todo 1
             StringWriter writer = new StringWriter();
             temp.merge(context, writer);
             wpsXml = writer.toString();
@@ -146,15 +161,31 @@ public class HadoopBackendService implements BackendService {
         }
         System.out.println("wpsXml = " + wpsXml);
 
-        return new PortalProductionResponse(new PortalProduction("", "", null));
+        Job job = submitJob(wpsXml);
+
+        HadoopProduction hadoopProduction = new HadoopProduction(productionId, productionName, job);
+        productions.add(hadoopProduction);
+
+        return new PortalProductionResponse(new PortalProduction(hadoopProduction.getId(),
+                                                                 hadoopProduction.getName(),
+                                                                 new PortalProductionStatus(PortalProductionStatus.State.WAITING,
+                                                                                            "Hadoop job submitted.", 0.0f)));
+    }
+
+    private Job submitJob(String wpsXml) throws BackendServiceException {
+        Job job;
+        try {
+            BeamJobService beamJobService = new BeamJobService();
+            job = beamJobService.createBeamHadoopJob(hadoopConf, wpsXml);
+            job.submit();
+        } catch (Exception e) {
+            throw new BackendServiceException("Failed to submit Hadoop job: " + e.getMessage(), e);
+        }
+        return job;
     }
 
     private String[] getInputFiles(Map<String, String> productionParameters) {
-        return new String[0];
-    }
-
-    private String getLevel3Parameters(Map<String, String> productionParameters) {
-        return "";  // todo
+        return new String[0];  // todo 2
     }
 
     private Map<String, String> getProductionParametersMap(PortalProductionRequest productionRequest) {
@@ -246,7 +277,7 @@ public class HadoopBackendService implements BackendService {
         return null;
     }
 
-    private PortalProductionStatus createWorkStatus(JobStatus job) throws IOException {
+    private PortalProductionStatus getPortalProductionStatus(JobStatus job) throws IOException {
         if (job != null) {
             float progress = (job.setupProgress() + job.cleanupProgress() + job.mapProgress() + job.reduceProgress()) / 4.0f;
             if (job.getRunState() == JobStatus.FAILED) {

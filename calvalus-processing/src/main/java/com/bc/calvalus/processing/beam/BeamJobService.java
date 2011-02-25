@@ -37,7 +37,7 @@ import java.io.IOException;
  */
 public class BeamJobService {
 
-    public Job createBeamHadoopJob(Configuration configuration, String wpsXmlRequest) throws IOException, SAXException, ParserConfigurationException {
+    public Job createBeamHadoopJob(Configuration configuration, String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
         String requestOutputDir = wpsConfig.getRequestOutputDir();
         String identifier = wpsConfig.getIdentifier();

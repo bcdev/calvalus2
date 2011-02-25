@@ -62,7 +62,37 @@
             <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
             <ows:Title>The parameters for the Calvalus Level 3 processor</ows:Title>
             <wps:Data>
-                <wps:ComplexData>${l3Parameters}</wps:ComplexData>
+                <wps:ComplexData>
+                    <numRows>${numRows}</numRows>
+                    <maskExpr>${maskExpr}</maskExpr>
+                    <superSampling>${superSampling}</superSampling>
+                    #if ($bbox)
+                        <bbox>$bbox</bbox>
+                    #elseif ($regionWkt)
+                        <regionWkt>$regionWkt</regionWkt>
+                    #end
+                    <variables>
+                        #foreach( $variable in $variables )
+                            <variable>
+                                <name>$variable.name</name>
+                                <expr>$variable.value</expr>
+                            </variable>
+                        #end
+                    </variables>
+                    <aggregators>
+                        #foreach( $aggregator in $aggregators )
+                            <aggregator>
+                                <type>$aggregator.type</type>
+                                #if ($aggregator.varName)
+                                    <varName>$aggregator.varName</varName>
+                                #elseif ($aggregator.varNames)
+                                    <varNames>$aggregator.varNames</varNames>
+                                #end
+                                <weightCoeff>$aggregator.weightCoeff</weightCoeff>
+                            </aggregator>
+                        #end
+                    </aggregators>
+                </wps:ComplexData>
             </wps:Data>
         </wps:Input>
 
