@@ -86,7 +86,7 @@ public class OrderL3ProductionView extends PortalView {
                                             new PortalParameter("l2OperatorParameters",
                                                                 l2ProcessorPanel.getProcessorParameters())));
             parameters.addAll(l3ProcessorPanel.getParameterList());
-            PortalProductionRequest request = new PortalProductionRequest("calvalus.level3",
+            PortalProductionRequest request = new PortalProductionRequest("calvalus-level3",
                                                                           parameters.toArray(new PortalParameter[parameters.size()]));
 
             getPortal().orderProduction(request);

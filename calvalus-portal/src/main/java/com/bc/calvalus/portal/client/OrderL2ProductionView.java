@@ -60,7 +60,7 @@ public class OrderL2ProductionView extends PortalView {
     private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
-            PortalProductionRequest request = new PortalProductionRequest("calvalus.level2",
+            PortalProductionRequest request = new PortalProductionRequest("calvalus-level2",
                                                                           new PortalParameter("inputProductSetId",
                                                                                               inputOutputPanel.getInputProductSetId()),
                                                                           new PortalParameter("outputFileName",

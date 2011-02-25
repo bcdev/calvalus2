@@ -10,6 +10,7 @@ import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.bc.calvalus.processing.beam.BeamJobService;
+import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -44,6 +45,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import static java.lang.Math.*;
 
 /**
  * An BackendService implementation that delegates to a Hadoop cluster.
@@ -61,26 +65,15 @@ public class HadoopBackendService implements BackendService {
     public HadoopBackendService(ServletContext servletContext) throws ServletException, IOException {
         this.servletContext = servletContext;
         this.hadoopConf = new Configuration();
-
-        velocityEngine = new VelocityEngine();
-        try {
-            velocityEngine.init();
-        } catch (Exception e) {
-            throw new ServletException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
-        }
-
-        initHadoopConf(servletContext);
+        initVelocityEngine();
+        initHadoopConf();
         String target = hadoopConf.get("mapred.job.tracker", "localhost:9001");
         InetSocketAddress trackerAddr = NetUtils.createSocketAddr(target);
         this.jobClient = new JobClient(trackerAddr, hadoopConf);
         productions = new ArrayList<HadoopProduction>();
     }
 
-    public ServletContext getServletContext() {
-        return servletContext;
-    }
-
-    private void initHadoopConf(ServletContext servletContext) {
+    private void initHadoopConf() {
         hadoopConf.reloadConfiguration();
         Enumeration elements = servletContext.getInitParameterNames();
         while (elements.hasMoreElements()) {
@@ -91,6 +84,18 @@ public class HadoopBackendService implements BackendService {
                 hadoopConf.set(hadoopName, hadoopValue);
                 System.out.println("Using Hadoop configuration: " + hadoopName + " = " + hadoopValue);
             }
+        }
+    }
+
+    private void initVelocityEngine() throws ServletException {
+        Properties properties = new Properties();
+        properties.setProperty("resource.loader", "class");
+        properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        velocityEngine = new VelocityEngine();
+        try {
+            velocityEngine.init(properties);
+        } catch (Exception e) {
+            throw new ServletException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
         }
     }
 
@@ -133,46 +138,60 @@ public class HadoopBackendService implements BackendService {
         }
     }
 
+    static long outputFileNum = 0;
+
     @Override
     public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
         String productionType = productionRequest.getProductionType();
-        if (!"calvalus.level3".equals(productionType)) {
+        if (!"calvalus-level3".equals(productionType)) {
             return new PortalProductionResponse(1, "Unhandled production type '" + productionType + "'");
         }
 
         Map<String, String> productionParameters = getProductionParametersMap(productionRequest);
+        String[] inputFiles;
+        try {
+            inputFiles = getInputFiles(productionParameters);
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to assemble input file list: " + e.getMessage(), e);
+        }
 
         String inputProductSetId = productionParameters.get("inputProductSetId");
         String l2OperatorName = productionParameters.get("l2OperatorName");
 
-        String productionName = "L3(L2("  + inputProductSetId + ", " + l2OperatorName + "))";
+        String productionName = "L3(L2(" + inputProductSetId + ", " + l2OperatorName + "))";
         String productionId = productionName + "-" + Long.toHexString(System.nanoTime());
+
+        BeamL3Config.AggregatorConfiguration[] aggregators = getAggregators(productionParameters);
 
         VelocityContext context = new VelocityContext();
         context.put("productionId", productionId);
         context.put("processorPackage", "beam-lkn");
         context.put("processorVersion", "1.0-SNAPSHOT");
         context.put("outputDir", "output-" + productionId);
-        try {
-            context.put("inputFiles", getInputFiles(productionParameters));
-        } catch (IOException e) {
-            throw new BackendServiceException("Failed to assemble input product list", e);
-
-        }
-        context.put("l2OperatorName", l2OperatorName);
+        context.put("inputFiles", inputFiles);
+        context.put("outputDir", getOutputDir(productionType, productionParameters));
+        context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
         context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
+        context.put("superSampling", productionParameters.get("superSampling"));
+        context.put("maskExpr", productionParameters.get("maskExpr"));
+        context.put("numRows", getNumRows(productionParameters));
+        context.put("bbox", getBBOX(productionParameters));
+        context.put("variables", new BeamL3Config.VariableConfiguration[0]);
+        context.put("aggregators", aggregators);
+
+
         // todo - add l3 params to context (bbox, aggegators ...)
 
         String wpsXml;
         try {
-            Template temp = velocityEngine.getTemplate("level3-wps-request.xml.vm");// todo 1
+            Template wpsXmlTemplate = velocityEngine.getTemplate("com/bc/calvalus/portal/server/level3-wps-request.xml.vm");
             StringWriter writer = new StringWriter();
-            temp.merge(context, writer);
+            wpsXmlTemplate.merge(context, writer);
             wpsXml = writer.toString();
+            System.out.println(wpsXml);
         } catch (Exception e) {
             throw new BackendServiceException("Failed to generate WPS XML request", e);
         }
-        System.out.println("wpsXml = " + wpsXml);
 
         Job job = submitJob(wpsXml);
 
@@ -183,6 +202,34 @@ public class HadoopBackendService implements BackendService {
                                                                  hadoopProduction.getName(),
                                                                  new PortalProductionStatus(PortalProductionStatus.State.WAITING,
                                                                                             "Hadoop job submitted.", 0.0f)));
+    }
+
+    private String getOutputDir(String productionType, Map<String, String> productionParameters) {
+        return productionParameters.get("outputFileName")
+                .replace("${user}", System.getProperty("user.name", "hadoop"))
+                .replace("${type}", productionType)
+                .replace("${num}", (++outputFileNum) + "");
+    }
+
+    private int getNumRows(Map<String, String> productionParameters) {
+        return getNumRows(Double.parseDouble(productionParameters.get("resolution")));
+    }
+
+    private String getBBOX(Map<String, String> productionParameters) {
+        return String.format("%s,%s,%s,%s",
+                                          productionParameters.get("lonMin"), productionParameters.get("latMin"),
+                                          productionParameters.get("lonMax"), productionParameters.get("latMax"));
+    }
+
+    private BeamL3Config.AggregatorConfiguration[] getAggregators(Map<String, String> productionParameters) {
+        String[] inputVariables = productionParameters.get("inputVariables").split(",");
+        BeamL3Config.AggregatorConfiguration[] aggregatorConfigurations = new BeamL3Config.AggregatorConfiguration[inputVariables.length];
+        for (int i = 0; i < inputVariables.length; i++) {
+            aggregatorConfigurations[i] = new BeamL3Config.AggregatorConfiguration(productionParameters.get("aggregator"),
+                                                                                   inputVariables[i],
+                                                                                   Double.parseDouble(productionParameters.get("weightCoeff")));
+        }
+        return aggregatorConfigurations;
     }
 
     private Job submitJob(String wpsXml) throws BackendServiceException {
@@ -349,4 +396,14 @@ public class HadoopBackendService implements BackendService {
     }
 
 
+    public static int getNumRows(double res) {
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
+        if (numRows % 2 == 0) {
+            return numRows;
+        } else {
+            return numRows + 1;
+        }
+    }
 }

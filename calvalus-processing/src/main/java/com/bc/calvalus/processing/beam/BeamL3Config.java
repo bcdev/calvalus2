@@ -63,7 +63,7 @@ import java.util.Map;
 
 import static java.lang.Math.*;
 
-class BeamL3Config {
+public class BeamL3Config {
     static final String L3_REQUEST_FILENAME = "wps-request.xml";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
 
@@ -71,6 +71,22 @@ class BeamL3Config {
         String name;
 
         String expr;
+
+        public VariableConfiguration() {
+        }
+
+        public VariableConfiguration(String name, String expr) {
+            this.name = name;
+            this.expr = expr;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getExpr() {
+            return expr;
+        }
     }
 
     public static class AggregatorConfiguration {
@@ -81,6 +97,31 @@ class BeamL3Config {
         String[] varNames;
 
         Double weightCoeff;
+
+        public AggregatorConfiguration() {
+        }
+
+        public AggregatorConfiguration(String type, String varName, Double weightCoeff) {
+            this.type = type;
+            this.varName = varName;
+            this.weightCoeff = weightCoeff;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getVarName() {
+            return varName;
+        }
+
+        public String[] getVarNames() {
+            return varNames;
+        }
+
+        public Double getWeightCoeff() {
+            return weightCoeff;
+        }
     }
     @Parameter
     int numRows;

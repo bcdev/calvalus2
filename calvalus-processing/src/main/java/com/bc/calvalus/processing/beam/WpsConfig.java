@@ -85,7 +85,7 @@ public class WpsConfig {
         }
     }
 
-    String[] getRequestInputPaths() {
+    public String[] getRequestInputPaths() {
         try {
             NodeList nodes = requestXmlDoc.getNodes(INPUTS_XPATH);
             String[] inputPaths = new String[nodes.getLength()];
