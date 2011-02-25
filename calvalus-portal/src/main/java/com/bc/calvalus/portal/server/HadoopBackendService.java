@@ -27,6 +27,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -34,9 +35,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -147,7 +153,12 @@ public class HadoopBackendService implements BackendService {
         context.put("processorPackage", "beam-lkn");
         context.put("processorVersion", "1.0-SNAPSHOT");
         context.put("outputDir", "output-" + productionId);
-        context.put("inputFiles", getInputFiles(productionParameters));
+        try {
+            context.put("inputFiles", getInputFiles(productionParameters));
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to assemble input product list", e);
+
+        }
         context.put("l2OperatorName", l2OperatorName);
         context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
         // todo - add l3 params to context (bbox, aggegators ...)
@@ -186,8 +197,48 @@ public class HadoopBackendService implements BackendService {
         return job;
     }
 
-    private String[] getInputFiles(Map<String, String> productionParameters) {
-        return new String[0];  // todo 2
+    private String[] getInputFiles(Map<String, String> productionParameters) throws IOException {
+        Path eoDataRoot = new Path("hdfs://cvmaster00:9000/calvalus/eodata/");
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+        Date startDate = null;
+        try {
+            startDate = dateFormat.parse(productionParameters.get("dateStart"));
+        } catch (ParseException ignore) {
+        }
+        Date stopDate = null;
+        try {
+            stopDate = dateFormat.parse(productionParameters.get("dateStop"));
+        } catch (ParseException ignore) {
+        }
+        String inputProductSetId = productionParameters.get("inputProductSetId");
+        Path inputPath = new Path(eoDataRoot, inputProductSetId);
+        List<String> dateList = getDateList(startDate, stopDate, inputProductSetId);
+        FileSystem fileSystem = inputPath.getFileSystem(hadoopConf);
+        List<String> inputFileList = new ArrayList<String>();
+        for (String day : dateList) {
+            FileStatus[] fileStatuses = fileSystem.listStatus(new Path(eoDataRoot, day));
+            for (FileStatus fileStatuse : fileStatuses) {
+                inputFileList.add(fileStatuse.getPath().toString());
+            }
+        }
+        return inputFileList.toArray(new String[inputFileList.size()]);
+    }
+
+    private static List<String> getDateList(Date start, Date stop, String prefix) {
+        Calendar startCal = ProductData.UTC.createCalendar();
+        Calendar stopCal = ProductData.UTC.createCalendar();
+        startCal.setTime(start);
+        stopCal.setTime(stop);
+        List<String> list = new ArrayList<String>();
+        do {
+            String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
+            if (dateString.startsWith(prefix)) {
+                list.add(dateString);
+            }
+            startCal.add(Calendar.DAY_OF_WEEK, 1);
+        } while (!startCal.after(stopCal));
+
+        return list;
     }
 
     private Map<String, String> getProductionParametersMap(PortalProductionRequest productionRequest) {
