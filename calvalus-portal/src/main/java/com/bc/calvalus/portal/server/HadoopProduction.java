@@ -1,6 +1,11 @@
 package com.bc.calvalus.portal.server;
 
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobStatus;
+import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
+
+import java.io.IOException;
 
 /**
  * A Hadoop workflow.
@@ -12,9 +17,9 @@ class HadoopProduction {
     private final String id;
     private final String name;
     private final Job job;
+    private JobStatus jobStatus;
 
     public HadoopProduction(String id, String name, Job job) {
-        //To change body of created methods use File | Settings | File Templates.
         this.id = id;
         this.name = name;
         this.job = job;
@@ -31,4 +36,13 @@ class HadoopProduction {
     public Job getJob() {
         return job;
     }
+
+    public JobStatus getJobStatus() {
+        return jobStatus;
+    }
+
+    public void setJobStatus(JobStatus jobStatus) {
+        this.jobStatus = jobStatus;
+    }
+
 }
