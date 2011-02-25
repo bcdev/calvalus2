@@ -239,7 +239,7 @@ public class HadoopBackendService implements BackendService {
             BeamJobService beamJobService = new BeamJobService();
             job = beamJobService.createBeamHadoopJob(hadoopConf, wpsXml);
             //add calvalus itself to classpath of hadoop jobs
-            BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", hadoopConf);
+            BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", job.getConfiguration());
             job.submit();
         } catch (Exception e) {
             throw new BackendServiceException("Failed to submit Hadoop job: " + e.getMessage(), e);
