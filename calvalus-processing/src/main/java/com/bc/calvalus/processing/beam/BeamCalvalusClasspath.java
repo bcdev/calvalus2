@@ -37,7 +37,7 @@ public class BeamCalvalusClasspath {
         addPackageToClassPath(beamPackage + "-" + beamVersion, configuration);
     }
 
-    private static void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
+    public static void addPackageToClassPath(String packageName, Configuration configuration) throws IOException {
         final FileSystem beamFileSystem = FileSystem.get(configuration);
         final Path beamPath = new Path("/calvalus/software/0.5/" + packageName);
 

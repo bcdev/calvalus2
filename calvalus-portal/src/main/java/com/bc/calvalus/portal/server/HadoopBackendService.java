@@ -9,6 +9,7 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
+import com.bc.calvalus.processing.beam.BeamCalvalusClasspath;
 import com.bc.calvalus.processing.beam.BeamJobService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
@@ -237,6 +238,8 @@ public class HadoopBackendService implements BackendService {
         try {
             BeamJobService beamJobService = new BeamJobService();
             job = beamJobService.createBeamHadoopJob(hadoopConf, wpsXml);
+            //add calvalus itself to classpath of hadoop jobs
+            BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", hadoopConf);
             job.submit();
         } catch (Exception e) {
             throw new BackendServiceException("Failed to submit Hadoop job: " + e.getMessage(), e);

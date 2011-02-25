@@ -26,11 +26,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Creates a beam hadoop job
@@ -46,18 +41,6 @@ public class BeamJobService {
         Job job = new Job(configuration, identifier);
         Configuration conf = job.getConfiguration();
         conf.set("calvalus.request", wpsXmlRequest);
-
-        // look up job jar either by class (if deployed) or by path (idea)
-        // job.setJarByClass(getClass());
-        String pathname = "lib/calvalus-processing-0.1-SNAPSHOT-job.jar";
-        if (!new File(pathname).exists()) {
-            pathname = "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar";
-            if (!new File(pathname).exists()) {
-                throw new IllegalArgumentException("Cannot find job jar");
-            }
-        }
-        conf.set("mapred.jar", pathname);
-
 
         // clear output directory
         final Path outputPath = new Path(requestOutputDir);

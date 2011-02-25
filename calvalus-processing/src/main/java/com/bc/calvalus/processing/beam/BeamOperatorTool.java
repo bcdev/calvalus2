@@ -17,6 +17,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -77,6 +78,17 @@ public class BeamOperatorTool extends Configured implements Tool {
             BeamJobService beamJobService = new BeamJobService();
             Configuration conf = getConf();
             Job job = beamJobService.createBeamHadoopJob(conf, requestContent);
+
+            // look up job jar either by class (if deployed) or by path (idea)
+            // job.setJarByClass(getClass());
+            String pathname = "lib/calvalus-processing-0.1-SNAPSHOT-job.jar";
+            if (!new File(pathname).exists()) {
+                pathname = "calvalus-processing/target/calvalus-processing-0.1-SNAPSHOT-job.jar";
+                if (!new File(pathname).exists()) {
+                    throw new IllegalArgumentException("Cannot find job jar");
+                }
+            }
+            conf.set("mapred.jar", pathname);
 
             LOG.info("start processing " + job.getJobName() + " (" + requestPath + ")");
             long startTime = System.nanoTime();
