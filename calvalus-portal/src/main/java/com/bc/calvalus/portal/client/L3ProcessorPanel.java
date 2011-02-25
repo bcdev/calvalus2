@@ -152,9 +152,9 @@ public class L3ProcessorPanel implements IsWidget {
         temporalParams.setWidget(2, 2, new Label("days"));
 
         lonMin = new DoubleBox();  // todo - validate against -180 <= x <= 180
-        lonMin.setValue(-180.0);
+        lonMin.setValue(3.0);
         lonMax = new DoubleBox();   // todo - validate against -180 <= x <= 180
-        lonMax.setValue(180.0);
+        lonMax.setValue(14.5);
 
         HorizontalPanel lonRange = new HorizontalPanel();
         lonRange.add(lonMin);
@@ -162,9 +162,9 @@ public class L3ProcessorPanel implements IsWidget {
         lonRange.add(lonMax);
 
         latMin = new DoubleBox();  // todo - validate against -90 <= x <= 90
-        latMin.setValue(-90.0);
+        latMin.setValue(52.0);
         latMax = new DoubleBox();  // todo - validate against -90 <= x <= 90
-        latMax.setValue(90.0);
+        latMax.setValue(56.5);
 
         HorizontalPanel latRange = new HorizontalPanel();
         latRange.add(latMin);
