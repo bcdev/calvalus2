@@ -113,7 +113,13 @@ public class HadoopBackendService implements BackendService {
     @Override
     public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
         return new PortalProcessor[]{
-                new PortalProcessor("CoastColour.L2W", "MERIS CoastColour", "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
+                new PortalProcessor("CoastColour.L2W", "MERIS CoastColour",
+                                    "<parameters>\n" +
+                                            "  <useIdepix>true</useIdepix>\n" +
+                                            "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                            "  <outputReflec>false</outputReflec>\n" +
+                                            "</parameters>",
+                                    "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
         };
     }
 
@@ -218,8 +224,8 @@ public class HadoopBackendService implements BackendService {
 
     private String getBBOX(Map<String, String> productionParameters) {
         return String.format("%s,%s,%s,%s",
-                                          productionParameters.get("lonMin"), productionParameters.get("latMin"),
-                                          productionParameters.get("lonMax"), productionParameters.get("latMax"));
+                             productionParameters.get("lonMin"), productionParameters.get("latMin"),
+                             productionParameters.get("lonMax"), productionParameters.get("latMax"));
     }
 
     private BeamL3Config.AggregatorConfiguration[] getAggregators(Map<String, String> productionParameters) {

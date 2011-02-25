@@ -50,15 +50,13 @@ public class GeneralProcessorPanel implements IsWidget {
         processor.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                updateProcessorVersionsListBox();
+                updateParametersWidget();
+                updateProcessorVersionsWidget();
             }
         });
 
         processorVersion = new ListBox();
         processorVersion.setName("processorVersionListBox");
-        if (portal.getProcessors().length > 0) {
-            updateProcessorVersionsListBox();
-        }
         processorVersion.setVisibleItemCount(3);
 
         processorParameters = new TextArea();
@@ -113,6 +111,11 @@ public class GeneralProcessorPanel implements IsWidget {
         widget = new DecoratorPanel();
         widget.setTitle(title); //todo - check why title doesn't show
         widget.setWidget(layout);
+
+        if (portal.getProcessors().length > 0) {
+            updateParametersWidget();
+            updateProcessorVersionsWidget();
+        }
     }
 
     private String cleanFromHtml(String results) {
@@ -139,10 +142,9 @@ public class GeneralProcessorPanel implements IsWidget {
         return widget;
     }
 
-    void updateProcessorVersionsListBox() {
+    void updateProcessorVersionsWidget() {
         processorVersion.clear();
-        int selectedIndex = processor.getSelectedIndex();
-        PortalProcessor selectedProcessor = portal.getProcessors()[selectedIndex];
+        PortalProcessor selectedProcessor = getSelectedProcessor();
         String[] versions = selectedProcessor.getVersions();
         for (String version : versions) {
             processorVersion.addItem(version);
@@ -150,6 +152,15 @@ public class GeneralProcessorPanel implements IsWidget {
         if (versions.length > 0) {
             processorVersion.setSelectedIndex(0);
         }
+    }
+
+    private void updateParametersWidget() {
+        processorParameters.setValue(getSelectedProcessor().getDefaultParameters());
+    }
+
+    private PortalProcessor getSelectedProcessor() {
+        int selectedIndex = processor.getSelectedIndex();
+        return portal.getProcessors()[selectedIndex];
     }
 
     private class FileUploadChangeHandler implements ChangeHandler {

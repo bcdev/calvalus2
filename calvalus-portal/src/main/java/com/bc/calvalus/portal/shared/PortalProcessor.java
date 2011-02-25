@@ -5,6 +5,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class PortalProcessor implements IsSerializable {
     private String operator;
     private String name;
+    private String defaultParameters;
     private String bundle;
     private String[] versions;
 
@@ -21,12 +22,24 @@ public class PortalProcessor implements IsSerializable {
         this.versions = versions;
     }
 
+    public PortalProcessor(String operator, String name, String defaultParameters, String bundle, String[] versions) {
+        this.operator = operator;
+        this.name = name;
+        this.defaultParameters = defaultParameters;
+        this.bundle = bundle;
+        this.versions = versions;
+    }
+
     public String getOperator() {
         return operator;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getDefaultParameters() {
+        return defaultParameters;
     }
 
     public String getBundle() {
