@@ -91,8 +91,10 @@ public class HadoopBackendService implements BackendService {
     @Override
     public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
         return new PortalProductSet[]{
-                new PortalProductSet("id1", "MERIS_RR__1P", "All MERIS RR L1b"),
-                new PortalProductSet("id2", "MERIS_RR__1P", "MERIS RR L1b 2004"),
+                new PortalProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
+                new PortalProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
+                new PortalProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
+                new PortalProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
         };
     }
 
