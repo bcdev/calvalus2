@@ -125,12 +125,12 @@ public class L3ProcessorPanel implements IsWidget {
 
         HorizontalPanel timeRange = new HorizontalPanel();
         timeRange.add(dateStart);
-        timeRange.add(new Label("-"));
+        timeRange.add(new Label(" to "));
         timeRange.add(dateStop);
 
         HorizontalPanel period = new HorizontalPanel();
         period.add(periodCount);
-        period.add(new Label("x"));
+        period.add(new Label(" x "));
         period.add(periodLength);
 
         FlexTable temporalParams = new FlexTable();
@@ -153,7 +153,7 @@ public class L3ProcessorPanel implements IsWidget {
 
         HorizontalPanel lonRange = new HorizontalPanel();
         lonRange.add(lonMin);
-        lonRange.add(new Label("-"));
+        lonRange.add(new Label(" to "));
         lonRange.add(lonMax);
 
         latMin = new DoubleBox();  // todo - validate against -90 <= x <= 90
@@ -163,7 +163,7 @@ public class L3ProcessorPanel implements IsWidget {
 
         HorizontalPanel latRange = new HorizontalPanel();
         latRange.add(latMin);
-        latRange.add(new Label("-"));
+        latRange.add(new Label(" to "));
         latRange.add(latMax);
 
         resolution = new DoubleBox();   // todo - validate against 0 < x <= 10
@@ -221,6 +221,66 @@ public class L3ProcessorPanel implements IsWidget {
     @Override
     public Widget asWidget() {
         return widget;
+    }
+
+    public String validate() {
+        boolean variablesValid = !variables.getValue().trim().isEmpty();
+        if (!variablesValid) {
+            return "At least one variable must be given.";
+        }
+
+        boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
+        if (!weightCoeffValid) {
+            return "Weight coefficient must be >= 0 and <= 1.";
+        }
+
+        boolean periodCountValid = periodCount.getValue() >= 1;
+        if (!periodCountValid) {
+            return "Period count must be >= 1.";
+        }
+
+        boolean periodLengthValid = periodLength.getValue() >= 1;
+        if (!periodLengthValid) {
+            return "Period length must be >= 1.";
+        }
+
+        boolean lonMinValid = lonMin.getValue() >= -180 && lonMin.getValue() < +180;
+        if (!lonMinValid) {
+            return "Minimum longitude must be >= -180 and < +180 degree.";
+        }
+        boolean lonMaxValid = lonMax.getValue() > -180 && lonMax.getValue() <= +180;
+        if (!lonMaxValid) {
+            return "Maximum longitude must be > -180 and <= +180 degree.";
+        }
+        boolean lonMinMaxValid = lonMax.getValue() > lonMin.getValue();
+        if (!lonMinMaxValid) {
+            return "Maximum longitude must greater than minimum longitude.";
+        }
+
+        boolean latMinValid = latMin.getValue() >= -90 && latMin.getValue() < +90;
+        if (!latMinValid) {
+            return "Minimum latitude must be >= -90 and < +90 degree.";
+        }
+        boolean latMaxValid = latMax.getValue() > -90 && latMax.getValue() <= +90;
+        if (!latMaxValid) {
+            return "Maximum latitude must be > -90 and <= +90 degree.";
+        }
+        boolean latMinMaxValid = latMax.getValue() > latMin.getValue();
+        if (!latMinMaxValid) {
+            return "Maximum latitude must greater than minimum latitude.";
+        }
+
+        boolean resolutionValid = resolution.getValue() > 0.0;
+        if (!resolutionValid) {
+            return "Resolution must greater than zero.";
+        }
+
+        boolean superSamplingValid = superSampling.getValue() >= 1 && superSampling.getValue() <= 9;
+        if (!superSamplingValid) {
+            return "Super-sampling must be >= 1 and <= 9.";
+        }
+
+        return null;
     }
 
     public List<PortalParameter> getParameterList() {

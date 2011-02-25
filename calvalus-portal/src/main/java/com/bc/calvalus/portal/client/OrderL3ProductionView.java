@@ -4,6 +4,7 @@ import com.bc.calvalus.portal.shared.PortalParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -12,7 +13,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -49,7 +49,7 @@ public class OrderL3ProductionView extends PortalView {
         widget.setWidget(0, 0, inputOutputPanel.asWidget());
         widget.setWidget(1, 0, l2ProcessorPanel.asWidget());
         widget.setWidget(0, 1, l3ProcessorPanel.asWidget());
-        widget.setWidget(2, 0, new Button("Order Production", new SubmitHandler()));
+        widget.setWidget(2, 0, new Button("Order Production", new OrderProductionHandler()));
     }
 
     @Override
@@ -67,9 +67,15 @@ public class OrderL3ProductionView extends PortalView {
         return "Order L3 Production";
     }
 
-    private class SubmitHandler implements ClickHandler {
+    private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
+            String errorMessage = l3ProcessorPanel.validate();
+            if (errorMessage != null) {
+                Window.alert(errorMessage);
+                return;
+            }
+
             ArrayList<PortalParameter> parameters = new ArrayList<PortalParameter>();
             parameters.addAll(Arrays.asList(new PortalParameter("inputProductSetId",
                                                                 inputOutputPanel.getInputProductSetId()),
