@@ -33,7 +33,7 @@ public class L3ProcessorPanel implements IsWidget {
 
     private DecoratorPanel widget;
 
-    private TextBox inputVariables;
+    private ListBox inputVariables;
     private TextBox validMask;
     private ListBox aggregator;
     private DoubleBox weightCoeff;
@@ -50,8 +50,13 @@ public class L3ProcessorPanel implements IsWidget {
 
     public L3ProcessorPanel() {
 
-        inputVariables = new TextBox();
-        inputVariables.setText("chl, tsm, gelb");
+        inputVariables = new ListBox();
+        inputVariables.addItem("chl_conc");
+        inputVariables.addItem("tsm");
+        inputVariables.addItem("Z90_max");
+        inputVariables.addItem("chiSquare");
+        inputVariables.addItem("turbidity_index");
+        inputVariables.setSelectedIndex(0);
 
         validMask = new TextBox();
         validMask.setText("!l1_flags.INVALID && !l1p_flags.LAND && !l1p_flags.CLOUD");
@@ -78,7 +83,7 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.getFlexCellFormatter().setColSpan(2, 1, 2);
         contentParams.getFlexCellFormatter().setColSpan(3, 1, 2);
         contentParams.setWidget(0, 0, new HTML("<b>L3 Content Parameters</b>"));
-        contentParams.setWidget(1, 0, new Label("Input variable(s):"));
+        contentParams.setWidget(1, 0, new Label("L2 variable:"));
         contentParams.setWidget(1, 1, inputVariables);
         contentParams.setWidget(2, 0, new Label("Valid mask:"));
         contentParams.setWidget(2, 1, validMask);
@@ -224,11 +229,6 @@ public class L3ProcessorPanel implements IsWidget {
     }
 
     public String validate() {
-        boolean variablesValid = !inputVariables.getValue().trim().isEmpty();
-        if (!variablesValid) {
-            return "At least one variable must be given.";
-        }
-
         boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
         if (!weightCoeffValid) {
             return "Weight coefficient must be >= 0 and <= 1.";
@@ -284,8 +284,8 @@ public class L3ProcessorPanel implements IsWidget {
     }
 
     public List<PortalParameter> getParameterList() {
-       return  Arrays.asList(
-                new PortalParameter("inputVariables", inputVariables.getText()),
+        return Arrays.asList(
+                new PortalParameter("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex())),
                 new PortalParameter("validMask", validMask.getText()),
                 new PortalParameter("aggregator", aggregator.getValue(aggregator.getSelectedIndex())),
                 new PortalParameter("weightCoeff", weightCoeff.getText()),
