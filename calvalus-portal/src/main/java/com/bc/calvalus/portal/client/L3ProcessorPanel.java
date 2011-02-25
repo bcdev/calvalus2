@@ -59,7 +59,7 @@ public class L3ProcessorPanel implements IsWidget {
         inputVariables.setSelectedIndex(0);
 
         validMask = new TextBox();
-        validMask.setText("!l1_flags.INVALID && !l1p_flags.LAND && !l1p_flags.CLOUD");
+        validMask.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD");
 
         aggregator = new ListBox();
         aggregator.addItem("Average", "AVG");

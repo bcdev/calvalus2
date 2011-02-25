@@ -174,7 +174,7 @@ public class HadoopBackendService implements BackendService {
         context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
         context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
         context.put("superSampling", productionParameters.get("superSampling"));
-        context.put("maskExpr", productionParameters.get("maskExpr"));
+        context.put("maskExpr", productionParameters.get("validMask"));
         context.put("numRows", getNumRows(productionParameters));
         context.put("bbox", getBBOX(productionParameters));
         context.put("variables", new BeamL3Config.VariableConfiguration[0]);
