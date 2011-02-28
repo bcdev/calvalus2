@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 class HadoopProduction {
    public static enum Request {
+       NONE,
        CANCEL,
        DELETE,
        RESTART,
@@ -27,6 +28,7 @@ class HadoopProduction {
         this.name = name;
         this.outputPath = outputPath;
         this.jobId = jobId;
+        this.request = Request.NONE;
     }
 
     public String getId() {

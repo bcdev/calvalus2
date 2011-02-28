@@ -32,15 +32,15 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
  */
 public class BeamJobService {
 
-    public Job createBeamHadoopJob(Configuration configuration, String wpsXmlRequest) throws Exception {
+    public Job createBeamHadoopJob(Configuration configurationBase, String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
         String requestOutputDir = wpsConfig.getRequestOutputDir();
         String identifier = wpsConfig.getIdentifier();
 
         // construct job and set parameters and handlers
-        Job job = new Job(configuration, identifier);
-        Configuration conf = job.getConfiguration();
-        conf.set("calvalus.request", wpsXmlRequest);
+        Job job = new Job(configurationBase, identifier);
+        Configuration configuration = job.getConfiguration();
+        configuration.set("calvalus.request", wpsXmlRequest);
 
         // clear output directory
         final Path outputPath = new Path(requestOutputDir);
@@ -72,13 +72,13 @@ public class BeamJobService {
             //job.setOutputKeyClass(Text.class);
             //job.setOutputValueClass(Text.class);
         }
-        conf.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
-        conf.set("mapred.map.tasks.speculative.execution", "false");
-        conf.set("mapred.reduce.tasks.speculative.execution", "false");
+        configuration.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
+        configuration.set("mapred.map.tasks.speculative.execution", "false");
+        configuration.set("mapred.reduce.tasks.speculative.execution", "false");
         //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
-        conf.set("mapred.child.java.opts", "-Xmx1024m");
+        configuration.set("mapred.child.java.opts", "-Xmx1024m");
 
-        BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), conf);
+        BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), configuration);
 
         return job;
     }

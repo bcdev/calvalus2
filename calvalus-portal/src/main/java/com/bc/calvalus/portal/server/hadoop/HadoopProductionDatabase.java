@@ -40,11 +40,11 @@ class HadoopProductionDatabase {
     }
 
     public synchronized HadoopProduction[] getProductions() {
-       return productionsList.toArray(new HadoopProduction[productionsList.size()]) ;
+        return productionsList.toArray(new HadoopProduction[productionsList.size()]);
     }
 
     public synchronized HadoopProduction getProduction(String productionId) {
-       return productionsMap.get(productionId);
+        return productionsMap.get(productionId);
     }
 
     public void load(File databaseFile) throws IOException {
@@ -67,7 +67,10 @@ class HadoopProductionDatabase {
     }
 
     public synchronized void store(File databaseFile) throws IOException {
-        databaseFile.renameTo(new File(databaseFile.getParentFile(), databaseFile.getName() + ".bak"));
+        // System.out.printf("%s: Storing %d production(s) to %s%n", this, productionsList.size(), databaseFile.getAbsolutePath());
+        File bakFile = new File(databaseFile.getParentFile(), databaseFile.getName() + ".bak");
+        bakFile.delete();
+        databaseFile.renameTo(bakFile);
         PrintWriter writer = new PrintWriter(new FileWriter(databaseFile));
         for (HadoopProduction production : productionsList) {
             writer.printf("%s\t%s\t%s\t%s\n",

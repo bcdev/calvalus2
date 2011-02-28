@@ -20,11 +20,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.net.NetUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -37,7 +37,6 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.InetSocketAddress;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class HadoopBackendService implements BackendService {
     public static final File PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
     private static final int HADOOP_OBSERVATION_PERIOD = 2000;
     private final ServletContext servletContext;
-    private final Configuration hadoopConf;
+    private final Configuration hadoopConfiguration;
     private final JobClient jobClient;
     private final HadoopProductionDatabase database;
     private final VelocityEngine velocityEngine;
@@ -72,7 +71,7 @@ public class HadoopBackendService implements BackendService {
 
     public HadoopBackendService(ServletContext servletContext) throws ServletException, IOException {
         this.servletContext = servletContext;
-        this.hadoopConf = new Configuration();
+        this.hadoopConfiguration = new Configuration();
         this.database = new HadoopProductionDatabase();
         this.velocityEngine = new VelocityEngine();
 
@@ -80,9 +79,12 @@ public class HadoopBackendService implements BackendService {
         initHadoopConf();
         initDatabase();
 
-        String target = hadoopConf.get("mapred.job.tracker", "localhost:9001");
-        InetSocketAddress trackerAddr = NetUtils.createSocketAddr(target);
-        this.jobClient = new JobClient(trackerAddr, hadoopConf);
+        // Prevent Windows from using ';' as path separator
+        System.setProperty("path.separator", ":");
+
+        String target = hadoopConfiguration.get("mapred.job.tracker", "localhost:9001");
+//        InetSocketAddress trackerAddr = NetUtils.createSocketAddr(target);
+        this.jobClient = new JobClient(new JobConf(hadoopConfiguration));
 
         Timer hadoopObservationTimer = new Timer(true);
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
@@ -158,7 +160,7 @@ public class HadoopBackendService implements BackendService {
                 hadoopProduction.setRequest(request);
                 try {
                     JobID jobId = hadoopProduction.getJobId();
-                    org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.forName(jobId.toString());
+                    org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
                     RunningJob runningJob = jobClient.getJob(oldJobId);
                     if (runningJob != null) {
                         runningJob.killJob();
@@ -180,13 +182,13 @@ public class HadoopBackendService implements BackendService {
             RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.forName(productionId));
             String jobFile = job.getJobFile();
             System.out.printf("jobFile = %n%s%n", jobFile);
-            Configuration configuration = new Configuration(hadoopConf);
+            Configuration configuration = new Configuration(hadoopConfiguration);
             configuration.addResource(new Path(jobFile));
 
             String jobOutputDir = configuration.get("mapred.output.dir");
             System.out.println("mapred.output.dir = " + jobOutputDir);
             Path outputPath = new Path(jobOutputDir);
-            FileSystem fileSystem = outputPath.getFileSystem(hadoopConf);
+            FileSystem fileSystem = outputPath.getFileSystem(hadoopConfiguration);
             FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
                 @Override
                 public boolean accept(Path path) {
@@ -203,7 +205,7 @@ public class HadoopBackendService implements BackendService {
             for (FileStatus seqFile : seqFiles) {
                 Path seqProductPath = seqFile.getPath();
                 System.out.println("seqProductPath = " + seqProductPath);
-                StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConf);
+                StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConfiguration);
                 Product product = reader.readProductNodes(null, null);
                 String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");
                 System.out.println("dimapProductName = " + dimapProductName);
@@ -309,21 +311,30 @@ public class HadoopBackendService implements BackendService {
     }
 
     private JobID submitL3Job(String wpsXml) throws BackendServiceException {
-        Job job;
         try {
             BeamJobService beamJobService = new BeamJobService();
-            job = beamJobService.createBeamHadoopJob(hadoopConf, wpsXml);
+            Job job = beamJobService.createBeamHadoopJob(hadoopConfiguration, wpsXml);
+            Configuration configuration = job.getConfiguration();
             //add calvalus itself to classpath of hadoop jobs
-            BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", job.getConfiguration());
-            job.submit();
+            BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
+            JobConf jobConf;
+            if (configuration instanceof JobConf) {
+                jobConf = (JobConf) configuration;
+            }else {
+                jobConf = new JobConf(configuration);
+            }
+            jobConf.setUseNewMapper(true);
+            jobConf.setUseNewReducer(true);
+            RunningJob runningJob = jobClient.submitJob(jobConf);
+            return runningJob.getID();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BackendServiceException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
-        return job.getJobID();
     }
 
     private String[] getInputFiles(Map<String, String> productionParameters) throws IOException {
-        Path eoDataRoot = new Path("hdfs://cvmaster00:9000/calvalus/eodata/");
+        Path eoDataRoot = new Path(hadoopConfiguration.get("fs.default.name"), "/calvalus/eodata/");
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
         Date startDate = null;
         try {
@@ -338,7 +349,7 @@ public class HadoopBackendService implements BackendService {
         String inputProductSetId = productionParameters.get("inputProductSetId");
         Path inputPath = new Path(eoDataRoot, inputProductSetId);
         List<String> dateList = getDateList(startDate, stopDate, inputProductSetId);
-        FileSystem fileSystem = inputPath.getFileSystem(hadoopConf);
+        FileSystem fileSystem = inputPath.getFileSystem(hadoopConfiguration);
         List<String> inputFileList = new ArrayList<String>();
         for (String day : dateList) {
             FileStatus[] fileStatuses = fileSystem.listStatus(new Path(eoDataRoot, day));
@@ -413,14 +424,14 @@ public class HadoopBackendService implements BackendService {
     }
 
     private void initHadoopConf() {
-        hadoopConf.reloadConfiguration();
+        hadoopConfiguration.reloadConfiguration();
         Enumeration elements = servletContext.getInitParameterNames();
         while (elements.hasMoreElements()) {
             String name = (String) elements.nextElement();
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 String hadoopValue = servletContext.getInitParameter(name);
-                hadoopConf.set(hadoopName, hadoopValue);
+                hadoopConfiguration.set(hadoopName, hadoopValue);
                 System.out.println("Using Hadoop configuration: " + hadoopName + " = " + hadoopValue);
             }
         }

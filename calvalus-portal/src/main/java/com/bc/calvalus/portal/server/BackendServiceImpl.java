@@ -16,6 +16,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 
 /**
  * The server side implementation of the RPC processing service.
@@ -25,6 +26,8 @@ import java.io.IOException;
  * (in context.xml or web.xml). Its value must be the name of a class that
  * implements the {@link BackendService} interface and has a one-argument constructor
  * taking the current {@link javax.servlet.ServletContext}.
+ *
+ * @author Norman
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
@@ -74,19 +77,26 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private void initDelegate() throws ServletException {
         if (delegate == null) {
-            String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
-            if (className != null) {
-                try {
-                    delegate = (BackendService) Class.forName(className).getConstructor(ServletContext.class).newInstance(getServletContext());
-                } catch (Exception e) {
-                    throw new ServletException(e);
+            synchronized (this) {
+                if (delegate == null) {
+                    String className = getServletContext().getInitParameter("calvalus.portal.backendService.class");
+                    if (className != null) {
+                        try {
+                            Class<?> backendServiceClass = Class.forName(className);
+                            Constructor<?> constructor = backendServiceClass.getConstructor(ServletContext.class);
+                            delegate = (BackendService) constructor.newInstance(getServletContext());
+                            // Make the service available to other servlets.
+                            getServletContext().setAttribute("calvalus.portal.backendService", delegate);
+                        } catch (Exception e) {
+                            throw new ServletException(e);
+                        }
+                    } else {
+                        throw new ServletException(String.format("Missing servlet initialisation parameter '%s'",
+                                                                 "calvalus.portal.backendService.class"));
+                    }
                 }
-            } else {
-                throw new ServletException(String.format("Missing servlet initialisation parameter '%s'",
-                                                         "calvalus.portal.backendService.class"));
             }
-            // Make the service available to other servlets.
-            getServletContext().setAttribute("calvalus.portal.backendService", delegate);
         }
     }
+
 }
