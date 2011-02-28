@@ -47,22 +47,26 @@ class HadoopProductionDatabase {
         return productionsMap.get(productionId);
     }
 
-    public void load(File databaseFile) throws IOException {
+    public synchronized void load(File databaseFile) throws IOException {
         if (databaseFile.exists()) {
             BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
             try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] tokens = line.split("\t");
-                    String id = tokens[0];
-                    String name = tokens[1];
-                    String outputPath = tokens[2];
-                    String jobId = tokens[3];
-                    addProduction(new HadoopProduction(id, name, outputPath, JobID.forName(jobId)));
-                }
+                load(reader);
             } finally {
                 reader.close();
             }
+        }
+    }
+
+    public synchronized void load(BufferedReader reader) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] tokens = line.split("\t");
+            String id = tokens[0];
+            String name = tokens[1];
+            String outputPath = tokens[2];
+            String jobId = tokens[3];
+            addProduction(new HadoopProduction(id, name, outputPath, JobID.forName(jobId)));
         }
     }
 
@@ -72,6 +76,14 @@ class HadoopProductionDatabase {
         bakFile.delete();
         databaseFile.renameTo(bakFile);
         PrintWriter writer = new PrintWriter(new FileWriter(databaseFile));
+        try {
+            store(writer);
+        } finally {
+            writer.close();
+        }
+    }
+
+    public synchronized void store(PrintWriter writer) {
         for (HadoopProduction production : productionsList) {
             writer.printf("%s\t%s\t%s\t%s\n",
                           production.getId(),
@@ -79,6 +91,5 @@ class HadoopProductionDatabase {
                           production.getOutputPath(),
                           production.getJobId());
         }
-        writer.close();
     }
 }
