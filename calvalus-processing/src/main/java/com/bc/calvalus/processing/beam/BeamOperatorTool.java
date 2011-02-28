@@ -7,11 +7,12 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -43,7 +44,7 @@ import java.util.logging.Logger;
  * </pre>
  *
  * @author Boe
-* @author Norman Fomferra
+ * @author Norman Fomferra
  * @author Marco Zuehlke
  */
 public class BeamOperatorTool extends Configured implements Tool {
@@ -58,8 +59,9 @@ public class BeamOperatorTool extends Configured implements Tool {
     /**
      * Constructs job for mapper-only processing with executable and submits it.
      * Waits until job completes.
-     * @param args  command line parameters, one with request file path expected
-     * @return  whether processing is successful (0) or failed (1)
+     *
+     * @param args command line parameters, one with request file path expected
+     * @return whether processing is successful (0) or failed (1)
      * @throws Exception
      */
     @Override
@@ -75,9 +77,8 @@ public class BeamOperatorTool extends Configured implements Tool {
         try {
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
-            BeamJobService beamJobService = new BeamJobService();
-            Configuration conf = getConf();
-            Job job = beamJobService.createBeamHadoopJob(conf, requestContent);
+            BeamJobService beamJobService = new BeamJobService(new JobClient(new JobConf(getConf())));
+            Job job = beamJobService.createBeamHadoopJob(requestContent);
 
             // look up job jar either by class (if deployed) or by path (idea)
             // job.setJarByClass(getClass());
@@ -88,28 +89,28 @@ public class BeamOperatorTool extends Configured implements Tool {
                     throw new IllegalArgumentException("Cannot find job jar");
                 }
             }
-            conf.set("mapred.jar", pathname);
+            job.getConfiguration().set("mapred.jar", pathname);
 
             LOG.info("start processing " + job.getJobName() + " (" + requestPath + ")");
             long startTime = System.nanoTime();
             boolean success = job.waitForCompletion(true);
             int result = success ? 0 : 1;
             long stopTime = System.nanoTime();
-            LOG.info("stop  processing "  + job.getJobName() + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) +  " sec");
+            LOG.info("stop  processing " + job.getJobName() + " (" + requestPath + ")" + " after " + ((stopTime - startTime) / 1E9) + " sec");
 
             if (success) {
                 Path outputPath = FileOutputFormat.getOutputPath(job);
-                FileSystem outputPathFileSystem = outputPath.getFileSystem(conf);
+                FileSystem outputPathFileSystem = outputPath.getFileSystem(job.getConfiguration());
                 FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, BeamL3Config.L3_REQUEST_FILENAME));
                 os.writeBytes(requestContent);
 
-                final String formatterOutput = conf.get("calvalus.l3.formatter.output");
+                final String formatterOutput = job.getConfiguration().get("calvalus.l3.formatter.output");
                 if (formatterOutput != null) {
                     //TODO enable direct formatting
-    //                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
-    //                L3Formatter formatter = new L3Formatter();
-    //                formatter.setConf(conf);
-    //                result = formatter.run(args);
+                    //                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
+                    //                L3Formatter formatter = new L3Formatter();
+                    //                formatter.setConf(conf);
+                    //                result = formatter.run(args);
                 } else {
                     LOG.info(MessageFormat.format("no formatting performed", formatterOutput));
                 }

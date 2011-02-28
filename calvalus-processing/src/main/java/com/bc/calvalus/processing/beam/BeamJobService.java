@@ -23,7 +23,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
@@ -32,13 +36,19 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
  */
 public class BeamJobService {
 
-    public Job createBeamHadoopJob(Configuration configurationBase, String wpsXmlRequest) throws Exception {
+    private JobClient jobClient;
+
+    public BeamJobService(JobClient jobClient) {
+        this.jobClient = jobClient;
+    }
+
+    public Job createBeamHadoopJob(String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
         String requestOutputDir = wpsConfig.getRequestOutputDir();
         String identifier = wpsConfig.getIdentifier();
 
         // construct job and set parameters and handlers
-        Job job = new Job(configurationBase, identifier);
+        Job job = new Job(jobClient.getConf(), identifier);
         Configuration configuration = job.getConfiguration();
         configuration.set("calvalus.request", wpsXmlRequest);
 
@@ -81,5 +91,22 @@ public class BeamJobService {
         BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), configuration);
 
         return job;
+    }
+
+    public JobID submitJob(String wpsXml) throws Exception {
+        Job job = createBeamHadoopJob(wpsXml);
+        Configuration configuration = job.getConfiguration();
+        //add calvalus itself to classpath of hadoop jobs
+        BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
+        JobConf jobConf;
+        if (configuration instanceof JobConf) {
+            jobConf = (JobConf) configuration;
+        } else {
+            jobConf = new JobConf(configuration);
+        }
+        jobConf.setUseNewMapper(true);
+        jobConf.setUseNewReducer(true);
+        RunningJob runningJob = jobClient.submitJob(jobConf);
+        return runningJob.getID();
     }
 }
