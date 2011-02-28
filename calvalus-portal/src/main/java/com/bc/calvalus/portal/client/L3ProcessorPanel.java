@@ -70,9 +70,11 @@ public class L3ProcessorPanel implements IsWidget {
 
         weightCoeff = new DoubleBox(); // todo - validate against 0 <= x <= 1.0
         weightCoeff.setValue(0.5);
+        weightCoeff.setWidth("6em");
 
         superSampling = new IntegerBox();  // todo - validate against 1 <= x <= 33
         superSampling.setValue(1);
+        superSampling.setWidth("2em");
 
         FlexTable contentParams = new FlexTable();
         contentParams.setWidth("100%");
@@ -99,10 +101,12 @@ public class L3ProcessorPanel implements IsWidget {
         dateStart = new DateBox();
         dateStart.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         dateStart.setValue(DATE_FORMAT.parse("2008-06-01"));
+        dateStart.setWidth("6em");
 
         dateStop = new DateBox();
         dateStop.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         dateStop.setValue(DATE_FORMAT.parse("2008-06-07"));
+        dateStop.setWidth("6em");
         dateStop.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
@@ -112,6 +116,7 @@ public class L3ProcessorPanel implements IsWidget {
 
         periodCount = new IntegerBox();  // todo - validate against 1 <= x <= 1000 (?)
         periodCount.setValue(1);
+        periodCount.setWidth("2em");
         periodCount.addValueChangeHandler(new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
@@ -121,6 +126,7 @@ public class L3ProcessorPanel implements IsWidget {
 
         periodLength = new IntegerBox(); // todo - validate against 1 <= x <= 365 (?)
         periodLength.setValue(7);
+        periodLength.setWidth("4em");
         periodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
@@ -130,12 +136,12 @@ public class L3ProcessorPanel implements IsWidget {
 
         HorizontalPanel timeRange = new HorizontalPanel();
         timeRange.add(dateStart);
-        timeRange.add(new Label(" to "));
+        timeRange.add(new HTML("&nbsp;to&nbsp;"));
         timeRange.add(dateStop);
 
         HorizontalPanel period = new HorizontalPanel();
         period.add(periodCount);
-        period.add(new Label(" x "));
+        period.add(new HTML("&nbsp;x&nbsp;"));
         period.add(periodLength);
 
         FlexTable temporalParams = new FlexTable();
@@ -153,26 +159,31 @@ public class L3ProcessorPanel implements IsWidget {
 
         lonMin = new DoubleBox();  // todo - validate against -180 <= x <= 180
         lonMin.setValue(3.0);
+        lonMin.setWidth("6em");
         lonMax = new DoubleBox();   // todo - validate against -180 <= x <= 180
         lonMax.setValue(14.5);
+        lonMax.setWidth("6em");
 
         HorizontalPanel lonRange = new HorizontalPanel();
         lonRange.add(lonMin);
-        lonRange.add(new Label(" to "));
+        lonRange.add(new HTML("&nbsp;to&nbsp;"));
         lonRange.add(lonMax);
 
         latMin = new DoubleBox();  // todo - validate against -90 <= x <= 90
         latMin.setValue(52.0);
+        latMin.setWidth("6em");
         latMax = new DoubleBox();  // todo - validate against -90 <= x <= 90
         latMax.setValue(56.5);
+        latMax.setWidth("6em");
 
         HorizontalPanel latRange = new HorizontalPanel();
         latRange.add(latMin);
-        latRange.add(new Label(" to "));
+        latRange.add(new HTML("&nbsp;to&nbsp;"));
         latRange.add(latMax);
 
         resolution = new DoubleBox();   // todo - validate against 0 < x <= 100
         resolution.setValue(9.28);
+        resolution.setWidth("6em");
 
         FlexTable spatialParams = new FlexTable();
         spatialParams.setWidth("100%");
