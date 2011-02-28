@@ -9,7 +9,7 @@ import org.apache.hadoop.mapreduce.JobID;
  * @author Norman
  */
 class HadoopProduction {
-   public static enum Request {
+   public static enum Action {
        NONE,
        CANCEL,
        DELETE,
@@ -21,14 +21,14 @@ class HadoopProduction {
     private final String outputPath;
     private final JobID jobId;
     private JobStatus jobStatus;
-    private Request request;
+    private Action action;
 
     public HadoopProduction(String id, String name, String outputPath, JobID jobId) {
         this.id = id;
         this.name = name;
         this.outputPath = outputPath;
         this.jobId = jobId;
-        this.request = Request.NONE;
+        this.action = Action.NONE;
     }
 
     public String getId() {
@@ -55,11 +55,11 @@ class HadoopProduction {
         this.jobStatus = jobStatus;
     }
 
-    public Request getRequest() {
-        return request;
+    public Action getAction() {
+        return action;
     }
 
-    public void setRequest(Request request) {
-        this.request = request;
+    public void setAction(Action action) {
+        this.action = action;
     }
 }

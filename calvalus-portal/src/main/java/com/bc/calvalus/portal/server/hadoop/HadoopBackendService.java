@@ -10,7 +10,6 @@ import com.bc.calvalus.portal.shared.PortalProduction;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
-import com.bc.calvalus.processing.beam.BeamCalvalusClasspath;
 import com.bc.calvalus.processing.beam.BeamJobService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
@@ -23,7 +22,6 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -138,20 +136,20 @@ public class HadoopBackendService implements BackendService {
 
     @Override
     public void cancelProductions(String[] productionIds) throws BackendServiceException {
-        requestProductionKill(productionIds, HadoopProduction.Request.CANCEL);
+        requestProductionKill(productionIds, HadoopProduction.Action.CANCEL);
     }
 
     @Override
     public void deleteProductions(String[] productionIds) throws BackendServiceException {
-        requestProductionKill(productionIds, HadoopProduction.Request.DELETE);
+        requestProductionKill(productionIds, HadoopProduction.Action.DELETE);
     }
 
-    private void requestProductionKill(String[] productionIds, HadoopProduction.Request request) throws BackendServiceException {
+    private void requestProductionKill(String[] productionIds, HadoopProduction.Action action) throws BackendServiceException {
         int count = 0;
         for (String productionId : productionIds) {
             HadoopProduction hadoopProduction = database.getProduction(productionId);
             if (hadoopProduction != null) {
-                hadoopProduction.setRequest(request);
+                hadoopProduction.setAction(action);
                 try {
                     JobID jobId = hadoopProduction.getJobId();
                     org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
@@ -368,7 +366,8 @@ public class HadoopBackendService implements BackendService {
 
     private PortalProductionStatus getPortalProductionStatus(JobStatus job) {
         if (job != null) {
-            float progress = (job.setupProgress() + job.cleanupProgress() + job.mapProgress() + job.reduceProgress()) / 4.0f;
+            // todo - use message that shows current 'action' value from 'HadoopProduction'
+            float progress = 0.5f * (job.mapProgress() + job.reduceProgress());
             if (job.getRunState() == JobStatus.FAILED) {
                 return new PortalProductionStatus(PortalProductionStatus.State.ERROR, progress);
             } else if (job.getRunState() == JobStatus.KILLED) {
@@ -449,7 +448,7 @@ public class HadoopBackendService implements BackendService {
 
         // Now try to delete productions
         for (HadoopProduction production : productions) {
-            if (HadoopProduction.Request.DELETE.equals(production.getRequest())) {
+            if (HadoopProduction.Action.DELETE.equals(production.getAction())) {
                 JobStatus jobStatus = production.getJobStatus();
                 if (isDone(jobStatus)) {
                     database.removeProduction(production);
