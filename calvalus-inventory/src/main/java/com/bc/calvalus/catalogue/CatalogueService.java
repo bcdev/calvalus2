@@ -2,6 +2,8 @@ package com.bc.calvalus.catalogue;
 
 /**
  * The interface to the Calvalus catalogue service.
+ * <p/>
+ * TODO - make use of this interface
  *
  * @author Norman
  */
