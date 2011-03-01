@@ -80,10 +80,10 @@ public class BeamL3FormattingService {
     public int format(String requestContent) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(requestContent);
         FormatterL3Config formatterL3Config = FormatterL3Config.create(wpsConfig.getRequestXmlDoc());
-        return format(formatterL3Config, wpsConfig.getRequestOutputDir());
+        return format(formatterL3Config, wpsConfig.getRequestOutputDir(), "");
     }
 
-    public int format(FormatterL3Config formatterL3Config, String jobOutputDir) throws Exception {
+    public int format(FormatterL3Config formatterL3Config, String jobOutputDir, String processingRequest) throws Exception {
         outputType = formatterL3Config.getOutputType();
 
         outputFile = new File(formatterL3Config.getOutputFile());
@@ -110,7 +110,7 @@ public class BeamL3FormattingService {
         }
 
         l3OutputDir = new Path(jobOutputDir);
-        BeamL3Config l3Config = readL3Config();
+        BeamL3Config l3Config = readL3Config(processingRequest);
 
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();
@@ -136,12 +136,17 @@ public class BeamL3FormattingService {
         return 0;
     }
 
-    private BeamL3Config readL3Config() throws IOException, SAXException, ParserConfigurationException {
-        FileSystem fs = l3OutputDir.getFileSystem(configuration);
-        InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        IOUtils.copyBytes(is, baos);
-        String wpsContent = baos.toString();
+    private BeamL3Config readL3Config(String processingRequest) throws IOException, SAXException, ParserConfigurationException {
+        String wpsContent;
+        if (processingRequest == null && processingRequest.isEmpty()) {
+            FileSystem fs = l3OutputDir.getFileSystem(configuration);
+            InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            IOUtils.copyBytes(is, baos);
+            wpsContent = baos.toString();
+        } else {
+            wpsContent = processingRequest;
+        }
         return BeamL3Config.create(new XmlDoc(wpsContent));
     }
 

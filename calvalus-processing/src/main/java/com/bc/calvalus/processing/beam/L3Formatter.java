@@ -85,9 +85,9 @@ public class L3Formatter extends Configured implements Tool {
         String requestPath = remainingArgs[0];
 
         // parse request
-        final String requestContent = FileUtil.readFile(requestPath);
+        final String formattingRequestContent = FileUtil.readFile(requestPath);
         BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
-        return beamL3FormattingService.format(requestContent);
+        return beamL3FormattingService.format(formattingRequestContent);
     }
 
 }

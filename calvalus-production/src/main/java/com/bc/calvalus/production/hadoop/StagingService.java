@@ -50,7 +50,7 @@ public class StagingService {
                 String outputDir = production.getOutputPath();
                 FormatterL3Config formatConfig = new FormatterL3Config("Product", "outputFile.dim", "BEAM-DIMAP", null, "2010-01-01", "2010-01-02");
                 try {
-                    beamL3FormattingService.format(formatConfig, outputDir);
+                    beamL3FormattingService.format(formatConfig, outputDir, "wpsRequestXML");//TODO
                     production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, "", 1));
                 } catch (Exception e) {
                     logger.log(Level.WARNING, "formatting failed.", e);
