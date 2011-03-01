@@ -10,7 +10,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class PortalProductionRequest implements IsSerializable {
     private String productionType;
-    private PortalParameter[] productionParameters;
+    private PortalProductionParameter[] productionParameters;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -19,7 +19,7 @@ public class PortalProductionRequest implements IsSerializable {
     }
 
     public PortalProductionRequest(String productionType,
-                                   PortalParameter... productionParameters) {
+                                   PortalProductionParameter... productionParameters) {
         this.productionType = productionType;
         this.productionParameters = productionParameters;
     }
@@ -35,7 +35,7 @@ public class PortalProductionRequest implements IsSerializable {
         return productionType;
     }
 
-    public PortalParameter[] getProductionParameters() {
+    public PortalProductionParameter[] getProductionParameters() {
         return productionParameters;
     }
 

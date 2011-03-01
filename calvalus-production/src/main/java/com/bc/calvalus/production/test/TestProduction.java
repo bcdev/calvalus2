@@ -29,7 +29,7 @@ class TestProduction extends Production {
      * @param duration The total time in ms to run.
      */
     public TestProduction(String name, long duration, String outputPath) {
-        super(Long.toHexString(idGen.nextLong()), name, outputPath, new ProductionStatus());
+        super(Long.toHexString(idGen.nextLong()), name, outputPath);
         this.duration = duration;
         this.startTime = System.currentTimeMillis();
     }

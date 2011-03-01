@@ -1,17 +1,14 @@
 package com.bc.calvalus.production.test;
 
 import com.bc.calvalus.catalogue.ProductSet;
-import com.bc.calvalus.production.Processor;
+import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionParameter;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -54,18 +51,18 @@ public class TestProductionService implements ProductionService {
     }
 
     @Override
-    public Processor[] getProcessors(String filter) throws ProductionException {
+    public ProductionProcessor[] getProcessors(String filter) throws ProductionException {
         // Return some dummy processors
-        return new Processor[]{
-                new Processor("pc1", "MERIS IOP Case2R",
+        return new ProductionProcessor[]{
+                new ProductionProcessor("pc1", "MERIS IOP Case2R",
                               "",
                               "beam-meris-case2r",
                               new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
-                new Processor("pc2", "MERIS IOP QAA",
+                new ProductionProcessor("pc2", "MERIS IOP QAA",
                               "",
                               "beam-meris-qaa",
                               new String[]{"1.2-SNAPSHOT", "1.1.3", "1.0.1"}),
-                new Processor("pc3", "Band Maths",
+                new ProductionProcessor("pc3", "Band Maths",
                               "",
                               "beam-gpf",
                               new String[]{"4.8"}),

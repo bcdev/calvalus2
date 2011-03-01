@@ -1,10 +1,10 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.portal.shared;
 
 /**
 * State of a production.
 */
-public enum ProductionState {
- /**
+public enum PortalProductionState {
+    /**
      * Indicates that the work unit has not yet started.
      */
     WAITING(false),
@@ -31,10 +31,11 @@ public enum ProductionState {
 
     private final boolean done;
 
-    ProductionState(boolean done) {
+    PortalProductionState(boolean done) {
         this.done = done;
     }
 
     public boolean isDone() {
         return done;
-    }}
+    }
+}

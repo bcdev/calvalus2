@@ -1,8 +1,7 @@
-package com.bc.calvalus.portal.server.hadoop;
+package com.bc.calvalus.production.hadoop;
 
 import org.apache.hadoop.mapreduce.JobID;
 
-import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -24,7 +23,7 @@ class HadoopProductionDatabase {
     private final List<HadoopProduction> productionsList;
     private final Map<String, HadoopProduction> productionsMap;
 
-    public HadoopProductionDatabase() throws ServletException, IOException {
+    public HadoopProductionDatabase() {
         this.productionsList = new ArrayList<HadoopProduction>();
         this.productionsMap = new HashMap<String, HadoopProduction>();
     }

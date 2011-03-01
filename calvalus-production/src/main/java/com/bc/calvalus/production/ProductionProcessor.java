@@ -1,20 +1,20 @@
 package com.bc.calvalus.production;
 
-public class Processor {
+public class ProductionProcessor {
     private String operator;
     private String name;
     private String defaultParameters;
     private String bundle;
     private String[] versions;
 
-    public Processor(String operator, String name, String bundle, String[] versions) {
+    public ProductionProcessor(String operator, String name, String bundle, String[] versions) {
         this.operator = operator;
         this.name = name;
         this.bundle = bundle;
         this.versions = versions;
     }
 
-    public Processor(String operator, String name, String defaultParameters, String bundle, String[] versions) {
+    public ProductionProcessor(String operator, String name, String defaultParameters, String bundle, String[] versions) {
         this.operator = operator;
         this.name = name;
         this.defaultParameters = defaultParameters;

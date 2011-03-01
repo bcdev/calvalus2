@@ -54,9 +54,9 @@
     <!-- Hadoop parameters -->
 
     <context-param>
-        <param-name>calvalus.portal.backendService.class</param-name>
-        <!--<param-value>com.bc.calvalus.portal.server.test.TestBackendService</param-value>-->
-        <param-value>com.bc.calvalus.portal.server.hadoop.HadoopBackendService</param-value>
+        <param-name>calvalus.portal.productionServiceFactory.class</param-name>
+        <!--<param-value>com.bc.calvalus.production.test.TestProductionServiceFactory</param-value>-->
+        <param-value>com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory</param-value>
     </context-param>
 
     <!-- value defaults to ${user.home}/.calvalus -->

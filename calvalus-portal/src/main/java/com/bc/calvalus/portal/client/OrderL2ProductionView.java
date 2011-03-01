@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalParameter;
+import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -61,15 +61,15 @@ public class OrderL2ProductionView extends PortalView {
 
         public void onClick(ClickEvent event) {
             PortalProductionRequest request = new PortalProductionRequest("calvalus-level2",
-                                                                          new PortalParameter("inputProductSetId",
+                                                                          new PortalProductionParameter("inputProductSetId",
                                                                                               inputOutputPanel.getInputProductSetId()),
-                                                                          new PortalParameter("outputFileName",
+                                                                          new PortalProductionParameter("outputFileName",
                                                                                               inputOutputPanel.getOutputFileName()),
-                                                                          new PortalParameter("processorId",
+                                                                          new PortalProductionParameter("processorId",
                                                                                               processingPanel.getProcessorId()),
-                                                                          new PortalParameter("processorVersion",
+                                                                          new PortalProductionParameter("processorVersion",
                                                                                               processingPanel.getProcessorVersion()),
-                                                                          new PortalParameter("processorParameters",
+                                                                          new PortalProductionParameter("processorParameters",
                                                                                               processingPanel.getProcessorParameters()));
             getPortal().orderProduction(request);
         }

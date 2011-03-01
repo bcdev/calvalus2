@@ -6,26 +6,23 @@ package com.bc.calvalus.production;
 *
 * @author Norman
 */
-public abstract class Production {
-    String id;
-    String name;
-    String outputPath;
-    ProductionStatus status;
+public class Production {
+    private String id;
+    private String name;
+    private String outputPath;
+    private ProductionStatus status;
 
-    public Production(String id, String name, String outputPath, ProductionStatus status) {
+    public Production(String id, String name, String outputPath) {
         if (id == null) {
             throw new NullPointerException("id");
         }
         if (name == null) {
             throw new NullPointerException("name");
         }
-        if (status == null) {
-            throw new NullPointerException("status");
-        }
         this.id = id;
         this.name = name;
         this.outputPath = outputPath;
-        this.status = status;
+        this.status = new ProductionStatus();
     }
 
     public String getId() {

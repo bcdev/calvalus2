@@ -14,10 +14,11 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.portal.server.hadoop;
+package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.BeamL3FormattingService;
 import com.bc.calvalus.processing.beam.FormatterL3Config;
+import com.bc.calvalus.production.ProductionState;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.concurrent.ExecutorService;
@@ -26,7 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A simpe servioce for stging the results of a hadoop job .
+ * A simple service for staging the results of a hadoop job.
+ *
+ * @author MarcoZ
  */
 public class StagingService {
 
@@ -47,10 +50,10 @@ public class StagingService {
                 FormatterL3Config formatConfig = new FormatterL3Config("Product", "outputFile.dim", "BEAM-DIMAP", null, "2010-01-01", "2010-01-02");
                 try {
                     beamL3FormattingService.format(formatConfig, outputDir);
+                    production.setStagingState(ProductionState.COMPLETED);
                 } catch (Exception e) {
                     logger.log(Level.WARNING, "formatting failed.", e);
                 }
-                production.setStaging(HadoopProduction.Staging.DONE);
             }
         });
     }

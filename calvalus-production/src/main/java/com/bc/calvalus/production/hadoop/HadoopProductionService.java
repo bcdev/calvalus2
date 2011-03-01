@@ -1,20 +1,18 @@
-package com.bc.calvalus.portal.server.hadoop;
+package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.portal.server.PortalConfig;
-import com.bc.calvalus.portal.server.ServletContextLogHandler;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceException;
-import com.bc.calvalus.portal.shared.PortalParameter;
-import com.bc.calvalus.portal.shared.PortalProcessor;
-import com.bc.calvalus.portal.shared.PortalProductSet;
-import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionRequest;
-import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.PortalProductionStatus;
+
+import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.processing.beam.BeamJobService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
+import com.bc.calvalus.production.ProductionProcessor;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionParameter;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionResponse;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionState;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,8 +30,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -42,39 +38,45 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
 /**
- * An BackendService implementation that delegates to a Hadoop cluster.
+ * A ProductionService implementation that delegates to a Hadoop cluster.
  * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
  * (context.xml or web.xml)
  */
-public class HadoopBackendService implements BackendService {
+public class HadoopProductionService implements ProductionService {
 
     public static final File PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
     private static final int HADOOP_OBSERVATION_PERIOD = 2000;
-    private final ServletContext servletContext;
     private final JobClient jobClient;
     private final HadoopProductionDatabase database;
     private final VelocityEngine velocityEngine;
     private final StagingService stagingService;
     // todo - Persist
     private static long outputFileNum = 0;
+    private final Logger logger;
+    private final File stagingDirectory;
 
-    public HadoopBackendService(ServletContext servletContext) throws ServletException, IOException {
-        this.servletContext = servletContext;
+    public HadoopProductionService(JobConf jobConf, Logger logger, File stagingDirectory) throws ProductionException {
+        this.logger = logger;
+        this.stagingDirectory = stagingDirectory;
         this.database = new HadoopProductionDatabase();
         this.velocityEngine = new VelocityEngine();
-        this.jobClient = new JobClient(createJobConf(servletContext));
+        try {
+            this.jobClient = new JobClient(jobConf);
+        } catch (IOException e) {
+            throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
+        }
 
         initVelocityEngine();
         initDatabase();
@@ -86,27 +88,25 @@ public class HadoopBackendService implements BackendService {
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
                                                    HADOOP_OBSERVATION_PERIOD / 2,
                                                    HADOOP_OBSERVATION_PERIOD);
-        Logger logger = Logger.getLogger("com.bc.calvalus");
-        logger.addHandler(new ServletContextLogHandler(servletContext));
         stagingService = new StagingService(logger);
     }
 
     @Override
-    public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
+    public ProductSet[] getProductSets(String filter) throws ProductionException {
         // todo - load & update from persistent storage
-        return new PortalProductSet[]{
-                new PortalProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
-                new PortalProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
-                new PortalProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
-                new PortalProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
+        return new ProductSet[]{
+                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
+                new ProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
+                new ProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
+                new ProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
         };
     }
 
     @Override
-    public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
+    public ProductionProcessor[] getProcessors(String filter) throws ProductionException {
         // todo - load & update from persistent storage
-        return new PortalProcessor[]{
-                new PortalProcessor("CoastColour.L2W", "MERIS CoastColour",
+        return new ProductionProcessor[]{
+                new ProductionProcessor("CoastColour.L2W", "MERIS CoastColour",
                                     "<parameters>\n" +
                                             "  <useIdepix>true</useIdepix>\n" +
                                             "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
@@ -117,41 +117,32 @@ public class HadoopBackendService implements BackendService {
     }
 
     @Override
-    public PortalProduction[] getProductions(String filter) throws BackendServiceException {
-        HadoopProduction[] hadoopProductions = database.getProductions();
-        PortalProduction[] portalProductions = new PortalProduction[hadoopProductions.length];
-        for (int i = 0; i < hadoopProductions.length; i++) {
-            HadoopProduction hadoopProduction = hadoopProductions[i];
-            portalProductions[i] = new PortalProduction(hadoopProduction.getId(),
-                                                        hadoopProduction.getName(),
-                                                        hadoopProduction.getOutputPath(),
-                                                        getPortalProductionStatus(hadoopProduction.getJobStatus()));
-        }
-        return portalProductions;
+    public Production[] getProductions(String filter) throws ProductionException {
+        return database.getProductions();
     }
 
     @Override
-    public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
+    public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
         String productionType = productionRequest.getProductionType();
         Map<String, String> productionParameters = getProductionParametersMap(productionRequest);
         if ("calvalus-level3".equals(productionType)) {
             return orderL3Production(productionType, productionParameters);
         } else {
-            throw new BackendServiceException(String.format("Unhandled production type '%s'", productionType));
+            throw new ProductionException(String.format("Unhandled production type '%s'", productionType));
         }
     }
 
     @Override
-    public void cancelProductions(String[] productionIds) throws BackendServiceException {
+    public void cancelProductions(String[] productionIds) throws ProductionException {
         requestProductionKill(productionIds, HadoopProduction.Action.CANCEL);
     }
 
     @Override
-    public void deleteProductions(String[] productionIds) throws BackendServiceException {
+    public void deleteProductions(String[] productionIds) throws ProductionException {
         requestProductionKill(productionIds, HadoopProduction.Action.DELETE);
     }
 
-    private void requestProductionKill(String[] productionIds, HadoopProduction.Action action) throws BackendServiceException {
+    private void requestProductionKill(String[] productionIds, HadoopProduction.Action action) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             HadoopProduction hadoopProduction = database.getProduction(productionId);
@@ -171,11 +162,11 @@ public class HadoopBackendService implements BackendService {
             }
         }
         if (count < productionIds.length) {
-            throw new BackendServiceException(String.format("Only %d of %d production(s) have been deleted.", count, productionIds.length));
+            throw new ProductionException(String.format("Only %d of %d production(s) have been deleted.", count, productionIds.length));
         }
     }
 
-    public String stageProductionOutput(String productionId) throws BackendServiceException {
+    public String stageProductionOutput(String productionId) throws ProductionException {
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
         try {
             RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.forName(productionId));
@@ -195,8 +186,7 @@ public class HadoopBackendService implements BackendService {
                 }
             });
 
-            File downloadDir = new File(new PortalConfig(servletContext).getLocalDownloadDir(),
-                                        outputPath.getName());
+            File downloadDir = new File(stagingDirectory, outputPath.getName());
             if (!downloadDir.exists()) {
                 downloadDir.mkdirs();
             }
@@ -213,12 +203,12 @@ public class HadoopBackendService implements BackendService {
             // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
             return outputPath.getName() + ".zip";
         } catch (Exception e) {
-            throw new BackendServiceException("Error: " + e.getMessage(), e);
+            throw new ProductionException("Error: " + e.getMessage(), e);
         }
 
     }
 
-    private PortalProductionResponse orderL3Production(String productionType, Map<String, String> productionParameters) throws BackendServiceException {
+    private ProductionResponse orderL3Production(String productionType, Map<String, String> productionParameters) throws ProductionException {
         String productionId = Long.toHexString(System.nanoTime());
         String productionName = String.format("%s using product set '%s' and L2 processor '%s'",
                                               productionType,
@@ -236,18 +226,15 @@ public class HadoopBackendService implements BackendService {
                                                                  outputDir,
                                                                  jobId);
         database.addProduction(hadoopProduction);
-        return new PortalProductionResponse(new PortalProduction(hadoopProduction.getId(),
-                                                                 hadoopProduction.getName(),
-                                                                 hadoopProduction.getOutputPath(),
-                                                                 new PortalProductionStatus(PortalProductionStatus.State.WAITING)));
+        return new ProductionResponse(hadoopProduction);
     }
 
-    private String createL3WpsXml(String productionId, String productionName, Map<String, String> productionParameters, String outputDir) throws BackendServiceException {
+    private String createL3WpsXml(String productionId, String productionName, Map<String, String> productionParameters, String outputDir) throws ProductionException {
         String[] inputFiles;
         try {
             inputFiles = getInputFiles(productionParameters);
         } catch (IOException e) {
-            throw new BackendServiceException("Failed to assemble input file list: " + e.getMessage(), e);
+            throw new ProductionException("Failed to assemble input file list: " + e.getMessage(), e);
         }
         BeamL3Config.AggregatorConfiguration[] aggregators = getAggregators(productionParameters);
 
@@ -275,7 +262,7 @@ public class HadoopBackendService implements BackendService {
             wpsXml = writer.toString();
             System.out.println(wpsXml);
         } catch (Exception e) {
-            throw new BackendServiceException("Failed to generate WPS XML request", e);
+            throw new ProductionException("Failed to generate WPS XML request", e);
         }
         return wpsXml;
     }
@@ -308,13 +295,13 @@ public class HadoopBackendService implements BackendService {
         return aggregatorConfigurations;
     }
 
-    private JobID submitL3Job(String wpsXml) throws BackendServiceException {
+    private JobID submitL3Job(String wpsXml) throws ProductionException {
         try {
             BeamJobService beamJobService = new BeamJobService(jobClient);
             return beamJobService.submitJob(wpsXml);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new BackendServiceException("Failed to submit Hadoop job: " + e.getMessage(), e);
+            throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
     }
 
@@ -362,32 +349,13 @@ public class HadoopBackendService implements BackendService {
         return list;
     }
 
-    private Map<String, String> getProductionParametersMap(PortalProductionRequest productionRequest) {
+    private Map<String, String> getProductionParametersMap(ProductionRequest productionRequest) {
         HashMap<String, String> productionParametersMap = new HashMap<String, String>();
-        PortalParameter[] productionParameters = productionRequest.getProductionParameters();
-        for (PortalParameter productionParameter : productionParameters) {
+        ProductionParameter[] productionParameters = productionRequest.getProductionParameters();
+        for (ProductionParameter productionParameter : productionParameters) {
             productionParametersMap.put(productionParameter.getName(), productionParameter.getValue());
         }
         return productionParametersMap;
-    }
-
-    private PortalProductionStatus getPortalProductionStatus(JobStatus job) {
-        if (job != null) {
-            // todo - use message that shows current 'action' value from 'HadoopProduction'
-            float progress = 0.5f * (job.mapProgress() + job.reduceProgress());
-            if (job.getRunState() == JobStatus.FAILED) {
-                return new PortalProductionStatus(PortalProductionStatus.State.ERROR, progress);
-            } else if (job.getRunState() == JobStatus.KILLED) {
-                return new PortalProductionStatus(PortalProductionStatus.State.CANCELLED, progress);
-            } else if (job.getRunState() == JobStatus.PREP) {
-                return new PortalProductionStatus(PortalProductionStatus.State.WAITING, progress);
-            } else if (job.getRunState() == JobStatus.RUNNING) {
-                return new PortalProductionStatus(PortalProductionStatus.State.IN_PROGRESS, progress);
-            } else if (job.getRunState() == JobStatus.SUCCEEDED) {
-                return new PortalProductionStatus(PortalProductionStatus.State.COMPLETED);
-            }
-        }
-        return new PortalProductionStatus(PortalProductionStatus.State.UNKNOWN);
     }
 
     static int getNumRows(double res) {
@@ -405,33 +373,19 @@ public class HadoopBackendService implements BackendService {
         try {
             database.load(PRODUCTIONS_DB_FILE);
         } catch (IOException e) {
-            servletContext.log("Failed to load productions: " + e.getMessage(), e);
+            logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
     }
 
-    private static JobConf createJobConf(ServletContext servletContext) throws IOException {
-        JobConf jobConf = new JobConf();
-        Enumeration elements = servletContext.getInitParameterNames();
-        while (elements.hasMoreElements()) {
-            String name = (String) elements.nextElement();
-            if (name.startsWith("calvalus.hadoop.")) {
-                String hadoopName = name.substring("calvalus.hadoop.".length());
-                String hadoopValue = servletContext.getInitParameter(name);
-                jobConf.set(hadoopName, hadoopValue);
-                // System.out.println("Using Hadoop configuration: " + hadoopName + " = " + hadoopValue);
-            }
-        }
-        return jobConf;
-    }
 
-    private void initVelocityEngine() throws ServletException {
+    private void initVelocityEngine() throws ProductionException {
         Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
         properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         try {
             velocityEngine.init(properties);
         } catch (Exception e) {
-            throw new ServletException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
+            throw new ProductionException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
         }
     }
 
@@ -464,15 +418,15 @@ public class HadoopBackendService implements BackendService {
         }
 
         // copy result to staging area
-        for (HadoopProduction production : productions) {
-            if (production.getStaging().equals(HadoopProduction.Staging.TODO)) {
-                JobStatus jobStatus = production.getJobStatus();
-                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
-                    production.setStaging(HadoopProduction.Staging.ONGOING);
-                    stagingService.stageProduction(production, jobClient.getConf());
-                }
-            }
-        }
+//        for (HadoopProduction production : productions) {
+//            if (production.isStagingAfterProduction() && !production.getStagingState().isDone()) {
+//                JobStatus jobStatus = production.getJobStatus();
+//                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+//                    production.setStagingState(ProductionState.WAITING);
+//                    stagingService.stageProduction(production, jobClient.getConf());
+//                }
+//            }
+//        }
 
         // write to persistent storage
         database.store(PRODUCTIONS_DB_FILE);
@@ -502,7 +456,7 @@ public class HadoopBackendService implements BackendService {
         private void logError(IOException e) {
             long time = System.currentTimeMillis();
             if (time - lastLog > 120 * 1000L) {
-                servletContext.log("Failed to update production state:" + e.getMessage(), e);
+                logger.log(Level.SEVERE, "Failed to update production state:" + e.getMessage(), e);
                 lastLog = time;
             }
         }

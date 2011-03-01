@@ -9,64 +9,43 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class PortalProductionStatus implements IsSerializable {
     private static final float EPS = 1.0E-04f;
-    private State state;
+    private PortalProductionState state;
     private String message;
     private float progress;
-
-    public enum State {
-        /**
-         * Indicates that the work unit has not yet started.
-         */
-        WAITING,
-        /**
-         * Indicates that the work unit is in progress.
-         */
-        IN_PROGRESS,
-        /**
-         * Indicates that the work unit has been successfully completed.
-         */
-        COMPLETED,
-        /**
-         * Indicates that the work unit has been cancelled, e.g. on user request.
-         */
-        CANCELLED,
-        /**
-         * Indicates an unknown state, e.g. could not be retrieved.
-         */
-        UNKNOWN,
-        /**
-         * Indicates a server-side problem, e.g. missing input files.
-         */
-        ERROR,
-    }
 
     /**
      * No-arg constructor as required by {@link IsSerializable}.
      */
     public PortalProductionStatus() {
-        this(State.WAITING);
+        this(PortalProductionState.WAITING);
     }
 
-    public PortalProductionStatus(State state) {
+    public PortalProductionStatus(PortalProductionState state) {
         this(state, 0.0f);
     }
 
-    public PortalProductionStatus(State state, float progress) {
+    public PortalProductionStatus(PortalProductionState state, float progress) {
         this(state, "", progress);
     }
 
-    public PortalProductionStatus(State state, String message, float progress) {
+    public PortalProductionStatus(PortalProductionState state, String message, float progress) {
+        if (state == null) {
+            throw new NullPointerException("state");
+        }
+        if (message == null) {
+            throw new NullPointerException("message");
+        }
         this.state = state;
         this.message = message;
         this.progress = progress;
     }
 
-    public State getState() {
+    public PortalProductionState getState() {
         return state;
     }
 
     public boolean isDone() {
-        return !(state == State.WAITING || state == State.IN_PROGRESS);
+        return state.isDone();
     }
 
     public String getMessage() {

@@ -7,17 +7,17 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 *
 * @author Norman
 */
-public class PortalParameter implements IsSerializable {
+public class PortalProductionParameter implements IsSerializable {
     String name;
     String value;
 
     /**
      * No-arg constructor as required by {@link com.google.gwt.user.client.rpc.IsSerializable}. Don't use directly.
      */
-    public PortalParameter() {
+    public PortalProductionParameter() {
     }
 
-    public PortalParameter(String name, String value) {
+    public PortalProductionParameter(String name, String value) {
         this.name = name;
         this.value = value;
     }

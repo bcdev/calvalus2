@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.PortalProduction;
+import com.bc.calvalus.portal.shared.PortalProductionState;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
@@ -109,7 +110,7 @@ public class ManageProductionsView extends PortalView {
             @Override
             public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
                 if (production.getOutputPath() != null
-                        && PortalProductionStatus.State.COMPLETED.equals(production.getStatus().getState())) {
+                        && PortalProductionState.COMPLETED.equals(production.getStatus().getState())) {
                     super.render(context, production, sb);
                 } else {
                     sb.appendHtmlConstant("<br/>");
@@ -245,18 +246,18 @@ public class ManageProductionsView extends PortalView {
 
     private String getWorkStatusText(PortalProduction production) {
         PortalProductionStatus status = production.getStatus();
-        PortalProductionStatus.State state = status.getState();
-        if (state == PortalProductionStatus.State.WAITING) {
+        PortalProductionState state = status.getState();
+        if (state == PortalProductionState.WAITING) {
             return "Waiting";
-        } else if (state == PortalProductionStatus.State.IN_PROGRESS) {
+        } else if (state == PortalProductionState.IN_PROGRESS) {
             return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
-        } else if (state == PortalProductionStatus.State.CANCELLED) {
+        } else if (state == PortalProductionState.CANCELLED) {
             return "Cancelled";
-        } else if (state == PortalProductionStatus.State.ERROR) {
+        } else if (state == PortalProductionState.ERROR) {
             return "Error";
-        } else if (state == PortalProductionStatus.State.UNKNOWN) {
+        } else if (state == PortalProductionState.UNKNOWN) {
             return "Unknown";
-        } else if (state == PortalProductionStatus.State.COMPLETED) {
+        } else if (state == PortalProductionState.COMPLETED) {
             return "Completed";
         }
         return "?";

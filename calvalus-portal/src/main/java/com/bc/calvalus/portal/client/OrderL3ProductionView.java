@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalParameter;
+import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -76,18 +76,18 @@ public class OrderL3ProductionView extends PortalView {
                 return;
             }
 
-            ArrayList<PortalParameter> parameters = new ArrayList<PortalParameter>();
-            parameters.addAll(Arrays.asList(new PortalParameter("inputProductSetId",
+            ArrayList<PortalProductionParameter> parameters = new ArrayList<PortalProductionParameter>();
+            parameters.addAll(Arrays.asList(new PortalProductionParameter("inputProductSetId",
                                                                 inputOutputPanel.getInputProductSetId()),
-                                            new PortalParameter("outputFileName",
+                                            new PortalProductionParameter("outputFileName",
                                                                 inputOutputPanel.getOutputFileName()),
-                                            new PortalParameter("l2OperatorName",
+                                            new PortalProductionParameter("l2OperatorName",
                                                                 l2ProcessorPanel.getProcessorId()),
-                                            new PortalParameter("l2OperatorParameters",
+                                            new PortalProductionParameter("l2OperatorParameters",
                                                                 l2ProcessorPanel.getProcessorParameters())));
             parameters.addAll(l3ProcessorPanel.getParameterList());
             PortalProductionRequest request = new PortalProductionRequest("calvalus-level3",
-                                                                          parameters.toArray(new PortalParameter[parameters.size()]));
+                                                                          parameters.toArray(new PortalProductionParameter[parameters.size()]));
 
             getPortal().orderProduction(request);
         }

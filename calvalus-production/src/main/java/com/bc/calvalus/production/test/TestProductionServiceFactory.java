@@ -1,0 +1,19 @@
+package com.bc.calvalus.production.test;
+
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceFactory;
+
+import java.io.File;
+import java.util.Map;
+import java.util.logging.Logger;
+
+/**
+ * Factory for the {@link TestProductionService}.
+ */
+public class TestProductionServiceFactory implements ProductionServiceFactory {
+    @Override
+    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger, File outputDir) throws ProductionException {
+        return new TestProductionService();
+    }
+}

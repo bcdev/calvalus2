@@ -26,7 +26,7 @@ public interface ProductionService {
      * @return The processors.
      * @throws ProductionException If a service error occurred.
      */
-    Processor[] getProcessors(String filter) throws ProductionException;
+    ProductionProcessor[] getProcessors(String filter) throws ProductionException;
 
     /**
      * Gets all known productions.

@@ -20,12 +20,15 @@ public class ProductionStatus {
     }
 
     public ProductionStatus(ProductionState state, float progress) {
-        this(state, null, progress);
+        this(state, "", progress);
     }
 
     public ProductionStatus(ProductionState state, String message, float progress) {
         if (state == null) {
             throw new NullPointerException("state");
+        }
+        if (message == null) {
+            throw new NullPointerException("message");
         }
         this.state = state;
         this.message = message;
@@ -37,9 +40,7 @@ public class ProductionStatus {
     }
 
     public boolean isDone() {
-        return state == ProductionState.COMPLETED
-                || state == ProductionState.ERROR
-                || state == ProductionState.CANCELLED;
+        return state.isDone();
     }
 
     public String getMessage() {
@@ -67,14 +68,14 @@ public class ProductionStatus {
         }
 
         return delta <= EPS
-                && (message != null ? message.equals(that.message) : that.message == null)
+                && message.equals(that.message)
                 && state == that.state;
     }
 
     @Override
     public int hashCode() {
         int result = state.hashCode();
-        result = 31 * result + (message != null ? message.hashCode() : 0);
+        result = 31 * result + message.hashCode();
         result = 31 * result + (int) (progress / EPS);
         return result;
     }

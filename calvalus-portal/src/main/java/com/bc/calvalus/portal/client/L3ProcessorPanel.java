@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalParameter;
+import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -294,21 +294,21 @@ public class L3ProcessorPanel implements IsWidget {
         return null;
     }
 
-    public List<PortalParameter> getParameterList() {
+    public List<PortalProductionParameter> getParameterList() {
         return Arrays.asList(
-                new PortalParameter("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex())),
-                new PortalParameter("validMask", validMask.getText()),
-                new PortalParameter("aggregator", aggregator.getValue(aggregator.getSelectedIndex())),
-                new PortalParameter("weightCoeff", weightCoeff.getText()),
-                new PortalParameter("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue())),
-                new PortalParameter("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue())),
-                new PortalParameter("periodCount", periodCount.getText()),
-                new PortalParameter("periodLength", periodLength.getText()),
-                new PortalParameter("lonMin", lonMin.getText()),
-                new PortalParameter("lonMax", lonMax.getText()),
-                new PortalParameter("latMin", latMin.getText()),
-                new PortalParameter("latMax", latMax.getText()),
-                new PortalParameter("resolution", resolution.getText()),
-                new PortalParameter("superSampling", superSampling.getText()));
+                new PortalProductionParameter("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex())),
+                new PortalProductionParameter("validMask", validMask.getText()),
+                new PortalProductionParameter("aggregator", aggregator.getValue(aggregator.getSelectedIndex())),
+                new PortalProductionParameter("weightCoeff", weightCoeff.getText()),
+                new PortalProductionParameter("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue())),
+                new PortalProductionParameter("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue())),
+                new PortalProductionParameter("periodCount", periodCount.getText()),
+                new PortalProductionParameter("periodLength", periodLength.getText()),
+                new PortalProductionParameter("lonMin", lonMin.getText()),
+                new PortalProductionParameter("lonMax", lonMax.getText()),
+                new PortalProductionParameter("latMin", latMin.getText()),
+                new PortalProductionParameter("latMax", latMax.getText()),
+                new PortalProductionParameter("resolution", resolution.getText()),
+                new PortalProductionParameter("superSampling", superSampling.getText()));
     }
 }
