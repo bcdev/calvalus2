@@ -1,6 +1,5 @@
-package com.bc.calvalus.portal.server.hadoop;
+package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.portal.server.hadoop.HadoopBackendService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -12,7 +11,7 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-public class HadoopBackendServiceTest {
+public class HadoopProductionServiceTest {
 
     @Test
     public void testVelocityL3Template() throws Exception {
@@ -59,9 +58,9 @@ public class HadoopBackendServiceTest {
 
     @Test
     public void testL3NumRows() {
-        assertEquals(2160, HadoopBackendService.getNumRows(9.28));
-        assertEquals(2160 * 2, HadoopBackendService.getNumRows(9.28 / 2));
-        assertEquals(2160 / 2, HadoopBackendService.getNumRows(9.28 * 2));
+        assertEquals(2160, HadoopProductionService.getNumRows(9.28));
+        assertEquals(2160 * 2, HadoopProductionService.getNumRows(9.28 / 2));
+        assertEquals(2160 / 2, HadoopProductionService.getNumRows(9.28 * 2));
     }
 
 }
