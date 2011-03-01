@@ -70,6 +70,19 @@ public class FormatterL3Config {
         }
     }
 
+    public FormatterL3Config() {
+        // used by DOM converter
+    }
+
+    public FormatterL3Config(String outputType, String outputFile, String outputFormat, BandConfiguration[] bands, String startTime, String endTime) {
+        this.outputType = outputType;
+        this.outputFile = outputFile;
+        this.outputFormat = outputFormat;
+        this.bands = bands;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
     public String getOutputType() {
         if (outputType == null) {
             throw new IllegalArgumentException("No output type given");

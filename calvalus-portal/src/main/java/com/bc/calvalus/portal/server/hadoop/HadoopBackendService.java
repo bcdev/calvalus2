@@ -1,6 +1,8 @@
 package com.bc.calvalus.portal.server.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.portal.server.PortalConfig;
+import com.bc.calvalus.portal.server.ServletContextLogHandler;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.PortalParameter;
@@ -47,6 +49,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 import static java.lang.Math.PI;
 
@@ -63,6 +66,7 @@ public class HadoopBackendService implements BackendService {
     private final JobClient jobClient;
     private final HadoopProductionDatabase database;
     private final VelocityEngine velocityEngine;
+    private final StagingService stagingService;
     // todo - Persist
     private static long outputFileNum = 0;
 
@@ -82,6 +86,9 @@ public class HadoopBackendService implements BackendService {
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
                                                    HADOOP_OBSERVATION_PERIOD / 2,
                                                    HADOOP_OBSERVATION_PERIOD);
+        Logger logger = Logger.getLogger("com.bc.calvalus");
+        logger.addHandler(new ServletContextLogHandler(servletContext));
+        stagingService = new StagingService(logger);
     }
 
     @Override
@@ -452,6 +459,17 @@ public class HadoopBackendService implements BackendService {
                 JobStatus jobStatus = production.getJobStatus();
                 if (isDone(jobStatus)) {
                     database.removeProduction(production);
+                }
+            }
+        }
+
+        // copy result to staging area
+        for (HadoopProduction production : productions) {
+            if (production.getStaging().equals(HadoopProduction.Staging.TODO)) {
+                JobStatus jobStatus = production.getJobStatus();
+                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+                    production.setStaging(HadoopProduction.Staging.ONGOING);
+                    stagingService.stageProduction(production, jobClient.getConf());
                 }
             }
         }

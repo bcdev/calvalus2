@@ -16,12 +16,21 @@ class HadoopProduction {
        RESTART,
    }
 
+    public static enum Staging {
+        NONE,
+        TODO,
+        ONGOING,
+        DONE
+    }
+
+
     private final String id;
     private final String name;
     private final String outputPath;
     private final JobID jobId;
     private JobStatus jobStatus;
     private Action action;
+    private Staging staging;
 
     public HadoopProduction(String id, String name, String outputPath, JobID jobId) {
         this.id = id;
@@ -29,6 +38,7 @@ class HadoopProduction {
         this.outputPath = outputPath;
         this.jobId = jobId;
         this.action = Action.NONE;
+        this.staging = Staging.NONE;
     }
 
     public String getId() {
@@ -61,5 +71,13 @@ class HadoopProduction {
 
     public void setAction(Action action) {
         this.action = action;
+    }
+
+    public Staging getStaging() {
+        return staging;
+    }
+
+    public void setStaging(Staging staging) {
+        this.staging = staging;
     }
 }
