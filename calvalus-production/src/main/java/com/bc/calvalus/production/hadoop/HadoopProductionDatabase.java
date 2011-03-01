@@ -65,7 +65,7 @@ class HadoopProductionDatabase {
             String name = tokens[1];
             String outputPath = tokens[2];
             String jobId = tokens[3];
-            addProduction(new HadoopProduction(id, name, outputPath, JobID.forName(jobId)));
+            addProduction(new HadoopProduction(id, name, JobID.forName(jobId), outputPath, true));
         }
     }
 

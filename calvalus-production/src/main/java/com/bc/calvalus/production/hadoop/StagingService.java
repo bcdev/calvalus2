@@ -19,6 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.processing.beam.BeamL3FormattingService;
 import com.bc.calvalus.processing.beam.FormatterL3Config;
 import com.bc.calvalus.production.ProductionState;
+import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.concurrent.ExecutorService;
@@ -50,7 +51,7 @@ public class StagingService {
                 FormatterL3Config formatConfig = new FormatterL3Config("Product", "outputFile.dim", "BEAM-DIMAP", null, "2010-01-01", "2010-01-02");
                 try {
                     beamL3FormattingService.format(formatConfig, outputDir);
-                    production.setStagingState(ProductionState.COMPLETED);
+                    production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, "", 1));
                 } catch (Exception e) {
                     logger.log(Level.WARNING, "formatting failed.", e);
                 }

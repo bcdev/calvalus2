@@ -12,7 +12,6 @@ import com.bc.calvalus.production.ProductionParameter;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionState;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -223,8 +222,8 @@ public class HadoopProductionService implements ProductionService {
         JobID jobId = submitL3Job(wpsXml);
         HadoopProduction hadoopProduction = new HadoopProduction(productionId,
                                                                  productionName,
-                                                                 outputDir,
-                                                                 jobId);
+                                                                 jobId, outputDir,
+                                                                 true);
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }

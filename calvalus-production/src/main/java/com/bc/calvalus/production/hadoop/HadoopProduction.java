@@ -23,15 +23,16 @@ class HadoopProduction extends Production {
     private final JobID jobId;
     private JobStatus jobStatus;
     private Action action;
-    private boolean stagingAfterProduction;
+    private boolean staging;
 
-    ProductionState stagingState;
+    ProductionStatus stagingStatus;
 
-    public HadoopProduction(String id, String name, String outputPath, JobID jobId) {
+    public HadoopProduction(String id, String name, JobID jobId, String outputPath, boolean staging) {
         super(id, name, outputPath);
         this.jobId = jobId;
+        this.staging = staging;
         this.action = Action.NONE;
-        this.stagingState = stagingAfterProduction ? ProductionState.WAITING : ProductionState.UNKNOWN;
+        this.stagingStatus = new ProductionStatus();
     }
 
     public JobID getJobId() {
@@ -55,20 +56,20 @@ class HadoopProduction extends Production {
         this.action = action;
     }
 
-    public boolean isStagingAfterProduction() {
-        return stagingAfterProduction;
+    public boolean isStaging() {
+        return staging;
     }
 
-    public void setStagingAfterProduction(boolean stagingAfterProduction) {
-        this.stagingAfterProduction = stagingAfterProduction;
+    public void setStaging(boolean staging) {
+        this.staging = staging;
     }
 
-    public ProductionState getStagingState() {
-        return stagingState;
+    public ProductionStatus getStagingStatus() {
+        return stagingStatus;
     }
 
-    public void setStagingState(ProductionState stagingState) {
-        this.stagingState = stagingState;
+    public void setStagingStatus(ProductionStatus stagingStatus) {
+        this.stagingStatus = stagingStatus;
     }
 
     public static ProductionStatus getProductionStatus(JobStatus job) {
@@ -84,8 +85,7 @@ class HadoopProduction extends Production {
             } else if (job.getRunState() == JobStatus.RUNNING) {
                 return new ProductionStatus(ProductionState.IN_PROGRESS, progress);
             } else if (job.getRunState() == JobStatus.SUCCEEDED) {
-
-                return new ProductionStatus(ProductionState.COMPLETED);
+                return new ProductionStatus(ProductionState.COMPLETED, 1.0f);
             }
         }
         return new ProductionStatus(ProductionState.UNKNOWN);
