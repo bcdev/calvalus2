@@ -2,7 +2,6 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionState;
@@ -44,8 +43,8 @@ public class BackendServiceTest extends GWTTestCase {
 
         // Send a request to the server.
         backendService.orderProduction(new PortalProductionRequest("x*y",
-                                                                   new PortalProductionParameter("x", "3"),
-                                                                   new PortalProductionParameter("y", "-1")),
+                                                                   "x", "3",
+                                                                   "y", "-1"),
                                        new PortalProductionResponseAsyncCallback());
     }
 

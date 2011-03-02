@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -19,9 +18,9 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -294,21 +293,22 @@ public class L3ProcessorPanel implements IsWidget {
         return null;
     }
 
-    public List<PortalProductionParameter> getParameterList() {
-        return Arrays.asList(
-                new PortalProductionParameter("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex())),
-                new PortalProductionParameter("validMask", validMask.getText()),
-                new PortalProductionParameter("aggregator", aggregator.getValue(aggregator.getSelectedIndex())),
-                new PortalProductionParameter("weightCoeff", weightCoeff.getText()),
-                new PortalProductionParameter("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue())),
-                new PortalProductionParameter("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue())),
-                new PortalProductionParameter("periodCount", periodCount.getText()),
-                new PortalProductionParameter("periodLength", periodLength.getText()),
-                new PortalProductionParameter("lonMin", lonMin.getText()),
-                new PortalProductionParameter("lonMax", lonMax.getText()),
-                new PortalProductionParameter("latMin", latMin.getText()),
-                new PortalProductionParameter("latMax", latMax.getText()),
-                new PortalProductionParameter("resolution", resolution.getText()),
-                new PortalProductionParameter("superSampling", superSampling.getText()));
+    public Map<String, String> getParameterMap() {
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex()));
+        parameters.put("validMask", validMask.getText());
+        parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
+        parameters.put("weightCoeff", weightCoeff.getText());
+        parameters.put("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue()));
+        parameters.put("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue()));
+        parameters.put("periodCount", periodCount.getText());
+        parameters.put("periodLength", periodLength.getText());
+        parameters.put("lonMin", lonMin.getText());
+        parameters.put("lonMax", lonMax.getText());
+        parameters.put("latMin", latMin.getText());
+        parameters.put("latMax", latMax.getText());
+        parameters.put("resolution", resolution.getText());
+        parameters.put("superSampling", superSampling.getText());
+        return parameters;
     }
 }

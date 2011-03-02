@@ -4,7 +4,6 @@ import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionParameter;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
@@ -78,8 +77,8 @@ public class TestProductionService implements ProductionService {
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
 
         String productionType = productionRequest.getProductionType();
-        String outputFileName = getOutputFile(productionRequest, productionType);
-        String inputProductSetId = getProductionParameter(productionRequest, "inputProductSetId");
+        String outputFileName = getOutputFile(productionRequest);
+        String inputProductSetId = productionRequest.getProductionParameters().get("inputProductSetId");
         String productionName = MessageFormat.format("Producing file ''{0}'' from ''{1}'' using workflow ''{2}''",
                                                      outputFileName,
                                                      inputProductSetId,
@@ -134,19 +133,10 @@ public class TestProductionService implements ProductionService {
         return null;
     }
 
-    public static String getProductionParameter(ProductionRequest productionRequest, String name) {
-        for (ProductionParameter parameter : productionRequest.getProductionParameters()) {
-            if (name.equals(parameter.getName())) {
-                return parameter.getValue();
-            }
-        }
-        return null;
-    }
-
-    private String getOutputFile(ProductionRequest productionRequest, String productionType) {
-        return getProductionParameter(productionRequest, "outputFileName")
+    private String getOutputFile(ProductionRequest productionRequest) {
+        return productionRequest.getProductionParameters().get("outputFileName")
                 .replace("${user}", System.getProperty("user.name", "Mrs Dummy"))
-                .replace("${type}", productionType)
+                .replace("${type}", productionRequest.getProductionType())
                 .replace("${num}", (++counter) + "");
     }
 

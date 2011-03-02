@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -9,6 +8,8 @@ import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Widget;
+
+import java.util.HashMap;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -59,21 +60,15 @@ public class OrderL2ProductionView extends PortalView {
 
     // todo - test
     private PortalProductionRequest getProductionRequest() {
-        return new PortalProductionRequest("calvalus-level2",
-                                           new PortalProductionParameter("inputProductSetId",
-                                                                         inputOutputPanel.getInputProductSetId()),
-                                           new PortalProductionParameter("outputFileName",
-                                                                         inputOutputPanel.getOutputFileName()),
-                                           new PortalProductionParameter("outputFormat",
-                                                                         inputOutputPanel.getOutputFormat()),
-                                           new PortalProductionParameter("outputStaging",
-                                                                         inputOutputPanel.getOutputStaging() + ""),
-                                           new PortalProductionParameter("processorId",
-                                                                         processingPanel.getProcessorId()),
-                                           new PortalProductionParameter("processorVersion",
-                                                                         processingPanel.getProcessorVersion()),
-                                           new PortalProductionParameter("processorParameters",
-                                                                         processingPanel.getProcessorParameters()));
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
+        parameters.put("outputFileName", inputOutputPanel.getOutputFileName());
+        parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
+        parameters.put("outputStaging", inputOutputPanel.getOutputStaging() + "");
+        parameters.put("processorId", processingPanel.getProcessorId());
+        parameters.put("processorVersion", processingPanel.getProcessorVersion());
+        parameters.put("processorParameters", processingPanel.getProcessorParameters());
+        return new PortalProductionRequest("calvalus-level2", parameters);
     }
 
     private class OrderProductionHandler implements ClickHandler {

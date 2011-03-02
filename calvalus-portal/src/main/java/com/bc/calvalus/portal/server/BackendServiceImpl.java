@@ -6,14 +6,12 @@ import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductSet;
 import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.bc.calvalus.portal.shared.PortalProductionResponse;
 import com.bc.calvalus.portal.shared.PortalProductionState;
 import com.bc.calvalus.portal.shared.PortalProductionStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionParameter;
 import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
@@ -161,19 +159,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private ProductionRequest convert(PortalProductionRequest portalProductionRequest) {
-        return new ProductionRequest(portalProductionRequest.getProductionType(), convert(portalProductionRequest.getProductionParameters()));
-    }
-
-    private ProductionParameter[] convert(PortalProductionParameter[] portalProductionParameters) {
-        ProductionParameter[] productionParameters = new ProductionParameter[portalProductionParameters.length];
-        for (int i = 0; i < productionParameters.length; i++) {
-            productionParameters[i] = convert(portalProductionParameters[i]);
-        }
-        return productionParameters;
-    }
-
-    private ProductionParameter convert(PortalProductionParameter portalProductionParameter) {
-        return new ProductionParameter(portalProductionParameter.getName(), portalProductionParameter.getValue());
+        return new ProductionRequest(portalProductionRequest.getProductionType(), portalProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(ProductionException e) {

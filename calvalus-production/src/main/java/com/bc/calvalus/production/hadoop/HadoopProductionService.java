@@ -5,10 +5,9 @@ import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.processing.beam.BeamJobService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionParameter;
+import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
@@ -106,12 +105,12 @@ public class HadoopProductionService implements ProductionService {
         // todo - load & update from persistent storage
         return new ProductionProcessor[]{
                 new ProductionProcessor("CoastColour.L2W", "MERIS CoastColour",
-                                    "<parameters>\n" +
-                                            "  <useIdepix>true</useIdepix>\n" +
-                                            "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                            "  <outputReflec>false</outputReflec>\n" +
-                                            "</parameters>",
-                                    "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
+                                        "<parameters>\n" +
+                                                "  <useIdepix>true</useIdepix>\n" +
+                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                                "  <outputReflec>false</outputReflec>\n" +
+                                                "</parameters>",
+                                        "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
         };
     }
 
@@ -122,12 +121,11 @@ public class HadoopProductionService implements ProductionService {
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
-        String productionType = productionRequest.getProductionType();
-        Map<String, String> productionParameters = getProductionParametersMap(productionRequest);
-        if ("calvalus-level3".equals(productionType)) {
-            return orderL3Production(productionType, productionParameters);
+        if ("calvalus-level3".equals(productionRequest.getProductionType())) {
+            return orderL3Production(productionRequest);
         } else {
-            throw new ProductionException(String.format("Unhandled production type '%s'", productionType));
+            throw new ProductionException(String.format("Unhandled production type '%s'",
+                                                        productionRequest.getProductionType()));
         }
     }
 
@@ -207,8 +205,10 @@ public class HadoopProductionService implements ProductionService {
 
     }
 
-    private ProductionResponse orderL3Production(String productionType, Map<String, String> productionParameters) throws ProductionException {
+    private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
         String productionId = Long.toHexString(System.nanoTime());
+        String productionType = productionRequest.getProductionType();
+        Map<String, String> productionParameters = productionRequest.getProductionParameters();
         String productionName = String.format("%s using product set '%s' and L2 processor '%s'",
                                               productionType,
                                               productionParameters.get("inputProductSetId"),
@@ -356,15 +356,6 @@ public class HadoopProductionService implements ProductionService {
         } while (!startCal.after(stopCal));
 
         return list;
-    }
-
-    private Map<String, String> getProductionParametersMap(ProductionRequest productionRequest) {
-        HashMap<String, String> productionParametersMap = new HashMap<String, String>();
-        ProductionParameter[] productionParameters = productionRequest.getProductionParameters();
-        for (ProductionParameter productionParameter : productionParameters) {
-            productionParametersMap.put(productionParameter.getName(), productionParameter.getValue());
-        }
-        return productionParametersMap;
     }
 
     static int getNumRows(double res) {

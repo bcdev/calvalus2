@@ -1,20 +1,19 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProductionParameter;
 import com.google.gwt.junit.client.GWTTestCase;
 
-import java.util.List;
+import java.util.Map;
 
 public class L3ProcessorPanelTest extends GWTTestCase {
     public String getModuleName() {
         return "com.bc.calvalus.portal.CalvalusPortalJUnit";
     }
 
-    public void testParameterList() {
+    public void testParameterMap() {
         L3ProcessorPanel l3ProcessorPanel = new L3ProcessorPanel();
-        List<PortalProductionParameter> parameterList = l3ProcessorPanel.getParameterList();
-        assertNotNull(parameterList);
-        assertEquals(14, parameterList.size());
+        Map<String, String> parameterMap = l3ProcessorPanel.getParameterMap();
+        assertNotNull(parameterMap);
+        assertEquals(14, parameterMap.size());
     }
 
 }
