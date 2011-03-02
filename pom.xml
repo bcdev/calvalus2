@@ -125,6 +125,12 @@
 
             <dependency>
                 <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-production</artifactId>
+                <version>${calvalus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
                 <artifactId>calvalus-processing</artifactId>
                 <version>${calvalus.version}</version>
             </dependency>

@@ -22,8 +22,11 @@ public class HadoopProductionTest {
         assertEquals((0.8f + 0.1f + 0.0f) / 3, processing.getStatus().getProgress(), 1e-5f);
 
         processing.setJobStatus(new JobStatus(org.apache.hadoop.mapred.JobID.downgrade(jobID), 1f, 1f, JobStatus.SUCCEEDED));
-        assertEquals(ProductionState.WAITING, processing.getStagingStatus().getState());
-        assertEquals(ProductionState.IN_PROGRESS, processing.getStatus().getState());
+        assertEquals(ProductionState.UNKNOWN, processing.getStatus().getState());
+        assertEquals((1.0f + 1.0f + 0.0f) / 3, processing.getStatus().getProgress(), 1e-5f);
+
+        processing.setStagingStatus(new ProductionStatus(ProductionState.WAITING, 0.0f));
+        assertEquals(ProductionState.WAITING, processing.getStatus().getState());
         assertEquals((1.0f + 1.0f + 0.0f) / 3, processing.getStatus().getProgress(), 1e-5f);
 
         processing.setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, 0.5f));

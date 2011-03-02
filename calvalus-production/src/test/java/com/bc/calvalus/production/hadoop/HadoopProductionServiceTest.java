@@ -44,7 +44,7 @@ public class HadoopProductionServiceTest {
         });
 
 
-        Template temp = ve.getTemplate("com/bc/calvalus/portal/server/level3-wps-request.xml.vm");
+        Template temp = ve.getTemplate("com/bc/calvalus/production/hadoop/level3-wps-request.xml.vm");
         assertNotNull(temp);
         StringWriter writer = new StringWriter();
         temp.merge(context, writer);

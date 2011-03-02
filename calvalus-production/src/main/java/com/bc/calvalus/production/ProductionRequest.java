@@ -25,10 +25,15 @@ public class ProductionRequest {
         this.productionType = productionType;
         this.productionParameters = new HashMap<String, String>();
         for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
-            if (productionParametersKeyValuePairs[i] == null) {
-                throw new IllegalArgumentException("productionParametersKeyValuePairs[" + i + "] == null");
+            String name = productionParametersKeyValuePairs[i];
+             if (name == null) {
+                throw new NullPointerException("name");
             }
-            productionParameters.put(productionParametersKeyValuePairs[i], productionParametersKeyValuePairs[i + 1]);
+            String value = productionParametersKeyValuePairs[i + 1];
+            if (value == null) {
+                throw new NullPointerException("value");
+            }
+            productionParameters.put(name, value);
         }
     }
 

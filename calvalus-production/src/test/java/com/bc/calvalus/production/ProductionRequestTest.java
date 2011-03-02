@@ -44,7 +44,7 @@ public class ProductionRequestTest {
         try {
             new ProductionRequest("t2", (String) null);
             fail("#production parameters must be a multiple of 2");
-        } catch (IllegalArgumentException e) {
+        } catch (NullPointerException e) {
             // ok
         }
         try {

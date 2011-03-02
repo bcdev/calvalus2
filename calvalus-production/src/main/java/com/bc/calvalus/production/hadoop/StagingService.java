@@ -21,7 +21,10 @@ import com.bc.calvalus.processing.beam.FormatterL3Config;
 import com.bc.calvalus.production.ProductionState;
 import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductIOPlugInManager;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -42,25 +45,45 @@ public class StagingService {
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
-    public void stageProduction(final HadoopProduction production, final Configuration configuration) {
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, configuration);
-                String outputDir = production.getOutputPath();
-                FormatterL3Config formatConfig = new FormatterL3Config("Product",
-                                                                       "outputFile.dim",
-                                                                       production.getOutputFormat(),
-                                                                       null,
-                                                                       "2010-01-01",
-                                                                       "2010-01-02");
-                try {
-                    beamL3FormattingService.format(formatConfig, outputDir, "wpsRequestXML");//TODO
-                    production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, "", 1));
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "formatting failed.", e);
-                }
+    public StagingJob stageProduction(final HadoopProduction production, final Configuration configuration) {
+        StagingJob task = new StagingJob(production, configuration);
+        executorService.submit(task);
+        return task;
+    }
+
+    class StagingJob implements Callable<StagingJob> {
+        private final HadoopProduction production;
+        private final Configuration hadoopConfiguration;
+        private float progress;
+
+        public StagingJob(HadoopProduction production, Configuration hadoopConfiguration) {
+            this.production = production;
+            this.hadoopConfiguration = hadoopConfiguration;
+        }
+
+        @Override
+        public StagingJob call() throws Exception {
+            progress = 0f;
+            BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
+            String outputDir = production.getOutputPath();
+            FormatterL3Config formatConfig = new FormatterL3Config("Product",
+                                                                   "calvalus-level3-" + production.getId() + ".dim",
+                                                                   production.getOutputFormat(),
+                                                                   null,
+                                                                   "2010-01-01",
+                                                                   "2010-01-02");
+            try {
+
+                beamL3FormattingService.format(formatConfig, outputDir, production.getWpsXml());
+                progress = 1f;
+                production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, "", progress));
+            } catch (Exception e) {
+                production.setStagingStatus(new ProductionStatus(ProductionState.ERROR, e.getMessage(), progress));
+                logger.log(Level.WARNING, "formatting failed.", e);
             }
-        });
+            return this;
+        }
+
+
     }
 }

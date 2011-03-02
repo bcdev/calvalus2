@@ -27,14 +27,11 @@
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-inventory</artifactId>
-            <version>${calvalus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-production</artifactId>
-            <version>${calvalus.version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>com.google.gwt</groupId>
@@ -77,33 +74,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-        </dependency>
-
-        <!-- todo - remove these dependencies once decoupled from Hadoop -->
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-processing</artifactId>
-            <version>${calvalus.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
-            <version>${beam.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-gpf</artifactId>
-            <version>${beam.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-envisat-reader</artifactId>
-            <version>1.4-SNAPSHOT</version>
         </dependency>
 
     </dependencies>

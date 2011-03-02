@@ -11,6 +11,8 @@ import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionState;
+import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,6 +27,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductIOPlugInManager;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -76,6 +79,7 @@ public class HadoopProductionService implements ProductionService {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
 
+        // todo - extract WpsXmlGenerator
         initVelocityEngine();
         initDatabase();
 
@@ -219,6 +223,7 @@ public class HadoopProductionService implements ProductionService {
                                        productionName,
                                        productionParameters,
                                        outputDir);
+        ProductIOPlugInManager instance = ProductIOPlugInManager.getInstance();
         JobID jobId = submitL3Job(wpsXml);
         String outputFormat = productionParameters.get("outputFormat");
         if (outputFormat == null) {
@@ -231,14 +236,20 @@ public class HadoopProductionService implements ProductionService {
         }
         HadoopProduction hadoopProduction = new HadoopProduction(productionId,
                                                                  productionName,
-                                                                 jobId, outputDir,
+                                                                 jobId,
+                                                                 outputDir,
                                                                  outputFormat,
                                                                  outputStaging);
+        hadoopProduction.setWpsXml(wpsXml); // toto - we hate it
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }
 
-    private String createL3WpsXml(String productionId, String productionName, Map<String, String> productionParameters, String outputDir) throws ProductionException {
+    // todo - test
+    String createL3WpsXml(String productionId,
+                                  String productionName,
+                                  Map<String, String> productionParameters,
+                                  String outputDir) throws ProductionException {
         String[] inputFiles;
         try {
             inputFiles = getInputFiles(productionParameters);
@@ -265,7 +276,7 @@ public class HadoopProductionService implements ProductionService {
 
         String wpsXml;
         try {
-            Template wpsXmlTemplate = velocityEngine.getTemplate("com/bc/calvalus/portal/server/level3-wps-request.xml.vm");
+            Template wpsXmlTemplate = velocityEngine.getTemplate("com/bc/calvalus/production/hadoop/level3-wps-request.xml.vm");
             StringWriter writer = new StringWriter();
             wpsXmlTemplate.merge(context, writer);
             wpsXml = writer.toString();
@@ -418,15 +429,16 @@ public class HadoopProductionService implements ProductionService {
         }
 
         // copy result to staging area
-//        for (HadoopProduction production : productions) {
-//            if (production.isStagingAfterProduction() && !production.getStagingState().isDone()) {
-//                JobStatus jobStatus = production.getJobStatus();
-//                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
-//                    production.setStagingState(ProductionState.WAITING);
-//                    stagingService.stageProduction(production, jobClient.getConf());
-//                }
-//            }
-//        }
+        for (HadoopProduction production : productions) {
+            if (production.getOutputStaging()
+                    && production.getStagingStatus().getState() == ProductionState.UNKNOWN) {
+                JobStatus jobStatus = production.getJobStatus();
+                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+                    production.setStagingStatus(new ProductionStatus(ProductionState.WAITING));
+                    stagingService.stageProduction(production, jobClient.getConf());
+                }
+            }
+        }
 
         // write to persistent storage
         database.store(PRODUCTIONS_DB_FILE);

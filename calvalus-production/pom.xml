@@ -18,6 +18,7 @@
     <description>Production request and workflow management.</description>
 
     <dependencies>
+
         <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
@@ -30,6 +31,23 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-inventory</artifactId>
         </dependency>
+
+        <!-- Used for staging -->
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-netcdf</artifactId>
+            <version>1.0.101-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-geotiff</artifactId>
+            <version>1.1</version>
+        </dependency>
+
     </dependencies>
 
 </project>

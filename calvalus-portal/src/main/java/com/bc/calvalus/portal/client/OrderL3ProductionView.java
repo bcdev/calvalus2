@@ -27,7 +27,7 @@ public class OrderL3ProductionView extends PortalView {
     public OrderL3ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
-        inputOutputPanel = new InputOutputPanel(calvalusPortal, "L3 Input/Output");
+        inputOutputPanel = new InputOutputPanel(getPortal(), "L3 Input/Output");
         l2ProcessorPanel = new GeneralProcessorPanel(getPortal(), "L2 Processor");
         l3ProcessorPanel = new L3ProcessorPanel();
 
@@ -74,6 +74,7 @@ public class OrderL3ProductionView extends PortalView {
         parameters.put("outputStaging", inputOutputPanel.getOutputStaging() + "");
         parameters.put("l2OperatorName", l2ProcessorPanel.getProcessorId());
         parameters.put("l2OperatorParameters", l2ProcessorPanel.getProcessorParameters());
+        parameters.putAll(l3ProcessorPanel.getParameterMap());
         return new PortalProductionRequest("calvalus-level3", parameters);
     }
 

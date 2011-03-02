@@ -13,6 +13,8 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 class HadoopProduction extends Production {
 
+    private String wpsXml;
+
     public static enum Action {
         NONE,
         CANCEL,
@@ -61,7 +63,7 @@ class HadoopProduction extends Production {
 
     public void setJobStatus(JobStatus jobStatus) {
         this.jobStatus = jobStatus;
-        setStatus(getProductionStatus(jobStatus));
+        updateStatus();
     }
 
     public Action getAction() {
@@ -78,24 +80,46 @@ class HadoopProduction extends Production {
 
     public void setStagingStatus(ProductionStatus stagingStatus) {
         this.stagingStatus = stagingStatus;
+        updateStatus();
     }
 
-    public static ProductionStatus getProductionStatus(JobStatus job) {
-        if (job != null) {
-            // todo - use message that shows current 'action' value from 'HadoopProduction'
-            float progress = 0.5f * (job.mapProgress() + job.reduceProgress());
-            if (job.getRunState() == JobStatus.FAILED) {
-                return new ProductionStatus(ProductionState.ERROR, progress);
-            } else if (job.getRunState() == JobStatus.KILLED) {
-                return new ProductionStatus(ProductionState.CANCELLED, progress);
-            } else if (job.getRunState() == JobStatus.PREP) {
-                return new ProductionStatus(ProductionState.WAITING, progress);
-            } else if (job.getRunState() == JobStatus.RUNNING) {
-                return new ProductionStatus(ProductionState.IN_PROGRESS, progress);
-            } else if (job.getRunState() == JobStatus.SUCCEEDED) {
-                return new ProductionStatus(ProductionState.COMPLETED, 1.0f);
+    private void updateStatus() {
+        ProductionStatus status = getStatus();
+
+
+        // todo - use message that shows current 'action' value from 'HadoopProduction'
+        float progress;
+        if (getOutputStaging()) {
+            progress = (jobStatus.mapProgress() + jobStatus.reduceProgress() + stagingStatus.getProgress()) / 3;
+        } else {
+            progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
+        }
+        if (jobStatus.getRunState() == JobStatus.FAILED) {
+            status = new ProductionStatus(ProductionState.ERROR, progress);
+        } else if (jobStatus.getRunState() == JobStatus.KILLED) {
+            status = new ProductionStatus(ProductionState.CANCELLED, progress);
+        } else if (jobStatus.getRunState() == JobStatus.PREP) {
+            status = new ProductionStatus(ProductionState.WAITING, progress);
+        } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
+            status = new ProductionStatus(ProductionState.IN_PROGRESS, progress);
+        } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+            if (getOutputStaging()) {
+                status = new ProductionStatus(stagingStatus.getState(), stagingStatus.getMessage(), progress);
+            } else {
+                status = new ProductionStatus(ProductionState.COMPLETED, 1.0f);
             }
         }
-        return new ProductionStatus(ProductionState.UNKNOWN);
+
+        setStatus(status);
     }
+
+    String getWpsXml() {
+        return wpsXml;
+    }
+
+    void setWpsXml(String wpsXml) {
+        //To change body of created methods use File | Settings | File Templates.
+        this.wpsXml = wpsXml;
+    }
+
 }
