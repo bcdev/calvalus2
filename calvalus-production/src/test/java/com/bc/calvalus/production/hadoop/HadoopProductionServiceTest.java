@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.BeamL3Config;
+import com.bc.calvalus.production.ProductionRequest;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -53,6 +54,13 @@ public class HadoopProductionServiceTest {
 
 
         System.out.println(wpsXml);
+    }
+
+    @Test
+    public  void testGetOutputName() {
+        ProductionRequest productionRequest = new ProductionRequest("matchup", "outputFileName", "output-${type}-45");
+        String outputDir = HadoopProductionService.getOutputDir(productionRequest);
+        assertEquals("output-matchup-45", outputDir);
     }
 
 

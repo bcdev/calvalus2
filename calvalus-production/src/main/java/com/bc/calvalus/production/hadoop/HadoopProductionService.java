@@ -210,6 +210,9 @@ public class HadoopProductionService implements ProductionService {
     }
 
     private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
+        // todo - use this instead!!!
+        L3ProcessingRequest l3ProcessingRequest = new HadoopL3ProcessingRequest(jobClient, productionRequest);
+
         String productionId = Long.toHexString(System.nanoTime());
         String productionType = productionRequest.getProductionType();
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
@@ -217,8 +220,7 @@ public class HadoopProductionService implements ProductionService {
                                               productionType,
                                               productionParameters.get("inputProductSetId"),
                                               productionParameters.get("l2OperatorName"));
-        String outputDir = getOutputDir(productionType,
-                                        productionParameters);
+        String outputDir = getOutputDir(productionRequest);
         String wpsXml = createL3WpsXml(productionId,
                                        productionName,
                                        productionParameters,
@@ -239,7 +241,7 @@ public class HadoopProductionService implements ProductionService {
                                                                  outputDir,
                                                                  outputFormat,
                                                                  outputStaging);
-        hadoopProduction.setWpsXml(wpsXml); // toto - we hate it
+        hadoopProduction.setWpsXml(wpsXml); // todo - we hate it
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }
@@ -286,24 +288,28 @@ public class HadoopProductionService implements ProductionService {
         return wpsXml;
     }
 
-    private String getOutputDir(String productionType, Map<String, String> productionParameters) {
-        return productionParameters.get("outputFileName")
+    static String getOutputDir(ProductionRequest productionRequest) {
+        String outputFileName = productionRequest.getProductionParameters().get("outputFileName");
+        if (outputFileName == null) {
+            outputFileName = "output-${user}-${num}";
+        }
+        return outputFileName
                 .replace("${user}", System.getProperty("user.name", "hadoop"))
-                .replace("${type}", productionType)
+                .replace("${type}", productionRequest.getProductionType())
                 .replace("${num}", (++outputFileNum) + "");
     }
 
-    private int getNumRows(Map<String, String> productionParameters) {
+    static int getNumRows(Map<String, String> productionParameters) {
         return getNumRows(Double.parseDouble(productionParameters.get("resolution")));
     }
 
-    private String getBBOX(Map<String, String> productionParameters) {
+    static String getBBOX(Map<String, String> productionParameters) {
         return String.format("%s,%s,%s,%s",
                              productionParameters.get("lonMin"), productionParameters.get("latMin"),
                              productionParameters.get("lonMax"), productionParameters.get("latMax"));
     }
 
-    private BeamL3Config.AggregatorConfiguration[] getAggregators(Map<String, String> productionParameters) {
+    static BeamL3Config.AggregatorConfiguration[] getAggregators(Map<String, String> productionParameters) {
         String[] inputVariables = productionParameters.get("inputVariables").split(",");
         BeamL3Config.AggregatorConfiguration[] aggregatorConfigurations = new BeamL3Config.AggregatorConfiguration[inputVariables.length];
         for (int i = 0; i < inputVariables.length; i++) {
@@ -324,7 +330,7 @@ public class HadoopProductionService implements ProductionService {
         }
     }
 
-    private String[] getInputFiles(Map<String, String> productionParameters) throws IOException {
+    String[] getInputFiles(Map<String, String> productionParameters) throws IOException {
         Path eoDataRoot = new Path(jobClient.getConf().get("fs.default.name"), "/calvalus/eodata/");
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
         Date startDate = null;
@@ -344,14 +350,14 @@ public class HadoopProductionService implements ProductionService {
         List<String> inputFileList = new ArrayList<String>();
         for (String day : dateList) {
             FileStatus[] fileStatuses = fileSystem.listStatus(new Path(eoDataRoot, day));
-            for (FileStatus fileStatuse : fileStatuses) {
-                inputFileList.add(fileStatuse.getPath().toString());
+            for (FileStatus fileStatus : fileStatuses) {
+                inputFileList.add(fileStatus.getPath().toString());
             }
         }
         return inputFileList.toArray(new String[inputFileList.size()]);
     }
 
-    private static List<String> getDateList(Date start, Date stop, String prefix) {
+    static List<String> getDateList(Date start, Date stop, String prefix) {
         Calendar startCal = ProductData.UTC.createCalendar();
         Calendar stopCal = ProductData.UTC.createCalendar();
         startCal.setTime(start);
