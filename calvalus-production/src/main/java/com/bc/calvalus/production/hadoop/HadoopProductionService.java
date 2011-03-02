@@ -223,7 +223,6 @@ public class HadoopProductionService implements ProductionService {
                                        productionName,
                                        productionParameters,
                                        outputDir);
-        ProductIOPlugInManager instance = ProductIOPlugInManager.getInstance();
         JobID jobId = submitL3Job(wpsXml);
         String outputFormat = productionParameters.get("outputFormat");
         if (outputFormat == null) {
@@ -381,6 +380,7 @@ public class HadoopProductionService implements ProductionService {
     }
 
     private void initDatabase() {
+        System.out.println("PRODUCTIONS_DB_FILE = " + PRODUCTIONS_DB_FILE.getAbsolutePath());
         try {
             database.load(PRODUCTIONS_DB_FILE);
         } catch (IOException e) {

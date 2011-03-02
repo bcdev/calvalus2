@@ -88,12 +88,13 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
+                <version>2.1.0-1</version>
                 <!-- JS is only needed in the package phase, this speeds up testing -->
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
                         <goals>
-                            <goal>compile</goal>
+                            <goal>compile-report</goal>
                         </goals>
                     </execution>
                 </executions>
