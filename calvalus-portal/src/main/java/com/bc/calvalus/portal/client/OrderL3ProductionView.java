@@ -67,6 +67,26 @@ public class OrderL3ProductionView extends PortalView {
         return "Order L3 Production";
     }
 
+    // todo - test
+    public PortalProductionRequest getProductionRequest() {
+        ArrayList<PortalProductionParameter> parameters = new ArrayList<PortalProductionParameter>();
+        parameters.addAll(Arrays.asList(new PortalProductionParameter("inputProductSetId",
+                                                                      inputOutputPanel.getInputProductSetId()),
+                                        new PortalProductionParameter("outputFileName",
+                                                                      inputOutputPanel.getOutputFileName()),
+                                        new PortalProductionParameter("outputFormat",
+                                                                      inputOutputPanel.getOutputFormat()),
+                                        new PortalProductionParameter("outputStaging",
+                                                                      inputOutputPanel.getOutputStaging() + ""),
+                                        new PortalProductionParameter("l2OperatorName",
+                                                                      l2ProcessorPanel.getProcessorId()),
+                                        new PortalProductionParameter("l2OperatorParameters",
+                                                                      l2ProcessorPanel.getProcessorParameters())));
+        parameters.addAll(l3ProcessorPanel.getParameterList());
+        return new PortalProductionRequest("calvalus-level3",
+                                           parameters.toArray(new PortalProductionParameter[parameters.size()]));
+    }
+
     private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
@@ -76,18 +96,7 @@ public class OrderL3ProductionView extends PortalView {
                 return;
             }
 
-            ArrayList<PortalProductionParameter> parameters = new ArrayList<PortalProductionParameter>();
-            parameters.addAll(Arrays.asList(new PortalProductionParameter("inputProductSetId",
-                                                                inputOutputPanel.getInputProductSetId()),
-                                            new PortalProductionParameter("outputFileName",
-                                                                inputOutputPanel.getOutputFileName()),
-                                            new PortalProductionParameter("l2OperatorName",
-                                                                l2ProcessorPanel.getProcessorId()),
-                                            new PortalProductionParameter("l2OperatorParameters",
-                                                                l2ProcessorPanel.getProcessorParameters())));
-            parameters.addAll(l3ProcessorPanel.getParameterList());
-            PortalProductionRequest request = new PortalProductionRequest("calvalus-level3",
-                                                                          parameters.toArray(new PortalProductionParameter[parameters.size()]));
+            PortalProductionRequest request = getProductionRequest();
 
             getPortal().orderProduction(request);
         }

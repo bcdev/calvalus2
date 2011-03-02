@@ -21,22 +21,38 @@ class HadoopProduction extends Production {
     }
 
     private final JobID jobId;
+    private String outputFormat;
+    private boolean outputStaging;
+
     private JobStatus jobStatus;
+    private ProductionStatus stagingStatus;
+
     private Action action;
-    private boolean staging;
 
-    ProductionStatus stagingStatus;
-
-    public HadoopProduction(String id, String name, JobID jobId, String outputPath, boolean staging) {
+    public HadoopProduction(String id,
+                            String name,
+                            JobID jobId,
+                            String outputPath,
+                            String outputFormat,
+                            boolean outputStaging) {
         super(id, name, outputPath);
         this.jobId = jobId;
-        this.staging = staging;
+        this.outputFormat = outputFormat;
+        this.outputStaging = outputStaging;
         this.action = Action.NONE;
         this.stagingStatus = new ProductionStatus();
     }
 
     public JobID getJobId() {
         return jobId;
+    }
+
+    public boolean getOutputStaging() {
+        return outputStaging;
+    }
+
+    public String getOutputFormat() {
+        return outputFormat;
     }
 
     public JobStatus getJobStatus() {
@@ -54,14 +70,6 @@ class HadoopProduction extends Production {
 
     public void setAction(Action action) {
         this.action = action;
-    }
-
-    public boolean isStaging() {
-        return staging;
-    }
-
-    public void setStaging(boolean staging) {
-        this.staging = staging;
     }
 
     public ProductionStatus getStagingStatus() {

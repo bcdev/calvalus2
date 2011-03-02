@@ -220,10 +220,20 @@ public class HadoopProductionService implements ProductionService {
                                        productionParameters,
                                        outputDir);
         JobID jobId = submitL3Job(wpsXml);
+        String outputFormat = productionParameters.get("outputFormat");
+        if (outputFormat == null) {
+            outputFormat = "BEAM-DIMAP";
+        }
+        String outputStagingStr = productionParameters.get("outputStaging");
+        boolean outputStaging = true;
+        if (outputStagingStr == null) {
+            outputStaging = Boolean.parseBoolean(outputStagingStr);
+        }
         HadoopProduction hadoopProduction = new HadoopProduction(productionId,
                                                                  productionName,
                                                                  jobId, outputDir,
-                                                                 true);
+                                                                 outputFormat,
+                                                                 outputStaging);
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }

@@ -63,9 +63,15 @@ class HadoopProductionDatabase {
             String[] tokens = line.split("\t");
             String id = tokens[0];
             String name = tokens[1];
-            String outputPath = tokens[2];
-            String jobId = tokens[3];
-            addProduction(new HadoopProduction(id, name, JobID.forName(jobId), outputPath, true));
+            String jobId = tokens[2];
+            String outputPath = tokens[3];
+            String outputFormat = tokens[4];
+            String outputStaging = tokens[5];
+            addProduction(new HadoopProduction(id, name,
+                                               JobID.forName(jobId),
+                                               outputPath,
+                                               outputFormat,
+                                               Boolean.parseBoolean(outputStaging)));
         }
     }
 
@@ -84,11 +90,13 @@ class HadoopProductionDatabase {
 
     public synchronized void store(PrintWriter writer) {
         for (HadoopProduction production : productionsList) {
-            writer.printf("%s\t%s\t%s\t%s\n",
+            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\n",
                           production.getId(),
                           production.getName(),
+                          production.getJobId(),
                           production.getOutputPath(),
-                          production.getJobId());
+                          production.getOutputFormat(),
+                          production.getOutputStaging());
         }
     }
 }

@@ -190,7 +190,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                         try {
                             Map<String, String> serviceConfiguration = getServiceConfiguration(servletContext);
                             Logger logger = createLogger(servletContext);
-                            File outputDir = new PortalConfig(servletContext).getLocalDownloadDir();//todo use configuration
+                            File outputDir = new PortalConfig(servletContext).getLocalDownloadDir();
                             Class<?> productionServiceFactoryClass = Class.forName(className);
                             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
                             productionService = productionServiceFactory.create(serviceConfiguration, logger, outputDir);

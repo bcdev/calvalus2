@@ -13,8 +13,7 @@ public class HadoopProductionTest {
     @Test
     public void testStateTransitionWithStaging() {
         JobID jobID = new JobID("34627598547", 6);
-        HadoopProduction processing = new HadoopProduction("1", "processing", jobID, "/test", true);
-        processing.setStaging(false);
+        HadoopProduction processing = new HadoopProduction("1", "processing", jobID, "/test", "NetCDF", true);
 
         assertEquals(ProductionState.UNKNOWN, processing.getStatus().getState());
 
@@ -27,16 +26,19 @@ public class HadoopProductionTest {
         assertEquals(ProductionState.IN_PROGRESS, processing.getStatus().getState());
         assertEquals((1.0f + 1.0f + 0.0f) / 3, processing.getStatus().getProgress(), 1e-5f);
 
-        processing.setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, "", 0.5f));
+        processing.setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, 0.5f));
         assertEquals(ProductionState.IN_PROGRESS, processing.getStatus().getState());
         assertEquals((1.0f + 1.0f + 0.5f) / 3, processing.getStatus().getProgress(), 1e-5f);
+
+        processing.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
+        assertEquals(ProductionState.COMPLETED, processing.getStatus().getState());
+        assertEquals((1.0f + 1.0f + 1.0f) / 3, processing.getStatus().getProgress(), 1e-5f);
     }
 
     @Test
     public void testStateTransitionWithoutStaging() {
         JobID jobID = new JobID("34627598547", 6);
-        HadoopProduction processing = new HadoopProduction("1", "processing", jobID, "/test", false);
-        processing.setStaging(false);
+        HadoopProduction processing = new HadoopProduction("1", "processing", jobID, "/test", "NetCDF", false);
 
         assertEquals(ProductionState.UNKNOWN, processing.getStatus().getState());
 

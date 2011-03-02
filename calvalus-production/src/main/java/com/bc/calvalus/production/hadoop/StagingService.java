@@ -48,7 +48,12 @@ public class StagingService {
             public void run() {
                 BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, configuration);
                 String outputDir = production.getOutputPath();
-                FormatterL3Config formatConfig = new FormatterL3Config("Product", "outputFile.dim", "BEAM-DIMAP", null, "2010-01-01", "2010-01-02");
+                FormatterL3Config formatConfig = new FormatterL3Config("Product",
+                                                                       "outputFile.dim",
+                                                                       production.getOutputFormat(),
+                                                                       null,
+                                                                       "2010-01-01",
+                                                                       "2010-01-02");
                 try {
                     beamL3FormattingService.format(formatConfig, outputDir, "wpsRequestXML");//TODO
                     production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, "", 1));

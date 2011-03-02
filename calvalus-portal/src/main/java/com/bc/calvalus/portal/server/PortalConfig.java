@@ -5,7 +5,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 
 /**
- * todo - add api doc
+ * Configuration of the portal.
  *
  * @author Norman Fomferra
  */

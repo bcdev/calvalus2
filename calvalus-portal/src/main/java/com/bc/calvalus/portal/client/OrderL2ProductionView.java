@@ -57,24 +57,31 @@ public class OrderL2ProductionView extends PortalView {
         return "Order L2 Production";
     }
 
+    // todo - test
+    private PortalProductionRequest getProductionRequest() {
+        return new PortalProductionRequest("calvalus-level2",
+                                           new PortalProductionParameter("inputProductSetId",
+                                                                         inputOutputPanel.getInputProductSetId()),
+                                           new PortalProductionParameter("outputFileName",
+                                                                         inputOutputPanel.getOutputFileName()),
+                                           new PortalProductionParameter("outputFormat",
+                                                                         inputOutputPanel.getOutputFormat()),
+                                           new PortalProductionParameter("outputStaging",
+                                                                         inputOutputPanel.getOutputStaging() + ""),
+                                           new PortalProductionParameter("processorId",
+                                                                         processingPanel.getProcessorId()),
+                                           new PortalProductionParameter("processorVersion",
+                                                                         processingPanel.getProcessorVersion()),
+                                           new PortalProductionParameter("processorParameters",
+                                                                         processingPanel.getProcessorParameters()));
+    }
+
     private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
-            PortalProductionRequest request = new PortalProductionRequest("calvalus-level2",
-                                                                          new PortalProductionParameter("inputProductSetId",
-                                                                                              inputOutputPanel.getInputProductSetId()),
-                                                                          new PortalProductionParameter("outputFileName",
-                                                                                              inputOutputPanel.getOutputFileName()),
-                                                                          new PortalProductionParameter("processorId",
-                                                                                              processingPanel.getProcessorId()),
-                                                                          new PortalProductionParameter("processorVersion",
-                                                                                              processingPanel.getProcessorVersion()),
-                                                                          new PortalProductionParameter("processorParameters",
-                                                                                              processingPanel.getProcessorParameters()));
+            PortalProductionRequest request = getProductionRequest();
             getPortal().orderProduction(request);
         }
-
-
     }
 
 }
