@@ -24,10 +24,21 @@
 
     <dependencies>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>
             <version>${gwt.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>
@@ -41,12 +52,14 @@
             <version>${gwt.version}</version>
             <!--
             todo - frequently check whether the following note still applies (nf)
-            Actually scope 'test' is correct, but with GWT 2.2.0 'mvn gwt:run' doesn't work and produces the following error:
+            Actually scope 'test' is correct, but with GWT 2.2.0 'mvn gwt:run' doesn't work
+            and produces the following error:
             00:00:00,016 [ERROR] Unexpected error while processing XML
             java.lang.NoClassDefFoundError: com/google/gwt/core/ext/GeneratorExt
             -->
             <!--<scope>test</scope>-->
             <scope>compile</scope>
+            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>com.bc.calvalus</groupId>
@@ -61,12 +74,7 @@
             <groupId>org.gwtopenmaps.openlayers</groupId>
             <artifactId>gwt-openlayers-client</artifactId>
             <version>0.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.2.2</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -108,7 +116,7 @@
                     <runTarget>calvalus.html</runTarget>
                     <!-- Location of the develop-mode web application structure (gwt:run). -->
                     <hostedWebapp>target/www</hostedWebapp>
-                    <soyc>true</soyc>
+                    <compileReport>true</compileReport>
                 </configuration>
             </plugin>
 
