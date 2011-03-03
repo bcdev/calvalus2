@@ -65,7 +65,7 @@ public class StagingService {
         public StagingJob call() throws Exception {
             progress = 0f;
             BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
-            String outputDir = "hdfs://cvmaster00:9000/calvalus/outputs/" + production.getOutputPath();
+            String outputDir = production.getOutputPath();
             FormatterL3Config formatConfig = new FormatterL3Config("Product",
                                                                    "calvalus-level3-" + production.getId() + ".dim",
                                                                    production.getOutputFormat(),

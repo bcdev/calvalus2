@@ -67,11 +67,14 @@ class HadoopProductionDatabase {
             String outputPath = tokens[3];
             String outputFormat = tokens[4];
             String outputStaging = tokens[5];
-            addProduction(new HadoopProduction(id, name,
-                                               JobID.forName(jobId),
-                                               outputPath,
-                                               outputFormat,
-                                               Boolean.parseBoolean(outputStaging)));
+            String hadoopJobDone = tokens[6];
+            HadoopProduction hadoopProduction = new HadoopProduction(id, name,
+                                                                     JobID.forName(jobId),
+                                                                     outputPath,
+                                                                     outputFormat,
+                                                                     Boolean.parseBoolean(outputStaging));
+            hadoopProduction.setHadoopJobDone(Boolean.parseBoolean(hadoopJobDone));
+            addProduction(hadoopProduction);
         }
     }
 
@@ -90,13 +93,14 @@ class HadoopProductionDatabase {
 
     public synchronized void store(PrintWriter writer) {
         for (HadoopProduction production : productionsList) {
-            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\n",
+            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
                           production.getId(),
                           production.getName(),
                           production.getJobId(),
                           production.getOutputPath(),
                           production.getOutputFormat(),
-                          production.getOutputStaging());
+                          production.getOutputStaging(),
+                          production.isHadoopJobDone());
         }
     }
 }

@@ -3,7 +3,6 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.processing.beam.BeamJobService;
-import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -23,29 +22,17 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.lang.Math.*;
 
 /**
  * A ProductionService implementation that delegates to a Hadoop cluster.
@@ -60,7 +47,6 @@ public class HadoopProductionService implements ProductionService {
     private final HadoopProductionDatabase database;
     private final StagingService stagingService;
     // todo - Persist
-    private static long outputFileNum = 0;
     private final Logger logger;
     private final File stagingDirectory;
     private WpsXmlGenerator wpsXmlGenerator;
@@ -109,7 +95,8 @@ public class HadoopProductionService implements ProductionService {
                                                 "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
                                                 "  <outputReflec>false</outputReflec>\n" +
                                                 "</parameters>",
-                                        "beam-lkn", new String[]{"1.0-SNAPSHOT"}),
+                                        "beam-lkn",
+                                        new String[]{"1.0-SNAPSHOT"}),
         };
     }
 
@@ -162,6 +149,7 @@ public class HadoopProductionService implements ProductionService {
         }
     }
 
+    // todo - remove once we have L2 requests
     public String stageProductionOutput(String productionId) throws ProductionException {
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
         try {
@@ -206,7 +194,6 @@ public class HadoopProductionService implements ProductionService {
 
     private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
 
-
         L3ProcessingRequest l3ProcessingRequest = new HadoopL3ProcessingRequest(jobClient, productionRequest);
 
         String l3ProductionId = createL3ProductionId(productionRequest);
@@ -230,10 +217,11 @@ public class HadoopProductionService implements ProductionService {
         return productionRequest.getProductionType() + "-" + Long.toHexString(System.nanoTime());
 
     }
+
     static String createL3ProductionName(ProductionRequest productionRequest) {
         return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
-                                              productionRequest.getProductionParameter("inputProductSetId"),
-                                              productionRequest.getProductionParameter("l2ProcessorName"));
+                             productionRequest.getProductionParameter("inputProductSetId"),
+                             productionRequest.getProductionParameter("l2ProcessorName"));
 
     }
 
@@ -245,50 +233,6 @@ public class HadoopProductionService implements ProductionService {
             e.printStackTrace();
             throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
-    }
-
-    String[] getInputFiles(Map<String, String> productionParameters) throws IOException {
-        Path eoDataRoot = new Path(jobClient.getConf().get("fs.default.name"), "/calvalus/eodata/");
-        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
-        Date startDate = null;
-        try {
-            startDate = dateFormat.parse(productionParameters.get("dateStart"));
-        } catch (ParseException ignore) {
-        }
-        Date stopDate = null;
-        try {
-            stopDate = dateFormat.parse(productionParameters.get("dateStop"));
-        } catch (ParseException ignore) {
-        }
-        String inputProductSetId = productionParameters.get("inputProductSetId");
-        Path inputPath = new Path(eoDataRoot, inputProductSetId);
-        List<String> dateList = getDateList(startDate, stopDate, inputProductSetId);
-        FileSystem fileSystem = inputPath.getFileSystem(jobClient.getConf());
-        List<String> inputFileList = new ArrayList<String>();
-        for (String day : dateList) {
-            FileStatus[] fileStatuses = fileSystem.listStatus(new Path(eoDataRoot, day));
-            for (FileStatus fileStatus : fileStatuses) {
-                inputFileList.add(fileStatus.getPath().toString());
-            }
-        }
-        return inputFileList.toArray(new String[inputFileList.size()]);
-    }
-
-    static List<String> getDateList(Date start, Date stop, String prefix) {
-        Calendar startCal = ProductData.UTC.createCalendar();
-        Calendar stopCal = ProductData.UTC.createCalendar();
-        startCal.setTime(start);
-        stopCal.setTime(stop);
-        List<String> list = new ArrayList<String>();
-        do {
-            String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
-            if (dateString.startsWith(prefix)) {
-                list.add(dateString);
-            }
-            startCal.add(Calendar.DAY_OF_WEEK, 1);
-        } while (!startCal.after(stopCal));
-
-        return list;
     }
 
     private void initDatabase() {
@@ -316,42 +260,31 @@ public class HadoopProductionService implements ProductionService {
 
         // Update state of all registered productions
         for (HadoopProduction production : productions) {
-            production.setJobStatus(jobStatusMap.get(production.getJobId()));
+            JobStatus jobStatus = jobStatusMap.get(production.getJobId());
+            production.updateStatus(jobStatus);
         }
 
         // Now try to delete productions
         for (HadoopProduction production : productions) {
             if (HadoopProduction.Action.DELETE.equals(production.getAction())) {
-                JobStatus jobStatus = production.getJobStatus();
-                if (isDone(jobStatus)) {
+                if (production.getStatus().isDone()) {
                     database.removeProduction(production);
                 }
             }
         }
 
-        // copy result to staging area
+        // Copy result to staging area
         for (HadoopProduction production : productions) {
             if (production.getOutputStaging()
+                    && production.isHadoopJobDone()
                     && production.getStagingStatus().getState() == ProductionState.UNKNOWN) {
-                JobStatus jobStatus = production.getJobStatus();
-                if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
-                    production.setStagingStatus(new ProductionStatus(ProductionState.WAITING));
-                    stagingService.stageProduction(production, jobClient.getConf());
-                }
+                production.setStagingStatus(new ProductionStatus(ProductionState.WAITING));
+                stagingService.stageProduction(production, jobClient.getConf());
             }
         }
 
         // write to persistent storage
         database.store(PRODUCTIONS_DB_FILE);
-    }
-
-    private boolean isDone(JobStatus jobStatus) {
-        return !isRunning(jobStatus);
-    }
-
-    private boolean isRunning(JobStatus jobStatus) {
-        return jobStatus.getRunState() == JobStatus.PREP
-                || jobStatus.getRunState() == JobStatus.RUNNING;
     }
 
     private class HadoopObservationTask extends TimerTask {

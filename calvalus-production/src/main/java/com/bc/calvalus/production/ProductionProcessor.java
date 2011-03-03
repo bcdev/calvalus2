@@ -1,54 +1,42 @@
 package com.bc.calvalus.production;
 
 public class ProductionProcessor {
-    private String operator;
-    private String name;
+    private String executableName;
+    private String processorName;
     private String defaultParameters;
-    private String bundle;
-    private String[] versions;
+    private String bundleName;
+    private String[] bundleVersions;
 
-    public ProductionProcessor(String operator, String name, String bundle, String[] versions) {
-        this.operator = operator;
-        this.name = name;
-        this.bundle = bundle;
-        this.versions = versions;
-    }
-
-    public ProductionProcessor(String operator, String name, String defaultParameters, String bundle, String[] versions) {
-        this.operator = operator;
-        this.name = name;
+    public ProductionProcessor(String executableName,
+                               String processorName,
+                               String defaultParameters,
+                               String bundleName,
+                               String[] bundleVersions) {
+        this.executableName = executableName;
+        this.processorName = processorName;
         this.defaultParameters = defaultParameters;
-        this.bundle = bundle;
-        this.versions = versions;
+        this.bundleName = bundleName;
+        this.bundleVersions = bundleVersions;
     }
 
-    public String getOperator() {
-        return operator;
+    public String getExecutableName() {
+        return executableName;
     }
 
-    public String getName() {
-        return name;
+    public String getProcessorName() {
+        return processorName;
     }
 
     public String getDefaultParameters() {
         return defaultParameters;
     }
 
-    public String getBundle() {
-        return bundle;
+    public String getBundleName() {
+        return bundleName;
     }
 
-    public String[] getVersions() {
-        return versions;
+    public String[] getBundleVersions() {
+        return bundleVersions;
     }
 
-    public static class Bundle {
-        String name;
-        String version;
-
-        public Bundle(String name, String version) {
-            this.name = name;
-            this.version = version;
-        }
-    }
 }

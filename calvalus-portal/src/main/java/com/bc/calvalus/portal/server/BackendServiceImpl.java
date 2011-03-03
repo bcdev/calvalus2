@@ -137,9 +137,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private PortalProcessor convert(ProductionProcessor processor) {
-        return new PortalProcessor(processor.getOperator(), processor.getName(),
-                                   processor.getDefaultParameters(), processor.getBundle(),
-                                   processor.getVersions());
+        return new PortalProcessor(processor.getExecutableName(), processor.getProcessorName(),
+                                   processor.getDefaultParameters(), processor.getBundleName(),
+                                   processor.getBundleVersions());
     }
 
     private PortalProduction convert(Production production) {

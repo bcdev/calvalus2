@@ -23,7 +23,7 @@ public class WpsXmlGeneratorTest {
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequest);
         assertNotNull(xml);
 
-        System.out.println(xml);
+        // System.out.println(xml);
 
         assertTrue(xml.contains("<ows:Identifier>ID_pi-pa-po</ows:Identifier>"));
         assertTrue(xml.contains("<ows:Title>Wonderful L3</ows:Title>"));
@@ -35,7 +35,7 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<wps:LiteralData>4.9-SNAPSHOT</wps:LiteralData>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.output.dir</ows:Identifier>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/outputs/calvalus-level3-output\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"calvalus-level3-output\"/>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.input</ows:Identifier>"));
         assertTrue(xml.contains("<wps:Reference xlink:href=\"fileA\"/>"));

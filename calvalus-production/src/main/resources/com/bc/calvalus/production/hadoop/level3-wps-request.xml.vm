@@ -23,7 +23,7 @@
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>Output directory</ows:Title>
             <wps:Data>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/${outputDir}"/>
+                <wps:Reference xlink:href="${outputDir}"/>
             </wps:Data>
         </wps:Input>
 

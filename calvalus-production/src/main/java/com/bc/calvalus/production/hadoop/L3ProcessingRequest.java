@@ -36,8 +36,13 @@ abstract class L3ProcessingRequest {
         processingParameters.put("variables", getVariables());
         processingParameters.put("aggregators", getAggregators());
         processingParameters.put("outputStaging", getOutputStaging());
+        processingParameters.put("fillValue", getFillValue());
 
         return processingParameters;
+    }
+
+    public  double getFillValue() throws ProductionException {
+        return Double.parseDouble(getProductionParameterSafe("fillValue"));
     }
 
     public String getOutputFormat() throws ProductionException {
@@ -90,7 +95,7 @@ abstract class L3ProcessingRequest {
         }
     }
 
-    public abstract String[] getInputFiles() throws ProductionException;
+      public abstract String[] getInputFiles() throws ProductionException;
 
     public String getOutputDir() {
         String outputFileName = productionRequest.getProductionParameters().get("outputFileName");

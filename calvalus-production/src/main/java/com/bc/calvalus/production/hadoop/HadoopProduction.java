@@ -13,7 +13,6 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 class HadoopProduction extends Production {
 
-    private String wpsXml;
 
     public static enum Action {
         NONE,
@@ -25,10 +24,9 @@ class HadoopProduction extends Production {
     private final JobID jobId;
     private String outputFormat;
     private boolean outputStaging;
-
-    private JobStatus jobStatus;
+    private String wpsXml;
+    private boolean hadoopJobDone;
     private ProductionStatus stagingStatus;
-
     private Action action;
 
     public HadoopProduction(String id,
@@ -49,21 +47,20 @@ class HadoopProduction extends Production {
         return jobId;
     }
 
+    public boolean isHadoopJobDone() {
+        return hadoopJobDone;
+    }
+
+    public void setHadoopJobDone(boolean hadoopJobDone) {
+        this.hadoopJobDone = hadoopJobDone;
+    }
+
     public boolean getOutputStaging() {
         return outputStaging;
     }
 
     public String getOutputFormat() {
         return outputFormat;
-    }
-
-    public JobStatus getJobStatus() {
-        return jobStatus;
-    }
-
-    public void setJobStatus(JobStatus jobStatus) {
-        this.jobStatus = jobStatus;
-        updateStatus();
     }
 
     public Action getAction() {
@@ -80,33 +77,47 @@ class HadoopProduction extends Production {
 
     public void setStagingStatus(ProductionStatus stagingStatus) {
         this.stagingStatus = stagingStatus;
-        updateStatus();
+
     }
 
-    private void updateStatus() {
+    /**
+     * Updates the status. This method is called periodically after a fixed delay period.
+     * @param jobStatus  The hadoop job status. May be null, which is interpreted as the job is being done.
+     */
+    public void updateStatus(JobStatus jobStatus) {
         ProductionStatus status = getStatus();
-
-
-        // todo - use message that shows current 'action' value from 'HadoopProduction'
-        float progress;
-        if (getOutputStaging()) {
-            progress = (jobStatus.mapProgress() + jobStatus.reduceProgress() + stagingStatus.getProgress()) / 3;
-        } else {
-            progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
-        }
-        if (jobStatus.getRunState() == JobStatus.FAILED) {
-            status = new ProductionStatus(ProductionState.ERROR, progress);
-        } else if (jobStatus.getRunState() == JobStatus.KILLED) {
-            status = new ProductionStatus(ProductionState.CANCELLED, progress);
-        } else if (jobStatus.getRunState() == JobStatus.PREP) {
-            status = new ProductionStatus(ProductionState.WAITING, progress);
-        } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
-            status = new ProductionStatus(ProductionState.IN_PROGRESS, progress);
-        } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+        if (jobStatus == null) {
+            hadoopJobDone = true;
             if (getOutputStaging()) {
-                status = new ProductionStatus(stagingStatus.getState(), stagingStatus.getMessage(), progress);
+                status = new ProductionStatus(stagingStatus.getState(), stagingStatus.getMessage(),
+                                              (2.0f + stagingStatus.getProgress()) / 3);
             } else {
                 status = new ProductionStatus(ProductionState.COMPLETED, 1.0f);
+            }
+        } else {
+            float progress;
+            if (getOutputStaging()) {
+                progress = (jobStatus.mapProgress() + jobStatus.reduceProgress() + stagingStatus.getProgress()) / 3;
+            } else {
+                progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
+            }
+            if (jobStatus.getRunState() == JobStatus.FAILED) {
+                hadoopJobDone = true;
+                status = new ProductionStatus(ProductionState.ERROR, "Hadoop job '" + jobStatus.getJobID() + "' failed", progress);
+            } else if (jobStatus.getRunState() == JobStatus.KILLED) {
+                hadoopJobDone = true;
+                status = new ProductionStatus(ProductionState.CANCELLED, progress);
+            } else if (jobStatus.getRunState() == JobStatus.PREP) {
+                status = new ProductionStatus(ProductionState.WAITING, progress);
+            } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
+                status = new ProductionStatus(ProductionState.IN_PROGRESS, progress);
+            } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+                hadoopJobDone = true;
+                if (getOutputStaging()) {
+                    status = new ProductionStatus(stagingStatus.getState(), stagingStatus.getMessage(), progress);
+                } else {
+                    status = new ProductionStatus(ProductionState.COMPLETED, 1.0f);
+                }
             }
         }
 

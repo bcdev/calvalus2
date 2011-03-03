@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.PortalProcessor;
 import com.bc.calvalus.portal.shared.PortalProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -22,14 +23,14 @@ public class OrderL3ProductionView extends PortalView {
     private FlexTable widget;
     private InputOutputPanel inputOutputPanel;
     private GeneralProcessorPanel l2ProcessorPanel;
-    private L3ProcessorPanel l3ProcessorPanel;
+    private L3ParametersPanel l3ParametersPanel;
 
     public OrderL3ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
         inputOutputPanel = new InputOutputPanel(getPortal(), "L3 Input/Output");
         l2ProcessorPanel = new GeneralProcessorPanel(getPortal(), "L2 Processor");
-        l3ProcessorPanel = new L3ProcessorPanel();
+        l3ParametersPanel = new L3ParametersPanel();
 
         widget = new FlexTable();
         widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
@@ -46,7 +47,7 @@ public class OrderL3ProductionView extends PortalView {
         widget.setCellPadding(2);
         widget.setWidget(0, 0, inputOutputPanel.asWidget());
         widget.setWidget(1, 0, l2ProcessorPanel.asWidget());
-        widget.setWidget(0, 1, l3ProcessorPanel.asWidget());
+        widget.setWidget(0, 1, l3ParametersPanel.asWidget());
         widget.setWidget(2, 0, new Button("Order Production", new OrderProductionHandler()));
     }
 
@@ -67,23 +68,30 @@ public class OrderL3ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public PortalProductionRequest getProductionRequest() {
+        HashMap<String, String> parameters = getValueMap();
+        return new PortalProductionRequest("calvalus-level3", parameters);
+    }
+
+    // todo - Provide JUnit test for this method
+    public HashMap<String, String> getValueMap() {
+        PortalProcessor selectedProcessor = l2ProcessorPanel.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
         parameters.put("outputFileName", inputOutputPanel.getOutputFileName());
         parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
         parameters.put("outputStaging", inputOutputPanel.getOutputStaging() + "");
-        parameters.put("l2ProcessorBundleName", "coastcolour"); // todo - where do we get 'l2ProcessorBundle' from ?
-        parameters.put("l2ProcessorBundleVersion", l2ProcessorPanel.getProcessorVersion());
-        parameters.put("l2ProcessorName", l2ProcessorPanel.getProcessorId());
+        parameters.put("l2ProcessorBundleName", selectedProcessor.getBundleName());
+        parameters.put("l2ProcessorBundleVersion", l2ProcessorPanel.getBundleVersion());
+        parameters.put("l2ProcessorName", selectedProcessor.getExecutableName());
         parameters.put("l2ProcessorParameters", l2ProcessorPanel.getProcessorParameters());
-        parameters.putAll(l3ProcessorPanel.getParameterMap());
-        return new PortalProductionRequest("calvalus-level3", parameters);
+        parameters.putAll(l3ParametersPanel.getValueMap());
+        return parameters;
     }
 
     private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
-            String errorMessage = l3ProcessorPanel.validate();
+            String errorMessage = l3ParametersPanel.validate();
             if (errorMessage != null) {
                 Window.alert(errorMessage);
                 return;

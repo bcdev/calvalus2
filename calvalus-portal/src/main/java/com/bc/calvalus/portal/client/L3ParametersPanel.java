@@ -27,13 +27,14 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class L3ProcessorPanel implements IsWidget {
+public class L3ParametersPanel implements IsWidget {
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     private DecoratorPanel widget;
 
     private ListBox inputVariables;
     private TextBox maskExpr;
+    private DoubleBox fillValue;
     private ListBox aggregator;
     private DoubleBox weightCoeff;
     private DateBox dateStart;
@@ -47,7 +48,7 @@ public class L3ProcessorPanel implements IsWidget {
     private IntegerBox periodCount;
     private IntegerBox superSampling;
 
-    public L3ProcessorPanel() {
+    public L3ParametersPanel() {
 
         inputVariables = new ListBox();
         inputVariables.addItem("chl_conc");
@@ -59,6 +60,9 @@ public class L3ProcessorPanel implements IsWidget {
 
         maskExpr = new TextBox();
         maskExpr.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD");
+
+        fillValue = new DoubleBox();
+        fillValue.setValue(Double.NaN);
 
         aggregator = new ListBox();
         aggregator.addItem("Average", "AVG");
@@ -88,14 +92,16 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.setWidget(1, 1, inputVariables);
         contentParams.setWidget(2, 0, new Label("Valid mask:"));
         contentParams.setWidget(2, 1, maskExpr);
-        contentParams.setWidget(3, 0, new Label("Aggregation:"));
-        contentParams.setWidget(3, 1, this.aggregator);
-        contentParams.setWidget(4, 0, new Label("Weight coeff.:"));
-        contentParams.setWidget(4, 1, this.weightCoeff);
-        contentParams.setWidget(4, 2, new Label("1"));
-        contentParams.setWidget(5, 0, new Label("Super-sampling:"));
-        contentParams.setWidget(5, 1, this.superSampling);
-        contentParams.setWidget(5, 2, new Label("pixel/pixel"));
+        contentParams.setWidget(3, 0, new Label("Fill value:"));
+        contentParams.setWidget(3, 1, fillValue);
+        contentParams.setWidget(4, 0, new Label("Aggregation:"));
+        contentParams.setWidget(4, 1, aggregator);
+        contentParams.setWidget(5, 0, new Label("Weight coeff.:"));
+        contentParams.setWidget(5, 1, weightCoeff);
+        contentParams.setWidget(5, 2, new Label("1"));
+        contentParams.setWidget(6, 0, new Label("Super-sampling:"));
+        contentParams.setWidget(6, 1, superSampling);
+        contentParams.setWidget(6, 2, new Label("pixel/pixel"));
 
         dateStart = new DateBox();
         dateStart.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
@@ -293,10 +299,11 @@ public class L3ProcessorPanel implements IsWidget {
         return null;
     }
 
-    public Map<String, String> getParameterMap() {
+    public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex()));
         parameters.put("maskExpr", maskExpr.getText());
+        parameters.put("fillValue", fillValue.getText());
         parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
         parameters.put("weightCoeff", weightCoeff.getText());
         parameters.put("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue()));

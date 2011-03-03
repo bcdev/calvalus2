@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import org.esa.beam.util.math.DoubleList;
 import org.junit.Test;
 
 import java.util.Map;
@@ -15,6 +16,7 @@ public class L3ProcessingRequestTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
 
         L3ProcessingRequest processingRequest = new L3ProcessingRequest(productionRequest) {
+
             @Override
             public String[] getInputFiles() throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};
@@ -29,6 +31,7 @@ public class L3ProcessingRequestTest {
         assertEquals(4320, processingRequest.getNumRows());
         assertEquals("calvalus-level3-output", processingRequest.getOutputDir());
         assertEquals(true, processingRequest.getOutputStaging());
+        assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
 
         // Assert that derived processing parameters are present in map
         Map<String, Object> processingParameters = processingRequest.getProcessingParameters();
@@ -46,6 +49,8 @@ public class L3ProcessingRequestTest {
         assertEquals("<!-- no params -->", processingParameters.get("l2ProcessorParameters"));
         assertEquals("1", processingParameters.get("superSampling"));
         assertEquals("NOT INVALID", processingParameters.get("maskExpr"));
+        assertNotNull(processingParameters.get("fillValue"));
+        assertTrue(Double.isNaN((Double) processingParameters.get("fillValue")));
     }
 
     static ProductionRequest createValidL3ProductionRequest() {
@@ -73,6 +78,7 @@ public class L3ProcessingRequestTest {
                                      "latMin", "50",
                                      "latMax", "60",
                                      "resolution", "4.64",
+                                     "fillValue", "NaN",
                                      "superSampling", "1"
         );
     }

@@ -27,9 +27,9 @@ import static com.bc.calvalus.portal.client.CalvalusPortal.*;
  */
 public class GeneralProcessorPanel implements IsWidget {
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
-    private ListBox processor;
-    private ListBox processorVersion;
+    private ListBox processorName;
     private TextArea processorParameters;
+    private ListBox bundleVersion;
     private FileUpload fileUpload;
     private final CalvalusPortal portal;
     private DecoratorPanel widget;
@@ -38,16 +38,18 @@ public class GeneralProcessorPanel implements IsWidget {
     public GeneralProcessorPanel(CalvalusPortal portal, String title) {
         this.portal = portal;
 
-        processor = new ListBox();
-        processor.setName("processorListBox");
+        processorName = new ListBox();
+        processorName.setName("processorName");
+        processorName.setWidth("20em");
         for (PortalProcessor processor : portal.getProcessors()) {
-            this.processor.addItem(processor.getName(), processor.getOperator());
+            String label = processor.getProcessorName() + " (from " + processor.getBundleName() + ")";
+            this.processorName.addItem(label, processor.getExecutableName());
         }
         if (portal.getProcessors().length > 0) {
-            processor.setSelectedIndex(0);
+            processorName.setSelectedIndex(0);
         }
-        processor.setVisibleItemCount(3);
-        processor.addChangeHandler(new ChangeHandler() {
+        processorName.setVisibleItemCount(3);
+        processorName.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
                 updateParametersWidget();
@@ -55,23 +57,24 @@ public class GeneralProcessorPanel implements IsWidget {
             }
         });
 
-        processorVersion = new ListBox();
-        processorVersion.setName("processorVersionListBox");
-        processorVersion.setVisibleItemCount(3);
-
         processorParameters = new TextArea();
-        processorParameters.setName("parameterKeyValuesArea");
+        processorParameters.setName("processorParameters");
         processorParameters.setCharacterWidth(48);
         processorParameters.setVisibleLines(16);
 
+        bundleVersion = new ListBox();
+        bundleVersion.setName("bundleVersion");
+        bundleVersion.setVisibleItemCount(3);
+
         fileUpload = new FileUpload();
-        fileUpload.setName("uploadFormElement");
+        fileUpload.setName("fileUpload");
         fileUpload.addChangeHandler(new FileUploadChangeHandler());
+        fileUpload.setWidth("30em");
 
         HorizontalPanel processorPanel = new HorizontalPanel();
         processorPanel.setSpacing(2);
-        processorPanel.add(createLabeledWidgetV("Processor:", processor));
-        processorPanel.add(createLabeledWidgetV("Version:", processorVersion));
+        processorPanel.add(createLabeledWidgetV("Processor:", processorName));
+        processorPanel.add(createLabeledWidgetV("Bundle version:", bundleVersion));
 
         uploadForm = new FormPanel();
         uploadForm.setWidget(createLabeledWidgetH("From file:", fileUpload));
@@ -118,19 +121,14 @@ public class GeneralProcessorPanel implements IsWidget {
         }
     }
 
-    private String cleanFromHtml(String results) {
-        return results.replace("<pre>", "").replace("</pre>", "").replace("&lt;", "<").replace("&gt;", ">");
+    public PortalProcessor getSelectedProcessor() {
+        int selectedIndex = processorName.getSelectedIndex();
+        return portal.getProcessors()[selectedIndex];
     }
 
-    public String getProcessorId() {
-        int processorIndex = processor.getSelectedIndex();
-        return processor.getValue(processorIndex);
-
-    }
-
-    public String getProcessorVersion() {
-        int processorVersionIndex = processorVersion.getSelectedIndex();
-        return processorVersion.getValue(processorVersionIndex);
+    public String getBundleVersion() {
+        int processorVersionIndex = bundleVersion.getSelectedIndex();
+        return bundleVersion.getValue(processorVersionIndex);
     }
 
     public String getProcessorParameters() {
@@ -143,24 +141,19 @@ public class GeneralProcessorPanel implements IsWidget {
     }
 
     void updateProcessorVersionsWidget() {
-        processorVersion.clear();
+        bundleVersion.clear();
         PortalProcessor selectedProcessor = getSelectedProcessor();
-        String[] versions = selectedProcessor.getVersions();
+        String[] versions = selectedProcessor.getBundleVersions();
         for (String version : versions) {
-            processorVersion.addItem(version);
+            bundleVersion.addItem(version);
         }
         if (versions.length > 0) {
-            processorVersion.setSelectedIndex(0);
+            bundleVersion.setSelectedIndex(0);
         }
     }
 
     private void updateParametersWidget() {
         processorParameters.setValue(getSelectedProcessor().getDefaultParameters());
-    }
-
-    private PortalProcessor getSelectedProcessor() {
-        int selectedIndex = processor.getSelectedIndex();
-        return portal.getProcessors()[selectedIndex];
     }
 
     private class FileUploadChangeHandler implements ChangeHandler {

@@ -25,8 +25,14 @@ class HadoopL3ProcessingRequest extends L3ProcessingRequest {
     }
 
     @Override
+    public String getOutputDir() {
+        String outputDir = super.getOutputDir();
+        return getFileSystemName() + "/calvalus/outputs/" + outputDir;
+    }
+
+    @Override
     public String[] getInputFiles() throws ProductionException {
-        Path eoDataRoot = new Path(jobClient.getConf().get("fs.default.name"), "/calvalus/eodata/");
+        Path eoDataRoot = new Path(getFileSystemName(), "/calvalus/eodata/");
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
         Date startDate = null;
         try {
@@ -73,5 +79,9 @@ class HadoopL3ProcessingRequest extends L3ProcessingRequest {
         } while (!startCal.after(stopCal));
 
         return list;
+    }
+
+    private String getFileSystemName() {
+        return jobClient.getConf().get("fs.default.name");
     }
 }
