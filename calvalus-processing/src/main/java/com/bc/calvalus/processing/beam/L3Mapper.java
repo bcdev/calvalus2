@@ -56,6 +56,8 @@ import java.util.logging.Logger;
 public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, SpatialBin> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
+    private static final String COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS = "Product Pixel Counts";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -83,13 +85,17 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final Product product = l3Config.getPreProcessedProduct(source, beamConfig);
         if (product != null) {
             try {
-                float[] supersamplingSteps = l3Config.getSuperSamplingSteps();
-                processProduct(product, ctx, spatialBinner, supersamplingSteps);
+                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
+                if (numObs > 0L) {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numObs);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numObs);
+                }
             } finally {
                 product.dispose();
             }
         } else {
-            LOG.info("product not used");
+            LOG.info("Product not used");
         }
 
         long stopTime = System.nanoTime();
@@ -105,7 +111,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     }
 
-    static void processProduct(Product product,
+    static long processProduct(Product product,
                                BinningContext ctx,
                                SpatialBinner spatialBinner,
                                float[] superSamplingSteps) {
@@ -148,6 +154,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final GeoCoding geoCoding = product.getGeoCoding();
         final Point[] tileIndices = maskImage.getTileIndices(null);
 
+        long numObsTotal = 0;
         ObservationSlice observationSlice;
         for (Point tileIndex : tileIndices) {
             observationSlice = createObservationSlice(geoCoding,
@@ -156,9 +163,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                       sliceWidth, sliceHeight,
                                                       superSamplingSteps);
             spatialBinner.processObservationSlice(observationSlice);
+            numObsTotal += observationSlice.getSize();
         }
 
         spatialBinner.complete();
+        return numObsTotal;
     }
 
     private static ObservationSlice createObservationSlice(GeoCoding geoCoding,
