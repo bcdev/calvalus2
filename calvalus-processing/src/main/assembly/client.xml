@@ -42,4 +42,15 @@
             <outputDirectory>requests</outputDirectory>
         </fileSet>
     </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>net.sf.saxon:saxon</include>
+                <include>net.sf.saxon:saxon-dom</include>
+            </includes>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <useTransitiveFiltering>false</useTransitiveFiltering>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
 </assembly>
