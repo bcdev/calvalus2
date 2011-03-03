@@ -27,19 +27,19 @@ public class L3ProcessingRequestTest {
         assertEquals(0, processingRequest.getVariables().length);
         assertEquals("5,50,25,60", processingRequest.getBBox());
         assertEquals(4320, processingRequest.getNumRows());
-        assertEquals("calvalus-level3-output", processingRequest.getOutputFileName());
+        assertEquals("calvalus-level3-output", processingRequest.getOutputDir());
+        assertEquals(true, processingRequest.getOutputStaging());
 
         // Assert that derived processing parameters are present in map
-        Map<String,Object> processingParameters = processingRequest.getProcessingParameters();
+        Map<String, Object> processingParameters = processingRequest.getProcessingParameters();
         assertNotNull(processingParameters);
         assertNotNull(processingParameters.get("inputFiles"));
         assertNotNull(processingParameters.get("variables"));
         assertNotNull(processingParameters.get("aggregators"));
         assertEquals("5,50,25,60", processingParameters.get("bbox"));
-        assertEquals(4320,  processingParameters.get("numRows"));
+        assertEquals(4320, processingParameters.get("numRows"));
         assertEquals("calvalus-level3-output", processingParameters.get("outputDir"));
-        assertEquals("1234", processingParameters.get("productionId"));
-        assertEquals("Wonderful L3", processingParameters.get("productionName"));
+        assertEquals("id3", processingParameters.get("inputProductSetId"));
         assertEquals("beam", processingParameters.get("l2ProcessorBundleName"));
         assertEquals("4.9-SNAPSHOT", processingParameters.get("l2ProcessorBundleVersion"));
         assertEquals("BandMaths", processingParameters.get("l2ProcessorName"));
@@ -50,34 +50,38 @@ public class L3ProcessingRequestTest {
 
     static ProductionRequest createValidL3ProductionRequest() {
         return new ProductionRequest("calvalus-level3",
-                                                                        // GeneralLevel 3 parameters
-                                                                        "productionName", "Wonderful L3",
-                                                                        "inputProductSetId", "id3",
-                                                                        "outputFileName", "${type}-output",
-                                                                        "outputFormat", "NetCDF",
-                                                                        "outputStaging", "true",
-                                                                        "l2ProcessorBundleName", "beam",
-                                                                        "l2ProcessorBundleVersion", "4.9-SNAPSHOT",
-                                                                        "l2ProcessorName", "BandMaths",
-                                                                        "l2ProcessorParameters", "<!-- no params -->",
-                                                                        // Special Level 3 parameters
-                                                                        "productionId", "1234",
-                                                                        "inputVariables", "a, b, c",
-                                                                        "maskExpr", "NOT INVALID",
-                                                                        "aggregator", "MIN_MAX",
-                                                                        "weightCoeff", "1.0",
-                                                                        "dateStart", "2010-06-01",
-                                                                        "dateStop", "2010-06-07",
-                                                                        "periodCount", "1",
-                                                                        "periodLength", "7",
-                                                                        "lonMin", "5",
-                                                                        "lonMax", "25",
-                                                                        "latMin", "50",
-                                                                        "latMax", "60",
-                                                                        "resolution", "4.64",
-                                                                        "superSampling", "1"
-            );
+                                     // GeneralLevel 3 parameters
+                                     "inputProductSetId", "id3",
+                                     "outputFileName", "${type}-output",
+                                     "outputFormat", "NetCDF",
+                                     "outputStaging", "true",
+                                     "l2ProcessorBundleName", "beam",
+                                     "l2ProcessorBundleVersion", "4.9-SNAPSHOT",
+                                     "l2ProcessorName", "BandMaths",
+                                     "l2ProcessorParameters", "<!-- no params -->",
+                                     // Special Level 3 parameters
+                                     "inputVariables", "a, b, c",
+                                     "maskExpr", "NOT INVALID",
+                                     "aggregator", "MIN_MAX",
+                                     "weightCoeff", "1.0",
+                                     "dateStart", "2010-06-01",
+                                     "dateStop", "2010-06-07",
+                                     "periodCount", "1",
+                                     "periodLength", "7",
+                                     "lonMin", "5",
+                                     "lonMax", "25",
+                                     "latMin", "50",
+                                     "latMax", "60",
+                                     "resolution", "4.64",
+                                     "superSampling", "1"
+        );
     }
 
 
+    @Test
+    public void testComputeNumRows() {
+        assertEquals(2160, L3ProcessingRequest.computeBinningGridRowCount(9.28));
+        assertEquals(2160 * 2, L3ProcessingRequest.computeBinningGridRowCount(9.28 / 2));
+        assertEquals(2160 / 2, L3ProcessingRequest.computeBinningGridRowCount(9.28 * 2));
+    }
 }

@@ -52,6 +52,10 @@ public class ProductionRequest {
         return productionType;
     }
 
+    public String getProductionParameter(String name)  {
+        return productionParameters.get(name);
+    }
+
     public Map<String, String> getProductionParameters() {
         return Collections.unmodifiableMap(productionParameters);
     }

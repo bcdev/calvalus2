@@ -7,6 +7,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Math.*;
+
 abstract class L3ProcessingRequest {
     private final ProductionRequest productionRequest;
     private static long outputFileNum = 0;
@@ -16,33 +18,36 @@ abstract class L3ProcessingRequest {
     }
 
     public Map<String, Object> getProcessingParameters() throws ProductionException {
-        HashMap<String, Object> context = new HashMap<String, Object>(productionRequest.getProductionParameters());
+        Map<String, String> productionParameters = productionRequest.getProductionParameters();
+        checkSet(productionParameters, "l2ProcessorBundleName");
+        checkSet(productionParameters, "l2ProcessorBundleVersion");
+        checkSet(productionParameters, "l2ProcessorName");
+        checkSet(productionParameters, "l2ProcessorParameters");
+        checkSet(productionParameters, "superSampling");
+        checkSet(productionParameters, "maskExpr");
+        checkSet(productionParameters, "outputStaging");
 
-        checkSet(context, "productionId");
-        checkSet(context, "productionName");
-        checkSet(context, "l2ProcessorBundleName");
-        checkSet(context, "l2ProcessorBundleVersion");
-        checkSet(context, "l2ProcessorName");
-        checkSet(context, "l2ProcessorParameters");
-        checkSet(context, "superSampling");
-        checkSet(context, "maskExpr");
-        context.put("inputFiles", getInputFiles());
-        context.put("outputDir", getOutputFileName());
-        context.put("numRows", getNumRows());
-        context.put("bbox", getBBox());
-        context.put("variables", getVariables());
-        context.put("aggregators", getAggregators());
+        HashMap<String, Object> processingParameters = new HashMap<String, Object>(productionParameters);
 
-        //context.put("processorPackage", "beam-lkn");
-        //context.put("processorVersion", "1.0-SNAPSHOT");
+        processingParameters.put("inputFiles", getInputFiles());
+        processingParameters.put("outputDir", getOutputDir());
+        processingParameters.put("numRows", getNumRows());
+        processingParameters.put("bbox", getBBox());
+        processingParameters.put("variables", getVariables());
+        processingParameters.put("aggregators", getAggregators());
+        processingParameters.put("outputStaging", getOutputStaging());
 
-        return context;
+        return processingParameters;
+    }
+
+    public String getOutputFormat() throws ProductionException {
+       return getProductionParameterSafe("outputFormat");
     }
 
     public BeamL3Config.AggregatorConfiguration[] getAggregators() throws ProductionException {
-        String inputVariablesStr = getProductionParameter("inputVariables");
-        String aggregator = getProductionParameter("aggregator");
-        double weightCoeff = Double.parseDouble(getProductionParameter("weightCoeff"));
+        String inputVariablesStr = getProductionParameterSafe("inputVariables");
+        String aggregator = getProductionParameterSafe("aggregator");
+        double weightCoeff = Double.parseDouble(getProductionParameterSafe("weightCoeff"));
 
         String[] inputVariables = inputVariablesStr.split(",");
         BeamL3Config.AggregatorConfiguration[] aggregatorConfigurations = new BeamL3Config.AggregatorConfiguration[inputVariables.length];
@@ -59,20 +64,35 @@ abstract class L3ProcessingRequest {
         return new BeamL3Config.VariableConfiguration[0];
     }
 
+    public boolean getOutputStaging() throws ProductionException {
+        return Boolean.parseBoolean(getProductionParameterSafe("outputStaging"));
+    }
+
     public String getBBox() throws ProductionException {
         return String.format("%s,%s,%s,%s",
-                             getProductionParameter("lonMin"), getProductionParameter("latMin"),
-                             getProductionParameter("lonMax"), getProductionParameter("latMax"));
+                             getProductionParameterSafe("lonMin"), getProductionParameterSafe("latMin"),
+                             getProductionParameterSafe("lonMax"), getProductionParameterSafe("latMax"));
     }
 
     public int getNumRows() throws ProductionException {
-        double resolution = Double.parseDouble(getProductionParameter("resolution"));
-        return HadoopProductionService.getNumRows(resolution);
+        double resolution = Double.parseDouble(getProductionParameterSafe("resolution"));
+        return computeBinningGridRowCount(resolution);
+    }
+
+    public static int computeBinningGridRowCount(double res) {
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
+        if (numRows % 2 == 0) {
+            return numRows;
+        } else {
+            return numRows + 1;
+        }
     }
 
     public abstract String[] getInputFiles() throws ProductionException;
 
-    public String getOutputFileName() {
+    public String getOutputDir() {
         String outputFileName = productionRequest.getProductionParameters().get("outputFileName");
         if (outputFileName == null) {
             outputFileName = "output-${user}-${num}";
@@ -83,16 +103,15 @@ abstract class L3ProcessingRequest {
                 .replace("${num}", (++outputFileNum) + "");
     }
 
-    String getProductionParameter(String name) throws ProductionException {
-        Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        String value = productionParameters.get(name);
+    String getProductionParameterSafe(String name) throws ProductionException {
+        String value = productionRequest.getProductionParameter(name);
         if (value == null) {
             throw new ProductionException("Missing production parameter '" + name + "'");
         }
         return value;
     }
 
-    void checkSet(Map<String, ?> transformed, String name) throws ProductionException {
+    void checkSet(Map<String, String> transformed, String name) throws ProductionException {
         if (transformed.get(name) == null) {
             throw new ProductionException("Missing production parameter '" + name + "'");
         }

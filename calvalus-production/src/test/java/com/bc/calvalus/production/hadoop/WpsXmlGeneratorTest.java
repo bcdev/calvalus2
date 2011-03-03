@@ -20,12 +20,12 @@ public class WpsXmlGeneratorTest {
                 return new String[]{"fileA", "fileB", "fileC"};
             }
         };
-        String xml = new WpsXmlGenerator().createL3WpsXml(processingRequest);
+        String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequest);
         assertNotNull(xml);
 
         System.out.println(xml);
 
-        assertTrue(xml.contains("<ows:Identifier>1234</ows:Identifier>"));
+        assertTrue(xml.contains("<ows:Identifier>ID_pi-pa-po</ows:Identifier>"));
         assertTrue(xml.contains("<ows:Title>Wonderful L3</ows:Title>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.processor.package</ows:Identifier>"));

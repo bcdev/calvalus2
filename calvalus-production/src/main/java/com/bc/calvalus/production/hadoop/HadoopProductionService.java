@@ -25,9 +25,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductIOPlugInManager;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -42,7 +40,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -61,26 +58,23 @@ public class HadoopProductionService implements ProductionService {
     private static final int HADOOP_OBSERVATION_PERIOD = 2000;
     private final JobClient jobClient;
     private final HadoopProductionDatabase database;
-    private final VelocityEngine velocityEngine;
     private final StagingService stagingService;
     // todo - Persist
     private static long outputFileNum = 0;
     private final Logger logger;
     private final File stagingDirectory;
+    private WpsXmlGenerator wpsXmlGenerator;
 
     public HadoopProductionService(JobConf jobConf, Logger logger, File stagingDirectory) throws ProductionException {
         this.logger = logger;
         this.stagingDirectory = stagingDirectory;
         this.database = new HadoopProductionDatabase();
-        this.velocityEngine = new VelocityEngine();
         try {
             this.jobClient = new JobClient(jobConf);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
 
-        // todo - extract WpsXmlGenerator
-        initVelocityEngine();
         initDatabase();
 
         // Prevent Windows from using ';' as path separator
@@ -91,6 +85,7 @@ public class HadoopProductionService implements ProductionService {
                                                    HADOOP_OBSERVATION_PERIOD / 2,
                                                    HADOOP_OBSERVATION_PERIOD);
         stagingService = new StagingService(logger);
+        wpsXmlGenerator = new WpsXmlGenerator();
     }
 
     @Override
@@ -210,114 +205,36 @@ public class HadoopProductionService implements ProductionService {
     }
 
     private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
-        // todo - use this instead!!!
+
+
         L3ProcessingRequest l3ProcessingRequest = new HadoopL3ProcessingRequest(jobClient, productionRequest);
 
-        String productionId = Long.toHexString(System.nanoTime());
-        String productionType = productionRequest.getProductionType();
-        Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        String productionName = String.format("%s using product set '%s' and L2 processor '%s'",
-                                              productionType,
-                                              productionParameters.get("inputProductSetId"),
-                                              productionParameters.get("l2OperatorName"));
-        String outputDir = getOutputDir(productionRequest);
-        String wpsXml = createL3WpsXml(productionId,
-                                       productionName,
-                                       productionParameters,
-                                       outputDir);
+        String l3ProductionId = createL3ProductionId(productionRequest);
+        String l3ProductionName = createL3ProductionName(productionRequest);
+        String wpsXml = wpsXmlGenerator.createL3WpsXml(l3ProductionId, l3ProductionName, l3ProcessingRequest);
+
         JobID jobId = submitL3Job(wpsXml);
-        String outputFormat = productionParameters.get("outputFormat");
-        if (outputFormat == null) {
-            outputFormat = "BEAM-DIMAP";
-        }
-        String outputStagingStr = productionParameters.get("outputStaging");
-        boolean outputStaging = true;
-        if (outputStagingStr == null) {
-            outputStaging = Boolean.parseBoolean(outputStagingStr);
-        }
-        HadoopProduction hadoopProduction = new HadoopProduction(productionId,
-                                                                 productionName,
+
+        HadoopProduction hadoopProduction = new HadoopProduction(l3ProductionId,
+                                                                 l3ProductionName,
                                                                  jobId,
-                                                                 outputDir,
-                                                                 outputFormat,
-                                                                 outputStaging);
-        hadoopProduction.setWpsXml(wpsXml); // todo - we hate it
+                                                                 l3ProcessingRequest.getOutputDir(),
+                                                                 l3ProcessingRequest.getOutputFormat(),
+                                                                 l3ProcessingRequest.getOutputStaging());
+        hadoopProduction.setWpsXml(wpsXml); // todo - check: this is only needed for staging (output directory)
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }
 
-    // todo - test
-    String createL3WpsXml(String productionId,
-                                  String productionName,
-                                  Map<String, String> productionParameters,
-                                  String outputDir) throws ProductionException {
-        String[] inputFiles;
-        try {
-            inputFiles = getInputFiles(productionParameters);
-        } catch (IOException e) {
-            throw new ProductionException("Failed to assemble input file list: " + e.getMessage(), e);
-        }
-        BeamL3Config.AggregatorConfiguration[] aggregators = getAggregators(productionParameters);
+    static String createL3ProductionId(ProductionRequest productionRequest) {
+        return productionRequest.getProductionType() + "-" + Long.toHexString(System.nanoTime());
 
-        VelocityContext context = new VelocityContext();
-        context.put("productionId", productionId);
-        context.put("productionName", productionName);
-        context.put("processorPackage", "beam-lkn");
-        context.put("processorVersion", "1.0-SNAPSHOT");
-        context.put("inputFiles", inputFiles);
-        context.put("outputDir", outputDir);
-        context.put("l2OperatorName", productionParameters.get("l2OperatorName"));
-        context.put("l2OperatorParameters", productionParameters.get("l2OperatorParameters"));
-        context.put("superSampling", productionParameters.get("superSampling"));
-        context.put("maskExpr", productionParameters.get("validMask"));
-        context.put("numRows", getNumRows(productionParameters));
-        context.put("bbox", getBBOX(productionParameters));
-        context.put("variables", new BeamL3Config.VariableConfiguration[0]);
-        context.put("aggregators", aggregators);
-
-        String wpsXml;
-        try {
-            Template wpsXmlTemplate = velocityEngine.getTemplate("com/bc/calvalus/production/hadoop/level3-wps-request.xml.vm");
-            StringWriter writer = new StringWriter();
-            wpsXmlTemplate.merge(context, writer);
-            wpsXml = writer.toString();
-            System.out.println(wpsXml);
-        } catch (Exception e) {
-            throw new ProductionException("Failed to generate WPS XML request", e);
-        }
-        return wpsXml;
     }
+    static String createL3ProductionName(ProductionRequest productionRequest) {
+        return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
+                                              productionRequest.getProductionParameter("inputProductSetId"),
+                                              productionRequest.getProductionParameter("l2ProcessorName"));
 
-    static String getOutputDir(ProductionRequest productionRequest) {
-        String outputFileName = productionRequest.getProductionParameters().get("outputFileName");
-        if (outputFileName == null) {
-            outputFileName = "output-${user}-${num}";
-        }
-        return outputFileName
-                .replace("${user}", System.getProperty("user.name", "hadoop"))
-                .replace("${type}", productionRequest.getProductionType())
-                .replace("${num}", (++outputFileNum) + "");
-    }
-
-    static int getNumRows(Map<String, String> productionParameters) {
-        return getNumRows(Double.parseDouble(productionParameters.get("resolution")));
-    }
-
-    static String getBBOX(Map<String, String> productionParameters) {
-        return String.format("%s,%s,%s,%s",
-                             productionParameters.get("lonMin"), productionParameters.get("latMin"),
-                             productionParameters.get("lonMax"), productionParameters.get("latMax"));
-    }
-
-    static BeamL3Config.AggregatorConfiguration[] getAggregators(Map<String, String> productionParameters) {
-        String[] inputVariables = productionParameters.get("inputVariables").split(",");
-        BeamL3Config.AggregatorConfiguration[] aggregatorConfigurations = new BeamL3Config.AggregatorConfiguration[inputVariables.length];
-        for (int i = 0; i < inputVariables.length; i++) {
-            aggregatorConfigurations[i] = new BeamL3Config.AggregatorConfiguration(productionParameters.get("aggregator"),
-                                                                                   inputVariables[i],
-                                                                                   Double.parseDouble(productionParameters.get("weightCoeff")));
-        }
-        return aggregatorConfigurations;
     }
 
     private JobID submitL3Job(String wpsXml) throws ProductionException {
@@ -374,17 +291,6 @@ public class HadoopProductionService implements ProductionService {
         return list;
     }
 
-    static int getNumRows(double res) {
-        // see: SeaWiFS Technical Report Series Vol. 32;
-        final double RE = 6378.145;
-        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
-        if (numRows % 2 == 0) {
-            return numRows;
-        } else {
-            return numRows + 1;
-        }
-    }
-
     private void initDatabase() {
         System.out.println("PRODUCTIONS_DB_FILE = " + PRODUCTIONS_DB_FILE.getAbsolutePath());
         try {
@@ -394,17 +300,6 @@ public class HadoopProductionService implements ProductionService {
         }
     }
 
-
-    private void initVelocityEngine() throws ProductionException {
-        Properties properties = new Properties();
-        properties.setProperty("resource.loader", "class");
-        properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        try {
-            velocityEngine.init(properties);
-        } catch (Exception e) {
-            throw new ProductionException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
-        }
-    }
 
     private Map<JobID, JobStatus> getJobStatusMap() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();

@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 class HadoopL3ProcessingRequest extends L3ProcessingRequest {
     private final JobClient jobClient;
@@ -31,17 +30,17 @@ class HadoopL3ProcessingRequest extends L3ProcessingRequest {
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
         Date startDate = null;
         try {
-            startDate = dateFormat.parse(getProductionParameter("dateStart"));
+            startDate = dateFormat.parse(getProductionParameterSafe("dateStart"));
         } catch (ParseException ignore) {
             // todo
         }
         Date stopDate = null;
         try {
-            stopDate = dateFormat.parse(getProductionParameter("dateStop"));
+            stopDate = dateFormat.parse(getProductionParameterSafe("dateStop"));
         } catch (ParseException ignore) {
             // todo
         }
-        String inputProductSetId = getProductionParameter("inputProductSetId");
+        String inputProductSetId = getProductionParameterSafe("inputProductSetId");
         Path inputPath = new Path(eoDataRoot, inputProductSetId);
         List<String> dateList = getDateList(startDate, stopDate, inputProductSetId);
         try {
