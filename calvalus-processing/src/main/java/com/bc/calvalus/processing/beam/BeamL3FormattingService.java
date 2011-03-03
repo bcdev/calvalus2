@@ -138,7 +138,7 @@ public class BeamL3FormattingService {
 
     private BeamL3Config readL3Config(String processingRequest) throws IOException, SAXException, ParserConfigurationException {
         String wpsContent;
-        if (processingRequest == null && processingRequest.isEmpty()) {
+        if (processingRequest == null || processingRequest.isEmpty()) {
             FileSystem fs = l3OutputDir.getFileSystem(configuration);
             InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
