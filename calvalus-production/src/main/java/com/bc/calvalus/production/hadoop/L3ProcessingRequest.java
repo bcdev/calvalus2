@@ -15,21 +15,17 @@ abstract class L3ProcessingRequest {
         this.productionRequest = productionRequest;
     }
 
-    public ProductionRequest getProductionRequest() {
-        return productionRequest;
-    }
-
     public Map<String, Object> getProcessingParameters() throws ProductionException {
         HashMap<String, Object> context = new HashMap<String, Object>(productionRequest.getProductionParameters());
 
         checkSet(context, "productionId");
         checkSet(context, "productionName");
-        checkSet(context, "l2OperatorName");
-        checkSet(context, "l2OperatorParameters");
+        checkSet(context, "l2ProcessorBundleName");
+        checkSet(context, "l2ProcessorBundleVersion");
+        checkSet(context, "l2ProcessorName");
+        checkSet(context, "l2ProcessorParameters");
         checkSet(context, "superSampling");
-        checkSet(context, "validMask");
-        checkSet(context, "processorPackage");
-        checkSet(context, "processorVersion");
+        checkSet(context, "maskExpr");
         context.put("inputFiles", getInputFiles());
         context.put("outputDir", getOutputFileName());
         context.put("numRows", getNumRows());

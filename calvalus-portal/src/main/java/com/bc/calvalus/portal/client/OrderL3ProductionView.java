@@ -65,15 +65,17 @@ public class OrderL3ProductionView extends PortalView {
         return "Order L3 Production";
     }
 
-    // todo - test
+    // todo - Provide JUnit test for this method
     public PortalProductionRequest getProductionRequest() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
         parameters.put("outputFileName", inputOutputPanel.getOutputFileName());
         parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
         parameters.put("outputStaging", inputOutputPanel.getOutputStaging() + "");
-        parameters.put("l2OperatorName", l2ProcessorPanel.getProcessorId());
-        parameters.put("l2OperatorParameters", l2ProcessorPanel.getProcessorParameters());
+        parameters.put("l2ProcessorBundleName", "coastcolour"); // todo - where do we get 'l2ProcessorBundle' from ?
+        parameters.put("l2ProcessorBundleVersion", l2ProcessorPanel.getProcessorVersion());
+        parameters.put("l2ProcessorName", l2ProcessorPanel.getProcessorId());
+        parameters.put("l2ProcessorParameters", l2ProcessorPanel.getProcessorParameters());
         parameters.putAll(l3ProcessorPanel.getParameterMap());
         return new PortalProductionRequest("calvalus-level3", parameters);
     }

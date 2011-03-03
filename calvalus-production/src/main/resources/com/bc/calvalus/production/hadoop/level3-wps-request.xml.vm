@@ -12,22 +12,6 @@
     <wps:DataInputs>
 
         <wps:Input>
-            <ows:Identifier>calvalus.processor.package</ows:Identifier>
-            <ows:Title>Software installation package name</ows:Title>
-            <wps:Data>
-                <wps:LiteralData>${processorPackage}</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.processor.version</ows:Identifier>
-            <ows:Title>Software installation package version</ows:Title>
-            <wps:Data>
-                <wps:LiteralData>${processorVersion}</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>Output directory</ows:Title>
             <wps:Data>
@@ -44,18 +28,34 @@
         #end
 
         <wps:Input>
-            <ows:Identifier>calvalus.l2.operator</ows:Identifier>
-            <ows:Title>The name of the Level 2 BEAM GPF operator</ows:Title>
+            <ows:Identifier>calvalus.processor.package</ows:Identifier>
+            <ows:Title>Name of the Level 2 installation bundle</ows:Title>
             <wps:Data>
-                <wps:LiteralData>${l2OperatorName}</wps:LiteralData>
+                <wps:LiteralData>${l2ProcessorBundleName}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.processor.version</ows:Identifier>
+            <ows:Title>Version of the Level 2 installation bundle</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>${l2ProcessorBundleVersion}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.l2.operator</ows:Identifier>
+            <ows:Title>The name of the Level 2 BEAM processor (GPF operator name)</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>${l2ProcessorName}</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
-            <ows:Title>The parameters for the Level 2 BEAM GPF operator</ows:Title>
+            <ows:Title>The parameters for the Level 2 BEAM processor (GPF operator name)</ows:Title>
             <wps:Data>
-                <wps:ComplexData>${l2OperatorParameters}</wps:ComplexData>
+                <wps:ComplexData>${l2ProcessorParameters}</wps:ComplexData>
             </wps:Data>
         </wps:Input>
 

@@ -33,7 +33,7 @@ public class L3ProcessorPanel implements IsWidget {
     private DecoratorPanel widget;
 
     private ListBox inputVariables;
-    private TextBox validMask;
+    private TextBox maskExpr;
     private ListBox aggregator;
     private DoubleBox weightCoeff;
     private DateBox dateStart;
@@ -57,8 +57,8 @@ public class L3ProcessorPanel implements IsWidget {
         inputVariables.addItem("turbidity_index");
         inputVariables.setSelectedIndex(0);
 
-        validMask = new TextBox();
-        validMask.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD");
+        maskExpr = new TextBox();
+        maskExpr.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD");
 
         aggregator = new ListBox();
         aggregator.addItem("Average", "AVG");
@@ -87,7 +87,7 @@ public class L3ProcessorPanel implements IsWidget {
         contentParams.setWidget(1, 0, new Label("L2 variable:"));
         contentParams.setWidget(1, 1, inputVariables);
         contentParams.setWidget(2, 0, new Label("Valid mask:"));
-        contentParams.setWidget(2, 1, validMask);
+        contentParams.setWidget(2, 1, maskExpr);
         contentParams.setWidget(3, 0, new Label("Aggregation:"));
         contentParams.setWidget(3, 1, this.aggregator);
         contentParams.setWidget(4, 0, new Label("Weight coeff.:"));
@@ -296,7 +296,7 @@ public class L3ProcessorPanel implements IsWidget {
     public Map<String, String> getParameterMap() {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex()));
-        parameters.put("validMask", validMask.getText());
+        parameters.put("maskExpr", maskExpr.getText());
         parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
         parameters.put("weightCoeff", weightCoeff.getText());
         parameters.put("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue()));
