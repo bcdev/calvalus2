@@ -98,13 +98,16 @@ public class BeamL3Config {
 
         Double weightCoeff;
 
+        Double fillValue;
+
         public AggregatorConfiguration() {
         }
 
-        public AggregatorConfiguration(String type, String varName, Double weightCoeff) {
+        public AggregatorConfiguration(String type, String varName, Double weightCoeff, Double fillValue) {
             this.type = type;
             this.varName = varName;
             this.weightCoeff = weightCoeff;
+            this.fillValue = fillValue;
         }
 
         public String getType() {
@@ -122,7 +125,12 @@ public class BeamL3Config {
         public Double getWeightCoeff() {
             return weightCoeff;
         }
+
+        public Double getFillValue() {
+            return fillValue;
+        }
     }
+
     @Parameter
     int numRows;
     @Parameter
@@ -161,14 +169,14 @@ public class BeamL3Config {
         } else {
             float[] samplingStep = new float[superSampling];
             for (int i = 0; i < samplingStep.length; i++) {
-                samplingStep[i] = (i*2+1f)/(2f*superSampling);
+                samplingStep[i] = (i * 2 + 1f) / (2f * superSampling);
             }
             return samplingStep;
         }
     }
 
     public BinningContext getBinningContext() {
-                VariableContext varCtx = getVariableContext();
+        VariableContext varCtx = getVariableContext();
         return new BinningContextImpl(getBinningGrid(),
                                       varCtx,
                                       getBinManager(varCtx));
@@ -238,33 +246,19 @@ public class BeamL3Config {
     }
 
     private Aggregator getAggregatorAverage(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        String varName = aggregatorConf.varName;
-        Double weightCoeff = aggregatorConf.weightCoeff;
-        if (weightCoeff == null) {
-            return new AggregatorAverage(varCtx, varName);
-        } else {
-            return new AggregatorAverage(varCtx, varName, weightCoeff);
-        }
+        return new AggregatorAverage(varCtx, aggregatorConf.varName, aggregatorConf.weightCoeff, aggregatorConf.fillValue);
     }
 
     private Aggregator getAggregatorAverageML(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        String varName = aggregatorConf.varName;
-        Double weightCoeff = aggregatorConf.weightCoeff;
-        if (weightCoeff == null) {
-            return new AggregatorAverageML(varCtx, varName);
-        } else {
-            return new AggregatorAverageML(varCtx, varName, weightCoeff);
-        }
+        return new AggregatorAverageML(varCtx, aggregatorConf.varName, aggregatorConf.weightCoeff, aggregatorConf.fillValue);
     }
 
     private Aggregator getAggregatorMinMax(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        String varName = aggregatorConf.varName;
-        return new AggregatorMinMax(varCtx, varName);
+        return new AggregatorMinMax(varCtx, aggregatorConf.varName, aggregatorConf.fillValue);
     }
 
     private Aggregator getAggregatorOnMaxSet(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        String[] varNames = aggregatorConf.varNames;
-        return new AggregatorOnMaxSet(varCtx, varNames);
+        return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
     }
 
     public Product getPreProcessedProduct(Product source, BeamL2Config beamConfig) {
@@ -317,7 +311,7 @@ public class BeamL3Config {
         final Rectangle pixelRegion = pixelRegionFinder.getPixelRegion();
         pixelRegion.grow(numBorderPixels, numBorderPixels);
         return pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
-                product.getSceneRasterHeight()));
+                                                      product.getSceneRasterHeight()));
     }
 
     static Geometry computeProductGeometry(Product product) {

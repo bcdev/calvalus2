@@ -53,6 +53,8 @@ public class FormatterL3Config {
     private String startTime;
     @Parameter
     private String endTime;
+    @Parameter
+    private float fillValue;
 
     public static FormatterL3Config create(XmlDoc request) {
         try {
@@ -74,13 +76,19 @@ public class FormatterL3Config {
         // used by DOM converter
     }
 
-    public FormatterL3Config(String outputType, String outputFile, String outputFormat, BandConfiguration[] bands, String startTime, String endTime) {
+    public FormatterL3Config(String outputType, String outputFile,
+                             String outputFormat,
+                             BandConfiguration[] bands,
+                             String startTime,
+                             String endTime,
+                             float fillValue) {
         this.outputType = outputType;
         this.outputFile = outputFile;
         this.outputFormat = outputFormat;
         this.bands = bands;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.fillValue = fillValue;
     }
 
     public String getOutputType() {
@@ -113,6 +121,10 @@ public class FormatterL3Config {
 
     public ProductData.UTC getEndTime() {
         return parseTime(endTime, "endTime");
+    }
+
+    public float getFillValue() {
+        return fillValue;
     }
 
     private static ProductData.UTC parseTime(String timeString, String timeName) {

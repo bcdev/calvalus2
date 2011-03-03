@@ -77,8 +77,8 @@ public class L3MapperTest {
         variableContext.defineVariable("b", "1.8");
 
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
-        BinManager binManager = new BinManagerImpl(new AggregatorAverage(variableContext, "a"),
-                                                   new AggregatorAverage(variableContext, "b"));
+        BinManager binManager = new BinManagerImpl(new AggregatorAverage(variableContext, "a", null, null),
+                                                   new AggregatorAverage(variableContext, "b", null, null));
 
         return new BinningContextImpl(binningGrid, variableContext, binManager);
     }

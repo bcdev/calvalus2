@@ -95,9 +95,9 @@ public class BeamL3FormattingService {
         outputFormat = formatterL3Config.getOutputFormat();
         if (outputFormat == null) {
             outputFormat = outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
-                            : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
-                            : outputFileNameExt.equalsIgnoreCase("png") ? "PNG"
-                            : outputFileNameExt.equalsIgnoreCase("jpg") ? "JPEG" : null;
+                    : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
+                    : outputFileNameExt.equalsIgnoreCase("png") ? "PNG"
+                    : outputFileNameExt.equalsIgnoreCase("jpg") ? "JPEG" : null;
         }
         if (outputFormat == null) {
             throw new IllegalArgumentException("No output format given");
@@ -223,7 +223,7 @@ public class BeamL3FormattingService {
         for (int i = 0; i < outputPropertyCount; i++) {
             String name = binningContext.getBinManager().getOutputPropertyName(i);
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
-            outputBands[i].setNoDataValue(Double.NaN);
+            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputPropertyFillValue(i));
             outputBands[i].setNoDataValueUsed(true);
             outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
         }
@@ -273,9 +273,9 @@ public class BeamL3FormattingService {
 
 
     private void writeGrayScaleImage(int width, int height,
-                                            float[] rawData,
-                                            float rawValue1, float rawValue2,
-                                            String outputFormat, File outputImageFile) throws IOException {
+                                     float[] rawData,
+                                     float rawValue1, float rawValue2,
+                                     String outputFormat, File outputImageFile) throws IOException {
 
         logger.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
@@ -290,9 +290,9 @@ public class BeamL3FormattingService {
     }
 
     private void writeRgbImage(int width, int height,
-                                      float[][] rawData,
-                                      float[] rawValue1, float[] rawValue2,
-                                      String outputFormat, File outputImageFile) throws IOException {
+                               float[][] rawData,
+                               float[] rawValue1, float[] rawValue2,
+                               String outputFormat, File outputImageFile) throws IOException {
         logger.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
@@ -375,9 +375,16 @@ public class BeamL3FormattingService {
         private final ProductWriter productWriter;
         private final Band numObsBand;
         private final Band numPassesBand;
+        private final float[] fillValues;
         int yLast;
 
-        public ProductDataWriter(ProductWriter productWriter, Band numObsBand, ProductData numObsLine, Band numPassesBand, ProductData numPassesLine, Band[] outputBands, ProductData[] outputLines) {
+        public ProductDataWriter(ProductWriter productWriter,
+                                 Band numObsBand,
+                                 ProductData numObsLine,
+                                 Band numPassesBand,
+                                 ProductData numPassesLine,
+                                 Band[] outputBands,
+                                 ProductData[] outputLines) {
             this.numObsLine = numObsLine;
             this.numPassesLine = numPassesLine;
             this.outputBands = outputBands;
@@ -387,6 +394,10 @@ public class BeamL3FormattingService {
             this.numPassesBand = numPassesBand;
             this.width = numObsBand.getSceneRasterWidth();
             this.yLast = 0;
+            this.fillValues = new float[outputBands.length];
+            for (int i = 0; i < outputBands.length; i++) {
+                fillValues[i] = (float) outputBands[i].getNoDataValue();
+            }
             initLine();
         }
 
@@ -444,9 +455,8 @@ public class BeamL3FormattingService {
             numObsLine.setElemIntAt(x, -1);
             numPassesLine.setElemIntAt(x, -1);
             for (int i = 0; i < outputBands.length; i++) {
-                outputLines[i].setElemFloatAt(x, Float.NaN);
+                outputLines[i].setElemFloatAt(x, fillValues[i]);
             }
         }
-
     }
 }
