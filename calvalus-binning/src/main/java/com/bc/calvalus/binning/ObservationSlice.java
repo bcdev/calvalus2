@@ -30,6 +30,10 @@ public final class ObservationSlice implements Iterable<Observation> {
         observations.add(new ObservationImpl(lat, lon, samples));
     }
 
+    public int getSize() {
+        return observations.size();
+    }
+
     @Override
     public Iterator<Observation> iterator() {
         return observations.iterator();
