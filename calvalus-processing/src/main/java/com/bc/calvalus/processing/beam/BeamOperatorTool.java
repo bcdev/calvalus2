@@ -21,7 +21,6 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.logging.Logger;
 
 /**
@@ -103,16 +102,13 @@ public class BeamOperatorTool extends Configured implements Tool {
                 FileSystem outputPathFileSystem = outputPath.getFileSystem(job.getConfiguration());
                 FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, BeamL3Config.L3_REQUEST_FILENAME));
                 os.writeBytes(requestContent);
+                os.close();
 
-                final String formatterOutput = job.getConfiguration().get("calvalus.l3.formatter.output");
-                if (formatterOutput != null) {
-                    //TODO enable direct formatting
-                    //                LOG.info(MessageFormat.format("formatting to {0}", formatterOutput));
-                    //                L3Formatter formatter = new L3Formatter();
-                    //                formatter.setConf(conf);
-                    //                result = formatter.run(args);
+                if (requestContent.contains("calvalus.formatter.parameters")) {
+                    BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
+                    result = beamL3FormattingService.format(requestContent);
                 } else {
-                    LOG.info(MessageFormat.format("no formatting performed", formatterOutput));
+                    LOG.info("no formatting performed");
                 }
             }
             return result;
