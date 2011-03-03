@@ -16,7 +16,9 @@ if [ ! -r $jobJar ] ; then
     jobJar=${baseDir}/target/calvalus-processing-0.1-SNAPSHOT-job.jar
 fi
 
-export HADOOP_CLASSPATH=`echo ${baseDir}/lib/beam/* | tr ' ' ':'`
+ cp1=`echo ${baseDir}/lib/beam/*.jar | tr ' ' ':'`
+ cp2=`echo ${baseDir}/lib/saxon*.jar | tr ' ' ':'`
+ export HADOOP_CLASSPATH=$cp1:$cp2
 
 input=$1
 shift

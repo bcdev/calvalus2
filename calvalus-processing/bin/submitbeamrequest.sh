@@ -16,6 +16,9 @@ if [ ! -r $jobJar ] ; then
     jobJar=${baseDir}/target/calvalus-processing-0.1-SNAPSHOT-job.jar
 fi
 
+cp1=`echo ${baseDir}/lib/beam/*.jar | tr ' ' ':'`
+cp2=`echo ${baseDir}/lib/saxon*.jar | tr ' ' ':'`
+export HADOOP_CLASSPATH=$cp1:$cp2
 
 #echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOperatorTool $@
 time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOperatorTool $@
