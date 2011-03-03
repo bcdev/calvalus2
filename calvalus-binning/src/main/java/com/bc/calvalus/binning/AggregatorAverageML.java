@@ -16,17 +16,15 @@ public class AggregatorAverageML implements Aggregator {
     private final String[] temporalPropertyNames;
     private final String[] outputPropertyNames;
     private final AggregatorAverage.WeightFn weightFn;
+    private final double fillValue;
 
-    public AggregatorAverageML(VariableContext ctx, String varName) {
-        this(ctx, varName, 0.5);
-    }
-
-    public AggregatorAverageML(VariableContext ctx, String varName, double weightCoeff) {
-        varIndex = ctx.getVariableIndex(varName);
-        spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
-        temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
-        outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma", varName + "_median", varName + "_mode"};
-        weightFn = getWeightFn(weightCoeff);
+    public AggregatorAverageML(VariableContext ctx, String varName, Double weightCoeff, Double fillValue) {
+        this.varIndex = ctx.getVariableIndex(varName);
+        this.spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
+        this.temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
+        this.outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma", varName + "_median", varName + "_mode"};
+        this.weightFn = getWeightFn(weightCoeff != null ? weightCoeff : 0.5);
+        this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 
     @Override
@@ -62,6 +60,11 @@ public class AggregatorAverageML implements Aggregator {
     @Override
     public String getOutputPropertyName(int i) {
         return outputPropertyNames[i];
+    }
+
+    @Override
+    public double getOutputPropertyFillValue(int i) {
+        return fillValue;
     }
 
     @Override

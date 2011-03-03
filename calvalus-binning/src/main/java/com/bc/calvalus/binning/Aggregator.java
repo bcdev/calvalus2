@@ -25,6 +25,8 @@ public interface Aggregator {
 
     String getOutputPropertyName(int i);
 
+    double getOutputPropertyFillValue(int i);
+
     /**
      * Initialises the spatial aggregation.
      *
@@ -71,4 +73,5 @@ public interface Aggregator {
      * @param outputVector   The output vector to be computed.
      */
     void computeOutput(Vector temporalVector, WritableVector outputVector);
+
 }

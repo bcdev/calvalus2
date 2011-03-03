@@ -9,7 +9,10 @@ public interface BinManager {
     // todo - add PropertyContext getInputPropertyContext()
     // todo - add PropertyContext getOutputPropertyContext()
     int getOutputPropertyCount();
+
     String getOutputPropertyName(int i);
+
+    double getOutputPropertyFillValue(int i);
 
     int getAggregatorCount();
 

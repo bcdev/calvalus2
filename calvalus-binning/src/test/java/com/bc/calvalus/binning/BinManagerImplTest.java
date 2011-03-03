@@ -8,9 +8,9 @@ public class BinManagerImplTest {
     @Test
     public void testBinCreation() {
         VariableContext vctx = new MyVariableContext("a", "b", "c");
-        BinManager binManager = new BinManagerImpl(new AggregatorAverage(vctx, "c"),
-                                                   new AggregatorAverageML(vctx, "b"),
-                                                   new AggregatorMinMax(vctx, "a"),
+        BinManager binManager = new BinManagerImpl(new AggregatorAverage(vctx, "c", null, null),
+                                                   new AggregatorAverageML(vctx, "b", null, null),
+                                                   new AggregatorMinMax(vctx, "a", null),
                                                    new AggregatorOnMaxSet(vctx, "c", "a", "b"));
 
         assertEquals(4, binManager.getAggregatorCount());

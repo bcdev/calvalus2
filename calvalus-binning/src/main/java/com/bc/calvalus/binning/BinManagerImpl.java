@@ -14,6 +14,7 @@ public class BinManagerImpl implements BinManager {
     private final int[] temporalPropertyOffsets;
     private final int[] outputPropertyOffsets;
     private final String[] outputPropertyNames;
+    private final double[] outputPropertyFillValues;
 
 
     public BinManagerImpl(Aggregator... aggregators) {
@@ -37,10 +38,13 @@ public class BinManagerImpl implements BinManager {
         this.temporalPropertyCount = temporalPropertyCount;
         this.outputPropertyCount = outputPropertyCount;
         this.outputPropertyNames = new String[outputPropertyCount];
+        this.outputPropertyFillValues = new double[outputPropertyCount];
         for (int i = 0, k = 0; i < aggregators.length; i++) {
             Aggregator aggregator = aggregators[i];
             for (int j = 0; j < aggregator.getOutputPropertyCount(); j++) {
-                outputPropertyNames[k++] = aggregator.getOutputPropertyName(j);
+                outputPropertyNames[k] = aggregator.getOutputPropertyName(j);
+                outputPropertyFillValues[k] = aggregator.getOutputPropertyFillValue(j);
+                k++;
             }
         }
     }
@@ -53,6 +57,11 @@ public class BinManagerImpl implements BinManager {
     @Override
     public String getOutputPropertyName(int i) {
         return outputPropertyNames[i];
+    }
+
+    @Override
+    public double getOutputPropertyFillValue(int i) {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

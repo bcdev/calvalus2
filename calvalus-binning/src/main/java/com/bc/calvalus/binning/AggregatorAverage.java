@@ -1,5 +1,7 @@
 package com.bc.calvalus.binning;
 
+import org.esa.beam.util.math.DoubleList;
+
 import java.util.Arrays;
 
 /**
@@ -11,26 +13,24 @@ public final class AggregatorAverage implements Aggregator {
     private final String[] temporalPropertyNames;
     private final String[] outputPropertyNames;
     private final WeightFn weightFn;
+    private final double fillValue;
 
-    public AggregatorAverage(VariableContext ctx, String varName) {
-        this(ctx, varName, 0.0);
-    }
-
-    public AggregatorAverage(VariableContext varCtx, String varName, double weightCoeff) {
+    public AggregatorAverage(VariableContext varCtx, String varName, Double weightCoeff, Double fillValue) {
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
         if (varName == null) {
             throw new NullPointerException("varName");
         }
-        if (weightCoeff < 0.0) {
+        if (weightCoeff != null && weightCoeff < 0.0) {
             throw new IllegalArgumentException("weightCoeff < 0.0");
         }
         this.varIndex = varCtx.getVariableIndex(varName);
         this.spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
         this.temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
         this.outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma"};
-        this.weightFn = getWeightFn(weightCoeff);
+        this.weightFn = getWeightFn(weightCoeff != null ? weightCoeff : 0.0);
+        this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 
     @Override
@@ -46,6 +46,11 @@ public final class AggregatorAverage implements Aggregator {
     @Override
     public String getSpatialPropertyName(int i) {
         return spatialPropertyNames[i];
+    }
+
+    @Override
+    public double getOutputPropertyFillValue(int i) {
+        return fillValue;
     }
 
     @Override

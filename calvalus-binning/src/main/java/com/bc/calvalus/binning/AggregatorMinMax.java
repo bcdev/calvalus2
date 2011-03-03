@@ -7,17 +7,19 @@ import java.util.Arrays;
  */
 public class AggregatorMinMax implements Aggregator {
     private final int varIndex;
-    private String[] propertyNames;
+    private final String[] propertyNames;
+    private final double fillValue;
 
-    public AggregatorMinMax(VariableContext varCtx, String varName) {
+    public AggregatorMinMax(VariableContext varCtx, String varName, Double fillValue) {
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
         if (varName == null) {
             throw new NullPointerException("varName");
         }
-        varIndex = varCtx.getVariableIndex(varName);
-        propertyNames = new String[]{varName + "_min", varName + "_max"};
+        this.varIndex = varCtx.getVariableIndex(varName);
+        this.propertyNames = new String[]{varName + "_min", varName + "_max"};
+        this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 
     @Override
@@ -53,6 +55,11 @@ public class AggregatorMinMax implements Aggregator {
     @Override
     public String getOutputPropertyName(int i) {
        return propertyNames[i];
+    }
+
+    @Override
+    public double getOutputPropertyFillValue(int i) {
+        return fillValue;
     }
 
     @Override

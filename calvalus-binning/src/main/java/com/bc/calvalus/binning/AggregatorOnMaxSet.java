@@ -69,6 +69,11 @@ public final class AggregatorOnMaxSet implements Aggregator {
     }
 
     @Override
+    public double getOutputPropertyFillValue(int i) {
+        return Double.NaN; // todo - convert to field
+    }
+
+    @Override
     public void initSpatial(WritableVector vector) {
         vector.set(0, Float.NEGATIVE_INFINITY);
     }

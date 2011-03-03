@@ -43,7 +43,7 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorAverageNoWeight() {
-        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 0.0);
+        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 0.0, null);
 
         assertEquals("AVG", agg.getName());
 
@@ -103,7 +103,7 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorAverageWeighted() {
-        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 1.0);
+        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 1.0, null);
 
         assertEquals("AVG", agg.getName());
 
@@ -163,7 +163,7 @@ public class AggregatorTest {
 
     @Test
     public void testSuperSampling() {
-        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c");
+        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", null, null);
         VectorImpl svec = vec(NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN);
@@ -194,7 +194,7 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorAverageML() {
-        Aggregator agg = new AggregatorAverageML(new MyVariableContext("b"), "b");
+        Aggregator agg = new AggregatorAverageML(new MyVariableContext("b"), "b", null, null);
 
         assertEquals("AVG_ML", agg.getName());
 
@@ -260,7 +260,7 @@ public class AggregatorTest {
 
     @Test
     public void tesAggregatorMinMax() {
-        Aggregator agg = new AggregatorMinMax(new MyVariableContext("a"), "a");
+        Aggregator agg = new AggregatorMinMax(new MyVariableContext("a"), "a", null);
 
         assertEquals("MIN_MAX", agg.getName());
 
