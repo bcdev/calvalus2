@@ -11,14 +11,6 @@
     <ows:Title>${productionName}</ows:Title>
     <wps:DataInputs>
 
-        <wps:Input>
-            <ows:Identifier>calvalus.output.dir</ows:Identifier>
-            <ows:Title>Output directory</ows:Title>
-            <wps:Data>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/${outputDir}"/>
-            </wps:Data>
-        </wps:Input>
-
         #foreach( $inputFile in $inputFiles )
             <wps:Input>
                 <ows:Identifier>calvalus.input</ows:Identifier>
@@ -26,6 +18,14 @@
                 <wps:Reference xlink:href="${inputFile}"/>
             </wps:Input>
         #end
+
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <ows:Title>Output directory</ows:Title>
+            <wps:Data>
+                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/${outputDir}"/>
+            </wps:Data>
+        </wps:Input>
 
         <wps:Input>
             <ows:Identifier>calvalus.processor.package</ows:Identifier>
