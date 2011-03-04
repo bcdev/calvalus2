@@ -56,6 +56,18 @@ public class ProductionRequest {
         return productionParameters.get(name);
     }
 
+    public String getProductionParameterSafe(String name) throws ProductionException {
+        String value = getProductionParameter(name);
+        if (value == null) {
+            throw new ProductionException("Missing production parameter '" + name + "'");
+        }
+        return value;
+    }
+
+    public void ensureProductionParameterSet(String name) throws ProductionException {
+        getProductionParameterSafe(name);
+    }
+
     public Map<String, String> getProductionParameters() {
         return Collections.unmodifiableMap(productionParameters);
     }

@@ -3,15 +3,16 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
-* Information about a production.
-*
-* @author Norman
-*/
+ * Information about a production.
+ *
+ * @author Norman
+ */
 public class PortalProduction implements IsSerializable {
     String id;
     String name;
-    String outputPath;
-    PortalProductionStatus status;
+    String outputUrl;
+    PortalProductionStatus processingStatus;
+    PortalProductionStatus stagingStatus;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -19,20 +20,28 @@ public class PortalProduction implements IsSerializable {
     public PortalProduction() {
     }
 
-    public PortalProduction(String id, String name,  String outputPath, PortalProductionStatus status) {
+    public PortalProduction(String id,
+                            String name,
+                            String outputUrl,
+                            PortalProductionStatus processingStatus,
+                            PortalProductionStatus stagingStatus) {
         if (id == null) {
             throw new NullPointerException("id");
         }
         if (name == null) {
             throw new NullPointerException("name");
         }
-        if (status == null) {
-            throw new NullPointerException("status");
+        if (processingStatus == null) {
+            throw new NullPointerException("processingStatus");
+        }
+        if (stagingStatus == null) {
+            throw new NullPointerException("stagingStatus");
         }
         this.id = id;
         this.name = name;
-        this.outputPath = outputPath;
-        this.status = status;
+        this.outputUrl = outputUrl;
+        this.processingStatus = processingStatus;
+        this.stagingStatus = stagingStatus;
     }
 
     public String getId() {
@@ -43,24 +52,34 @@ public class PortalProduction implements IsSerializable {
         return name;
     }
 
-    public void setStatus(PortalProductionStatus status) {
-        this.status = status;
+    public String getOutputUrl() {
+        return outputUrl;
     }
 
-    public String getOutputPath() {
-        return outputPath;
+    public PortalProductionStatus getProcessingStatus() {
+        return processingStatus;
     }
 
-    public PortalProductionStatus getStatus() {
-        return status;
+    public void setProcessingStatus(PortalProductionStatus processingStatus) {
+        this.processingStatus = processingStatus;
+    }
+
+    public PortalProductionStatus getStagingStatus() {
+        return stagingStatus;
+    }
+
+    public void setStagingStatus(PortalProductionStatus stagingStatus) {
+        this.stagingStatus = stagingStatus;
     }
 
     @Override
     public String toString() {
-        return "PortalProduction{" +
+        return "Production{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", status=" + status +
+                ", outputUrl=" + outputUrl +
+                ", productionStatus=" + processingStatus +
+                ", stagingStatus=" + stagingStatus +
                 '}';
     }
 

@@ -14,21 +14,20 @@ public class L3ProcessingRequestTest {
     public void testGetProcessingParameters() throws ProductionException {
 
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-
-        L3ProcessingRequest processingRequest = new L3ProcessingRequest(productionRequest) {
-
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
             @Override
-            public String[] getInputFiles() throws ProductionException {
+            public String[] getInputFiles(ProductionRequest request) throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};
             }
         };
+        L3ProcessingRequest processingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
 
         // Assert that derived processing parameters are generated correctly
         assertEquals(4, processingRequest.getInputFiles().length);
         assertEquals(3, processingRequest.getAggregators().length);
         assertEquals(0, processingRequest.getVariables().length);
         assertEquals("5,50,25,60", processingRequest.getBBox());
-        assertEquals(4320, processingRequest.getNumRows());
+        assertEquals(4320, (int) processingRequest.getNumRows());
         assertEquals("calvalus-level3-output", processingRequest.getOutputDir());
         assertEquals(true, processingRequest.getOutputStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
@@ -86,8 +85,8 @@ public class L3ProcessingRequestTest {
 
     @Test
     public void testComputeNumRows() {
-        assertEquals(2160, L3ProcessingRequest.computeBinningGridRowCount(9.28));
-        assertEquals(2160 * 2, L3ProcessingRequest.computeBinningGridRowCount(9.28 / 2));
-        assertEquals(2160 / 2, L3ProcessingRequest.computeBinningGridRowCount(9.28 * 2));
+        assertEquals(2160, L3ProcessingRequestFactory.computeBinningGridRowCount(9.28));
+        assertEquals(2160 * 2, L3ProcessingRequestFactory.computeBinningGridRowCount(9.28 / 2));
+        assertEquals(2160 / 2, L3ProcessingRequestFactory.computeBinningGridRowCount(9.28 * 2));
     }
 }

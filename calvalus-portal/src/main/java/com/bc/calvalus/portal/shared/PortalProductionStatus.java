@@ -48,6 +48,10 @@ public class PortalProductionStatus implements IsSerializable {
         return state.isDone();
     }
 
+    public boolean isUnknown() {
+        return state == PortalProductionState.UNKNOWN;
+    }
+
     public String getMessage() {
         return message;
     }

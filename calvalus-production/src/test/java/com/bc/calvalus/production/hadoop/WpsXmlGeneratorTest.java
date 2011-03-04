@@ -13,13 +13,15 @@ public class WpsXmlGeneratorTest {
 
     @Test
     public void testL3WpsXml() throws ProductionException {
-        ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest processingRequest = new L3ProcessingRequest(productionRequest) {
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
             @Override
-            public String[] getInputFiles() throws ProductionException {
+            public String[] getInputFiles(ProductionRequest request) throws ProductionException {
                 return new String[]{"fileA", "fileB", "fileC"};
             }
         };
+        ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
+        L3ProcessingRequest processingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
+
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequest);
         assertNotNull(xml);
 
@@ -51,6 +53,7 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<ows:Identifier>calvalus.l3.parameters</ows:Identifier>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<maskExpr>NOT INVALID</maskExpr>"));
+        assertTrue(xml.contains("<fillValue>NaN</fillValue>"));
         assertTrue(xml.contains("<bbox>5,50,25,60</bbox>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<superSampling>1</superSampling>"));

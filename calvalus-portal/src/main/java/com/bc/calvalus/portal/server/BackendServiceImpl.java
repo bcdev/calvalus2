@@ -143,9 +143,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private PortalProduction convert(Production production) {
-        ProductionStatus status1 = production.getStatus();
-        return new PortalProduction(production.getId(), production.getName(),
-                                    production.getOutputPath(), convert(status1));
+        return new PortalProduction(production.getId(),
+                                    production.getName(),
+                                    production.getOutputUrl(),
+                                    convert(production.getProcessingStatus()),
+                                    convert(production.getStagingStatus()));
     }
 
     private PortalProductionStatus convert(ProductionStatus status) {

@@ -40,6 +40,7 @@ public class ManageProductionsView extends PortalView {
     public static final int ID = 3;
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
+    private static final String STAGE = "Stage";
     private static final String DOWNLOAD = "Download";
     private static final String INFO = "Info";
 
@@ -82,35 +83,27 @@ public class ManageProductionsView extends PortalView {
         };
         nameColumn.setSortable(true);
 
-        TextColumn<PortalProduction> statusColumn = new TextColumn<PortalProduction>() {
+        TextColumn<PortalProduction> productionStatusColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
-                return getWorkStatusText(production);
+                return getStatusText(production.getProcessingStatus());
             }
         };
-        statusColumn.setSortable(true);
+        productionStatusColumn.setSortable(true);
 
-        TextColumn<PortalProduction> messageColumn = new TextColumn<PortalProduction>() {
+        TextColumn<PortalProduction> stagingStatusColumn = new TextColumn<PortalProduction>() {
             @Override
             public String getValue(PortalProduction production) {
-                return production.getStatus().getMessage();
+                return getStatusText(production.getStagingStatus());
             }
         };
-        messageColumn.setSortable(true);
+        stagingStatusColumn.setSortable(true);
 
         Column<PortalProduction, String> actionColumn = new Column<PortalProduction, String>(new ButtonCell()) {
             @Override
-            public String getValue(PortalProduction production) {
-                return production.getStatus().isDone() ? RESTART : CANCEL;
-            }
-        };
-        actionColumn.setFieldUpdater(new ProductionActionUpdater());
-
-        Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
-            @Override
             public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
-                if (production.getOutputPath() != null
-                        && PortalProductionState.COMPLETED.equals(production.getStatus().getState())) {
+                String action = getAction(production);
+                if (action != null) {
                     super.render(context, production, sb);
                 } else {
                     sb.appendHtmlConstant("<br/>");
@@ -119,17 +112,35 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(PortalProduction production) {
-                return DOWNLOAD;
+                return getAction(production);
+            }
+        };
+        actionColumn.setFieldUpdater(new ProductionActionUpdater());
+
+        Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+            @Override
+            public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
+                String result = getResult(production);
+                if (result != null) {
+                    super.render(context, production, sb);
+                } else {
+                    sb.appendHtmlConstant("<br/>");
+                }
+            }
+
+            @Override
+            public String getValue(PortalProduction production) {
+                return getResult(production);
             }
         };
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
         productionTable.addColumn(nameColumn, "Production Name");
-        productionTable.addColumn(statusColumn, "Status");
-        productionTable.addColumn(messageColumn, "Message");
+        productionTable.addColumn(productionStatusColumn, "Processing Status");
+        productionTable.addColumn(stagingStatusColumn, "Staging Status");
         productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        productionTable.addColumn(resultColumn, "Production Result");
+        productionTable.addColumn(resultColumn, "Result");
 
         // Connect the table to the data provider.
         portal.getProductions().addDataDisplay(productionTable);
@@ -148,6 +159,36 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(0, 0, productionTable);
         widget.setWidget(1, 0, pager);
         widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
+    }
+
+    static String getResult(PortalProduction production) {
+        if (production.getOutputUrl() == null) {
+            return null;
+        }
+
+        if (production.getProcessingStatus().getState() == PortalProductionState.COMPLETED
+                && production.getStagingStatus().getState() == PortalProductionState.COMPLETED) {
+            return DOWNLOAD;
+        }
+
+        if (production.getProcessingStatus().getState() == PortalProductionState.COMPLETED
+                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            return STAGE;
+        }
+
+        return null;
+    }
+
+    static String getAction(PortalProduction production) {
+        if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
+            return null;
+        }
+        if (production.getProcessingStatus().isDone()
+                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            return RESTART;
+        } else {
+            return CANCEL;
+        }
     }
 
 
@@ -186,8 +227,8 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(PortalProduction production) {
-        Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputPath(),
-                     "_blank", "");
+        Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
+                    "_blank", "");
     }
 
     private void cancelProduction(PortalProduction production) {
@@ -244,21 +285,21 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private String getWorkStatusText(PortalProduction production) {
-        PortalProductionStatus status = production.getStatus();
+    private String getStatusText(PortalProductionStatus status) {
         PortalProductionState state = status.getState();
+        String message = status.getMessage();
         if (state == PortalProductionState.WAITING) {
-            return "Waiting";
+            return "Waiting" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == PortalProductionState.IN_PROGRESS) {
-            return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)";
+            return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == PortalProductionState.CANCELLED) {
-            return "Cancelled";
+            return "Cancelled" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == PortalProductionState.ERROR) {
-            return "Error";
+            return "Error" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == PortalProductionState.UNKNOWN) {
             return "Unknown";
         } else if (state == PortalProductionState.COMPLETED) {
-            return "Completed";
+            return "Completed" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
     }

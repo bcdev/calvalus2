@@ -54,12 +54,12 @@ public class HadoopProductionService implements ProductionService {
     public HadoopProductionService(JobConf jobConf, Logger logger, File stagingDirectory) throws ProductionException {
         this.logger = logger;
         this.stagingDirectory = stagingDirectory;
-        this.database = new HadoopProductionDatabase();
         try {
             this.jobClient = new JobClient(jobConf);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
+        this.database = new HadoopProductionDatabase(new HadoopL3ProcessingRequestFactory(jobClient));
 
         initDatabase();
 
@@ -70,7 +70,7 @@ public class HadoopProductionService implements ProductionService {
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
                                                    HADOOP_OBSERVATION_PERIOD / 2,
                                                    HADOOP_OBSERVATION_PERIOD);
-        stagingService = new StagingService(logger);
+        stagingService = new StagingService();
         wpsXmlGenerator = new WpsXmlGenerator();
     }
 
@@ -194,7 +194,8 @@ public class HadoopProductionService implements ProductionService {
 
     private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
 
-        L3ProcessingRequest l3ProcessingRequest = new HadoopL3ProcessingRequest(jobClient, productionRequest);
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new HadoopL3ProcessingRequestFactory(jobClient);
+        L3ProcessingRequest l3ProcessingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
 
         String l3ProductionId = createL3ProductionId(productionRequest);
         String l3ProductionName = createL3ProductionName(productionRequest);
@@ -202,13 +203,18 @@ public class HadoopProductionService implements ProductionService {
 
         JobID jobId = submitL3Job(wpsXml);
 
+        boolean outputStaging = l3ProcessingRequest.getOutputStaging();
         HadoopProduction hadoopProduction = new HadoopProduction(l3ProductionId,
                                                                  l3ProductionName,
                                                                  jobId,
-                                                                 l3ProcessingRequest.getOutputDir(),
-                                                                 l3ProcessingRequest.getOutputFormat(),
-                                                                 l3ProcessingRequest.getOutputStaging());
-        hadoopProduction.setWpsXml(wpsXml); // todo - check: this is only needed for staging (output directory)
+                                                                 outputStaging, productionRequest
+        );
+
+        L3StagingJob l3StagingJob = null;
+        if (outputStaging) {
+            l3StagingJob = new L3StagingJob(l3ProcessingRequest, hadoopProduction, jobClient.getConf(), wpsXml, logger);
+        }
+
         database.addProduction(hadoopProduction);
         return new ProductionResponse(hadoopProduction);
     }
@@ -261,13 +267,13 @@ public class HadoopProductionService implements ProductionService {
         // Update state of all registered productions
         for (HadoopProduction production : productions) {
             JobStatus jobStatus = jobStatusMap.get(production.getJobId());
-            production.updateStatus(jobStatus);
+            production.setProductionStatus(jobStatus);
         }
 
         // Now try to delete productions
         for (HadoopProduction production : productions) {
             if (HadoopProduction.Action.DELETE.equals(production.getAction())) {
-                if (production.getStatus().isDone()) {
+                if (production.getProcessingStatus().isDone()) {
                     database.removeProduction(production);
                 }
             }
@@ -275,11 +281,11 @@ public class HadoopProductionService implements ProductionService {
 
         // Copy result to staging area
         for (HadoopProduction production : productions) {
-            if (production.getOutputStaging()
-                    && production.isHadoopJobDone()
-                    && production.getStagingStatus().getState() == ProductionState.UNKNOWN) {
+            if (production.isOutputStaging()
+                    && production.getProcessingStatus().getState() == ProductionState.COMPLETED
+                    && production.getStagingStatus().getState() == ProductionState.WAITING) {
                 production.setStagingStatus(new ProductionStatus(ProductionState.WAITING));
-                stagingService.stageProduction(production, jobClient.getConf());
+                // todo - stagingService.stageProduction(production, jobClient.getConf());
             }
         }
 

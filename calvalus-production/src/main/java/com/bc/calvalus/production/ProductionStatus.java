@@ -8,22 +8,22 @@ package com.bc.calvalus.production;
 public class ProductionStatus {
     private static final float EPS = 1.0E-04f;
     private ProductionState state;
-    private String message;
     private float progress;
+    private String message;
 
     public ProductionStatus() {
         this(ProductionState.UNKNOWN);
     }
 
     public ProductionStatus(ProductionState state) {
-        this(state, 0.0f);
+        this(state, state.isDone() ? 1.0f : 0.0f);
     }
 
     public ProductionStatus(ProductionState state, float progress) {
-        this(state, "", progress);
+        this(state, progress, "");
     }
 
-    public ProductionStatus(ProductionState state, String message, float progress) {
+    public ProductionStatus(ProductionState state, float progress, String message) {
         if (state == null) {
             throw new NullPointerException("state");
         }

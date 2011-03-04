@@ -9,10 +9,11 @@ package com.bc.calvalus.production;
 public class Production {
     private String id;
     private String name;
-    private String outputPath;
-    private ProductionStatus status;
+    private String outputUrl;
+    private ProductionStatus processingStatus;
+    private ProductionStatus stagingStatus;
 
-    public Production(String id, String name, String outputPath) {
+    public Production(String id, String name) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -21,8 +22,8 @@ public class Production {
         }
         this.id = id;
         this.name = name;
-        this.outputPath = outputPath;
-        this.status = new ProductionStatus();
+        this.processingStatus = new ProductionStatus();
+        this.stagingStatus = new ProductionStatus();
     }
 
     public String getId() {
@@ -33,20 +34,28 @@ public class Production {
         return name;
     }
 
-    public String getOutputPath() {
-        return outputPath;
+    public String getOutputUrl() {
+        return outputUrl;
     }
 
-    public void setOutputPath(String outputPath) {
-        this.outputPath = outputPath;
+    public void setOutputUrl(String outputUrl) {
+        this.outputUrl = outputUrl;
     }
 
-    public ProductionStatus getStatus() {
-        return status;
+    public ProductionStatus getProcessingStatus() {
+        return processingStatus;
     }
 
-    public void setStatus(ProductionStatus status) {
-        this.status = status;
+    public void setProcessingStatus(ProductionStatus processingStatus) {
+        this.processingStatus = processingStatus;
+    }
+
+    public ProductionStatus getStagingStatus() {
+        return stagingStatus;
+    }
+
+    public void setStagingStatus(ProductionStatus stagingStatus) {
+        this.stagingStatus = stagingStatus;
     }
 
     @Override
@@ -54,7 +63,9 @@ public class Production {
         return "Production{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", status=" + status +
+                ", outputUrl=" + outputUrl +
+                ", productionStatus=" + processingStatus +
+                ", stagingStatus=" + stagingStatus +
                 '}';
     }
 

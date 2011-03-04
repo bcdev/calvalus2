@@ -6,6 +6,7 @@ import com.bc.calvalus.production.ProductionStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Timer;
@@ -21,6 +22,7 @@ class TestProduction extends Production {
     private final long startTime;
     private final long duration;
     private Timer timer;
+    private final boolean autoStage;
 
     /**
      * Constructs a new dummy production.
@@ -28,33 +30,38 @@ class TestProduction extends Production {
      * @param name     Some name.
      * @param duration The total time in ms to run.
      */
-    public TestProduction(String name, long duration, String outputPath) {
-        super(Long.toHexString(idGen.nextLong()), name, outputPath);
+    public TestProduction(String name, long duration, String outputFileName, boolean autoStage) {
+        super(Long.toHexString(idGen.nextLong()), name);
+        this.autoStage = autoStage;
         this.duration = duration;
         this.startTime = System.currentTimeMillis();
+
+        if (outputFileName != null) {
+            File downloadDir = new File(System.getProperty("user.home"), ".calvalus/test");
+            setOutputUrl(new File(downloadDir, outputFileName).getPath());
+            if (autoStage) {
+                setStagingStatus(new ProductionStatus(ProductionState.WAITING));
+            }
+        }
     }
 
 
     public void start() {
-        setStatus(new ProductionStatus(ProductionState.WAITING));
+        setProcessingStatus(new ProductionStatus(ProductionState.WAITING));
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 float progress = (float) (System.currentTimeMillis() - startTime) / (float) duration;
                 if (progress >= 1.0f) {
-                    setStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
+                    setProcessingStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
                     if (timer != null) {
-                        if (getOutputPath() != null) {
-                            try {
-                                writeOutputFile();
-                            } catch (Exception e) {
-                                // shit
-                            }
+                        if (autoStage && getOutputUrl() != null) {
+                            writeOutputFile();
                         }
                         stopTimer();
                     }
                 } else {
-                    setStatus(new ProductionStatus(ProductionState.IN_PROGRESS, progress));
+                    setProcessingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, progress));
                 }
             }
         };
@@ -65,7 +72,7 @@ class TestProduction extends Production {
     public void cancel() {
         if (timer != null) {
             stopTimer();
-            setStatus(new ProductionStatus(ProductionState.CANCELLED, "Cancelled", 0.0f));
+            setProcessingStatus(new ProductionStatus(ProductionState.CANCELLED, 0.0f, "Cancelled"));
         }
     }
 
@@ -74,20 +81,30 @@ class TestProduction extends Production {
         timer = null;
     }
 
-    private void writeOutputFile() throws Exception {
-        File outputFile = new File(getOutputPath());
-        if (!outputFile.exists()) {
-            outputFile.getParentFile().mkdirs();
-            FileOutputStream stream = new FileOutputStream(outputFile);
-            byte[] buffer = new byte[1024 * 1024];
-            try {
-                for (int i = 0; i < 32; i++) {
-                    Arrays.fill(buffer, (byte) i);
-                    stream.write(buffer);
+    private void writeOutputFile() {
+        try {
+            setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, 0.0f));
+            File outputFile = new File(getOutputUrl());
+            if (!outputFile.exists()) {
+                File parentFile = outputFile.getParentFile();
+                if (parentFile != null) {
+                    parentFile.mkdirs();
                 }
-            } finally {
-                stream.close();
+                FileOutputStream stream = new FileOutputStream(outputFile);
+                byte[] buffer = new byte[1024 * 1024];
+                try {
+                    for (int i = 0; i < 32; i++) {
+                        setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, i / 32f));
+                        Arrays.fill(buffer, (byte) i);
+                        stream.write(buffer);
+                    }
+                } finally {
+                    stream.close();
+                }
             }
+            setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, 1f));
+        } catch (IOException e) {
+            setStagingStatus(new ProductionStatus(ProductionState.ERROR, getStagingStatus().getProgress(), e.getMessage()));
         }
     }
 

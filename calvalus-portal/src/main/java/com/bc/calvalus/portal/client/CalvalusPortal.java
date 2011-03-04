@@ -200,8 +200,12 @@ public class CalvalusPortal implements EntryPoint {
             PortalProduction unknownProduction = unknownProductions[i];
             PortalProduction knownProduction = productionsMap.get(unknownProduction.getId());
             if (knownProduction != null) {
-                if (!unknownProduction.getStatus().equals(knownProduction.getStatus())) {
-                    knownProduction.setStatus(unknownProduction.getStatus());
+                if (!unknownProduction.getProcessingStatus().equals(knownProduction.getProcessingStatus())) {
+                    knownProduction.setProcessingStatus(unknownProduction.getProcessingStatus());
+                    propertyChange = true;
+                }
+                if (!unknownProduction.getStagingStatus().equals(knownProduction.getStagingStatus())) {
+                    knownProduction.setStagingStatus(unknownProduction.getStagingStatus());
                     propertyChange = true;
                 }
                 deletedProductions.remove(knownProduction);

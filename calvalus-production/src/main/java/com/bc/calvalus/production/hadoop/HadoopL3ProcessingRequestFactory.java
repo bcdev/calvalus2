@@ -16,37 +16,38 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-class HadoopL3ProcessingRequest extends L3ProcessingRequest {
+class HadoopL3ProcessingRequestFactory extends L3ProcessingRequestFactory {
     private final JobClient jobClient;
 
-    HadoopL3ProcessingRequest(JobClient jobClient, ProductionRequest productionRequest) {
-        super(productionRequest);
+    HadoopL3ProcessingRequestFactory(JobClient jobClient) {
         this.jobClient = jobClient;
     }
 
     @Override
-    public String getOutputDir() {
-        String outputDir = super.getOutputDir();
+    public String getOutputDir(ProductionRequest request) throws ProductionException {
+        String outputDir = super.getOutputDir(request);
         return getFileSystemName() + "/calvalus/outputs/" + outputDir;
     }
 
+
     @Override
-    public String[] getInputFiles() throws ProductionException {
+    public String[] getInputFiles(ProductionRequest request) throws ProductionException {
         Path eoDataRoot = new Path(getFileSystemName(), "/calvalus/eodata/");
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+        // todo - parse the following in L3PrcoessingRequestFactory!!!
         Date startDate = null;
         try {
-            startDate = dateFormat.parse(getProductionParameterSafe("dateStart"));
+            startDate = dateFormat.parse(request.getProductionParameterSafe("dateStart"));
         } catch (ParseException ignore) {
             // todo
         }
         Date stopDate = null;
         try {
-            stopDate = dateFormat.parse(getProductionParameterSafe("dateStop"));
+            stopDate = dateFormat.parse(request.getProductionParameterSafe("dateStop"));
         } catch (ParseException ignore) {
             // todo
         }
-        String inputProductSetId = getProductionParameterSafe("inputProductSetId");
+        String inputProductSetId = request.getProductionParameterSafe("inputProductSetId");
         Path inputPath = new Path(eoDataRoot, inputProductSetId);
         List<String> dateList = getDateList(startDate, stopDate, inputProductSetId);
         try {

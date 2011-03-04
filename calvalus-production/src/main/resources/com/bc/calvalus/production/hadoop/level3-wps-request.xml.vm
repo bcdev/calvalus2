@@ -66,6 +66,7 @@
                 <wps:ComplexData>
                     <numRows>${numRows}</numRows>
                     <maskExpr>${maskExpr}</maskExpr>
+                    <fillValue>${fillValue}</fillValue>
                     <superSampling>${superSampling}</superSampling>
                     #if ($bbox)
                         <bbox>$bbox</bbox>
@@ -86,10 +87,16 @@
                                 <type>${aggregator.type}</type>
                                 #if ($aggregator.varName)
                                     <varName>${aggregator.varName}</varName>
-                                #elseif ($aggregator.varNames)
+                                #end
+                                #if ($aggregator.varNames)
                                     <varNames>${aggregator.varNames}</varNames>
                                 #end
-                                <weightCoeff>${aggregator.weightCoeff}</weightCoeff>
+                                #if ($aggregator.weightCoeff)
+                                    <weightCoeff>${aggregator.weightCoeff}</weightCoeff>
+                                #end
+                                #if ($aggregator.fillValue)
+                                    <fillValue>${aggregator.fillValue}</fillValue>
+                                #end
                             </aggregator>
                         #end
                     </aggregators>

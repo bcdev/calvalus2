@@ -18,20 +18,20 @@ public class ProductionStatusTest {
         assertEquals("", done.getMessage());
         assertEquals(1.0f, done.getProgress(), 1e-5);
 
-        ProductionStatus error = new ProductionStatus(ProductionState.ERROR, "File not found", 0.0f);
+        ProductionStatus error = new ProductionStatus(ProductionState.ERROR, 0.0f, "File not found");
         assertEquals(ProductionState.ERROR, error.getState());
         assertEquals("File not found", error.getMessage());
         assertEquals(0.0f, error.getProgress(), 1e-5);
 
         try {
-            new ProductionStatus(null, "File not found", 0.0f);
+            new ProductionStatus(null, 0.0f, "File not found");
             fail("State must not be null");
         } catch (NullPointerException e) {
             // ok
         }
 
         try {
-            new ProductionStatus(ProductionState.COMPLETED, null, 0.0f);
+            new ProductionStatus(ProductionState.COMPLETED, 0.0f, null);
             fail("State must not be null");
         } catch (NullPointerException e) {
             // ok
@@ -57,19 +57,19 @@ public class ProductionStatusTest {
         assertTrue(status.equals(new ProductionStatus()));
         assertTrue(new ProductionStatus(ProductionState.COMPLETED).equals(
                 new ProductionStatus(ProductionState.COMPLETED)));
-        assertTrue(new ProductionStatus(ProductionState.IN_PROGRESS, "Dabei!", 0.2f).equals(
-                new ProductionStatus(ProductionState.IN_PROGRESS, "Dabei!", 0.2f)));
-        assertTrue(new ProductionStatus(ProductionState.IN_PROGRESS, "Dabei!", 0.20001f).equals(
-                new ProductionStatus(ProductionState.IN_PROGRESS, "Dabei!", 0.20003f)));
+        assertTrue(new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, "Dabei!").equals(
+                new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, "Dabei!")));
+        assertTrue(new ProductionStatus(ProductionState.IN_PROGRESS, 0.20001f, "Dabei!").equals(
+                new ProductionStatus(ProductionState.IN_PROGRESS, 0.20003f, "Dabei!")));
     }
 
     @Test
     public void testNotEquals() {
-        assertFalse(new ProductionStatus(ProductionState.ERROR, "", 0.1f).equals(
-                new ProductionStatus(ProductionState.COMPLETED, "", 0.1f)));
-        assertFalse(new ProductionStatus(ProductionState.IN_PROGRESS, "", 0.21f).equals(
-                new ProductionStatus(ProductionState.IN_PROGRESS, "", 0.22f)));
-        assertFalse(new ProductionStatus(ProductionState.IN_PROGRESS, "Dabei!", 0.2f).equals(
-                new ProductionStatus(ProductionState.IN_PROGRESS, "Vorbei!", 0.2f)));
+        assertFalse(new ProductionStatus(ProductionState.ERROR, 0.1f, "").equals(
+                new ProductionStatus(ProductionState.COMPLETED, 0.1f, "")));
+        assertFalse(new ProductionStatus(ProductionState.IN_PROGRESS, 0.21f, "").equals(
+                new ProductionStatus(ProductionState.IN_PROGRESS, 0.22f, "")));
+        assertFalse(new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, "Dabei!").equals(
+                new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, "Vorbei!")));
     }
 }
