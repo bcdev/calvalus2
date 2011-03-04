@@ -4,6 +4,8 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
 
+import java.io.File;
+
 import static org.junit.Assert.*;
 
 /**
@@ -17,6 +19,10 @@ public class WpsXmlGeneratorTest {
             @Override
             public String[] getInputFiles(ProductionRequest request) throws ProductionException {
                 return new String[]{"fileA", "fileB", "fileC"};
+            }
+            @Override
+            public String getStagingDir(ProductionRequest request) throws ProductionException {
+                return  "/";
             }
         };
         ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();

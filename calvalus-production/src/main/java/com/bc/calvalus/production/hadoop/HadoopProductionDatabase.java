@@ -26,12 +26,10 @@ class HadoopProductionDatabase {
 
     private final List<HadoopProduction> productionsList;
     private final Map<String, HadoopProduction> productionsMap;
-    private final ProcessingRequestFactory processingRequestFactory;
 
-    public HadoopProductionDatabase(ProcessingRequestFactory processingRequestFactory) {
+    public HadoopProductionDatabase() {
         this.productionsList = new ArrayList<HadoopProduction>();
         this.productionsMap = new HashMap<String, HadoopProduction>();
-        this.processingRequestFactory = processingRequestFactory;
     }
 
     public synchronized void addProduction(HadoopProduction hadoopProduction) {

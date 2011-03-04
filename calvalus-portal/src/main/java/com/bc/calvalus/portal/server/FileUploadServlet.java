@@ -23,10 +23,6 @@ import java.util.List;
  */
 public class FileUploadServlet extends HttpServlet {
 
-    public BackendService getBackendService() {
-         return (BackendService) getServletContext().getAttribute("calvalusPortal.backendService");
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

@@ -3,6 +3,8 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
+import java.io.File;
+
 /**
  * Generates processing requests from production requests.
  *
@@ -37,6 +39,8 @@ abstract class ProcessingRequestFactory {
                 .replace("${type}", request.getProductionType())
                 .replace("${num}", (++outputFileNum) + "");
     }
+
+    public abstract String getStagingDir(ProductionRequest request) throws ProductionException;
 
     protected Double getDouble(ProductionRequest request, String name, Double def) {
         String fillValueStr = request.getProductionParameter(name);

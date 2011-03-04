@@ -21,24 +21,28 @@ class TestProduction extends Production {
     private static final Random idGen = new Random();
     private final long startTime;
     private final long duration;
-    private Timer timer;
+    private final File outputFile;
     private final boolean autoStage;
+    private Timer timer;
 
     /**
      * Constructs a new dummy production.
      *
      * @param name     Some name.
      * @param duration The total time in ms to run.
+     * @param outputUrl The relative output URL
+     * @param outputFile The path to the local file to be created
+     * @param autoStage true, if auto-staging enabled
      */
-    public TestProduction(String name, long duration, String outputFileName, boolean autoStage) {
+    public TestProduction(String name, long duration, String outputUrl, File outputFile, boolean autoStage) {
         super(Long.toHexString(idGen.nextLong()), name);
+        this.outputFile = outputFile;
         this.autoStage = autoStage;
         this.duration = duration;
         this.startTime = System.currentTimeMillis();
 
-        if (outputFileName != null) {
-            File downloadDir = new File(System.getProperty("user.home"), ".calvalus/test");
-            setOutputUrl(new File(downloadDir, outputFileName).getPath());
+        if (outputUrl != null) {
+            setOutputUrl(outputUrl);
             if (autoStage) {
                 setStagingStatus(new ProductionStatus(ProductionState.WAITING));
             }
@@ -56,7 +60,7 @@ class TestProduction extends Production {
                     setProcessingStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
                     if (timer != null) {
                         if (autoStage && getOutputUrl() != null) {
-                            writeOutputFile();
+                            stageOutput();
                         }
                         stopTimer();
                     }
@@ -81,10 +85,9 @@ class TestProduction extends Production {
         timer = null;
     }
 
-    private void writeOutputFile() {
+    void stageOutput() {
         try {
             setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, 0.0f));
-            File outputFile = new File(getOutputUrl());
             if (!outputFile.exists()) {
                 File parentFile = outputFile.getParentFile();
                 if (parentFile != null) {

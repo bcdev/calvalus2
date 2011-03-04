@@ -5,6 +5,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.util.math.DoubleList;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -19,6 +20,10 @@ public class L3ProcessingRequestTest {
             public String[] getInputFiles(ProductionRequest request) throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};
             }
+            @Override
+            public String getStagingDir(ProductionRequest request) throws ProductionException {
+                return "/";
+            }
         };
         L3ProcessingRequest processingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
 
@@ -29,6 +34,7 @@ public class L3ProcessingRequestTest {
         assertEquals("5,50,25,60", processingRequest.getBBox());
         assertEquals(4320, (int) processingRequest.getNumRows());
         assertEquals("calvalus-level3-output", processingRequest.getOutputDir());
+        assertEquals("/", processingRequest.getStagingDir());
         assertEquals(true, processingRequest.getOutputStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
 
@@ -41,6 +47,7 @@ public class L3ProcessingRequestTest {
         assertEquals("5,50,25,60", processingParameters.get("bbox"));
         assertEquals(4320, processingParameters.get("numRows"));
         assertEquals("calvalus-level3-output", processingParameters.get("outputDir"));
+        assertEquals("/", processingParameters.get("stagingDir"));
         assertEquals("id3", processingParameters.get("inputProductSetId"));
         assertEquals("beam", processingParameters.get("l2ProcessorBundleName"));
         assertEquals("4.9-SNAPSHOT", processingParameters.get("l2ProcessorBundleVersion"));

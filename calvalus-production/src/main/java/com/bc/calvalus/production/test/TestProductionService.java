@@ -7,8 +7,6 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -24,14 +22,21 @@ import java.util.List;
 public class TestProductionService implements ProductionService {
 
     private final List<TestProduction> productionList;
+    private final String relStagingUrl;
+    private final File localStagingDir;
     private long counter;
 
-    public TestProductionService() {
+    public TestProductionService(String relStagingUrl, File localStagingDir) {
+        this.relStagingUrl = relStagingUrl;
+        this.localStagingDir = localStagingDir;
         productionList = Collections.synchronizedList(new ArrayList<TestProduction>(32));
         // Add some dummy productions
-        productionList.add(new TestProduction("Formatting all hard drives", 20 * 1000, "abc", true));
-        productionList.add(new TestProduction("Drying CD slots", 10 * 1000, "abc", true));
-        productionList.add(new TestProduction("Rewriting kernel using BASIC", 5 * 1000, "abc", false));
+        productionList.add(new TestProduction("Formatting all hard drives", 20 * 1000,
+                                              relStagingUrl + "/p1", new File(localStagingDir, "p1"), true));
+        productionList.add(new TestProduction("Drying CD slots", 10 * 1000,
+                                              relStagingUrl + "/p2", new File(localStagingDir, "p2"), true));
+        productionList.add(new TestProduction("Rewriting kernel using BASIC", 5 * 1000,
+                                              relStagingUrl + "/p3", new File(localStagingDir, "p3"), false));
         for (TestProduction production : productionList) {
             production.start();
         }
@@ -89,7 +94,8 @@ public class TestProductionService implements ProductionService {
         long secondsToRun = (int) (10 + 20 * Math.random()); // 10...30 seconds
 
         TestProduction production = new TestProduction(productionName, secondsToRun * 1000,
-                                                       outputFileName,
+                                                       relStagingUrl + "/" + outputFileName,
+                                                       new File(localStagingDir, outputFileName),
                                                        Boolean.parseBoolean(productionRequest.getProductionParameter("outputStaging")));
         production.start();
         productionList.add(production);
@@ -127,6 +133,21 @@ public class TestProductionService implements ProductionService {
         }
     }
 
+    @Override
+    public void stageProductions(String[] productionIds) throws ProductionException {
+        int count = 0;
+        for (String productionId : productionIds) {
+            TestProduction production = getProduction(productionId);
+            if (production != null) {
+                production.stageOutput();
+                count++;
+            }
+        }
+        if (count < productionIds.length) {
+            throw new ProductionException(String.format("Only %d of %d production(s) have been staged.", count, productionIds.length));
+        }
+    }
+
     private TestProduction getProduction(String productionId) {
         for (TestProduction production : productionList) {
             if (productionId.equals(production.getId())) {
@@ -138,7 +159,7 @@ public class TestProductionService implements ProductionService {
 
     private String getOutputFile(ProductionRequest productionRequest) {
         return productionRequest.getProductionParameters().get("outputFileName")
-                .replace("${user}", System.getProperty("user.name", "Mrs Dummy"))
+                .replace("${user}", System.getProperty("user.name"))
                 .replace("${type}", productionRequest.getProductionType())
                 .replace("${num}", (++counter) + "");
     }

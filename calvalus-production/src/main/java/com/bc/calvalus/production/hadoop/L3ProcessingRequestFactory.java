@@ -28,6 +28,7 @@ abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         Map<String, Object> processingParameters = new HashMap<String, Object>(productionParameters);
         processingParameters.put("inputFiles", getInputFiles(productionRequest));
         processingParameters.put("outputDir", getOutputDir(productionRequest));
+        processingParameters.put("stagingDir", getStagingDir(productionRequest));
         processingParameters.put("numRows", getNumRows(productionRequest));
         processingParameters.put("bbox", getBBox(productionRequest));
         processingParameters.put("fillValue", getFillValue(productionRequest));

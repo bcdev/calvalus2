@@ -227,8 +227,25 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(PortalProduction production) {
+/*
         Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
                     "_blank", "");
+*/
+        Window.open(production.getOutputUrl(), "_blank", "");
+    }
+
+    private void stageProduction(PortalProduction production) {
+        getPortal().getBackendService().stageProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
+            @Override
+            public void onSuccess(Void ignored) {
+                // ok, result will display soon
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Staging failed:\n" + caught.getMessage());
+            }
+        });
     }
 
     private void cancelProduction(PortalProduction production) {
@@ -313,10 +330,13 @@ public class ManageProductionsView extends PortalView {
                 cancelProduction(production);
             } else if (DOWNLOAD.equals(value)) {
                 downloadProduction(production);
+            } else if (STAGE.equals(value)) {
+                stageProduction(production);
             } else if (INFO.equals(value)) {
                 showProductionInfo(production);
             }
         }
+
     }
 
     private class DeleteProductionsAction implements ClickHandler {

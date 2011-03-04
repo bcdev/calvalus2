@@ -132,6 +132,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    @Override
+    public void stageProductions(String[] productionIds) throws BackendServiceException {
+        try {
+            productionService.stageProductions(productionIds);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
     private PortalProductSet convert(ProductSet productSet) {
         return new PortalProductSet(productSet.getId(), productSet.getType(), productSet.getName());
     }
@@ -178,10 +187,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                         try {
                             Map<String, String> serviceConfiguration = getServiceConfiguration(servletContext);
                             Logger logger = createLogger(servletContext);
-                            File outputDir = new PortalConfig(servletContext).getLocalDownloadDir();
                             Class<?> productionServiceFactoryClass = Class.forName(className);
                             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
-                            productionService = productionServiceFactory.create(serviceConfiguration, logger, outputDir);
+                            PortalConfig portalConfig = new PortalConfig(servletContext);
+                            productionService = productionServiceFactory.create(serviceConfiguration, logger,
+                                                                                portalConfig.getStagingPath(),
+                                                                                portalConfig.getLocalStagingDir());
                         } catch (Exception e) {
                             throw new ServletException(e);
                         }

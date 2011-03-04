@@ -19,10 +19,6 @@ import java.io.IOException;
  */
 public class FileDownloadServlet extends HttpServlet {
 
-    public BackendService getBackendService() {
-        return (BackendService) getServletContext().getAttribute("calvalus.portal.backendService");
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
@@ -36,7 +32,7 @@ public class FileDownloadServlet extends HttpServlet {
             throw new ServletException("Missing query parameter 'file'");
         }
 
-        File downloadDir = new PortalConfig(getServletContext()).getLocalDownloadDir();
+        File downloadDir = new PortalConfig(getServletContext()).getLocalStagingDir();
         File file = new File(downloadDir, filePath);
         // todo - check: do we need to set contentLength on resp (which is an int)? (nf)
         if (file.length() > Integer.MAX_VALUE) {

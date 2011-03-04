@@ -14,6 +14,8 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 class HadoopProduction extends Production {
 
+    private StagingJob stagingJob;
+
     public static enum Action {
         NONE,
         CANCEL,
@@ -55,6 +57,15 @@ class HadoopProduction extends Production {
     public boolean isOutputStaging() {
         return outputStaging;
     }
+
+    public StagingJob getStagingJob() {
+        return stagingJob;
+    }
+
+    public void setStagingJob(StagingJob stagingJob) {
+        this.stagingJob = stagingJob;
+    }
+
 
     public Action getAction() {
         return action;

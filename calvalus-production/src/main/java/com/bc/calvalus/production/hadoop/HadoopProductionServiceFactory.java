@@ -15,13 +15,14 @@ import java.util.logging.Logger;
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
 
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger, File outputDir) throws ProductionException {
-        return new HadoopProductionService(createJobConf(serviceConfiguration), logger, outputDir);
+    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger,
+                                    String relStagingUrl, File localStagingDir) throws ProductionException {
+        return new HadoopProductionService(createJobConf(serviceConfiguration), logger, relStagingUrl, localStagingDir);
     }
 
-    private static JobConf createJobConf(Map<String, String> hadoopProp)  {
+    private static JobConf createJobConf(Map<String, String> hadoopProp) {
         JobConf jobConf = new JobConf();
-        for (Map.Entry<String, String> entry: hadoopProp.entrySet()){
+        for (Map.Entry<String, String> entry : hadoopProp.entrySet()) {
             String name = entry.getKey();
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());

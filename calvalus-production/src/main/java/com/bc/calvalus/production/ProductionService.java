@@ -59,4 +59,11 @@ public interface ProductionService {
      * @throws ProductionException If a service error occurred.
      */
     void deleteProductions(String[] productionIds) throws ProductionException;
- }
+
+    /**
+     * Requests stating of productions with given IDs.
+     * @param productionIds The production IDs.
+     * @throws ProductionException If a service error occurred.
+     */
+    void stageProductions(String[] productionIds) throws ProductionException;
+}

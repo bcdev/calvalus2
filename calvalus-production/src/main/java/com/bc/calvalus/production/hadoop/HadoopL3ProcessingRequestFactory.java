@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -18,9 +19,11 @@ import java.util.List;
 
 class HadoopL3ProcessingRequestFactory extends L3ProcessingRequestFactory {
     private final JobClient jobClient;
+    private final File localStagingDir;
 
-    HadoopL3ProcessingRequestFactory(JobClient jobClient) {
+    HadoopL3ProcessingRequestFactory(JobClient jobClient, File localStagingDir) {
         this.jobClient = jobClient;
+        this.localStagingDir = localStagingDir;
     }
 
     @Override
@@ -29,6 +32,11 @@ class HadoopL3ProcessingRequestFactory extends L3ProcessingRequestFactory {
         return getFileSystemName() + "/calvalus/outputs/" + outputDir;
     }
 
+    @Override
+    public String getStagingDir(ProductionRequest request) throws ProductionException {
+        String outputDir = super.getOutputDir(request);
+        return new File(new File(localStagingDir, "ewa"), outputDir).getPath();
+    }
 
     @Override
     public String[] getInputFiles(ProductionRequest request) throws ProductionException {

@@ -7,7 +7,7 @@ import java.io.File;
 /**
  * Configuration of the portal.
  *
- * @author Norman Fomferra
+ * @author Norman
  */
 public class PortalConfig {
 
@@ -25,27 +25,23 @@ public class PortalConfig {
         return value;
     }
 
-    public String getInitParameter(String name, String defaultValue) {
-        String value = servletContext.getInitParameter(name);
-        if (value == null) {
-            return defaultValue;
-        }
-        return value;
+    public String getStagingPath() throws ServletException {
+        return getInitParameter("calvalus.portal.staging.path");
+    }
+
+    public String getUploadPath() throws ServletException {
+        return getInitParameter("calvalus.portal.upload.path");
     }
 
     public File getLocalUploadDir() throws ServletException {
-        return new File(getLocalBaseDir(),
-                        getInitParameter("calvalus.portal.upload.dir"));
+        return new File(getLocalContextDir(), getUploadPath());
     }
 
-    public File getLocalDownloadDir() throws ServletException {
-        return new File(getLocalBaseDir(),
-                        getInitParameter("calvalus.portal.download.dir"));
+    public File getLocalStagingDir() throws ServletException {
+        return new File(getLocalContextDir(), getStagingPath());
     }
 
-    public File getLocalBaseDir() {
-        File defaultDir = new File(System.getProperty("user.home"), ".calvalus");
-        return new File(getInitParameter("calvalus.portal.base.dir",
-                                         defaultDir.getPath()));
+    public File getLocalContextDir() {
+        return new File(servletContext.getRealPath("."));
     }
 }

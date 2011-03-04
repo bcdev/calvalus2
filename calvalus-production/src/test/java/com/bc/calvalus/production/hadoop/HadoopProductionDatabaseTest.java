@@ -6,6 +6,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -27,8 +28,13 @@ public class HadoopProductionDatabaseTest {
             public String[] getInputFiles(ProductionRequest request) throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};
             }
+
+            @Override
+            public String getStagingDir(ProductionRequest request) throws ProductionException {
+                return "/";
+            }
         };
-        HadoopProductionDatabase db = new HadoopProductionDatabase(processingRequestFactory);
+        HadoopProductionDatabase db = new HadoopProductionDatabase();
         HadoopProduction prod1 = new HadoopProduction("id1", "name1",
                                                       new JobID("34627598547", 11),
                                                       false,
@@ -55,7 +61,7 @@ public class HadoopProductionDatabaseTest {
         StringWriter out = new StringWriter();
         db.store(new PrintWriter(out));
 
-        HadoopProductionDatabase db2 = new HadoopProductionDatabase(processingRequestFactory);
+        HadoopProductionDatabase db2 = new HadoopProductionDatabase();
         db2.load(new BufferedReader(new StringReader(out.toString())));
 
         HadoopProduction[] productions = db2.getProductions();

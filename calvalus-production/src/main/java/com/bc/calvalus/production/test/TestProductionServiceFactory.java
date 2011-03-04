@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  */
 public class TestProductionServiceFactory implements ProductionServiceFactory {
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger, File outputDir) throws ProductionException {
-        return new TestProductionService();
+    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger, String relStagingUrl, File localStagingDir) throws ProductionException {
+        return new TestProductionService(relStagingUrl, localStagingDir);
     }
 }

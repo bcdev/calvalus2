@@ -9,6 +9,28 @@
 
     <display-name>Calvalus Portal</display-name>
 
+    <!-- Default servlet (used to customise directory listings) -->
+
+    <servlet>
+        <servlet-name>staging</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+
+    <servlet-mapping>
+        <servlet-name>staging</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
     <!-- Backend servlet -->
 
     <servlet>
@@ -59,23 +81,15 @@
         <!--<param-value>com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory</param-value>-->
     </context-param>
 
-    <!-- value defaults to ${user.home}/.calvalus -->
-<!--
+    <!-- value is relative to the context's directory -->
     <context-param>
-        <param-name>calvalus.portal.base.dir</param-name>
-        <param-value>${user.home}/.calvalus</param-value>
-    </context-param>
--->
-
-    <!-- value is relative to ${calvalus.portal.base.dir} -->
-    <context-param>
-        <param-name>calvalus.portal.download.dir</param-name>
-        <param-value>downloads</param-value>
+        <param-name>calvalus.portal.staging.path</param-name>
+        <param-value>staging</param-value>
     </context-param>
 
-    <!-- value is relative to ${calvalus.portal.base.dir} -->
+    <!-- value is relative to the context's directory -->
     <context-param>
-        <param-name>calvalus.portal.upload.dir</param-name>
+        <param-name>calvalus.portal.upload.path</param-name>
         <param-value>uploads</param-value>
     </context-param>
 
