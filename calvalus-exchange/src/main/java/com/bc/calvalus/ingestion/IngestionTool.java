@@ -22,7 +22,9 @@ import java.text.MessageFormat;
  * </pre>
  */
 public class IngestionTool extends Configured implements Tool {
-    private static final String PRODUCT_TYPE = "MER_RR__1P";
+
+    static final String DEFAULT_PRODUCT_TYPE = "MER_RR__1P";
+    static final String DEFAULT_REPROCESSING = "r03";
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new IngestionTool(), args));
@@ -30,15 +32,27 @@ public class IngestionTool extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        if (args.length != 1) {
-            System.err.println(MessageFormat.format("Usage: {0} <path>", IngestionTool.class.getSimpleName()));
+        String path;
+        String productType = DEFAULT_PRODUCT_TYPE;
+        String reprocessing = DEFAULT_REPROCESSING;
+        if (args.length == 1) {
+            path = args[0];
+        } else if (args.length == 2) {
+            path = args[0];
+            productType = args[1];
+        } else if (args.length == 3) {
+            path = args[0];
+            productType = args[1];
+            reprocessing = args[2];
+        } else {
+            System.err.println(MessageFormat.format("Usage: {0} <path> [PRODUCT_TYPE] [REPROCESSING]", IngestionTool.class.getSimpleName()));
             return 1;
         }
 
-        File sourceDir = new File(args[0]);
-        File[] sourceFiles = sourceDir.listFiles(new ProductFilenameFilter());
+        File sourceDir = new File(path);
+        File[] sourceFiles = sourceDir.listFiles(new ProductFilenameFilter(productType));
         if (sourceFiles == null) {
-            System.err.println(MessageFormat.format("No {0} files found in {1}", PRODUCT_TYPE, sourceDir));
+            System.err.println(MessageFormat.format("No {0} files found in {1}", DEFAULT_PRODUCT_TYPE, sourceDir));
             return 2;
         }
 
@@ -52,7 +66,7 @@ public class IngestionTool extends Configured implements Tool {
         final short replication = hdfs.getDefaultReplication();
 
         for (File sourceFile : sourceFiles) {
-            String archivePath = getArchivePath(sourceFile.getName());
+            String archivePath = getArchivePath(sourceFile.getName(), productType, reprocessing);
             System.out.println(MessageFormat.format("Archiving {0} in {1}", sourceFile, archivePath));
 
             long fileSize = sourceFile.length();
@@ -68,15 +82,17 @@ public class IngestionTool extends Configured implements Tool {
         return 0;
     }
 
-
     /**
      * Implements the archiving "rule"
+     *
      * @param fileName a file name
+     * @param productType the product type
+     * @param reprocessing the reprocessing
      * @return   an archive path
      */
-    static String getArchivePath(String fileName) {
+    static String getArchivePath(String fileName, String productType, String reprocessing) {
         String subPath = getDatePath(fileName);
-        return "/calvalus/eodata/" + PRODUCT_TYPE + "/r03/" + subPath;
+        return String.format("/calvalus/eodata/%s/%s/%s", productType, reprocessing, subPath);
     }
 
     static String getDatePath(String fileName) {
@@ -87,9 +103,15 @@ public class IngestionTool extends Configured implements Tool {
     }
 
     static class ProductFilenameFilter implements FilenameFilter {
+        private final String productType;
+
+        public ProductFilenameFilter(String productType) {
+            this.productType = productType;
+        }
+
         @Override
         public boolean accept(File file, String s) {
-            return s.startsWith(PRODUCT_TYPE) && s.endsWith(".N1");
+            return s.startsWith(productType) && s.endsWith(".N1");
         }
     }
 }
