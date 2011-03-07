@@ -18,7 +18,7 @@ import java.text.MessageFormat;
  * A tool to archive all MER_RR__1P products found in a given directory into a computed directory in the HDFS archive.
  * <pre>
  * Usage:
- *    hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.ingestion.IngestionTool ${sourceDir}
+ *    hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.ingestion.IngestionTool ${sourceDir} [${productType}] [${reprocessing}]
  * </pre>
  */
 public class IngestionTool extends Configured implements Tool {
