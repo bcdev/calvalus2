@@ -17,47 +17,56 @@ import java.io.File;
  * @author MarcoZ
  */
 class L3StagingJob extends StagingJob {
-    private final L3ProcessingRequest processingRequest;
     private final HadoopProduction production;
+    private final L3ProcessingRequest[] processingRequests;
     private final Configuration hadoopConfiguration;
-    private final String wpsXml;
+    private final String stagingDir;
+    private final String outputFormat;
     private final Logger logger;
     private float progress;
 
     public L3StagingJob(HadoopProduction production,
-                        L3ProcessingRequest processingRequest,
+                        L3ProcessingRequest[] processingRequests,
                         Configuration hadoopConfiguration,
-                        String wpsXml,
+                        String stagingDir,
                         Logger logger) {
-        this.processingRequest = processingRequest;
         this.production = production;
+        this.processingRequests = processingRequests;
         this.hadoopConfiguration = hadoopConfiguration;
-        this.wpsXml = wpsXml;
+        this.stagingDir = stagingDir;
+        this.outputFormat = production.getProductionRequest().getProductionParameter("outputFormat");
         this.logger = logger;
     }
 
     @Override
     public L3StagingJob call() throws Exception {
         progress = 0f;
-        BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
-        String outputDir = processingRequest.getOutputDir();
-        FormatterL3Config formatConfig = new FormatterL3Config("Product", // todo - from processingRequest
-                                                               new File(processingRequest.getStagingDir(), production.getId()).getPath(),
-                                                               (String) processingRequest.getOutputFormat(),
-                                                               new FormatterL3Config.BandConfiguration[0],  // todo - from processingRequest
-                                                               (String) processingRequest.getProcessingParameter("startDate"),
-                                                               (String) processingRequest.getProcessingParameter("stopDate"));
-        try {
-            // todo - need a progress monitor here
-            beamL3FormattingService.format(formatConfig, outputDir, wpsXml);
-            progress = 1f;
-            // todo - if job has been cancelled, it must not change its state anymore
-            production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, progress, ""));
-        } catch (Exception e) {
-            // todo - if job has been cancelled, it must not change its state anymore
-            production.setStagingStatus(new ProductionStatus(ProductionState.ERROR, progress, e.getMessage()));
-            logger.log(Level.WARNING, "Formatting failed.", e);
+        for (int i = 0; i < processingRequests.length; i++) {
+            L3ProcessingRequest processingRequest = processingRequests[i];
+
+            BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
+            String outputDir = processingRequest.getOutputDir();
+            FormatterL3Config formatConfig = new FormatterL3Config("Product", // todo - from processingRequest
+                                                                   new File(stagingDir, production.getId()).getPath(),
+                                                                   processingRequest.getOutputFormat(),
+                                                                   new FormatterL3Config.BandConfiguration[0],  // todo - from processingRequest
+                                                                   (String) processingRequest.getProcessingParameter("dateStart"),
+                                                                   (String) processingRequest.getProcessingParameter("dateStop"));
+            try {
+                // todo - need a progress monitor here
+                beamL3FormattingService.format(formatConfig, outputDir, "");
+                progress = 1f;
+                // todo - if job has been cancelled, it must not change its state anymore
+                production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, progress, ""));
+            } catch (Exception e) {
+                // todo - if job has been cancelled, it must not change its state anymore
+                production.setStagingStatus(new ProductionStatus(ProductionState.ERROR, progress, e.getMessage()));
+                logger.log(Level.WARNING, "Formatting failed.", e);
+            }
+            progress += (i + 1) / processingRequests.length;
         }
+        progress = 1.0f;
+
         return this;
     }
 

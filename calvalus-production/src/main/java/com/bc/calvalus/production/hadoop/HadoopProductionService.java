@@ -2,8 +2,6 @@ package com.bc.calvalus.production.hadoop;
 
 
 import com.bc.calvalus.catalogue.ProductSet;
-import com.bc.calvalus.processing.beam.BeamJobService;
-import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionProcessor;
@@ -11,18 +9,11 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionState;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,8 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,37 +35,27 @@ public class HadoopProductionService implements ProductionService {
     private static final int HADOOP_OBSERVATION_PERIOD = 2000;
     private final JobClient jobClient;
     private final HadoopProductionDatabase database;
-    private final ExecutorService stagingService;
     // todo - Persist
     private final Logger logger;
-    private final String relStagingUrl;
-    private final File localStagingDir;
-    private WpsXmlGenerator wpsXmlGenerator;
+    private final Map<String, ProductionType> productionTypeMap;
 
-    public HadoopProductionService(JobConf jobConf, Logger logger,
-                                   String relStagingUrl, File localStagingDir) throws ProductionException {
+    public HadoopProductionService(JobClient jobClient, Logger logger,
+                                   ProductionType... productionTypes) throws ProductionException {
         this.logger = logger;
-        this.relStagingUrl = relStagingUrl;
-        this.localStagingDir = localStagingDir;
-        try {
-            this.jobClient = new JobClient(jobConf);
-        } catch (IOException e) {
-            throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
-        }
+        this.jobClient = jobClient;
         this.database = new HadoopProductionDatabase();
 
         initDatabase();
 
-        // Prevent Windows from using ';' as path separator
-        System.setProperty("path.separator", ":");
-
         Timer hadoopObservationTimer = new Timer(true);
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
-                                                   HADOOP_OBSERVATION_PERIOD / 2,
-                                                   HADOOP_OBSERVATION_PERIOD);
+                                                   HADOOP_OBSERVATION_PERIOD, HADOOP_OBSERVATION_PERIOD);
 
-        stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
-        wpsXmlGenerator = new WpsXmlGenerator();
+
+        productionTypeMap = new HashMap<String, ProductionType>();
+        for (ProductionType productionType : productionTypes) {
+            productionTypeMap.put(productionType.getName(), productionType);
+        }
     }
 
     @Override
@@ -112,12 +91,14 @@ public class HadoopProductionService implements ProductionService {
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
-        if ("calvalus-level3".equals(productionRequest.getProductionType())) {
-            return orderL3Production(productionRequest);
-        } else {
+        ProductionType productionType = productionTypeMap.get(productionRequest.getProductionType());
+        if (productionType == null) {
             throw new ProductionException(String.format("Unhandled production type '%s'",
                                                         productionRequest.getProductionType()));
         }
+        HadoopProduction production = productionType.createProduction(productionRequest);
+        database.addProduction(production);
+        return new ProductionResponse(production);
     }
 
     @Override
@@ -127,7 +108,8 @@ public class HadoopProductionService implements ProductionService {
             HadoopProduction production = database.getProduction(productionId);
             if (production != null) {
                 try {
-                    stageProduction(production);
+                    ProductionType productionType = productionTypeMap.get(production.getProductionRequest().getProductionType());
+                    productionType.stageProduction(production);
                     count++;
                 } catch (ProductionException e) {
                     logger.log(Level.SEVERE, String.format("Failed to stage production '%s': %s",
@@ -182,110 +164,6 @@ public class HadoopProductionService implements ProductionService {
         }
     }
 
-    // todo - remove once we have L2 requests
-    public String stageProductionOutput(String productionId) throws ProductionException {
-        // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
-        try {
-            RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.forName(productionId));
-            String jobFile = job.getJobFile();
-            // System.out.printf("jobFile = %n%s%n", jobFile);
-            Configuration configuration = new Configuration(jobClient.getConf());
-            configuration.addResource(new Path(jobFile));
-
-            String jobOutputDir = configuration.get("mapred.output.dir");
-            // System.out.println("mapred.output.dir = " + jobOutputDir);
-            Path outputPath = new Path(jobOutputDir);
-            FileSystem fileSystem = outputPath.getFileSystem(jobClient.getConf());
-            FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return path.getName().endsWith(".seq");
-                }
-            });
-
-            File downloadDir = new File(localStagingDir, outputPath.getName());
-            if (!downloadDir.exists()) {
-                downloadDir.mkdirs();
-            }
-            for (FileStatus seqFile : seqFiles) {
-                Path seqProductPath = seqFile.getPath();
-                System.out.println("seqProductPath = " + seqProductPath);
-                StreamingProductReader reader = new StreamingProductReader(seqProductPath, jobClient.getConf());
-                Product product = reader.readProductNodes(null, null);
-                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");
-                System.out.println("dimapProductName = " + dimapProductName);
-                File productFile = new File(downloadDir, dimapProductName);
-                ProductIO.writeProduct(product, productFile, ProductIO.DEFAULT_FORMAT_NAME, false);
-            }
-            // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
-            return outputPath.getName() + ".zip";
-        } catch (Exception e) {
-            throw new ProductionException("Error: " + e.getMessage(), e);
-        }
-
-    }
-
-    private ProductionResponse orderL3Production(ProductionRequest productionRequest) throws ProductionException {
-
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new HadoopL3ProcessingRequestFactory(jobClient, localStagingDir);
-        L3ProcessingRequest l3ProcessingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
-
-        String l3ProductionId = createL3ProductionId(productionRequest);
-        String l3ProductionName = createL3ProductionName(productionRequest);
-        String wpsXml = wpsXmlGenerator.createL3WpsXml(l3ProductionId, l3ProductionName, l3ProcessingRequest);
-
-        JobID jobId = submitL3Job(wpsXml);
-
-        boolean outputStaging = l3ProcessingRequest.getOutputStaging();
-        HadoopProduction hadoopProduction = new HadoopProduction(l3ProductionId,
-                                                                 l3ProductionName,
-                                                                 jobId,
-                                                                 outputStaging,
-                                                                 productionRequest);
-
-
-        database.addProduction(hadoopProduction);
-        return new ProductionResponse(hadoopProduction);
-    }
-
-    static String createL3ProductionId(ProductionRequest productionRequest) {
-        return productionRequest.getProductionType() + "-" + Long.toHexString(System.nanoTime());
-
-    }
-
-    static String createL3ProductionName(ProductionRequest productionRequest) {
-        return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
-                             productionRequest.getProductionParameter("inputProductSetId"),
-                             productionRequest.getProductionParameter("l2ProcessorName"));
-
-    }
-
-    private JobID submitL3Job(String wpsXml) throws ProductionException {
-        try {
-            BeamJobService beamJobService = new BeamJobService(jobClient);
-            return beamJobService.submitJob(wpsXml);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
-        }
-    }
-
-    private void stageProduction(HadoopProduction hadoopProduction) throws ProductionException {
-        ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
-        if ("calvalus-level3".equals(productionRequest.getProductionType())) {
-            L3ProcessingRequestFactory l3ProcessingRequestFactory = new HadoopL3ProcessingRequestFactory(jobClient, localStagingDir);
-            L3ProcessingRequest l3ProcessingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
-
-            String l3ProductionId = hadoopProduction.getId();
-            String l3ProductionName = hadoopProduction.getName();
-            String wpsXml = wpsXmlGenerator.createL3WpsXml(l3ProductionId, l3ProductionName, l3ProcessingRequest);
-
-            L3StagingJob l3StagingJob = new L3StagingJob(hadoopProduction, l3ProcessingRequest, jobClient.getConf(), wpsXml, logger);
-            stagingService.submit(l3StagingJob);
-            hadoopProduction.setStagingJob(l3StagingJob);
-        }
-    }
-
     private void initDatabase() {
         System.out.println("PRODUCTIONS_DB_FILE = " + PRODUCTIONS_DB_FILE.getAbsolutePath());
         try {
@@ -330,7 +208,8 @@ public class HadoopProductionService implements ProductionService {
                     && production.getProcessingStatus().getState() == ProductionState.COMPLETED
                     && production.getStagingStatus().getState() == ProductionState.WAITING
                     && production.getStagingJob() == null) {
-                stageProduction(production);
+                ProductionType productionType = productionTypeMap.get(production.getProductionRequest().getProductionType());
+                productionType.stageProduction(production);
             }
         }
 

@@ -3,7 +3,11 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import org.esa.beam.framework.datamodel.ProductData;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,11 +15,12 @@ import static java.lang.Math.*;
 
 abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
+
     protected L3ProcessingRequestFactory() {
     }
 
     @Override
-    public L3ProcessingRequest createProcessingRequest(ProductionRequest productionRequest) throws ProductionException {
+    public L3ProcessingRequest[] createProcessingRequests(ProductionRequest productionRequest) throws ProductionException {
 
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
         productionRequest.ensureProductionParameterSet("l2ProcessorBundleName");
@@ -25,20 +30,43 @@ abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         productionRequest.ensureProductionParameterSet("superSampling");
         productionRequest.ensureProductionParameterSet("maskExpr");
 
-        Map<String, Object> processingParameters = new HashMap<String, Object>(productionParameters);
-        processingParameters.put("inputFiles", getInputFiles(productionRequest));
-        processingParameters.put("outputDir", getOutputDir(productionRequest));
-        processingParameters.put("stagingDir", getStagingDir(productionRequest));
-        processingParameters.put("numRows", getNumRows(productionRequest));
-        processingParameters.put("bbox", getBBox(productionRequest));
-        processingParameters.put("fillValue", getFillValue(productionRequest));
-        processingParameters.put("weightCoeff", getWeightCoeff(productionRequest));
-        processingParameters.put("variables", getVariables(productionRequest));
-        processingParameters.put("aggregators", getAggregators(productionRequest));
-        processingParameters.put("outputStaging", getOutputStaging(productionRequest));
+        Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
+        commonProcessingParameters.put("outputDir", getOutputDir(productionRequest));
+        commonProcessingParameters.put("stagingDir", getStagingDir(productionRequest));
+        commonProcessingParameters.put("numRows", getNumRows(productionRequest));
+        commonProcessingParameters.put("bbox", getBBox(productionRequest));
+        commonProcessingParameters.put("fillValue", getFillValue(productionRequest));
+        commonProcessingParameters.put("weightCoeff", getWeightCoeff(productionRequest));
+        commonProcessingParameters.put("variables", getVariables(productionRequest));
+        commonProcessingParameters.put("aggregators", getAggregators(productionRequest));
+        commonProcessingParameters.put("outputStaging", getOutputStaging(productionRequest));
 
-        return new L3ProcessingRequest(processingParameters);
+        int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
+        int periodLength = Integer.parseInt(productionRequest.getProductionParameter("periodLength")); // unit=days
+
+        Date startDate = getDate(productionRequest, "dateStart");
+        Date stopDate = getDate(productionRequest, "dateStop");
+        L3ProcessingRequest[] processingRequests = new L3ProcessingRequest[periodCount];
+        long time = startDate.getTime();
+        long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+        for (int i = 0; i < periodCount; i++) {
+
+            HashMap<String, Object> processingParameters = new HashMap<String, Object>(commonProcessingParameters);
+            Date date1 = new Date(time);
+            Date date2 = new Date(time + periodLengthMillis);
+            processingParameters.put("dateStart", getDateFormat().format(date1));
+            processingParameters.put("dateStop", getDateFormat().format(date2));
+            processingParameters.put("inputFiles", getInputFiles(productionRequest, date1, date2));
+            time += periodLengthMillis;
+
+            processingRequests[i] = new L3ProcessingRequest(processingParameters);
+        }
+
+        return processingRequests;
     }
+
+
+    public abstract String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException;
 
     public Double getFillValue(ProductionRequest request) throws ProductionException {
         return getDouble(request, "fillValue", null);

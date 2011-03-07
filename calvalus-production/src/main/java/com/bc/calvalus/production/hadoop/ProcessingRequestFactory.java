@@ -2,8 +2,12 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
 
 /**
  * Generates processing requests from production requests.
@@ -11,11 +15,11 @@ import java.io.File;
  * @author Norman
  */
 abstract class ProcessingRequestFactory {
+    private final static DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
     static int outputFileNum;
 
-    public abstract ProcessingRequest createProcessingRequest(ProductionRequest productionRequest) throws ProductionException;
+    public abstract ProcessingRequest[] createProcessingRequests(ProductionRequest productionRequest) throws ProductionException;
 
-    public abstract String[] getInputFiles(ProductionRequest request) throws ProductionException;
 
     public boolean getOutputStaging(ProductionRequest request) throws ProductionException {
         return Boolean.parseBoolean(request.getProductionParameterSafe("outputStaging"));
@@ -51,4 +55,15 @@ abstract class ProcessingRequestFactory {
         }
     }
 
+    protected Date getDate(ProductionRequest productionRequest, String name) throws ProductionException {
+         try {
+             return dateFormat.parse(productionRequest.getProductionParameterSafe(name));
+         } catch (ParseException e) {
+             throw new ProductionException("Illegal date format for production parameter '" + name + "'");
+         }
+     }
+
+    public static DateFormat getDateFormat() {
+        return dateFormat;
+    }
 }

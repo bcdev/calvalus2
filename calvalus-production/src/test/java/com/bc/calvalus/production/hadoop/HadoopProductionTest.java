@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionState;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapreduce.JobID;
@@ -45,7 +46,7 @@ public class HadoopProductionTest {
     @Test
     public void testStateTransitionWithoutStaging() {
         JobID jobID = new JobID("34627598547", 6);
-        HadoopProduction processing = new HadoopProduction("id", "name", jobID, false, null);
+        HadoopProduction processing = new HadoopProduction("id", "name", false, new JobID[]{ jobID}, new ProductionRequest("test"));
 
         assertEquals(ProductionState.UNKNOWN, processing.getProcessingStatus().getState());
 

@@ -90,7 +90,7 @@ public class InputOutputPanel implements IsWidget {
         return outputFormat.getValue(index);
     }
 
-    public boolean getOutputStaging() {
+    public boolean isOutputStaging() {
         return outputStaging.getValue();
     }
 

@@ -11,10 +11,6 @@ class L3ProcessingRequest extends ProcessingRequest {
         super(processingParameters);
     }
 
-    public String getStagingDir() {
-        return getProcessingParameter("stagingDir");
-    }
-
     public Double getFillValue() {
         return getProcessingParameter("fillValue");
     }

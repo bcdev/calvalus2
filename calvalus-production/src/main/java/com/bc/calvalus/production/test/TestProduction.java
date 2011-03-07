@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.test;
 
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionState;
 import com.bc.calvalus.production.ProductionStatus;
 
@@ -22,7 +23,6 @@ class TestProduction extends Production {
     private final long startTime;
     private final long duration;
     private final File outputFile;
-    private final boolean autoStage;
     private Timer timer;
 
     /**
@@ -32,18 +32,17 @@ class TestProduction extends Production {
      * @param duration The total time in ms to run.
      * @param outputUrl The relative output URL
      * @param outputFile The path to the local file to be created
-     * @param autoStage true, if auto-staging enabled
+     * @param outputStaging true, if auto-staging enabled
      */
-    public TestProduction(String name, long duration, String outputUrl, File outputFile, boolean autoStage) {
-        super(Long.toHexString(idGen.nextLong()), name);
+    public TestProduction(String name, long duration, String outputUrl, File outputFile, boolean outputStaging, ProductionRequest productionRequest) {
+        super(Long.toHexString(idGen.nextLong()), name, outputStaging, productionRequest);
         this.outputFile = outputFile;
-        this.autoStage = autoStage;
         this.duration = duration;
         this.startTime = System.currentTimeMillis();
 
         if (outputUrl != null) {
             setOutputUrl(outputUrl);
-            if (autoStage) {
+            if (outputStaging) {
                 setStagingStatus(new ProductionStatus(ProductionState.WAITING));
             }
         }
@@ -59,7 +58,7 @@ class TestProduction extends Production {
                 if (progress >= 1.0f) {
                     setProcessingStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
                     if (timer != null) {
-                        if (autoStage && getOutputUrl() != null) {
+                        if (isOutputStaging() && getOutputUrl() != null) {
                             stageOutput();
                         }
                         stopTimer();

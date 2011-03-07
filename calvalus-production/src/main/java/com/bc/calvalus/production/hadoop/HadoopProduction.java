@@ -14,8 +14,6 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 class HadoopProduction extends Production {
 
-    private StagingJob stagingJob;
-
     public static enum Action {
         NONE,
         CANCEL,
@@ -24,22 +22,18 @@ class HadoopProduction extends Production {
     }
 
     // final
-    private final JobID jobId;
-    private final boolean outputStaging;
-    private final ProductionRequest productionRequest;
+    private final JobID[]  jobIds;
 
     // variable
     private Action action;
+    private StagingJob stagingJob;
 
     public HadoopProduction(String id,
                             String name,
-                            JobID jobId,
-                            boolean outputStaging,
+                            boolean outputStaging, JobID[] jobIds,
                             ProductionRequest productionRequest) {
-        super(id, name);
-        this.jobId = jobId;
-        this.productionRequest = productionRequest;
-        this.outputStaging = outputStaging;
+        super(id, name, outputStaging, productionRequest);
+        this.jobIds = jobIds.clone();
         this.action = Action.NONE;
         if (outputStaging) {
             setStagingStatus(new ProductionStatus(ProductionState.WAITING));
@@ -47,15 +41,11 @@ class HadoopProduction extends Production {
     }
 
     public JobID getJobId() {
-        return jobId;
+        return jobIds[0];
     }
 
-    public ProductionRequest getProductionRequest() {
-        return productionRequest;
-    }
-
-    public boolean isOutputStaging() {
-        return outputStaging;
+    public JobID[] getJobIds() {
+        return jobIds.clone();
     }
 
     public StagingJob getStagingJob() {

@@ -74,7 +74,8 @@ public class FormatterL3Config {
         // used by DOM converter
     }
 
-    public FormatterL3Config(String outputType, String outputFile,
+    public FormatterL3Config(String outputType,
+                             String outputFile,
                              String outputFormat,
                              BandConfiguration[] bands,
                              String startTime,

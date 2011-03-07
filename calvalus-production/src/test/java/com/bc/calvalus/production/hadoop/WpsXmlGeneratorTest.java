@@ -4,7 +4,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
 
-import java.io.File;
+import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -17,7 +17,7 @@ public class WpsXmlGeneratorTest {
     public void testL3WpsXml() throws ProductionException {
         L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
             @Override
-            public String[] getInputFiles(ProductionRequest request) throws ProductionException {
+            public String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
                 return new String[]{"fileA", "fileB", "fileC"};
             }
             @Override
@@ -26,9 +26,9 @@ public class WpsXmlGeneratorTest {
             }
         };
         ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest processingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
+        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests(productionRequest);
 
-        String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequest);
+        String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
         assertNotNull(xml);
 
         // System.out.println(xml);

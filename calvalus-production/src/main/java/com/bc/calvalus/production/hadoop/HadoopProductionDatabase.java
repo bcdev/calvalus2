@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A database for productions.
@@ -80,15 +79,17 @@ class HadoopProductionDatabase {
             String[] tokens = line.split("\t");
             String id = tokens[0];
             String name = tokens[1];
-            String jobId = tokens[2];
-            boolean outputStaging = Boolean.parseBoolean(tokens[3]);
-            ProductionStatus productionStatus = decodeProductionStatusTSV(tokens, 4);
-            ProductionStatus stagingStatus = decodeProductionStatusTSV(tokens, 4 + 3);
-            ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, 4 + 3 + 3);
+            boolean outputStaging = Boolean.parseBoolean(tokens[2]);
+            int[] offpt = new int[]{3};
+            JobID[] jobIDs = decodeJobIdsTSV(tokens, offpt);
+            ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
+            ProductionStatus productionStatus = decodeProductionStatusTSV(tokens, offpt);
+            ProductionStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
 
             HadoopProduction hadoopProduction = new HadoopProduction(id, name,
-                                                                     JobID.forName(jobId),
-                                                                     outputStaging, productionRequest);
+                                                                     outputStaging, jobIDs,
+                                                                     productionRequest);
+
             hadoopProduction.setProcessingStatus(productionStatus);
             hadoopProduction.setStagingStatus(stagingStatus);
             addProduction(hadoopProduction);
@@ -97,22 +98,48 @@ class HadoopProductionDatabase {
 
     public synchronized void store(PrintWriter writer) {
         for (HadoopProduction production : productionsList) {
-            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\tEOR\n",
                           production.getId(),
                           production.getName(),
-                          production.getJobId(),
                           production.isOutputStaging(),
+                          encodeJobIdsTSV(production.getJobIds()),
+                          encodeProductionRequestTSV(production.getProductionRequest()),
                           encodeProductionStatusTSV(production.getProcessingStatus()),
-                          encodeProductionStatusTSV(production.getStagingStatus()),
-                          encodeProductionRequestTSV(production.getProductionRequest()));
+                          encodeProductionStatusTSV(production.getStagingStatus())
+            );
         }
     }
 
+
+    private static JobID[] decodeJobIdsTSV(String[] tokens, int[] offpt) {
+        int off = offpt[0];
+        int numJobs = Integer.parseInt(tokens[off++]);
+        JobID[] jobIds = new JobID[numJobs];
+        for (int i = 0; i < numJobs; i++) {
+            jobIds[i] = JobID.forName(tokens[off++]);
+        }
+        offpt[0] = off;
+        return jobIds;
+    }
+
+    private static String encodeJobIdsTSV(JobID[] jobIds) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(jobIds.length);
+        for (JobID jobId : jobIds) {
+            sb.append("\t");
+            sb.append(jobId.toString());
+        }
+        return sb.toString();
+    }
+
     static String encodeProductionRequestTSV(ProductionRequest productionRequest) {
-        StringBuilder sb = new StringBuilder(productionRequest.getProductionType());
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        Set<Map.Entry<String, String>> entries = productionParameters.entrySet();
-        for (Map.Entry<String, String> entry : entries) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(productionRequest.getProductionType());
+        sb.append("\t");
+        sb.append(productionParameters.size());
+        for (Map.Entry<String, String> entry : productionParameters.entrySet()) {
             sb.append("\t");
             sb.append(encodeTSV(entry.getKey()));
             sb.append("\t");
@@ -121,12 +148,17 @@ class HadoopProductionDatabase {
         return sb.toString();
     }
 
-    private static ProductionRequest decodeProductionRequestTSV(String[] tokens, int off) {
-        String productionType = decodeTSV(tokens[off]);
+    private static ProductionRequest decodeProductionRequestTSV(String[] tokens, int[] offpt) {
+        int off = offpt[0];
+        String productionType = decodeTSV(tokens[off++]);
+        int numParams = Integer.parseInt(tokens[off++]);
         Map<String, String> productionParameters = new HashMap<String, String>();
-        for (int i = off + 1; i < tokens.length; i += 2) {
-            productionParameters.put(decodeTSV(tokens[i]), decodeTSV(tokens[i + 1]));
+        for (int i = 0; i < numParams; i++) {
+            String name = decodeTSV(tokens[off++]);
+            String value = decodeTSV(tokens[off++]);
+            productionParameters.put(name, value);
         }
+        offpt[0] = off;
         return new ProductionRequest(productionType, productionParameters);
     }
 
@@ -140,10 +172,12 @@ class HadoopProductionDatabase {
         return sb.toString();
     }
 
-    static ProductionStatus decodeProductionStatusTSV(String[] tokens, int off) {
-        ProductionState productionState = ProductionState.valueOf(tokens[off]);
-        float progress = Float.parseFloat(tokens[off + 1]);
-        String message = encodeTSV(tokens[off + 2]);
+    static ProductionStatus decodeProductionStatusTSV(String[] tokens, int[] offpt) {
+        int off = offpt[0];
+        ProductionState productionState = ProductionState.valueOf(tokens[off++]);
+        float progress = Float.parseFloat(tokens[off++]);
+        String message = encodeTSV(tokens[off++]);
+        offpt[0] = off;
         return new ProductionStatus(productionState, progress, message);
     }
 

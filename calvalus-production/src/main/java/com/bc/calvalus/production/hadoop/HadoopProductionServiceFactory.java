@@ -3,9 +3,11 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
+import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -17,7 +19,19 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration, Logger logger,
                                     String relStagingUrl, File localStagingDir) throws ProductionException {
-        return new HadoopProductionService(createJobConf(serviceConfiguration), logger, relStagingUrl, localStagingDir);
+
+        // Prevent Windows from using ';' as path separator
+        System.setProperty("path.separator", ":");
+
+        JobConf jobConf = createJobConf(serviceConfiguration);
+        try {
+            JobClient jobClient = new JobClient(jobConf);
+            ProductionType l2ProductionType = new L2ProductionType(jobClient, logger, localStagingDir);
+            ProductionType l3ProductionType = new L3ProductionType(jobClient, localStagingDir, logger);
+            return new HadoopProductionService(jobClient, logger, l2ProductionType, l3ProductionType);
+        } catch (IOException e) {
+            throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
+        }
     }
 
     private static JobConf createJobConf(Map<String, String> hadoopProp) {

@@ -2,10 +2,9 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import org.esa.beam.util.math.DoubleList;
 import org.junit.Test;
 
-import java.io.File;
+import java.util.Date;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -17,7 +16,7 @@ public class L3ProcessingRequestTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
             @Override
-            public String[] getInputFiles(ProductionRequest request) throws ProductionException {
+            public String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};
             }
             @Override
@@ -25,7 +24,11 @@ public class L3ProcessingRequestTest {
                 return "/";
             }
         };
-        L3ProcessingRequest processingRequest = l3ProcessingRequestFactory.createProcessingRequest(productionRequest);
+        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests(productionRequest);
+        assertNotNull(processingRequests);
+        assertEquals(1, processingRequests.length);
+
+         L3ProcessingRequest processingRequest = processingRequests[0];
 
         // Assert that derived processing parameters are generated correctly
         assertEquals(4, processingRequest.getInputFiles().length);
@@ -35,7 +38,7 @@ public class L3ProcessingRequestTest {
         assertEquals(4320, (int) processingRequest.getNumRows());
         assertEquals("calvalus-level3-output", processingRequest.getOutputDir());
         assertEquals("/", processingRequest.getStagingDir());
-        assertEquals(true, processingRequest.getOutputStaging());
+        assertEquals(true, processingRequest.isOutputStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
 
         // Assert that derived processing parameters are present in map

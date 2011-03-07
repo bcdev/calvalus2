@@ -7,31 +7,49 @@ package com.bc.calvalus.production;
 * @author Norman
 */
 public class Production {
-    private String id;
-    private String name;
+    private final String id;
+    private final String name;
+    private final boolean outputStaging;
+    private final ProductionRequest productionRequest;
     private String outputUrl;
     private ProductionStatus processingStatus;
     private ProductionStatus stagingStatus;
 
-    public Production(String id, String name) {
+    public Production(String id,
+                      String name,
+                      boolean outputStaging,
+                      ProductionRequest productionRequest) {
         if (id == null) {
             throw new NullPointerException("id");
         }
         if (name == null) {
             throw new NullPointerException("name");
         }
+        if (productionRequest == null) {
+            throw new NullPointerException("productionRequest");
+        }
         this.id = id;
-        this.name = name;
+        this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
+        this.outputStaging = outputStaging; // todo - check: remove param, instead derive from  productionRequest?
+        this.productionRequest = productionRequest;
         this.processingStatus = new ProductionStatus();
-        this.stagingStatus = new ProductionStatus();
+        this.stagingStatus =  outputStaging ? new ProductionStatus(ProductionState.WAITING) : new ProductionStatus();
     }
 
-    public String getId() {
+     public String getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    public boolean isOutputStaging() {
+        return outputStaging;
+    }
+
+    public ProductionRequest getProductionRequest() {
+        return productionRequest;
     }
 
     public String getOutputUrl() {
