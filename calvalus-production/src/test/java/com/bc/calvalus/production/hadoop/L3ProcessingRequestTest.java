@@ -1,13 +1,18 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.binning.BinManager;
+import com.bc.calvalus.processing.beam.BeamL3Config;
+import com.bc.calvalus.processing.beam.FormatterL3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
 import java.util.Date;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class L3ProcessingRequestTest {
     @Test
@@ -60,6 +65,31 @@ public class L3ProcessingRequestTest {
         assertEquals("NOT INVALID", processingParameters.get("maskExpr"));
         assertNotNull(processingParameters.get("fillValue"));
         assertTrue(Double.isNaN((Double) processingParameters.get("fillValue")));
+
+        // Assert that processing config objects are correct
+        BeamL3Config beamL3Config = processingRequest.getBeamL3Config();
+        assertNotNull(beamL3Config);
+        assertEquals(4320, beamL3Config.getBinningContext().getBinningGrid().getNumRows());
+        assertEquals("NOT INVALID", beamL3Config.getVariableContext().getMaskExpr());
+        float[] superSamplingSteps = beamL3Config.getSuperSamplingSteps();
+        assertEquals(1, superSamplingSteps.length);
+        assertEquals(0.5f, superSamplingSteps[0], 1e-5);
+        Geometry regionOfInterest = beamL3Config.getRegionOfInterest();
+        assertNotNull(regionOfInterest);
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
+        assertEquals(3, beamL3Config.getVariableContext().getVariableCount());
+        assertEquals("a", beamL3Config.getVariableContext().getVariableName(0));
+        assertEquals(" b", beamL3Config.getVariableContext().getVariableName(1));
+        assertEquals(" c", beamL3Config.getVariableContext().getVariableName(2));
+        BinManager binManager = beamL3Config.getBinningContext().getBinManager();
+        assertEquals(3, binManager.getAggregatorCount());
+        assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
+
+        FormatterL3Config formatterL3Config = processingRequest.getFormatterL3Config();
+        assertNotNull(formatterL3Config);
+        assertEquals("NetCDF", formatterL3Config.getOutputFormat());
+        assertEquals("/L3_2010-06-01-2010-06-08.nc", formatterL3Config.getOutputFile());
+        assertEquals("Product", formatterL3Config.getOutputType());
     }
 
     static ProductionRequest createValidL3ProductionRequest() {

@@ -40,6 +40,7 @@ public class WpsConfig {
     private static final String OPERATOR_NAME_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.operator']/Data/LiteralData";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.parameters']/Data/ComplexData/parameters";
     private static final String L3_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
+    private static final String FORMATTER_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
     private static final String INPUT_HREF_XPATH = "Reference/@href";
 
@@ -153,7 +154,33 @@ public class WpsConfig {
         }
     }
 
-   public static WpsConfig createFromJobConfig(Configuration hadoopConfiguration) {
+    private String getFormatterParameter() {
+        try {
+            Node node = requestXmlDoc.getNode(FORMATTER_PARAMETERS_XPATH);
+            if (node != null) {
+                NodeDomElement nodeDomElement = new NodeDomElement(node);
+                return nodeDomElement.toXml();
+            } else {
+                return null;
+            }
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression", e);
+        }
+    }
+    //TODO
+//    public static void loadFromXml(String xml, Object object) {
+//        DomElement parametersElement = new NodeDomElement(request.getNode(PARAMETERS_XPATH));
+//
+////        FormatterL3Config formatterL3Config = new FormatterL3Config();
+//
+//        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+//        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
+//        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
+//
+//        domConverter.convertDomToValue(parametersElement, parameterSet);
+//    }
+
+    public static WpsConfig createFromJobConfig(Configuration hadoopConfiguration) {
         final String requestContent = hadoopConfiguration.get("calvalus.request");
         try {
             return new WpsConfig(requestContent);

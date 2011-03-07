@@ -20,12 +20,10 @@ class L3ProductionType implements ProductionType {
     private final HadoopProcessingService processingService;
     private WpsXmlGenerator wpsXmlGenerator;
     private final ExecutorService stagingService;
-    private File localStagingDir;
     private final L3ProcessingRequestFactory processingRequestFactory;
 
     L3ProductionType(HadoopProcessingService processingService, File localStagingDir) throws ProductionException {
         this.processingService = processingService;
-        this.localStagingDir = localStagingDir;
         wpsXmlGenerator = new WpsXmlGenerator();
         stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
         processingRequestFactory = new L3ProcessingRequestFactory(processingService, localStagingDir);
@@ -72,7 +70,7 @@ class L3ProductionType implements ProductionType {
         JobClient jobClient = processingService.getJobClient();
         ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionRequest);
-        L3StagingJob l3StagingJob = new L3StagingJob(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), localStagingDir.getPath());
+        L3StagingJob l3StagingJob = new L3StagingJob(hadoopProduction, l3ProcessingRequests, jobClient.getConf());
         stagingService.submit(l3StagingJob);
         hadoopProduction.setStagingJob(l3StagingJob);
     }

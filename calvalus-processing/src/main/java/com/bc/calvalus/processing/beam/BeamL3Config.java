@@ -163,6 +163,34 @@ public class BeamL3Config {
         }
     }
 
+    public void setNumRows(int numRows) {
+        this.numRows = numRows;
+    }
+
+    public void setSuperSampling(Integer superSampling) {
+        this.superSampling = superSampling;
+    }
+
+    public void setBbox(String bbox) {
+        this.bbox = bbox;
+    }
+
+    public void setRegionWkt(String regionWkt) {
+        this.regionWkt = regionWkt;
+    }
+
+    public void setMaskExpr(String maskExpr) {
+        this.maskExpr = maskExpr;
+    }
+
+    public void setVariables(VariableConfiguration[] variables) {
+        this.variables = variables;
+    }
+
+    public void setAggregators(AggregatorConfiguration[] aggregators) {
+        this.aggregators = aggregators;
+    }
+
     public float[] getSuperSamplingSteps() {
         if (superSampling == null || superSampling < 1) {
             return new float[]{0.5f};

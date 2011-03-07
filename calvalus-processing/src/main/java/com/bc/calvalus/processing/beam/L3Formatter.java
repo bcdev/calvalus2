@@ -18,16 +18,22 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.FileUtil;
+import com.bc.calvalus.processing.shellexec.XmlDoc;
+import com.bc.io.IOUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
@@ -86,9 +92,25 @@ public class L3Formatter extends Configured implements Tool {
 
         // parse request
         final String formattingRequestContent = FileUtil.readFile(requestPath);
+
+        WpsConfig formattingWpsConfig = new WpsConfig(formattingRequestContent);
+        FormatterL3Config formatterL3Config = FormatterL3Config.create(formattingWpsConfig.getRequestXmlDoc());
+        String hadoopJobOutputDir = formattingWpsConfig.getRequestOutputDir();
+
+        String processingWps = loadProcessingWpsXml(hadoopJobOutputDir);
+        BeamL3Config beamL3Config = BeamL3Config.create(new XmlDoc(processingWps));
+
         BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
-        return beamL3FormattingService.format(formattingRequestContent);
+        return beamL3FormattingService.format(formatterL3Config, beamL3Config, hadoopJobOutputDir);
     }
 
+    private String loadProcessingWpsXml(String hadoopJobOutputDir) throws IOException {
+        Path l3OutputDir = new Path(hadoopJobOutputDir);
+        FileSystem fs = l3OutputDir.getFileSystem(getConf());
+        InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copyBytes(is, baos);
+        return baos.toString();
+    }
 }
 

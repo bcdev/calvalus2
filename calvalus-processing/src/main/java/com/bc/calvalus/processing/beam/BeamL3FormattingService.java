@@ -22,13 +22,10 @@ import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
-import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.io.IOUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
@@ -39,17 +36,13 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
-import org.xml.sax.SAXException;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -77,13 +70,7 @@ public class BeamL3FormattingService {
         this.configuration = configuration;
     }
 
-    public int format(String requestContent) throws Exception {
-        WpsConfig wpsConfig = new WpsConfig(requestContent);
-        FormatterL3Config formatterL3Config = FormatterL3Config.create(wpsConfig.getRequestXmlDoc());
-        return format(formatterL3Config, wpsConfig.getRequestOutputDir(), "");
-    }
-
-    public int format(FormatterL3Config formatterL3Config, String jobOutputDir, String processingRequest) throws Exception {
+    public int format(FormatterL3Config formatterL3Config, BeamL3Config l3Config, String hadoopJobOutputDir) throws Exception {
         outputType = formatterL3Config.getOutputType();
 
         outputFile = new File(formatterL3Config.getOutputFile());
@@ -109,9 +96,7 @@ public class BeamL3FormattingService {
             throw new IllegalArgumentException("Unknown output format: " + outputFormat);
         }
 
-        l3OutputDir = new Path(jobOutputDir);
-        BeamL3Config l3Config = readL3Config(processingRequest);
-
+        l3OutputDir = new Path(hadoopJobOutputDir);
         binningContext = l3Config.getBinningContext();
         final BinManager binManager = binningContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
@@ -134,20 +119,6 @@ public class BeamL3FormattingService {
         }
 
         return 0;
-    }
-
-    private BeamL3Config readL3Config(String processingRequest) throws IOException, SAXException, ParserConfigurationException {
-        String wpsContent;
-        if (processingRequest == null || processingRequest.isEmpty()) {
-            FileSystem fs = l3OutputDir.getFileSystem(configuration);
-            InputStream is = fs.open(new Path(l3OutputDir, BeamL3Config.L3_REQUEST_FILENAME));
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            IOUtils.copyBytes(is, baos);
-            wpsContent = baos.toString();
-        } else {
-            wpsContent = processingRequest;
-        }
-        return BeamL3Config.create(new XmlDoc(wpsContent));
     }
 
     private void computeOutputRegion(BeamL3Config l3Config) {
