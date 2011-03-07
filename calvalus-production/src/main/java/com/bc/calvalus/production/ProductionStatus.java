@@ -6,14 +6,13 @@ package com.bc.calvalus.production;
  * @author Norman
  */
 public class ProductionStatus {
-    private static final float EPS = 1.0E-04f;
-    private ProductionState state;
-    private float progress;
-    private String message;
+    public final static ProductionStatus UNKNOWN = new ProductionStatus(ProductionState.UNKNOWN);
+    public final static ProductionStatus WAITING = new ProductionStatus(ProductionState.WAITING);
 
-    public ProductionStatus() {
-        this(ProductionState.UNKNOWN);
-    }
+    private static final float EPS = 1.0E-04f;
+    private final ProductionState state;
+    private final float progress;
+    private final String message;
 
     public ProductionStatus(ProductionState state) {
         this(state, state.isDone() ? 1.0f : 0.0f);

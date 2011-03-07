@@ -9,7 +9,6 @@ import org.apache.hadoop.mapreduce.JobID;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -18,20 +17,18 @@ import java.util.logging.Logger;
  * @author Norman
  */
 class L3ProductionType implements ProductionType {
+    private final HadoopProcessingService processingService;
     private WpsXmlGenerator wpsXmlGenerator;
     private final ExecutorService stagingService;
-    private final JobClient jobClient;
     private File localStagingDir;
-    private Logger logger;
     private final L3ProcessingRequestFactory processingRequestFactory;
 
-    L3ProductionType(JobClient jobClient, File localStagingDir, Logger logger) throws ProductionException {
-        this.logger = logger;
+    L3ProductionType(HadoopProcessingService processingService, File localStagingDir) throws ProductionException {
+        this.processingService = processingService;
         this.localStagingDir = localStagingDir;
-        this.jobClient = jobClient;
         wpsXmlGenerator = new WpsXmlGenerator();
         stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
-        processingRequestFactory = new HadoopL3ProcessingRequestFactory(jobClient, localStagingDir);
+        processingRequestFactory = new L3ProcessingRequestFactory(processingService, localStagingDir);
     }
 
     @Override
@@ -61,6 +58,7 @@ class L3ProductionType implements ProductionType {
 
     private JobID submitL3Job(String wpsXml) throws ProductionException {
         try {
+            JobClient jobClient = processingService.getJobClient();
             BeamJobService beamJobService = new BeamJobService(jobClient);
             return beamJobService.submitJob(wpsXml);
         } catch (Exception e) {
@@ -71,11 +69,10 @@ class L3ProductionType implements ProductionType {
 
     @Override
     public void stageProduction(HadoopProduction hadoopProduction) throws ProductionException {
+        JobClient jobClient = processingService.getJobClient();
         ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
-
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionRequest);
-
-        L3StagingJob l3StagingJob = new L3StagingJob(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), localStagingDir.getPath(), logger);
+        L3StagingJob l3StagingJob = new L3StagingJob(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), localStagingDir.getPath());
         stagingService.submit(l3StagingJob);
         hadoopProduction.setStagingJob(l3StagingJob);
     }

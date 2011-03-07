@@ -32,8 +32,8 @@ public class Production {
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
         this.outputStaging = outputStaging; // todo - check: remove param, instead derive from  productionRequest?
         this.productionRequest = productionRequest;
-        this.processingStatus = new ProductionStatus();
-        this.stagingStatus =  outputStaging ? new ProductionStatus(ProductionState.WAITING) : new ProductionStatus();
+        this.processingStatus = ProductionStatus.UNKNOWN;
+        this.stagingStatus =  outputStaging ? ProductionStatus.WAITING : ProductionStatus.UNKNOWN;
     }
 
      public String getId() {

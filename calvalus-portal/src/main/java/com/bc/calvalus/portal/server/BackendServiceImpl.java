@@ -26,7 +26,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -184,13 +183,13 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     ServletContext servletContext = getServletContext();
                     String className = servletContext.getInitParameter(CALVALUS_PORTAL_PRODUCTION_SERVICE_FACTORY_CLASS);
                     if (className != null) {
+                        initLogger(servletContext);
+                        Map<String, String> serviceConfiguration = getServiceConfiguration(servletContext);
                         try {
-                            Map<String, String> serviceConfiguration = getServiceConfiguration(servletContext);
-                            Logger logger = createLogger(servletContext);
                             Class<?> productionServiceFactoryClass = Class.forName(className);
                             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
                             PortalConfig portalConfig = new PortalConfig(servletContext);
-                            productionService = productionServiceFactory.create(serviceConfiguration, logger,
+                            productionService = productionServiceFactory.create(serviceConfiguration,
                                                                                 portalConfig.getStagingPath(),
                                                                                 portalConfig.getLocalStagingDir());
                         } catch (Exception e) {
@@ -205,6 +204,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    private void initLogger(ServletContext servletContext) {
+        Logger logger = Logger.getLogger("com.bc.calvalus");
+        logger.addHandler(new ServletContextLogHandler(servletContext));
+    }
+
     private static Map<String, String> getServiceConfiguration(ServletContext servletContext) {
         Map<String, String> map = new HashMap<String, String>();
         Enumeration elements = servletContext.getInitParameterNames();
@@ -214,12 +218,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             map.put(name, value);
         }
         return map;
-    }
-
-    private static Logger createLogger(ServletContext servletContext) {
-        Logger logger = Logger.getLogger("com.bc.calvalus");
-        logger.addHandler(new ServletContextLogHandler(servletContext));
-        return logger;
     }
 
 }

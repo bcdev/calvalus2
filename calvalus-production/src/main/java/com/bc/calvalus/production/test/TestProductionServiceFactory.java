@@ -6,14 +6,13 @@ import com.bc.calvalus.production.ProductionServiceFactory;
 
 import java.io.File;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Factory for the {@link TestProductionService}.
  */
 public class TestProductionServiceFactory implements ProductionServiceFactory {
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger, String relStagingUrl, File localStagingDir) throws ProductionException {
+    public ProductionService create(Map<String, String> serviceConfiguration, String relStagingUrl, File localStagingDir) throws ProductionException {
         return new TestProductionService(relStagingUrl, localStagingDir);
     }
 }

@@ -8,7 +8,7 @@ public class ProductionStatusTest {
 
     @Test
     public void testConstructors() {
-        ProductionStatus unknown = new ProductionStatus();
+        ProductionStatus unknown = ProductionStatus.UNKNOWN;
         assertEquals(ProductionState.UNKNOWN, unknown.getState());
         assertEquals("", unknown.getMessage());
         assertEquals(0.0f, unknown.getProgress(), 1e-5);
@@ -52,9 +52,9 @@ public class ProductionStatusTest {
 
     @Test
     public void testEquals() {
-        ProductionStatus status = new ProductionStatus();
+        ProductionStatus status = ProductionStatus.UNKNOWN;
         assertTrue(status.equals(status));
-        assertTrue(status.equals(new ProductionStatus()));
+        assertTrue(status.equals(new ProductionStatus(ProductionState.UNKNOWN)));
         assertTrue(new ProductionStatus(ProductionState.COMPLETED).equals(
                 new ProductionStatus(ProductionState.COMPLETED)));
         assertTrue(new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, "Dabei!").equals(

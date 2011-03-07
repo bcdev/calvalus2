@@ -15,7 +15,7 @@ public class WpsXmlGeneratorTest {
 
     @Test
     public void testL3WpsXml() throws ProductionException {
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(null, null) {   // todo
             @Override
             public String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
                 return new String[]{"fileA", "fileB", "fileC"};

@@ -9,10 +9,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionState;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobStatus;
-import org.apache.hadoop.mapred.RunningJob;
+import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.File;
@@ -33,29 +30,27 @@ public class HadoopProductionService implements ProductionService {
 
     public static final File PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
     private static final int HADOOP_OBSERVATION_PERIOD = 2000;
-    private final JobClient jobClient;
-    private final HadoopProductionDatabase database;
-    // todo - Persist
-    private final Logger logger;
+
+    private final ProcessingService processingService;
+    private final HadoopProductionDatabase productionDatabase;
+    private final Logger logger = Logger.getLogger("com.bc.calvalus");
     private final Map<String, ProductionType> productionTypeMap;
 
-    public HadoopProductionService(JobClient jobClient, Logger logger,
+    public HadoopProductionService(ProcessingService processingService,
                                    ProductionType... productionTypes) throws ProductionException {
-        this.logger = logger;
-        this.jobClient = jobClient;
-        this.database = new HadoopProductionDatabase();
 
-        initDatabase();
+        this.processingService = processingService;
+        this.productionDatabase = new HadoopProductionDatabase();  // todo - add as parameter
+        this.productionTypeMap = new HashMap<String, ProductionType>();
+        for (ProductionType productionType : productionTypes) {
+            this.productionTypeMap.put(productionType.getName(), productionType);
+        }
+
+        loadProductions();
 
         Timer hadoopObservationTimer = new Timer(true);
         hadoopObservationTimer.scheduleAtFixedRate(new HadoopObservationTask(),
                                                    HADOOP_OBSERVATION_PERIOD, HADOOP_OBSERVATION_PERIOD);
-
-
-        productionTypeMap = new HashMap<String, ProductionType>();
-        for (ProductionType productionType : productionTypes) {
-            productionTypeMap.put(productionType.getName(), productionType);
-        }
     }
 
     @Override
@@ -86,7 +81,7 @@ public class HadoopProductionService implements ProductionService {
 
     @Override
     public Production[] getProductions(String filter) throws ProductionException {
-        return database.getProductions();
+        return productionDatabase.getProductions();
     }
 
     @Override
@@ -97,7 +92,7 @@ public class HadoopProductionService implements ProductionService {
                                                         productionRequest.getProductionType()));
         }
         HadoopProduction production = productionType.createProduction(productionRequest);
-        database.addProduction(production);
+        productionDatabase.addProduction(production);
         return new ProductionResponse(production);
     }
 
@@ -105,7 +100,7 @@ public class HadoopProductionService implements ProductionService {
     public void stageProductions(String[] productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
-            HadoopProduction production = database.getProduction(productionId);
+            HadoopProduction production = productionDatabase.getProduction(productionId);
             if (production != null) {
                 try {
                     ProductionType productionType = productionTypeMap.get(production.getProductionRequest().getProductionType());
@@ -135,69 +130,66 @@ public class HadoopProductionService implements ProductionService {
     private void requestProductionKill(String[] productionIds, HadoopProduction.Action action) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
-            HadoopProduction production = database.getProduction(productionId);
+            HadoopProduction production = productionDatabase.getProduction(productionId);
             if (production != null) {
                 production.setAction(action);
-                try {
-                    StagingJob stagingJob = production.getStagingJob();
-                    if (stagingJob != null && !stagingJob.isCancelled()) {
-                        stagingJob.cancel();
-                        production.setStagingJob(null);
-                    }
-
-                    JobID jobId = production.getJobId();
-                    org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
-                    RunningJob runningJob = jobClient.getJob(oldJobId);
-                    if (runningJob != null) {
-                        runningJob.killJob();
-                        count++;
-                    }
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, String.format("Failed to cancel production '%s': %s",
-                                                           production.getId(), e.getMessage()), e);
+                StagingJob stagingJob = production.getStagingJob();
+                if (stagingJob != null && !stagingJob.isCancelled()) {
+                    stagingJob.cancel();
+                    production.setStagingJob(null);
                 }
+
+                IOException error = null;
+                JobID[] jobIds = production.getJobIds();
+                for (JobID jobId : jobIds) {
+                    try {
+                        processingService.killJob(jobId);
+                    } catch (IOException e) {
+                        logger.log(Level.SEVERE, String.format("Failed to kill Hadoop job '%s' of production '%s': %s",
+                                                               jobId, production.getId(), e.getMessage()), e);
+                        error = error == null ? e : error;
+                    }
+                }
+                count++;
+            } else {
+                logger.warning(String.format("Failed to kill unknown production '%s'", productionId));
             }
         }
         if (count < productionIds.length) {
-            throw new ProductionException(String.format("Only %d of %d production(s) have been deleted.",
+            throw new ProductionException(String.format("Only %d of %d production(s) have been killed. See server log for details.",
                                                         count, productionIds.length));
         }
     }
 
-    private void initDatabase() {
+    private void loadProductions() {
         System.out.println("PRODUCTIONS_DB_FILE = " + PRODUCTIONS_DB_FILE.getAbsolutePath());
         try {
-            database.load(PRODUCTIONS_DB_FILE);
+            productionDatabase.load(PRODUCTIONS_DB_FILE);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
     }
 
-
-    private Map<JobID, JobStatus> getJobStatusMap() throws IOException {
-        JobStatus[] jobStatuses = jobClient.getAllJobs();
-        HashMap<JobID, JobStatus> jobStatusMap = new HashMap<JobID, JobStatus>();
-        for (JobStatus jobStatus : jobStatuses) {
-            jobStatusMap.put(jobStatus.getJobID(), jobStatus);
-        }
-        return jobStatusMap;
-    }
-
-    private void updateProductionsState() throws IOException, ProductionException {
-        Map<JobID, JobStatus> jobStatusMap = getJobStatusMap();
-        HadoopProduction[] productions = database.getProductions();
+    void updateProductionsState() throws IOException, ProductionException {
+        Map<Object, ProductionStatus> jobStatusMap = processingService.getJobStatusMap();
+        HadoopProduction[] productions = productionDatabase.getProductions();
 
         // Update state of all registered productions
         for (HadoopProduction production : productions) {
-            JobStatus jobStatus = jobStatusMap.get(production.getJobId());
-            production.setProductionStatus(jobStatus);
+            JobID[] jobIds = production.getJobIds();
+            ProductionStatus[] jobStatuses = new ProductionStatus[jobIds.length];
+            for (int i = 0; i < jobIds.length; i++) {
+                JobID jobId = jobIds[i];
+                jobStatuses[i] = jobStatusMap.get(jobId);
+            }
+            production.setProcessingStatus(getProcessingStatus(jobStatuses));
         }
 
         // Now try to delete productions
         for (HadoopProduction production : productions) {
             if (HadoopProduction.Action.DELETE.equals(production.getAction())) {
                 if (production.getProcessingStatus().isDone()) {
-                    database.removeProduction(production);
+                    productionDatabase.removeProduction(production);
                 }
             }
         }
@@ -214,7 +206,40 @@ public class HadoopProductionService implements ProductionService {
         }
 
         // write to persistent storage
-        database.store(PRODUCTIONS_DB_FILE);
+        productionDatabase.store(PRODUCTIONS_DB_FILE);
+    }
+
+    static ProductionStatus getProcessingStatus(ProductionStatus[] jobStatuses) {
+        if (jobStatuses.length == 1) {
+            return jobStatuses[0];
+        } else if (jobStatuses.length > 1) {
+            float progress = 0f;
+            for (ProductionStatus jobStatus : jobStatuses) {
+                progress += jobStatus.getProgress();
+            }
+            progress /= jobStatuses.length;
+            for (ProductionStatus jobStatus : jobStatuses) {
+                if (jobStatus.getState() == ProductionState.ERROR
+                        || jobStatus.getState() == ProductionState.CANCELLED) {
+                    return new ProductionStatus(jobStatus.getState(), progress, jobStatus.getMessage());
+                }
+            }
+
+            int numCompleted = 0;
+            int numWaiting = 0;
+            for (ProductionStatus jobStatus : jobStatuses) {
+                if (jobStatus.getState() == ProductionState.COMPLETED) {
+                    numCompleted++;
+                } else if (jobStatus.getState() == ProductionState.WAITING) {
+                    numWaiting++;
+                }
+            }
+            return new ProductionStatus(numCompleted == jobStatuses.length
+                                                ? ProductionState.COMPLETED : numWaiting == jobStatuses.length
+                    ? ProductionState.WAITING : ProductionState.IN_PROGRESS,
+                                        progress);
+        }
+        return ProductionStatus.UNKNOWN;
     }
 
     private class HadoopObservationTask extends TimerTask {

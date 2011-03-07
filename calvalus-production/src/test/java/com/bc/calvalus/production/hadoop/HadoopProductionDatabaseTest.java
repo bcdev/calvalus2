@@ -59,7 +59,7 @@ public class HadoopProductionDatabaseTest {
         assertEquals(new JobID("34627598547", 11).toString(), restoredProd1.getJobIds()[0].toString());
         assertEquals(false, restoredProd1.isOutputStaging());
         assertEquals(new ProductionStatus(ProductionState.IN_PROGRESS, 0.6f), restoredProd1.getProcessingStatus());
-        assertEquals(new ProductionStatus(), restoredProd1.getStagingStatus());
+        assertEquals(ProductionStatus.UNKNOWN, restoredProd1.getStagingStatus());
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
         assertEquals("5", restoredProd1.getProductionRequest().getProductionParameter("a"));
@@ -71,7 +71,7 @@ public class HadoopProductionDatabaseTest {
         assertEquals(new JobID("34627598547", 426).toString(), restoredProd2.getJobIds()[0].toString());
         assertEquals(false, restoredProd2.isOutputStaging());
         assertEquals(new ProductionStatus(ProductionState.COMPLETED), restoredProd2.getProcessingStatus());
-        assertEquals(new ProductionStatus(), restoredProd2.getStagingStatus());
+        assertEquals(ProductionStatus.UNKNOWN, restoredProd2.getStagingStatus());
         assertNotNull(restoredProd2.getProductionRequest());
         assertEquals("test", restoredProd2.getProductionRequest().getProductionType());
         assertEquals("9", restoredProd2.getProductionRequest().getProductionParameter("a"));

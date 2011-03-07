@@ -8,6 +8,6 @@ import java.util.logging.Logger;
  * Responsible for creating ProductionService instances.
  */
 public interface ProductionServiceFactory {
-    ProductionService create(Map<String, String> serviceConfiguration, Logger logger,
+    ProductionService create(Map<String, String> serviceConfiguration,
                              String relStagingUrl, File localStagingDir) throws ProductionException;
 }

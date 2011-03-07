@@ -5,18 +5,28 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.Math.*;
 
-abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
+class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
+    private final ProcessingService processingService;
+    private final File localStagingDir;
 
-    protected L3ProcessingRequestFactory() {
+    L3ProcessingRequestFactory(ProcessingService processingService, File localStagingDir) {
+        this.processingService = processingService;
+        this.localStagingDir = localStagingDir;
     }
 
     @Override
@@ -66,7 +76,19 @@ abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
 
-    public abstract String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException;
+    @Override
+     public String getOutputDir(ProductionRequest request) throws ProductionException {
+         String outputDir = super.getOutputDir(request);
+         return processingService.getDataOutputRootPath()  + "/" + outputDir;
+     }
+
+     @Override
+     public String getStagingDir(ProductionRequest request) throws ProductionException {
+         String outputDir = super.getOutputDir(request);
+         return new File(new File(localStagingDir, "ewa"), outputDir).getPath();
+     }
+
+
 
     public Double getFillValue(ProductionRequest request) throws ProductionException {
         return getDouble(request, "fillValue", null);
@@ -113,4 +135,37 @@ abstract class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             return numRows + 1;
         }
     }
+
+    String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
+         String eoDataPath = processingService.getDataArchiveRootPath();
+         String inputProductSetId = request.getProductionParameterSafe("inputProductSetId");
+         List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
+         try {
+             List<String> inputFileList = new ArrayList<String>();
+             for (String dayPath : dayPathList) {
+                 String[] strings = processingService.listFilePaths(eoDataPath + "/" + dayPath);
+                 inputFileList.addAll(Arrays.asList(strings));
+             }
+             return inputFileList.toArray(new String[inputFileList.size()]);
+         } catch (IOException e) {
+             throw new ProductionException("Failed to compute input file list.", e);
+         }
+     }
+
+     static List<String> getDayPathList(Date start, Date stop, String prefix) {
+         Calendar startCal = ProductData.UTC.createCalendar();
+         Calendar stopCal = ProductData.UTC.createCalendar();
+         startCal.setTime(start);
+         stopCal.setTime(stop);
+         List<String> list = new ArrayList<String>();
+         do {
+             String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
+             if (dateString.startsWith(prefix)) {
+                 list.add(dateString);
+             }
+             startCal.add(Calendar.DAY_OF_WEEK, 1);
+         } while (!startCal.after(stopCal));
+
+         return list;
+     }
 }

@@ -22,24 +22,22 @@ class L3StagingJob extends StagingJob {
     private final Configuration hadoopConfiguration;
     private final String stagingDir;
     private final String outputFormat;
-    private final Logger logger;
     private float progress;
 
     public L3StagingJob(HadoopProduction production,
                         L3ProcessingRequest[] processingRequests,
                         Configuration hadoopConfiguration,
-                        String stagingDir,
-                        Logger logger) {
+                        String stagingDir) {
         this.production = production;
         this.processingRequests = processingRequests;
         this.hadoopConfiguration = hadoopConfiguration;
         this.stagingDir = stagingDir;
         this.outputFormat = production.getProductionRequest().getProductionParameter("outputFormat");
-        this.logger = logger;
     }
 
     @Override
     public L3StagingJob call() throws Exception {
+        Logger logger = Logger.getLogger("com.bc.calvalus");
         progress = 0f;
         for (int i = 0; i < processingRequests.length; i++) {
             L3ProcessingRequest processingRequest = processingRequests[i];

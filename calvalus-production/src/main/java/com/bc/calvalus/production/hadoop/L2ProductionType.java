@@ -1,7 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.apache.hadoop.conf.Configuration;
@@ -22,21 +21,18 @@ import java.util.logging.Logger;
 
 /**
  * A production type used for generating one or more Level-2 products.
+ *
  * @author MarcoZ
  * @author Norman
-*/
+ */
 public class L2ProductionType implements ProductionType {
-    private WpsXmlGenerator wpsXmlGenerator;
+    private HadoopProcessingService processingService;
     private ExecutorService stagingService;
-    private Logger logger;
     private File localStagingDir;
-    private JobClient jobClient;
 
-    L2ProductionType(JobClient jobClient, Logger logger, File localStagingDir) throws ProductionException {
-        this.logger = logger;
+    L2ProductionType(HadoopProcessingService processingService, File localStagingDir) throws ProductionException {
         this.localStagingDir = localStagingDir;
-        this.jobClient = jobClient;
-        wpsXmlGenerator = new WpsXmlGenerator();
+        this.processingService = processingService;
         stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
     }
 
@@ -53,7 +49,7 @@ public class L2ProductionType implements ProductionType {
 
     @Override
     public void stageProduction(HadoopProduction p) throws ProductionException {
-
+        JobClient jobClient = processingService.getJobClient();
         JobID jobId = p.getJobId();
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
         try {

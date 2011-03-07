@@ -14,7 +14,7 @@ public class L3ProcessingRequestTest {
     public void testGetProcessingParameters() throws ProductionException {
 
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory() {
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(null, null) {    // todo
             @Override
             public String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
                 return new String[]{"F1.N1", "F2.N1", "F3.N1", "F4.N1"};

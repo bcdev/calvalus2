@@ -9,7 +9,6 @@ import org.apache.hadoop.mapred.JobConf;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Creates a hadoop production service.
@@ -17,7 +16,7 @@ import java.util.logging.Logger;
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
 
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration, Logger logger,
+    public ProductionService create(Map<String, String> serviceConfiguration,
                                     String relStagingUrl, File localStagingDir) throws ProductionException {
 
         // Prevent Windows from using ';' as path separator
@@ -26,9 +25,10 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = createJobConf(serviceConfiguration);
         try {
             JobClient jobClient = new JobClient(jobConf);
-            ProductionType l2ProductionType = new L2ProductionType(jobClient, logger, localStagingDir);
-            ProductionType l3ProductionType = new L3ProductionType(jobClient, localStagingDir, logger);
-            return new HadoopProductionService(jobClient, logger, l2ProductionType, l3ProductionType);
+            HadoopProcessingService hadoopProcessingService = new HadoopProcessingService(jobClient);
+            ProductionType l2ProductionType = new L2ProductionType(hadoopProcessingService, localStagingDir);
+            ProductionType l3ProductionType = new L3ProductionType(hadoopProcessingService, localStagingDir);
+            return new HadoopProductionService(hadoopProcessingService, l2ProductionType, l3ProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
