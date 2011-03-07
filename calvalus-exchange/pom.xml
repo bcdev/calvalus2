@@ -18,6 +18,20 @@
     <description>Data ingestion, post-processing and staging for Calvalus.</description>
 
     <dependencies>
+        <!--  Calvalus -->
+
+        <!--<dependency>-->
+            <!--<groupId>com.bc.calvalus</groupId>-->
+            <!--<artifactId>calvalus-commons</artifactId>-->
+        <!--</dependency>-->
+
+        <!--  Hadoop -->
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+        </dependency>
+
         <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
