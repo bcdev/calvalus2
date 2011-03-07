@@ -1,9 +1,4 @@
-package com.bc.calvalus.production.hadoop;
-
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
-import org.apache.hadoop.mapreduce.JobID;
+package com.bc.calvalus.production;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,39 +12,71 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A database for productions.
+ * A plain text database for productions.
  *
  * @author Norman
  */
-class HadoopProductionDatabase {
+public class SimpleProductionStore implements ProductionStore {
 
-    private final List<HadoopProduction> productionsList;
-    private final Map<String, HadoopProduction> productionsMap;
+    public static final File PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
 
-    public HadoopProductionDatabase() {
-        this.productionsList = new ArrayList<HadoopProduction>();
-        this.productionsMap = new HashMap<String, HadoopProduction>();
+    private final List<Production> productionsList;
+    private final Map<String, Production> productionsMap;
+    private final JobIdFormat idFormat;
+
+    public SimpleProductionStore() {
+        this(new JobIdFormat() {
+            @Override
+            public String format(Object jobId) {
+                return jobId.toString();
+            }
+
+            @Override
+            public Object parse(String text) {
+                return text;
+            }
+        });
     }
 
-    public synchronized void addProduction(HadoopProduction hadoopProduction) {
-        productionsList.add(hadoopProduction);
-        productionsMap.put(hadoopProduction.getId(), hadoopProduction);
+    public SimpleProductionStore(JobIdFormat idFormat) {
+        this.idFormat = idFormat;
+        this.productionsList = new ArrayList<Production>();
+        this.productionsMap = new HashMap<String, Production>();
     }
 
-    public synchronized void removeProduction(HadoopProduction hadoopProduction) {
-        productionsList.remove(hadoopProduction);
-        productionsMap.remove(hadoopProduction.getId());
+    @Override
+    public synchronized void addProduction(Production production) {
+        productionsList.add(production);
+        productionsMap.put(production.getId(), production);
     }
 
-    public synchronized HadoopProduction[] getProductions() {
-        return productionsList.toArray(new HadoopProduction[productionsList.size()]);
+    @Override
+    public synchronized void removeProduction(Production production) {
+        productionsList.remove(production);
+        productionsMap.remove(production.getId());
     }
 
-    public synchronized HadoopProduction getProduction(String productionId) {
+    @Override
+    public synchronized Production[] getProductions() {
+        return productionsList.toArray(new Production[productionsList.size()]);
+    }
+
+    @Override
+    public synchronized Production getProduction(String productionId) {
         return productionsMap.get(productionId);
     }
 
-    public synchronized void load(File databaseFile) throws IOException {
+    @Override
+    public synchronized void load() throws IOException {
+        load(PRODUCTIONS_DB_FILE);
+    }
+
+    @Override
+    public synchronized void store() throws IOException {
+        store(PRODUCTIONS_DB_FILE);
+    }
+
+    private void load(File databaseFile) throws IOException {
         if (databaseFile.exists()) {
             BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
             try {
@@ -60,7 +87,7 @@ class HadoopProductionDatabase {
         }
     }
 
-    public synchronized void store(File databaseFile) throws IOException {
+    private void store(File databaseFile) throws IOException {
         // System.out.printf("%s: Storing %d production(s) to %s%n", this, productionsList.size(), databaseFile.getAbsolutePath());
         File bakFile = new File(databaseFile.getParentFile(), databaseFile.getName() + ".bak");
         bakFile.delete();
@@ -73,22 +100,23 @@ class HadoopProductionDatabase {
         }
     }
 
-    public synchronized void load(BufferedReader reader) throws IOException {
+    void load(BufferedReader reader) throws IOException {
         String line;
         while ((line = reader.readLine()) != null) {
             String[] tokens = line.split("\t");
-            String id = tokens[0];
-            String name = tokens[1];
-            boolean outputStaging = Boolean.parseBoolean(tokens[2]);
-            int[] offpt = new int[]{3};
-            JobID[] jobIDs = decodeJobIdsTSV(tokens, offpt);
+            String id = decodeTSV(tokens[0]);
+            String name = decodeTSV(tokens[1]);
+            String user = decodeTSV(tokens[2]);
+            boolean outputStaging = Boolean.parseBoolean(tokens[3]);
+            int[] offpt = new int[]{4};
+            Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
             ProductionStatus productionStatus = decodeProductionStatusTSV(tokens, offpt);
             ProductionStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
 
-            HadoopProduction hadoopProduction = new HadoopProduction(id, name,
-                                                                     outputStaging, jobIDs,
-                                                                     productionRequest);
+            Production hadoopProduction = new Production(id, name, user,
+                                                         outputStaging, jobIDs,
+                                                         productionRequest);
 
             hadoopProduction.setProcessingStatus(productionStatus);
             hadoopProduction.setStagingStatus(stagingStatus);
@@ -96,43 +124,43 @@ class HadoopProductionDatabase {
         }
     }
 
-    public synchronized void store(PrintWriter writer) {
-        for (HadoopProduction production : productionsList) {
-            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\tEOR\n",
-                          production.getId(),
-                          production.getName(),
+    void store(PrintWriter writer) {
+        for (Production production : productionsList) {
+            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tEoR\n",
+                          encodeTSV(production.getId()),
+                          encodeTSV(production.getName()),
+                          encodeTSV(production.getUser()),
                           production.isOutputStaging(),
                           encodeJobIdsTSV(production.getJobIds()),
                           encodeProductionRequestTSV(production.getProductionRequest()),
                           encodeProductionStatusTSV(production.getProcessingStatus()),
-                          encodeProductionStatusTSV(production.getStagingStatus())
-            );
+                          encodeProductionStatusTSV(production.getStagingStatus()));
         }
     }
 
 
-    private static JobID[] decodeJobIdsTSV(String[] tokens, int[] offpt) {
+    private Object[] decodeJobIdsTSV(String[] tokens, int[] offpt) {
         int off = offpt[0];
         int numJobs = Integer.parseInt(tokens[off++]);
-        JobID[] jobIds = new JobID[numJobs];
+        Object[] jobIds = new Object[numJobs];
         for (int i = 0; i < numJobs; i++) {
-            jobIds[i] = JobID.forName(tokens[off++]);
+            jobIds[i] = idFormat.parse(decodeTSV(tokens[off++]));
         }
         offpt[0] = off;
         return jobIds;
     }
 
-    private static String encodeJobIdsTSV(JobID[] jobIds) {
+    private String encodeJobIdsTSV(Object[] jobIds) {
         StringBuilder sb = new StringBuilder();
         sb.append(jobIds.length);
-        for (JobID jobId : jobIds) {
+        for (Object jobId : jobIds) {
             sb.append("\t");
-            sb.append(jobId.toString());
+            sb.append(encodeTSV(idFormat.format(jobId)));
         }
         return sb.toString();
     }
 
-    static String encodeProductionRequestTSV(ProductionRequest productionRequest) {
+    String encodeProductionRequestTSV(ProductionRequest productionRequest) {
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
 
         StringBuilder sb = new StringBuilder();

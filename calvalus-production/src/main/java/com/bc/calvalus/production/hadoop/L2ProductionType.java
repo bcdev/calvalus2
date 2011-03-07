@@ -1,8 +1,11 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.StreamingProductReader;
+import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -15,9 +18,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -27,13 +27,11 @@ import java.util.logging.Logger;
  */
 public class L2ProductionType implements ProductionType {
     private HadoopProcessingService processingService;
-    private ExecutorService stagingService;
-    private File localStagingDir;
+    private String localStagingDir;
 
-    L2ProductionType(HadoopProcessingService processingService, File localStagingDir) throws ProductionException {
+    L2ProductionType(HadoopProcessingService processingService, String localStagingDir) throws ProductionException {
         this.localStagingDir = localStagingDir;
         this.processingService = processingService;
-        stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
     }
 
 
@@ -43,17 +41,17 @@ public class L2ProductionType implements ProductionType {
     }
 
     @Override
-    public HadoopProduction createProduction(ProductionRequest pdr) throws ProductionException {
+    public Production orderProduction(ProductionRequest productionRequest) throws ProductionException {
         throw new ProductionException("L2 production not implemented yet.");
     }
 
     @Override
-    public void stageProduction(HadoopProduction p) throws ProductionException {
+    public Staging stageProduction(Production production) throws ProductionException {
         JobClient jobClient = processingService.getJobClient();
-        JobID jobId = p.getJobId();
+        Object[] jobIds = production.getJobIds();
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
         try {
-            RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.downgrade(jobId));
+            RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.downgrade((JobID) jobIds[0]));
             String jobFile = job.getJobFile();
             // System.out.printf("jobFile = %n%s%n", jobFile);
             Configuration configuration = new Configuration(jobClient.getConf());
@@ -90,7 +88,7 @@ public class L2ProductionType implements ProductionType {
         } catch (Exception e) {
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
-
+        return null; // todo
     }
 
 }

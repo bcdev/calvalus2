@@ -2,9 +2,8 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestProcessingService;
 import org.junit.Test;
-
-import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -15,23 +14,15 @@ public class WpsXmlGeneratorTest {
 
     @Test
     public void testL3WpsXml() throws ProductionException {
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(null, null) {   // todo
-            @Override
-            public String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
-                return new String[]{"fileA", "fileB", "fileC"};
-            }
-            @Override
-            public String getStagingDir(ProductionRequest request) throws ProductionException {
-                return  "/";
-            }
-        };
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService(),
+                                                                                               "/opt/tomcat/webapps/calvalus/staging");
         ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests(productionRequest);
+        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
 
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
         assertNotNull(xml);
 
-        // System.out.println(xml);
+         System.out.println(xml);
 
         assertTrue(xml.contains("<ows:Identifier>ID_pi-pa-po</ows:Identifier>"));
         assertTrue(xml.contains("<ows:Title>Wonderful L3</ows:Title>"));
@@ -43,12 +34,13 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<wps:LiteralData>4.9-SNAPSHOT</wps:LiteralData>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.output.dir</ows:Identifier>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"calvalus-level3-output\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/output/ewa-A25F/out\"/>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.input</ows:Identifier>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"fileA\"/>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"fileB\"/>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"fileC\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F2.N1\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F3.N1\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F4.N1\"/>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.l2.operator</ows:Identifier>"));
         assertTrue(xml.contains("<wps:LiteralData>BandMaths</wps:LiteralData>"));
@@ -65,4 +57,5 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<superSampling>1</superSampling>"));
 
     }
+
 }

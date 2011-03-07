@@ -12,7 +12,9 @@ import java.util.Map;
  */
 public class TestProductionServiceFactory implements ProductionServiceFactory {
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration, String relStagingUrl, File localStagingDir) throws ProductionException {
+    public ProductionService create(Map<String, String> serviceConfiguration,
+                                    String relStagingUrl,
+                                    String localStagingDir) throws ProductionException {
         return new TestProductionService(relStagingUrl, localStagingDir);
     }
 }

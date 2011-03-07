@@ -1,6 +1,4 @@
-package com.bc.calvalus.production.hadoop;
-
-import com.bc.calvalus.production.ProductionStatus;
+package com.bc.calvalus.production;
 
 import java.io.IOException;
 import java.util.Map;

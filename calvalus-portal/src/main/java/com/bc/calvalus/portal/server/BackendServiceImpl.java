@@ -191,7 +191,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                             PortalConfig portalConfig = new PortalConfig(servletContext);
                             productionService = productionServiceFactory.create(serviceConfiguration,
                                                                                 portalConfig.getStagingPath(),
-                                                                                portalConfig.getLocalStagingDir());
+                                                                                portalConfig.getLocalStagingDir().getPath());
                         } catch (Exception e) {
                             throw new ServletException(e);
                         }

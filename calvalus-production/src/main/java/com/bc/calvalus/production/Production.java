@@ -2,13 +2,15 @@ package com.bc.calvalus.production;
 
 
 /**
-* Information about a production.
-*
-* @author Norman
-*/
+ * Information about a production.
+ *
+ * @author Norman
+ */
 public class Production {
     private final String id;
     private final String name;
+    private final String user;
+    private final Object[] jobIds;
     private final boolean outputStaging;
     private final ProductionRequest productionRequest;
     private String outputUrl;
@@ -17,7 +19,9 @@ public class Production {
 
     public Production(String id,
                       String name,
+                      String user,
                       boolean outputStaging,
+                      Object[] jobIds,
                       ProductionRequest productionRequest) {
         if (id == null) {
             throw new NullPointerException("id");
@@ -25,23 +29,39 @@ public class Production {
         if (name == null) {
             throw new NullPointerException("name");
         }
+        if (user == null) {
+            throw new NullPointerException("user");
+        }
+        if (jobIds == null) {
+            throw new NullPointerException("jobIds");
+        }
         if (productionRequest == null) {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
+        this.user = user; // todo - check: remove param, instead derive from  productionRequest?
         this.outputStaging = outputStaging; // todo - check: remove param, instead derive from  productionRequest?
+        this.jobIds = jobIds.clone();
         this.productionRequest = productionRequest;
         this.processingStatus = ProductionStatus.UNKNOWN;
-        this.stagingStatus =  outputStaging ? ProductionStatus.WAITING : ProductionStatus.UNKNOWN;
+        this.stagingStatus = outputStaging ? ProductionStatus.WAITING : ProductionStatus.UNKNOWN;
     }
 
-     public String getId() {
+    public String getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public Object[] getJobIds() {
+        return jobIds.clone();
     }
 
     public boolean isOutputStaging() {

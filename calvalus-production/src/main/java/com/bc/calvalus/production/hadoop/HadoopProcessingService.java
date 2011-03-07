@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 
+import com.bc.calvalus.production.ProcessingService;
 import com.bc.calvalus.production.ProductionState;
 import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.fs.FileStatus;

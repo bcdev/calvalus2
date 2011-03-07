@@ -41,7 +41,7 @@ class WpsXmlGenerator {
      *
      * </pre>
      *
-     * @param productionId    A production ID.
+     * @param productionId      A production ID.
      * @param productionName    A production name.
      * @param processingRequest The L3 processing request.  @return The WPS XML plain text.
      * @throws ProductionException If the WPS XML cannot be created.

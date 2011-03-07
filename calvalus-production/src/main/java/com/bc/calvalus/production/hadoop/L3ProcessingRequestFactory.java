@@ -1,14 +1,12 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.BeamL3Config;
+import com.bc.calvalus.production.ProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.framework.datamodel.ProductData;
 
-import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -21,16 +19,12 @@ import static java.lang.Math.*;
 
 class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
-    private final ProcessingService processingService;
-    private final File localStagingDir;
-
-    L3ProcessingRequestFactory(ProcessingService processingService, File localStagingDir) {
-        this.processingService = processingService;
-        this.localStagingDir = localStagingDir;
+    L3ProcessingRequestFactory(ProcessingService processingService, String localStagingDir) {
+        super(processingService, localStagingDir);
     }
 
     @Override
-    public L3ProcessingRequest[] createProcessingRequests(ProductionRequest productionRequest) throws ProductionException {
+    public L3ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException {
 
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
         productionRequest.ensureProductionParameterSet("l2ProcessorBundleName");
@@ -41,8 +35,8 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         productionRequest.ensureProductionParameterSet("maskExpr");
 
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
-        commonProcessingParameters.put("outputDir", getOutputDir(productionRequest));
-        commonProcessingParameters.put("stagingDir", getStagingDir(productionRequest));
+        commonProcessingParameters.put("outputDir", getOutputDir(productionId, userName, productionRequest));
+        commonProcessingParameters.put("stagingDir", getStagingDir(productionId, userName, productionRequest));
         commonProcessingParameters.put("numRows", getNumRows(productionRequest));
         commonProcessingParameters.put("bbox", getBBox(productionRequest));
         commonProcessingParameters.put("fillValue", getFillValue(productionRequest));
@@ -63,7 +57,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
             HashMap<String, Object> processingParameters = new HashMap<String, Object>(commonProcessingParameters);
             Date date1 = new Date(time);
-            Date date2 = new Date(time + periodLengthMillis);
+            Date date2 = new Date(time + periodLengthMillis - 1L);
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
             processingParameters.put("inputFiles", getInputFiles(productionRequest, date1, date2));
@@ -74,21 +68,6 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
         return processingRequests;
     }
-
-
-    @Override
-     public String getOutputDir(ProductionRequest request) throws ProductionException {
-         String outputDir = super.getOutputDir(request);
-         return processingService.getDataOutputRootPath()  + "/" + outputDir;
-     }
-
-     @Override
-     public String getStagingDir(ProductionRequest request) throws ProductionException {
-         String outputDir = super.getOutputDir(request);
-         return new File(new File(localStagingDir, "ewa"), outputDir).getPath();
-     }
-
-
 
     public Double getFillValue(ProductionRequest request) throws ProductionException {
         return getDouble(request, "fillValue", null);
@@ -137,13 +116,13 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
     String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
-         String eoDataPath = processingService.getDataArchiveRootPath();
+         String eoDataPath = getProcessingService().getDataArchiveRootPath();
          String inputProductSetId = request.getProductionParameterSafe("inputProductSetId");
          List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
          try {
              List<String> inputFileList = new ArrayList<String>();
              for (String dayPath : dayPathList) {
-                 String[] strings = processingService.listFilePaths(eoDataPath + "/" + dayPath);
+                 String[] strings = getProcessingService().listFilePaths(eoDataPath + "/" + dayPath);
                  inputFileList.addAll(Arrays.asList(strings));
              }
              return inputFileList.toArray(new String[inputFileList.size()]);

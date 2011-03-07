@@ -35,7 +35,7 @@ class TestProduction extends Production {
      * @param outputStaging true, if auto-staging enabled
      */
     public TestProduction(String name, long duration, String outputUrl, File outputFile, boolean outputStaging, ProductionRequest productionRequest) {
-        super(Long.toHexString(idGen.nextLong()), name, outputStaging, productionRequest);
+        super(Long.toHexString(idGen.nextLong()), name, System.getProperty("user.name"), outputStaging, new Object[0], productionRequest);
         this.outputFile = outputFile;
         this.duration = duration;
         this.startTime = System.currentTimeMillis();

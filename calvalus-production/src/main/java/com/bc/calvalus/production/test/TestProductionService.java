@@ -23,10 +23,10 @@ public class TestProductionService implements ProductionService {
 
     private final List<TestProduction> productionList;
     private final String relStagingUrl;
-    private final File localStagingDir;
+    private final String localStagingDir;
     private long counter;
 
-    public TestProductionService(String relStagingUrl, File localStagingDir) {
+    public TestProductionService(String relStagingUrl, String localStagingDir) {
         this.relStagingUrl = relStagingUrl;
         this.localStagingDir = localStagingDir;
         productionList = Collections.synchronizedList(new ArrayList<TestProduction>(32));
