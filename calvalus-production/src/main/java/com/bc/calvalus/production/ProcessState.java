@@ -2,6 +2,8 @@ package com.bc.calvalus.production;
 
 /**
  * State of a production.
+ *
+ * @author Norman
  */
 public enum ProcessState {
     /**
@@ -31,10 +33,16 @@ public enum ProcessState {
 
     private final boolean done;
 
-    ProcessState(boolean done) {
+    private ProcessState(boolean done) {
         this.done = done;
     }
 
+    /**
+     * Returns whether the process is known to be "done".
+     *
+     * @return {@code true}, if and only if the state is one of {@link ProcessState#COMPLETED}, {@link ProcessState#CANCELLED} or
+     *         {@link ProcessState#CANCELLED}. In all other cases {@code false}.
+     */
     public boolean isDone() {
         return done;
     }
