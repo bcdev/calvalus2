@@ -61,7 +61,7 @@ public class BeamJobService {
 
         job.setInputFormatClass(ExecutablesInputFormat.class);
 
-        if (wpsConfig.isLevel3()) {
+        if (processingConfiguration.getLevel3Parameters() != null) {
             job.setNumReduceTasks(16);
 
             job.setMapperClass(L3Mapper.class);
@@ -89,7 +89,7 @@ public class BeamJobService {
         //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
 
-        BeamCalvalusClasspath.configure(wpsConfig.getProcessorPackage(), configuration);
+        BeamCalvalusClasspath.configure(processingConfiguration.getProcessorBundle(), configuration);
 
         return job;
     }

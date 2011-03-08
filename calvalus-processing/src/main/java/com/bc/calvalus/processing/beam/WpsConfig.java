@@ -22,16 +22,12 @@ import com.bc.ceres.binding.dom.Xpp3DomElement;
 import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.DomReader;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
-import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathExpressionException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Encapsulation the WPS XML configuration
@@ -107,17 +103,6 @@ public class WpsConfig {
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
-    }
-
-    boolean isLevel3() {
-        try {
-            Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
-            if (node != null) {
-                return true;
-            }
-        } catch (XPathExpressionException ignore) {
-        }
-        return false;
     }
 
     String getLevel2Paramter() {

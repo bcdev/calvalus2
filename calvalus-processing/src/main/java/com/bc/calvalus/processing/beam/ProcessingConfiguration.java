@@ -58,6 +58,10 @@ public class ProcessingConfiguration {
         this.hadoopConf = hadoopConf;
     }
 
+    public String getProcessorBundle() {
+        return hadoopConf.get(CALVALUS_BUNDLE);
+    }
+
     public String[] getInputPath() {
         return hadoopConf.get(CALVALUS_INPUT).split(",");
     }

@@ -80,7 +80,6 @@ public class WpsConfigTest {
     @Test
     public void getParameters() throws Exception {
         WpsConfig wpsConfig = createFromResource("l3-request.xml");
-        assertTrue(wpsConfig.isLevel3());
 
         assertNotNull(wpsConfig.getLevel2Paramter());
         assertFalse(wpsConfig.getLevel2Paramter().equals(""));
