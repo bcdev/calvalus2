@@ -50,7 +50,8 @@ public class BeamJobService {
         // construct job and set parameters and handlers
         Job job = new Job(jobClient.getConf(), identifier);
         Configuration configuration = job.getConfiguration();
-        configuration.set("calvalus.request", wpsXmlRequest);
+        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
+        processingConfiguration.addWpsParameters(wpsConfig);
 
         // clear output directory
         final Path outputPath = new Path(requestOutputDir);

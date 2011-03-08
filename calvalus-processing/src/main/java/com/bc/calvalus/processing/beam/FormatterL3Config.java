@@ -16,14 +16,8 @@
 
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.processing.shellexec.XmlDoc;
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.dom.DefaultDomConverter;
-import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -32,7 +26,6 @@ import java.text.ParseException;
  * The configuration of the L3 formatter
  */
 public class FormatterL3Config {
-    private static final String PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
 
     public static class BandConfiguration {
         String index;
@@ -54,20 +47,10 @@ public class FormatterL3Config {
     @Parameter
     private String endTime;
 
-    public static FormatterL3Config create(XmlDoc request) {
-        try {
-            DomElement parametersElement = new NodeDomElement(request.getNode(PARAMETERS_XPATH));
-
-            FormatterL3Config formatterL3Config = new FormatterL3Config();
-            ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-            PropertySet parameterSet = PropertyContainer.createObjectBacked(formatterL3Config, parameterDescriptorFactory);
-            DefaultDomConverter domConverter = new DefaultDomConverter(FormatterL3Config.class, parameterDescriptorFactory);
-
-            domConverter.convertDomToValue(parametersElement, parameterSet);
-            return formatterL3Config;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+    public static FormatterL3Config create(String formatterParameters) {
+        FormatterL3Config formatterL3Config = new FormatterL3Config();
+        ProcessingConfiguration.loadFromXml(formatterParameters, formatterL3Config);
+        return formatterL3Config;
     }
 
     public FormatterL3Config() {

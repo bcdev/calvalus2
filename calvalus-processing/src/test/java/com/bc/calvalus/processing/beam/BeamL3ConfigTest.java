@@ -259,7 +259,9 @@ public class BeamL3ConfigTest {
         }
 
     private BeamL3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
-        return BeamL3Config.create(new XmlDoc(loadConfigProperties(configPath)));
+        String wpsRequest = loadConfigProperties(configPath);
+        WpsConfig wpsConfig = new WpsConfig(wpsRequest);
+        return BeamL3Config.create(wpsConfig.getLevel3Paramter());
     }
 
     private String loadConfigProperties(String configPath) throws IOException {

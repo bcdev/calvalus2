@@ -107,8 +107,8 @@ public class BeamOperatorTool extends Configured implements Tool {
                 if (requestContent.contains("calvalus.formatter.parameters")) {
                     WpsConfig wpsConfig = new WpsConfig(requestContent);
 
-                    BeamL3Config beamL3Config = BeamL3Config.create(wpsConfig.getRequestXmlDoc());
-                    FormatterL3Config formatterL3Config = FormatterL3Config.create(wpsConfig.getRequestXmlDoc());
+                    BeamL3Config beamL3Config = BeamL3Config.create(wpsConfig.getLevel3Paramter());
+                    FormatterL3Config formatterL3Config = FormatterL3Config.create(wpsConfig.getFormatterParameter());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
                     BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
                     result = beamL3FormattingService.format(formatterL3Config, beamL3Config, hadoopJobOutputDir);

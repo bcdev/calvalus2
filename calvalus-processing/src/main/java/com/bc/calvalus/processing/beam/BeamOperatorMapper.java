@@ -49,14 +49,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
             // parse request
             Configuration configuration = context.getConfiguration();
-            WpsConfig wpsConfig = WpsConfig.createFromJobConfig(configuration);
-            BeamL2Config opConfig = new BeamL2Config(wpsConfig);
+            ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
 
-            final String operatorName = opConfig.getOperatorName();
-            final String requestOutputPath = opConfig.getWpsConfig().getRequestOutputDir();
+            final String operatorName = processingConfiguration.getLevel2OperatorName();
+            final String requestOutputPath = processingConfiguration.getOutputPath();
 
             // transform request into parameter objects
-            Map<String, Object> parameters = opConfig.getOperatorParameters();
+            Map<String, Object> parameters = processingConfiguration.getLevel2ParameterMap();
 
             // write initial log entry for runtime measurements
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);

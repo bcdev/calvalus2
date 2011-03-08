@@ -62,11 +62,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         BeamProductHandler.init();
-        final Configuration hadoopConfiguration = context.getConfiguration();
-        WpsConfig wpsConfig = WpsConfig.createFromJobConfig(hadoopConfiguration);
-        BeamL3Config l3Config = BeamL3Config.create(wpsConfig.getRequestXmlDoc());
-        l3Config.validateConfiguration();
-        BeamL2Config beamConfig = new BeamL2Config(wpsConfig);
+        final Configuration configuration = context.getConfiguration();
+        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
+        BeamL3Config l3Config = BeamL3Config.create(processingConfiguration.getLevel3Parameters());
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -80,9 +78,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
         final Path inputPath = split.getPath();
         BeamProductHandler beamProductHandler = new BeamProductHandler();
-        Product source = beamProductHandler.readProduct(inputPath, hadoopConfiguration);
+        Product source = beamProductHandler.readProduct(inputPath, configuration);
 
-        final Product product = l3Config.getPreProcessedProduct(source, beamConfig);
+        final Product product = l3Config.getPreProcessedProduct(source, processingConfiguration.getLevel2OperatorName(), processingConfiguration.getLevel2ParameterMap());
         if (product != null) {
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());

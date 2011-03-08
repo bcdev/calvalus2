@@ -91,14 +91,15 @@ public class L3Formatter extends Configured implements Tool {
         String requestPath = remainingArgs[0];
 
         // parse request
-        final String formattingRequestContent = FileUtil.readFile(requestPath);
+        final String formattingWpsRequest = FileUtil.readFile(requestPath);
 
-        WpsConfig formattingWpsConfig = new WpsConfig(formattingRequestContent);
-        FormatterL3Config formatterL3Config = FormatterL3Config.create(formattingWpsConfig.getRequestXmlDoc());
+        WpsConfig formattingWpsConfig = new WpsConfig(formattingWpsRequest);
+        FormatterL3Config formatterL3Config = FormatterL3Config.create(formattingWpsConfig.getFormatterParameter());
         String hadoopJobOutputDir = formattingWpsConfig.getRequestOutputDir();
 
         String processingWps = loadProcessingWpsXml(hadoopJobOutputDir);
-        BeamL3Config beamL3Config = BeamL3Config.create(new XmlDoc(processingWps));
+        WpsConfig level3Wpsconfig = new WpsConfig(processingWps);
+        BeamL3Config beamL3Config = BeamL3Config.create(level3Wpsconfig.getLevel3Paramter());
 
         BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
         return beamL3FormattingService.format(formatterL3Config, beamL3Config, hadoopJobOutputDir);

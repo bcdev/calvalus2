@@ -11,6 +11,21 @@
     <wps:DataInputs>
 
         <wps:Input>
+            <ows:Identifier>calvalus.processor.package</ows:Identifier>
+            <ows:Title>software installation package name</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>beam-meris-radiometry</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.processor.version</ows:Identifier>
+            <ows:Title>software installation package version</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>1.0-SNAPSHOT</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>output directory</ows:Title>
             <wps:Data>

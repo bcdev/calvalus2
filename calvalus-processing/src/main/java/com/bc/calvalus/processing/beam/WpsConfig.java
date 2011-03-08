@@ -17,15 +17,19 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.shellexec.XmlDoc;
+import com.bc.ceres.binding.dom.DomElement;
+import com.bc.ceres.binding.dom.Xpp3DomElement;
+import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
+import com.thoughtworks.xstream.io.xml.DomReader;
+import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,33 +50,19 @@ public class WpsConfig {
 
     private final XmlDoc requestXmlDoc;
 
-    public WpsConfig(String requestContent) throws IOException, SAXException, ParserConfigurationException {
-        requestXmlDoc = new XmlDoc(requestContent);
-    }
-
-    public Map<String, String> getParametersMap() {
-        HashMap<String, String> map = new HashMap<String, String>();
-        map.put(Config.CALVALUS_IDENTIFIER, getIdentifier());
-        map.put(Config.CALVALUS_BUNDLE, getProcessorPackage());
-        String[] requestInputPaths = getRequestInputPaths();
-        String inputs = StringUtils.join(requestInputPaths, ",");
-        map.put(Config.CALVALUS_INPUT, inputs);
-        map.put(Config.CALVALUS_OUTPUT, getRequestOutputDir());
-        map.put(Config.CALVALUS_L2_OPERATOR, getOperatorName());
-        map.put(Config.CALVALUS_L2_PARAMETER, getLevel2Paramter());
-        map.put(Config.CALVALUS_L3_PARAMETER, getLevel3Paramter());
-        return map;
-    }
-
-    public XmlDoc getRequestXmlDoc() {
-        return requestXmlDoc;
+    public WpsConfig(String requestContent) {
+        try {
+            requestXmlDoc = new XmlDoc(requestContent);
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot create DOM: " + e.getMessage(), e);
+        }
     }
 
     String getIdentifier() {
         try {
             return requestXmlDoc.getString(TYPE_XPATH);
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -82,7 +72,7 @@ public class WpsConfig {
             final String processorVersion = requestXmlDoc.getString(PROCESSOR_VERSION_XPATH);
             return processorPackage + "-" + processorVersion;
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -98,7 +88,7 @@ public class WpsConfig {
             }
             return inputPaths;
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -107,7 +97,7 @@ public class WpsConfig {
         try {
             return requestXmlDoc.getString(OUTPUT_DIR_XPATH);
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+           throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -115,7 +105,7 @@ public class WpsConfig {
         try {
             return requestXmlDoc.getString(OPERATOR_NAME_XPATH);
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -130,71 +120,53 @@ public class WpsConfig {
         return false;
     }
 
-    private String getLevel2Paramter() {
+    String getLevel2Paramter() {
         try {
             Node node = requestXmlDoc.getNode(OPERATOR_PARAMETERS_XPATH);
-            NodeDomElement nodeDomElement = new NodeDomElement(node);
-            return nodeDomElement.toXml();
+            return convertToDomElement(node).toXml();
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
-    private String getLevel3Paramter() {
+    String getLevel3Paramter() {
         try {
             Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
             if (node != null) {
-                NodeDomElement nodeDomElement = new NodeDomElement(node);
-                return nodeDomElement.toXml();
+                return convertToDomElement(node).toXml();
             } else {
-                return null;
+                return "";
             }
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
-    private String getFormatterParameter() {
+    String getFormatterParameter() {
         try {
             Node node = requestXmlDoc.getNode(FORMATTER_PARAMETERS_XPATH);
             if (node != null) {
-                NodeDomElement nodeDomElement = new NodeDomElement(node);
-                return nodeDomElement.toXml();
+                return convertToDomElement(node).toXml();
             } else {
-                return null;
+                return "";
             }
         } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression", e);
-        }
-    }
-    //TODO
-//    public static void loadFromXml(String xml, Object object) {
-//        DomElement parametersElement = new NodeDomElement(request.getNode(PARAMETERS_XPATH));
-//
-////        FormatterL3Config formatterL3Config = new FormatterL3Config();
-//
-//        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-//        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
-//        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-//
-//        domConverter.convertDomToValue(parametersElement, parameterSet);
-//    }
-
-    public static WpsConfig createFromJobConfig(Configuration hadoopConfiguration) {
-        final String requestContent = hadoopConfiguration.get("calvalus.request");
-        try {
-            return new WpsConfig(requestContent);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
-    public static void addToConfiguration(Map<String, String> parametersMap, Configuration configuration) {
-        for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
-            String value = entry.getValue();
-            if (value != null) {
-                configuration.set(entry.getKey(), value);
-            }
+    static DomElement convertToDomElement(Node node) {
+        Element element;
+        if (node instanceof Element) {
+            element = (Element) node;
+        } else if (node instanceof Document) {
+            element = ((Document) node).getDocumentElement();
+        } else {
+            throw new IllegalStateException("Cannot create DOM.");
         }
+        XppDomWriter destination = new XppDomWriter();
+        new HierarchicalStreamCopier().copy(new DomReader(element), destination);
+        return new Xpp3DomElement(destination.getConfiguration());
     }
+
 }

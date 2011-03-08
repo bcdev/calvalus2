@@ -49,9 +49,8 @@ public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, T
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        WpsConfig wpsConfig = WpsConfig.createFromJobConfig(conf);
-        BeamL3Config l3Config = BeamL3Config.create(wpsConfig.getRequestXmlDoc());
-        l3Config.validateConfiguration();
+        String level3Parameters = new ProcessingConfiguration(conf).getLevel3Parameters();
+        BeamL3Config l3Config = BeamL3Config.create(level3Parameters);
         this.binManager = l3Config.getBinningContext().getBinManager();
     }
 

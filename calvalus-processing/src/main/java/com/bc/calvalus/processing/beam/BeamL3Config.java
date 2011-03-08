@@ -30,11 +30,6 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.VariableContextImpl;
-import com.bc.calvalus.processing.shellexec.XmlDoc;
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.dom.DefaultDomConverter;
-import com.bc.ceres.binding.dom.DomElement;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateFilter;
 import com.vividsolutions.jts.geom.Geometry;
@@ -48,7 +43,6 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.ProductUtils;
 
@@ -58,14 +52,12 @@ import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 
 import static java.lang.Math.*;
 
 public class BeamL3Config {
     static final String L3_REQUEST_FILENAME = "wps-request.xml";
-    private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
 
     public static class VariableConfiguration {
         String name;
@@ -146,21 +138,10 @@ public class BeamL3Config {
     @Parameter(itemAlias = "aggregator")
     AggregatorConfiguration[] aggregators;
 
-
-    public static BeamL3Config create(XmlDoc request) {
-        try {
-            DomElement parametersElement = new NodeDomElement(request.getNode(OPERATOR_PARAMETERS_XPATH));
-
-            BeamL3Config l3Config = new BeamL3Config();
-            ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-            PropertySet parameterSet = PropertyContainer.createObjectBacked(l3Config, parameterDescriptorFactory);
-            DefaultDomConverter domConverter = new DefaultDomConverter(BeamL3Config.class, parameterDescriptorFactory);
-
-            domConverter.convertDomToValue(parametersElement, parameterSet);
-            return l3Config;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+    public static BeamL3Config create(String level3ParametersXml) {
+        BeamL3Config l3Config = new BeamL3Config();
+        ProcessingConfiguration.loadFromXml(level3ParametersXml, l3Config);
+        return l3Config;
     }
 
     public void setNumRows(int numRows) {
@@ -289,19 +270,13 @@ public class BeamL3Config {
         return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
     }
 
-    public Product getPreProcessedProduct(Product source, BeamL2Config beamConfig) {
+    public Product getPreProcessedProduct(Product source,  String operatorName, Map<String, Object> operatorParameters) {
         Product product = getProductSpatialSubset(source);
         if (product == null) {
             return null;
         }
-        String operatorName = beamConfig.getOperatorName();
         if (operatorName != null && !operatorName.isEmpty()) {
-            Map<String, Object> parameters = Collections.EMPTY_MAP;
-            try {
-                parameters = beamConfig.getOperatorParameters();
-            } catch (Exception ignore) {
-            }
-            product = GPF.createProduct(operatorName, parameters, product);
+            product = GPF.createProduct(operatorName, operatorParameters, product);
         }
         return product;
     }
@@ -404,12 +379,6 @@ public class BeamL3Config {
             return wktReader.read(regionWkt);
         } catch (com.vividsolutions.jts.io.ParseException e) {
             throw new IllegalArgumentException("Illegal region geometry: " + regionWkt, e);
-        }
-    }
-
-    void validateConfiguration() {
-        if (aggregators == null || aggregators.length == 0) {
-            throw new IllegalArgumentException("No aggregator specified.");
         }
     }
 

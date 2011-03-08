@@ -1,8 +1,9 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.beam.ProcessingConfiguration;
 import com.bc.calvalus.processing.beam.NoRecordReader;
-import com.bc.calvalus.processing.beam.WpsConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,8 +40,8 @@ public class ExecutablesInputFormat extends InputFormat {
 
         try {
             // parse request
-            WpsConfig wpsConfig = WpsConfig.createFromJobConfig(job.getConfiguration());
-            String[] requestInputPaths = wpsConfig.getRequestInputPaths();
+            Configuration configuration = job.getConfiguration();
+            String[] requestInputPaths = new ProcessingConfiguration(configuration).getInputPath();
 
             // create splits for each calvalus.input in request
             List<FileSplit> splits = new ArrayList<FileSplit>(requestInputPaths.length);
@@ -49,7 +50,7 @@ public class ExecutablesInputFormat extends InputFormat {
                 String inputUrl = requestInputPaths[i];
                 // inquire "status" of file from HDFS
                 Path input = new Path(inputUrl);
-                FileSystem fs = input.getFileSystem(job.getConfiguration());
+                FileSystem fs = input.getFileSystem(configuration);
                 FileStatus[] file = fs.listStatus(input);
                 if (file.length != 1) throw new FileNotFoundException(inputUrl + " not found");
                 long length = file[0].getLen();
