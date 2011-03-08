@@ -2,7 +2,7 @@ package com.bc.calvalus.portal.shared;
 
 import com.google.gwt.junit.client.GWTTestCase;
 
-public class GwtProcessStatusTest extends GWTTestCase {
+public class GsProcessStatusTest extends GWTTestCase {
 
     @Override
     public String getModuleName() {
