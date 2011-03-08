@@ -1,8 +1,5 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.production.ProcessingService;
-import com.bc.calvalus.production.ProductionStatus;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +31,8 @@ public class TestProcessingService implements ProcessingService {
     }
 
     @Override
-    public Map<Object, ProductionStatus> getJobStatusMap() throws IOException {
-        return new HashMap<Object, ProductionStatus>();
+    public Map<Object, ProcessStatus> getJobStatusMap() throws IOException {
+        return new HashMap<Object, ProcessStatus>();
     }
 
     @Override

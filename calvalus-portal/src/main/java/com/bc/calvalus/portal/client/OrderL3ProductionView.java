@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProcessor;
-import com.bc.calvalus.portal.shared.PortalProductionRequest;
+import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.GsProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
@@ -67,14 +67,14 @@ public class OrderL3ProductionView extends PortalView {
     }
 
     // todo - Provide JUnit test for this method
-    public PortalProductionRequest getProductionRequest() {
+    public GsProductionRequest getProductionRequest() {
         HashMap<String, String> parameters = getValueMap();
-        return new PortalProductionRequest("calvalus-level3", parameters);
+        return new GsProductionRequest("calvalus-level3", parameters);
     }
 
     // todo - Provide JUnit test for this method
     public HashMap<String, String> getValueMap() {
-        PortalProcessor selectedProcessor = l2ProcessorPanel.getSelectedProcessor();
+        GsProcessorDescriptor selectedProcessor = l2ProcessorPanel.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
         parameters.put("outputFileName", inputOutputPanel.getOutputFileName());
@@ -97,7 +97,7 @@ public class OrderL3ProductionView extends PortalView {
                 return;
             }
 
-            PortalProductionRequest request = getProductionRequest();
+            GsProductionRequest request = getProductionRequest();
             getPortal().orderProduction(request);
         }
 

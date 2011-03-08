@@ -1,11 +1,11 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionState;
-import com.bc.calvalus.portal.shared.PortalProductionStatus;
+import com.bc.calvalus.portal.shared.GsProcessState;
+import com.bc.calvalus.portal.shared.GsProcessStatus;
+import com.bc.calvalus.portal.shared.GsProduction;
 import com.google.gwt.junit.client.GWTTestCase;
 
-import static com.bc.calvalus.portal.shared.PortalProductionState.*;
+import static com.bc.calvalus.portal.shared.GsProcessState.*;
 
 public class ManageProductionsViewTest extends GWTTestCase {
     public String getModuleName() {
@@ -48,15 +48,15 @@ public class ManageProductionsViewTest extends GWTTestCase {
         assertEquals("Stage", getResult(COMPLETED, ERROR));
     }
 
-    private String getAction(PortalProductionState productionState, PortalProductionState stagingState) {
-        return ManageProductionsView.getAction(new PortalProduction("id", "name", "outputUrl",
-                                                                    new PortalProductionStatus(productionState),
-                                                                    new PortalProductionStatus(stagingState)));
+    private String getAction(GsProcessState productionState, GsProcessState stagingState) {
+        return ManageProductionsView.getAction(new GsProduction("id", "name", "outputUrl",
+                                                                    new GsProcessStatus(productionState),
+                                                                    new GsProcessStatus(stagingState)));
     }
 
-    private String getResult(PortalProductionState productionState, PortalProductionState stagingState) {
-        return ManageProductionsView.getResult(new PortalProduction("id", "name", "outputUrl",
-                                                                    new PortalProductionStatus(productionState),
-                                                                    new PortalProductionStatus(stagingState)));
+    private String getResult(GsProcessState productionState, GsProcessState stagingState) {
+        return ManageProductionsView.getResult(new GsProduction("id", "name", "outputUrl",
+                                                                    new GsProcessStatus(productionState),
+                                                                    new GsProcessStatus(stagingState)));
     }
 }

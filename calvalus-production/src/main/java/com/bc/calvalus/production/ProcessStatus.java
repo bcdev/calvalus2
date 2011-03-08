@@ -5,24 +5,24 @@ package com.bc.calvalus.production;
  *
  * @author Norman
  */
-public class ProductionStatus {
-    public final static ProductionStatus UNKNOWN = new ProductionStatus(ProductionState.UNKNOWN);
-    public final static ProductionStatus WAITING = new ProductionStatus(ProductionState.WAITING);
+public class ProcessStatus {
+    public final static ProcessStatus UNKNOWN = new ProcessStatus(ProcessState.UNKNOWN);
+    public final static ProcessStatus WAITING = new ProcessStatus(ProcessState.WAITING);
 
     private static final float EPS = 1.0E-04f;
-    private final ProductionState state;
+    private final ProcessState state;
     private final float progress;
     private final String message;
 
-    public ProductionStatus(ProductionState state) {
+    public ProcessStatus(ProcessState state) {
         this(state, state.isDone() ? 1.0f : 0.0f);
     }
 
-    public ProductionStatus(ProductionState state, float progress) {
+    public ProcessStatus(ProcessState state, float progress) {
         this(state, progress, "");
     }
 
-    public ProductionStatus(ProductionState state, float progress, String message) {
+    public ProcessStatus(ProcessState state, float progress, String message) {
         if (state == null) {
             throw new NullPointerException("state");
         }
@@ -34,7 +34,7 @@ public class ProductionStatus {
         this.progress = progress;
     }
 
-    public static ProductionStatus aggregate(ProductionStatus... statuses) {
+    public static ProcessStatus aggregate(ProcessStatus... statuses) {
         if (statuses.length == 0) {
             return null;
         }
@@ -43,20 +43,20 @@ public class ProductionStatus {
         }
 
         float averageProgress = 0f;
-        for (ProductionStatus jobStatus : statuses) {
+        for (ProcessStatus jobStatus : statuses) {
             averageProgress += jobStatus.getProgress();
         }
         averageProgress /= statuses.length;
 
-        for (ProductionStatus status : statuses) {
-            if (status.getState() == ProductionState.ERROR
-                    || status.getState() == ProductionState.CANCELLED) {
-                return new ProductionStatus(status.getState(), averageProgress, status.getMessage());
+        for (ProcessStatus status : statuses) {
+            if (status.getState() == ProcessState.ERROR
+                    || status.getState() == ProcessState.CANCELLED) {
+                return new ProcessStatus(status.getState(), averageProgress, status.getMessage());
             }
         }
 
         String message = "";
-        for (ProductionStatus status : statuses) {
+        for (ProcessStatus status : statuses) {
             message = status.getMessage();
             if (!message.isEmpty()) {
                 break;
@@ -66,31 +66,31 @@ public class ProductionStatus {
         int numCompleted = 0;
         int numWaiting = 0;
         int numUnknown = 0;
-        for (ProductionStatus status : statuses) {
-            if (status.getState() == ProductionState.COMPLETED) {
+        for (ProcessStatus status : statuses) {
+            if (status.getState() == ProcessState.COMPLETED) {
                 numCompleted++;
-            } else if (status.getState() == ProductionState.WAITING) {
+            } else if (status.getState() == ProcessState.WAITING) {
                 numWaiting++;
-            } else if (status.getState() == ProductionState.UNKNOWN) {
+            } else if (status.getState() == ProcessState.UNKNOWN) {
                 numUnknown++;
             }
         }
 
-        final ProductionState state;
+        final ProcessState state;
         if (numCompleted == statuses.length) {
-            state = ProductionState.COMPLETED;
+            state = ProcessState.COMPLETED;
         } else if (numWaiting == statuses.length) {
-            state = ProductionState.WAITING;
+            state = ProcessState.WAITING;
         } else if (numUnknown == statuses.length) {
-            state = ProductionState.UNKNOWN;
+            state = ProcessState.UNKNOWN;
         } else {
-            state = ProductionState.IN_PROGRESS;
+            state = ProcessState.IN_PROGRESS;
         }
 
-        return new ProductionStatus(state, averageProgress, message);
+        return new ProcessStatus(state, averageProgress, message);
     }
 
-    public ProductionState getState() {
+    public ProcessState getState() {
         return state;
     }
 
@@ -115,7 +115,7 @@ public class ProductionStatus {
             return false;
         }
 
-        ProductionStatus that = (ProductionStatus) o;
+        ProcessStatus that = (ProcessStatus) o;
 
         float delta = that.progress - progress;
         if (delta < 0) {

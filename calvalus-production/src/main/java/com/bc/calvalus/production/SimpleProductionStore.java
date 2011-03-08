@@ -111,14 +111,14 @@ public class SimpleProductionStore implements ProductionStore {
             int[] offpt = new int[]{4};
             Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
-            ProductionStatus productionStatus = decodeProductionStatusTSV(tokens, offpt);
-            ProductionStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
+            ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
+            ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
 
             Production hadoopProduction = new Production(id, name, user,
                                                          outputStaging, jobIDs,
                                                          productionRequest);
 
-            hadoopProduction.setProcessingStatus(productionStatus);
+            hadoopProduction.setProcessingStatus(processStatus);
             hadoopProduction.setStagingStatus(stagingStatus);
             addProduction(hadoopProduction);
         }
@@ -190,23 +190,23 @@ public class SimpleProductionStore implements ProductionStore {
         return new ProductionRequest(productionType, productionParameters);
     }
 
-    static String encodeProductionStatusTSV(ProductionStatus productionStatus) {
+    static String encodeProductionStatusTSV(ProcessStatus processStatus) {
         StringBuilder sb = new StringBuilder();
-        sb.append(productionStatus.getState());
+        sb.append(processStatus.getState());
         sb.append("\t");
-        sb.append(productionStatus.getProgress());
+        sb.append(processStatus.getProgress());
         sb.append("\t");
-        sb.append(encodeTSV(productionStatus.getMessage()));
+        sb.append(encodeTSV(processStatus.getMessage()));
         return sb.toString();
     }
 
-    static ProductionStatus decodeProductionStatusTSV(String[] tokens, int[] offpt) {
+    static ProcessStatus decodeProductionStatusTSV(String[] tokens, int[] offpt) {
         int off = offpt[0];
-        ProductionState productionState = ProductionState.valueOf(tokens[off++]);
+        ProcessState processState = ProcessState.valueOf(tokens[off++]);
         float progress = Float.parseFloat(tokens[off++]);
         String message = encodeTSV(tokens[off++]);
         offpt[0] = off;
-        return new ProductionStatus(productionState, progress, message);
+        return new ProcessStatus(processState, progress, message);
     }
 
     // TSV = tab separated characters

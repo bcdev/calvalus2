@@ -15,7 +15,7 @@ public interface BackendService extends RemoteService {
      * @return The product sets.
      * @throws BackendServiceException If a server error occurred.
      */
-    PortalProductSet[] getProductSets(String filter) throws BackendServiceException;
+    GsProductSet[] getProductSets(String filter) throws BackendServiceException;
 
     /**
      * Gets all known processors.
@@ -24,7 +24,7 @@ public interface BackendService extends RemoteService {
      * @return The processors.
      * @throws BackendServiceException If a server error occurred.
      */
-    PortalProcessor[] getProcessors(String filter) throws BackendServiceException;
+    GsProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException;
 
     /**
      * Gets all known productions.
@@ -33,7 +33,7 @@ public interface BackendService extends RemoteService {
      * @return The productions.
      * @throws BackendServiceException If a server error occurred.
      */
-    PortalProduction[] getProductions(String filter) throws BackendServiceException;
+    GsProduction[] getProductions(String filter) throws BackendServiceException;
 
     /**
      * Orders a new productions.
@@ -42,7 +42,7 @@ public interface BackendService extends RemoteService {
      * @return The response.
      * @throws BackendServiceException If a server error occurred.
      */
-    PortalProductionResponse orderProduction(PortalProductionRequest request) throws BackendServiceException;
+    GsProductionResponse orderProduction(GsProductionRequest request) throws BackendServiceException;
 
     void cancelProductions(String[] productionIds) throws BackendServiceException;
 

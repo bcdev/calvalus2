@@ -1,17 +1,26 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.portal.shared;
 
-public class ProductionProcessor {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+/**
+ * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessorDescriptor} class.
+ *
+ * @author Norman
+ */
+public class GsProcessorDescriptor implements IsSerializable {
     private String executableName;
     private String processorName;
     private String defaultParameters;
     private String bundleName;
     private String[] bundleVersions;
 
-    public ProductionProcessor(String executableName,
-                               String processorName,
-                               String defaultParameters,
-                               String bundleName,
-                               String[] bundleVersions) {
+    /**
+     * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
+     */
+    public GsProcessorDescriptor() {
+    }
+
+    public GsProcessorDescriptor(String executableName, String processorName, String defaultParameters, String bundleName, String[] bundleVersions) {
         this.executableName = executableName;
         this.processorName = processorName;
         this.defaultParameters = defaultParameters;
@@ -38,5 +47,4 @@ public class ProductionProcessor {
     public String[] getBundleVersions() {
         return bundleVersions;
     }
-
 }

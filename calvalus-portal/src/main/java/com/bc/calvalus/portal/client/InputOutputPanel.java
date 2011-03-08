@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProductSet;
+import com.bc.calvalus.portal.shared.GsProductSet;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -8,7 +8,6 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
@@ -31,7 +30,7 @@ public class InputOutputPanel implements IsWidget {
 
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
-        for (PortalProductSet productSet : portal.getProductSets()) {
+        for (GsProductSet productSet : portal.getProductSets()) {
             inputProductSet.addItem(productSet.getName(), productSet.getId());
         }
         inputProductSet.setWidth("20em");

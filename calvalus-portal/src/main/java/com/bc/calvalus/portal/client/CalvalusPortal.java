@@ -2,11 +2,11 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.PortalProcessor;
-import com.bc.calvalus.portal.shared.PortalProductSet;
-import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionRequest;
-import com.bc.calvalus.portal.shared.PortalProductionResponse;
+import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.GsProductSet;
+import com.bc.calvalus.portal.shared.GsProduction;
+import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.GsProductionResponse;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.cellview.client.CellTree;
@@ -43,10 +43,10 @@ public class CalvalusPortal implements EntryPoint {
     private DecoratedTabPanel tabPanel;
 
     // Data provided by various external services
-    private PortalProductSet[] productSets;
-    private PortalProcessor[] processors;
-    private ListDataProvider<PortalProduction> productions;
-    private Map<String, PortalProduction> productionsMap;
+    private GsProductSet[] productSets;
+    private GsProcessorDescriptor[] processors;
+    private ListDataProvider<GsProduction> productions;
+    private Map<String, GsProduction> productionsMap;
     private PortalView[] views;
     private HorizontalPanel mainPanel;
 
@@ -64,15 +64,15 @@ public class CalvalusPortal implements EntryPoint {
         backendService.getProductions(null, new InitProductionsCallback());
     }
 
-    public PortalProductSet[] getProductSets() {
+    public GsProductSet[] getProductSets() {
         return productSets;
     }
 
-    public PortalProcessor[] getProcessors() {
+    public GsProcessorDescriptor[] getProcessors() {
         return processors;
     }
 
-    public ListDataProvider<PortalProduction> getProductions() {
+    public ListDataProvider<GsProduction> getProductions() {
         return productions;
     }
 
@@ -188,17 +188,17 @@ public class CalvalusPortal implements EntryPoint {
                 && productions != null;
     }
 
-    private synchronized void updateProductions(PortalProduction[] unknownProductions) {
+    private synchronized void updateProductions(GsProduction[] unknownProductions) {
         if (productions == null) {
-            productions = new ListDataProvider<PortalProduction>();
-            productionsMap = new HashMap<String, PortalProduction>();
+            productions = new ListDataProvider<GsProduction>();
+            productionsMap = new HashMap<String, GsProduction>();
         }
         boolean listChange = false;
         boolean propertyChange = false;
-        ArrayList<PortalProduction> deletedProductions = new ArrayList<PortalProduction>(productions.getList());
+        ArrayList<GsProduction> deletedProductions = new ArrayList<GsProduction>(productions.getList());
         for (int i = 0; i < unknownProductions.length; i++) {
-            PortalProduction unknownProduction = unknownProductions[i];
-            PortalProduction knownProduction = productionsMap.get(unknownProduction.getId());
+            GsProduction unknownProduction = unknownProductions[i];
+            GsProduction knownProduction = productionsMap.get(unknownProduction.getId());
             if (knownProduction != null) {
                 if (!unknownProduction.getProcessingStatus().equals(knownProduction.getProcessingStatus())) {
                     knownProduction.setProcessingStatus(unknownProduction.getProcessingStatus());
@@ -215,7 +215,7 @@ public class CalvalusPortal implements EntryPoint {
                 listChange = true;
             }
         }
-        for (PortalProduction deletedProduction : deletedProductions) {
+        for (GsProduction deletedProduction : deletedProductions) {
             productions.getList().remove(deletedProduction);
             productionsMap.remove(deletedProduction.getId());
             listChange = true;
@@ -229,9 +229,9 @@ public class CalvalusPortal implements EntryPoint {
         }
     }
 
-    public void orderProduction(PortalProductionRequest request) {
-        getBackendService().orderProduction(request, new AsyncCallback<PortalProductionResponse>() {
-            public void onSuccess(final PortalProductionResponse response) {
+    public void orderProduction(GsProductionRequest request) {
+        getBackendService().orderProduction(request, new AsyncCallback<GsProductionResponse>() {
+            public void onSuccess(final GsProductionResponse response) {
                 ManageProductionsView view = (ManageProductionsView) getView(ManageProductionsView.ID);
                 view.show();
             }
@@ -243,9 +243,9 @@ public class CalvalusPortal implements EntryPoint {
     }
 
 
-    private class InitProductSetsCallback implements AsyncCallback<PortalProductSet[]> {
+    private class InitProductSetsCallback implements AsyncCallback<GsProductSet[]> {
         @Override
-        public void onSuccess(PortalProductSet[] productSets) {
+        public void onSuccess(GsProductSet[] productSets) {
             CalvalusPortal.this.productSets = productSets;
             maybeInitFrontend();
         }
@@ -253,13 +253,13 @@ public class CalvalusPortal implements EntryPoint {
         @Override
         public void onFailure(Throwable caught) {
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.productSets = new PortalProductSet[0];
+            CalvalusPortal.this.productSets = new GsProductSet[0];
         }
     }
 
-    private class InitProcessorsCallback implements AsyncCallback<PortalProcessor[]> {
+    private class InitProcessorsCallback implements AsyncCallback<GsProcessorDescriptor[]> {
         @Override
-        public void onSuccess(PortalProcessor[] processors) {
+        public void onSuccess(GsProcessorDescriptor[] processors) {
             CalvalusPortal.this.processors = processors;
             maybeInitFrontend();
         }
@@ -267,13 +267,13 @@ public class CalvalusPortal implements EntryPoint {
         @Override
         public void onFailure(Throwable caught) {
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.processors = new PortalProcessor[0];
+            CalvalusPortal.this.processors = new GsProcessorDescriptor[0];
         }
     }
 
-    private class InitProductionsCallback implements AsyncCallback<PortalProduction[]> {
+    private class InitProductionsCallback implements AsyncCallback<GsProduction[]> {
         @Override
-        public void onSuccess(PortalProduction[] productions) {
+        public void onSuccess(GsProduction[] productions) {
             updateProductions(productions);
             maybeInitFrontend();
         }
@@ -281,13 +281,13 @@ public class CalvalusPortal implements EntryPoint {
         @Override
         public void onFailure(Throwable caught) {
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.productions = new ListDataProvider<PortalProduction>();
+            CalvalusPortal.this.productions = new ListDataProvider<GsProduction>();
         }
     }
 
-    private class UpdateProductionsCallback implements AsyncCallback<PortalProduction[]> {
+    private class UpdateProductionsCallback implements AsyncCallback<GsProduction[]> {
         @Override
-        public void onSuccess(PortalProduction[] unknownProductions) {
+        public void onSuccess(GsProduction[] unknownProductions) {
             updateProductions(unknownProductions);
         }
 

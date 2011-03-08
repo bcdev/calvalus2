@@ -3,7 +3,7 @@ package com.bc.calvalus.production;
 /**
  * State of a production.
  */
-public enum ProductionState {
+public enum ProcessState {
     /**
      * Indicates an unknown state, e.g. could not be retrieved.
      */
@@ -31,7 +31,7 @@ public enum ProductionState {
 
     private final boolean done;
 
-    ProductionState(boolean done) {
+    ProcessState(boolean done) {
         this.done = done;
     }
 

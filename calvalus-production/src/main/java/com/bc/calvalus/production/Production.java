@@ -14,8 +14,8 @@ public class Production {
     private final boolean outputStaging;
     private final ProductionRequest productionRequest;
     private String outputUrl;
-    private ProductionStatus processingStatus;
-    private ProductionStatus stagingStatus;
+    private ProcessStatus processingStatus;
+    private ProcessStatus stagingStatus;
 
     public Production(String id,
                       String name,
@@ -44,8 +44,8 @@ public class Production {
         this.outputStaging = outputStaging; // todo - check: remove param, instead derive from  productionRequest?
         this.jobIds = jobIds.clone();
         this.productionRequest = productionRequest;
-        this.processingStatus = ProductionStatus.UNKNOWN;
-        this.stagingStatus = outputStaging ? ProductionStatus.WAITING : ProductionStatus.UNKNOWN;
+        this.processingStatus = ProcessStatus.UNKNOWN;
+        this.stagingStatus = outputStaging ? ProcessStatus.WAITING : ProcessStatus.UNKNOWN;
     }
 
     public String getId() {
@@ -80,19 +80,19 @@ public class Production {
         this.outputUrl = outputUrl;
     }
 
-    public ProductionStatus getProcessingStatus() {
+    public ProcessStatus getProcessingStatus() {
         return processingStatus;
     }
 
-    public void setProcessingStatus(ProductionStatus processingStatus) {
+    public void setProcessingStatus(ProcessStatus processingStatus) {
         this.processingStatus = processingStatus;
     }
 
-    public ProductionStatus getStagingStatus() {
+    public ProcessStatus getStagingStatus() {
         return stagingStatus;
     }
 
-    public void setStagingStatus(ProductionStatus stagingStatus) {
+    public void setStagingStatus(ProcessStatus stagingStatus) {
         this.stagingStatus = stagingStatus;
     }
 

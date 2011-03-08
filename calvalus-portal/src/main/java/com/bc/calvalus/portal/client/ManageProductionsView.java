@@ -1,8 +1,8 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionState;
-import com.bc.calvalus.portal.shared.PortalProductionStatus;
+import com.bc.calvalus.portal.shared.GsProcessState;
+import com.bc.calvalus.portal.shared.GsProcessStatus;
+import com.bc.calvalus.portal.shared.GsProduction;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
@@ -45,63 +45,63 @@ public class ManageProductionsView extends PortalView {
     private static final String INFO = "Info";
 
     private FlexTable widget;
-    private SelectionModel<PortalProduction> selectionModel;
+    private SelectionModel<GsProduction> selectionModel;
 
     public ManageProductionsView(CalvalusPortal portal) {
         super(portal);
 
-        ProvidesKey<PortalProduction> keyProvider = new ProvidesKey<PortalProduction>() {
-            public Object getKey(PortalProduction production) {
+        ProvidesKey<GsProduction> keyProvider = new ProvidesKey<GsProduction>() {
+            public Object getKey(GsProduction production) {
                 return production == null ? null : production.getId();
             }
         };
 
-        selectionModel = new MultiSelectionModel<PortalProduction>(keyProvider);
+        selectionModel = new MultiSelectionModel<GsProduction>(keyProvider);
 
-        CellTable<PortalProduction> productionTable = new CellTable<PortalProduction>(keyProvider);
+        CellTable<GsProduction> productionTable = new CellTable<GsProduction>(keyProvider);
         productionTable.setWidth("100%");
         productionTable.setSelectionModel(selectionModel);
 
-        Column<PortalProduction, Boolean> checkColumn = new Column<PortalProduction, Boolean>(new CheckboxCell(true, true)) {
+        Column<GsProduction, Boolean> checkColumn = new Column<GsProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
-            public Boolean getValue(PortalProduction production) {
+            public Boolean getValue(GsProduction production) {
                 return selectionModel.isSelected(production);
             }
         };
-        checkColumn.setFieldUpdater(new FieldUpdater<PortalProduction, Boolean>() {
+        checkColumn.setFieldUpdater(new FieldUpdater<GsProduction, Boolean>() {
             @Override
-            public void update(int index, PortalProduction object, Boolean value) {
+            public void update(int index, GsProduction object, Boolean value) {
                 selectionModel.setSelected(object, value);
             }
         });
 
-        TextColumn<PortalProduction> nameColumn = new TextColumn<PortalProduction>() {
+        TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
             @Override
-            public String getValue(PortalProduction production) {
+            public String getValue(GsProduction production) {
                 return production.getName();
             }
         };
         nameColumn.setSortable(true);
 
-        TextColumn<PortalProduction> productionStatusColumn = new TextColumn<PortalProduction>() {
+        TextColumn<GsProduction> productionStatusColumn = new TextColumn<GsProduction>() {
             @Override
-            public String getValue(PortalProduction production) {
+            public String getValue(GsProduction production) {
                 return getStatusText(production.getProcessingStatus());
             }
         };
         productionStatusColumn.setSortable(true);
 
-        TextColumn<PortalProduction> stagingStatusColumn = new TextColumn<PortalProduction>() {
+        TextColumn<GsProduction> stagingStatusColumn = new TextColumn<GsProduction>() {
             @Override
-            public String getValue(PortalProduction production) {
+            public String getValue(GsProduction production) {
                 return getStatusText(production.getStagingStatus());
             }
         };
         stagingStatusColumn.setSortable(true);
 
-        Column<PortalProduction, String> actionColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+        Column<GsProduction, String> actionColumn = new Column<GsProduction, String>(new ButtonCell()) {
             @Override
-            public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
+            public void render(Cell.Context context, GsProduction production, SafeHtmlBuilder sb) {
                 String action = getAction(production);
                 if (action != null) {
                     super.render(context, production, sb);
@@ -111,15 +111,15 @@ public class ManageProductionsView extends PortalView {
             }
 
             @Override
-            public String getValue(PortalProduction production) {
+            public String getValue(GsProduction production) {
                 return getAction(production);
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
 
-        Column<PortalProduction, String> resultColumn = new Column<PortalProduction, String>(new ButtonCell()) {
+        Column<GsProduction, String> resultColumn = new Column<GsProduction, String>(new ButtonCell()) {
             @Override
-            public void render(Cell.Context context, PortalProduction production, SafeHtmlBuilder sb) {
+            public void render(Cell.Context context, GsProduction production, SafeHtmlBuilder sb) {
                 String result = getResult(production);
                 if (result != null) {
                     super.render(context, production, sb);
@@ -129,7 +129,7 @@ public class ManageProductionsView extends PortalView {
             }
 
             @Override
-            public String getValue(PortalProduction production) {
+            public String getValue(GsProduction production) {
                 return getResult(production);
             }
         };
@@ -161,17 +161,17 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
     }
 
-    static String getResult(PortalProduction production) {
+    static String getResult(GsProduction production) {
         if (production.getOutputUrl() == null) {
             return null;
         }
 
-        if (production.getProcessingStatus().getState() == PortalProductionState.COMPLETED
-                && production.getStagingStatus().getState() == PortalProductionState.COMPLETED) {
+        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
+                && production.getStagingStatus().getState() == GsProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
-        if (production.getProcessingStatus().getState() == PortalProductionState.COMPLETED
+        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
                 && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return STAGE;
         }
@@ -179,7 +179,7 @@ public class ManageProductionsView extends PortalView {
         return null;
     }
 
-    static String getAction(PortalProduction production) {
+    static String getAction(GsProduction production) {
         if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
             return null;
         }
@@ -214,19 +214,19 @@ public class ManageProductionsView extends PortalView {
     public void handlePortalStartedUp() {
     }
 
-    private void restartProduction(PortalProduction production) {
+    private void restartProduction(GsProduction production) {
         // todo - implement
         Window.alert("Not implemented yet:\n" +
                              "Restart " + production);
     }
 
-    private void showProductionInfo(PortalProduction production) {
+    private void showProductionInfo(GsProduction production) {
         // todo - implement
         Window.alert("Not implemented yet:\n" +
                              "Show info on " + production);
     }
 
-    private void downloadProduction(PortalProduction production) {
+    private void downloadProduction(GsProduction production) {
 /*
         Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
                     "_blank", "");
@@ -234,7 +234,7 @@ public class ManageProductionsView extends PortalView {
         Window.open(production.getOutputUrl(), "_blank", "");
     }
 
-    private void stageProduction(PortalProduction production) {
+    private void stageProduction(GsProduction production) {
         getPortal().getBackendService().stageProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
             @Override
             public void onSuccess(Void ignored) {
@@ -248,7 +248,7 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private void cancelProduction(PortalProduction production) {
+    private void cancelProduction(GsProduction production) {
         boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
                                                  "This operation cannot be undone.\n" +
                                                  "\n" +
@@ -270,7 +270,7 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private void deleteProductions(final List<PortalProduction> toDeleteList) {
+    private void deleteProductions(final List<GsProduction> toDeleteList) {
         if (toDeleteList.isEmpty()) {
             Window.alert("Nothing selected.");
             return;
@@ -302,28 +302,28 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private String getStatusText(PortalProductionStatus status) {
-        PortalProductionState state = status.getState();
+    private String getStatusText(GsProcessStatus status) {
+        GsProcessState state = status.getState();
         String message = status.getMessage();
-        if (state == PortalProductionState.WAITING) {
+        if (state == GsProcessState.WAITING) {
             return "Waiting" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == PortalProductionState.IN_PROGRESS) {
+        } else if (state == GsProcessState.IN_PROGRESS) {
             return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == PortalProductionState.CANCELLED) {
+        } else if (state == GsProcessState.CANCELLED) {
             return "Cancelled" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == PortalProductionState.ERROR) {
+        } else if (state == GsProcessState.ERROR) {
             return "Error" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == PortalProductionState.UNKNOWN) {
+        } else if (state == GsProcessState.UNKNOWN) {
             return "Unknown";
-        } else if (state == PortalProductionState.COMPLETED) {
+        } else if (state == GsProcessState.COMPLETED) {
             return "Completed" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
     }
 
-    private class ProductionActionUpdater implements FieldUpdater<PortalProduction, String> {
+    private class ProductionActionUpdater implements FieldUpdater<GsProduction, String> {
         @Override
-        public void update(int index, PortalProduction production, String value) {
+        public void update(int index, GsProduction production, String value) {
             if (RESTART.equals(value)) {
                 restartProduction(production);
             } else if (CANCEL.equals(value)) {
@@ -342,9 +342,9 @@ public class ManageProductionsView extends PortalView {
     private class DeleteProductionsAction implements ClickHandler {
         @Override
         public void onClick(ClickEvent event) {
-            final List<PortalProduction> availableList = getPortal().getProductions().getList();
-            final List<PortalProduction> toDeleteList = new ArrayList<PortalProduction>();
-            for (PortalProduction production : availableList) {
+            final List<GsProduction> availableList = getPortal().getProductions().getList();
+            final List<GsProduction> toDeleteList = new ArrayList<GsProduction>();
+            for (GsProduction production : availableList) {
                 // todo - check, this doesn't work?!?
                 if (selectionModel.isSelected(production)) {
                     toDeleteList.add(production);

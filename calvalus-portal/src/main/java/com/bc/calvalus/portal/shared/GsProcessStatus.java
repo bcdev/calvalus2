@@ -3,32 +3,32 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * Provides status information about a server-side production transaction.
+ * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessStatus} class.
  *
  * @author Norman
  */
-public class PortalProductionStatus implements IsSerializable {
+public class GsProcessStatus implements IsSerializable {
     private static final float EPS = 1.0E-04f;
-    private PortalProductionState state;
+    private GsProcessState state;
     private String message;
     private float progress;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}.
      */
-    public PortalProductionStatus() {
-        this(PortalProductionState.WAITING);
+    public GsProcessStatus() {
+        this(GsProcessState.UNKNOWN);
     }
 
-    public PortalProductionStatus(PortalProductionState state) {
+    public GsProcessStatus(GsProcessState state) {
         this(state, 0.0f);
     }
 
-    public PortalProductionStatus(PortalProductionState state, float progress) {
+    public GsProcessStatus(GsProcessState state, float progress) {
         this(state, "", progress);
     }
 
-    public PortalProductionStatus(PortalProductionState state, String message, float progress) {
+    public GsProcessStatus(GsProcessState state, String message, float progress) {
         if (state == null) {
             throw new NullPointerException("state");
         }
@@ -40,7 +40,7 @@ public class PortalProductionStatus implements IsSerializable {
         this.progress = progress;
     }
 
-    public PortalProductionState getState() {
+    public GsProcessState getState() {
         return state;
     }
 
@@ -49,7 +49,7 @@ public class PortalProductionStatus implements IsSerializable {
     }
 
     public boolean isUnknown() {
-        return state == PortalProductionState.UNKNOWN;
+        return state == GsProcessState.UNKNOWN;
     }
 
     public String getMessage() {
@@ -69,7 +69,7 @@ public class PortalProductionStatus implements IsSerializable {
             return false;
         }
 
-        PortalProductionStatus that = (PortalProductionStatus) o;
+        GsProcessStatus that = (GsProcessStatus) o;
 
         float delta = that.progress - progress;
         if (delta < 0) {

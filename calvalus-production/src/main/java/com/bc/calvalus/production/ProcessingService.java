@@ -16,7 +16,7 @@ public interface ProcessingService {
 
     String[] listFilePaths(String dirPath) throws IOException;
 
-    Map<Object, ProductionStatus> getJobStatusMap() throws IOException;
+    Map<Object, ProcessStatus> getJobStatusMap() throws IOException;
 
     boolean killJob(Object jobId) throws IOException;
 }

@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.PortalProcessor;
+import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -41,7 +41,7 @@ public class GeneralProcessorPanel implements IsWidget {
         processorName = new ListBox();
         processorName.setName("processorName");
         processorName.setWidth("20em");
-        for (PortalProcessor processor : portal.getProcessors()) {
+        for (GsProcessorDescriptor processor : portal.getProcessors()) {
             String label = processor.getProcessorName() + " (from " + processor.getBundleName() + ")";
             this.processorName.addItem(label, processor.getExecutableName());
         }
@@ -121,7 +121,7 @@ public class GeneralProcessorPanel implements IsWidget {
         }
     }
 
-    public PortalProcessor getSelectedProcessor() {
+    public GsProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorName.getSelectedIndex();
         return portal.getProcessors()[selectedIndex];
     }
@@ -142,7 +142,7 @@ public class GeneralProcessorPanel implements IsWidget {
 
     void updateProcessorVersionsWidget() {
         bundleVersion.clear();
-        PortalProcessor selectedProcessor = getSelectedProcessor();
+        GsProcessorDescriptor selectedProcessor = getSelectedProcessor();
         String[] versions = selectedProcessor.getBundleVersions();
         for (String version : versions) {
             bundleVersion.addItem(version);

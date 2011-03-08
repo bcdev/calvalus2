@@ -3,28 +3,28 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * Information about a production.
+ * GWT-serializable version of the {@link com.bc.calvalus.production.Production} class.
  *
  * @author Norman
  */
-public class PortalProduction implements IsSerializable {
+public class GsProduction implements IsSerializable {
     String id;
     String name;
     String outputUrl;
-    PortalProductionStatus processingStatus;
-    PortalProductionStatus stagingStatus;
+    GsProcessStatus processingStatus;
+    GsProcessStatus stagingStatus;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public PortalProduction() {
+    public GsProduction() {
     }
 
-    public PortalProduction(String id,
-                            String name,
-                            String outputUrl,
-                            PortalProductionStatus processingStatus,
-                            PortalProductionStatus stagingStatus) {
+    public GsProduction(String id,
+                        String name,
+                        String outputUrl,
+                        GsProcessStatus processingStatus,
+                        GsProcessStatus stagingStatus) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -56,19 +56,19 @@ public class PortalProduction implements IsSerializable {
         return outputUrl;
     }
 
-    public PortalProductionStatus getProcessingStatus() {
+    public GsProcessStatus getProcessingStatus() {
         return processingStatus;
     }
 
-    public void setProcessingStatus(PortalProductionStatus processingStatus) {
+    public void setProcessingStatus(GsProcessStatus processingStatus) {
         this.processingStatus = processingStatus;
     }
 
-    public PortalProductionStatus getStagingStatus() {
+    public GsProcessStatus getStagingStatus() {
         return stagingStatus;
     }
 
-    public void setStagingStatus(PortalProductionStatus stagingStatus) {
+    public void setStagingStatus(GsProcessStatus stagingStatus) {
         this.stagingStatus = stagingStatus;
     }
 

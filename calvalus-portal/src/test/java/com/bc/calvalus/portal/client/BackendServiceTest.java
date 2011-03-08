@@ -2,9 +2,9 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.PortalProductionRequest;
-import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.PortalProductionState;
+import com.bc.calvalus.portal.shared.GsProcessState;
+import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.GsProductionResponse;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -17,15 +17,6 @@ public class BackendServiceTest extends GWTTestCase {
      */
     public String getModuleName() {
         return "com.bc.calvalus.portal.CalvalusPortalJUnit";
-    }
-
-    /**
-     * Tests the ProcessingRequestVerifier.
-     */
-    public void testFieldVerifier() {
-        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest(null)));
-        assertFalse(PortalProductionRequest.isValid(new PortalProductionRequest("")));
-        assertTrue(PortalProductionRequest.isValid(new PortalProductionRequest("ice cream")));
     }
 
     /**
@@ -42,9 +33,9 @@ public class BackendServiceTest extends GWTTestCase {
         delayTestFinish(10000);
 
         // Send a request to the server.
-        backendService.orderProduction(new PortalProductionRequest("x*y",
-                                                                   "x", "3",
-                                                                   "y", "-1"),
+        backendService.orderProduction(new GsProductionRequest("x*y",
+                                                               "x", "3",
+                                                               "y", "-1"),
                                        new PortalProductionResponseAsyncCallback());
     }
 
@@ -56,15 +47,15 @@ public class BackendServiceTest extends GWTTestCase {
     }
 
 
-    private class PortalProductionResponseAsyncCallback implements AsyncCallback<PortalProductionResponse> {
-        public void onSuccess(PortalProductionResponse response) {
+    private class PortalProductionResponseAsyncCallback implements AsyncCallback<GsProductionResponse> {
+        public void onSuccess(GsProductionResponse response) {
             // Verify that the response is correct.
             assertNotNull(response);
             assertNotNull(response.getProduction());
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());
             assertNotNull(response.getProduction().getProcessingStatus());
-            assertEquals(PortalProductionState.WAITING, response.getProduction().getProcessingStatus().getState());
+            assertEquals(GsProcessState.WAITING, response.getProduction().getProcessingStatus().getState());
 
             // Now that we have received a response, we need to tell the test runner
             // that the test is complete. You must call finishTest() after an

@@ -3,9 +3,9 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.BeamL3FormattingService;
 import com.bc.calvalus.processing.beam.FormatterL3Config;
+import com.bc.calvalus.production.ProcessState;
 import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
+import com.bc.calvalus.production.ProcessStatus;
 import com.bc.calvalus.production.Staging;
 import org.apache.hadoop.conf.Configuration;
 
@@ -47,10 +47,10 @@ class L3Staging extends Staging {
                 beamL3FormattingService.format(formatConfig, beamL3config, outputDir);
                 progress = 1f;
                 // todo - if job has been cancelled, it must not change its state anymore
-                production.setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, progress, ""));
+                production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
             } catch (Exception e) {
                 // todo - if job has been cancelled, it must not change its state anymore
-                production.setStagingStatus(new ProductionStatus(ProductionState.ERROR, progress, e.getMessage()));
+                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 logger.log(Level.WARNING, "Formatting failed.", e);
             }
             progress += (i + 1) / processingRequests.length;
@@ -62,12 +62,12 @@ class L3Staging extends Staging {
 
     @Override
     public boolean isCancelled() {
-        return production.getStagingStatus().getState() == ProductionState.CANCELLED;
+        return production.getStagingStatus().getState() == ProcessState.CANCELLED;
     }
 
     @Override
     public void cancel() {
         // todo - cleanup output directory!!!
-        production.setStagingStatus(new ProductionStatus(ProductionState.CANCELLED));
+        production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
     }
 }

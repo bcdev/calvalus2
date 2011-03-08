@@ -8,22 +8,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A production request. Production requests are submitted to the backend service.
+ * GWT-serializable version of the {@link com.bc.calvalus.production.ProductionRequest} class.
  *
  * @author Norman
  */
-public class PortalProductionRequest implements IsSerializable {
+public class GsProductionRequest implements IsSerializable {
     private String productionType;
     private Map<String, String> productionParameters;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public PortalProductionRequest() {
+    public GsProductionRequest() {
     }
 
-    public PortalProductionRequest(String productionType,
-                             String... productionParametersKeyValuePairs) {
+    public GsProductionRequest(String productionType,
+                               String... productionParametersKeyValuePairs) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
         }
@@ -45,7 +45,7 @@ public class PortalProductionRequest implements IsSerializable {
         }
     }
 
-    public PortalProductionRequest(String productionType, Map<String, String> productionParameters) {
+    public GsProductionRequest(String productionType, Map<String, String> productionParameters) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
         }
@@ -65,7 +65,7 @@ public class PortalProductionRequest implements IsSerializable {
     }
 
 
-    public static boolean isValid(PortalProductionRequest req) {
+    public static boolean isValid(GsProductionRequest req) {
         if (req.getProductionType() == null || req.getProductionType().isEmpty()) {
             return false;
         }

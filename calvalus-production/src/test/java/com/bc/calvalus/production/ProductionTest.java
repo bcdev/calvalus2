@@ -20,12 +20,12 @@ public class ProductionTest {
         assertEquals(1, production.getJobIds().length);
         assertEquals(jobID, production.getJobIds()[0]);
         assertEquals("test", production.getProductionRequest().getProductionType());
-        assertEquals(ProductionState.UNKNOWN, production.getProcessingStatus().getState());
-        assertEquals(ProductionState.UNKNOWN, production.getStagingStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, production.getProcessingStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, production.getStagingStatus().getState());
 
         production = new Production("9A3F", "Toasting", "user", true, new JobID[]{jobID}, new ProductionRequest("test"));
-        assertEquals(ProductionState.UNKNOWN, production.getProcessingStatus().getState());
-        assertEquals(ProductionState.WAITING, production.getStagingStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, production.getProcessingStatus().getState());
+        assertEquals(ProcessState.WAITING, production.getStagingStatus().getState());
     }
 
     @Test

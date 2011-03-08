@@ -1,9 +1,9 @@
 package com.bc.calvalus.production.test;
 
+import com.bc.calvalus.production.ProcessState;
+import com.bc.calvalus.production.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,20 +43,20 @@ class TestProduction extends Production {
         if (outputUrl != null) {
             setOutputUrl(outputUrl);
             if (outputStaging) {
-                setStagingStatus(new ProductionStatus(ProductionState.WAITING));
+                setStagingStatus(new ProcessStatus(ProcessState.WAITING));
             }
         }
     }
 
 
     public void start() {
-        setProcessingStatus(new ProductionStatus(ProductionState.WAITING));
+        setProcessingStatus(new ProcessStatus(ProcessState.WAITING));
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 float progress = (float) (System.currentTimeMillis() - startTime) / (float) duration;
                 if (progress >= 1.0f) {
-                    setProcessingStatus(new ProductionStatus(ProductionState.COMPLETED, 1.0f));
+                    setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f));
                     if (timer != null) {
                         if (isOutputStaging() && getOutputUrl() != null) {
                             stageOutput();
@@ -64,7 +64,7 @@ class TestProduction extends Production {
                         stopTimer();
                     }
                 } else {
-                    setProcessingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, progress));
+                    setProcessingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, progress));
                 }
             }
         };
@@ -75,7 +75,7 @@ class TestProduction extends Production {
     public void cancel() {
         if (timer != null) {
             stopTimer();
-            setProcessingStatus(new ProductionStatus(ProductionState.CANCELLED, 0.0f, "Cancelled"));
+            setProcessingStatus(new ProcessStatus(ProcessState.CANCELLED, 0.0f, "Cancelled"));
         }
     }
 
@@ -86,7 +86,7 @@ class TestProduction extends Production {
 
     void stageOutput() {
         try {
-            setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, 0.0f));
+            setStagingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, 0.0f));
             if (!outputFile.exists()) {
                 File parentFile = outputFile.getParentFile();
                 if (parentFile != null) {
@@ -96,7 +96,7 @@ class TestProduction extends Production {
                 byte[] buffer = new byte[1024 * 1024];
                 try {
                     for (int i = 0; i < 32; i++) {
-                        setStagingStatus(new ProductionStatus(ProductionState.IN_PROGRESS, i / 32f));
+                        setStagingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, i / 32f));
                         Arrays.fill(buffer, (byte) i);
                         stream.write(buffer);
                     }
@@ -104,9 +104,9 @@ class TestProduction extends Production {
                     stream.close();
                 }
             }
-            setStagingStatus(new ProductionStatus(ProductionState.COMPLETED, 1f));
+            setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1f));
         } catch (IOException e) {
-            setStagingStatus(new ProductionStatus(ProductionState.ERROR, getStagingStatus().getProgress(), e.getMessage()));
+            setStagingStatus(new ProcessStatus(ProcessState.ERROR, getStagingStatus().getProgress(), e.getMessage()));
         }
     }
 

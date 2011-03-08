@@ -1,9 +1,9 @@
 package com.bc.calvalus.production.hadoop;
 
 
+import com.bc.calvalus.production.ProcessState;
+import com.bc.calvalus.production.ProcessStatus;
 import com.bc.calvalus.production.ProcessingService;
-import com.bc.calvalus.production.ProductionState;
-import com.bc.calvalus.production.ProductionStatus;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -52,9 +52,9 @@ public class HadoopProcessingService implements ProcessingService {
 
 
     @Override
-    public Map<Object, ProductionStatus> getJobStatusMap() throws IOException {
+    public Map<Object, ProcessStatus> getJobStatusMap() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
-        HashMap<Object, ProductionStatus> jobStatusMap = new HashMap<Object, ProductionStatus>();
+        HashMap<Object, ProcessStatus> jobStatusMap = new HashMap<Object, ProcessStatus>();
         for (JobStatus jobStatus : jobStatuses) {
             jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
         }
@@ -82,21 +82,21 @@ public class HadoopProcessingService implements ProcessingService {
      *
      * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
      */
-    static ProductionStatus convertStatus(JobStatus jobStatus) {
+    static ProcessStatus convertStatus(JobStatus jobStatus) {
         if (jobStatus != null) {
             float progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
             if (jobStatus.getRunState() == JobStatus.FAILED) {
-                return new ProductionStatus(ProductionState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed");
+                return new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed");
             } else if (jobStatus.getRunState() == JobStatus.KILLED) {
-                return new ProductionStatus(ProductionState.CANCELLED, progress);
+                return new ProcessStatus(ProcessState.CANCELLED, progress);
             } else if (jobStatus.getRunState() == JobStatus.PREP) {
-                return new ProductionStatus(ProductionState.WAITING, progress);
+                return new ProcessStatus(ProcessState.WAITING, progress);
             } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
-                return new ProductionStatus(ProductionState.IN_PROGRESS, progress);
+                return new ProcessStatus(ProcessState.IN_PROGRESS, progress);
             } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
-                return new ProductionStatus(ProductionState.COMPLETED, 1.0f);
+                return new ProcessStatus(ProcessState.COMPLETED, 1.0f);
             }
         }
-        return ProductionStatus.UNKNOWN;
+        return ProcessStatus.UNKNOWN;
     }
 }

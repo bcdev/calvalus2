@@ -3,21 +3,21 @@ package com.bc.calvalus.portal.server;
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
-import com.bc.calvalus.portal.shared.PortalProcessor;
-import com.bc.calvalus.portal.shared.PortalProductSet;
-import com.bc.calvalus.portal.shared.PortalProduction;
-import com.bc.calvalus.portal.shared.PortalProductionRequest;
-import com.bc.calvalus.portal.shared.PortalProductionResponse;
-import com.bc.calvalus.portal.shared.PortalProductionState;
-import com.bc.calvalus.portal.shared.PortalProductionStatus;
+import com.bc.calvalus.portal.shared.GsProcessState;
+import com.bc.calvalus.portal.shared.GsProcessStatus;
+import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.GsProductSet;
+import com.bc.calvalus.portal.shared.GsProduction;
+import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.GsProductionResponse;
+import com.bc.calvalus.production.ProcessorDescriptor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionProcessor;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
-import com.bc.calvalus.production.ProductionStatus;
+import com.bc.calvalus.production.ProcessStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
@@ -62,49 +62,49 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public PortalProductSet[] getProductSets(String filter) throws BackendServiceException {
+    public GsProductSet[] getProductSets(String filter) throws BackendServiceException {
         try {
             ProductSet[] productSets = productionService.getProductSets(filter);
-            PortalProductSet[] portalProductSets = new PortalProductSet[productSets.length];
+            GsProductSet[] gsProductSets = new GsProductSet[productSets.length];
             for (int i = 0; i < productSets.length; i++) {
-                portalProductSets[i] = convert(productSets[i]);
+                gsProductSets[i] = convert(productSets[i]);
             }
-            return portalProductSets;
+            return gsProductSets;
         } catch (ProductionException e) {
             throw convert(e);
         }
     }
 
     @Override
-    public PortalProcessor[] getProcessors(String filter) throws BackendServiceException {
+    public GsProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException {
         try {
-            ProductionProcessor[] processors = productionService.getProcessors(filter);
-            PortalProcessor[] portalProcessors = new PortalProcessor[processors.length];
-            for (int i = 0; i < processors.length; i++) {
-                portalProcessors[i] = convert(processors[i]);
+            ProcessorDescriptor[] processorDescriptors = productionService.getProcessors(filter);
+            GsProcessorDescriptor[] gsProcessorDescriptors = new GsProcessorDescriptor[processorDescriptors.length];
+            for (int i = 0; i < processorDescriptors.length; i++) {
+                gsProcessorDescriptors[i] = convert(processorDescriptors[i]);
             }
-            return portalProcessors;
+            return gsProcessorDescriptors;
         } catch (ProductionException e) {
             throw convert(e);
         }
     }
 
     @Override
-    public PortalProduction[] getProductions(String filter) throws BackendServiceException {
+    public GsProduction[] getProductions(String filter) throws BackendServiceException {
         try {
             Production[] productions = productionService.getProductions(filter);
-            PortalProduction[] portalProductions = new PortalProduction[productions.length];
+            GsProduction[] gsProductions = new GsProduction[productions.length];
             for (int i = 0; i < productions.length; i++) {
-                portalProductions[i] = convert(productions[i]);
+                gsProductions[i] = convert(productions[i]);
             }
-            return portalProductions;
+            return gsProductions;
         } catch (ProductionException e) {
             throw convert(e);
         }
     }
 
     @Override
-    public PortalProductionResponse orderProduction(PortalProductionRequest productionRequest) throws BackendServiceException {
+    public GsProductionResponse orderProduction(GsProductionRequest productionRequest) throws BackendServiceException {
         try {
             ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
             return convert(productionResponse);
@@ -140,36 +140,36 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
-    private PortalProductSet convert(ProductSet productSet) {
-        return new PortalProductSet(productSet.getId(), productSet.getType(), productSet.getName());
+    private GsProductSet convert(ProductSet productSet) {
+        return new GsProductSet(productSet.getId(), productSet.getType(), productSet.getName());
     }
 
-    private PortalProcessor convert(ProductionProcessor processor) {
-        return new PortalProcessor(processor.getExecutableName(), processor.getProcessorName(),
-                                   processor.getDefaultParameters(), processor.getBundleName(),
-                                   processor.getBundleVersions());
+    private GsProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
+        return new GsProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
+                                   processorDescriptor.getDefaultParameters(), processorDescriptor.getBundleName(),
+                                   processorDescriptor.getBundleVersions());
     }
 
-    private PortalProduction convert(Production production) {
-        return new PortalProduction(production.getId(),
+    private GsProduction convert(Production production) {
+        return new GsProduction(production.getId(),
                                     production.getName(),
                                     production.getOutputUrl(),
                                     convert(production.getProcessingStatus()),
                                     convert(production.getStagingStatus()));
     }
 
-    private PortalProductionStatus convert(ProductionStatus status) {
-        return new PortalProductionStatus(PortalProductionState.valueOf(status.getState().name()),
+    private GsProcessStatus convert(ProcessStatus status) {
+        return new GsProcessStatus(GsProcessState.valueOf(status.getState().name()),
                                           status.getMessage(),
                                           status.getProgress());
     }
 
-    private PortalProductionResponse convert(ProductionResponse productionResponse) {
-        return new PortalProductionResponse(convert(productionResponse.getProduction()));
+    private GsProductionResponse convert(ProductionResponse productionResponse) {
+        return new GsProductionResponse(convert(productionResponse.getProduction()));
     }
 
-    private ProductionRequest convert(PortalProductionRequest portalProductionRequest) {
-        return new ProductionRequest(portalProductionRequest.getProductionType(), portalProductionRequest.getProductionParameters());
+    private ProductionRequest convert(GsProductionRequest gwtProductionRequest) {
+        return new ProductionRequest(gwtProductionRequest.getProductionType(), gwtProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(ProductionException e) {

@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.test;
 
 import com.bc.calvalus.catalogue.ProductSet;
-import com.bc.calvalus.production.ProductionProcessor;
+import com.bc.calvalus.production.ProcessorDescriptor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -57,18 +57,18 @@ public class TestProductionService implements ProductionService {
     }
 
     @Override
-    public ProductionProcessor[] getProcessors(String filter) throws ProductionException {
+    public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
         // Return some dummy processors
-        return new ProductionProcessor[]{
-                new ProductionProcessor("pc1", "MERIS IOP Case2R",
+        return new ProcessorDescriptor[]{
+                new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
                               "",
                               "beam-meris-case2r",
                               new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
-                new ProductionProcessor("pc2", "MERIS IOP QAA",
+                new ProcessorDescriptor("pc2", "MERIS IOP QAA",
                               "",
                               "beam-meris-qaa",
                               new String[]{"1.2-SNAPSHOT", "1.1.3", "1.0.1"}),
-                new ProductionProcessor("pc3", "Band Maths",
+                new ProcessorDescriptor("pc3", "Band Maths",
                               "",
                               "beam-gpf",
                               new String[]{"4.8"}),

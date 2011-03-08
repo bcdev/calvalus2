@@ -1,21 +1,17 @@
-package com.bc.calvalus.portal.shared;
+package com.bc.calvalus.production;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
-
-public class PortalProcessor implements IsSerializable {
+public class ProcessorDescriptor {
     private String executableName;
     private String processorName;
     private String defaultParameters;
     private String bundleName;
     private String[] bundleVersions;
 
-    /**
-     * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
-     */
-    public PortalProcessor() {
-    }
-
-    public PortalProcessor(String executableName, String processorName, String defaultParameters, String bundleName, String[] bundleVersions) {
+    public ProcessorDescriptor(String executableName,
+                               String processorName,
+                               String defaultParameters,
+                               String bundleName,
+                               String[] bundleVersions) {
         this.executableName = executableName;
         this.processorName = processorName;
         this.defaultParameters = defaultParameters;
@@ -42,4 +38,5 @@ public class PortalProcessor implements IsSerializable {
     public String[] getBundleVersions() {
         return bundleVersions;
     }
+
 }

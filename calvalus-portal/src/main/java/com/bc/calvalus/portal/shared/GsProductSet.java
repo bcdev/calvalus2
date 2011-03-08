@@ -3,11 +3,11 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * A proxy for a product set.
+ * GWT-serializable version of the {@link com.bc.calvalus.catalogue.ProductSet} class.
  *
  * @author Norman
  */
-public class PortalProductSet implements IsSerializable {
+public class GsProductSet implements IsSerializable {
     private String id;
     private String type;
     private String name;
@@ -15,11 +15,11 @@ public class PortalProductSet implements IsSerializable {
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public PortalProductSet() {
+    public GsProductSet() {
         this(null, "", "");
     }
 
-    public PortalProductSet(String id, String type, String name) {
+    public GsProductSet(String id, String type, String name) {
         this.id = id;
         this.type = type;
         this.name = name;

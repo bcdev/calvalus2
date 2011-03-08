@@ -1,9 +1,15 @@
 package com.bc.calvalus.portal.shared;
 
 /**
-* State of a production.
-*/
-public enum PortalProductionState {
+ * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessState} class.
+ *
+ * @author Norman
+ */
+public enum GsProcessState {
+    /**
+     * Indicates an unknown state, e.g. could not be retrieved.
+     */
+    UNKNOWN(false),
     /**
      * Indicates that the work unit has not yet started.
      */
@@ -21,17 +27,13 @@ public enum PortalProductionState {
      */
     CANCELLED(true),
     /**
-     * Indicates an unknown state, e.g. could not be retrieved.
-     */
-    UNKNOWN(false),
-    /**
      * Indicates a server-side problem, e.g. missing input files.
      */
     ERROR(true);
 
     private final boolean done;
 
-    PortalProductionState(boolean done) {
+    GsProcessState(boolean done) {
         this.done = done;
     }
 

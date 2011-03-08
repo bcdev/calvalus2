@@ -68,10 +68,10 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public ProductionProcessor[] getProcessors(String filter) throws ProductionException {
+    public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
         // todo - load & update from persistent storage
-        return new ProductionProcessor[]{
-                new ProductionProcessor("CoastColour.L2W", "MERIS CoastColour",
+        return new ProcessorDescriptor[]{
+                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
                                         "<parameters>\n" +
                                                 "  <useIdepix>true</useIdepix>\n" +
                                                 "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
@@ -173,18 +173,18 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     public void updateProductions() throws IOException, ProductionException {
-        Map<Object, ProductionStatus> jobStatusMap = processingService.getJobStatusMap();
+        Map<Object, ProcessStatus> jobStatusMap = processingService.getJobStatusMap();
         Production[] productions = productionStore.getProductions();
 
         // Update state of all registered productions
         for (Production production : productions) {
             Object[] jobIds = production.getJobIds();
-            ProductionStatus[] jobStatuses = new ProductionStatus[jobIds.length];
+            ProcessStatus[] jobStatuses = new ProcessStatus[jobIds.length];
             for (int i = 0; i < jobIds.length; i++) {
                 Object jobId = jobIds[i];
                 jobStatuses[i] = jobStatusMap.get(jobId);
             }
-            production.setProcessingStatus(ProductionStatus.aggregate(jobStatuses));
+            production.setProcessingStatus(ProcessStatus.aggregate(jobStatuses));
         }
 
         // Now try to delete productions
@@ -201,8 +201,8 @@ public class ProductionServiceImpl implements ProductionService {
         // Copy result to staging area
         for (Production production : productions) {
             if (production.isOutputStaging()
-                    && production.getProcessingStatus().getState() == ProductionState.COMPLETED
-                    && production.getStagingStatus().getState() == ProductionState.WAITING
+                    && production.getProcessingStatus().getState() == ProcessState.COMPLETED
+                    && production.getStagingStatus().getState() == ProcessState.WAITING
                     && stagingsMap.get(production.getId()) == null) {
                 stageProductionResults(production);
             }
