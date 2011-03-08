@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.test;
 
-import com.bc.calvalus.production.ProcessState;
-import com.bc.calvalus.production.ProcessStatus;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 

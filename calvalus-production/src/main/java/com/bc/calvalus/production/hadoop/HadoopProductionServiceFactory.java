@@ -1,11 +1,16 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.processing.hadoop.HadoopJobIdFormat;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
+import com.bc.calvalus.production.ProductionStore;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.SimpleProductionStore;
+import com.bc.calvalus.staging.SimpleStagingService;
+import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -27,14 +32,16 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = createJobConf(serviceConfiguration);
         try {
             JobClient jobClient = new JobClient(jobConf);
-            SimpleProductionStore simpleProductionStore = new SimpleProductionStore(new HadoopJobIdFormat());
-            HadoopProcessingService hadoopProcessingService = new HadoopProcessingService(jobClient);
-            ProductionType l2ProductionType = new L2ProductionType(hadoopProcessingService, localStagingDir);
-            ProductionType l3ProductionType = new L3ProductionType(hadoopProcessingService, localStagingDir);
-            return new ProductionServiceImpl(simpleProductionStore,
-                                               hadoopProcessingService,
-                                               l2ProductionType,
-                                               l3ProductionType);
+            ProductionStore productionStore = new SimpleProductionStore(new HadoopJobIdFormat());
+            HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
+            StagingService stagingService = new SimpleStagingService(3);
+            ProductionType l2ProductionType = new L2ProductionType(processingService, localStagingDir);
+            ProductionType l3ProductionType = new L3ProductionType(processingService, localStagingDir);
+            return new ProductionServiceImpl(productionStore,
+                                             processingService,
+                                             stagingService,
+                                             l2ProductionType,
+                                             l3ProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

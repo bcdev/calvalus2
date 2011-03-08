@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.ProcessState;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;
 

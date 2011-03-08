@@ -25,11 +25,19 @@
         </dependency>
         <dependency>
             <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-processing</artifactId>
         </dependency>
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-exchange</artifactId>
         </dependency>
 
         <!-- Used for staging -->

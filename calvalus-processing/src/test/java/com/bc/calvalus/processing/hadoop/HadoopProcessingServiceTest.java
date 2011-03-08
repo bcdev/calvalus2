@@ -1,7 +1,8 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.processing.hadoop;
 
-import com.bc.calvalus.production.ProcessState;
-import com.bc.calvalus.production.ProcessStatus;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;

@@ -2,14 +2,17 @@ package com.bc.calvalus.production;
 
 
 import com.bc.calvalus.catalogue.ProductSet;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.staging.Staging;
+import com.bc.calvalus.staging.StagingService;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,21 +30,22 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, ProductionType> productionTypeMap;
     private final Map<String, Action> productionActionMap;
     private final Map<String, Staging> stagingsMap;
-    private final ExecutorService stagingService;
+    private final StagingService stagingService;
     private final Logger logger;
 
     public ProductionServiceImpl(ProductionStore productionStore,
                                  ProcessingService processingService,
+                                 StagingService stagingService,
                                  ProductionType... productionTypes) throws ProductionException {
         this.productionStore = productionStore;
         this.processingService = processingService;
+        this.stagingService = stagingService;
         this.productionTypeMap = new HashMap<String, ProductionType>();
         for (ProductionType productionType : productionTypes) {
             this.productionTypeMap.put(productionType.getName(), productionType);
         }
         this.productionActionMap = new HashMap<String, Action>();
         this.stagingsMap = new HashMap<String, Staging>();
-        this.stagingService = Executors.newFixedThreadPool(3); // todo - make numThreads configurable
         this.logger = Logger.getLogger("com.bc.calvalus");
 
         try {
@@ -94,7 +98,7 @@ public class ProductionServiceImpl implements ProductionService {
             throw new ProductionException(String.format("Unhandled production type '%s'",
                                                         productionRequest.getProductionType()));
         }
-        Production production = productionType.orderProduction(productionRequest);
+        Production production = productionType.createProduction(productionRequest);
         productionStore.addProduction(production);
         return new ProductionResponse(production);
     }
@@ -167,9 +171,14 @@ public class ProductionServiceImpl implements ProductionService {
 
     private void stageProductionResults(Production production) throws ProductionException {
         ProductionType productionType = productionTypeMap.get(production.getProductionRequest().getProductionType());
-        Staging staging = productionType.stageProduction(production);
-        stagingsMap.put(production.getId(), staging);
-        stagingService.submit(staging);
+        Staging staging = productionType.createStaging(production);
+        try {
+            stagingService.orderStaging(staging);
+            stagingsMap.put(production.getId(), staging);
+        } catch (IOException e) {
+            throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
+                                                        production.getId(), e.getMessage()), e);
+        }
     }
 
     public void updateProductions() throws IOException, ProductionException {

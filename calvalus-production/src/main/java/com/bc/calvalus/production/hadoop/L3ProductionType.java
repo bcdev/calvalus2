@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.BeamJobService;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -31,7 +32,7 @@ class L3ProductionType implements ProductionType {
     }
 
     @Override
-    public Production orderProduction(ProductionRequest productionRequest) throws ProductionException {
+    public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         String l3ProductionId = createL3ProductionId(productionRequest);
         String l3ProductionName = createL3ProductionName(productionRequest);
@@ -65,7 +66,7 @@ class L3ProductionType implements ProductionType {
     }
 
     @Override
-    public L3Staging stageProduction(Production hadoopProduction) throws ProductionException {
+    public L3Staging createStaging(Production hadoopProduction) throws ProductionException {
         JobClient jobClient = processingService.getJobClient();
         ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),

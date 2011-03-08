@@ -1,12 +1,12 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.processing.beam.BeamL3FormattingService;
 import com.bc.calvalus.processing.beam.FormatterL3Config;
-import com.bc.calvalus.production.ProcessState;
 import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProcessStatus;
-import com.bc.calvalus.production.Staging;
+import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.logging.Level;

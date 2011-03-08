@@ -1,4 +1,4 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.commons;
 
 /**
  * Provides status information about a server-side production transaction.

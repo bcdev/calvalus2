@@ -1,5 +1,9 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.processing.ProcessingService;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +14,11 @@ import java.util.Map;
 * @author Norman Fomferra
 */
 public class TestProcessingService implements ProcessingService {
+    @Override
+    public JobIdFormat getJobIdFormat() {
+        return JobIdFormat.TEXT;
+    }
+
     @Override
     public String getDataArchiveRootPath() {
         return "hdfs://cvmaster00:9000/calvalus/eodata";

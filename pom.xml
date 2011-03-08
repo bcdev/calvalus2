@@ -147,6 +147,12 @@
                 <version>${calvalus.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-exchange</artifactId>
+                <version>${calvalus.version}</version>
+            </dependency>
+
             <!--  BEAM -->
 
             <dependency>

@@ -1,6 +1,8 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.commons.ProcessStatus;
+
 /**
  * Information about a production.
  *

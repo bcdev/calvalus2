@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.shared;
 
 /**
- * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessState} class.
+ * GWT-serializable version of the {@link com.bc.calvalus.commons.ProcessState} class.
  *
  * @author Norman
  */

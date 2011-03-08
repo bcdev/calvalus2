@@ -1,9 +1,10 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.processing.hadoop;
 
 
-import com.bc.calvalus.production.ProcessState;
-import com.bc.calvalus.production.ProcessStatus;
-import com.bc.calvalus.production.ProcessingService;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.processing.ProcessingService;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,7 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HadoopProcessingService implements ProcessingService {
+public class HadoopProcessingService implements ProcessingService<JobID> {
     private final JobClient jobClient;
     private final FileSystem fileSystem;
     private final Path dataArchiveRootPath;
@@ -28,6 +29,15 @@ public class HadoopProcessingService implements ProcessingService {
         // String fsName = jobClient.getConf().get("fs.default.name");
         this.dataArchiveRootPath = fileSystem.makeQualified(new Path("/calvalus/eodata"));
         this.dataOutputRootPath =  fileSystem.makeQualified(new Path("/calvalus/outputs"));
+    }
+
+    public JobClient getJobClient() {
+        return jobClient;
+    }
+
+    @Override
+    public JobIdFormat<JobID> getJobIdFormat() {
+        return new HadoopJobIdFormat();
     }
 
     @Override
@@ -52,9 +62,9 @@ public class HadoopProcessingService implements ProcessingService {
 
 
     @Override
-    public Map<Object, ProcessStatus> getJobStatusMap() throws IOException {
+    public Map<JobID, ProcessStatus> getJobStatusMap() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
-        HashMap<Object, ProcessStatus> jobStatusMap = new HashMap<Object, ProcessStatus>();
+        HashMap<JobID, ProcessStatus> jobStatusMap = new HashMap<JobID, ProcessStatus>();
         for (JobStatus jobStatus : jobStatuses) {
             jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
         }
@@ -62,8 +72,8 @@ public class HadoopProcessingService implements ProcessingService {
     }
 
     @Override
-    public boolean killJob(Object jobId) throws IOException {
-        org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade((JobID) jobId);
+    public boolean killJob(JobID jobId) throws IOException {
+        org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         RunningJob runningJob = jobClient.getJob(oldJobId);
         if (runningJob != null) {
             runningJob.killJob();
@@ -71,11 +81,6 @@ public class HadoopProcessingService implements ProcessingService {
         }
         return false;
     }
-
-    JobClient getJobClient() {
-        return jobClient;
-    }
-
 
     /**
      * Updates the status. This method is called periodically after a fixed delay period.

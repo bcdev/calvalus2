@@ -1,4 +1,4 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.commons;
 
 /**
  * State of a production.

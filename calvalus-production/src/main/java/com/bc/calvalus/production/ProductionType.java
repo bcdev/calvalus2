@@ -1,5 +1,7 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.staging.Staging;
+
 /**
  * Abstraction of a product type (workflow implementation).
  *
@@ -9,7 +11,7 @@ package com.bc.calvalus.production;
 public interface ProductionType {
     String getName();
 
-    Production orderProduction(ProductionRequest productionRequest) throws ProductionException;
+    Production createProduction(ProductionRequest productionRequest) throws ProductionException;
 
-    Staging stageProduction(Production production) throws ProductionException;
+    Staging createStaging(Production production) throws ProductionException;
 }

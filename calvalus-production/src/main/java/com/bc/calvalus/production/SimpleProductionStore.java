@@ -1,5 +1,9 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.JobIdFormat;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -25,17 +29,7 @@ public class SimpleProductionStore implements ProductionStore {
     private final JobIdFormat idFormat;
 
     public SimpleProductionStore() {
-        this(new JobIdFormat() {
-            @Override
-            public String format(Object jobId) {
-                return jobId.toString();
-            }
-
-            @Override
-            public Object parse(String text) {
-                return text;
-            }
-        });
+        this(JobIdFormat.TEXT);
     }
 
     public SimpleProductionStore(JobIdFormat idFormat) {

@@ -1,11 +1,12 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.StreamingProductReader;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.production.Staging;
+import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -41,12 +42,12 @@ public class L2ProductionType implements ProductionType {
     }
 
     @Override
-    public Production orderProduction(ProductionRequest productionRequest) throws ProductionException {
+    public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         throw new ProductionException("L2 production not implemented yet.");
     }
 
     @Override
-    public Staging stageProduction(Production production) throws ProductionException {
+    public Staging createStaging(Production production) throws ProductionException {
         JobClient jobClient = processingService.getJobClient();
         Object[] jobIds = production.getJobIds();
         // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
