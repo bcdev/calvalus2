@@ -184,7 +184,7 @@ public class ProductionServiceImpl implements ProductionService {
                 Object jobId = jobIds[i];
                 jobStatuses[i] = jobStatusMap.get(jobId);
             }
-            production.setProcessingStatus(getProcessingStatus(jobStatuses));
+            production.setProcessingStatus(ProductionStatus.aggregate(jobStatuses));
         }
 
         // Now try to delete productions
@@ -210,39 +210,6 @@ public class ProductionServiceImpl implements ProductionService {
 
         // write to persistent storage
         productionStore.store();
-    }
-
-    static ProductionStatus getProcessingStatus(ProductionStatus[] jobStatuses) {
-        if (jobStatuses.length == 1) {
-            return jobStatuses[0];
-        } else if (jobStatuses.length > 1) {
-            float progress = 0f;
-            for (ProductionStatus jobStatus : jobStatuses) {
-                progress += jobStatus.getProgress();
-            }
-            progress /= jobStatuses.length;
-            for (ProductionStatus jobStatus : jobStatuses) {
-                if (jobStatus.getState() == ProductionState.ERROR
-                        || jobStatus.getState() == ProductionState.CANCELLED) {
-                    return new ProductionStatus(jobStatus.getState(), progress, jobStatus.getMessage());
-                }
-            }
-
-            int numCompleted = 0;
-            int numWaiting = 0;
-            for (ProductionStatus jobStatus : jobStatuses) {
-                if (jobStatus.getState() == ProductionState.COMPLETED) {
-                    numCompleted++;
-                } else if (jobStatus.getState() == ProductionState.WAITING) {
-                    numWaiting++;
-                }
-            }
-            return new ProductionStatus(numCompleted == jobStatuses.length
-                                                ? ProductionState.COMPLETED : numWaiting == jobStatuses.length
-                    ? ProductionState.WAITING : ProductionState.IN_PROGRESS,
-                                        progress);
-        }
-        return ProductionStatus.UNKNOWN;
     }
 
     public static enum Action {

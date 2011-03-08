@@ -34,6 +34,62 @@ public class ProductionStatus {
         this.progress = progress;
     }
 
+    public static ProductionStatus aggregate(ProductionStatus... statuses) {
+        if (statuses.length == 0) {
+            return null;
+        }
+        if (statuses.length == 1) {
+            return statuses[0];
+        }
+
+        float averageProgress = 0f;
+        for (ProductionStatus jobStatus : statuses) {
+            averageProgress += jobStatus.getProgress();
+        }
+        averageProgress /= statuses.length;
+
+        for (ProductionStatus status : statuses) {
+            if (status.getState() == ProductionState.ERROR
+                    || status.getState() == ProductionState.CANCELLED) {
+                return new ProductionStatus(status.getState(), averageProgress, status.getMessage());
+            }
+        }
+
+        String message = "";
+        for (ProductionStatus status : statuses) {
+            message = status.getMessage();
+            if (!message.isEmpty()) {
+                break;
+            }
+        }
+
+        int numCompleted = 0;
+        int numWaiting = 0;
+        int numUnknown = 0;
+        for (ProductionStatus status : statuses) {
+            if (status.getState() == ProductionState.COMPLETED) {
+                numCompleted++;
+            } else if (status.getState() == ProductionState.WAITING) {
+                numWaiting++;
+            } else if (status.getState() == ProductionState.UNKNOWN) {
+                numUnknown++;
+            }
+        }
+
+        final ProductionState state;
+        if (numCompleted == statuses.length) {
+            state = ProductionState.COMPLETED;
+        } else if (numWaiting == statuses.length) {
+            state = ProductionState.WAITING;
+        } else if (numUnknown == statuses.length) {
+            state = ProductionState.UNKNOWN;
+        } else {
+            state = ProductionState.IN_PROGRESS;
+        }
+
+        return new ProductionStatus(state, averageProgress, message);
+    }
+
     public ProductionState getState() {
         return state;
     }

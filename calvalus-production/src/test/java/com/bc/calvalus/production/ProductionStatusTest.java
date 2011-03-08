@@ -40,6 +40,34 @@ public class ProductionStatusTest {
 
 
     @Test
+    public void testAggregate() {
+        assertEquals(null,
+                     ProductionStatus.aggregate());
+        assertEquals(new ProductionStatus(ProductionState.IN_PROGRESS, 0.4f, "Hello!"),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.IN_PROGRESS, 0.4f, "Hello!")));
+        assertEquals(new ProductionStatus(ProductionState.IN_PROGRESS, 0.3f, ""),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, ""),
+                                                new ProductionStatus(ProductionState.IN_PROGRESS, 0.4f, ""),
+                                                new ProductionStatus(ProductionState.IN_PROGRESS, 0.3f, "")));
+        assertEquals(new ProductionStatus(ProductionState.IN_PROGRESS, 0.8f, "Wait"),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.IN_PROGRESS, 0.4f, "Wait"),
+                                                new ProductionStatus(ProductionState.COMPLETED, 1.0f, ""),
+                                                new ProductionStatus(ProductionState.COMPLETED, 1.0f, "")));
+        assertEquals(new ProductionStatus(ProductionState.COMPLETED, 1.0f, "This was hard"),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.COMPLETED, 1.0f, ""),
+                                                new ProductionStatus(ProductionState.COMPLETED, 1.0f, "This was hard"),
+                                                new ProductionStatus(ProductionState.COMPLETED, 1.0f, "")));
+        assertEquals(new ProductionStatus(ProductionState.ERROR, 0.8f, "I/O problem"),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.COMPLETED, 1.0f, ""),
+                                                new ProductionStatus(ProductionState.ERROR, 0.4f, "I/O problem"),
+                                                new ProductionStatus(ProductionState.COMPLETED, 1.0f, "")));
+        assertEquals(new ProductionStatus(ProductionState.CANCELLED, 0.3f, "Go away"),
+                     ProductionStatus.aggregate(new ProductionStatus(ProductionState.IN_PROGRESS, 0.2f, ""),
+                                                new ProductionStatus(ProductionState.IN_PROGRESS, 0.6f, ""),
+                                                new ProductionStatus(ProductionState.CANCELLED, 0.1f, "Go away")));
+    }
+
+    @Test
     public void testIsDone() {
         assertEquals(true, new ProductionStatus(ProductionState.COMPLETED).isDone());
         assertEquals(true, new ProductionStatus(ProductionState.ERROR).isDone());
