@@ -7,6 +7,7 @@ import com.bc.calvalus.processing.JobIdFormat;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -18,7 +19,8 @@ public class SimpleProductionStoreTest {
 
     @Test
     public void testIO() throws IOException {
-        SimpleProductionStore db = new SimpleProductionStore();
+        File unusedDbFile = new File("x");
+        SimpleProductionStore db = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
 
         Production prod1 = new Production("id1", "name1", "marco",
                                           false,
@@ -46,7 +48,7 @@ public class SimpleProductionStoreTest {
         StringWriter out = new StringWriter();
         db.store(new PrintWriter(out));
 
-        SimpleProductionStore db2 = new SimpleProductionStore();
+        SimpleProductionStore db2 = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
         db2.load(new BufferedReader(new StringReader(out.toString())));
 
         Production[] productions = db2.getProductions();
@@ -91,17 +93,5 @@ public class SimpleProductionStoreTest {
         assertEquals("test", restoredProd3.getProductionRequest().getProductionType());
         assertEquals("1", restoredProd3.getProductionRequest().getProductionParameter("a"));
         assertEquals("0", restoredProd3.getProductionRequest().getProductionParameter("b"));
-    }
-
-    private static class SimpleJobIdFormat implements JobIdFormat {
-        @Override
-        public String format(Object jobId) {
-            return jobId.toString();
-        }
-
-        @Override
-        public Object parse(String text) {
-            return text;
-        }
     }
 }

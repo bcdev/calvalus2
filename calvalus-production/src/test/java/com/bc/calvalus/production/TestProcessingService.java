@@ -19,7 +19,7 @@ public class TestProcessingService implements ProcessingService<String> {
 
     @Override
     public JobIdFormat<String> getJobIdFormat() {
-        return JobIdFormat.TEXT;
+        return JobIdFormat.STRING;
     }
 
     @Override

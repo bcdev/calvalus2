@@ -6,7 +6,7 @@ package com.bc.calvalus.processing;
  * @author Norman Fomferra
  */
 public interface JobIdFormat<T> {
-    JobIdFormat<String> TEXT = new JobIdFormat<String>() {
+    JobIdFormat<String> STRING = new JobIdFormat<String>() {
         @Override
         public String format(String jobId) {
             return jobId;

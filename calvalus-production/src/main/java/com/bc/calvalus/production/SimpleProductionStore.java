@@ -22,18 +22,20 @@ import java.util.Map;
  */
 public class SimpleProductionStore implements ProductionStore {
 
-    public static final File PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
-
+    private final File databaseFile;
     private final List<Production> productionsList;
     private final Map<String, Production> productionsMap;
-    private final JobIdFormat idFormat;
+    private final JobIdFormat jobIdFormat;
 
-    public SimpleProductionStore() {
-        this(JobIdFormat.TEXT);
-    }
-
-    public SimpleProductionStore(JobIdFormat idFormat) {
-        this.idFormat = idFormat;
+    public SimpleProductionStore(JobIdFormat jobIdFormat, File databaseFile) {
+        if (jobIdFormat == null) {
+            throw new NullPointerException("jobIdFormat");
+        }
+        if (databaseFile == null) {
+            throw new NullPointerException("databaseFile");
+        }
+        this.databaseFile = databaseFile;
+        this.jobIdFormat = jobIdFormat;
         this.productionsList = new ArrayList<Production>();
         this.productionsMap = new HashMap<String, Production>();
     }
@@ -62,12 +64,12 @@ public class SimpleProductionStore implements ProductionStore {
 
     @Override
     public synchronized void load() throws IOException {
-        load(PRODUCTIONS_DB_FILE);
+        load(databaseFile);
     }
 
     @Override
     public synchronized void store() throws IOException {
-        store(PRODUCTIONS_DB_FILE);
+        store(databaseFile);
     }
 
     private void load(File databaseFile) throws IOException {
@@ -138,7 +140,7 @@ public class SimpleProductionStore implements ProductionStore {
         int numJobs = Integer.parseInt(tokens[off++]);
         Object[] jobIds = new Object[numJobs];
         for (int i = 0; i < numJobs; i++) {
-            jobIds[i] = idFormat.parse(decodeTSV(tokens[off++]));
+            jobIds[i] = jobIdFormat.parse(decodeTSV(tokens[off++]));
         }
         offpt[0] = off;
         return jobIds;
@@ -149,7 +151,7 @@ public class SimpleProductionStore implements ProductionStore {
         sb.append(jobIds.length);
         for (Object jobId : jobIds) {
             sb.append("\t");
-            sb.append(encodeTSV(idFormat.format(jobId)));
+            sb.append(encodeTSV(jobIdFormat.format(jobId)));
         }
         return sb.toString();
     }

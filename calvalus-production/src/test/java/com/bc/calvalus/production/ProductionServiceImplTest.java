@@ -23,9 +23,7 @@ public class ProductionServiceImplTest {
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType();
         productionStoreMock = new TestProductionStore();
-        productionServiceUnderTest = new ProductionServiceImpl(productionStoreMock,
-                                                               processingServiceMock,
-                                                               stagingServiceMock,
+        productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock, stagingServiceMock, productionStoreMock,
                                                                productionTypeMock);
     }
 

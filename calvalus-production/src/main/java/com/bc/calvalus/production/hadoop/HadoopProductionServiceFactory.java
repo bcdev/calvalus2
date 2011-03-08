@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.processing.hadoop.HadoopJobIdFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
@@ -14,6 +13,7 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -21,6 +21,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
+    private static final File DEFAULT_PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
     @Override
@@ -33,14 +34,13 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = createJobConf(serviceConfiguration);
         try {
             JobClient jobClient = new JobClient(jobConf);
-            ProductionStore productionStore = new SimpleProductionStore(new HadoopJobIdFormat());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
+            ProductionStore productionStore = new SimpleProductionStore(processingService.getJobIdFormat(),
+                                                                        DEFAULT_PRODUCTIONS_DB_FILE);
             StagingService stagingService = new SimpleStagingService(3);
             ProductionType l2ProductionType = new L2ProductionType(processingService, localStagingDir);
             ProductionType l3ProductionType = new L3ProductionType(processingService, localStagingDir);
-            ProductionServiceImpl productionService = new ProductionServiceImpl(productionStore,
-                                                                                processingService,
-                                                                                stagingService,
+            ProductionServiceImpl productionService = new ProductionServiceImpl(processingService, stagingService, productionStore,
                                                                                 l2ProductionType,
                                                                                 l3ProductionType);
 

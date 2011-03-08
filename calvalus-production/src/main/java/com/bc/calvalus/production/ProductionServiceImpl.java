@@ -23,18 +23,18 @@ import java.util.logging.Logger;
  */
 public class ProductionServiceImpl implements ProductionService {
 
-    private final ProductionStore productionStore;
     private final ProcessingService processingService;
+    private final StagingService stagingService;
+    private final ProductionStore productionStore;
     private final Map<String, ProductionType> productionTypeMap;
     private final Map<String, Action> productionActionMap;
-    private final Map<String, Staging> stagingsMap;
-    private final StagingService stagingService;
+    private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
     private Timer statusObserver;
 
-    public ProductionServiceImpl(ProductionStore productionStore,
-                                 ProcessingService processingService,
+    public ProductionServiceImpl(ProcessingService processingService,
                                  StagingService stagingService,
+                                 ProductionStore productionStore,
                                  ProductionType... productionTypes) throws ProductionException {
         this.productionStore = productionStore;
         this.processingService = processingService;
@@ -44,7 +44,7 @@ public class ProductionServiceImpl implements ProductionService {
             this.productionTypeMap.put(productionType.getName(), productionType);
         }
         this.productionActionMap = new HashMap<String, Action>();
-        this.stagingsMap = new HashMap<String, Staging>();
+        this.productionStagingsMap = new HashMap<String, Staging>();
         this.logger = Logger.getLogger("com.bc.calvalus");
 
         try {
@@ -144,9 +144,9 @@ public class ProductionServiceImpl implements ProductionService {
             if (production != null) {
                 productionActionMap.put(production.getId(), action);
 
-                Staging staging = stagingsMap.get(production.getId());
+                Staging staging = productionStagingsMap.get(production.getId());
                 if (staging != null && !staging.isCancelled()) {
-                    stagingsMap.remove(production.getId());
+                    productionStagingsMap.remove(production.getId());
                     staging.cancel();
                 }
 
@@ -182,7 +182,7 @@ public class ProductionServiceImpl implements ProductionService {
         Staging staging = productionType.createStaging(production);
         try {
             stagingService.orderStaging(staging);
-            stagingsMap.put(production.getId(), staging);
+            productionStagingsMap.put(production.getId(), staging);
         } catch (IOException e) {
             throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
                                                         production.getId(), e.getMessage()), e);
@@ -220,7 +220,7 @@ public class ProductionServiceImpl implements ProductionService {
             if (production.isOutputStaging()
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
                     && production.getStagingStatus().getState() == ProcessState.WAITING
-                    && stagingsMap.get(production.getId()) == null) {
+                    && productionStagingsMap.get(production.getId()) == null) {
                 stageProductionResults(production);
             }
         }
@@ -232,7 +232,7 @@ public class ProductionServiceImpl implements ProductionService {
     private void removeProduction(Production production) {
         productionStore.removeProduction(production);
         productionActionMap.remove(production.getId());
-        stagingsMap.remove(production.getId());
+        productionStagingsMap.remove(production.getId());
     }
 
     public static enum Action {
