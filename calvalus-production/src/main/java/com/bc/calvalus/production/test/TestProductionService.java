@@ -104,7 +104,7 @@ public class TestProductionService implements ProductionService {
     }
 
     @Override
-    public void cancelProductions(String[] productionIds) throws ProductionException {
+    public void cancelProductions(String... productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             TestProduction production = getProduction(productionId);
@@ -119,7 +119,7 @@ public class TestProductionService implements ProductionService {
     }
 
     @Override
-    public void deleteProductions(String[] productionIds) throws ProductionException {
+    public void deleteProductions(String... productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             TestProduction production = getProduction(productionId);
@@ -135,7 +135,7 @@ public class TestProductionService implements ProductionService {
     }
 
     @Override
-    public void stageProductions(String[] productionIds) throws ProductionException {
+    public void stageProductions(String... productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             TestProduction production = getProduction(productionId);

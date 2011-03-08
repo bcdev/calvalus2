@@ -23,8 +23,6 @@ import java.util.logging.Logger;
  */
 public class ProductionServiceImpl implements ProductionService {
 
-    private static final int HADOOP_OBSERVATION_PERIOD = 2000;
-
     private final ProductionStore productionStore;
     private final ProcessingService processingService;
     private final Map<String, ProductionType> productionTypeMap;
@@ -32,6 +30,7 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, Staging> stagingsMap;
     private final StagingService stagingService;
     private final Logger logger;
+    private Timer statusObserver;
 
     public ProductionServiceImpl(ProductionStore productionStore,
                                  ProcessingService processingService,
@@ -53,11 +52,16 @@ public class ProductionServiceImpl implements ProductionService {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
+    }
 
-        Timer updateTimer = new Timer(true);
-        updateTimer.scheduleAtFixedRate(new ProductionUpdater(),
-                                        HADOOP_OBSERVATION_PERIOD,
-                                        HADOOP_OBSERVATION_PERIOD);
+    public void startStatusObserver(int period) {
+        statusObserver = new Timer("StatusObserver", true);
+        statusObserver.scheduleAtFixedRate(new ProductionUpdater(), period, period);
+    }
+
+    public void stopStatusObserver() {
+        statusObserver.cancel();
+        statusObserver = null;
     }
 
     @Override
@@ -104,7 +108,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void stageProductions(String[] productionIds) throws ProductionException {
+    public void stageProductions(String... productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             Production production = productionStore.getProduction(productionId);
@@ -124,12 +128,12 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void cancelProductions(String[] productionIds) throws ProductionException {
+    public void cancelProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.CANCEL);
     }
 
     @Override
-    public void deleteProductions(String[] productionIds) throws ProductionException {
+    public void deleteProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.DELETE);
     }
 
@@ -146,7 +150,11 @@ public class ProductionServiceImpl implements ProductionService {
                     staging.cancel();
                 }
 
-                if (!production.getProcessingStatus().isDone()) {
+                if (production.getProcessingStatus().isDone()) {
+                    if (action == Action.DELETE) {
+                        removeProduction(production);
+                    }
+                } else {
                     Object[] jobIds = production.getJobIds();
                     for (Object jobId : jobIds) {
                         try {
@@ -191,18 +199,18 @@ public class ProductionServiceImpl implements ProductionService {
             ProcessStatus[] jobStatuses = new ProcessStatus[jobIds.length];
             for (int i = 0; i < jobIds.length; i++) {
                 Object jobId = jobIds[i];
-                jobStatuses[i] = jobStatusMap.get(jobId);
+                ProcessStatus processStatus = jobStatusMap.get(jobId);
+                jobStatuses[i] = processStatus != null ? processStatus : ProcessStatus.UNKNOWN;
             }
             production.setProcessingStatus(ProcessStatus.aggregate(jobStatuses));
         }
 
         // Now try to delete productions
         for (Production production : productions) {
-            Action action = productionActionMap.get(production.getId());
-            if (action == Action.DELETE) {
-                if (production.getProcessingStatus().isDone()) {
-                    productionStore.removeProduction(production);
-                    productionActionMap.remove(production.getId());
+            if (production.getProcessingStatus().isDone()) {
+                Action action = productionActionMap.get(production.getId());
+                if (action == Action.DELETE) {
+                    removeProduction(production);
                 }
             }
         }
@@ -219,6 +227,12 @@ public class ProductionServiceImpl implements ProductionService {
 
         // write to persistent storage
         productionStore.store();
+    }
+
+    private void removeProduction(Production production) {
+        productionStore.removeProduction(production);
+        productionActionMap.remove(production.getId());
+        stagingsMap.remove(production.getId());
     }
 
     public static enum Action {

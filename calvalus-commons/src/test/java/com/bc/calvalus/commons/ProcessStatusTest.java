@@ -65,6 +65,16 @@ public class ProcessStatusTest {
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, ""),
                                              new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f, ""),
                                              new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
+
+        // test illegal null-statuses
+        try {
+            ProcessStatus.aggregate(ProcessStatus.UNKNOWN,
+                                    ProcessStatus.UNKNOWN,
+                                    null);
+            fail("NPE expected");
+        } catch (NullPointerException e) {
+            // ok
+        }
     }
 
     @Test

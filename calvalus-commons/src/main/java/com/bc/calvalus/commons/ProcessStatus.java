@@ -35,16 +35,23 @@ public class ProcessStatus {
     }
 
     public static ProcessStatus aggregate(ProcessStatus... statuses) {
+        for (int i = 0; i < statuses.length; i++) {
+            if (statuses[i] == null) {
+                throw new NullPointerException("statuses[" + i + "]");
+            }
+        }
+
         if (statuses.length == 0) {
             return null;
         }
+
         if (statuses.length == 1) {
             return statuses[0];
         }
 
         float averageProgress = 0f;
-        for (ProcessStatus jobStatus : statuses) {
-            averageProgress += jobStatus.getProgress();
+        for (ProcessStatus status : statuses) {
+            averageProgress += status.getProgress();
         }
         averageProgress /= statuses.length;
 

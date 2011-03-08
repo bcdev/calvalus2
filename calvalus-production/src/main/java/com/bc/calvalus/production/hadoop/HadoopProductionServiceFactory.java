@@ -21,6 +21,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
+    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
@@ -37,11 +38,14 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             StagingService stagingService = new SimpleStagingService(3);
             ProductionType l2ProductionType = new L2ProductionType(processingService, localStagingDir);
             ProductionType l3ProductionType = new L3ProductionType(processingService, localStagingDir);
-            return new ProductionServiceImpl(productionStore,
-                                             processingService,
-                                             stagingService,
-                                             l2ProductionType,
-                                             l3ProductionType);
+            ProductionServiceImpl productionService = new ProductionServiceImpl(productionStore,
+                                                                                processingService,
+                                                                                stagingService,
+                                                                                l2ProductionType,
+                                                                                l3ProductionType);
+
+            productionService.startStatusObserver(PRODUCTION_STATUS_OBSERVATION_PERIOD);
+            return productionService;
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

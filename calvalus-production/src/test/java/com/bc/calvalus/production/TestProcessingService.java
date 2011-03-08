@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
@@ -9,13 +10,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* todo - add api doc
-*
-* @author Norman Fomferra
-*/
-public class TestProcessingService implements ProcessingService {
+ * Test implementation of ProductionStore.
+ *
+ * @author Norman
+ */
+public class TestProcessingService implements ProcessingService<String> {
+    private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
+
     @Override
-    public JobIdFormat getJobIdFormat() {
+    public JobIdFormat<String> getJobIdFormat() {
         return JobIdFormat.TEXT;
     }
 
@@ -39,13 +42,25 @@ public class TestProcessingService implements ProcessingService {
         };
     }
 
-    @Override
-    public Map<Object, ProcessStatus> getJobStatusMap() throws IOException {
-        return new HashMap<Object, ProcessStatus>();
+    public void setJobStatus(String jobId, ProcessStatus status) {
+        this.jobStatusMap.put(jobId, status);
     }
 
     @Override
-    public boolean killJob(Object jobId) throws IOException {
-        return false;
+    public Map<String, ProcessStatus> getJobStatusMap() throws IOException {
+        return new HashMap<String, ProcessStatus>(jobStatusMap);
+    }
+
+    @Override
+    public boolean killJob(String jobId) throws IOException {
+        ProcessStatus processStatus = jobStatusMap.get(jobId);
+        if (processStatus == null) {
+            return false;
+        }
+        if (processStatus.isDone()) {
+            return false;
+        }
+        jobStatusMap.put(jobId, new ProcessStatus(ProcessState.CANCELLED, processStatus.getProgress()));
+        return true;
     }
 }

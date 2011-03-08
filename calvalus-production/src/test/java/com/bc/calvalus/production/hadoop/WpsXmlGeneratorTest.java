@@ -22,7 +22,7 @@ public class WpsXmlGeneratorTest {
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
         assertNotNull(xml);
 
-         System.out.println(xml);
+        // System.out.println(xml);
 
         assertTrue(xml.contains("<ows:Identifier>ID_pi-pa-po</ows:Identifier>"));
         assertTrue(xml.contains("<ows:Title>Wonderful L3</ows:Title>"));

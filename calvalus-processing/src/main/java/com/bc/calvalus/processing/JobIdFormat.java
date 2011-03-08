@@ -6,14 +6,14 @@ package com.bc.calvalus.processing;
  * @author Norman Fomferra
  */
 public interface JobIdFormat<T> {
-    JobIdFormat TEXT = new JobIdFormat() {
+    JobIdFormat<String> TEXT = new JobIdFormat<String>() {
         @Override
-        public String format(Object jobId) {
-            return (String) jobId;
+        public String format(String jobId) {
+            return jobId;
         }
 
         @Override
-        public Object parse(String text) {
+        public String parse(String text) {
             return text;
         }
     };
