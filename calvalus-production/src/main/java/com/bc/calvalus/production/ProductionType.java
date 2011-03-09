@@ -14,4 +14,6 @@ public interface ProductionType {
     Production createProduction(ProductionRequest productionRequest) throws ProductionException;
 
     Staging createStaging(Production production) throws ProductionException;
+
+    boolean accepts(ProductionRequest productionRequest);
 }

@@ -1,7 +1,5 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.portal.shared.BackendService;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +30,7 @@ public class FileDownloadServlet extends HttpServlet {
             throw new ServletException("Missing query parameter 'file'");
         }
 
-        File downloadDir = new PortalConfig(getServletContext()).getLocalStagingDir();
+        File downloadDir = new BackendConfig(getServletContext()).getLocalStagingDir();
         File file = new File(downloadDir, filePath);
         // todo - check: do we need to set contentLength on resp (which is an int)? (nf)
         if (file.length() > Integer.MAX_VALUE) {

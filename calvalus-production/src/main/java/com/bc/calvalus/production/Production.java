@@ -3,28 +3,33 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessStatus;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Information about a production.
  *
  * @author Norman
  */
 public class Production {
+    public static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static long uniqueLong = System.nanoTime();
     private final String id;
     private final String name;
     private final String user;
     private final Object[] jobIds;
-    private final boolean outputStaging;
+    private final boolean autoStaging;
     private final ProductionRequest productionRequest;
-    private String outputUrl;
+    private final String stagingPath;
     private ProcessStatus processingStatus;
     private ProcessStatus stagingStatus;
 
     public Production(String id,
                       String name,
                       String user,
-                      boolean outputStaging,
-                      Object[] jobIds,
-                      ProductionRequest productionRequest) {
+                      String stagingPath,
+                      ProductionRequest productionRequest,
+                      Object... jobIds) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -34,20 +39,25 @@ public class Production {
         if (user == null) {
             throw new NullPointerException("user");
         }
-        if (jobIds == null) {
-            throw new NullPointerException("jobIds");
-        }
         if (productionRequest == null) {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
         this.user = user; // todo - check: remove param, instead derive from  productionRequest?
-        this.outputStaging = outputStaging; // todo - check: remove param, instead derive from  productionRequest?
-        this.jobIds = jobIds.clone();
+        this.stagingPath = stagingPath;
+        this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
+        this.jobIds = jobIds;
         this.productionRequest = productionRequest;
         this.processingStatus = ProcessStatus.UNKNOWN;
-        this.stagingStatus = outputStaging ? ProcessStatus.WAITING : ProcessStatus.UNKNOWN;
+        this.stagingStatus = autoStaging ? ProcessStatus.WAITING : ProcessStatus.UNKNOWN;
+    }
+
+    public static String createId(String productionType) {
+        return String.format("%s_%s_%8s",
+                             yyyyMMddHHmmss.format(new Date()),
+                             productionType,
+                             Long.toHexString(nextUniqueLong()));
     }
 
     public String getId() {
@@ -66,20 +76,16 @@ public class Production {
         return jobIds.clone();
     }
 
-    public boolean isOutputStaging() {
-        return outputStaging;
+    public boolean isAutoStaging() {
+        return autoStaging;
     }
 
     public ProductionRequest getProductionRequest() {
         return productionRequest;
     }
 
-    public String getOutputUrl() {
-        return outputUrl;
-    }
-
-    public void setOutputUrl(String outputUrl) {
-        this.outputUrl = outputUrl;
+    public String getStagingPath() {
+        return stagingPath;
     }
 
     public ProcessStatus getProcessingStatus() {
@@ -98,12 +104,16 @@ public class Production {
         this.stagingStatus = stagingStatus;
     }
 
+    private static long nextUniqueLong() {
+        return ++uniqueLong;
+    }
+
     @Override
     public String toString() {
         return "Production{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", outputUrl=" + outputUrl +
+                ", stagingPath=" + stagingPath +
                 ", productionStatus=" + processingStatus +
                 ", stagingStatus=" + stagingStatus +
                 '}';

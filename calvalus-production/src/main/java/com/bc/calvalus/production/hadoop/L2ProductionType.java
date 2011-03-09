@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
+import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,11 +29,11 @@ import java.io.File;
  */
 public class L2ProductionType implements ProductionType {
     private HadoopProcessingService processingService;
-    private String localStagingDir;
+    private StagingService stagingService;
 
-    L2ProductionType(HadoopProcessingService processingService, String localStagingDir) throws ProductionException {
-        this.localStagingDir = localStagingDir;
+    L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         this.processingService = processingService;
+        this.stagingService = stagingService;
     }
 
 
@@ -70,7 +71,7 @@ public class L2ProductionType implements ProductionType {
             });
 
 
-            File downloadDir = new File(localStagingDir, outputPath.getName());
+            File downloadDir = new File(stagingService.getStagingAreaPath(), outputPath.getName());
             if (!downloadDir.exists()) {
                 downloadDir.mkdirs();
             }
@@ -90,6 +91,11 @@ public class L2ProductionType implements ProductionType {
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
         return null; // todo
+    }
+
+    @Override
+    public boolean accepts(ProductionRequest productionRequest) {
+        return getName().equalsIgnoreCase(productionRequest.getProductionType());
     }
 
 }

@@ -23,8 +23,7 @@ public class InputOutputPanel implements IsWidget {
     private ListBox inputProductSet;
     private ListBox outputFormat;
     private DecoratorPanel widget;
-    private TextBox outputFileName;
-    private CheckBox outputStaging;
+    private CheckBox autoStaging;
 
     public InputOutputPanel(CalvalusPortal portal, String title) {
 
@@ -36,11 +35,6 @@ public class InputOutputPanel implements IsWidget {
         inputProductSet.setWidth("20em");
         inputProductSet.setVisibleItemCount(6);
 
-        outputFileName = new TextBox();
-        outputFileName.setName("outputFileName");
-        outputFileName.setText("output-${user}-${num}");
-        outputFileName.setWidth("20em");
-
         outputFormat = new ListBox();
         outputFormat.setName("outputFormat");
         outputFormat.addItem("BEAM-DIMAP");
@@ -50,13 +44,13 @@ public class InputOutputPanel implements IsWidget {
         outputFormat.setVisibleItemCount(1);
         outputFormat.setSelectedIndex(0);
 
-        outputStaging = new CheckBox("Perform staging step after successful production");
-        outputStaging.setValue(true);
+        autoStaging = new CheckBox("Perform staging step after successful production");
+        autoStaging.setValue(true);
 
         HorizontalPanel outputControlPanel = new HorizontalPanel();
         outputControlPanel.setSpacing(2);
         outputControlPanel.add(createLabeledWidgetV("Output format:", outputFormat));
-        outputControlPanel.add(outputStaging);
+        outputControlPanel.add(autoStaging);
 
         FlexTable layout = new FlexTable();
         layout.setWidth("100%");
@@ -66,9 +60,8 @@ public class InputOutputPanel implements IsWidget {
         layout.setWidget(0, 0, new HTML("<b>Input</b>"));
         layout.setWidget(1, 0, createLabeledWidgetV("Input product set:", inputProductSet));
         layout.setWidget(2, 0, new HTML("<b>Output</b>"));
-        layout.setWidget(3, 0, createLabeledWidgetV("Output file name:", outputFileName));
-        layout.setWidget(4, 0, createLabeledWidgetV("Output format:", outputFormat));
-        layout.setWidget(5, 0, outputStaging);
+        layout.setWidget(3, 0, createLabeledWidgetV("Output format:", outputFormat));
+        layout.setWidget(4, 0, autoStaging);
 
         // Wrap the contents in a DecoratorPanel
         widget = new DecoratorPanel();
@@ -80,17 +73,13 @@ public class InputOutputPanel implements IsWidget {
         return inputProductSet.getValue(inputProductSet.getSelectedIndex());
     }
 
-    public String getOutputFileName() {
-        return outputFileName.getText();
-    }
-
     public String getOutputFormat() {
         int index = outputFormat.getSelectedIndex();
         return outputFormat.getValue(index);
     }
 
-    public boolean isOutputStaging() {
-        return outputStaging.getValue();
+    public boolean isAutoStaging() {
+        return autoStaging.getValue();
     }
 
     @Override

@@ -162,7 +162,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     static String getResult(GsProduction production) {
-        if (production.getOutputUrl() == null) {
+        if (production.getDownloadPath() == null) {
             return null;
         }
 
@@ -231,7 +231,7 @@ public class ManageProductionsView extends PortalView {
         Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
                     "_blank", "");
 */
-        Window.open(production.getOutputUrl(), "_blank", "");
+        Window.open(production.getDownloadPath(), "_blank", "");
     }
 
     private void stageProduction(GsProduction production) {
@@ -305,18 +305,18 @@ public class ManageProductionsView extends PortalView {
     private String getStatusText(GsProcessStatus status) {
         GsProcessState state = status.getState();
         String message = status.getMessage();
-        if (state == GsProcessState.WAITING) {
+        if (state == GsProcessState.UNKNOWN) {
+            return "";
+        } else if (state == GsProcessState.WAITING) {
             return "Waiting" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == GsProcessState.IN_PROGRESS) {
             return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
+        } else if (state == GsProcessState.COMPLETED) {
+            return "Completed" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == GsProcessState.CANCELLED) {
             return "Cancelled" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == GsProcessState.ERROR) {
             return "Error" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.UNKNOWN) {
-            return "Unknown";
-        } else if (state == GsProcessState.COMPLETED) {
-            return "Completed" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
     }

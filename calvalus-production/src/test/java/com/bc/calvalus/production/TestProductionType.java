@@ -4,15 +4,6 @@ import com.bc.calvalus.staging.Staging;
 
 public class TestProductionType implements ProductionType {
     int productionCount;
-    boolean outputStaging;
-
-    public void setOutputStaging(boolean outputStaging) {
-        this.outputStaging = outputStaging;
-    }
-
-    public int getProductionCount() {
-        return productionCount;
-    }
 
     @Override
     public String getName() {
@@ -25,33 +16,26 @@ public class TestProductionType implements ProductionType {
         return new Production("id_" + productionCount,
                               "name_" + productionCount,
                               "user_" + productionCount,
-                              outputStaging,
-                              new Object[] {
-                                      "job_" + productionCount + "_1",
-                                      "job_" + productionCount + "_2",
-                              },
-                              productionRequest);
+                              "stagingPath_" + productionCount,
+                              productionRequest,
+                              "job_" + productionCount + "_1",
+                              "job_" + productionCount + "_2");
     }
 
     @Override
     public Staging createStaging(Production production) throws ProductionException {
         return new Staging() {
-            private boolean cancelled = true;
 
             @Override
-            public Void call() throws Exception {
+            public String call() throws Exception {
                 return null;
             }
 
-            @Override
-            public boolean isCancelled() {
-                return cancelled;
-            }
-
-            @Override
-            public void cancel() {
-                cancelled = true;
-            }
         };
+    }
+
+    @Override
+    public boolean accepts(ProductionRequest productionRequest) {
+        return "test".equals(productionRequest.getProductionType());
     }
 }

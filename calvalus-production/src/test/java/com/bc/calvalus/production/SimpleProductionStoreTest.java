@@ -23,21 +23,19 @@ public class SimpleProductionStoreTest {
         SimpleProductionStore db = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
 
         Production prod1 = new Production("id1", "name1", "marco",
-                                          false,
-                                          new Object[]{"job5"},
-                                          new ProductionRequest("test", "a", "5", "b", "9"));
+                                          "path1",
+                                          new ProductionRequest("test", "a", "5", "b", "9"),
+                                          "job5");
         prod1.setProcessingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f));
 
-        Production prod2 = new Production("id2", "name2", "martin",
-                                          false,
-                                          new Object[]{"job9"},
-                                          new ProductionRequest("test", "a", "9", "b", "2"));
+        Production prod2 = new Production("id2", "name2", "martin", null,
+                                          new ProductionRequest("test", "a", "9", "b", "2"),
+                                          "job9");
         prod2.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
 
-        Production prod3 = new Production("id3", "name3", "norman",
-                                          true,
-                                          new Object[]{"job2"},
-                                          new ProductionRequest("test", "a", "1", "b", "0"));
+        Production prod3 = new Production("id3", "name3", "norman", "path3",
+                                          new ProductionRequest("test", "a", "1", "b", "0", "autoStaging", "true"),
+                                          "job2");
         prod3.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
         prod3.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED));
 
@@ -59,8 +57,9 @@ public class SimpleProductionStoreTest {
         assertEquals("id1", restoredProd1.getId());
         assertEquals("name1", restoredProd1.getName());
         assertEquals("marco", restoredProd1.getUser());
+        assertEquals("path1", restoredProd1.getStagingPath());
         assertEquals("job5", restoredProd1.getJobIds()[0]);
-        assertEquals(false, restoredProd1.isOutputStaging());
+        assertEquals(false, restoredProd1.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f), restoredProd1.getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, restoredProd1.getStagingStatus());
         assertNotNull(restoredProd1.getProductionRequest());
@@ -72,8 +71,9 @@ public class SimpleProductionStoreTest {
         assertEquals("id2", restoredProd2.getId());
         assertEquals("name2", restoredProd2.getName());
         assertEquals("martin", restoredProd2.getUser());
+        assertEquals(null, restoredProd2.getStagingPath());
         assertEquals("job9", restoredProd2.getJobIds()[0]);
-        assertEquals(false, restoredProd2.isOutputStaging());
+        assertEquals(false, restoredProd2.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd2.getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, restoredProd2.getStagingStatus());
         assertNotNull(restoredProd2.getProductionRequest());
@@ -85,8 +85,9 @@ public class SimpleProductionStoreTest {
         assertEquals("id3", restoredProd3.getId());
         assertEquals("name3", restoredProd3.getName());
         assertEquals("norman", restoredProd3.getUser());
+        assertEquals("path3", restoredProd3.getStagingPath());
         assertEquals("job2", restoredProd3.getJobIds()[0]);
-        assertEquals(true, restoredProd3.isOutputStaging());
+        assertEquals(true, restoredProd3.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getProcessingStatus());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getStagingStatus());
         assertNotNull(restoredProd3.getProductionRequest());

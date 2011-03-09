@@ -10,7 +10,8 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class GsProduction implements IsSerializable {
     String id;
     String name;
-    String outputUrl;
+    String user;
+    String downloadPath;
     GsProcessStatus processingStatus;
     GsProcessStatus stagingStatus;
 
@@ -22,7 +23,8 @@ public class GsProduction implements IsSerializable {
 
     public GsProduction(String id,
                         String name,
-                        String outputUrl,
+                        String user,
+                        String downloadPath,
                         GsProcessStatus processingStatus,
                         GsProcessStatus stagingStatus) {
         if (id == null) {
@@ -30,6 +32,9 @@ public class GsProduction implements IsSerializable {
         }
         if (name == null) {
             throw new NullPointerException("name");
+        }
+        if (user == null) {
+            throw new NullPointerException("user");
         }
         if (processingStatus == null) {
             throw new NullPointerException("processingStatus");
@@ -39,7 +44,8 @@ public class GsProduction implements IsSerializable {
         }
         this.id = id;
         this.name = name;
-        this.outputUrl = outputUrl;
+        this.user = user;
+        this.downloadPath = downloadPath;
         this.processingStatus = processingStatus;
         this.stagingStatus = stagingStatus;
     }
@@ -52,8 +58,12 @@ public class GsProduction implements IsSerializable {
         return name;
     }
 
-    public String getOutputUrl() {
-        return outputUrl;
+    public String getUser() {
+        return user;
+    }
+
+    public String getDownloadPath() {
+        return downloadPath;
     }
 
     public GsProcessStatus getProcessingStatus() {
@@ -77,7 +87,7 @@ public class GsProduction implements IsSerializable {
         return "Production{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", outputUrl=" + outputUrl +
+                ", downloadPath=" + downloadPath +
                 ", productionStatus=" + processingStatus +
                 ", stagingStatus=" + stagingStatus +
                 '}';

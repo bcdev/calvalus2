@@ -26,7 +26,6 @@ public class ProductionServiceImplTest {
         productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock,
                                                                stagingServiceMock,
                                                                productionStoreMock,
-                                                               "staging",
                                                                productionTypeMock);
     }
 
@@ -46,7 +45,7 @@ public class ProductionServiceImplTest {
         assertEquals("job_1_2", productionResponse.getProduction().getJobIds()[1]);
         assertNotNull(productionResponse.getProduction().getProductionRequest());
         assertEquals(request, productionResponse.getProduction().getProductionRequest());
-        assertEquals("staging", productionResponse.getProduction().getOutputUrl());
+        assertEquals("stagingPath_1", productionResponse.getProduction().getStagingPath());
     }
 
     @Test
@@ -213,14 +212,12 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testStaging() throws ProductionException, IOException {
+    public void testStageProduction() throws ProductionException, IOException {
 
-        productionTypeMock.setOutputStaging(false); // the following 2 productions will NOT use auto-staging
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionTypeMock.setOutputStaging(true); // the following 2 productions will use auto-staging once they are done
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "false"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "false"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "true"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "true"));
 
         processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.COMPLETED));
         processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.COMPLETED));

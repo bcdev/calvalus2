@@ -103,16 +103,17 @@ public class SimpleProductionStore implements ProductionStore {
             String id = decodeTSV(tokens[0]);
             String name = decodeTSV(tokens[1]);
             String user = decodeTSV(tokens[2]);
-            boolean outputStaging = Boolean.parseBoolean(tokens[3]);
+            String stagingPath = decodeTSV(tokens[3]);
             int[] offpt = new int[]{4};
-            Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
+            Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
 
             Production hadoopProduction = new Production(id, name, user,
-                                                         outputStaging, jobIDs,
-                                                         productionRequest);
+                                                         stagingPath,
+                                                         productionRequest, jobIDs
+            );
 
             hadoopProduction.setProcessingStatus(processStatus);
             hadoopProduction.setStagingStatus(stagingStatus);
@@ -126,9 +127,9 @@ public class SimpleProductionStore implements ProductionStore {
                           encodeTSV(production.getId()),
                           encodeTSV(production.getName()),
                           encodeTSV(production.getUser()),
-                          production.isOutputStaging(),
-                          encodeJobIdsTSV(production.getJobIds()),
+                          encodeTSV(production.getStagingPath()),
                           encodeProductionRequestTSV(production.getProductionRequest()),
+                          encodeJobIdsTSV(production.getJobIds()),
                           encodeProductionStatusTSV(production.getProcessingStatus()),
                           encodeProductionStatusTSV(production.getStagingStatus()));
         }
@@ -207,11 +208,17 @@ public class SimpleProductionStore implements ProductionStore {
 
     // TSV = tab separated characters
     private static String encodeTSV(String value) {
+        if (value == null) {
+            return "[[null]]";
+        }
         return value.replace("\n", "\\n").replace("\t", "\\t");
     }
 
     // TSV = tab separated characters
     private static String decodeTSV(String tsv) {
+        if (tsv.equals("[[null]]")) {
+            return null;
+        }
         return tsv.replace("\\n", "\n").replace("\\t", "\t");
     }
 }

@@ -11,14 +11,17 @@ import java.util.concurrent.Executors;
  * @author Norman
  */
 public class SimpleStagingService implements StagingService {
+    private final String stagingAreaPath;
     private final ExecutorService executorService;
 
-    public SimpleStagingService(int numParallelThreads) {
-        this(Executors.newFixedThreadPool(numParallelThreads));
+    public SimpleStagingService(String stagingAreaPath, int numParallelThreads) {
+        this.stagingAreaPath = stagingAreaPath;
+        this.executorService = Executors.newFixedThreadPool(numParallelThreads);
     }
 
-    public SimpleStagingService(ExecutorService executorService) {
-        this.executorService = executorService;
+    @Override
+    public String getStagingAreaPath() {
+        return stagingAreaPath;
     }
 
     @Override

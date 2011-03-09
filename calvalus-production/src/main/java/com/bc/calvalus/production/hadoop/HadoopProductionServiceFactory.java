@@ -26,7 +26,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
-                                    String relStagingUrl, String localStagingDir) throws ProductionException {
+                                    String localStagingDir) throws ProductionException {
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
@@ -37,11 +37,10 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             ProductionStore productionStore = new SimpleProductionStore(processingService.getJobIdFormat(),
                                                                         DEFAULT_PRODUCTIONS_DB_FILE);
-            StagingService stagingService = new SimpleStagingService(3);
-            ProductionType l2ProductionType = new L2ProductionType(processingService, localStagingDir);
-            ProductionType l3ProductionType = new L3ProductionType(processingService, localStagingDir);
+            StagingService stagingService = new SimpleStagingService(localStagingDir, 3);
+            ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
+            ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);
             ProductionServiceImpl productionService = new ProductionServiceImpl(processingService, stagingService, productionStore,
-                                                                                relStagingUrl,
                                                                                 l2ProductionType,
                                                                                 l3ProductionType);
 

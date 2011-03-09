@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.catalogue.ProductSet;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.GsProcessState;
@@ -17,7 +18,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
-import com.bc.calvalus.commons.ProcessStatus;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
@@ -48,6 +48,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private static final String CALVALUS_PORTAL_PRODUCTION_SERVICE_FACTORY_CLASS = "calvalus.portal.productionServiceFactory.class";
     private ProductionService productionService;
+    private BackendConfig backendConfig;
 
     @Override
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
@@ -146,22 +147,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private GsProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
         return new GsProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
-                                   processorDescriptor.getDefaultParameters(), processorDescriptor.getBundleName(),
-                                   processorDescriptor.getBundleVersions());
+                                         processorDescriptor.getDefaultParameters(), processorDescriptor.getBundleName(),
+                                         processorDescriptor.getBundleVersions());
     }
 
     private GsProduction convert(Production production) {
         return new GsProduction(production.getId(),
-                                    production.getName(),
-                                    production.getOutputUrl(),
-                                    convert(production.getProcessingStatus()),
-                                    convert(production.getStagingStatus()));
+                                production.getName(),
+                                production.getUser(),
+                                backendConfig.getStagingPath() + "/" + production.getStagingPath(),
+                                convert(production.getProcessingStatus()),
+                                convert(production.getStagingStatus()));
     }
 
     private GsProcessStatus convert(ProcessStatus status) {
         return new GsProcessStatus(GsProcessState.valueOf(status.getState().name()),
-                                          status.getMessage(),
-                                          status.getProgress());
+                                   status.getMessage(),
+                                   status.getProgress());
     }
 
     private GsProductionResponse convert(ProductionResponse productionResponse) {
@@ -188,10 +190,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                         try {
                             Class<?> productionServiceFactoryClass = Class.forName(className);
                             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
-                            PortalConfig portalConfig = new PortalConfig(servletContext);
+                            backendConfig = new BackendConfig(servletContext);
                             productionService = productionServiceFactory.create(serviceConfiguration,
-                                                                                portalConfig.getStagingPath(),
-                                                                                portalConfig.getLocalStagingDir().getPath());
+                                                                                backendConfig.getLocalStagingDir().getPath());
                         } catch (Exception e) {
                             throw new ServletException(e);
                         }

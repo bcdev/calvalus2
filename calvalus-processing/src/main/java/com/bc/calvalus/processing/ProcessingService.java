@@ -14,9 +14,9 @@ public interface ProcessingService<JOBID> {
 
     JobIdFormat<JOBID> getJobIdFormat();
 
-    String getDataArchiveRootPath();
+    String getDataInputPath();
 
-    String getDataOutputRootPath();
+    String getDataOutputPath();
 
     String[] listFilePaths(String dirPath) throws IOException;
 

@@ -77,8 +77,8 @@
 
     <context-param>
         <param-name>calvalus.portal.productionServiceFactory.class</param-name>
-        <!--<param-value>com.bc.calvalus.production.test.TestProductionServiceFactory</param-value>-->
-        <param-value>com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory</param-value>
+        <!--<param-value>com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory</param-value>-->
+        <param-value>com.bc.calvalus.production.local.LocalProductionServiceFactory</param-value>
     </context-param>
 
     <!-- value is relative to the context's directory -->

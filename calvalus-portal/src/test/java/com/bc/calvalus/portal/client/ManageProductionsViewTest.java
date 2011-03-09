@@ -22,8 +22,8 @@ public class ManageProductionsViewTest extends GWTTestCase {
         assertEquals("Cancel", getAction(WAITING, WAITING));
         assertEquals("Cancel", getAction(IN_PROGRESS, WAITING));
         assertEquals("Cancel", getAction(COMPLETED, WAITING));
-        assertEquals("Cancel", getAction(CANCELLED, WAITING));
-        assertEquals("Cancel", getAction(ERROR, WAITING));
+        assertEquals("Restart", getAction(CANCELLED, WAITING)); // todo - weird status, why is staging WAITING? (nf)
+        assertEquals("Restart", getAction(ERROR, WAITING));     // todo - weird status, why is staging WAITING? (nf)
         assertEquals("Cancel", getAction(COMPLETED, IN_PROGRESS));
         assertEquals("Restart", getAction(COMPLETED, COMPLETED));
         assertEquals("Restart", getAction(COMPLETED, CANCELLED));
@@ -49,13 +49,13 @@ public class ManageProductionsViewTest extends GWTTestCase {
     }
 
     private String getAction(GsProcessState productionState, GsProcessState stagingState) {
-        return ManageProductionsView.getAction(new GsProduction("id", "name", "outputUrl",
+        return ManageProductionsView.getAction(new GsProduction("id", "name", "user", "outputUrl",
                                                                     new GsProcessStatus(productionState),
                                                                     new GsProcessStatus(stagingState)));
     }
 
     private String getResult(GsProcessState productionState, GsProcessState stagingState) {
-        return ManageProductionsView.getResult(new GsProduction("id", "name", "outputUrl",
+        return ManageProductionsView.getResult(new GsProduction("id", "name", "user", "outputUrl",
                                                                     new GsProcessStatus(productionState),
                                                                     new GsProcessStatus(stagingState)));
     }

@@ -4,10 +4,10 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.beam.BeamL3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.staging.StagingService;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -20,8 +20,8 @@ import static java.lang.Math.*;
 
 class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
-    L3ProcessingRequestFactory(ProcessingService processingService, String localStagingDir) {
-        super(processingService, localStagingDir);
+    L3ProcessingRequestFactory(ProcessingService processingService, StagingService stagingService) {
+        super(processingService, stagingService);
     }
 
     @Override
@@ -43,7 +43,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         commonProcessingParameters.put("weightCoeff", getWeightCoeff(productionRequest));
         commonProcessingParameters.put("variables", getVariables(productionRequest));
         commonProcessingParameters.put("aggregators", getAggregators(productionRequest));
-        commonProcessingParameters.put("outputStaging", getOutputStaging(productionRequest));
+        commonProcessingParameters.put("autoStaging", isAutoStaging(productionRequest));
 
         int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
         int periodLength = Integer.parseInt(productionRequest.getProductionParameter("periodLength")); // unit=days
@@ -62,7 +62,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
             processingParameters.put("inputFiles", getInputFiles(productionRequest, date1, date2));
-            processingParameters.put("outputDir", getProcessingService().getDataOutputRootPath() +
+            processingParameters.put("outputDir", getProcessingService().getDataOutputPath() +
                     "/" + userName + "/" + productionId + "_" + i);
 
             time += periodLengthMillis;
@@ -120,7 +120,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
     String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
-         String eoDataPath = getProcessingService().getDataArchiveRootPath();
+         String eoDataPath = getProcessingService().getDataInputPath();
          String inputProductSetId = request.getProductionParameterSafe("inputProductSetId");
          List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
          try {

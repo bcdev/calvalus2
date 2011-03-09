@@ -8,5 +8,10 @@ import java.io.IOException;
  * @author Norman
  */
 public interface StagingService {
+    /**
+     * @return The absolute path to the staging area.
+     */
+    String getStagingAreaPath();
+
     void orderStaging(Staging staging) throws IOException;
 }

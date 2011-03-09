@@ -25,8 +25,8 @@ class ProcessingRequest {
         return getProcessingParameter("inputFiles");
     }
 
-    public Boolean isOutputStaging() {
-        return getProcessingParameter("outputStaging");
+    public Boolean isAutoStaging() {
+        return getProcessingParameter("autoStaging");
     }
 
     /**

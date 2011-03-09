@@ -25,9 +25,8 @@ public class ProductionServiceImpl implements ProductionService {
 
     private final ProcessingService processingService;
     private final StagingService stagingService;
-    private final String relStagingUrl;
+    private final ProductionType[] productionTypes;
     private final ProductionStore productionStore;
-    private final Map<String, ProductionType> productionTypeMap;
     private final Map<String, Action> productionActionMap;
     private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
@@ -36,16 +35,11 @@ public class ProductionServiceImpl implements ProductionService {
     public ProductionServiceImpl(ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
-                                 String relStagingUrl,
                                  ProductionType... productionTypes) throws ProductionException {
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
-        this.relStagingUrl = relStagingUrl;
-        this.productionTypeMap = new HashMap<String, ProductionType>();
-        for (ProductionType productionType : productionTypes) {
-            this.productionTypeMap.put(productionType.getName(), productionType);
-        }
+        this.productionTypes = productionTypes;
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
         this.logger = Logger.getLogger("com.bc.calvalus");
@@ -94,25 +88,22 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public Production[] getProductions(String filter) throws ProductionException {
+    public synchronized Production[] getProductions(String filter) throws ProductionException {
         return productionStore.getProductions();
     }
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
-        ProductionType productionType = productionTypeMap.get(productionRequest.getProductionType());
-        if (productionType == null) {
-            throw new ProductionException(String.format("Unhandled production type '%s'",
-                                                        productionRequest.getProductionType()));
+        ProductionType productionType = findProductionType(productionRequest);
+        synchronized (this) {
+            Production production = productionType.createProduction(productionRequest);
+            productionStore.addProduction(production);
+            return new ProductionResponse(production);
         }
-        Production production = productionType.createProduction(productionRequest);
-        production.setOutputUrl(relStagingUrl);
-        productionStore.addProduction(production);
-        return new ProductionResponse(production);
     }
 
     @Override
-    public void stageProductions(String... productionIds) throws ProductionException {
+    public synchronized void stageProductions(String... productionIds) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             Production production = productionStore.getProduction(productionId);
@@ -132,12 +123,12 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void cancelProductions(String... productionIds) throws ProductionException {
+    public  void cancelProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.CANCEL);
     }
 
     @Override
-    public void deleteProductions(String... productionIds) throws ProductionException {
+    public  void deleteProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.DELETE);
     }
 
@@ -182,7 +173,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     private void stageProductionResults(Production production) throws ProductionException {
-        ProductionType productionType = productionTypeMap.get(production.getProductionRequest().getProductionType());
+        ProductionType productionType = findProductionType(production.getProductionRequest());
         Staging staging = productionType.createStaging(production);
         try {
             stagingService.orderStaging(staging);
@@ -221,7 +212,7 @@ public class ProductionServiceImpl implements ProductionService {
 
         // Copy result to staging area
         for (Production production : productions) {
-            if (production.isOutputStaging()
+            if (production.isAutoStaging()
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
                     && production.getStagingStatus().getState() == ProcessState.WAITING
                     && productionStagingsMap.get(production.getId()) == null) {
@@ -233,7 +224,22 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.store();
     }
 
-    private void removeProduction(Production production) {
+    private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {
+        for (ProductionType productionType : productionTypes) {
+            if (productionType.getName().equals(productionRequest.getProductionType())) {
+                return productionType;
+            }
+        }
+        for (ProductionType productionType : productionTypes) {
+            if (productionType.accepts(productionRequest)) {
+                return productionType;
+            }
+        }
+        throw new ProductionException(String.format("Unhandled production request of type '%s'",
+                                                    productionRequest.getProductionType()));
+    }
+
+    private synchronized void removeProduction(Production production) {
         productionStore.removeProduction(production);
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());

@@ -7,6 +7,5 @@ import java.util.Map;
  */
 public interface ProductionServiceFactory {
     ProductionService create(Map<String, String> serviceConfiguration,
-                             String relStagingUrl,
                              String localStagingDir) throws ProductionException;
 }

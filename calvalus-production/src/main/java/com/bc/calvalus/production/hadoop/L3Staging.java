@@ -32,7 +32,7 @@ class L3Staging extends Staging {
     }
 
     @Override
-    public Void call() throws Exception {
+    public String call() throws Exception {
         Logger logger = Logger.getLogger("com.bc.calvalus");
         BeamL3Config beamL3config = processingRequests[0].getBeamL3Config();
         progress = 0f;
@@ -40,6 +40,10 @@ class L3Staging extends Staging {
             L3ProcessingRequest processingRequest = processingRequests[i];
             FormatterL3Config formatConfig = processingRequest.getFormatterL3Config();
             String outputDir = processingRequest.getOutputDir();
+
+            if (isCancelled()) {
+                return null;
+            }
 
             BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
             try {
@@ -61,12 +65,8 @@ class L3Staging extends Staging {
     }
 
     @Override
-    public boolean isCancelled() {
-        return production.getStagingStatus().getState() == ProcessState.CANCELLED;
-    }
-
-    @Override
     public void cancel() {
+        super.cancel();
         // todo - cleanup output directory!!!
         production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
     }

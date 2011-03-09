@@ -23,12 +23,12 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public String getDataArchiveRootPath() {
+    public String getDataInputPath() {
         return "hdfs://cvmaster00:9000/calvalus/eodata";
     }
 
     @Override
-    public String getDataOutputRootPath() {
+    public String getDataOutputPath() {
         return "hdfs://cvmaster00:9000/calvalus/output";
     }
 

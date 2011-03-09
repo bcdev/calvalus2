@@ -20,15 +20,15 @@ import java.util.Map;
 public class HadoopProcessingService implements ProcessingService<JobID> {
     private final JobClient jobClient;
     private final FileSystem fileSystem;
-    private final Path dataArchiveRootPath;
-    private final Path dataOutputRootPath;
+    private final Path dataInputPath;
+    private final Path dataOutputPath;
 
     public HadoopProcessingService(JobClient jobClient) throws IOException {
         this.jobClient = jobClient;
         this.fileSystem = FileSystem.get(jobClient.getConf());
         // String fsName = jobClient.getConf().get("fs.default.name");
-        this.dataArchiveRootPath = fileSystem.makeQualified(new Path("/calvalus/eodata"));
-        this.dataOutputRootPath =  fileSystem.makeQualified(new Path("/calvalus/outputs"));
+        this.dataInputPath = fileSystem.makeQualified(new Path("/calvalus/eodata"));
+        this.dataOutputPath =  fileSystem.makeQualified(new Path("/calvalus/outputs"));
     }
 
     public JobClient getJobClient() {
@@ -51,13 +51,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public String getDataArchiveRootPath() {
-        return dataArchiveRootPath.toString();
+    public String getDataInputPath() {
+        return dataInputPath.toString();
     }
 
     @Override
-    public String getDataOutputRootPath() {
-        return dataOutputRootPath.toString();
+    public String getDataOutputPath() {
+        return dataOutputPath.toString();
     }
 
 

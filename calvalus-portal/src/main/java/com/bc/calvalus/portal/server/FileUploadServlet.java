@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.portal.shared.BackendService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -38,12 +37,12 @@ public class FileUploadServlet extends HttpServlet {
                            "Request contents type is not supported by the servlet.");
             return;
         }
-        PortalConfig portalConfig = new PortalConfig(getServletContext());
+        BackendConfig backendConfig = new BackendConfig(getServletContext());
         final FileHandler fileHandler;
         if (req.getParameter("echo") != null) {
             fileHandler = new FileEchoHandler();
         } else {
-            fileHandler = new FileStoreHandler(portalConfig.getLocalUploadDir());
+            fileHandler = new FileStoreHandler(backendConfig.getLocalUploadDir());
         }
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         try {

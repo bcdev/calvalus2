@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.beam.FormatterL3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
+import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class L3ProcessingRequestTest {
 
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3ProcessingRequestFactory requestFactory = new L3ProcessingRequestFactory(new TestProcessingService(),
-                                                                                   "/opt/tomcat/webapps/calvalus/staging");
+                                                                                   new TestStagingService());
         L3ProcessingRequest[] processingRequests = requestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
         assertNotNull(processingRequests);
         assertEquals(1, processingRequests.length);
@@ -36,7 +37,7 @@ public class L3ProcessingRequestTest {
         assertEquals(4320, (int) processingRequest.getNumRows());
         assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingRequest.getOutputDir());
         assertEquals("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out", processingRequest.getStagingDir());
-        assertEquals(true, processingRequest.isOutputStaging());
+        assertEquals(true, processingRequest.isAutoStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
 
         // Assert that derived processing parameters are present in map
@@ -91,7 +92,7 @@ public class L3ProcessingRequestTest {
                                      "inputProductSetId", "MER_RR__1P/r03/2010",
                                      "outputFileName", "${user}-${id}/out",
                                      "outputFormat", "NetCDF",
-                                     "outputStaging", "true",
+                                     "autoStaging", "true",
                                      "l2ProcessorBundleName", "beam",
                                      "l2ProcessorBundleVersion", "4.9-SNAPSHOT",
                                      "l2ProcessorName", "BandMaths",
