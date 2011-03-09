@@ -41,6 +41,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l2ProductionType = new L2ProductionType(processingService, localStagingDir);
             ProductionType l3ProductionType = new L3ProductionType(processingService, localStagingDir);
             ProductionServiceImpl productionService = new ProductionServiceImpl(processingService, stagingService, productionStore,
+                                                                                relStagingUrl,
                                                                                 l2ProductionType,
                                                                                 l3ProductionType);
 

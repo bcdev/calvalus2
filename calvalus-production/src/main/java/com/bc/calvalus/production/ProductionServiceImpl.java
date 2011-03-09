@@ -25,6 +25,7 @@ public class ProductionServiceImpl implements ProductionService {
 
     private final ProcessingService processingService;
     private final StagingService stagingService;
+    private final String relStagingUrl;
     private final ProductionStore productionStore;
     private final Map<String, ProductionType> productionTypeMap;
     private final Map<String, Action> productionActionMap;
@@ -35,10 +36,12 @@ public class ProductionServiceImpl implements ProductionService {
     public ProductionServiceImpl(ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
+                                 String relStagingUrl,
                                  ProductionType... productionTypes) throws ProductionException {
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
+        this.relStagingUrl = relStagingUrl;
         this.productionTypeMap = new HashMap<String, ProductionType>();
         for (ProductionType productionType : productionTypes) {
             this.productionTypeMap.put(productionType.getName(), productionType);
@@ -103,6 +106,7 @@ public class ProductionServiceImpl implements ProductionService {
                                                         productionRequest.getProductionType()));
         }
         Production production = productionType.createProduction(productionRequest);
+        production.setOutputUrl(relStagingUrl);
         productionStore.addProduction(production);
         return new ProductionResponse(production);
     }
