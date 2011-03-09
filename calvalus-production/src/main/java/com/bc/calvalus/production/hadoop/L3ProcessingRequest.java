@@ -55,18 +55,18 @@ class L3ProcessingRequest extends ProcessingRequest {
         } else {
             extension = "xxx"; // todo  what else to handle ?
         }
-        String filename = String.format("L3_%s-%s.%s", dateStart, dateStop, extension);
+        String filename = String.format("L3_%s-%s.%s", dateStart, dateStop, extension);  // todo - from processingRequest
         String stagingPath = new File(getStagingDir(), filename).getPath();
 
         FormatterL3Config.BandConfiguration[] bands = new FormatterL3Config.BandConfiguration[0];  // todo - from processingRequest
         String outputType = "Product"; // todo - from processingRequest
 
         FormatterL3Config formatConfig = new FormatterL3Config(outputType,
-                stagingPath,
-                outputFormat,
-                bands,
-                dateStart,
-                dateStop);
+                                                               stagingPath,
+                                                               outputFormat,
+                                                               bands,
+                                                               dateStart,
+                                                               dateStop);
 
         return formatConfig;
     }

@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -35,7 +36,6 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         productionRequest.ensureProductionParameterSet("maskExpr");
 
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
-        commonProcessingParameters.put("outputDir", getOutputDir(productionId, userName, productionRequest));
         commonProcessingParameters.put("stagingDir", getStagingDir(productionId, userName, productionRequest));
         commonProcessingParameters.put("numRows", getNumRows(productionRequest));
         commonProcessingParameters.put("bbox", getBBox(productionRequest));
@@ -53,6 +53,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         L3ProcessingRequest[] processingRequests = new L3ProcessingRequest[periodCount];
         long time = startDate.getTime();
         long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+
         for (int i = 0; i < periodCount; i++) {
 
             HashMap<String, Object> processingParameters = new HashMap<String, Object>(commonProcessingParameters);
@@ -61,6 +62,9 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
             processingParameters.put("inputFiles", getInputFiles(productionRequest, date1, date2));
+            processingParameters.put("outputDir", getProcessingService().getDataOutputRootPath() +
+                    "/" + userName + "/" + productionId + "_" + i);
+
             time += periodLengthMillis;
 
             processingRequests[i] = new L3ProcessingRequest(processingParameters);

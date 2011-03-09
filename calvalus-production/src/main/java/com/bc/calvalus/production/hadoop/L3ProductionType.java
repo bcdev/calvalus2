@@ -9,16 +9,20 @@ import com.bc.calvalus.production.ProductionType;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapreduce.JobID;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * A production type used for generating one or more Level-3 products.
  *
  * @author MarcoZ
  * @author Norman
  */
-class L3ProductionType implements ProductionType {
+public class L3ProductionType implements ProductionType {
     private final HadoopProcessingService processingService;
     private WpsXmlGenerator wpsXmlGenerator;
     private final L3ProcessingRequestFactory processingRequestFactory;
+    private static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyyMMddHHmmss");
 
     L3ProductionType(HadoopProcessingService processingService, String localStagingDir) throws ProductionException {
         this.processingService = processingService;
@@ -72,13 +76,14 @@ class L3ProductionType implements ProductionType {
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
                                                                                                        hadoopProduction.getUser(),
                                                                                                        productionRequest);
-        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf());
 
-        return l3Staging;
+        return new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf());
     }
 
     static String createL3ProductionId(ProductionRequest productionRequest) {
-        return productionRequest.getProductionType() + "-" + Long.toHexString(System.nanoTime());
+        return String.format("%s_%s_%s", yyyyMMddHHmmss.format(new Date()),
+                             productionRequest.getProductionType(),
+                             Long.toHexString(System.nanoTime()));
 
     }
 

@@ -39,9 +39,9 @@ class L3Staging extends Staging {
         for (int i = 0; i < processingRequests.length; i++) {
             L3ProcessingRequest processingRequest = processingRequests[i];
             FormatterL3Config formatConfig = processingRequest.getFormatterL3Config();
+            String outputDir = processingRequest.getOutputDir();
 
             BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
-            String outputDir = processingRequest.getOutputDir();
             try {
                 // todo - need a progress monitor here
                 beamL3FormattingService.format(formatConfig, beamL3config, outputDir);
