@@ -74,6 +74,7 @@ public class BeamL3FormattingService {
         outputType = formatterL3Config.getOutputType();
 
         outputFile = new File(formatterL3Config.getOutputFile());
+
         final String fileName = outputFile.getName();
         final int extPos = fileName.lastIndexOf(".");
         outputFileNameBase = fileName.substring(0, extPos);
@@ -112,6 +113,7 @@ public class BeamL3FormattingService {
 
         computeOutputRegion(l3Config);
 
+        outputFile.getParentFile().mkdirs();
         if (outputType.equalsIgnoreCase("Product")) {
             writeProductFile(formatterL3Config.getStartTime(), formatterL3Config.getEndTime());
         } else {
