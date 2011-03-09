@@ -23,7 +23,10 @@ public class ProductionServiceImplTest {
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType();
         productionStoreMock = new TestProductionStore();
-        productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock, stagingServiceMock, productionStoreMock,
+        productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock,
+                                                               stagingServiceMock,
+                                                               productionStoreMock,
+                                                               "staging",
                                                                productionTypeMock);
     }
 
@@ -43,6 +46,7 @@ public class ProductionServiceImplTest {
         assertEquals("job_1_2", productionResponse.getProduction().getJobIds()[1]);
         assertNotNull(productionResponse.getProduction().getProductionRequest());
         assertEquals(request, productionResponse.getProduction().getProductionRequest());
+        assertEquals("staging", productionResponse.getProduction().getOutputUrl());
     }
 
     @Test
