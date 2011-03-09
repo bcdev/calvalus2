@@ -34,7 +34,7 @@ public class L3ProcessingRequestTest {
         assertEquals(0, processingRequest.getVariables().length);
         assertEquals("5,50,25,60", processingRequest.getBBox());
         assertEquals(4320, (int) processingRequest.getNumRows());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa-A25F/out", processingRequest.getOutputDir());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingRequest.getOutputDir());
         assertEquals("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out", processingRequest.getStagingDir());
         assertEquals(true, processingRequest.isOutputStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
@@ -47,7 +47,7 @@ public class L3ProcessingRequestTest {
         assertNotNull(processingParameters.get("aggregators"));
         assertEquals("5,50,25,60", processingParameters.get("bbox"));
         assertEquals(4320, processingParameters.get("numRows"));
-        assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa-A25F/out", processingParameters.get("outputDir"));
+        assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingParameters.get("outputDir"));
         assertEquals("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out", processingParameters.get("stagingDir"));
         assertEquals("MER_RR__1P/r03/2010", processingParameters.get("inputProductSetId"));
         assertEquals("beam", processingParameters.get("l2ProcessorBundleName"));

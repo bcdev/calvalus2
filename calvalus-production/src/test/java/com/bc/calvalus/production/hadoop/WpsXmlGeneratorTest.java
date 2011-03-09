@@ -34,7 +34,7 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<wps:LiteralData>4.9-SNAPSHOT</wps:LiteralData>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.output.dir</ows:Identifier>"));
-        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/output/ewa-A25F/out\"/>"));
+        assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0\"/>"));
 
         assertTrue(xml.contains("<ows:Identifier>calvalus.input</ows:Identifier>"));
         assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1\"/>"));
