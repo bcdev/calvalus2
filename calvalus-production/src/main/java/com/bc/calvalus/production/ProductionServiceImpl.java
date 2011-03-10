@@ -176,7 +176,7 @@ public class ProductionServiceImpl implements ProductionService {
         ProductionType productionType = findProductionType(production.getProductionRequest());
         Staging staging = productionType.createStaging(production);
         try {
-            stagingService.orderStaging(staging);
+            stagingService.submitStaging(staging);
             productionStagingsMap.put(production.getId(), staging);
         } catch (IOException e) {
             throw new ProductionException(String.format("Failed to order staging for production '%s': %s",

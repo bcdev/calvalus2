@@ -26,7 +26,7 @@ public class TestStagingService implements StagingService {
     }
 
     @Override
-    public void orderStaging(Staging staging) throws IOException {
+    public void submitStaging(Staging staging) throws IOException {
         stagings.add(staging);
     }
 }

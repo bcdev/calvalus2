@@ -13,5 +13,5 @@ public interface StagingService {
      */
     String getStagingAreaPath();
 
-    void orderStaging(Staging staging) throws IOException;
+    void submitStaging(Staging staging) throws IOException;
 }
