@@ -83,7 +83,7 @@ class DummyProductionType implements ProductionType {
         @Override
         public String call() throws Exception {
             try {
-                final File outputFile = new File(stagingService.getStagingAreaPath(), production.getStagingPath());
+                final File outputFile = new File(stagingService.getStagingDir(), production.getStagingPath());
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0f));
                 if (!outputFile.exists()) {
                     File parentFile = outputFile.getParentFile();

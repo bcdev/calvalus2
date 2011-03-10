@@ -240,10 +240,11 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production);
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
-        //TODO this should be done in the staging service (mz)
-        File file = new File(stagingService.getStagingAreaPath(), production.getStagingPath());
-        if (file.exists()) {
-            SystemUtils.deleteFileTree(file);
+        try {
+            stagingService.deleteTree(production.getStagingPath());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, String.format("Failed to delete staging directory '%s' of production '%s': %s",
+                                                   production.getStagingPath(), production.getId(), e.getMessage()), e);
         }
     }
 

@@ -21,12 +21,13 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
-    private static final File DEFAULT_PRODUCTIONS_DB_FILE = new File("calvalus-productions-db.csv");
+    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME ="calvalus-productions-db.csv";
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
-                                    String localStagingDir) throws ProductionException {
+                                    File localContextDir,
+                                    File localStagingDir) throws ProductionException {
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
@@ -36,7 +37,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             JobClient jobClient = new JobClient(jobConf);
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             ProductionStore productionStore = new SimpleProductionStore(processingService.getJobIdFormat(),
-                                                                        DEFAULT_PRODUCTIONS_DB_FILE);
+                                                                        new File(localContextDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
             StagingService stagingService = new SimpleStagingService(localStagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);

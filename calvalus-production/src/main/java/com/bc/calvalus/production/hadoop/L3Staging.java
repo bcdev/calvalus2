@@ -9,6 +9,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,12 +22,12 @@ class L3Staging extends Staging {
     private final Production production;
     private final L3ProcessingRequest[] processingRequests;
     private final Configuration hadoopConfiguration;
-    private final String stagingAreaPath;
+    private final File stagingAreaPath;
     private float progress;
 
     public L3Staging(Production production,
                      L3ProcessingRequest[] processingRequests,
-                     Configuration hadoopConfiguration, String stagingAreaPath) {
+                     Configuration hadoopConfiguration, File stagingAreaPath) {
         this.production = production;
         this.processingRequests = processingRequests;
         this.hadoopConfiguration = hadoopConfiguration;
@@ -40,7 +41,7 @@ class L3Staging extends Staging {
         progress = 0f;
         for (int i = 0; i < processingRequests.length; i++) {
             L3ProcessingRequest processingRequest = processingRequests[i];
-            FormatterL3Config formatConfig = processingRequest.getFormatterL3Config(stagingAreaPath + "/" + production.getStagingPath());
+            FormatterL3Config formatConfig = processingRequest.getFormatterL3Config(new File(stagingAreaPath, production.getStagingPath()).getPath());
             String outputDir = processingRequest.getOutputDir();
 
             if (isCancelled()) {

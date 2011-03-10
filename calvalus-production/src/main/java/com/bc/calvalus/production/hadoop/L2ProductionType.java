@@ -71,7 +71,7 @@ public class L2ProductionType implements ProductionType {
             });
 
 
-            File downloadDir = new File(stagingService.getStagingAreaPath(), outputPath.getName());
+            File downloadDir = new File(stagingService.getStagingDir(), outputPath.getName());
             if (!downloadDir.exists()) {
                 downloadDir.mkdirs();
             }

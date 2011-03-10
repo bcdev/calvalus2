@@ -20,17 +20,19 @@
     <dependencies>
         <!--  Calvalus -->
 
-        <!--<dependency>-->
-            <!--<groupId>com.bc.calvalus</groupId>-->
-            <!--<artifactId>calvalus-commons</artifactId>-->
-        <!--</dependency>-->
-
-        <!--  Hadoop -->
-
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-commons</artifactId>
         </dependency>
+
+        <!--  BEAM -->
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+
+        <!--  Hadoop -->
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>

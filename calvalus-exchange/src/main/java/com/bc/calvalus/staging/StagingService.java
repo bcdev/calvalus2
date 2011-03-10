@@ -1,5 +1,6 @@
 package com.bc.calvalus.staging;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -9,9 +10,18 @@ import java.io.IOException;
  */
 public interface StagingService {
     /**
-     * @return The absolute path to the staging area.
+     * @return The absolute, local directory path to this service's staging area.
      */
-    String getStagingAreaPath();
+    File getStagingDir();
+
 
     void submitStaging(Staging staging) throws IOException;
+
+    /**
+     * Recursively deletes a path in the staging area.
+     *
+     * @param path The path to delete.
+     * @throws IOException If an error occurs
+     */
+    void deleteTree(String path) throws IOException;
 }

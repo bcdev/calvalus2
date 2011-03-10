@@ -193,7 +193,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
                             backendConfig = new BackendConfig(servletContext);
                             productionService = productionServiceFactory.create(serviceConfiguration,
-                                                                                backendConfig.getLocalStagingDir().getPath());
+                                                                                backendConfig.getLocalContextDir(),
+                                                                                backendConfig.getLocalStagingDir());
                         } catch (Exception e) {
                             throw new ServletException(e);
                         }

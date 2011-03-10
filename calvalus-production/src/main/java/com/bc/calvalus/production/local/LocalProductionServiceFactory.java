@@ -11,22 +11,24 @@ import com.bc.calvalus.production.SimpleProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 /**
- * Factory for the {@link com.bc.calvalus.production.test.TestProductionService}.
+ * Factory for production service that operates locally.
  */
 public class LocalProductionServiceFactory implements ProductionServiceFactory {
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
-                                    String localStagingDir) throws ProductionException {
+                                    File localContextDir,
+                                    File localStagingDir) throws ProductionException, IOException {
 
         LocalProcessingService processingService = new LocalProcessingService();
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
         ProductionServiceImpl productionService = new ProductionServiceImpl(processingService,
                                                                             stagingService,
                                                                             new SimpleProductionStore(processingService.getJobIdFormat(),
-                                                                                                      new File("test-productions.csv")),
+                                                                                                      new File(localContextDir, "test-productions.csv")),
                                                                             new DummyProductionType(processingService, stagingService)) {
             @Override
             public ProductSet[] getProductSets(String filter) throws ProductionException {

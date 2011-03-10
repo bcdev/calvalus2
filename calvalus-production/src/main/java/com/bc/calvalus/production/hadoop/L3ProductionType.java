@@ -78,7 +78,7 @@ public class L3ProductionType implements ProductionType {
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
                                                                                                        hadoopProduction.getUser(),
                                                                                                        productionRequest);
-        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingAreaPath());
+        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingDir());
         try {
             stagingService.submitStaging(l3Staging);
         } catch (IOException e) {
