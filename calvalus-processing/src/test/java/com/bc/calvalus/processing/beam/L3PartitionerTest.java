@@ -29,7 +29,7 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
 
         assertNull(l3Partitioner.getBinningGrid());
-        BeamL3Config l3Config = new BeamL3Config();
+        L3Config l3Config = new L3Config();
         l3Config.numRows = 113;
         try {
             l3Partitioner.setL3Config(l3Config);
@@ -41,7 +41,7 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows2Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        BeamL3Config l3Config = new BeamL3Config();
+        L3Config l3Config = new L3Config();
         int numRows = 6;
         l3Config.numRows = numRows;
         l3Partitioner.setL3Config(l3Config);
@@ -73,7 +73,7 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows3Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        BeamL3Config l3Config = new BeamL3Config();
+        L3Config l3Config = new L3Config();
         int numRows = 6;
         l3Config.numRows = numRows;
         l3Partitioner.setL3Config(l3Config);
@@ -106,7 +106,7 @@ public class L3PartitionerTest {
     @Test
     public void test8Rows3Partitions() {
         L3Partitioner l3Partitioner = new L3Partitioner();
-        BeamL3Config l3Config = new BeamL3Config();
+        L3Config l3Config = new L3Config();
         int numRows = 8;
         l3Config.numRows = numRows;
         l3Partitioner.setL3Config(l3Config);

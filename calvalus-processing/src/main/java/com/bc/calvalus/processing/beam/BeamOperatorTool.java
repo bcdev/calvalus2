@@ -100,18 +100,18 @@ public class BeamOperatorTool extends Configured implements Tool {
             if (success) {
                 Path outputPath = FileOutputFormat.getOutputPath(job);
                 FileSystem outputPathFileSystem = outputPath.getFileSystem(job.getConfiguration());
-                FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, BeamL3Config.L3_REQUEST_FILENAME));
+                FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, L3Config.L3_REQUEST_FILENAME));
                 os.writeBytes(requestContent);
                 os.close();
 
                 if (requestContent.contains("calvalus.formatter.parameters")) {
                     WpsConfig wpsConfig = new WpsConfig(requestContent);
 
-                    BeamL3Config beamL3Config = BeamL3Config.create(wpsConfig.getLevel3Paramter());
-                    FormatterL3Config formatterL3Config = FormatterL3Config.create(wpsConfig.getFormatterParameter());
+                    L3Config l3Config = L3Config.create(wpsConfig.getLevel3Paramter());
+                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
-                    BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(LOG, getConf());
-                    result = beamL3FormattingService.format(formatterL3Config, beamL3Config, hadoopJobOutputDir);
+                    L3Formatter formatter = new L3Formatter(LOG, getConf());
+                    result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir);
                 } else {
                     LOG.info("no formatting performed");
                 }

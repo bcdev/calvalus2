@@ -64,7 +64,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         BeamProductHandler.init();
         final Configuration configuration = context.getConfiguration();
         ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
-        BeamL3Config l3Config = BeamL3Config.create(processingConfiguration.getLevel3Parameters());
+        L3Config l3Config = L3Config.create(processingConfiguration.getLevel3Parameters());
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);

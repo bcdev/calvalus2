@@ -1,8 +1,8 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.processing.beam.BeamL3Config;
-import com.bc.calvalus.processing.beam.FormatterL3Config;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.L3FormatterConfig;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
@@ -58,29 +58,29 @@ public class L3ProcessingRequestTest {
         assertTrue(Double.isNaN((Double) processingParameters.get("fillValue")));
 
         // Assert that processing config objects are correct
-        BeamL3Config beamL3Config = processingRequest.getBeamL3Config();
-        assertNotNull(beamL3Config);
-        assertEquals(4320, beamL3Config.getBinningContext().getBinningGrid().getNumRows());
-        assertEquals("NOT INVALID", beamL3Config.getVariableContext().getMaskExpr());
-        float[] superSamplingSteps = beamL3Config.getSuperSamplingSteps();
+        L3Config l3Config = processingRequest.getBeamL3Config();
+        assertNotNull(l3Config);
+        assertEquals(4320, l3Config.getBinningContext().getBinningGrid().getNumRows());
+        assertEquals("NOT INVALID", l3Config.getVariableContext().getMaskExpr());
+        float[] superSamplingSteps = l3Config.getSuperSamplingSteps();
         assertEquals(1, superSamplingSteps.length);
         assertEquals(0.5f, superSamplingSteps[0], 1e-5);
-        Geometry regionOfInterest = beamL3Config.getRegionOfInterest();
+        Geometry regionOfInterest = l3Config.getRegionOfInterest();
         assertNotNull(regionOfInterest);
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
-        assertEquals(3, beamL3Config.getVariableContext().getVariableCount());
-        assertEquals("a", beamL3Config.getVariableContext().getVariableName(0));
-        assertEquals(" b", beamL3Config.getVariableContext().getVariableName(1));
-        assertEquals(" c", beamL3Config.getVariableContext().getVariableName(2));
-        BinManager binManager = beamL3Config.getBinningContext().getBinManager();
+        assertEquals(3, l3Config.getVariableContext().getVariableCount());
+        assertEquals("a", l3Config.getVariableContext().getVariableName(0));
+        assertEquals(" b", l3Config.getVariableContext().getVariableName(1));
+        assertEquals(" c", l3Config.getVariableContext().getVariableName(2));
+        BinManager binManager = l3Config.getBinningContext().getBinManager();
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
 
-        FormatterL3Config formatterL3Config = processingRequest.getFormatterL3Config("/opt/tomcat/webapps/calvalus/staging/ewa-A25F");
-        assertNotNull(formatterL3Config);
-        assertEquals("NetCDF", formatterL3Config.getOutputFormat());
-        assertEquals(new File("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/L3_2010-06-03-2010-06-05.nc").getPath(), formatterL3Config.getOutputFile());
-        assertEquals("Product", formatterL3Config.getOutputType());
+        L3FormatterConfig formatterConfig = processingRequest.getFormatterL3Config("/opt/tomcat/webapps/calvalus/staging/ewa-A25F");
+        assertNotNull(formatterConfig);
+        assertEquals("NetCDF", formatterConfig.getOutputFormat());
+        assertEquals(new File("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/L3_2010-06-03-2010-06-05.nc").getPath(), formatterConfig.getOutputFile());
+        assertEquals("Product", formatterConfig.getOutputType());
     }
 
     static ProductionRequest createValidL3ProductionRequest() {

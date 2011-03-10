@@ -46,11 +46,11 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
     public void setConf(Configuration conf) {
         this.conf = conf;
         String level3Parameters = new ProcessingConfiguration(conf).getLevel3Parameters();
-        BeamL3Config l3Config = BeamL3Config.create(level3Parameters);
+        L3Config l3Config = L3Config.create(level3Parameters);
         setL3Config(l3Config);
     }
 
-    void setL3Config(BeamL3Config l3Config) {
+    void setL3Config(L3Config l3Config) {
         this.binningGrid = l3Config.getBinningGrid();
     }
 

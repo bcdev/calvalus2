@@ -25,7 +25,7 @@ import java.text.ParseException;
 /**
  * The configuration of the L3 formatter
  */
-public class FormatterL3Config {
+public class L3FormatterConfig {
 
     public static class BandConfiguration {
         String index;
@@ -47,17 +47,17 @@ public class FormatterL3Config {
     @Parameter
     private String endTime;
 
-    public static FormatterL3Config create(String formatterParameters) {
-        FormatterL3Config formatterL3Config = new FormatterL3Config();
-        ProcessingConfiguration.loadFromXml(formatterParameters, formatterL3Config);
-        return formatterL3Config;
+    public static L3FormatterConfig create(String formatterParameters) {
+        L3FormatterConfig formatterConfig = new L3FormatterConfig();
+        ProcessingConfiguration.loadFromXml(formatterParameters, formatterConfig);
+        return formatterConfig;
     }
 
-    public FormatterL3Config() {
+    public L3FormatterConfig() {
         // used by DOM converter
     }
 
-    public FormatterL3Config(String outputType,
+    public L3FormatterConfig(String outputType,
                              String outputFile,
                              String outputFormat,
                              BandConfiguration[] bands,

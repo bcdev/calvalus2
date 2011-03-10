@@ -50,7 +50,7 @@ public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, T
     public void setConf(Configuration conf) {
         this.conf = conf;
         String level3Parameters = new ProcessingConfiguration(conf).getLevel3Parameters();
-        BeamL3Config l3Config = BeamL3Config.create(level3Parameters);
+        L3Config l3Config = L3Config.create(level3Parameters);
         this.binManager = l3Config.getBinningContext().getBinManager();
     }
 

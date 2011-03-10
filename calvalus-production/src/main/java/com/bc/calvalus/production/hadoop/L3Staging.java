@@ -2,9 +2,9 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.processing.beam.BeamL3Config;
-import com.bc.calvalus.processing.beam.BeamL3FormattingService;
-import com.bc.calvalus.processing.beam.FormatterL3Config;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.L3Formatter;
+import com.bc.calvalus.processing.beam.L3FormatterConfig;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
@@ -37,21 +37,21 @@ class L3Staging extends Staging {
     @Override
     public String call() throws Exception {
         Logger logger = Logger.getLogger("com.bc.calvalus");
-        BeamL3Config beamL3config = processingRequests[0].getBeamL3Config();
+        L3Config l3config = processingRequests[0].getBeamL3Config();
         progress = 0f;
         for (int i = 0; i < processingRequests.length; i++) {
             L3ProcessingRequest processingRequest = processingRequests[i];
-            FormatterL3Config formatConfig = processingRequest.getFormatterL3Config(new File(stagingAreaPath, production.getStagingPath()).getPath());
+            L3FormatterConfig formatterConfig = processingRequest.getFormatterL3Config(new File(stagingAreaPath, production.getStagingPath()).getPath());
             String outputDir = processingRequest.getOutputDir();
 
             if (isCancelled()) {
                 return null;
             }
 
-            BeamL3FormattingService beamL3FormattingService = new BeamL3FormattingService(logger, hadoopConfiguration);
+            L3Formatter formatter = new L3Formatter(logger, hadoopConfiguration);
             try {
                 // todo - need a progress monitor here
-                beamL3FormattingService.format(formatConfig, beamL3config, outputDir);
+                formatter.format(formatterConfig, l3config, outputDir);
                 progress = 1f;
                 // todo - if job has been cancelled, it must not change its state anymore
                 production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));

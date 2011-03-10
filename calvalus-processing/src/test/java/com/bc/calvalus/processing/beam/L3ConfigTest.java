@@ -24,7 +24,6 @@ import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
-import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -51,9 +50,9 @@ import java.util.Calendar;
 
 import static org.junit.Assert.*;
 
-public class BeamL3ConfigTest {
+public class L3ConfigTest {
 
-    private BeamL3Config l3Config;
+    private L3Config l3Config;
 
     @Before
     public void createL3Config() throws IOException, SAXException, ParserConfigurationException {
@@ -62,7 +61,7 @@ public class BeamL3ConfigTest {
 
     @Test
     public void testSuperSampling() {
-        BeamL3Config config = new BeamL3Config();
+        L3Config config = new L3Config();
         float[] superSamplingSteps = config.getSuperSamplingSteps();
         assertNotNull(superSamplingSteps);
         assertEquals(1, superSamplingSteps.length);
@@ -92,7 +91,7 @@ public class BeamL3ConfigTest {
 
     @Test
     public void testBinningGrid() {
-        BinningGrid grid = new BeamL3Config().getBinningGrid();
+        BinningGrid grid = new L3Config().getBinningGrid();
         assertEquals(2160, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
 
@@ -104,7 +103,7 @@ public class BeamL3ConfigTest {
 
     @Test
     public void testGetRegionOfInterest() {
-        BeamL3Config l3Config = new BeamL3Config();
+        L3Config l3Config = new L3Config();
         Geometry regionOfInterest;
 
         regionOfInterest = l3Config.getRegionOfInterest();
@@ -139,41 +138,41 @@ public class BeamL3ConfigTest {
         AffineTransform at = AffineTransform.getTranslateInstance(-180, -90);
         CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, new Rectangle(360, 180), at);
         product.setGeoCoding(geoCoding);
-        geometry = BeamL3Config.computeProductGeometry(product);
+        geometry = L3Config.computeProductGeometry(product);
         assertTrue(geometry instanceof Polygon);
         assertEquals("POLYGON ((-179.5 -89.5, -179.5 89.5, 179.5 89.5, 179.5 -89.5, -179.5 -89.5))", geometry.toString());
 
         Rectangle rectangle;
 
-        rectangle = BeamL3Config.computePixelRegion(product, geometry);
+        rectangle = L3Config.computePixelRegion(product, geometry);
         assertEquals(new Rectangle(360, 180), rectangle);
 
         SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);
         op.setRegion(new Rectangle(180 - 50, 90 - 25, 100, 50));
         product = op.getTargetProduct();
-        geometry = BeamL3Config.computeProductGeometry(product);
+        geometry = L3Config.computeProductGeometry(product);
         assertTrue(geometry instanceof Polygon);
         assertEquals("POLYGON ((-49.5 -24.5, -49.5 24.5, 49.5 24.5, 49.5 -24.5, -49.5 -24.5))", geometry.toString());
 
         // BBOX fully contained, with border=0
-        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 0);
+        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 0);
         assertEquals(new Rectangle(50, 25, 11, 11), rectangle);
 
         // BBOX fully contained, with border=1
-        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 1);
+        rectangle = L3Config.computePixelRegion(product, createBBOX(0.0, 0.0, 10.0, 10.0), 1);
         assertEquals(new Rectangle(49, 24, 13, 13), rectangle);
 
         // BBOX intersects product rect in upper left
-        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(45.5, 20.5, 100.0, 50.0), 0);
+        rectangle = L3Config.computePixelRegion(product, createBBOX(45.5, 20.5, 100.0, 50.0), 0);
         assertEquals(new Rectangle(95, 45, 5, 5), rectangle);
 
         // Product bounds fully contained in BBOX
-        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(-180, -90, 360, 180), 0);
+        rectangle = L3Config.computePixelRegion(product, createBBOX(-180, -90, 360, 180), 0);
         assertEquals(new Rectangle(0, 0, 100, 50), rectangle);
 
         // BBOX not contained
-        rectangle = BeamL3Config.computePixelRegion(product, createBBOX(60.0, 0.0, 10.0, 10.0));
+        rectangle = L3Config.computePixelRegion(product, createBBOX(60.0, 0.0, 10.0, 10.0));
         assertEquals(null, rectangle);
     }
 
@@ -258,10 +257,10 @@ public class BeamL3ConfigTest {
             assertEquals(4320, l3Config.numRows);
         }
 
-    private BeamL3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
+    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
         String wpsRequest = loadConfigProperties(configPath);
         WpsConfig wpsConfig = new WpsConfig(wpsRequest);
-        return BeamL3Config.create(wpsConfig.getLevel3Paramter());
+        return L3Config.create(wpsConfig.getLevel3Paramter());
     }
 
     private String loadConfigProperties(String configPath) throws IOException {

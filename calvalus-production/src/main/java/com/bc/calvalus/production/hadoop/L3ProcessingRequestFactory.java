@@ -1,10 +1,9 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.beam.BeamL3Config;
+import com.bc.calvalus.processing.beam.L3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.staging.StagingService;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
@@ -80,16 +79,16 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         return getDouble(request, "weightCoeff", null);
     }
 
-    public BeamL3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+    public L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         String inputVariablesStr = request.getProductionParameterSafe("inputVariables");
         String aggregator = request.getProductionParameterSafe("aggregator");
         Double weightCoeff = getWeightCoeff(request);
         Double fillValue = getFillValue(request);
 
         String[] inputVariables = inputVariablesStr.split(",");
-        BeamL3Config.AggregatorConfiguration[] aggregatorConfigurations = new BeamL3Config.AggregatorConfiguration[inputVariables.length];
+        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[inputVariables.length];
         for (int i = 0; i < inputVariables.length; i++) {
-            aggregatorConfigurations[i] = new BeamL3Config.AggregatorConfiguration(aggregator,
+            aggregatorConfigurations[i] = new L3Config.AggregatorConfiguration(aggregator,
                                                                                    inputVariables[i],
                                                                                    weightCoeff,
                                                                                    fillValue);
@@ -97,9 +96,9 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         return aggregatorConfigurations;
     }
 
-    public BeamL3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+    public L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
         // todo - implement L3 variables
-        return new BeamL3Config.VariableConfiguration[0];
+        return new L3Config.VariableConfiguration[0];
     }
 
     public int getNumRows(ProductionRequest request) throws ProductionException {

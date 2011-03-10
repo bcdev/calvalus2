@@ -56,7 +56,7 @@ import java.util.Map;
 
 import static java.lang.Math.*;
 
-public class BeamL3Config {
+public class L3Config {
     static final String L3_REQUEST_FILENAME = "wps-request.xml";
 
     public static class VariableConfiguration {
@@ -138,8 +138,8 @@ public class BeamL3Config {
     @Parameter(itemAlias = "aggregator")
     AggregatorConfiguration[] aggregators;
 
-    public static BeamL3Config create(String level3ParametersXml) {
-        BeamL3Config l3Config = new BeamL3Config();
+    public static L3Config create(String level3ParametersXml) {
+        L3Config l3Config = new L3Config();
         ProcessingConfiguration.loadFromXml(level3ParametersXml, l3Config);
         return l3Config;
     }
