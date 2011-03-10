@@ -73,6 +73,7 @@ public class OrderL2ProductionView extends PortalView {
         GsProcessorDescriptor selectedProcessor = processingPanel.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
+        parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
         parameters.put("autoStaging", inputOutputPanel.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
         parameters.put("processorBundleVersion", processingPanel.getBundleVersion());
