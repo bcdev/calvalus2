@@ -95,9 +95,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             } else if (jobStatus.getRunState() == JobStatus.KILLED) {
                 return new ProcessStatus(ProcessState.CANCELLED, progress);
             } else if (jobStatus.getRunState() == JobStatus.PREP) {
-                return new ProcessStatus(ProcessState.WAITING, progress);
+                return new ProcessStatus(ProcessState.SCHEDULED, progress);
             } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
-                return new ProcessStatus(ProcessState.IN_PROGRESS, progress);
+                return new ProcessStatus(ProcessState.RUNNING, progress);
             } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
                 return new ProcessStatus(ProcessState.COMPLETED, 1.0f);
             }

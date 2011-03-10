@@ -95,19 +95,19 @@ public class ProductionServiceImplTest {
         assertEquals(ProcessStatus.UNKNOWN, productions[1].getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, productions[2].getProcessingStatus());
 
-        processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f));
-        processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f));
+        processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.RUNNING, 0.2f));
+        processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.RUNNING, 0.4f));
         processingServiceMock.setJobStatus("job_2_1", new ProcessStatus(ProcessState.COMPLETED));
         processingServiceMock.setJobStatus("job_2_2", new ProcessStatus(ProcessState.COMPLETED));
-        processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.WAITING));
-        processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.IN_PROGRESS, 0.8f));
+        processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.SCHEDULED));
+        processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.RUNNING, 0.8f));
 
         // this would be called by the StatusObserver timer task
         productionServiceUnderTest.updateProductions();
 
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.3f), productions[0].getProcessingStatus());
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f), productions[0].getProcessingStatus());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), productions[1].getProcessingStatus());
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f), productions[2].getProcessingStatus());
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.4f), productions[2].getProcessingStatus());
     }
 
 
@@ -128,8 +128,8 @@ public class ProductionServiceImplTest {
 
         processingServiceMock.setJobStatus("job_2_1", new ProcessStatus(ProcessState.COMPLETED));
         processingServiceMock.setJobStatus("job_2_2", new ProcessStatus(ProcessState.COMPLETED));
-        processingServiceMock.setJobStatus("job_4_1", new ProcessStatus(ProcessState.IN_PROGRESS));
-        processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.IN_PROGRESS));
+        processingServiceMock.setJobStatus("job_4_1", new ProcessStatus(ProcessState.RUNNING));
+        processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
         productionServiceUnderTest.updateProductions();
@@ -167,14 +167,14 @@ public class ProductionServiceImplTest {
         productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
         productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
 
-        processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.WAITING));
-        processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.IN_PROGRESS));
+        processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.SCHEDULED));
+        processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.RUNNING));
         processingServiceMock.setJobStatus("job_2_1", new ProcessStatus(ProcessState.COMPLETED));
         processingServiceMock.setJobStatus("job_2_2", new ProcessStatus(ProcessState.COMPLETED));
-        processingServiceMock.setJobStatus("job_3_1", new ProcessStatus(ProcessState.IN_PROGRESS));
+        processingServiceMock.setJobStatus("job_3_1", new ProcessStatus(ProcessState.RUNNING));
         processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.COMPLETED));
-        processingServiceMock.setJobStatus("job_4_1", new ProcessStatus(ProcessState.IN_PROGRESS));
-        processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.IN_PROGRESS));
+        processingServiceMock.setJobStatus("job_4_1", new ProcessStatus(ProcessState.RUNNING));
+        processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
         productionServiceUnderTest.updateProductions();
@@ -182,10 +182,10 @@ public class ProductionServiceImplTest {
         Production[] productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
         assertEquals(4, productions.length);
-        assertEquals(ProcessState.IN_PROGRESS, productions[0].getProcessingStatus().getState());
+        assertEquals(ProcessState.RUNNING, productions[0].getProcessingStatus().getState());
         assertEquals(ProcessState.COMPLETED, productions[1].getProcessingStatus().getState());
-        assertEquals(ProcessState.IN_PROGRESS, productions[2].getProcessingStatus().getState());
-        assertEquals(ProcessState.IN_PROGRESS, productions[3].getProcessingStatus().getState());
+        assertEquals(ProcessState.RUNNING, productions[2].getProcessingStatus().getState());
+        assertEquals(ProcessState.RUNNING, productions[3].getProcessingStatus().getState());
 
         productionServiceUnderTest.cancelProductions("id_1", "id_2", "id_4");
 
@@ -197,7 +197,7 @@ public class ProductionServiceImplTest {
         assertEquals(4, productions.length);
         assertEquals(ProcessState.CANCELLED, productions[0].getProcessingStatus().getState());
         assertEquals(ProcessState.COMPLETED, productions[1].getProcessingStatus().getState());
-        assertEquals(ProcessState.IN_PROGRESS, productions[2].getProcessingStatus().getState());
+        assertEquals(ProcessState.RUNNING, productions[2].getProcessingStatus().getState());
         assertEquals(ProcessState.CANCELLED, productions[3].getProcessingStatus().getState());
     }
 

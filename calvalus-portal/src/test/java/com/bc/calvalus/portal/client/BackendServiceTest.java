@@ -55,7 +55,7 @@ public class BackendServiceTest extends GWTTestCase {
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());
             assertNotNull(response.getProduction().getProcessingStatus());
-            assertEquals(GsProcessState.WAITING, response.getProduction().getProcessingStatus().getState());
+            assertEquals(GsProcessState.SCHEDULED, response.getProduction().getProcessingStatus().getState());
 
             // Now that we have received a response, we need to tell the test runner
             // that the test is complete. You must call finishTest() after an

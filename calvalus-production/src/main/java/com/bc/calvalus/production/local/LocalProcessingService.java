@@ -54,7 +54,7 @@ class LocalProcessingService implements ProcessingService<String> {
             } else if (job.getProgress() >= 1.0f) {
                 processStatus = new ProcessStatus(ProcessState.COMPLETED);
             } else {
-                processStatus = new ProcessStatus(ProcessState.IN_PROGRESS, job.getProgress());
+                processStatus = new ProcessStatus(ProcessState.RUNNING, job.getProgress());
             }
             jobStatuses.put(id, processStatus);
         }

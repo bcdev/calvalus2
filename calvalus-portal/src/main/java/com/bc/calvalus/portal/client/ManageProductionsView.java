@@ -307,10 +307,10 @@ public class ManageProductionsView extends PortalView {
         String message = status.getMessage();
         if (state == GsProcessState.UNKNOWN) {
             return "";
-        } else if (state == GsProcessState.WAITING) {
-            return "Waiting" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.IN_PROGRESS) {
-            return "In progress (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
+        } else if (state == GsProcessState.SCHEDULED) {
+            return "Scheduled" + (message.isEmpty() ? "" : (": " + message));
+        } else if (state == GsProcessState.RUNNING) {
+            return "Running (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == GsProcessState.COMPLETED) {
             return "Completed" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == GsProcessState.CANCELLED) {

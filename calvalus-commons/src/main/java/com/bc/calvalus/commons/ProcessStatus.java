@@ -7,7 +7,7 @@ package com.bc.calvalus.commons;
  */
 public class ProcessStatus {
     public final static ProcessStatus UNKNOWN = new ProcessStatus(ProcessState.UNKNOWN);
-    public final static ProcessStatus WAITING = new ProcessStatus(ProcessState.WAITING);
+    public final static ProcessStatus WAITING = new ProcessStatus(ProcessState.SCHEDULED);
 
     private static final float EPS = 1.0E-04f;
     private final ProcessState state;
@@ -76,7 +76,7 @@ public class ProcessStatus {
         for (ProcessStatus status : statuses) {
             if (status.getState() == ProcessState.COMPLETED) {
                 numCompleted++;
-            } else if (status.getState() == ProcessState.WAITING) {
+            } else if (status.getState() == ProcessState.SCHEDULED) {
                 numWaiting++;
             } else if (status.getState() == ProcessState.UNKNOWN) {
                 numUnknown++;
@@ -87,11 +87,11 @@ public class ProcessStatus {
         if (numCompleted == statuses.length) {
             state = ProcessState.COMPLETED;
         } else if (numWaiting == statuses.length) {
-            state = ProcessState.WAITING;
+            state = ProcessState.SCHEDULED;
         } else if (numUnknown == statuses.length) {
             state = ProcessState.UNKNOWN;
         } else {
-            state = ProcessState.IN_PROGRESS;
+            state = ProcessState.RUNNING;
         }
 
         return new ProcessStatus(state, averageProgress, message);

@@ -13,11 +13,11 @@ public enum GsProcessState {
     /**
      * Indicates that the work unit has not yet started.
      */
-    WAITING(false),
+    SCHEDULED(false),
     /**
      * Indicates that the work unit is in progress.
      */
-    IN_PROGRESS(false),
+    RUNNING(false),
     /**
      * Indicates that the work unit has been successfully completed.
      */

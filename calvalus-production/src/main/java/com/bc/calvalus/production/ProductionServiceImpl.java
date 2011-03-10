@@ -214,7 +214,7 @@ public class ProductionServiceImpl implements ProductionService {
         for (Production production : productions) {
             if (production.isAutoStaging()
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                    && production.getStagingStatus().getState() == ProcessState.WAITING
+                    && production.getStagingStatus().getState() == ProcessState.SCHEDULED
                     && productionStagingsMap.get(production.getId()) == null) {
                 stageProductionResults(production);
             }

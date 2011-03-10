@@ -64,7 +64,7 @@ class DummyProductionType implements ProductionType {
             public String call() throws Exception {
                 try {
                     final File outputFile = new File(stagingService.getStagingAreaPath(), production.getStagingPath());
-                    production.setStagingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, 0.0f));
+                    production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0f));
                     if (!outputFile.exists()) {
                         File parentFile = outputFile.getParentFile();
                         if (parentFile != null) {
@@ -77,7 +77,7 @@ class DummyProductionType implements ProductionType {
                                 if (isCancelled()) {
                                     return null;
                                 }
-                                production.setStagingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, i / 32f));
+                                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, i / 32f));
                                 Arrays.fill(buffer, (byte) i);
                                 stream.write(buffer);
                             }

@@ -43,14 +43,14 @@ public class ProcessStatusTest {
     public void testAggregate() {
         assertEquals(null,
                      ProcessStatus.aggregate());
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f, "Hello!"),
-                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f, "Hello!")));
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.3f, ""),
-                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, ""),
-                                             new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f, ""),
-                                             new ProcessStatus(ProcessState.IN_PROGRESS, 0.3f, "")));
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.8f, "Wait"),
-                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.IN_PROGRESS, 0.4f, "Wait"),
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!"),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!")));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f, ""),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.4f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.3f, "")));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.8f, "Wait"),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Wait"),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
         assertEquals(new ProcessStatus(ProcessState.COMPLETED, 1.0f, "This was hard"),
@@ -62,8 +62,8 @@ public class ProcessStatusTest {
                                              new ProcessStatus(ProcessState.ERROR, 0.4f, "I/O problem"),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
         assertEquals(new ProcessStatus(ProcessState.CANCELLED, 0.3f, "Go away"),
-                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, ""),
-                                             new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f, ""),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.6f, ""),
                                              new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
 
         // test illegal null-statuses
@@ -84,8 +84,8 @@ public class ProcessStatusTest {
         assertEquals(true, new ProcessStatus(ProcessState.CANCELLED).isDone());
 
         assertEquals(false, new ProcessStatus(ProcessState.UNKNOWN).isDone());
-        assertEquals(false, new ProcessStatus(ProcessState.IN_PROGRESS).isDone());
-        assertEquals(false, new ProcessStatus(ProcessState.WAITING).isDone());
+        assertEquals(false, new ProcessStatus(ProcessState.RUNNING).isDone());
+        assertEquals(false, new ProcessStatus(ProcessState.SCHEDULED).isDone());
     }
 
     @Test
@@ -95,19 +95,19 @@ public class ProcessStatusTest {
         assertTrue(status.equals(new ProcessStatus(ProcessState.UNKNOWN)));
         assertTrue(new ProcessStatus(ProcessState.COMPLETED).equals(
                 new ProcessStatus(ProcessState.COMPLETED)));
-        assertTrue(new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, "Dabei!").equals(
-                new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, "Dabei!")));
-        assertTrue(new ProcessStatus(ProcessState.IN_PROGRESS, 0.20001f, "Dabei!").equals(
-                new ProcessStatus(ProcessState.IN_PROGRESS, 0.20003f, "Dabei!")));
+        assertTrue(new ProcessStatus(ProcessState.RUNNING, 0.2f, "Dabei!").equals(
+                new ProcessStatus(ProcessState.RUNNING, 0.2f, "Dabei!")));
+        assertTrue(new ProcessStatus(ProcessState.RUNNING, 0.20001f, "Dabei!").equals(
+                new ProcessStatus(ProcessState.RUNNING, 0.20003f, "Dabei!")));
     }
 
     @Test
     public void testNotEquals() {
         assertFalse(new ProcessStatus(ProcessState.ERROR, 0.1f, "").equals(
                 new ProcessStatus(ProcessState.COMPLETED, 0.1f, "")));
-        assertFalse(new ProcessStatus(ProcessState.IN_PROGRESS, 0.21f, "").equals(
-                new ProcessStatus(ProcessState.IN_PROGRESS, 0.22f, "")));
-        assertFalse(new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, "Dabei!").equals(
-                new ProcessStatus(ProcessState.IN_PROGRESS, 0.2f, "Vorbei!")));
+        assertFalse(new ProcessStatus(ProcessState.RUNNING, 0.21f, "").equals(
+                new ProcessStatus(ProcessState.RUNNING, 0.22f, "")));
+        assertFalse(new ProcessStatus(ProcessState.RUNNING, 0.2f, "Dabei!").equals(
+                new ProcessStatus(ProcessState.RUNNING, 0.2f, "Vorbei!")));
     }
 }

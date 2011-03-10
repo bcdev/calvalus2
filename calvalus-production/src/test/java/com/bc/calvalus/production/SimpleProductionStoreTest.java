@@ -26,7 +26,7 @@ public class SimpleProductionStoreTest {
                                           "path1",
                                           new ProductionRequest("test", "a", "5", "b", "9"),
                                           "job5");
-        prod1.setProcessingStatus(new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f));
+        prod1.setProcessingStatus(new ProcessStatus(ProcessState.RUNNING, 0.6f));
 
         Production prod2 = new Production("id2", "name2", "martin", null,
                                           new ProductionRequest("test", "a", "9", "b", "2"),
@@ -60,7 +60,7 @@ public class SimpleProductionStoreTest {
         assertEquals("path1", restoredProd1.getStagingPath());
         assertEquals("job5", restoredProd1.getJobIds()[0]);
         assertEquals(false, restoredProd1.isAutoStaging());
-        assertEquals(new ProcessStatus(ProcessState.IN_PROGRESS, 0.6f), restoredProd1.getProcessingStatus());
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.6f), restoredProd1.getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, restoredProd1.getStagingStatus());
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
