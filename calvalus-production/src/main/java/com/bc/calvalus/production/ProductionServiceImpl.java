@@ -7,7 +7,10 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.esa.beam.util.SystemUtils;
+import org.esa.beam.util.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -238,6 +241,10 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production);
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
+        File file = new File(stagingService.getStagingAreaPath(), production.getStagingPath());
+        if (file.exists()) {
+            SystemUtils.deleteFileTree(file);
+        }
     }
 
     public static enum Action {
