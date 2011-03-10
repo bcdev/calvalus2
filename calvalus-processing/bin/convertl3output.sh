@@ -23,6 +23,6 @@ fi
 input=$1
 shift
 
-#echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.L3Formatter ${input}  $@
-time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.L3Formatter ${input}  $@
+#echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.L3FormatterTool ${input}  $@
+time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.L3FormatterTool ${input}  $@
 
