@@ -30,15 +30,6 @@ class ProcessingRequest {
     }
 
     /**
-     * The absolute path of the directory used to stage (copy and reformat) the output of a processing job.
-     *
-     * @return The output directory.
-     */
-    public String getStagingDir() {
-        return getProcessingParameter("stagingDir");
-    }
-
-    /**
      * The absolute path of the directory used to store the output of a processing job.
      * @return The output directory.
      */

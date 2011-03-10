@@ -21,14 +21,16 @@ class L3Staging extends Staging {
     private final Production production;
     private final L3ProcessingRequest[] processingRequests;
     private final Configuration hadoopConfiguration;
+    private final String stagingAreaPath;
     private float progress;
 
     public L3Staging(Production production,
                      L3ProcessingRequest[] processingRequests,
-                     Configuration hadoopConfiguration) {
+                     Configuration hadoopConfiguration, String stagingAreaPath) {
         this.production = production;
         this.processingRequests = processingRequests;
         this.hadoopConfiguration = hadoopConfiguration;
+        this.stagingAreaPath = stagingAreaPath;
     }
 
     @Override
@@ -38,7 +40,7 @@ class L3Staging extends Staging {
         progress = 0f;
         for (int i = 0; i < processingRequests.length; i++) {
             L3ProcessingRequest processingRequest = processingRequests[i];
-            FormatterL3Config formatConfig = processingRequest.getFormatterL3Config();
+            FormatterL3Config formatConfig = processingRequest.getFormatterL3Config(stagingAreaPath + "/" + production.getStagingPath());
             String outputDir = processingRequest.getOutputDir();
 
             if (isCancelled()) {

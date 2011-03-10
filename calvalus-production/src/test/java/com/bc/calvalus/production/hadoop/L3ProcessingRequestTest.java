@@ -6,7 +6,6 @@ import com.bc.calvalus.processing.beam.FormatterL3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
-import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
@@ -21,8 +20,8 @@ public class L3ProcessingRequestTest {
     public void testGetProcessingParameters() throws ProductionException {
 
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3ProcessingRequestFactory requestFactory = new L3ProcessingRequestFactory(new TestProcessingService(),
-                                                                                   new TestStagingService());
+        L3ProcessingRequestFactory requestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
+        );
         L3ProcessingRequest[] processingRequests = requestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
         assertNotNull(processingRequests);
         assertEquals(1, processingRequests.length);
@@ -36,7 +35,6 @@ public class L3ProcessingRequestTest {
         assertEquals("5,50,25,60", processingRequest.getBBox());
         assertEquals(4320, (int) processingRequest.getNumRows());
         assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingRequest.getOutputDir());
-        assertEquals("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out", processingRequest.getStagingDir());
         assertEquals(true, processingRequest.isAutoStaging());
         assertEquals(true, Double.isNaN(processingRequest.getFillValue()));
 
@@ -49,7 +47,6 @@ public class L3ProcessingRequestTest {
         assertEquals("5,50,25,60", processingParameters.get("bbox"));
         assertEquals(4320, processingParameters.get("numRows"));
         assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingParameters.get("outputDir"));
-        assertEquals("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out", processingParameters.get("stagingDir"));
         assertEquals("MER_RR__1P/r03/2010", processingParameters.get("inputProductSetId"));
         assertEquals("beam", processingParameters.get("l2ProcessorBundleName"));
         assertEquals("4.9-SNAPSHOT", processingParameters.get("l2ProcessorBundleVersion"));
@@ -79,10 +76,10 @@ public class L3ProcessingRequestTest {
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
 
-        FormatterL3Config formatterL3Config = processingRequest.getFormatterL3Config();
+        FormatterL3Config formatterL3Config = processingRequest.getFormatterL3Config("/opt/tomcat/webapps/calvalus/staging/ewa-A25F");
         assertNotNull(formatterL3Config);
         assertEquals("NetCDF", formatterL3Config.getOutputFormat());
-        assertEquals(new File("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/out/L3_2010-06-03-2010-06-05.nc").getPath(), formatterL3Config.getOutputFile());
+        assertEquals(new File("/opt/tomcat/webapps/calvalus/staging/ewa-A25F/L3_2010-06-03-2010-06-05.nc").getPath(), formatterL3Config.getOutputFile());
         assertEquals("Product", formatterL3Config.getOutputType());
     }
 
@@ -90,7 +87,6 @@ public class L3ProcessingRequestTest {
         return new ProductionRequest("calvalus-level3",
                                      // GeneralLevel 3 parameters
                                      "inputProductSetId", "MER_RR__1P/r03/2010",
-                                     "outputFileName", "${user}-${id}/out",
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
                                      "l2ProcessorBundleName", "beam",

@@ -76,8 +76,8 @@ public class BeamOperatorTool extends Configured implements Tool {
         try {
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
-            BeamJobService beamJobService = new BeamJobService(new JobClient(new JobConf(getConf())));
-            Job job = beamJobService.createBeamHadoopJob(requestContent);
+            BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(new JobClient(new JobConf(getConf())));
+            Job job = beamOpProcessingType.createBeamHadoopJob(requestContent);
 
             // look up job jar either by class (if deployed) or by path (idea)
             // job.setJarByClass(getClass());

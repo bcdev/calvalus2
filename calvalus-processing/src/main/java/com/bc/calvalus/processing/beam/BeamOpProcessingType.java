@@ -34,11 +34,11 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 /**
  * Creates a beam hadoop job
  */
-public class BeamJobService {
+public class BeamOpProcessingType {
 
     private JobClient jobClient;
 
-    public BeamJobService(JobClient jobClient) {
+    public BeamOpProcessingType(JobClient jobClient) {
         this.jobClient = jobClient;
     }
 

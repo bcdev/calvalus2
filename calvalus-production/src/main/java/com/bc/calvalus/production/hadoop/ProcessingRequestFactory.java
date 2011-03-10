@@ -3,7 +3,6 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.staging.StagingService;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
@@ -17,42 +16,19 @@ import java.util.Date;
  */
 abstract class ProcessingRequestFactory {
     private final static DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
-    static int outputFileNum;
 
     private final ProcessingService processingService;
-    private final StagingService stagingService;
 
-    ProcessingRequestFactory(ProcessingService processingService, StagingService stagingService) {
+    ProcessingRequestFactory(ProcessingService processingService) {
         this.processingService = processingService;
-        this.stagingService = stagingService;
     }
 
     public ProcessingService getProcessingService() {
         return processingService;
     }
 
-    public StagingService getStagingService() {
-        return stagingService;
-    }
-
     public abstract ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException;
 
-    public String getOutputFileName(String productionId, String userName, ProductionRequest request) throws ProductionException {
-        String outputFileName = request.getProductionParameter("outputFileName");
-        if (outputFileName == null) {
-            outputFileName = "${user}-${id}/output-${num}";
-        }
-        return outputFileName
-                .replace("${id}", productionId)
-                .replace("${user}", userName)
-                .replace("${type}", request.getProductionType())
-                .replace("${num}", (++outputFileNum) + "");   // todo - outputFileNum not unique
-    }
-
-    public String getStagingDir(String productionId, String userName, ProductionRequest request) throws ProductionException {
-        return stagingService.getStagingAreaPath() + "/"
-                + getOutputFileName(productionId, userName, request);
-    }
 
     public boolean isAutoStaging(ProductionRequest request) throws ProductionException {
         return Boolean.parseBoolean(request.getProductionParameterSafe("autoStaging"));

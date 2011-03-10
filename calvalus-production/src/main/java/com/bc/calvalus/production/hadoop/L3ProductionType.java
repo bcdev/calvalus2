@@ -1,6 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.processing.beam.BeamJobService;
+import com.bc.calvalus.processing.beam.BeamOpProcessingType;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -10,6 +10,8 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapreduce.JobID;
 
+import java.io.IOException;
+
 /**
  * A production type used for generating one or more Level-3 products.
  *
@@ -18,13 +20,15 @@ import org.apache.hadoop.mapreduce.JobID;
  */
 public class L3ProductionType implements ProductionType {
     private final HadoopProcessingService processingService;
+    private final StagingService stagingService;
     private WpsXmlGenerator wpsXmlGenerator;
     private final L3ProcessingRequestFactory processingRequestFactory;
 
     L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         this.processingService = processingService;
+        this.stagingService = stagingService;
         wpsXmlGenerator = new WpsXmlGenerator();
-        processingRequestFactory = new L3ProcessingRequestFactory(processingService, stagingService);
+        processingRequestFactory = new L3ProcessingRequestFactory(processingService);
     }
 
     @Override
@@ -37,9 +41,10 @@ public class L3ProductionType implements ProductionType {
 
         String productionId = Production.createId(productionRequest.getProductionType());
         String productionName = createL3ProductionName(productionRequest);
+        String userName = "ewa";  // todo - get user from productionRequest
 
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionId,
-                                                                                                       "ewa", // todo - get user
+                                                                                                       userName,
                                                                                                        productionRequest);
         JobID[] jobIds = new JobID[l3ProcessingRequests.length];
         for (int i = 0; i < l3ProcessingRequests.length; i++) {
@@ -49,8 +54,8 @@ public class L3ProductionType implements ProductionType {
 
         return new Production(productionId,
                               productionName,
-                              "ewa", // todo - get user name
-                              " ",
+                              userName,
+                              userName + "/" + productionId,
                               productionRequest,
                               jobIds);
     }
@@ -58,8 +63,8 @@ public class L3ProductionType implements ProductionType {
     private JobID submitL3Job(String wpsXml) throws ProductionException {
         try {
             JobClient jobClient = processingService.getJobClient();
-            BeamJobService beamJobService = new BeamJobService(jobClient);
-            return beamJobService.submitJob(wpsXml);
+            BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
+            return beamOpProcessingType.submitJob(wpsXml);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
@@ -73,8 +78,14 @@ public class L3ProductionType implements ProductionType {
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
                                                                                                        hadoopProduction.getUser(),
                                                                                                        productionRequest);
-
-        return new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf());
+        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingAreaPath());
+        try {
+            stagingService.submitStaging(l3Staging);
+        } catch (IOException e) {
+            throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
+                                                        hadoopProduction.getId(), e.getMessage()), e);
+        }
+        return l3Staging;
     }
 
     @Override

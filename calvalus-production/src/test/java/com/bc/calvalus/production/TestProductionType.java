@@ -1,9 +1,17 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.staging.Staging;
+import com.bc.calvalus.staging.StagingService;
+
+import java.io.IOException;
 
 public class TestProductionType implements ProductionType {
     int productionCount;
+    private final StagingService stagingService;
+
+    public TestProductionType(StagingService stagingService) {
+        this.stagingService = stagingService;
+    }
 
     @Override
     public String getName() {
@@ -24,7 +32,7 @@ public class TestProductionType implements ProductionType {
 
     @Override
     public Staging createStaging(Production production) throws ProductionException {
-        return new Staging() {
+        Staging staging = new Staging() {
 
             @Override
             public String call() throws Exception {
@@ -32,6 +40,12 @@ public class TestProductionType implements ProductionType {
             }
 
         };
+        try {
+            stagingService.submitStaging(staging);
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+        return staging;
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
-import com.bc.calvalus.production.TestStagingService;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -15,8 +14,8 @@ public class WpsXmlGeneratorTest {
 
     @Test
     public void testL3WpsXml() throws ProductionException {
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService(),
-                                                                                               new TestStagingService());
+        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
+        );
         ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
         L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
 
