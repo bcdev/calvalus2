@@ -156,6 +156,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                 production.getName(),
                                 production.getUser(),
                                 backendConfig.getStagingPath() + "/" + production.getStagingPath(),
+                                production.isAutoStaging(),
                                 convert(production.getProcessingStatus()),
                                 convert(production.getStagingStatus()));
     }

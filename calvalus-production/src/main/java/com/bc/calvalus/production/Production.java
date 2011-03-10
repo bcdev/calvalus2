@@ -50,7 +50,7 @@ public class Production {
         this.jobIds = jobIds;
         this.productionRequest = productionRequest;
         this.processingStatus = ProcessStatus.UNKNOWN;
-        this.stagingStatus = autoStaging ? ProcessStatus.WAITING : ProcessStatus.UNKNOWN;
+        this.stagingStatus = ProcessStatus.UNKNOWN;
     }
 
     public static String createId(String productionType) {

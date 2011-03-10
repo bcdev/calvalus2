@@ -19,11 +19,7 @@ public class ManageProductionsViewTest extends GWTTestCase {
         assertEquals("Restart", getAction(COMPLETED, UNKNOWN));
         assertEquals("Restart", getAction(CANCELLED, UNKNOWN));
         assertEquals("Restart", getAction(ERROR, UNKNOWN));
-        assertEquals("Cancel", getAction(SCHEDULED, SCHEDULED));
-        assertEquals("Cancel", getAction(RUNNING, SCHEDULED));
         assertEquals("Cancel", getAction(COMPLETED, SCHEDULED));
-        assertEquals("Restart", getAction(CANCELLED, SCHEDULED)); // todo - weird status, why is staging WAITING? (nf)
-        assertEquals("Restart", getAction(ERROR, SCHEDULED));     // todo - weird status, why is staging WAITING? (nf)
         assertEquals("Cancel", getAction(COMPLETED, RUNNING));
         assertEquals("Restart", getAction(COMPLETED, COMPLETED));
         assertEquals("Restart", getAction(COMPLETED, CANCELLED));
@@ -37,26 +33,42 @@ public class ManageProductionsViewTest extends GWTTestCase {
         assertEquals("Stage", getResult(COMPLETED, UNKNOWN));
         assertEquals(null, getResult(CANCELLED, UNKNOWN));
         assertEquals(null, getResult(ERROR, UNKNOWN));
-        assertEquals(null, getResult(SCHEDULED, SCHEDULED));
-        assertEquals(null, getResult(RUNNING, SCHEDULED));
         assertEquals(null, getResult(COMPLETED, SCHEDULED));
-        assertEquals(null, getResult(CANCELLED, SCHEDULED));
-        assertEquals(null, getResult(ERROR, SCHEDULED));
         assertEquals(null, getResult(COMPLETED, RUNNING));
         assertEquals("Download", getResult(COMPLETED, COMPLETED));
         assertEquals("Stage", getResult(COMPLETED, CANCELLED));
         assertEquals("Stage", getResult(COMPLETED, ERROR));
     }
 
+    public void testGetResultAutoStaging() {
+        assertEquals(null, getResultAutoStaging(UNKNOWN, UNKNOWN));
+        assertEquals(null, getResultAutoStaging(SCHEDULED, UNKNOWN));
+        assertEquals(null, getResultAutoStaging(RUNNING, UNKNOWN));
+        assertEquals("#Auto-staging", getResultAutoStaging(COMPLETED, UNKNOWN));
+        assertEquals(null, getResultAutoStaging(CANCELLED, UNKNOWN));
+        assertEquals(null, getResultAutoStaging(ERROR, UNKNOWN));
+        assertEquals(null, getResultAutoStaging(COMPLETED, SCHEDULED));
+        assertEquals(null, getResultAutoStaging(COMPLETED, RUNNING));
+        assertEquals("Download", getResultAutoStaging(COMPLETED, COMPLETED));
+        assertEquals("Stage", getResultAutoStaging(COMPLETED, CANCELLED));
+        assertEquals("Stage", getResultAutoStaging(COMPLETED, ERROR));
+    }
+
     private String getAction(GsProcessState productionState, GsProcessState stagingState) {
-        return ManageProductionsView.getAction(new GsProduction("id", "name", "user", "outputUrl",
-                                                                    new GsProcessStatus(productionState),
-                                                                    new GsProcessStatus(stagingState)));
+        return ManageProductionsView.getAction(createProduction(productionState, stagingState, false));
     }
 
     private String getResult(GsProcessState productionState, GsProcessState stagingState) {
-        return ManageProductionsView.getResult(new GsProduction("id", "name", "user", "outputUrl",
-                                                                    new GsProcessStatus(productionState),
-                                                                    new GsProcessStatus(stagingState)));
+        return ManageProductionsView.getResult(createProduction(productionState, stagingState, false));
+    }
+
+    private String getResultAutoStaging(GsProcessState productionState, GsProcessState stagingState) {
+        return ManageProductionsView.getResult(createProduction(productionState, stagingState, true));
+    }
+
+    private GsProduction createProduction(GsProcessState productionState, GsProcessState stagingState, boolean autoStaging) {
+        return new GsProduction("id", "name", "user", "outputUrl", autoStaging,
+                                                                new GsProcessStatus(productionState),
+                                                                new GsProcessStatus(stagingState));
     }
 }

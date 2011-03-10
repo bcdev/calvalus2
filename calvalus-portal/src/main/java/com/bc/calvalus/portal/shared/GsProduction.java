@@ -12,6 +12,7 @@ public class GsProduction implements IsSerializable {
     String name;
     String user;
     String downloadPath;
+    boolean autoStaging;
     GsProcessStatus processingStatus;
     GsProcessStatus stagingStatus;
 
@@ -25,6 +26,7 @@ public class GsProduction implements IsSerializable {
                         String name,
                         String user,
                         String downloadPath,
+                        boolean autoStaging,
                         GsProcessStatus processingStatus,
                         GsProcessStatus stagingStatus) {
         if (id == null) {
@@ -46,6 +48,7 @@ public class GsProduction implements IsSerializable {
         this.name = name;
         this.user = user;
         this.downloadPath = downloadPath;
+        this.autoStaging = autoStaging;
         this.processingStatus = processingStatus;
         this.stagingStatus = stagingStatus;
     }
@@ -64,6 +67,10 @@ public class GsProduction implements IsSerializable {
 
     public String getDownloadPath() {
         return downloadPath;
+    }
+
+    public boolean isAutoStaging() {
+        return autoStaging;
     }
 
     public GsProcessStatus getProcessingStatus() {

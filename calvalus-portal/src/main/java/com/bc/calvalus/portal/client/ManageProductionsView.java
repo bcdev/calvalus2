@@ -122,7 +122,11 @@ public class ManageProductionsView extends PortalView {
             public void render(Cell.Context context, GsProduction production, SafeHtmlBuilder sb) {
                 String result = getResult(production);
                 if (result != null) {
-                    super.render(context, production, sb);
+                    if (result.startsWith("#")) {
+                        sb.appendHtmlConstant(result.substring(1) + "<br/>");
+                    } else {
+                        super.render(context, production, sb);
+                    }
                 } else {
                     sb.appendHtmlConstant("<br/>");
                 }
@@ -164,6 +168,12 @@ public class ManageProductionsView extends PortalView {
     static String getResult(GsProduction production) {
         if (production.getDownloadPath() == null) {
             return null;
+        }
+
+        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
+                && production.getStagingStatus().getState() == GsProcessState.UNKNOWN
+                && production.isAutoStaging()) {
+            return "#Auto-staging";
         }
 
         if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED

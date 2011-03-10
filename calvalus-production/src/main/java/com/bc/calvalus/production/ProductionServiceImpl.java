@@ -173,6 +173,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     private void stageProductionResults(Production production) throws ProductionException {
+        production.setStagingStatus(ProcessStatus.SCHEDULED);
         ProductionType productionType = findProductionType(production.getProductionRequest());
         Staging staging = productionType.createStaging(production);
         try {
@@ -214,7 +215,7 @@ public class ProductionServiceImpl implements ProductionService {
         for (Production production : productions) {
             if (production.isAutoStaging()
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                    && production.getStagingStatus().getState() == ProcessState.SCHEDULED
+                    && production.getStagingStatus().getState() == ProcessState.UNKNOWN
                     && productionStagingsMap.get(production.getId()) == null) {
                 stageProductionResults(production);
             }

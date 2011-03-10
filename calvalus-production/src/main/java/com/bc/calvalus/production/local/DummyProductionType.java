@@ -77,6 +77,7 @@ class DummyProductionType implements ProductionType {
                                 if (isCancelled()) {
                                     return null;
                                 }
+                                Thread.sleep(500);
                                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, i / 32f));
                                 Arrays.fill(buffer, (byte) i);
                                 stream.write(buffer);

@@ -7,7 +7,7 @@ package com.bc.calvalus.commons;
  */
 public class ProcessStatus {
     public final static ProcessStatus UNKNOWN = new ProcessStatus(ProcessState.UNKNOWN);
-    public final static ProcessStatus WAITING = new ProcessStatus(ProcessState.SCHEDULED);
+    public final static ProcessStatus SCHEDULED = new ProcessStatus(ProcessState.SCHEDULED);
 
     private static final float EPS = 1.0E-04f;
     private final ProcessState state;
