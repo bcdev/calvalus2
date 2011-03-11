@@ -70,7 +70,7 @@ public final class TemporalBin implements Writable {
 
     @Override
     public void readFields(DataInput dataInput) throws IOException {
-        // // Note, we don't serialise the index, because it is usually the MapReduce key
+        // Note, we don't serialise the index, because it is usually the MapReduce key
         numObs = dataInput.readInt();
         numPasses = dataInput.readInt();
         final int numProps = dataInput.readInt();
