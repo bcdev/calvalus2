@@ -118,7 +118,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         }
 
         final int sliceWidth = product.getSceneRasterWidth();
-
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);
             String variableExpr = ctx.getVariableContext().getVariableExpr(i);
@@ -175,8 +174,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                            int sliceWidth,
                                                            int sliceHeight,
                                                            float[] superSamplingSteps) {
-        final float weight = 1f;//superSamplingSteps.length * superSamplingSteps.length;
-
         final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
         final Raster[] varTiles = new Raster[varImages.length];
         for (int i = 0; i < varImages.length; i++) {
@@ -193,10 +190,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         for (int y = y1; y < y2; y++) {
             for (int x = x1; x < x2; x++) {
                 if (maskTile.getSample(x, y, 0) != 0) {
-                    final float[] samples = observationSlice.createObservationSamples(x, y, weight);
-                    for (int sy = 0; sy < superSamplingSteps.length; sy++) {
-                        for (int sx = 0; sx < superSamplingSteps.length; sx++) {
-                            pixelPos.setLocation(x + superSamplingSteps[sx], y + superSamplingSteps[sy]);
+                    final float[] samples = observationSlice.createObservationSamples(x, y);
+                    for (float dy : superSamplingSteps) {
+                        for (float dx : superSamplingSteps) {
+                            pixelPos.setLocation(x + dx, y + dy);
                             geoCoding.getGeoPos(pixelPos, geoPos);
                             observationSlice.addObservation(geoPos.lat, geoPos.lon, samples);
                         }
