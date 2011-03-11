@@ -13,6 +13,8 @@
                 <include>org.esa.beam:beam-gpf</include>
                 <include>org.esa.beam:beam-core</include>
                 <include>org.esa.beam:beam-envisat-reader</include>
+                <include>org.esa.beam:beam-geotiff</include>
+                <include>org.esa.beam:beam-netcdf</include>
             </includes>
             <excludes>
                 <exclude>org.esa.beam:beam-ui</exclude>
