@@ -62,7 +62,7 @@ public class BeamOpProcessingType {
         job.setInputFormatClass(ExecutablesInputFormat.class);
 
         if (processingConfiguration.getLevel3Parameters() != null) {
-            job.setNumReduceTasks(16);
+            job.setNumReduceTasks(4);
 
             job.setMapperClass(L3Mapper.class);
             job.setMapOutputKeyClass(LongWritable.class);
