@@ -53,8 +53,16 @@ public final class TemporalBin implements Writable {
         return numPasses;
     }
 
+    public void setNumPasses(int numPasses) {
+        this.numPasses = numPasses;
+    }
+
     public int getPropertyCount() {
         return properties.length;
+    }
+
+    public float[] getProperties() {
+        return properties;
     }
 
     @Override

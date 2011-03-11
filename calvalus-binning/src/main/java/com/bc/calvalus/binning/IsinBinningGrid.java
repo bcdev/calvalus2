@@ -19,7 +19,7 @@ public final class IsinBinningGrid implements BinningGrid {
     public static final int DEFAULT_NUM_ROWS = 2160;
 
     private final int numRows;
-    private final double[] latBin;
+    private final double[] latBin;  // latitude of first bin in row
     private final long[] baseBin; // bin-index of the first bin in this row
     private final int[] numBin;  // number of bins in this row
     private final long numBins;
@@ -51,6 +51,7 @@ public final class IsinBinningGrid implements BinningGrid {
         numBins = baseBin[numRows - 1] + numBin[numRows - 1];
     }
 
+    @Override
     public int getNumRows() {
         return numRows;
     }
@@ -60,6 +61,7 @@ public final class IsinBinningGrid implements BinningGrid {
         return numBin[row];
     }
 
+    @Override
     public long getNumBins() {
         return numBins;
     }
@@ -69,26 +71,6 @@ public final class IsinBinningGrid implements BinningGrid {
         final int row = getRowIndex(lat);
         final int col = getColIndex(lon, row);
         return baseBin[row] + col;
-    }
-
-    public int getColIndex(double lon, int row) {
-        if (lon <= -180.0) {
-            return 0;
-        }
-        if (lon >= 180.0) {
-            return numBin[row] - 1;
-        }
-        return (int) ((180.0 + lon) * numBin[row] / 360.0);
-    }
-
-    public int getRowIndex(double lat) {
-        if (lat <= -90.0) {
-            return numRows - 1;
-        }
-        if (lat >= 90.0) {
-            return 0;
-        }
-        return (numRows - 1) - (int) ((90.0 + lat) * (numRows / 180.0));
     }
 
     /**
@@ -104,6 +86,7 @@ public final class IsinBinningGrid implements BinningGrid {
      * @param binIndex The bin ID.
      * @return The row index.
      */
+    @Override
     public int getRowIndex(long binIndex) {
         // compute max constant
         final int max = baseBin.length - 1;
@@ -125,18 +108,19 @@ public final class IsinBinningGrid implements BinningGrid {
         }
     }
 
-    public double[] getCenterLatLon(long binIndex) {
+    @Override
+    public double[] getCenterLonLat(long binIndex) {
         final int row = getRowIndex(binIndex);
         return new double[]{
-                latBin[row],
-                getCenterLon(row, (int) (binIndex - baseBin[row]))
+                getCenterLon(row, (int) (binIndex - baseBin[row])),
+                latBin[row]
         };
     }
 
     public double[] getCenterLatLon(int row, int col) {
         return new double[]{
-                latBin[row],
-                getCenterLon(row, col)
+                getCenterLon(row, col),
+                latBin[row]
         };
     }
 
@@ -145,5 +129,25 @@ public final class IsinBinningGrid implements BinningGrid {
         return 360.0 * (col + 0.5) / numBin[row] - 180.0;
     }
 
+
+    public int getColIndex(double lon, int row) {
+        if (lon <= -180.0) {
+            return 0;
+        }
+        if (lon >= 180.0) {
+            return numBin[row] - 1;
+        }
+        return (int) ((180.0 + lon) * numBin[row] / 360.0);
+    }
+
+    public int getRowIndex(double lat) {
+        if (lat <= -90.0) {
+            return numRows - 1;
+        }
+        if (lat >= 90.0) {
+            return 0;
+        }
+        return (numRows - 1) - (int) ((90.0 + lat) * (numRows / 180.0));
+    }
 
 }
