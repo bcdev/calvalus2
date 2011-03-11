@@ -59,7 +59,7 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             Date date2 = new Date(time + periodLengthMillis - 1L);
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
-            processingParameters.put("inputFiles", getInputFiles(productionRequest, date1, date2));
+            processingParameters.put("inputFiles", getInputFiles(productionRequest.getProductionParameterSafe("inputProductSetId"), date1, date2));
             processingParameters.put("outputDir", getProcessingService().getDataOutputPath() +
                     "/" + userName + "/" + productionId + "_" + i);
 
@@ -117,36 +117,4 @@ class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         }
     }
 
-    String[] getInputFiles(ProductionRequest request, Date startDate, Date stopDate) throws ProductionException {
-        String eoDataPath = getProcessingService().getDataInputPath();
-        String inputProductSetId = request.getProductionParameterSafe("inputProductSetId");
-        List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
-        try {
-            List<String> inputFileList = new ArrayList<String>();
-            for (String dayPath : dayPathList) {
-                String[] strings = getProcessingService().listFilePaths(eoDataPath + "/" + dayPath);
-                inputFileList.addAll(Arrays.asList(strings));
-            }
-            return inputFileList.toArray(new String[inputFileList.size()]);
-        } catch (IOException e) {
-            throw new ProductionException("Failed to compute input file list.", e);
-        }
-    }
-
-    static List<String> getDayPathList(Date start, Date stop, String prefix) {
-        Calendar startCal = ProductData.UTC.createCalendar();
-        Calendar stopCal = ProductData.UTC.createCalendar();
-        startCal.setTime(start);
-        stopCal.setTime(stop);
-        List<String> list = new ArrayList<String>();
-        do {
-            String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
-            if (dateString.startsWith(prefix)) {
-                list.add(dateString);
-            }
-            startCal.add(Calendar.DAY_OF_WEEK, 1);
-        } while (!startCal.after(stopCal));
-
-        return list;
-    }
 }

@@ -30,6 +30,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.esa.beam.util.StringUtils;
+
+import java.util.Map;
 
 /**
  * Creates a beam hadoop job
@@ -42,19 +45,62 @@ public class BeamOpProcessingType {
         this.jobClient = jobClient;
     }
 
-    public Job createBeamHadoopJob(String wpsXmlRequest) throws Exception {
+    public JobID submitJob(String wpsXml) throws Exception {
+        Job job = createJob(wpsXml);
+        configureJob(job);
+        return submitJobImpl(job);
+    }
+
+    public JobID submitJob(Map<String, Object> parameters) throws Exception {
+        Job job = createJob(parameters);
+        configureJob(job);
+        return submitJobImpl(job);
+    }
+
+    public Job createJob(String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
-        String requestOutputDir = wpsConfig.getRequestOutputDir();
         String identifier = wpsConfig.getIdentifier();
 
-        // construct job and set parameters and handlers
         Job job = new Job(jobClient.getConf(), identifier);
+        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(job.getConfiguration());
+        processingConfiguration.addWpsParameters(wpsConfig);
+        return job;
+    }
+
+    // at the moment only for beam-op-level 2
+    private Job createJob(Map<String, Object> parameters) throws Exception {
+        String productionId = getString(parameters, "productionId");
+
+        Job job = new Job(jobClient.getConf(), productionId);
+        Configuration configuration = job.getConfiguration();
+
+        configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, productionId);
+        String name = getString(parameters, "l2ProcessorBundleName");
+        String version = getString(parameters, "l2ProcessorBundleVersion");
+        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, name + "-" + version);
+        String[] inputFiles = (String[]) parameters.get("inputFiles");
+        String inputs = StringUtils.join(inputFiles, ",");
+        configuration.set(ProcessingConfiguration.CALVALUS_INPUT, inputs);
+        configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, getString(parameters, "outputDir"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "l2ProcessorName"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "l2ProcessorParameters"));
+        return job;
+    }
+
+    private static String getString(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        if (value instanceof String) {
+            return (String) value;
+        } else {
+            throw new IllegalArgumentException(String.format("The parameters '%s' is not a String.", key));
+        }
+    }
+
+    public void configureJob(Job job) throws Exception {
         Configuration configuration = job.getConfiguration();
         ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
-        processingConfiguration.addWpsParameters(wpsConfig);
-
         // clear output directory
-        final Path outputPath = new Path(requestOutputDir);
+        final Path outputPath = new Path(processingConfiguration.getOutputPath());
         final FileSystem fileSystem = outputPath.getFileSystem(configuration);
         fileSystem.delete(outputPath, true);
         FileOutputFormat.setOutputPath(job, outputPath);
@@ -90,12 +136,10 @@ public class BeamOpProcessingType {
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
 
         BeamCalvalusClasspath.configure(processingConfiguration.getProcessorBundle(), configuration);
-
-        return job;
     }
 
-    public JobID submitJob(String wpsXml) throws Exception {
-        Job job = createBeamHadoopJob(wpsXml);
+
+    private JobID submitJobImpl(Job job) throws Exception {
         Configuration configuration = job.getConfiguration();
         //add calvalus itself to classpath of hadoop jobs
         BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
@@ -110,4 +154,6 @@ public class BeamOpProcessingType {
         RunningJob runningJob = jobClient.submitJob(jobConf);
         return runningJob.getID();
     }
+
+
 }

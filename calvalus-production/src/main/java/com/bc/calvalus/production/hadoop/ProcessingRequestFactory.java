@@ -5,9 +5,14 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Generates processing requests from production requests.
@@ -63,4 +68,37 @@ abstract class ProcessingRequestFactory {
     public static DateFormat getDateFormat() {
         return dateFormat;
     }
+
+    String[] getInputFiles(String inputProductSetId, Date startDate, Date stopDate) throws ProductionException {
+        String eoDataPath = getProcessingService().getDataInputPath();
+        List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
+        try {
+            List<String> inputFileList = new ArrayList<String>();
+            for (String dayPath : dayPathList) {
+                String[] strings = getProcessingService().listFilePaths(eoDataPath + "/" + dayPath);
+                inputFileList.addAll(Arrays.asList(strings));
+            }
+            return inputFileList.toArray(new String[inputFileList.size()]);
+        } catch (IOException e) {
+            throw new ProductionException("Failed to compute input file list.", e);
+        }
+    }
+
+    static List<String> getDayPathList(Date start, Date stop, String prefix) {
+        Calendar startCal = ProductData.UTC.createCalendar();
+        Calendar stopCal = ProductData.UTC.createCalendar();
+        startCal.setTime(start);
+        stopCal.setTime(stop);
+        List<String> list = new ArrayList<String>();
+        do {
+            String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
+            if (dateString.startsWith(prefix)) {
+                list.add(dateString);
+            }
+            startCal.add(Calendar.DAY_OF_WEEK, 1);
+        } while (!startCal.after(stopCal));
+
+        return list;
+    }
+
 }
