@@ -96,9 +96,9 @@ public class AggregatorAverageML implements Aggregator {
 
     @Override
     public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
-        temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));
-        temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));
-        temporalVector.set(2, temporalVector.get(2) + weightFn.eval(numSpatialObs));
+        temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));  // sumX
+        temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));  // sumXX
+        temporalVector.set(2, temporalVector.get(2) + weightFn.eval(numSpatialObs)); // sumW
     }
 
     @Override
