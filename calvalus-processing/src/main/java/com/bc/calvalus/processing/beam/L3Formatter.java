@@ -84,6 +84,7 @@ public class L3Formatter {
         if (outputFormat == null) {
             outputFormat = outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
                     : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
+                    : outputFileNameExt.equalsIgnoreCase("tiff") ? "GeoTIFF"
                     : outputFileNameExt.equalsIgnoreCase("png") ? "PNG"
                     : outputFileNameExt.equalsIgnoreCase("jpg") ? "JPEG" : null;
         }
@@ -92,9 +93,13 @@ public class L3Formatter {
         }
         if (!outputFormat.equalsIgnoreCase("NetCDF")
                 && !outputFormat.equalsIgnoreCase("BEAM-DIMAP")
+                && !outputFormat.equalsIgnoreCase("GeoTIFF")
                 && !outputFormat.equalsIgnoreCase("PNG")
                 && !outputFormat.equalsIgnoreCase("JPEG")) {
             throw new IllegalArgumentException("Unknown output format: " + outputFormat);
+        }
+        if (outputFormat.equalsIgnoreCase("NetCDF")) {
+            outputFormat = "NetCDF-BEAM"; // use NetCDF with beam extensions
         }
 
         l3OutputDir = new Path(hadoopJobOutputDir);

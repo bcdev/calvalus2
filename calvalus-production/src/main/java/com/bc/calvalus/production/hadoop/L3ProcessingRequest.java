@@ -52,6 +52,8 @@ class L3ProcessingRequest extends ProcessingRequest {
             extension = "dim";
         } else if (outputFormat.equals("NetCDF")) {
             extension = "nc";
+        } else if (outputFormat.equals("GeoTIFF")) {
+            extension = "tif";
         } else {
             extension = "xxx"; // todo  what else to handle ?
         }
