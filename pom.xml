@@ -50,6 +50,19 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+         <repository>
+            <id>bc-mvn-repo-closed</id>
+            <name>Private Maven Repository at Brockmann Consult</name>
+            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
     </repositories>
 
     <build>
