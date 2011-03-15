@@ -87,7 +87,7 @@ public class L3ProductionType implements ProductionType {
     static String createL3ProductionName(ProductionRequest productionRequest) {
         return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getProductionParameter("inputProductSetId"),
-                             productionRequest.getProductionParameter("l2ProcessorName"));
+                             productionRequest.getProductionParameter("processorName"));
 
     }
 

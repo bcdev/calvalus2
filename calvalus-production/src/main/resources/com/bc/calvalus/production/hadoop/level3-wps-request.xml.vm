@@ -31,7 +31,7 @@
             <ows:Identifier>calvalus.processor.package</ows:Identifier>
             <ows:Title>Name of the Level 2 installation bundle</ows:Title>
             <wps:Data>
-                <wps:LiteralData>${l2ProcessorBundleName}</wps:LiteralData>
+                <wps:LiteralData>${processorBundleName}</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -39,7 +39,7 @@
             <ows:Identifier>calvalus.processor.version</ows:Identifier>
             <ows:Title>Version of the Level 2 installation bundle</ows:Title>
             <wps:Data>
-                <wps:LiteralData>${l2ProcessorBundleVersion}</wps:LiteralData>
+                <wps:LiteralData>${processorBundleVersion}</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -47,7 +47,7 @@
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
             <ows:Title>The name of the Level 2 BEAM processor (GPF operator name)</ows:Title>
             <wps:Data>
-                <wps:LiteralData>${l2ProcessorName}</wps:LiteralData>
+                <wps:LiteralData>${processorName}</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -55,7 +55,7 @@
             <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
             <ows:Title>The parameters for the Level 2 BEAM processor (GPF operator name)</ows:Title>
             <wps:Data>
-                <wps:ComplexData>${l2ProcessorParameters}</wps:ComplexData>
+                <wps:ComplexData>${processorParameters}</wps:ComplexData>
             </wps:Data>
         </wps:Input>
 

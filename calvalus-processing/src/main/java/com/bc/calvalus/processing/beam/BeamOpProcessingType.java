@@ -78,15 +78,15 @@ public class BeamOpProcessingType {
         Configuration configuration = job.getConfiguration();
 
         configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, productionId);
-        String name = getString(parameters, "l2ProcessorBundleName");
-        String version = getString(parameters, "l2ProcessorBundleVersion");
+        String name = getString(parameters, "processorBundleName");
+        String version = getString(parameters, "processorBundleVersion");
         configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, name + "-" + version);
         String[] inputFiles = (String[]) parameters.get("inputFiles");
         String inputs = StringUtils.join(inputFiles, ",");
         configuration.set(ProcessingConfiguration.CALVALUS_INPUT, inputs);
         configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, getString(parameters, "outputDir"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "l2ProcessorName"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "l2ProcessorParameters"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "processorName"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "processorParameters"));
         return job;
     }
 
