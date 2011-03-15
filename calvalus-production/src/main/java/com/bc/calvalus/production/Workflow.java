@@ -13,26 +13,19 @@ import java.util.List;
  * @author MarcoZ
  * @author Norman
  */
-public abstract class Workflow implements WorkflowItem, WorkflowItem.StateChangeListener {
+public abstract class Workflow extends AbstractWorkflowItem implements WorkflowItem.StateChangeListener {
     final List<WorkflowItem> itemList;
-    final List<StateChangeListener> changeListeners;
-    ProcessStatus status = ProcessStatus.UNKNOWN;
 
     protected Workflow() {
+        super();
         this.itemList = new ArrayList<WorkflowItem>();
-        this.changeListeners = new ArrayList<StateChangeListener>();
     }
 
-    public void add(WorkflowItem... items) {
+    public void addItem(WorkflowItem... items) {
         for (WorkflowItem item : items) {
             item.addStateChangeListener(this);
         }
         itemList.addAll(Arrays.asList(items));
-    }
-
-    @Override
-    public void addStateChangeListener(StateChangeListener l) {
-        changeListeners.add(l);
     }
 
     /**
@@ -50,24 +43,6 @@ public abstract class Workflow implements WorkflowItem, WorkflowItem.StateChange
         setStatus(ProcessStatus.aggregate(statuses));
     }
 
-    @Override
-    public ProcessStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ProcessStatus status) {
-        if (this.status.getState() != status.getState()) {
-            this.status = status;
-            fireStateChanged();
-        }
-    }
-
-    private void fireStateChanged() {
-        for (StateChangeListener changeListener : changeListeners) {
-            changeListener.handleStateChanged(this);
-        }
-    }
-
     /**
      * A sequential workflow. An item is submitted only after its predecessor has completed.
      */
@@ -80,6 +55,11 @@ public abstract class Workflow implements WorkflowItem, WorkflowItem.StateChange
         @Override
         public void submit() {
             submitNext();
+        }
+
+        @Override
+        public void kill() {
+            // todo - test & implement me!
         }
 
         @Override
@@ -112,6 +92,11 @@ public abstract class Workflow implements WorkflowItem, WorkflowItem.StateChange
             for (WorkflowItem item : itemList) {
                 item.submit();
             }
+        }
+
+        @Override
+        public void kill() {
+            // todo - test & implement me!
         }
     }
 

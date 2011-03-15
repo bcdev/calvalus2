@@ -5,10 +5,12 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.BeamOpProcessingType;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.production.AbstractWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.fs.FileStatus;
@@ -54,9 +56,9 @@ public class L2ProductionType implements ProductionType {
         ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(productionId,
                                                                                                    userName,
                                                                                                    productionRequest);
-        JobID[] jobIds = new JobID[processingRequests.length];
-        JobClient jobClient = processingService.getJobClient();
-        BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
+        final JobID[] jobIds = new JobID[processingRequests.length];
+        final JobClient jobClient = processingService.getJobClient();
+        final BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
         for (int i = 0; i < processingRequests.length; i++) {
             try {
                 jobIds[i] = beamOpProcessingType.submitJob(processingRequests[i].getProcessingParameters());
@@ -66,11 +68,29 @@ public class L2ProductionType implements ProductionType {
             }
         }
 
+        // todo - WORKFLOW {{{
+        Workflow.Parallel parallel = new Workflow.Parallel();
+        for (ProcessingRequest processingRequest : processingRequests) {
+            parallel.addItem(new AbstractWorkflowItem() {
+                @Override
+                public void submit() {
+                    try {
+                        JobID jobIds = beamOpProcessingType.submitJob(processingRequest.getProcessingParameters());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
+                    }
+                }
+            });
+        }
+        // todo - }}} WORKFLOW
+
         return new Production(productionId,
                               productionName,
                               userName,
                               userName + "/" + productionId,
                               productionRequest,
+                              parallel,
                               jobIds);
     }
 

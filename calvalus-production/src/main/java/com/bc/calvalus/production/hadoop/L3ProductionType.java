@@ -2,10 +2,12 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.beam.BeamOpProcessingType;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.production.AbstractWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.Workflow;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapreduce.JobID;
@@ -39,9 +41,9 @@ public class L3ProductionType implements ProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
-        String productionId = Production.createId(productionRequest.getProductionType());
-        String productionName = createL3ProductionName(productionRequest);
-        String userName = "ewa";  // todo - get user from productionRequest
+        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String productionName = createL3ProductionName(productionRequest);
+        final String userName = "ewa";  // todo - get user from productionRequest
 
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionId,
                                                                                                        userName,
@@ -52,11 +54,25 @@ public class L3ProductionType implements ProductionType {
             jobIds[i] = submitL3Job(wpsXml);
         }
 
+        // todo - WORKFLOW {{{
+        Workflow.Parallel parallel = new Workflow.Parallel();
+        for (L3ProcessingRequest l3ProcessingRequest : l3ProcessingRequests) {
+            parallel.addItem(new AbstractWorkflowItem() {
+                @Override
+                public void submit() {
+                    String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, l3ProcessingRequest);
+                    JobID jobId = submitL3Job(wpsXml);
+                }
+            });
+        }
+        // todo - }}} WORKFLOW
+
         return new Production(productionId,
                               productionName,
                               userName,
                               userName + "/" + productionId,
                               productionRequest,
+                              parallel,
                               jobIds);
     }
 

@@ -15,7 +15,7 @@ public class FailedWorkflowTest {
         TestWorkflowItem job1 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
         TestWorkflowItem job2 = new TestWorkflowItem();
 
-        wf.add(job1, job2);
+        wf.addItem(job1, job2);
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());
         assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
@@ -50,7 +50,7 @@ public class FailedWorkflowTest {
         TestWorkflowItem job1 = new TestWorkflowItem();
         TestWorkflowItem job2 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
 
-        wf.add(job1, job2);
+        wf.addItem(job1, job2);
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());
         assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
@@ -87,10 +87,10 @@ public class FailedWorkflowTest {
         TestWorkflowItem job4 = new TestWorkflowItem();
 
         Workflow.Parallel wfp = new Workflow.Parallel();
-        wfp.add(job1, job2);
+        wfp.addItem(job1, job2);
         Workflow.Sequential wfs = new Workflow.Sequential();
-        wfs.add(job3, job4);
-        wf.add(wfp, wfs);
+        wfs.addItem(job3, job4);
+        wf.addItem(wfp, wfs);
 
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());

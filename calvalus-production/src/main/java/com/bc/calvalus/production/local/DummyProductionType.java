@@ -2,10 +2,12 @@ package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.production.AbstractWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
@@ -46,11 +48,22 @@ class DummyProductionType implements ProductionType {
 
         String productionId = Production.createId(productionRequest.getProductionType());
 
+        // todo - WORKFLOW {{{
+        Workflow.Sequential sequential = new Workflow.Sequential();
+        sequential.addItem(new AbstractWorkflowItem() {
+            @Override
+            public void submit() {
+                String jobId = processingService.submitJob();
+            }
+        });
+        // todo - }}} WORKFLOW
+
         return new Production(productionId,
                               name,
                               user,
                               productionId,
                               productionRequest,
+                              sequential,
                               jobId);
     }
 

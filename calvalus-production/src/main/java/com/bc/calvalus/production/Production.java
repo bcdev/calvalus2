@@ -17,11 +17,13 @@ public class Production {
     private final String id;
     private final String name;
     private final String user;
+    private final Workflow workflow;
     private final Object[] jobIds;
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
     private final String stagingPath;
     private ProcessStatus processingStatus;
+
     private ProcessStatus stagingStatus;
 
     public Production(String id,
@@ -29,6 +31,7 @@ public class Production {
                       String user,
                       String stagingPath,
                       ProductionRequest productionRequest,
+                      Workflow workflow,
                       Object... jobIds) {
         if (id == null) {
             throw new NullPointerException("id");
@@ -48,6 +51,7 @@ public class Production {
         this.stagingPath = stagingPath;
         this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
         this.jobIds = jobIds;
+        this.workflow = workflow;
         this.productionRequest = productionRequest;
         this.processingStatus = ProcessStatus.UNKNOWN;
         this.stagingStatus = ProcessStatus.UNKNOWN;
@@ -106,6 +110,10 @@ public class Production {
 
     private static long nextUniqueLong() {
         return ++uniqueLong;
+    }
+
+    public Workflow getWorkflow() {
+        return workflow;
     }
 
     @Override
