@@ -3,6 +3,7 @@ package com.bc.calvalus.production.local;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -56,11 +57,11 @@ class DummyProductionType implements ProductionType {
             }
 
             @Override
-            public void kill() throws ProductionException {
+            public void kill() throws WorkflowException {
                 try {
                     processingService.killJob(jobId);
                 } catch (IOException e) {
-                    throw new ProductionException("Failed to kill job: " + e.getMessage(), e);
+                    throw new WorkflowException("Failed to kill job: " + e.getMessage(), e);
                 }
             }
 

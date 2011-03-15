@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.commons;
 
 /**
@@ -13,18 +29,18 @@ public interface WorkflowItem {
      * Usually, implementations of this method should return immediately after the job has been submitted.
      * In rare cases the method blocks, e.g. until the job has completed.
      *
-     * @throws Exception If the submission fails.
+     * @throws WorkflowException If the submission fails.
      */
-    void submit() throws Exception;
+    void submit() throws WorkflowException;
 
     /**
      * Kills this work item's job in the underlying job engine.
      * Usually, implementations of this method should return immediately after the kill request has been submitted.
      * In rare cases the method blocks, e.g. until the job has been terminated.
      *
-     * @throws Exception If the kill request fails.
+     * @throws WorkflowException If the kill request fails.
      */
-    void kill() throws Exception;
+    void kill() throws WorkflowException;
 
     /**
      * Asks this workflow item to update its job status from the underlying job engine.

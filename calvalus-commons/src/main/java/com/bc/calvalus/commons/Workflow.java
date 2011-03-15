@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.commons;
 
 import java.util.ArrayList;
@@ -27,7 +43,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
     }
 
     @Override
-    public void kill() throws Exception {
+    public void kill() throws WorkflowException {
         for (WorkflowItem item : itemList) {
             if (!item.getStatus().isDone()) {
                 item.kill();
@@ -82,7 +98,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
          * Submits the first item. Subsequent items are submitted after their predecessors have successfully completed.
          */
         @Override
-        public void submit() throws Exception {
+        public void submit() throws WorkflowException {
             submitNext();
         }
 
@@ -101,7 +117,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
                 currentItemIndex++;
                 try {
                     itemList.get(currentItemIndex).submit();
-                } catch (Exception e) {
+                } catch (WorkflowException e) {
                     itemList.get(currentItemIndex).setStatus(new ProcessStatus(ProcessState.ERROR, 0.0F, e.getMessage()));
                 }
             }
@@ -121,7 +137,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
          * Submits all contained items at once.
          */
         @Override
-        public void submit() throws Exception {
+        public void submit() throws WorkflowException {
             for (WorkflowItem item : itemList) {
                 item.submit();
             }

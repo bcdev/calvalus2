@@ -4,16 +4,14 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.esa.beam.util.SystemUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -100,7 +98,11 @@ public class ProductionServiceImpl implements ProductionService {
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
             Production production = productionType.createProduction(productionRequest);
-            production.getWorkflow().submit();
+            try {
+                production.getWorkflow().submit();
+            } catch (WorkflowException e) {
+                throw new ProductionException(String.format("Failed to sumbit production '%s'workflow: %s", production.getId(), e.getMessage()), e);
+            }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
         }
@@ -156,7 +158,7 @@ public class ProductionServiceImpl implements ProductionService {
                 } else {
                     try {
                         production.getWorkflow().kill();
-                    } catch (ProductionException e) {
+                    } catch (WorkflowException e) {
                         logger.log(Level.SEVERE, String.format("Failed to kill production '%s': %s",
                                                                production.getId(), e.getMessage()), e);
                     }
