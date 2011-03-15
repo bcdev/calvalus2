@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -152,14 +153,11 @@ public class ProductionServiceImpl implements ProductionService {
                         removeProduction(production);
                     }
                 } else {
-                    Object[] jobIds = production.getJobIds();
-                    for (Object jobId : jobIds) {
-                        try {
-                            processingService.killJob(jobId);
-                        } catch (IOException e) {
-                            logger.log(Level.SEVERE, String.format("Failed to kill Hadoop job '%s' of production '%s': %s",
-                                                                   jobId, production.getId(), e.getMessage()), e);
-                        }
+                    try {
+                        production.getWorkflow().kill();
+                    } catch (ProductionException e) {
+                        logger.log(Level.SEVERE, String.format("Failed to kill production '%s': %s",
+                                                               production.getId(), e.getMessage()), e);
                     }
                 }
 
@@ -182,19 +180,11 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     public void updateProductions() throws IOException, ProductionException {
-        Map<Object, ProcessStatus> jobStatusMap = processingService.getJobStatusMap();
-        Production[] productions = productionStore.getProductions();
-
+        processingService.updateJobStatuses();
         // Update state of all registered productions
+        Production[] productions = productionStore.getProductions();
         for (Production production : productions) {
-            Object[] jobIds = production.getJobIds();
-            ProcessStatus[] jobStatuses = new ProcessStatus[jobIds.length];
-            for (int i = 0; i < jobIds.length; i++) {
-                Object jobId = jobIds[i];
-                ProcessStatus processStatus = jobStatusMap.get(jobId);
-                jobStatuses[i] = processStatus != null ? processStatus : ProcessStatus.UNKNOWN;
-            }
-            production.setProcessingStatus(ProcessStatus.aggregate(jobStatuses));
+            production.getWorkflow().updateStatus();
         }
 
         // Now try to delete productions

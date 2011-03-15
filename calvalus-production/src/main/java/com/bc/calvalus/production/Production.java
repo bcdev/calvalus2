@@ -17,13 +17,10 @@ public class Production {
     private final String id;
     private final String name;
     private final String user;
-    private final Workflow workflow;
-    private final Object[] jobIds;
+    private final WorkflowItem workflow;
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
     private final String stagingPath;
-    private ProcessStatus processingStatus;
-
     private ProcessStatus stagingStatus;
 
     public Production(String id,
@@ -31,8 +28,7 @@ public class Production {
                       String user,
                       String stagingPath,
                       ProductionRequest productionRequest,
-                      Workflow workflow,
-                      Object... jobIds) {
+                      WorkflowItem workflow) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -50,10 +46,8 @@ public class Production {
         this.user = user; // todo - check: remove param, instead derive from  productionRequest?
         this.stagingPath = stagingPath;
         this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
-        this.jobIds = jobIds;
         this.workflow = workflow;
         this.productionRequest = productionRequest;
-        this.processingStatus = ProcessStatus.UNKNOWN;
         this.stagingStatus = ProcessStatus.UNKNOWN;
     }
 
@@ -76,8 +70,13 @@ public class Production {
         return user;
     }
 
+    public WorkflowItem getWorkflow() {
+        return workflow;
+    }
+
+    @Deprecated
     public Object[] getJobIds() {
-        return jobIds.clone();
+        return workflow.getJobIds();
     }
 
     public boolean isAutoStaging() {
@@ -93,11 +92,11 @@ public class Production {
     }
 
     public ProcessStatus getProcessingStatus() {
-        return processingStatus;
+        return workflow.getStatus();
     }
 
     public void setProcessingStatus(ProcessStatus processingStatus) {
-        this.processingStatus = processingStatus;
+        this.workflow.setStatus( processingStatus);
     }
 
     public ProcessStatus getStagingStatus() {
@@ -112,17 +111,13 @@ public class Production {
         return ++uniqueLong;
     }
 
-    public Workflow getWorkflow() {
-        return workflow;
-    }
-
     @Override
     public String toString() {
         return "Production{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", stagingPath=" + stagingPath +
-                ", productionStatus=" + processingStatus +
+                ", processingStatus=" + getProcessingStatus() +
                 ", stagingStatus=" + stagingStatus +
                 '}';
     }

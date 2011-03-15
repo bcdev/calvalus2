@@ -14,6 +14,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final FileSystem fileSystem;
     private final Path dataInputPath;
     private final Path dataOutputPath;
+    private final Map<JobID, ProcessStatus> jobStatusMap;
 
     public HadoopProcessingService(JobClient jobClient) throws IOException {
         this.jobClient = jobClient;
@@ -29,6 +31,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         // String fsName = jobClient.getConf().get("fs.default.name");
         this.dataInputPath = fileSystem.makeQualified(new Path("/calvalus/eodata"));
         this.dataOutputPath =  fileSystem.makeQualified(new Path("/calvalus/outputs"));
+        jobStatusMap = new HashMap<JobID, ProcessStatus>();
     }
 
     public JobClient getJobClient() {
@@ -60,16 +63,24 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return dataOutputPath.toString();
     }
 
+    @Override
+    public void updateJobStatuses() throws IOException {
+        JobStatus[] jobStatuses = jobClient.getAllJobs();
+        synchronized (jobStatusMap) {
+            jobStatusMap.clear();
+            for (JobStatus jobStatus : jobStatuses) {
+                jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
+            }
+        }
+    }
 
     @Override
-    public Map<JobID, ProcessStatus> getJobStatusMap() throws IOException {
-        JobStatus[] jobStatuses = jobClient.getAllJobs();
-        HashMap<JobID, ProcessStatus> jobStatusMap = new HashMap<JobID, ProcessStatus>();
-        for (JobStatus jobStatus : jobStatuses) {
-            jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
+    public ProcessStatus getJobStatus(JobID jobID) {
+        synchronized (jobStatusMap) {
+            return jobStatusMap.get(jobID);
         }
-        return jobStatusMap;
     }
+
 
     @Override
     public boolean killJob(JobID jobId) throws IOException {

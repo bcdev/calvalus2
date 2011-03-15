@@ -12,10 +12,10 @@ public class FailedWorkflowTest {
     public void testSequential() throws Exception {
 
         Workflow.Sequential wf = new Workflow.Sequential();
-        TestWorkflowItem job1 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
-        TestWorkflowItem job2 = new TestWorkflowItem();
+        LifeStepWorkflowItem job1 = new FailingLifeStepWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
+        LifeStepWorkflowItem job2 = new LifeStepWorkflowItem();
 
-        wf.addItem(job1, job2);
+        wf.add(job1, job2);
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());
         assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
@@ -47,10 +47,10 @@ public class FailedWorkflowTest {
 
         Workflow.Parallel wf = new Workflow.Parallel();
 
-        TestWorkflowItem job1 = new TestWorkflowItem();
-        TestWorkflowItem job2 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
+        LifeStepWorkflowItem job1 = new LifeStepWorkflowItem();
+        LifeStepWorkflowItem job2 = new FailingLifeStepWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
 
-        wf.addItem(job1, job2);
+        wf.add(job1, job2);
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());
         assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
@@ -81,16 +81,16 @@ public class FailedWorkflowTest {
     public void testMixed() throws Exception {
 
         Workflow.Sequential wf = new Workflow.Sequential();
-        TestWorkflowItem job1 = new TestWorkflowItem();
-        TestWorkflowItem job2 = new TestWorkflowItem();
-        TestWorkflowItem job3 = new FailingTestWorkflowItem(ProcessState.SCHEDULED, ProcessState.ERROR);
-        TestWorkflowItem job4 = new TestWorkflowItem();
+        LifeStepWorkflowItem job1 = new LifeStepWorkflowItem();
+        LifeStepWorkflowItem job2 = new LifeStepWorkflowItem();
+        LifeStepWorkflowItem job3 = new FailingLifeStepWorkflowItem(ProcessState.SCHEDULED, ProcessState.ERROR);
+        LifeStepWorkflowItem job4 = new LifeStepWorkflowItem();
 
         Workflow.Parallel wfp = new Workflow.Parallel();
-        wfp.addItem(job1, job2);
+        wfp.add(job1, job2);
         Workflow.Sequential wfs = new Workflow.Sequential();
-        wfs.addItem(job3, job4);
-        wf.addItem(wfp, wfs);
+        wfs.add(job3, job4);
+        wf.add(wfp, wfs);
 
         wf.submit();
         assertEquals(ProcessState.UNKNOWN, job1.getStatus().getState());
@@ -147,8 +147,8 @@ public class FailedWorkflowTest {
         assertEquals(ProcessState.ERROR, wf.getStatus().getState());
     }
 
-    static void incLifeStep(TestWorkflowItem... jobs) {
-        for (TestWorkflowItem job : jobs) {
+    static void incLifeStep(LifeStepWorkflowItem... jobs) {
+        for (LifeStepWorkflowItem job : jobs) {
             job.incLifeStep();
         }
     }

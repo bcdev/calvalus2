@@ -25,17 +25,17 @@ public class SimpleProductionStoreTest {
         Production prod1 = new Production("id1", "name1", "marco",
                                           "path1",
                                           new ProductionRequest("test", "a", "5", "b", "9"),
-                                          "job5");
+                                          new Workflow.Parallel(new TestWorkflowItem<String>("job5")));
         prod1.setProcessingStatus(new ProcessStatus(ProcessState.RUNNING, 0.6f));
 
         Production prod2 = new Production("id2", "name2", "martin", null,
                                           new ProductionRequest("test", "a", "9", "b", "2"),
-                                          "job9");
+                                          new Workflow.Parallel(new TestWorkflowItem<String>("job9")));
         prod2.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
 
         Production prod3 = new Production("id3", "name3", "norman", "path3",
                                           new ProductionRequest("test", "a", "1", "b", "0", "autoStaging", "true"),
-                                          "job2");
+                                          new Workflow.Parallel(new TestWorkflowItem<String>("job2")));
         prod3.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
         prod3.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED));
 

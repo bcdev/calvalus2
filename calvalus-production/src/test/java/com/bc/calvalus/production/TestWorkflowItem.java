@@ -1,40 +1,36 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Ignore;
 
 /**
- * A workflow item that runs through the regular life cycle steps UNKNOWN, SCHEDULED, RUNNING and finally COMPLETED.
- *
- * @author MarcoZ
- * @author Norman
+ * A simple WorkflowItem with an ID but that does nothing on submit(), kill() and updateStatus().
  */
 @Ignore
-public class TestWorkflowItem extends Workflow {
-    private boolean submitted;
+public class TestWorkflowItem<T> extends AbstractWorkflowItem {
+    private final T jobId;
 
-    public boolean isSubmitted() {
-        return submitted;
+    TestWorkflowItem(T jobId) {
+        this.jobId = jobId;
     }
 
-    void incLifeStep() {
-        if (isSubmitted()) {
-            ProcessStatus status = getStatus();
-            if (status.equals(ProcessStatus.UNKNOWN)) {
-                setStatus(new ProcessStatus(ProcessState.SCHEDULED));
-            } else if (status.equals(ProcessStatus.SCHEDULED)) {
-                setStatus(new ProcessStatus(ProcessState.RUNNING, 0.5f));
-            } else if (status.equals(new ProcessStatus(ProcessState.RUNNING, 0.5f))) {
-                setStatus(new ProcessStatus(ProcessState.COMPLETED));
-            }
-            // Other case are failures: CANCELLED, ERROR
-        }
+    public T getJobId() {
+        return jobId;
     }
 
     @Override
-    public void submit() {
-        submitted = true;
+    public void submit() throws ProductionException {
     }
 
+    @Override
+    public void kill() throws ProductionException {
+    }
+
+    @Override
+    public void updateStatus() {
+    }
+
+    @Override
+    public Object[] getJobIds() {
+        return new Object[]{jobId};
+    }
 }

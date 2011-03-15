@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 
 import java.util.ArrayList;
@@ -32,8 +33,10 @@ public abstract class AbstractWorkflowItem implements WorkflowItem {
 
     @Override
     public void setStatus(ProcessStatus status) {
-        if (this.status.getState() != status.getState()) {
-            this.status = status;
+        ProcessState oldState = this.status.getState();
+        this.status = status;
+        if (oldState != status.getState()) {
+            // todo: do not allow transition to unknown state
             fireStateChanged();
         }
     }

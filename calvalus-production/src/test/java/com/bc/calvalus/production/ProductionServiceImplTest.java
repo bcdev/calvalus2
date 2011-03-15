@@ -21,7 +21,8 @@ public class ProductionServiceImplTest {
     public void setUp() throws Exception {
         processingServiceMock = new TestProcessingService();
         stagingServiceMock = new TestStagingService();
-        productionTypeMock = new TestProductionType(stagingServiceMock);
+        productionTypeMock = new TestProductionType(processingServiceMock,
+                                                    stagingServiceMock);
         productionStoreMock = new TestProductionStore();
         productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock,
                                                                stagingServiceMock,

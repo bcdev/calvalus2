@@ -16,16 +16,33 @@ import java.util.List;
 public abstract class Workflow extends AbstractWorkflowItem implements WorkflowItem.StateChangeListener {
     final List<WorkflowItem> itemList;
 
-    protected Workflow() {
+    protected Workflow(WorkflowItem... items) {
         super();
         this.itemList = new ArrayList<WorkflowItem>();
+        add(items);
     }
 
-    public void addItem(WorkflowItem... items) {
+    public void add(WorkflowItem... items) {
         for (WorkflowItem item : items) {
             item.addStateChangeListener(this);
         }
         itemList.addAll(Arrays.asList(items));
+    }
+
+    @Override
+    public void kill() throws ProductionException {
+        for (WorkflowItem item : itemList) {
+            if (!item.getStatus().isDone()) {
+                item.kill();
+            }
+        }
+    }
+
+    @Override
+    public void updateStatus() {
+        for (WorkflowItem item : itemList) {
+            item.updateStatus();
+        }
     }
 
     /**
@@ -43,39 +60,52 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
         setStatus(ProcessStatus.aggregate(statuses));
     }
 
+    @Override
+    public Object[] getJobIds() {
+        ArrayList<Object> list = new ArrayList<Object>();
+        for (WorkflowItem item : itemList) {
+            list.addAll(Arrays.asList(item.getJobIds()));
+        }
+        return list.toArray(new Object[list.size()]);
+    }
+
     /**
      * A sequential workflow. An item is submitted only after its predecessor has completed.
      */
     public static class Sequential extends Workflow {
-        int currentIndex = -1;
+        private int currentItemIndex;
+
+        public Sequential(WorkflowItem... items) {
+            super(items);
+            currentItemIndex = -1;
+        }
 
         /**
          * Submits the first item. Subsequent items are submitted after their predecessors have successfully completed.
          */
         @Override
-        public void submit() {
+        public void submit() throws ProductionException {
             submitNext();
-        }
-
-        @Override
-        public void kill() {
-            // todo - test & implement me!
         }
 
         @Override
         public void handleStateChanged(WorkflowItem item) {
             super.handleStateChanged(item);
-            if (currentIndex >= 0
-                    && itemList.get(currentIndex) == item
-                    && itemList.get(currentIndex).getStatus().getState() == ProcessState.COMPLETED) {
+            if (currentItemIndex >= 0
+                    && itemList.get(currentItemIndex) == item
+                    && itemList.get(currentItemIndex).getStatus().getState() == ProcessState.COMPLETED) {
                 submitNext();
             }
         }
 
         private void submitNext() {
-            if (currentIndex < itemList.size() - 1) {
-                currentIndex++;
-                itemList.get(currentIndex).submit();
+            if (currentItemIndex < itemList.size() - 1) {
+                currentItemIndex++;
+                try {
+                    itemList.get(currentItemIndex).submit();
+                } catch (ProductionException e) {
+                    itemList.get(currentItemIndex).setStatus(new ProcessStatus(ProcessState.ERROR, 0.0F, e.getMessage()));
+                }
             }
         }
     }
@@ -84,19 +114,19 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
      * A parallel workflow. All items are submitted independently of each other.
      */
     public static class Parallel extends Workflow {
+
+        public Parallel(WorkflowItem... items) {
+            super(items);
+        }
+
         /**
          * Submits all contained items at once.
          */
         @Override
-        public void submit() {
+        public void submit() throws ProductionException {
             for (WorkflowItem item : itemList) {
                 item.submit();
             }
-        }
-
-        @Override
-        public void kill() {
-            // todo - test & implement me!
         }
     }
 

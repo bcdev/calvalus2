@@ -24,6 +24,7 @@ import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -56,30 +57,47 @@ public class L2ProductionType implements ProductionType {
         ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(productionId,
                                                                                                    userName,
                                                                                                    productionRequest);
-        final JobID[] jobIds = new JobID[processingRequests.length];
-        final JobClient jobClient = processingService.getJobClient();
-        final BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
-        for (int i = 0; i < processingRequests.length; i++) {
-            try {
-                jobIds[i] = beamOpProcessingType.submitJob(processingRequests[i].getProcessingParameters());
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
-            }
-        }
 
         // todo - WORKFLOW {{{
         Workflow.Parallel parallel = new Workflow.Parallel();
         for (ProcessingRequest processingRequest : processingRequests) {
-            parallel.addItem(new AbstractWorkflowItem() {
+            final Map<String, Object> processingParameters = processingRequest.getProcessingParameters();
+            parallel.add(new AbstractWorkflowItem() {
+                JobID jobId;
+
                 @Override
-                public void submit() {
+                public void submit() throws ProductionException {
                     try {
-                        JobID jobIds = beamOpProcessingType.submitJob(processingRequest.getProcessingParameters());
+                        final JobClient jobClient = processingService.getJobClient();
+                        final BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
+                        jobId = beamOpProcessingType.submitJob(processingParameters);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
                     }
+                }
+
+                @Override
+                public void kill() throws ProductionException {
+                    try {
+                        processingService.killJob(jobId);
+                    } catch (IOException e) {
+                        throw new ProductionException("Failed to kill Hadoop job: " + e.getMessage(), e);
+                    }
+                }
+
+                @Override
+                public void updateStatus() {
+                    if (jobId != null) {
+                        ProcessStatus jobStatus = processingService.getJobStatus(jobId);
+                        if (jobStatus != null) {
+                            setStatus(jobStatus);
+                        }
+                    }
+                }
+
+                @Override
+                public Object[] getJobIds() {
+                    return jobId != null ? new Object[]{jobId} : new Object[0];
                 }
             });
         }
@@ -90,8 +108,7 @@ public class L2ProductionType implements ProductionType {
                               userName,
                               userName + "/" + productionId,
                               productionRequest,
-                              parallel,
-                              jobIds);
+                              parallel);
     }
 
     @Override
@@ -99,8 +116,8 @@ public class L2ProductionType implements ProductionType {
         ProductionRequest productionRequest = production.getProductionRequest();
 
         final ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(production.getId(),
-                                                                                                       production.getUser(),
-                                                                                                   productionRequest);
+                                                                                                         production.getUser(),
+                                                                                                         productionRequest);
         final String jobOutputDir = processingRequests[0].getOutputDir();
         Staging staging = new Staging() {
 

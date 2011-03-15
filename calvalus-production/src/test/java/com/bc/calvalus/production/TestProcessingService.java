@@ -44,13 +44,17 @@ public class TestProcessingService implements ProcessingService<String> {
         };
     }
 
-    public void setJobStatus(String jobId, ProcessStatus status) {
-        this.jobStatusMap.put(jobId, status);
+    @Override
+    public void updateJobStatuses() throws IOException {
     }
 
     @Override
-    public Map<String, ProcessStatus> getJobStatusMap() throws IOException {
-        return new HashMap<String, ProcessStatus>(jobStatusMap);
+    public ProcessStatus getJobStatus(String jobId) {
+        return jobStatusMap.get(jobId);
+    }
+
+    public void setJobStatus(String jobId, ProcessStatus status) {
+        this.jobStatusMap.put(jobId, status);
     }
 
     @Override

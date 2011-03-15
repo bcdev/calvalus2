@@ -33,6 +33,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.Map;
 
 import java.util.ArrayList;
@@ -63,7 +64,6 @@ public class BeamOpProcessingType {
     public Job createJob(String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
         String identifier = wpsConfig.getIdentifier();
-
         Job job = new Job(jobClient.getConf(), identifier);
         ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(job.getConfiguration());
         processingConfiguration.addWpsParameters(wpsConfig);
@@ -71,7 +71,7 @@ public class BeamOpProcessingType {
     }
 
     // at the moment only for beam-op-level 2
-    private Job createJob(Map<String, Object> parameters) throws Exception {
+    private Job createJob(Map<String, Object> parameters) throws IOException {
         String productionId = getString(parameters, "productionId");
 
         Job job = new Job(jobClient.getConf(), productionId);
@@ -99,7 +99,7 @@ public class BeamOpProcessingType {
         }
     }
 
-    public void configureJob(Job job) throws Exception {
+    public void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
         ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
         // clear output directory

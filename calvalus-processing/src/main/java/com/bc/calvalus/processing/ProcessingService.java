@@ -20,7 +20,9 @@ public interface ProcessingService<JOBID> {
 
     String[] listFilePaths(String dirPath) throws IOException;
 
-    Map<JOBID, ProcessStatus> getJobStatusMap() throws IOException;
+    void updateJobStatuses() throws IOException;
+
+    ProcessStatus getJobStatus(JOBID jobid);
 
     boolean killJob(JOBID jobId) throws IOException;
 }

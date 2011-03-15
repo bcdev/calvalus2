@@ -19,7 +19,13 @@ import java.util.TimerTask;
 class LocalProcessingService implements ProcessingService<String> {
     static long jobNum = System.nanoTime();
 
-    Map<String, Job> jobs = new HashMap<String, Job>();
+    private final Map<String, Job> jobs;
+    private final Map<String, ProcessStatus> jobStatuses;
+
+    public LocalProcessingService() {
+        jobs = new HashMap<String, Job>();
+        jobStatuses = new HashMap<String, ProcessStatus>();
+    }
 
     @Override
     public JobIdFormat<String> getJobIdFormat() {
@@ -42,23 +48,30 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public synchronized Map<String, ProcessStatus> getJobStatusMap() throws IOException {
-        Map<String, ProcessStatus> jobStatuses = new HashMap<String, ProcessStatus>();
+    public void updateJobStatuses() throws IOException {
         Set<Map.Entry<String, Job>> entries = jobs.entrySet();
-        for (Map.Entry<String, Job> entry : entries) {
-            String id = entry.getKey();
-            Job job = entry.getValue();
-            ProcessStatus processStatus;
-            if (job.isKilled()) {
-                processStatus = new ProcessStatus(ProcessState.CANCELLED);
-            } else if (job.getProgress() >= 1.0f) {
-                processStatus = new ProcessStatus(ProcessState.COMPLETED);
-            } else {
-                processStatus = new ProcessStatus(ProcessState.RUNNING, job.getProgress());
+        synchronized (jobStatuses) {
+            for (Map.Entry<String, Job> entry : entries) {
+                String id = entry.getKey();
+                Job job = entry.getValue();
+                ProcessStatus processStatus;
+                if (job.isKilled()) {
+                    processStatus = new ProcessStatus(ProcessState.CANCELLED);
+                } else if (job.getProgress() >= 1.0f) {
+                    processStatus = new ProcessStatus(ProcessState.COMPLETED);
+                } else {
+                    processStatus = new ProcessStatus(ProcessState.RUNNING, job.getProgress());
+                }
+                jobStatuses.put(id, processStatus);
             }
-            jobStatuses.put(id, processStatus);
         }
-        return jobStatuses;
+    }
+
+    @Override
+    public ProcessStatus getJobStatus(String jobId) {
+        synchronized (jobStatuses) {
+            return jobStatuses.get(jobId);
+        }
     }
 
     @Override

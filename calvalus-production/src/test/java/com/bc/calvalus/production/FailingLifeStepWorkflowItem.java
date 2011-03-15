@@ -10,11 +10,11 @@ import org.junit.Ignore;
  * @author Norman
  */
 @Ignore
-public class FailingTestWorkflowItem extends TestWorkflowItem {
+public class FailingLifeStepWorkflowItem extends LifeStepWorkflowItem {
     private final ProcessState stateBeforeFailure;
     private final ProcessState failureState;
 
-    public FailingTestWorkflowItem(ProcessState stateBeforeFailure, ProcessState failureState) {
+    public FailingLifeStepWorkflowItem(ProcessState stateBeforeFailure, ProcessState failureState) {
         this.stateBeforeFailure = stateBeforeFailure;
         this.failureState = failureState;
     }

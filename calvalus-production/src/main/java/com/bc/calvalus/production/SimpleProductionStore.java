@@ -109,15 +109,15 @@ public class SimpleProductionStore implements ProductionStore {
             Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
-
-            Production hadoopProduction = new Production(id, name, user,
-                                                         stagingPath,
-                                                         productionRequest, jobIDs
-            );
-
-            hadoopProduction.setProcessingStatus(processStatus);
-            hadoopProduction.setStagingStatus(stagingStatus);
-            addProduction(hadoopProduction);
+            WorkflowItem workflow = createWorkflow(jobIDs);
+            Production production = new Production(id, name, user,
+                                                   stagingPath,
+                                                   productionRequest,
+                                                   workflow);
+            workflow.setStatus(processStatus);
+            production.setProcessingStatus(processStatus);
+            production.setStagingStatus(stagingStatus);
+            addProduction(production);
         }
     }
 
@@ -220,5 +220,43 @@ public class SimpleProductionStore implements ProductionStore {
             return null;
         }
         return tsv.replace("\\n", "\n").replace("\\t", "\t");
+    }
+
+    /**
+     * Creates the appropriate workflow for the given array of job identifiers.
+     * The default implementation creates a proxy workflow that can neither be submitted, killed nor
+     * updated.
+     *
+     * @param jobIds Array of job identifiers
+     * @return The workflow.
+     */
+    protected WorkflowItem createWorkflow(Object[] jobIds) {
+        // todo - we need a factory that creates the correct Workflow for a production
+        return new ProxyWorkflowItem(jobIds);
+    }
+
+    private static class ProxyWorkflowItem extends AbstractWorkflowItem {
+        private final Object[] jobIds;
+
+        public ProxyWorkflowItem(Object[] jobIds) {
+            this.jobIds = jobIds;
+        }
+
+        @Override
+        public void submit() throws ProductionException {
+        }
+
+        @Override
+        public void kill() throws ProductionException {
+        }
+
+        @Override
+        public void updateStatus() {
+        }
+
+        @Override
+        public Object[] getJobIds() {
+            return jobIds;
+        }
     }
 }

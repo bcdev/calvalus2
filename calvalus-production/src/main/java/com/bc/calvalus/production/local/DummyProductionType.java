@@ -44,27 +44,50 @@ class DummyProductionType implements ProductionType {
             user = "someone";
         }
 
-        String jobId = processingService.submitJob();
-
-        String productionId = Production.createId(productionRequest.getProductionType());
 
         // todo - WORKFLOW {{{
         Workflow.Sequential sequential = new Workflow.Sequential();
-        sequential.addItem(new AbstractWorkflowItem() {
+        sequential.add(new AbstractWorkflowItem() {
+            String jobId;
+
             @Override
             public void submit() {
-                String jobId = processingService.submitJob();
+                jobId = processingService.submitJob();
+            }
+
+            @Override
+            public void kill() throws ProductionException {
+                try {
+                    processingService.killJob(jobId);
+                } catch (IOException e) {
+                    throw new ProductionException("Failed to kill job: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public void updateStatus() {
+                if (jobId != null) {
+                    ProcessStatus jobStatus = processingService.getJobStatus(jobId);
+                    if (jobStatus != null) {
+                        setStatus(jobStatus);
+                    }
+                }
+            }
+
+            @Override
+            public Object[] getJobIds() {
+                return jobId != null ? new Object[]{jobId} : new Object[0];
             }
         });
         // todo - }}} WORKFLOW
 
+        String productionId = Production.createId(productionRequest.getProductionType());
         return new Production(productionId,
                               name,
                               user,
                               productionId,
                               productionRequest,
-                              sequential,
-                              jobId);
+                              sequential);
     }
 
     @Override

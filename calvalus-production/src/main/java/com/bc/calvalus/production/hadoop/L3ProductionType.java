@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.BeamOpProcessingType;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.AbstractWorkflowItem;
@@ -48,20 +49,48 @@ public class L3ProductionType implements ProductionType {
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionId,
                                                                                                        userName,
                                                                                                        productionRequest);
-        JobID[] jobIds = new JobID[l3ProcessingRequests.length];
-        for (int i = 0; i < l3ProcessingRequests.length; i++) {
-            String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, l3ProcessingRequests[i]);
-            jobIds[i] = submitL3Job(wpsXml);
-        }
-
         // todo - WORKFLOW {{{
         Workflow.Parallel parallel = new Workflow.Parallel();
         for (L3ProcessingRequest l3ProcessingRequest : l3ProcessingRequests) {
-            parallel.addItem(new AbstractWorkflowItem() {
+            final L3ProcessingRequest pcr = l3ProcessingRequest;
+            parallel.add(new AbstractWorkflowItem() {
+                JobID jobId;
+
                 @Override
-                public void submit() {
-                    String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, l3ProcessingRequest);
-                    JobID jobId = submitL3Job(wpsXml);
+                public void submit() throws ProductionException {
+                    try {
+                        String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, pcr);
+                        JobClient jobClient = processingService.getJobClient();
+                        BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
+                        jobId = beamOpProcessingType.submitJob(wpsXml);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
+                    }
+                }
+
+                @Override
+                public void kill() throws ProductionException {
+                    try {
+                        processingService.killJob(jobId);
+                    } catch (IOException e) {
+                        throw new ProductionException("Failed to kill Hadoop job: " + e.getMessage(), e);
+                    }
+                }
+
+                @Override
+                public void updateStatus() {
+                    if (jobId != null) {
+                        ProcessStatus jobStatus = processingService.getJobStatus(jobId);
+                        if (jobStatus != null) {
+                            setStatus(jobStatus);
+                        }
+                    }
+                }
+
+                @Override
+                public Object[] getJobIds() {
+                    return jobId != null ? new Object[]{jobId} : new Object[0];
                 }
             });
         }
@@ -72,19 +101,7 @@ public class L3ProductionType implements ProductionType {
                               userName,
                               userName + "/" + productionId,
                               productionRequest,
-                              parallel,
-                              jobIds);
-    }
-
-    private JobID submitL3Job(String wpsXml) throws ProductionException {
-        try {
-            JobClient jobClient = processingService.getJobClient();
-            BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
-            return beamOpProcessingType.submitJob(wpsXml);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
-        }
+                              parallel);
     }
 
     @Override

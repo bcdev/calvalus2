@@ -13,7 +13,9 @@ public class ProductionTest {
         Production production;
         JobID jobID = new JobID("34627598547", 6);
 
-        production = new Production("9A3F", "Toasting", "ewa", null, new ProductionRequest("test"), new JobID[]{jobID});
+        production = new Production("9A3F", "Toasting", "ewa", null,
+                                    new ProductionRequest("test"),
+                                    new MyWorkflowItem(jobID));
         assertEquals("9A3F", production.getId());
         assertEquals("Toasting", production.getName());
         assertEquals("ewa", production.getUser());
@@ -31,7 +33,9 @@ public class ProductionTest {
         Production production;
         JobID jobID = new JobID("34627985F47", 4);
 
-        production = new Production("9A3F", "Toasting", "ewa", null, new ProductionRequest("test"), new JobID[]{jobID});
+        production = new Production("9A3F", "Toasting", "ewa", null,
+                                    new ProductionRequest("test"),
+                                    new MyWorkflowItem(jobID));
 
         assertEquals(jobID, production.getJobIds()[0]);
 
@@ -46,5 +50,11 @@ public class ProductionTest {
         String id = Production.createId("level4");
         assertTrue(id.contains("level4"));
         assertFalse(id.equals(Production.createId("level4")));
+    }
+
+    private static class MyWorkflowItem extends TestWorkflowItem<JobID> {
+        MyWorkflowItem(JobID id) {
+            super(id);
+        }
     }
 }
