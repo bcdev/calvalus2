@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
  *
  * @author Norman
  */
+@Ignore
 public class TestProcessingService implements ProcessingService<String> {
     private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
 

@@ -6,13 +6,13 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class WorkflowTest {
+public class FailedWorkflowTest {
 
     @Test
     public void testSequential() throws Exception {
 
         Workflow.Sequential wf = new Workflow.Sequential();
-        TestWorkflowItem job1 = new TestWorkflowItem();
+        TestWorkflowItem job1 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
         TestWorkflowItem job2 = new TestWorkflowItem();
 
         wf.add(job1, job2);
@@ -32,24 +32,14 @@ public class WorkflowTest {
         assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
 
         incLifeStep(job1, job2);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.SCHEDULED, job2.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job1.getStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
 
         incLifeStep(job1, job2);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, job2.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
-
-        incLifeStep(job1, job2);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
-
-        incLifeStep(job1, job2);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job1.getStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, job2.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
     }
 
     @Test
@@ -58,7 +48,7 @@ public class WorkflowTest {
         Workflow.Parallel wf = new Workflow.Parallel();
 
         TestWorkflowItem job1 = new TestWorkflowItem();
-        TestWorkflowItem job2 = new TestWorkflowItem();
+        TestWorkflowItem job2 = new FailingTestWorkflowItem(ProcessState.RUNNING, ProcessState.ERROR);
 
         wf.add(job1, job2);
         wf.submit();
@@ -78,13 +68,13 @@ public class WorkflowTest {
 
         incLifeStep(job1, job2);
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job2.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
 
         incLifeStep(job1, job2);
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job2.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
     }
 
     @Test
@@ -93,7 +83,7 @@ public class WorkflowTest {
         Workflow.Sequential wf = new Workflow.Sequential();
         TestWorkflowItem job1 = new TestWorkflowItem();
         TestWorkflowItem job2 = new TestWorkflowItem();
-        TestWorkflowItem job3 = new TestWorkflowItem();
+        TestWorkflowItem job3 = new FailingTestWorkflowItem(ProcessState.SCHEDULED, ProcessState.ERROR);
         TestWorkflowItem job4 = new TestWorkflowItem();
 
         Workflow.Parallel wfp = new Workflow.Parallel();
@@ -141,47 +131,20 @@ public class WorkflowTest {
         incLifeStep(job1, job2, job3, job4);
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, job3.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job3.getStatus().getState());
         assertEquals(ProcessState.UNKNOWN, job4.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wfs.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wfs.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
 
         incLifeStep(job1, job2, job3, job4);
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job3.getStatus().getState());
-        assertEquals(ProcessState.SCHEDULED, job4.getStatus().getState());
+        assertEquals(ProcessState.ERROR, job3.getStatus().getState());
+        assertEquals(ProcessState.UNKNOWN, job4.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wfs.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
-
-        incLifeStep(job1, job2, job3, job4);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job3.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, job4.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wfs.getStatus().getState());
-        assertEquals(ProcessState.RUNNING, wf.getStatus().getState());
-
-        incLifeStep(job1, job2, job3, job4);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job3.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job4.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wfs.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
-
-        incLifeStep(job1, job2, job3, job4);
-        assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job3.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, job4.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wfs.getStatus().getState());
-        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wfs.getStatus().getState());
+        assertEquals(ProcessState.ERROR, wf.getStatus().getState());
     }
 
     static void incLifeStep(TestWorkflowItem... jobs) {
