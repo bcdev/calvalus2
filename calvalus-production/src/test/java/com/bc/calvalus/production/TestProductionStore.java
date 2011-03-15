@@ -1,11 +1,14 @@
 package com.bc.calvalus.production;
 
+import org.junit.Ignore;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
 /**
  * Test implementation of ProductionStore.
  */
+@Ignore
 public class TestProductionStore implements ProductionStore {
     private final ArrayList<Production> list = new ArrayList<Production>();
 

@@ -2,9 +2,11 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.junit.Ignore;
 
 import java.io.IOException;
 
+@Ignore
 public class TestProductionType implements ProductionType {
     int productionCount;
     private final StagingService stagingService;
