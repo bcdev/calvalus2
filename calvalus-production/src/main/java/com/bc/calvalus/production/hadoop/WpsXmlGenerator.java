@@ -13,6 +13,7 @@ import java.util.Properties;
 /**
  * Generates the WPS XML.
  */
+@Deprecated
 class WpsXmlGenerator {
     private final VelocityEngine velocityEngine;
 

@@ -4,18 +4,12 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.beam.L3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import org.esa.beam.framework.datamodel.ProductData;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
 
 public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
@@ -35,12 +29,21 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         productionRequest.ensureProductionParameterSet("maskExpr");
 
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
-        commonProcessingParameters.put("numRows", getNumRows(productionRequest));
-        commonProcessingParameters.put("bbox", getBBox(productionRequest));
+        int numRows = getNumRows(productionRequest);
+        commonProcessingParameters.put("numRows", numRows);
+        String bBox = getBBox(productionRequest);
+        commonProcessingParameters.put("bbox", bBox);
         commonProcessingParameters.put("fillValue", getFillValue(productionRequest));
         commonProcessingParameters.put("weightCoeff", getWeightCoeff(productionRequest));
-        commonProcessingParameters.put("variables", getVariables(productionRequest));
-        commonProcessingParameters.put("aggregators", getAggregators(productionRequest));
+        L3Config.VariableConfiguration[] variables = getVariables(productionRequest);
+        commonProcessingParameters.put("variables", variables);
+        L3Config.AggregatorConfiguration[] aggregators = getAggregators(productionRequest);
+        commonProcessingParameters.put("aggregators", aggregators);
+        String maskExpr = productionRequest.getProductionParameter("maskExpr");
+        String superSampling = productionRequest.getProductionParameter("superSampling");
+
+        commonProcessingParameters.put("level3Parameters", getLevel3(numRows, bBox, maskExpr, superSampling, variables, aggregators));
+
         commonProcessingParameters.put("autoStaging", isAutoStaging(productionRequest));
 
         int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
@@ -69,6 +72,17 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         }
 
         return processingRequests;
+    }
+
+    private L3Config getLevel3(int numRows, String bBox, String maskExpr, String superSampling, L3Config.VariableConfiguration[] variables, L3Config.AggregatorConfiguration[] aggregators) {
+        L3Config l3Config = new L3Config();
+        l3Config.setNumRows(numRows);
+        l3Config.setSuperSampling(Integer.parseInt(superSampling));
+        l3Config.setBbox(bBox);
+        l3Config.setMaskExpr(maskExpr);
+        l3Config.setVariables(variables);
+        l3Config.setAggregators(aggregators);
+        return l3Config;
     }
 
     public Double getFillValue(ProductionRequest request) throws ProductionException {

@@ -29,8 +29,6 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-
-
     /**
      * Mapper implementation method. See class comment.
      *
@@ -42,28 +40,27 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
      */
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        BeamProductHandler.init();
+        BeamUtils.initGpf();
         try {
             final FileSplit split = (FileSplit) context.getInputSplit();
             final Path input = split.getPath();
 
             // parse request
             Configuration configuration = context.getConfiguration();
-            ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
 
-            final String operatorName = processingConfiguration.getLevel2OperatorName();
-            final String requestOutputPath = processingConfiguration.getOutputPath();
+            final String operatorName = configuration.get(ProcessingConfiguration.CALVALUS_L2_OPERATOR);
+            final String level2Parameters = configuration.get(ProcessingConfiguration.CALVALUS_L2_PARAMETER);
+            final String requestOutputPath = configuration.get(ProcessingConfiguration.CALVALUS_OUTPUT);
 
             // transform request into parameter objects
-            Map<String, Object> parameters = processingConfiguration.getLevel2ParameterMap();
+            Map<String, Object> parameters = BeamUtils.getLevel2ParameterMap(operatorName, level2Parameters);
 
             // write initial log entry for runtime measurements
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
             final long startTime = System.nanoTime();
 
             // set up input reader
-            BeamProductHandler beamProductHandler = new BeamProductHandler();
-            final Product sourceProduct = beamProductHandler.readProduct(input, configuration);
+            final Product sourceProduct = BeamUtils.readProduct(input, configuration);
 
             // set up operator and target product
             final Product targetProduct = GPF.createProduct(operatorName, parameters, sourceProduct);
@@ -72,7 +69,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             // process input and write target product
             final String outputFileName = "L2_of_" + input.getName() + ".seq";
             final Path outputProductPath = new Path(requestOutputPath, outputFileName);
-            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, beamProductHandler.getTileHeight());
+            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, BeamUtils.getTileHeight(configuration));
 
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();

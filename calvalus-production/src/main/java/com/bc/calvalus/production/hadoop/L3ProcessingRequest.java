@@ -29,16 +29,7 @@ public class L3ProcessingRequest extends ProcessingRequest {
     }
 
     public L3Config getBeamL3Config() {
-        L3Config l3Config = new L3Config();
-        l3Config.setNumRows(getNumRows());
-        String superSampling = getProcessingParameter("superSampling");
-        l3Config.setSuperSampling(Integer.parseInt(superSampling));
-        l3Config.setBbox(getBBox());
-        String maskExpr = getProcessingParameter("maskExpr");
-        l3Config.setMaskExpr(maskExpr);
-        l3Config.setVariables(getVariables());
-        l3Config.setAggregators(getAggregators());
-        return l3Config;
+        return getProcessingParameter("level3Parameters");
     }
 
     public L3FormatterConfig getFormatterL3Config(String stagingPath) {

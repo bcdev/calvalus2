@@ -33,30 +33,19 @@ import org.apache.hadoop.mapreduce.JobID;
 */
 class L3WorkflowItem extends HadoopWorkflowItem {
 
-    private final String productionId;
-    private final String productionName;
-    private final WpsXmlGenerator wpsXmlGenerator;
     private final L3ProcessingRequest processingRequest;
 
-    public L3WorkflowItem(HadoopProcessingService processingService,
-                          WpsXmlGenerator wpsXmlGenerator,
-                          String productionId,
-                          String productionName,
-                          L3ProcessingRequest processingRequest) {
+    public L3WorkflowItem(HadoopProcessingService processingService, L3ProcessingRequest processingRequest) {
         super(processingService);
-        this.wpsXmlGenerator = wpsXmlGenerator;
-        this.productionId = productionId;
-        this.productionName = productionName;
         this.processingRequest = processingRequest;
     }
 
     @Override
     public void submit() throws WorkflowException {
         try {
-            String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, processingRequest);
-            JobClient jobClient = getProcessingService().getJobClient();
-            BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
-            JobID jobId = beamOpProcessingType.submitJob(wpsXml);
+            final JobClient jobClient = getProcessingService().getJobClient();
+            final BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
+            JobID jobId = beamOpProcessingType.submitJob(processingRequest.getProcessingParameters());
             setJobId(jobId);
         } catch (Exception e) {
             throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);

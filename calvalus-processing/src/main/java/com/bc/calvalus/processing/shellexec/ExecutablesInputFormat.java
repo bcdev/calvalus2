@@ -41,7 +41,7 @@ public class ExecutablesInputFormat extends InputFormat {
         try {
             // parse request
             Configuration configuration = job.getConfiguration();
-            String[] requestInputPaths = new ProcessingConfiguration(configuration).getInputPath();
+            String[] requestInputPaths = configuration.get(ProcessingConfiguration.CALVALUS_INPUT).split(",");
 
             // create splits for each calvalus.input in request
             List<FileSplit> splits = new ArrayList<FileSplit>(requestInputPaths.length);
