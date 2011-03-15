@@ -95,7 +95,7 @@ public class GsProduction implements IsSerializable {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", downloadPath=" + downloadPath +
-                ", productionStatus=" + processingStatus +
+                ", processingStatus=" + processingStatus +
                 ", stagingStatus=" + stagingStatus +
                 '}';
     }

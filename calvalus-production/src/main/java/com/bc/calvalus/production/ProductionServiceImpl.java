@@ -100,6 +100,7 @@ public class ProductionServiceImpl implements ProductionService {
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
             Production production = productionType.createProduction(productionRequest);
+            production.getWorkflow().submit();
             productionStore.addProduction(production);
             return new ProductionResponse(production);
         }

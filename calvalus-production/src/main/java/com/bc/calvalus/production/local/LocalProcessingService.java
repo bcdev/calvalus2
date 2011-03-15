@@ -144,6 +144,7 @@ class LocalProcessingService implements ProcessingService<String> {
             } else {
                 this.progress = progress;
             }
+            // System.out.println("progress = " + progress);
         }
 
     }

@@ -143,7 +143,6 @@ public class BeamOpProcessingType {
 
                 job2.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-
                 org.apache.hadoop.mapred.jobcontrol.Job jc1 = new org.apache.hadoop.mapred.jobcontrol.Job((JobConf) job.getConfiguration());
                 ArrayList<org.apache.hadoop.mapred.jobcontrol.Job> dependingJobs = new ArrayList<org.apache.hadoop.mapred.jobcontrol.Job>();
                 dependingJobs.add(jc1);
