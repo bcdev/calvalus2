@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobIdFormat;
 import org.junit.Test;
 

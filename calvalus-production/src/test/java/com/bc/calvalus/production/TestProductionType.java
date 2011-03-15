@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;

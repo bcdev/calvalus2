@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.AbstractWorkflowItem;
 import org.junit.Ignore;
 
 /**

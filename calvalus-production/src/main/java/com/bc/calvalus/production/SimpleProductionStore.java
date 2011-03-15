@@ -1,7 +1,9 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobIdFormat;
 
 import java.io.BufferedReader;
@@ -254,6 +256,7 @@ public class SimpleProductionStore implements ProductionStore {
         public void updateStatus() {
         }
 
+        @Deprecated
         @Override
         public Object[] getJobIds() {
             return jobIds;

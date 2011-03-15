@@ -1,5 +1,6 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.commons;
 
+import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Ignore;
@@ -38,7 +39,7 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
     }
 
     @Override
-    public void kill() throws ProductionException {
+    public void kill() throws Exception {
     }
 
     @Override

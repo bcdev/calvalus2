@@ -6,7 +6,7 @@ import com.bc.calvalus.processing.beam.L3FormatterConfig;
 import java.io.File;
 import java.util.Map;
 
-class L3ProcessingRequest extends ProcessingRequest {
+public class L3ProcessingRequest extends ProcessingRequest {
 
     public L3ProcessingRequest(Map<String, Object> processingParameters) {
         super(processingParameters);

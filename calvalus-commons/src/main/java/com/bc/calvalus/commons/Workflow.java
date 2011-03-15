@@ -1,7 +1,4 @@
-package com.bc.calvalus.production;
-
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
+package com.bc.calvalus.commons;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +11,7 @@ import java.util.List;
  * @author Norman
  */
 public abstract class Workflow extends AbstractWorkflowItem implements WorkflowItem.StateChangeListener {
-    final List<WorkflowItem> itemList;
+    protected final List<WorkflowItem> itemList;
 
     protected Workflow(WorkflowItem... items) {
         super();
@@ -30,7 +27,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
     }
 
     @Override
-    public void kill() throws ProductionException {
+    public void kill() throws Exception {
         for (WorkflowItem item : itemList) {
             if (!item.getStatus().isDone()) {
                 item.kill();
@@ -61,6 +58,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
     }
 
     @Override
+    @Deprecated
     public Object[] getJobIds() {
         ArrayList<Object> list = new ArrayList<Object>();
         for (WorkflowItem item : itemList) {
@@ -84,7 +82,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
          * Submits the first item. Subsequent items are submitted after their predecessors have successfully completed.
          */
         @Override
-        public void submit() throws ProductionException {
+        public void submit() throws Exception {
             submitNext();
         }
 
@@ -103,7 +101,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
                 currentItemIndex++;
                 try {
                     itemList.get(currentItemIndex).submit();
-                } catch (ProductionException e) {
+                } catch (Exception e) {
                     itemList.get(currentItemIndex).setStatus(new ProcessStatus(ProcessState.ERROR, 0.0F, e.getMessage()));
                 }
             }
@@ -123,7 +121,7 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowI
          * Submits all contained items at once.
          */
         @Override
-        public void submit() throws ProductionException {
+        public void submit() throws Exception {
             for (WorkflowItem item : itemList) {
                 item.submit();
             }

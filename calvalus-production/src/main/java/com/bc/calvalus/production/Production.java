@@ -2,6 +2,7 @@ package com.bc.calvalus.production;
 
 
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

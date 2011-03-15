@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static java.lang.Math.*;
 
-class L3ProcessingRequestFactory extends ProcessingRequestFactory {
+public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
     L3ProcessingRequestFactory(ProcessingService processingService) {
         super(processingService);

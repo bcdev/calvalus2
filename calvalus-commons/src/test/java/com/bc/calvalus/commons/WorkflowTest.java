@@ -1,8 +1,6 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.commons;
 
 
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

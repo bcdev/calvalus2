@@ -1,7 +1,4 @@
-package com.bc.calvalus.production;
-
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
+package com.bc.calvalus.commons;
 
 import java.util.ArrayList;
 import java.util.List;

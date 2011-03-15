@@ -2,15 +2,13 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.processing.beam.BeamOpProcessingType;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.production.AbstractWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.production.Workflow;
+import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.fs.FileStatus;
@@ -18,13 +16,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapreduce.JobID;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -58,57 +54,17 @@ public class L2ProductionType implements ProductionType {
                                                                                                    userName,
                                                                                                    productionRequest);
 
-        // todo - WORKFLOW {{{
-        Workflow.Parallel parallel = new Workflow.Parallel();
+        Workflow.Parallel workflow = new Workflow.Parallel();
         for (ProcessingRequest processingRequest : processingRequests) {
-            final Map<String, Object> processingParameters = processingRequest.getProcessingParameters();
-            parallel.add(new AbstractWorkflowItem() {
-                JobID jobId;
-
-                @Override
-                public void submit() throws ProductionException {
-                    try {
-                        final JobClient jobClient = processingService.getJobClient();
-                        final BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
-                        jobId = beamOpProcessingType.submitJob(processingParameters);
-                    } catch (Exception e) {
-                        throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
-                    }
-                }
-
-                @Override
-                public void kill() throws ProductionException {
-                    try {
-                        processingService.killJob(jobId);
-                    } catch (IOException e) {
-                        throw new ProductionException("Failed to kill Hadoop job: " + e.getMessage(), e);
-                    }
-                }
-
-                @Override
-                public void updateStatus() {
-                    if (jobId != null) {
-                        ProcessStatus jobStatus = processingService.getJobStatus(jobId);
-                        if (jobStatus != null) {
-                            setStatus(jobStatus);
-                        }
-                    }
-                }
-
-                @Override
-                public Object[] getJobIds() {
-                    return jobId != null ? new Object[]{jobId} : new Object[0];
-                }
-            });
+            workflow.add(new L2WorkflowItem(processingService, processingRequest));
         }
-        // todo - }}} WORKFLOW
 
         return new Production(productionId,
                               productionName,
                               userName,
                               userName + "/" + productionId,
                               productionRequest,
-                              parallel);
+                              workflow);
     }
 
     @Override

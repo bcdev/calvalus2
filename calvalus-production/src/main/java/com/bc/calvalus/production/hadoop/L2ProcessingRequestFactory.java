@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class L2ProcessingRequestFactory extends ProcessingRequestFactory {
+class L2ProcessingRequestFactory extends ProcessingRequestFactory {
 
     L2ProcessingRequestFactory(ProcessingService processingService) {
         super(processingService);
