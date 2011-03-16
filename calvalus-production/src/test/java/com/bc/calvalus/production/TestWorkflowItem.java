@@ -49,6 +49,6 @@ public class TestWorkflowItem<T> extends AbstractWorkflowItem {
 
     @Override
     public Object[] getJobIds() {
-        return new Object[]{jobId};
+        return new Object[]{getJobId()};
     }
 }

@@ -21,7 +21,6 @@ import java.util.List;
 
 /**
  * Base class for workflow item implementations.
- * Clients only must implement {@link #submit()}.
  *
  * @author Norman
  */

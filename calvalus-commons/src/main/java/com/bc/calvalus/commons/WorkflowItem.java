@@ -25,16 +25,16 @@ package com.bc.calvalus.commons;
  */
 public interface WorkflowItem {
     /**
-     * Submits this work item's job to the underlying job engine.
+     * Submits this work item's job to the underlying job engine so that a new process is spawn.
      * Usually, implementations of this method should return immediately after the job has been submitted.
-     * In rare cases the method blocks, e.g. until the job has completed.
+     * In rare cases the method blocks, e.g. until the associated process has terminated.
      *
      * @throws WorkflowException If the submission fails.
      */
     void submit() throws WorkflowException;
 
     /**
-     * Kills this work item's job in the underlying job engine.
+     * Kills this work item's process in the underlying job engine.
      * Usually, implementations of this method should return immediately after the kill request has been submitted.
      * In rare cases the method blocks, e.g. until the job has been terminated.
      *
@@ -43,22 +43,24 @@ public interface WorkflowItem {
     void kill() throws WorkflowException;
 
     /**
-     * Asks this workflow item to update its job status from the underlying job engine.
+     * Asks this workflow item to update its process status from the underlying job engine.
      */
     void updateStatus();
 
     /**
-     * @return The current workflow status.
+     * @return The current workflow item's process status.
      */
     ProcessStatus getStatus();
 
     /**
-     * @param status The new workflow status.
+     * @param status The new workflow item's process status.
      */
     void setStatus(ProcessStatus status);
 
     /**
      * Adds a new state change listener to the workflow.
+     * The listener is called each time the state of this workflow item's
+     * process state changes.
      *
      * @param listener The new state change listener.
      */
@@ -78,9 +80,9 @@ public interface WorkflowItem {
      */
     public interface StateChangeListener {
         /**
-         * Called if the state of a workflow item has changed.
+         * Called if the state of a workflow item's process has changed.
          *
-         * @param item The workflow item whose state has changed.
+         * @param item The workflow item whose process state has changed.
          */
         void handleStateChanged(WorkflowItem item);
     }
