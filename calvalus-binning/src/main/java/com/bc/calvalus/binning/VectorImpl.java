@@ -3,6 +3,9 @@ package com.bc.calvalus.binning;
 import java.util.Arrays;
 
 /**
+ * The {@code VectorImpl} class is a light-weight implementation of
+ * the {@link WritableVector} interface. It operates on an array of {@code float}
+ * elements. The array object is used by reference and is passed into the constructor.
  * The class is final for allowing method in-lining.
  *
  * @author Norman Fomferra
