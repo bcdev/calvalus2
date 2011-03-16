@@ -48,7 +48,7 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public void updateJobStatuses() throws IOException {
+    public void updateStatuses() throws IOException {
         Set<Map.Entry<String, Job>> entries = jobs.entrySet();
         synchronized (jobStatuses) {
             for (Map.Entry<String, Job> entry : entries) {

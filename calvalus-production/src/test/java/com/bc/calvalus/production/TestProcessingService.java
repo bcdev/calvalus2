@@ -45,7 +45,7 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public void updateJobStatuses() throws IOException {
+    public void updateStatuses() throws IOException {
     }
 
     @Override

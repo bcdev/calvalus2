@@ -66,4 +66,10 @@ public interface ProductionService {
      * @throws ProductionException If a service error occurred.
      */
     void stageProductions(String ... productionIds) throws ProductionException;
+
+    // todo - actually the service shall update itself on a regular basis
+    /**
+     * A request to retrieve and update the status of all workflows.
+     */
+    void updateStatuses();
 }

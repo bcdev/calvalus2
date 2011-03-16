@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +22,12 @@ import java.util.logging.Logger;
  * (context.xml or web.xml)
  */
 public class ProductionServiceImpl implements ProductionService {
+
+    public static enum Action {
+        CANCEL,
+        DELETE,
+        RESTART,// todo - implement restart
+    }
 
     private final ProcessingService processingService;
     private final StagingService stagingService;
@@ -50,16 +55,6 @@ public class ProductionServiceImpl implements ProductionService {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
-    }
-
-    public void startStatusObserver(int period) {
-        statusObserver = new Timer("StatusObserver", true);
-        statusObserver.scheduleAtFixedRate(new ProductionUpdater(), period, period);
-    }
-
-    public void stopStatusObserver() {
-        statusObserver.cancel();
-        statusObserver = null;
     }
 
     @Override
@@ -129,12 +124,12 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public  void cancelProductions(String... productionIds) throws ProductionException {
+    public void cancelProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.CANCEL);
     }
 
     @Override
-    public  void deleteProductions(String... productionIds) throws ProductionException {
+    public void deleteProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.DELETE);
     }
 
@@ -151,8 +146,7 @@ public class ProductionServiceImpl implements ProductionService {
                     staging.cancel();
                 }
 
-                if (production.getProcessingStatus().isDone()
-                        || production.getProcessingStatus().equals(ProcessStatus.UNKNOWN)) {
+                if (production.getProcessingStatus().isDone()) {
                     if (action == Action.DELETE) {
                         removeProduction(production);
                     }
@@ -183,8 +177,14 @@ public class ProductionServiceImpl implements ProductionService {
         productionStagingsMap.put(production.getId(), staging);
     }
 
-    public void updateProductions() throws IOException, ProductionException {
-        processingService.updateJobStatuses();
+    @Override
+    public void updateStatuses() {
+        try {
+            processingService.updateStatuses();
+        } catch (IOException e) {
+            logger.warning("Failed to update job statuses: " + e.getMessage());
+        }
+
         // Update state of all registered productions
         Production[] productions = productionStore.getProductions();
         for (Production production : productions) {
@@ -207,12 +207,20 @@ public class ProductionServiceImpl implements ProductionService {
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
                     && production.getStagingStatus().getState() == ProcessState.UNKNOWN
                     && productionStagingsMap.get(production.getId()) == null) {
-                stageProductionResults(production);
+                try {
+                    stageProductionResults(production);
+                } catch (ProductionException e) {
+                    logger.warning("Failed to stage production: " + e.getMessage());
+                }
             }
         }
 
         // write to persistent storage
-        productionStore.store();
+        try {
+            productionStore.store();
+        } catch (IOException e) {
+            logger.warning("Failed to persist productions: " + e.getMessage());
+        }
     }
 
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {
@@ -242,31 +250,5 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    public static enum Action {
-        CANCEL,
-        DELETE,
-        RESTART,// todo - implement restart
-    }
 
-    private class ProductionUpdater extends TimerTask {
-        private long lastLog;
-
-        @Override
-        public void run() {
-            try {
-                updateProductions();
-            } catch (Exception e) {
-                logError(e);
-            }
-        }
-
-        private void logError(Exception e) {
-            long time = System.currentTimeMillis();
-            // only log errors every 2 minutes
-            if (time - lastLog > 120 * 1000L) {
-                logger.log(Level.SEVERE, "Failed to update production state:" + e.getMessage(), e);
-                lastLog = time;
-            }
-        }
-    }
 }

@@ -58,8 +58,8 @@
             java.lang.NoClassDefFoundError: com/google/gwt/core/ext/GeneratorExt
             -->
             <!--<scope>test</scope>-->
-            <scope>compile</scope>
-            <!--<scope>provided</scope>-->
+            <!--<scope>compile</scope>-->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.bc.calvalus</groupId>

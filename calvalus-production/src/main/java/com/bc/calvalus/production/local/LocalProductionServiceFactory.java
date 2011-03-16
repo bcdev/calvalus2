@@ -80,7 +80,6 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                                     "autoStaging", "false"));
         }
 
-        productionService.startStatusObserver(2000);
         return productionService;
 
     }

@@ -104,7 +104,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.RUNNING, 0.8f));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f), productions[0].getProcessingStatus());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), productions[1].getProcessingStatus());
@@ -133,7 +133,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -143,7 +143,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.COMPLETED));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -178,7 +178,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         Production[] productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -191,7 +191,7 @@ public class ProductionServiceImplTest {
         productionServiceUnderTest.cancelProductions("id_1", "id_2", "id_4");
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -232,7 +232,7 @@ public class ProductionServiceImplTest {
         assertTrue(stagingServiceMock.getStagings().isEmpty());
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         assertEquals(2, stagingServiceMock.getStagings().size());
 

@@ -20,9 +20,13 @@ public interface ProcessingService<JOBID> {
 
     String[] listFilePaths(String dirPath) throws IOException;
 
-    void updateJobStatuses() throws IOException;
-
     ProcessStatus getJobStatus(JOBID jobid);
 
     boolean killJob(JOBID jobId) throws IOException;
+
+    // todo - actually the service shall update itself on a regular basis
+    /**
+     * A request to retrieve and update the status of all processes.
+     */
+    void updateStatuses() throws IOException;
 }

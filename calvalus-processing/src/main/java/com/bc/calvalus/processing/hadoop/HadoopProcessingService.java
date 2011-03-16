@@ -64,7 +64,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public void updateJobStatuses() throws IOException {
+    public void updateStatuses() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
         synchronized (jobStatusMap) {
             jobStatusMap.clear();
