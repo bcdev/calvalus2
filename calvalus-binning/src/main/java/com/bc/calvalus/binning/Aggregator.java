@@ -28,16 +28,16 @@ public interface Aggregator {
     double getOutputPropertyFillValue(int i);
 
     /**
-     * Initialises the spatial aggregation.
+     * Initialises the spatial aggregation vector.
      *
-     * @param vector The aggregation to initialise.
+     * @param vector The aggregation vector to initialise.
      */
     void initSpatial(WritableVector vector);
 
     /**
-     * Initialises the spatial aggregation.
+     * Initialises the temporal aggregation vector.
      *
-     * @param vector The aggregation to initialise.
+     * @param vector The aggregation vector to initialise.
      */
     void initTemporal(WritableVector vector);
 
