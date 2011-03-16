@@ -13,4 +13,5 @@ public interface WritableVector extends Vector {
      * @param element The new {@code float} element.
      */
     void set(int index, float element);
+
 }

@@ -97,4 +97,12 @@ public class SpatialBinTest {
         assertEquals(2.235039f, agg3Copy.get(0), 1e-5f);
         assertEquals(3.240475f, agg3Copy.get(1), 1e-5f);
     }
+
+    @Test
+    public void testBinContext() {
+        BinContext ctx = new SpatialBin(0, 0);
+        assertEquals(null, ctx.get("a"));
+        ctx.put("a", 42);
+        assertEquals(42, ctx.get("a"));
+    }
 }

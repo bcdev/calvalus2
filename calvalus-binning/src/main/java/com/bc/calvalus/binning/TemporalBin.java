@@ -1,7 +1,5 @@
 package com.bc.calvalus.binning;
 
-import org.apache.hadoop.io.Writable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -14,39 +12,16 @@ import java.util.Arrays;
  *
  * @author Norman Fomferra
  */
-public final class TemporalBin implements Writable {
+public final class TemporalBin extends Bin {
 
-    long index;
-    int numObs;
     int numPasses;
-    float[] properties;
 
     public TemporalBin() {
-        this.index = -1;
+        super();
     }
 
     public TemporalBin(long index, int numProperties) {
-        if (numProperties < 0) {
-            throw new IllegalArgumentException("numProperties < 0");
-        }
-        this.index = index;
-        this.properties = new float[numProperties];
-    }
-
-    public long getIndex() {
-        return index;
-    }
-
-    public void setIndex(long index) {
-        this.index = index;
-    }
-
-    public int getNumObs() {
-        return numObs;
-    }
-
-    public void setNumObs(int numObs) {
-        this.numObs = numObs;
+        super(index, numProperties);
     }
 
     public int getNumPasses() {
@@ -55,14 +30,6 @@ public final class TemporalBin implements Writable {
 
     public void setNumPasses(int numPasses) {
         this.numPasses = numPasses;
-    }
-
-    public int getPropertyCount() {
-        return properties.length;
-    }
-
-    public float[] getProperties() {
-        return properties;
     }
 
     @Override
@@ -95,9 +62,9 @@ public final class TemporalBin implements Writable {
     }
 
     @Override
-     public String toString() {
-         return String.format("%s{index=%d, numObs=%d, numPasses=%d, properties=%s}",
-                              getClass().getSimpleName(), index, numObs, numPasses, Arrays.toString(properties));
-     }
+    public String toString() {
+        return String.format("%s{index=%d, numObs=%d, numPasses=%d, properties=%s}",
+                             getClass().getSimpleName(), index, numObs, numPasses, Arrays.toString(properties));
+    }
 
 }

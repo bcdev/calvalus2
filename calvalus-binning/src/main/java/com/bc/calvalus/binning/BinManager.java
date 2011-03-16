@@ -34,6 +34,8 @@ public interface BinManager {
 
     void aggregateTemporalBin(SpatialBin sBin, TemporalBin tBin);
 
+    void completeTemporalBin(TemporalBin tBin);
+
     void computeOutput(TemporalBin temporalBin, WritableVector outputVector);
 
 }

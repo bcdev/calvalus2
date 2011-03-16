@@ -2,11 +2,18 @@ package com.bc.calvalus.binning;
 
 import org.junit.Test;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+
 import static java.lang.Float.*;
 import static java.lang.Math.*;
 import static org.junit.Assert.*;
 
 public class AggregatorTest {
+
+     BinContext ctx = createCtx();
 
     @Test
     public void testWeightFN() {
@@ -64,32 +71,32 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN);
 
-        agg.initSpatial(svec);
+        agg.initSpatial(ctx, svec);
         assertEquals(0.0f, svec.get(0), 0.0f);
         assertEquals(0.0f, svec.get(1), 0.0f);
 
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
         float sumX = 1.5f + 2.5f + 0.5f;
         float sumXX = 1.5f * 1.5f + 2.5f * 2.5f + 0.5f * 0.5f;
         assertEquals(sumX, svec.get(0), 1e-5f);
         assertEquals(sumXX, svec.get(1), 1e-5f);
 
         int numObs = 3;
-        agg.completeSpatial(numObs, svec);
+        agg.completeSpatial(ctx, numObs, svec);
         assertEquals(sumX / numObs, svec.get(0), 1e-5f);
         assertEquals(sumXX / numObs, svec.get(1), 1e-5f);
 
-        agg.initTemporal(tvec);
+        agg.initTemporal(ctx, tvec);
         assertEquals(0.0f, tvec.get(0), 0.0f);
         assertEquals(0.0f, tvec.get(1), 0.0f);
         assertEquals(0.0f, tvec.get(2), 0.0f);
 
-        agg.aggregateTemporal(vec(0.3f, 0.09f), 3, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 2, tvec);
-        agg.aggregateTemporal(vec(0.2f, 0.04f), 1, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 7, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f, 0.09f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 2, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f, 0.04f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 7, tvec);
         assertEquals(0.3f + 0.1f + 0.2f + 0.1f, tvec.get(0), 1e-5f);
         assertEquals(0.09f + 0.01f + 0.04f + 0.01f, tvec.get(1), 1e-5f);
         assertEquals(4f, tvec.get(2), 1e-5f);
@@ -124,32 +131,32 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN);
 
-        agg.initSpatial(svec);
+        agg.initSpatial(ctx, svec);
         assertEquals(0.0f, svec.get(0), 0.0f);
         assertEquals(0.0f, svec.get(1), 0.0f);
 
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
         float sumX = 1.5f + 2.5f + 0.5f;
         float sumXX = 1.5f * 1.5f + 2.5f * 2.5f + 0.5f * 0.5f;
         assertEquals(sumX, svec.get(0), 1e-5f);
         assertEquals(sumXX, svec.get(1), 1e-5f);
 
         int numObs = 3;
-        agg.completeSpatial(numObs, svec);
+        agg.completeSpatial(ctx, numObs, svec);
         assertEquals(sumX / numObs, svec.get(0), 1e-5f);
         assertEquals(sumXX / numObs, svec.get(1), 1e-5f);
 
-        agg.initTemporal(tvec);
+        agg.initTemporal(ctx, tvec);
         assertEquals(0.0f, tvec.get(0), 0.0f);
         assertEquals(0.0f, tvec.get(1), 0.0f);
         assertEquals(0.0f, tvec.get(2), 0.0f);
 
-        agg.aggregateTemporal(vec(0.3f, 0.09f), 3, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 2, tvec);
-        agg.aggregateTemporal(vec(0.2f, 0.04f), 1, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 7, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f, 0.09f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 2, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f, 0.04f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 7, tvec);
         assertEquals(3 * 0.3f + 2 * 0.1f + 1 * 0.2f + 7 * 0.1f, tvec.get(0), 1e-5f);
         assertEquals(3 *0.09f + 2 * 0.01f + 1 *0.04f + 7 * 0.01f, tvec.get(1), 1e-5f);
         assertEquals(3f + 2f + 1f + 7f, tvec.get(2), 1e-5f);
@@ -168,18 +175,18 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN);
 
-        agg.initSpatial(svec);
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.initSpatial(ctx, svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
 
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
 
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
 
         float sumX = (1.5f + 2.5f + 0.5f) * 3;
         float sumXX = (1.5f * 1.5f + 2.5f * 2.5f + 0.5f * 0.5f) * 3;
@@ -187,7 +194,7 @@ public class AggregatorTest {
         assertEquals(sumXX, svec.get(1), 1e-5f);
 
         int numObs = 9;
-        agg.completeSpatial(numObs, svec);
+        agg.completeSpatial(ctx, numObs, svec);
         assertEquals(sumX / numObs, svec.get(0), 1e-5f);
         assertEquals(sumXX / numObs, svec.get(1), 1e-5f);
     }
@@ -217,29 +224,29 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN, NaN, NaN);
 
-        agg.initSpatial(svec);
+        agg.initSpatial(ctx, svec);
         assertEquals(0.0f, svec.get(0), 0.0f);
         assertEquals(0.0f, svec.get(1), 0.0f);
 
-        agg.aggregateSpatial(vec(1.5f), svec);
-        agg.aggregateSpatial(vec(2.5f), svec);
-        agg.aggregateSpatial(vec(0.5f), svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
         assertEquals(log(1.5f) + log(2.5f) + log(0.5f), svec.get(0), 1e-5);
         assertEquals(log(1.5f) * log(1.5f) + log(2.5f) * log(2.5f) + log(0.5f) * log(0.5f), svec.get(1), 1e-5f);
 
-        agg.completeSpatial(3, svec);
+        agg.completeSpatial(ctx, 3, svec);
         assertEquals((log(1.5f) + log(2.5f) + log(0.5f)) / sqrt(3f), svec.get(0), 1e-5f);
         assertEquals((log(1.5f) * log(1.5f) + log(2.5f) * log(2.5f) + log(0.5f) * log(0.5f)) / sqrt(3f), svec.get(1), 1e-5f);
 
-        agg.initTemporal(tvec);
+        agg.initTemporal(ctx, tvec);
         assertEquals(0.0f, tvec.get(0), 0.0f);
         assertEquals(0.0f, tvec.get(1), 0.0f);
         assertEquals(0.0f, tvec.get(2), 0.0f);
 
-        agg.aggregateTemporal(vec(0.3f, 0.09f), 3, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 2, tvec);
-        agg.aggregateTemporal(vec(0.2f, 0.04f), 1, tvec);
-        agg.aggregateTemporal(vec(0.1f, 0.01f), 7, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f, 0.09f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 2, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f, 0.04f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 7, tvec);
         assertEquals(0.3f + 0.1f + 0.2f + 0.1f, tvec.get(0), 1e-5);
         assertEquals(0.09f + 0.01f + 0.04f + 0.01f, tvec.get(1), 1e-5);
         assertEquals(sqrt(3f) + sqrt(2f) + sqrt(1f) + sqrt(7f), tvec.get(2), 1e-5);
@@ -256,6 +263,60 @@ public class AggregatorTest {
         assertEquals(median, out.get(2), 1e-5f);
         assertEquals(mode, out.get(3), 1e-5f);
          */
+    }
+
+    @Test
+    public void testAggregatorPercentile() {
+        Aggregator agg = new AggregatorPercentile(new MyVariableContext("c"), "c", 70, null);
+
+        assertEquals("PERCENTILE", agg.getName());
+
+        assertEquals(1, agg.getSpatialPropertyCount());
+        assertEquals("c_sum_x", agg.getSpatialPropertyName(0));
+
+        assertEquals(1, agg.getTemporalPropertyCount());
+        assertEquals("c_P70", agg.getTemporalPropertyName(0));
+
+        assertEquals(1, agg.getOutputPropertyCount());
+        assertEquals("c_P70", agg.getOutputPropertyName(0));
+
+        VectorImpl svec = vec(NaN);
+        VectorImpl tvec = vec(NaN);
+        VectorImpl out = vec(NaN);
+
+        agg.initSpatial(ctx, svec);
+        assertEquals(0.0f, svec.get(0), 0.0f);
+
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
+        float sumX = 1.5f + 2.5f + 0.5f;
+        assertEquals(sumX, svec.get(0), 1e-5f);
+
+        int numObs = 3;
+        agg.completeSpatial(ctx, numObs, svec);
+        assertEquals(sumX / numObs, svec.get(0), 1e-5f);
+
+        agg.initTemporal(ctx, tvec);
+        assertEquals(0.0f, tvec.get(0), 0.0f);
+
+        agg.aggregateTemporal(ctx, vec(0.1f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.4f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.4f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.5f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.5f), 1, tvec);
+        assertEquals(0.0f, tvec.get(0), 1e-5f);
+
+        agg.completeTemporal(ctx, 10, tvec);
+        assertEquals(0.47f, tvec.get(0), 1e-5f);
+
+        agg.computeOutput(tvec, out);
+        assertEquals(0.47f, out.get(0), 1e-5f);
     }
 
     @Test
@@ -280,29 +341,29 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN);
         VectorImpl out = vec(NaN, NaN);
 
-        agg.initSpatial(svec);
+        agg.initSpatial(ctx, svec);
         assertEquals(Float.POSITIVE_INFINITY, svec.get(0), 0.0f);
         assertEquals(Float.NEGATIVE_INFINITY, svec.get(1), 0.0f);
 
-        agg.aggregateSpatial(vec(7.3f), svec);
-        agg.aggregateSpatial(vec(5.5f), svec);
-        agg.aggregateSpatial(vec(-0.1f), svec);
-        agg.aggregateSpatial(vec(2.0f), svec);
+        agg.aggregateSpatial(ctx, vec(7.3f), svec);
+        agg.aggregateSpatial(ctx, vec(5.5f), svec);
+        agg.aggregateSpatial(ctx, vec(-0.1f), svec);
+        agg.aggregateSpatial(ctx, vec(2.0f), svec);
         assertEquals(-0.1f, svec.get(0), 1e-5f);
         assertEquals(7.3f, svec.get(1), 1e-5f);
 
-        agg.completeSpatial(3, svec);
+        agg.completeSpatial(ctx, 3, svec);
         assertEquals(-0.1f, svec.get(0), 1e-5f);
         assertEquals(7.3f, svec.get(1), 1e-5f);
 
-        agg.initTemporal(tvec);
+        agg.initTemporal(ctx, tvec);
         assertEquals(Float.POSITIVE_INFINITY, tvec.get(0), 0.0f);
         assertEquals(Float.NEGATIVE_INFINITY, tvec.get(1), 0.0f);
 
-        agg.aggregateTemporal(vec(0.9f, 1.0f), 3, tvec);
-        agg.aggregateTemporal(vec(0.1f, 5.1f), 5, tvec);
-        agg.aggregateTemporal(vec(0.6f, 2.0f), 9, tvec);
-        agg.aggregateTemporal(vec(0.2f, 1.5f), 2, tvec);
+        agg.aggregateTemporal(ctx, vec(0.9f, 1.0f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(0.1f, 5.1f), 5, tvec);
+        agg.aggregateTemporal(ctx, vec(0.6f, 2.0f), 9, tvec);
+        agg.aggregateTemporal(ctx, vec(0.2f, 1.5f), 2, tvec);
         assertEquals(0.1f, tvec.get(0), 1e-5f);
         assertEquals(5.1f, tvec.get(1), 1e-5f);
 
@@ -336,31 +397,31 @@ public class AggregatorTest {
         VectorImpl tvec = vec(NaN, NaN, NaN);
         VectorImpl out = vec(NaN, NaN, NaN);
 
-        agg.initSpatial(svec);
+        agg.initSpatial(ctx, svec);
         assertEquals(Float.NEGATIVE_INFINITY, svec.get(0), 0.0f);
         assertEquals(NaN, svec.get(1), 0.0f);
         assertEquals(NaN, svec.get(2), 0.0f);
 
-        agg.aggregateSpatial(vec(7.3f, 0.5f, 1.1f), svec);
-        agg.aggregateSpatial(vec(0.1f, 2.5f, 1.5f), svec);
-        agg.aggregateSpatial(vec(5.5f, 4.9f, 1.4f), svec);
+        agg.aggregateSpatial(ctx, vec(7.3f, 0.5f, 1.1f), svec);
+        agg.aggregateSpatial(ctx, vec(0.1f, 2.5f, 1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(5.5f, 4.9f, 1.4f), svec);
         assertEquals(1.5f, svec.get(0), 1e-5f);
         assertEquals(0.1f, svec.get(1), 1e-5f);
         assertEquals(2.5f, svec.get(2), 1e-5f);
 
-        agg.completeSpatial(3, svec);
+        agg.completeSpatial(ctx, 3, svec);
         assertEquals(1.5f, svec.get(0), 1e-5f);
         assertEquals(0.1f, svec.get(1), 1e-5f);
         assertEquals(2.5f, svec.get(2), 1e-5f);
 
-        agg.initTemporal(tvec);
+        agg.initTemporal(ctx, tvec);
         assertEquals(Float.NEGATIVE_INFINITY, tvec.get(0), 0.0f);
         assertEquals(NaN, tvec.get(1), 0.0f);
         assertEquals(NaN, tvec.get(2), 0.0f);
 
-        agg.aggregateTemporal(vec(0.3f, 0.2f, 9.7f), 3, tvec);
-        agg.aggregateTemporal(vec(1.1f, 0.1f, 0.3f), 3, tvec);
-        agg.aggregateTemporal(vec(4.7f, 0.6f, 7.1f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(0.3f, 0.2f, 9.7f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(1.1f, 0.1f, 0.3f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(4.7f, 0.6f, 7.1f), 3, tvec);
         assertEquals(4.7f, tvec.get(0), 1e-5f);
         assertEquals(0.6f, tvec.get(1), 1e-5f);
         assertEquals(7.1f, tvec.get(2), 1e-5f);
@@ -375,6 +436,19 @@ public class AggregatorTest {
         return new VectorImpl(values);
     }
 
+    static BinContext createCtx() {
+        return new BinContext() {
+            private  HashMap map = new HashMap();
 
+            @Override
+            public <T> T get(String name) {
+                return (T) map.get(name);
+            }
 
+            @Override
+            public void put(String name, Object value) {
+                map.put(name, value);
+            }
+        };
+    }
 }

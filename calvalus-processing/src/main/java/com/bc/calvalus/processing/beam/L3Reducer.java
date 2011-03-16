@@ -43,6 +43,7 @@ public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, T
         for (SpatialBin spatialBin : spatialBins) {
             binManager.aggregateTemporalBin(spatialBin, temporalBin);
         }
+        binManager.completeTemporalBin(temporalBin);
         context.write(binIndex, temporalBin);
     }
 
