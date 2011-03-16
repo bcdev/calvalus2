@@ -96,7 +96,7 @@ public class BeamOpProcessingType {
         configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, getString(parameters, "outputDir"));
         configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "processorName"));
         configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "processorParameters"));
-        Object level3Parameters = parameters.get("level3Parameters");
+        Object level3Parameters = parameters.get("binningParameters");
         if (level3Parameters instanceof L3Config) {
             L3Config l3Config = (L3Config) level3Parameters;
             String l3Params = BeamUtils.saveAsXml(l3Config);
