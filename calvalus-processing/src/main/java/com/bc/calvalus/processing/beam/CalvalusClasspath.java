@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.PathFilter;
 
 import java.io.IOException;
 
-public class BeamCalvalusClasspath {
+public class CalvalusClasspath {
 
     public static void configure(String processorPackage, Configuration configuration) throws IOException {
         // put processor onto the classpath

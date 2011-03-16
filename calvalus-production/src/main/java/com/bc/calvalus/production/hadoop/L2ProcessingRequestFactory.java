@@ -34,10 +34,10 @@ class L2ProcessingRequestFactory extends ProcessingRequestFactory {
     @Override
     public ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException {
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        productionRequest.ensureProductionParameterSet("l2ProcessorBundleName");
-        productionRequest.ensureProductionParameterSet("l2ProcessorBundleVersion");
-        productionRequest.ensureProductionParameterSet("l2ProcessorName");
-        productionRequest.ensureProductionParameterSet("l2ProcessorParameters");
+        productionRequest.ensureProductionParameterSet("processorBundleName");
+        productionRequest.ensureProductionParameterSet("processorBundleVersion");
+        productionRequest.ensureProductionParameterSet("processorName");
+        productionRequest.ensureProductionParameterSet("processorParameters");
         productionRequest.ensureProductionParameterSet("dateStart");
         productionRequest.ensureProductionParameterSet("dateStop");
 

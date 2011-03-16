@@ -48,10 +48,10 @@ public class L3ProcessingRequestTest {
         assertEquals(4320, processingParameters.get("numRows"));
         assertEquals("hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0", processingParameters.get("outputDir"));
         assertEquals("MER_RR__1P/r03/2010", processingParameters.get("inputProductSetId"));
-        assertEquals("beam", processingParameters.get("l2ProcessorBundleName"));
-        assertEquals("4.9-SNAPSHOT", processingParameters.get("l2ProcessorBundleVersion"));
-        assertEquals("BandMaths", processingParameters.get("l2ProcessorName"));
-        assertEquals("<!-- no params -->", processingParameters.get("l2ProcessorParameters"));
+        assertEquals("beam", processingParameters.get("processorBundleName"));
+        assertEquals("4.9-SNAPSHOT", processingParameters.get("processorBundleVersion"));
+        assertEquals("BandMaths", processingParameters.get("processorName"));
+        assertEquals("<!-- no params -->", processingParameters.get("processorParameters"));
         assertEquals("1", processingParameters.get("superSampling"));
         assertEquals("NOT INVALID", processingParameters.get("maskExpr"));
         assertNotNull(processingParameters.get("fillValue"));
@@ -89,10 +89,10 @@ public class L3ProcessingRequestTest {
                                      "inputProductSetId", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
-                                     "l2ProcessorBundleName", "beam",
-                                     "l2ProcessorBundleVersion", "4.9-SNAPSHOT",
-                                     "l2ProcessorName", "BandMaths",
-                                     "l2ProcessorParameters", "<!-- no params -->",
+                                     "processorBundleName", "beam",
+                                     "processorBundleVersion", "4.9-SNAPSHOT",
+                                     "processorName", "BandMaths",
+                                     "processorParameters", "<!-- no params -->",
                                      // Special Level 3 parameters
                                      "inputVariables", "a, b, c",
                                      "maskExpr", "NOT INVALID",

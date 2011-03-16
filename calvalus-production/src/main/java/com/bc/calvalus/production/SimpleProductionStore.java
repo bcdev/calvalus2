@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobIdFormat;
 
@@ -245,11 +246,11 @@ public class SimpleProductionStore implements ProductionStore {
         }
 
         @Override
-        public void submit() throws ProductionException {
+        public void submit() throws WorkflowException {
         }
 
         @Override
-        public void kill() throws ProductionException {
+        public void kill() throws WorkflowException {
         }
 
         @Override

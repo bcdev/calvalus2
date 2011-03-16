@@ -2,6 +2,7 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
@@ -72,16 +73,16 @@ public class TestProductionType implements ProductionType {
         }
 
         @Override
-        public void submit() throws ProductionException {
+        public void submit() throws WorkflowException {
             // processingService.setJobStatus(id, new ProcessStatus(ProcessState.SCHEDULED));
         }
 
         @Override
-        public void kill() throws ProductionException {
+        public void kill() throws WorkflowException {
             try {
                 processingService.killJob(getJobId());
             } catch (IOException e) {
-                throw new ProductionException(e);
+                throw new WorkflowException(e);
             }
         }
 

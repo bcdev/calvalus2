@@ -75,10 +75,10 @@ public class OrderL2ProductionView extends PortalView {
         parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
         parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
         parameters.put("autoStaging", inputOutputPanel.isAutoStaging() + "");
-        parameters.put("l2ProcessorBundleName", selectedProcessor.getBundleName());
-        parameters.put("l2ProcessorBundleVersion", processingPanel.getBundleVersion());
-        parameters.put("l2ProcessorName", selectedProcessor.getExecutableName());
-        parameters.put("l2ProcessorParameters", processingPanel.getProcessorParameters());
+        parameters.put("processorBundleName", selectedProcessor.getBundleName());
+        parameters.put("processorBundleVersion", processingPanel.getBundleVersion());
+        parameters.put("processorName", selectedProcessor.getExecutableName());
+        parameters.put("processorParameters", processingPanel.getProcessorParameters());
         parameters.putAll(productFilterPanel.getValueMap());
         return parameters;
     }

@@ -140,7 +140,7 @@ public class L3Config {
 
     public static L3Config create(String level3ParametersXml) {
         L3Config l3Config = new L3Config();
-        ProcessingConfiguration.loadFromXml(level3ParametersXml, l3Config);
+        BeamUtils.loadFromXml(level3ParametersXml, l3Config);
         return l3Config;
     }
 

@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.ceres.binding.dom.DomElement;
-import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
@@ -34,29 +33,27 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link ProcessingConfiguration}.
+ * Test for {@link BeamUtils}.
  */
-public class ProcessingConfigurationTest {
+public class BeamUtilsTest {
 
     @Before
     public void before() {
          GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 
-    private ProcessingConfiguration createFromResource(String name) throws IOException, SAXException, ParserConfigurationException {
+
+    private String readFromResource(String name) throws IOException, SAXException, ParserConfigurationException {
         InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(name));
-        String wpsXML = FileUtils.readText(inputStreamReader).trim();
-        WpsConfig wpsConfig = new WpsConfig(wpsXML);
-        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(new Configuration());
-        processingConfiguration.addWpsParameters(wpsConfig);
-        return processingConfiguration;
+        return FileUtils.readText(inputStreamReader).trim();
     }
 
     @Test
     public void convertSimpleRequestToParametersMap() throws Exception {
-        ProcessingConfiguration conf = createFromResource("radiometry-request.xml");
+        String level2OperatorName = "Meris.CorrectRadiometry";
+        String level2Parameters = readFromResource("radiometry.xml");
 
-        DomElement element = ProcessingConfiguration.createDomElement(conf.getLevel2Parameters());
+        DomElement element = BeamUtils.createDomElement(level2Parameters);
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());
@@ -67,7 +64,7 @@ public class ProcessingConfigurationTest {
         assertEquals("reproVersion", child2.getName());
         assertEquals("AUTO_DETECT", child2.getValue());
 
-        Map<String,Object> operatorParameters = conf.getLevel2ParameterMap();
+        Map<String,Object> operatorParameters = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 
@@ -85,10 +82,10 @@ public class ProcessingConfigurationTest {
 
     @Test
     public void convertComplexRequestToParametersMap() throws Exception {
-        ProcessingConfiguration conf = createFromResource("bandmaths-request.xml");
+        String level2OperatorName = "BandMaths";
+        String level2Parameters = readFromResource("bandmaths.xml");
 
-        // Check if we can extract parameters element
-        DomElement element = ProcessingConfiguration.createDomElement(conf.getLevel2Parameters());
+        DomElement element = BeamUtils.createDomElement(level2Parameters);
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());
@@ -123,7 +120,7 @@ public class ProcessingConfigurationTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String,Object> operatorParameters = conf.getLevel2ParameterMap();
+        Map<String,Object> operatorParameters = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 

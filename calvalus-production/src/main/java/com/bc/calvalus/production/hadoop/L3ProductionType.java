@@ -20,13 +20,11 @@ import java.io.IOException;
 public class L3ProductionType implements ProductionType {
     private final HadoopProcessingService processingService;
     private final StagingService stagingService;
-    private WpsXmlGenerator wpsXmlGenerator;
     private final L3ProcessingRequestFactory processingRequestFactory;
 
     L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         this.processingService = processingService;
         this.stagingService = stagingService;
-        wpsXmlGenerator = new WpsXmlGenerator();
         processingRequestFactory = new L3ProcessingRequestFactory(processingService);
     }
 
@@ -47,11 +45,7 @@ public class L3ProductionType implements ProductionType {
                                                                                                      productionRequest);
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (L3ProcessingRequest processingRequest : processingRequests) {
-            workflow.add(new L3WorkflowItem(processingService,
-                                            wpsXmlGenerator,
-                                            productionId,
-                                            productionName,
-                                            processingRequest));
+            workflow.add(new L3WorkflowItem(processingService, processingRequest));
         }
 
         return new Production(productionId,
@@ -87,7 +81,7 @@ public class L3ProductionType implements ProductionType {
     static String createL3ProductionName(ProductionRequest productionRequest) {
         return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getProductionParameter("inputProductSetId"),
-                             productionRequest.getProductionParameter("l2ProcessorName"));
+                             productionRequest.getProductionParameter("processorName"));
 
     }
 

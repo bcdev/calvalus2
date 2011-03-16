@@ -44,6 +44,7 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,10 +62,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        BeamProductHandler.init();
+        BeamUtils.initGpf();
         final Configuration configuration = context.getConfiguration();
-        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
-        L3Config l3Config = L3Config.create(processingConfiguration.getLevel3Parameters());
+        L3Config l3Config = L3Config.create(configuration.get(ProcessingConfiguration.CALVALUS_L3_PARAMETER));
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -77,10 +77,12 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         final Path inputPath = split.getPath();
-        BeamProductHandler beamProductHandler = new BeamProductHandler();
-        Product source = beamProductHandler.readProduct(inputPath, configuration);
+        Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        final Product product = l3Config.getPreProcessedProduct(source, processingConfiguration.getLevel2OperatorName(), processingConfiguration.getLevel2ParameterMap());
+        String level2OperatorName = configuration.get(ProcessingConfiguration.CALVALUS_L2_OPERATOR);
+        String level2Parameters = configuration.get(ProcessingConfiguration.CALVALUS_L2_PARAMETER);
+        Map<String,Object> level2ParameterMap = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
+        final Product product = l3Config.getPreProcessedProduct(source, level2OperatorName, level2ParameterMap);
         if (product != null) {
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
@@ -106,7 +108,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         // write final log entry for runtime measurements
         LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
-
     }
 
     static long processProduct(Product product,

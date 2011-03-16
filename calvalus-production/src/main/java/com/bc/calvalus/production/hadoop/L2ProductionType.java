@@ -133,7 +133,7 @@ public class L2ProductionType implements ProductionType {
     static String createL2ProductionName(ProductionRequest productionRequest) {
         return String.format("Level 2 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getProductionParameter("inputProductSetId"),
-                             productionRequest.getProductionParameter("l2ProcessorName"));
+                             productionRequest.getProductionParameter("processorName"));
 
     }
 

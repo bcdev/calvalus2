@@ -49,44 +49,59 @@ public class BeamOpProcessingType {
         this.jobClient = jobClient;
     }
 
-    public JobID submitJob(String wpsXml) throws Exception {
-        Job job = createJob(wpsXml);
-        configureJob(job);
-        return submitJobImpl(job);
-    }
-
     public JobID submitJob(Map<String, Object> parameters) throws Exception {
-        Job job = createJob(parameters);
+        Job job = createJobFromParameters(parameters);
         configureJob(job);
         return submitJobImpl(job);
     }
 
-    public Job createJob(String wpsXmlRequest) throws Exception {
+    public Job createJobFromWps(String wpsXmlRequest) throws Exception {
         WpsConfig wpsConfig = new WpsConfig(wpsXmlRequest);
         String identifier = wpsConfig.getIdentifier();
         Job job = new Job(jobClient.getConf(), identifier);
-        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(job.getConfiguration());
-        processingConfiguration.addWpsParameters(wpsConfig);
+        Configuration conf = job.getConfiguration();
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_IDENTIFIER, wpsConfig.getIdentifier());
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_BUNDLE, wpsConfig.getProcessorPackage());
+        String[] requestInputPaths = wpsConfig.getRequestInputPaths();
+        String inputs = StringUtils.join(requestInputPaths, ",");
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_INPUT, inputs);
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());
+        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_FORMATTER_PARAMETER, wpsConfig.getFormatterParameter());
         return job;
     }
 
-    // at the moment only for beam-op-level 2
-    private Job createJob(Map<String, Object> parameters) throws IOException {
+    private static void addIfNotEmpty(Configuration conf, String key, String value) {
+        if (value != null && !value.isEmpty()) {
+            conf.set(key, value);
+        }
+    }
+
+    private Job createJobFromParameters(Map<String, Object> parameters) throws IOException {
         String productionId = getString(parameters, "productionId");
 
         Job job = new Job(jobClient.getConf(), productionId);
         Configuration configuration = job.getConfiguration();
 
+        //TODO generalise this (copy everything from parameters map?)
         configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, productionId);
-        String name = getString(parameters, "l2ProcessorBundleName");
-        String version = getString(parameters, "l2ProcessorBundleVersion");
+        String name = getString(parameters, "processorBundleName");
+        String version = getString(parameters, "processorBundleVersion");
         configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, name + "-" + version);
         String[] inputFiles = (String[]) parameters.get("inputFiles");
         String inputs = StringUtils.join(inputFiles, ",");
         configuration.set(ProcessingConfiguration.CALVALUS_INPUT, inputs);
         configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, getString(parameters, "outputDir"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "l2ProcessorName"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "l2ProcessorParameters"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "processorName"));
+        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "processorParameters"));
+        Object level3Parameters = parameters.get("level3Parameters");
+        if (level3Parameters instanceof L3Config) {
+            L3Config l3Config = (L3Config) level3Parameters;
+            String l3Params = BeamUtils.saveAsXml(l3Config);
+            configuration.set(ProcessingConfiguration.CALVALUS_L3_PARAMETER, l3Params);
+        }
         return job;
     }
 
@@ -101,16 +116,16 @@ public class BeamOpProcessingType {
 
     public void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
-        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
+        String output = configuration.get(ProcessingConfiguration.CALVALUS_OUTPUT);
         // clear output directory
-        final Path outputPath = new Path(processingConfiguration.getOutputPath());
+        final Path outputPath = new Path(output);
         final FileSystem fileSystem = outputPath.getFileSystem(configuration);
         fileSystem.delete(outputPath, true);
         FileOutputFormat.setOutputPath(job, outputPath);
 
         job.setInputFormatClass(ExecutablesInputFormat.class);
 
-        if (processingConfiguration.getLevel3Parameters() != null) {
+        if (configuration.get(ProcessingConfiguration.CALVALUS_L3_PARAMETER) != null) {
             job.setNumReduceTasks(4);
 
             job.setMapperClass(L3Mapper.class);
@@ -169,14 +184,14 @@ public class BeamOpProcessingType {
         //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
 
-        BeamCalvalusClasspath.configure(processingConfiguration.getProcessorBundle(), configuration);
+        CalvalusClasspath.configure(configuration.get(ProcessingConfiguration.CALVALUS_BUNDLE), configuration);
     }
 
 
     private JobID submitJobImpl(Job job) throws Exception {
         Configuration configuration = job.getConfiguration();
         //add calvalus itself to classpath of hadoop jobs
-        BeamCalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
+        CalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
