@@ -301,22 +301,22 @@ public class AggregatorTest {
         assertEquals(0.0f, tvec.get(0), 0.0f);
 
         agg.aggregateTemporal(ctx, vec(0.1f), 1, tvec);
-        agg.aggregateTemporal(ctx, vec(0.1f), 1, tvec);
-        agg.aggregateTemporal(ctx, vec(0.2f), 1, tvec);
         agg.aggregateTemporal(ctx, vec(0.2f), 1, tvec);
         agg.aggregateTemporal(ctx, vec(0.3f), 1, tvec);
-        agg.aggregateTemporal(ctx, vec(0.3f), 1, tvec);
-        agg.aggregateTemporal(ctx, vec(0.4f), 1, tvec);
         agg.aggregateTemporal(ctx, vec(0.4f), 1, tvec);
         agg.aggregateTemporal(ctx, vec(0.5f), 1, tvec);
-        agg.aggregateTemporal(ctx, vec(0.5f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.6f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.7f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.8f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.9f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(1.0f), 1, tvec);
         assertEquals(0.0f, tvec.get(0), 1e-5f);
 
         agg.completeTemporal(ctx, 10, tvec);
-        assertEquals(0.47f, tvec.get(0), 1e-5f);
+        assertEquals(0.77f, tvec.get(0), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(0.47f, out.get(0), 1e-5f);
+        assertEquals(0.77f, out.get(0), 1e-5f);
     }
 
     @Test

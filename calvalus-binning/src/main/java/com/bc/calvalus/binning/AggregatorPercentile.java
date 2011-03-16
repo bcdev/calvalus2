@@ -90,22 +90,19 @@ public class AggregatorPercentile implements Aggregator {
     @Override
     public void initTemporal(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
-        ctx.put("ml", new ArrayList<Float>());
+        ctx.put("ml", new GrowableVector(256));
     }
 
     @Override
     public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
-        List<Float> measurementsList = ctx.get("ml");
-        measurementsList.add(spatialVector.get(0));
+        GrowableVector measurementsVec = ctx.get("ml");
+        measurementsVec.add(spatialVector.get(0));
     }
 
     @Override
     public void completeTemporal(BinContext ctx, int numTemporalObs, WritableVector temporalVector) {
-        List<Float> measurementsList = ctx.get("ml");
-        float[] measurements = new float[measurementsList.size()];
-        for (int i = 0; i < measurements.length; i++) {
-            measurements[i] = measurementsList.get(i);
-        }
+        GrowableVector measurementsVec = ctx.get("ml");
+        float[] measurements = measurementsVec.getElements();
         Arrays.sort(measurements);
         temporalVector.set(0, computePercentile(percentile, measurements));
     }
