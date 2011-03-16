@@ -30,6 +30,8 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
 
+        commonProcessingParameters.put("productionId", productionId);
+        commonProcessingParameters.put("userName", userName);
         commonProcessingParameters.put("binningParameters", getLevel3(getNumRows(productionRequest),
                                                                       getBBox(productionRequest),
                                                                       productionRequest.getProductionParameter("maskExpr"),

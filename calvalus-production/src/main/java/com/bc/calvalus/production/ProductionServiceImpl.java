@@ -151,7 +151,8 @@ public class ProductionServiceImpl implements ProductionService {
                     staging.cancel();
                 }
 
-                if (production.getProcessingStatus().isDone()) {
+                if (production.getProcessingStatus().isDone()
+                        || production.getProcessingStatus().equals(ProcessStatus.UNKNOWN)) {
                     if (action == Action.DELETE) {
                         removeProduction(production);
                     }

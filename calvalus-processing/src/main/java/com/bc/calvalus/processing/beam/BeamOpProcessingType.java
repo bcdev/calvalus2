@@ -34,9 +34,8 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Map;
-
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Creates a beam hadoop job
@@ -107,11 +106,13 @@ public class BeamOpProcessingType {
 
     private static String getString(Map<String, Object> map, String key) {
         Object value = map.get(key);
-        if (value instanceof String) {
-            return (String) value;
-        } else {
-            throw new IllegalArgumentException(String.format("The parameters '%s' is not a String.", key));
+        if (value == null) {
+            throw new IllegalArgumentException(String.format("Missing parameter '%s'.", key));
         }
+        if (!(value instanceof String)) {
+            throw new IllegalArgumentException(String.format("Parameter '%s' must be a String.", key));
+        }
+        return (String) value;
     }
 
     public void configureJob(Job job) throws IOException {
