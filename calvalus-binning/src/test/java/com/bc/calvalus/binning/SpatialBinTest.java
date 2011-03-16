@@ -105,4 +105,17 @@ public class SpatialBinTest {
         ctx.put("a", 42);
         assertEquals(42, ctx.get("a"));
     }
+
+    @Test
+    public void testToString() {
+        SpatialBin bin = new SpatialBin(0, 0);
+        assertEquals("SpatialBin{index=0, numObs=0, properties=[]}", bin.toString());
+        bin = new SpatialBin(42, 2);
+        assertEquals("SpatialBin{index=42, numObs=0, properties=[0.0, 0.0]}", bin.toString());
+        bin.setNumObs(13);
+        assertEquals("SpatialBin{index=42, numObs=13, properties=[0.0, 0.0]}", bin.toString());
+        bin.properties[0] = 56.7f;
+        bin.properties[1] = 8.9f;
+        assertEquals("SpatialBin{index=42, numObs=13, properties=[56.7, 8.9]}", bin.toString());
+    }
 }
