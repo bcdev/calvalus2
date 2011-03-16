@@ -1,33 +1,35 @@
 package com.bc.calvalus.binning;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
- * An aggregator that computes the minimum and maximum values.
+ * An aggregator that computes the p-th percentile,
+ * the value of a variable below which a certain percent (p) of observations fall.
+ *
+ * @author MarcoZ
+ * @author Norman
  */
 public class AggregatorPercentile implements Aggregator {
     private final int varIndex;
     private final String[] spatialPropertyNames;
     private final String[] temporalPropertyNames;
-    private final int percentile;
+    private final int percentage;
     private final double fillValue;
 
-    public AggregatorPercentile(VariableContext varCtx, String varName, int percentile, Double fillValue) {
+    public AggregatorPercentile(VariableContext varCtx, String varName, Integer percentage, Double fillValue) {
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
         if (varName == null) {
             throw new NullPointerException("varName");
         }
-        if (percentile < 0 || percentile > 100) {
-            throw new IllegalArgumentException("percentile < 0 || percentile > 100");
+        if (percentage != null && (percentage < 0 || percentage > 100)) {
+            throw new IllegalArgumentException("percentage < 0 || percentage > 100");
         }
         this.varIndex = varCtx.getVariableIndex(varName);
         this.spatialPropertyNames = new String[]{varName + "_sum_x"};
-        this.temporalPropertyNames = new String[]{varName + "_P" + percentile};
-        this.percentile = percentile;
+        this.temporalPropertyNames = new String[]{varName + "_P" + percentage};
+        this.percentage = percentage != null ? percentage : 90;
         this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 
@@ -104,7 +106,7 @@ public class AggregatorPercentile implements Aggregator {
         GrowableVector measurementsVec = ctx.get("ml");
         float[] measurements = measurementsVec.getElements();
         Arrays.sort(measurements);
-        temporalVector.set(0, computePercentile(percentile, measurements));
+        temporalVector.set(0, computePercentile(percentage, measurements));
     }
 
 
@@ -117,6 +119,7 @@ public class AggregatorPercentile implements Aggregator {
     public String toString() {
         return "AggregatorPercentile{" +
                 "varIndex=" + varIndex +
+                ", percentage=" + percentage +
                 ", spatialPropertyNames=" + (spatialPropertyNames == null ? null : Arrays.toString(spatialPropertyNames)) +
                 ", temporalPropertyNames=" + (temporalPropertyNames == null ? null : Arrays.toString(temporalPropertyNames)) +
                 '}';

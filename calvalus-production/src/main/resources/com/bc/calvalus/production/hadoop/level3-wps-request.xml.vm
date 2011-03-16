@@ -64,16 +64,16 @@
             <ows:Title>The parameters for the Calvalus Level 3 processor</ows:Title>
             <wps:Data>
                 <wps:ComplexData>
-                    <numRows>${numRows}</numRows>
-                    <maskExpr>${maskExpr}</maskExpr>
-                    <superSampling>${superSampling}</superSampling>
-                    #if ($bbox)
-                        <bbox>$bbox</bbox>
-                    #elseif (${regionWkt})
-                        <regionWkt>${regionWkt}</regionWkt>
+                    <numRows>${binningParameters.numRows}</numRows>
+                    <maskExpr>${binningParameters.maskExpr}</maskExpr>
+                    <superSampling>${binningParameters.superSampling}</superSampling>
+                    #if ($binningParameters.bbox)
+                        <bbox>$binningParameters.bbox</bbox>
+                    #elseif (${binningParameters.regionWkt})
+                        <regionWkt>${binningParameters.regionWkt}</regionWkt>
                     #end
                     <variables>
-                        #foreach( $variable in $variables )
+                        #foreach( $variable in $binningParameters.variables )
                             <variable>
                                 <name>${variable.name}</name>
                                 <expr>${variable.expr}</expr>
@@ -81,7 +81,7 @@
                         #end
                     </variables>
                     <aggregators>
-                        #foreach( $aggregator in $aggregators )
+                        #foreach( $aggregator in $binningParameters.aggregators )
                             <aggregator>
                                 <type>${aggregator.type}</type>
                                 #if ($aggregator.varName)
@@ -96,7 +96,10 @@
                                 #if ($aggregator.fillValue)
                                     <fillValue>${aggregator.fillValue}</fillValue>
                                 #end
-                            </aggregator>
+                                #if ($aggregator.percentage)
+                                     <percentage>${aggregator.percentage}</percentage>
+                                 #end
+                             </aggregator>
                         #end
                     </aggregators>
                 </wps:ComplexData>

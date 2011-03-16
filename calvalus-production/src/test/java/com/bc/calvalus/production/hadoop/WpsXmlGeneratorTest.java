@@ -51,10 +51,10 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<ows:Identifier>calvalus.l3.parameters</ows:Identifier>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<maskExpr>NOT INVALID</maskExpr>"));
-        assertTrue(xml.contains("<fillValue>NaN</fillValue>"));
         assertTrue(xml.contains("<bbox>5,50,25,60</bbox>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<superSampling>1</superSampling>"));
+        assertTrue(xml.contains("<fillValue>-999.9</fillValue>"));
 
     }
 

@@ -12,24 +12,8 @@ public class L3ProcessingRequest extends ProcessingRequest {
         super(processingParameters);
     }
 
-    public Double getFillValue() {
-        return getProcessingParameter("fillValue");
-    }
-
-    public L3Config.AggregatorConfiguration[] getAggregators() {
-        return getProcessingParameter("aggregators");
-    }
-
-    public L3Config.VariableConfiguration[] getVariables() {
-        return getProcessingParameter("variables");
-    }
-
-    public Integer getNumRows() {
-        return getProcessingParameter("numRows");
-    }
-
     public L3Config getBeamL3Config() {
-        return getProcessingParameter("level3Parameters");
+        return getProcessingParameter("binningParameters");
     }
 
     public L3FormatterConfig getFormatterL3Config(String stagingPath) {
@@ -54,14 +38,12 @@ public class L3ProcessingRequest extends ProcessingRequest {
         L3FormatterConfig.BandConfiguration[] bands = new L3FormatterConfig.BandConfiguration[0];  // todo - from processingRequest
         String outputType = "Product"; // todo - from processingRequest
 
-        L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
+        return new L3FormatterConfig(outputType,
                                                                stagingFilePath,
                                                                outputFormat,
                                                                bands,
                                                                dateStart,
                                                                dateStop);
-
-        return formatterConfig;
     }
 
 }

@@ -49,9 +49,18 @@ abstract class ProcessingRequestFactory {
 
 
     protected Double getDouble(ProductionRequest request, String name, Double def) {
-        String fillValueStr = request.getProductionParameter(name);
-        if (fillValueStr != null) {
-            return Double.parseDouble(fillValueStr);
+        String text = request.getProductionParameter(name);
+        if (text != null) {
+            return Double.parseDouble(text);
+        } else {
+            return def;
+        }
+    }
+
+    protected Integer getInteger(ProductionRequest request, String name, Integer def) {
+        String text = request.getProductionParameter(name);
+        if (text != null) {
+            return Integer.parseInt(text);
         } else {
             return def;
         }

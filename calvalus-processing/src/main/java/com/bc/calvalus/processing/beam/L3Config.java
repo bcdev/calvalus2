@@ -22,6 +22,7 @@ import com.bc.calvalus.binning.AggregatorAverage;
 import com.bc.calvalus.binning.AggregatorAverageML;
 import com.bc.calvalus.binning.AggregatorMinMax;
 import com.bc.calvalus.binning.AggregatorOnMaxSet;
+import com.bc.calvalus.binning.AggregatorPercentile;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
 import com.bc.calvalus.binning.BinningContext;
@@ -88,6 +89,8 @@ public class L3Config {
 
         String[] varNames;
 
+        Integer percentage;
+
         Double weightCoeff;
 
         Double fillValue;
@@ -95,11 +98,8 @@ public class L3Config {
         public AggregatorConfiguration() {
         }
 
-        public AggregatorConfiguration(String type, String varName, Double weightCoeff, Double fillValue) {
+        public AggregatorConfiguration(String type) {
             this.type = type;
-            this.varName = varName;
-            this.weightCoeff = weightCoeff;
-            this.fillValue = fillValue;
         }
 
         public String getType() {
@@ -114,12 +114,41 @@ public class L3Config {
             return varNames;
         }
 
+        public Integer getPercentage() {
+            return percentage;
+        }
+
         public Double getWeightCoeff() {
             return weightCoeff;
         }
 
         public Double getFillValue() {
             return fillValue;
+
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setVarName(String varName) {
+            this.varName = varName;
+        }
+
+        public void setVarNames(String[] varNames) {
+            this.varNames = varNames;
+        }
+
+        public void setPercentage(Integer percentage) {
+            this.percentage = percentage;
+        }
+
+        public void setWeightCoeff(Double weightCoeff) {
+            this.weightCoeff = weightCoeff;
+        }
+
+        public void setFillValue(Double fillValue) {
+            this.fillValue = fillValue;
         }
     }
 
@@ -142,6 +171,34 @@ public class L3Config {
         L3Config l3Config = new L3Config();
         BeamUtils.loadFromXml(level3ParametersXml, l3Config);
         return l3Config;
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public Integer getSuperSampling() {
+        return superSampling;
+    }
+
+    public String getBbox() {
+        return bbox;
+    }
+
+    public String getRegionWkt() {
+        return regionWkt;
+    }
+
+    public String getMaskExpr() {
+        return maskExpr;
+    }
+
+    public VariableConfiguration[] getVariables() {
+        return variables;
+    }
+
+    public AggregatorConfiguration[] getAggregators() {
+        return aggregators;
     }
 
     public void setNumRows(int numRows) {
@@ -211,6 +268,8 @@ public class L3Config {
                 aggregator = getAggregatorMinMax(varCtx, aggregators[i]);
             } else if (type.equals("ON_MAX_SET")) {
                 aggregator = getAggregatorOnMaxSet(varCtx, aggregators[i]);
+            } else if (type.equals("PERCENTILE")) {
+                aggregator = getAggregatorPercentile(varCtx, aggregators[i]);
             } else {
                 throw new IllegalArgumentException("Unknown aggregator type: " + type);
             }
@@ -268,6 +327,10 @@ public class L3Config {
 
     private Aggregator getAggregatorOnMaxSet(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
         return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
+    }
+
+     private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
+        return new AggregatorPercentile(varCtx, aggregatorConf.varName, aggregatorConf.percentage, aggregatorConf.fillValue);
     }
 
     public Product getPreProcessedProduct(Product source,  String operatorName, Map<String, Object> operatorParameters) {

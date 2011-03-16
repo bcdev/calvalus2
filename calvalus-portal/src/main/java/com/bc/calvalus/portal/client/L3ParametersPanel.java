@@ -68,6 +68,7 @@ public class L3ParametersPanel implements IsWidget {
         aggregator.addItem("Average", "AVG");
         aggregator.addItem("Max. Likelihood Average", "AVG_ML");
         aggregator.addItem("Minimum + Maximum", "MIN_MAX");
+        aggregator.addItem("P90 Percentile", "PERCENTILE");
         aggregator.setVisibleItemCount(1);
         aggregator.setSelectedIndex(1);
 

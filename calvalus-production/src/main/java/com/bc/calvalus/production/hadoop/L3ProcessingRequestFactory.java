@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
 public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
 
@@ -25,32 +25,24 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         productionRequest.ensureProductionParameterSet("processorBundleVersion");
         productionRequest.ensureProductionParameterSet("processorName");
         productionRequest.ensureProductionParameterSet("processorParameters");
-        productionRequest.ensureProductionParameterSet("superSampling");
         productionRequest.ensureProductionParameterSet("maskExpr");
+        productionRequest.ensureProductionParameterSet("superSampling");
 
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
-        int numRows = getNumRows(productionRequest);
-        commonProcessingParameters.put("numRows", numRows);
-        String bBox = getBBox(productionRequest);
-        commonProcessingParameters.put("bbox", bBox);
-        commonProcessingParameters.put("fillValue", getFillValue(productionRequest));
-        commonProcessingParameters.put("weightCoeff", getWeightCoeff(productionRequest));
-        L3Config.VariableConfiguration[] variables = getVariables(productionRequest);
-        commonProcessingParameters.put("variables", variables);
-        L3Config.AggregatorConfiguration[] aggregators = getAggregators(productionRequest);
-        commonProcessingParameters.put("aggregators", aggregators);
-        String maskExpr = productionRequest.getProductionParameter("maskExpr");
-        String superSampling = productionRequest.getProductionParameter("superSampling");
 
-        commonProcessingParameters.put("level3Parameters", getLevel3(numRows, bBox, maskExpr, superSampling, variables, aggregators));
-
+        commonProcessingParameters.put("binningParameters", getLevel3(getNumRows(productionRequest),
+                                                                      getBBox(productionRequest),
+                                                                      productionRequest.getProductionParameter("maskExpr"),
+                                                                      productionRequest.getProductionParameter("superSampling"),
+                                                                      getVariables(productionRequest),
+                                                                      getAggregators(productionRequest)));
         commonProcessingParameters.put("autoStaging", isAutoStaging(productionRequest));
 
         int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
         int periodLength = Integer.parseInt(productionRequest.getProductionParameter("periodLength")); // unit=days
 
         Date startDate = getDate(productionRequest, "dateStart");
-        Date stopDate = getDate(productionRequest, "dateStop");
+        Date stopDate = getDate(productionRequest, "dateStop");  // todo - use stop date
         L3ProcessingRequest[] processingRequests = new L3ProcessingRequest[periodCount];
         long time = startDate.getTime();
         long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
@@ -63,8 +55,7 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
             processingParameters.put("inputFiles", getInputFiles(productionRequest.getProductionParameterSafe("inputProductSetId"), date1, date2));
-            processingParameters.put("outputDir", getProcessingService().getDataOutputPath() +
-                    "/" + userName + "/" + productionId + "_" + i);
+            processingParameters.put("outputDir", getProcessingService().getDataOutputPath() + "/" + userName + "/" + productionId + "_" + i);
 
             time += periodLengthMillis;
 
@@ -85,27 +76,21 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         return l3Config;
     }
 
-    public Double getFillValue(ProductionRequest request) throws ProductionException {
-        return getDouble(request, "fillValue", null);
-    }
-
-    public Double getWeightCoeff(ProductionRequest request) throws ProductionException {
-        return getDouble(request, "weightCoeff", null);
-    }
-
     public L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         String inputVariablesStr = request.getProductionParameterSafe("inputVariables");
-        String aggregator = request.getProductionParameterSafe("aggregator");
-        Double weightCoeff = getWeightCoeff(request);
-        Double fillValue = getFillValue(request);
-
+        String aggregatorName = request.getProductionParameterSafe("aggregator");
+        Integer percentage = getInteger(request, "percentage", null);
+        Double weightCoeff = getDouble(request, "weightCoeff", null);
+        Double fillValue = getDouble(request, "fillValue", null);
         String[] inputVariables = inputVariablesStr.split(",");
         L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[inputVariables.length];
         for (int i = 0; i < inputVariables.length; i++) {
-            aggregatorConfigurations[i] = new L3Config.AggregatorConfiguration(aggregator,
-                                                                                   inputVariables[i],
-                                                                                   weightCoeff,
-                                                                                   fillValue);
+            L3Config.AggregatorConfiguration aggregatorConfiguration = new L3Config.AggregatorConfiguration(aggregatorName);
+            aggregatorConfiguration.setVarName(inputVariables[i]);
+            aggregatorConfiguration.setPercentage(percentage);
+            aggregatorConfiguration.setWeightCoeff(weightCoeff);
+            aggregatorConfiguration.setFillValue(fillValue);
+            aggregatorConfigurations[i] = aggregatorConfiguration;
         }
         return aggregatorConfigurations;
     }

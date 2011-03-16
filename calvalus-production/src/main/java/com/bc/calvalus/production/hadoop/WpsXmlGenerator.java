@@ -53,7 +53,6 @@ class WpsXmlGenerator {
         Map<String, Object> templateParameters = new HashMap<String, Object>(processingRequest.getProcessingParameters());
         templateParameters.put("productionId", productionId);
         templateParameters.put("productionName", productionName);
-        templateParameters.put("processingRequest", processingRequest);
         return interpolateTemplate("com/bc/calvalus/production/hadoop/level3-wps-request.xml.vm",
                                    templateParameters);
     }
