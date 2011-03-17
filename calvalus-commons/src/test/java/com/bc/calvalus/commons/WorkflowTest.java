@@ -191,10 +191,16 @@ public class WorkflowTest {
         Workflow wf = new Workflow.Parallel();
         wf.add(job1, job2);
 
-        job2.setStatus(new ProcessStatus(ProcessState.RUNNING, 0.2F));
         job1.setStatus(new ProcessStatus(ProcessState.RUNNING, 0.4F));
-
+        job2.setStatus(new ProcessStatus(ProcessState.RUNNING, 0.2F));
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3F), wf.getStatus());
+
+        job2.setStatus(new ProcessStatus(ProcessState.RUNNING, 0.8F));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.6F), wf.getStatus());
+
+        job1.setStatus(new ProcessStatus(ProcessState.RUNNING, 0.8F));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.8F), wf.getStatus());
+
     }
 
     @Test

@@ -58,13 +58,13 @@ public interface WorkflowItem {
     void setStatus(ProcessStatus status);
 
     /**
-     * Adds a new state change listener to the workflow.
-     * The listener is called each time the state of this workflow item's
-     * process state changes.
+     * Adds a new workflow status change listener to the workflow.
+     * The listener is called each time the status of this workflow item's
+     * process changes.
      *
-     * @param listener The new state change listener.
+     * @param listener The new workflow status change listener.
      */
-    void addStateChangeListener(StateChangeListener listener);
+    void addWorkflowStatusListener(WorkflowStatusListener listener);
 
     /**
      * Gets the identifiers of all the jobs that this workflow is managing.
@@ -74,17 +74,5 @@ public interface WorkflowItem {
      */
     @Deprecated
     Object[] getJobIds();
-
-    /**
-     * A listener for state changes in workflow items.
-     */
-    public interface StateChangeListener {
-        /**
-         * Called if the state of a workflow item's process has changed.
-         *
-         * @param item The workflow item whose process state has changed.
-         */
-        void handleStateChanged(WorkflowItem item);
-    }
 
 }
