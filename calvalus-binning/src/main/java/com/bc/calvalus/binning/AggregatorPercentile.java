@@ -44,8 +44,8 @@ public class AggregatorPercentile implements Aggregator {
         }
         this.varIndex = varCtx.getVariableIndex(varName);
         this.spatialPropertyNames = new String[]{varName + "_sum_x"};
-        this.temporalPropertyNames = new String[]{varName + "_P" + percentage};
         this.percentage = percentage != null ? percentage : 90;
+        this.temporalPropertyNames = new String[]{varName + "_P" + this.percentage};
         this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 

@@ -267,7 +267,13 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorPercentile() {
-        Aggregator agg = new AggregatorPercentile(new MyVariableContext("c"), "c", 70, null);
+        Aggregator agg = new AggregatorPercentile(new MyVariableContext("c"), "c", null, null);
+
+        assertTrue(Double.isNaN(agg.getOutputPropertyFillValue(0)));
+        assertEquals("c_P90", agg.getTemporalPropertyName(0));
+        assertEquals("c_P90", agg.getOutputPropertyName(0));
+
+        agg = new AggregatorPercentile(new MyVariableContext("c"), "c", 70, 0.42);
 
         assertEquals("PERCENTILE", agg.getName());
 
@@ -279,6 +285,8 @@ public class AggregatorTest {
 
         assertEquals(1, agg.getOutputPropertyCount());
         assertEquals("c_P70", agg.getOutputPropertyName(0));
+
+        assertEquals(0.42, agg.getOutputPropertyFillValue(0), 1e-5);
 
         VectorImpl svec = vec(NaN);
         VectorImpl tvec = vec(NaN);
