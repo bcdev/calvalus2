@@ -49,6 +49,9 @@ public class WorkflowTest {
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+
+        assertEquals(1, job1.getSubmitCount());
+        assertEquals(1, job2.getSubmitCount());
     }
 
     @Test
@@ -84,6 +87,9 @@ public class WorkflowTest {
         assertEquals(ProcessState.COMPLETED, job1.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, job2.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+
+        assertEquals(1, job1.getSubmitCount());
+        assertEquals(1, job2.getSubmitCount());
     }
 
     @Test
@@ -181,6 +187,11 @@ public class WorkflowTest {
         assertEquals(ProcessState.COMPLETED, wfp.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wfs.getStatus().getState());
         assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+
+        assertEquals(1, job1.getSubmitCount());
+        assertEquals(1, job2.getSubmitCount());
+        assertEquals(1, job3.getSubmitCount());
+        assertEquals(1, job4.getSubmitCount());
     }
 
     @Test

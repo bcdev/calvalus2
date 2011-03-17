@@ -26,20 +26,18 @@ import java.util.List;
  * @author MarcoZ
  * @author Norman
  */
-public abstract class Workflow extends AbstractWorkflowItem {
+public abstract class Workflow extends AbstractWorkflowItem implements WorkflowStatusListener {
     protected final List<WorkflowItem> itemList;
-    protected final WorkflowStatusListener statusAggregationListener;
 
     protected Workflow(WorkflowItem... items) {
         super();
         this.itemList = new ArrayList<WorkflowItem>();
-        this.statusAggregationListener = new StatusAggregationListener();
         add(items);
     }
 
     public void add(WorkflowItem... items) {
         for (WorkflowItem item : items) {
-            item.addWorkflowStatusListener(statusAggregationListener);
+            item.addWorkflowStatusListener(this);
         }
         itemList.addAll(Arrays.asList(items));
     }
@@ -60,6 +58,21 @@ public abstract class Workflow extends AbstractWorkflowItem {
         }
     }
 
+    /**
+     * Aggregates statuses from its items. Called whenever status changes in items are detected.
+     * There is usually no need to call this method directly.
+     *
+     * @param event The workflow status event.
+     */
+    @Override
+    public void handleStatusChanged(WorkflowStatusEvent event) {
+        ProcessStatus[] statuses = new ProcessStatus[itemList.size()];
+        for (int i = 0; i < statuses.length; i++) {
+            statuses[i] = itemList.get(i).getStatus();
+        }
+        setStatus(ProcessStatus.aggregate(statuses));
+    }
+
     @Override
     @Deprecated
     public Object[] getJobIds() {
@@ -73,25 +86,12 @@ public abstract class Workflow extends AbstractWorkflowItem {
     /**
      * A sequential workflow. An item is submitted only after its predecessor has completed.
      */
-    public static class Sequential extends Workflow implements  WorkflowStatusListener{
+    public static class Sequential extends Workflow {
         private int currentItemIndex;
 
         public Sequential(WorkflowItem... items) {
             super(items);
             currentItemIndex = -1;
-        }
-
-        /**
-         * Overridden to add its own {@code WorkflowStatusListener}.
-         *
-         * @param items The workflow items to be added.
-         */
-        @Override
-        public void add(WorkflowItem... items) {
-            for (WorkflowItem item : items) {
-                item.addWorkflowStatusListener(this);
-            }
-            super.add(items);
         }
 
         /**
@@ -104,8 +104,9 @@ public abstract class Workflow extends AbstractWorkflowItem {
 
         @Override
         public void handleStatusChanged(WorkflowStatusEvent event) {
+            super.handleStatusChanged(event);
             if (currentItemIndex >= 0
-                    && itemList.get(currentItemIndex) == event.getSource()
+                    && event.getSource() == itemList.get(currentItemIndex)
                     && event.getNewStatus().getState() == ProcessState.COMPLETED) {
                 submitNext();
             }
@@ -142,17 +143,4 @@ public abstract class Workflow extends AbstractWorkflowItem {
             }
         }
     }
-
-    private class StatusAggregationListener implements WorkflowStatusListener {
-
-        @Override
-        public void handleStatusChanged(WorkflowStatusEvent event) {
-            ProcessStatus[] statuses = new ProcessStatus[itemList.size()];
-            for (int i = 0; i < statuses.length; i++) {
-                statuses[i] = itemList.get(i).getStatus();
-            }
-            setStatus(ProcessStatus.aggregate(statuses));
-        }
-    }
-
 }

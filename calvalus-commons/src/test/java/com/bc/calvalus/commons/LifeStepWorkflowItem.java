@@ -16,9 +16,6 @@
 
 package com.bc.calvalus.commons;
 
-import com.bc.calvalus.commons.AbstractWorkflowItem;
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Ignore;
 
 /**
@@ -29,10 +26,14 @@ import org.junit.Ignore;
  */
 @Ignore
 public class LifeStepWorkflowItem extends AbstractWorkflowItem {
-    private boolean submitted;
+    private int submitCount;
 
     public boolean isSubmitted() {
-        return submitted;
+        return submitCount >0;
+    }
+
+    public int getSubmitCount() {
+        return submitCount;
     }
 
     void incLifeStep() {
@@ -44,6 +45,8 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
                 setStatus(new ProcessStatus(ProcessState.RUNNING, 0.5f));
             } else if (status.equals(new ProcessStatus(ProcessState.RUNNING, 0.5f))) {
                 setStatus(new ProcessStatus(ProcessState.COMPLETED));
+            } else if (status.equals(new ProcessStatus(ProcessState.COMPLETED))) {
+                setStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Completed, but message changed. Submit count: " + getSubmitCount()));
             }
             // Other case are failures: CANCELLED, ERROR
         }
@@ -51,7 +54,7 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
 
     @Override
     public void submit() {
-        submitted = true;
+        submitCount++;
     }
 
     @Override
