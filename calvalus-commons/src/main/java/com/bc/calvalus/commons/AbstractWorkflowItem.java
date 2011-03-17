@@ -25,17 +25,17 @@ import java.util.List;
  * @author Norman
  */
 public abstract class AbstractWorkflowItem implements WorkflowItem {
-    private final List<WorkflowStatusListener> changeListeners;
+    private final List<WorkflowStatusListener> statusListeners;
     private ProcessStatus status;
 
     public AbstractWorkflowItem() {
-        this.changeListeners = new ArrayList<WorkflowStatusListener>();
+        this.statusListeners = new ArrayList<WorkflowStatusListener>();
         this.status = ProcessStatus.UNKNOWN;
     }
 
     @Override
     public void addWorkflowStatusListener(WorkflowStatusListener l) {
-        changeListeners.add(l);
+        statusListeners.add(l);
     }
 
     @Override
@@ -49,12 +49,12 @@ public abstract class AbstractWorkflowItem implements WorkflowItem {
             // todo: do not allow transition to unknown state
             ProcessStatus oldStatus = status;
             status = newStatus;
-            fireStateChanged(new WorkflowStatusEvent(this, oldStatus, newStatus));
+            fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus));
         }
     }
 
-    protected void fireStateChanged(WorkflowStatusEvent event) {
-        for (WorkflowStatusListener changeListener : changeListeners) {
+    protected void fireStatusChanged(WorkflowStatusEvent event) {
+        for (WorkflowStatusListener changeListener : statusListeners) {
             changeListener.handleStatusChanged(event);
         }
     }
