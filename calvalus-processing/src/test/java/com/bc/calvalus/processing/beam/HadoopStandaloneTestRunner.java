@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.MessageFormat;
 
 /**
  * A test runner to run unit-level tests that require a running standalone Hadoop on localhost.
@@ -32,6 +31,7 @@ public class HadoopStandaloneTestRunner extends BlockJUnit4ClassRunner {
             super.runChild(method, notifier);
         } catch (UnknownHostException e) {
             System.err.println("test skipped, localhost not configured");
+            notifier.fireTestIgnored(describeChild(method));
         } catch (IOException e) {
             // inform about reason for skipping test
             System.err.println("test skipped, local Hadoop not running");
@@ -40,6 +40,7 @@ public class HadoopStandaloneTestRunner extends BlockJUnit4ClassRunner {
             System.err.println("  /.../hadoop-0.20.2/bin/hadoop namenode -format");
             System.err.println("  /.../hadoop-0.20.2/bin/start-all.sh");
             System.err.println("  sleep 30");
+            notifier.fireTestIgnored(describeChild(method));
         }
     }
 }

@@ -5,12 +5,9 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -39,8 +36,10 @@ public class HadoopStandaloneAndAccountTestRunner extends BlockJUnit4ClassRunner
             super.runChild(method, notifier);
         } catch (UnknownHostException e) {
             System.err.println("test skipped, localhost not configured");
+            notifier.fireTestIgnored(describeChild(method));
         } catch (NoSuchElementException e) {
             System.err.println("test skipped, " + e.getMessage());
+            notifier.fireTestIgnored(describeChild(method));
         } catch (IOException e) {
             // inform about reason for skipping test
             System.err.println("test skipped, local Hadoop not running or failed to read /etc/passwd");
@@ -49,6 +48,7 @@ public class HadoopStandaloneAndAccountTestRunner extends BlockJUnit4ClassRunner
             System.err.println("  /.../hadoop-0.20.2/bin/hadoop namenode -format");
             System.err.println("  /.../hadoop-0.20.2/bin/start-all.sh");
             System.err.println("  sleep 30");
+            notifier.fireTestIgnored(describeChild(method));
         }
     }
 
