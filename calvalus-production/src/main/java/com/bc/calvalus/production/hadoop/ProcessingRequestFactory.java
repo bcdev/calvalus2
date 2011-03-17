@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.hadoop.ProcessingRequest;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -32,7 +33,7 @@ abstract class ProcessingRequestFactory {
         return processingService;
     }
 
-    public abstract ProcessingRequest[] createProcessingRequests(String productionId, ProductionRequest productionRequest) throws ProductionException;
+    public abstract ProcessingRequest[] createWorkflowItems(String productionId, ProductionRequest productionRequest) throws ProductionException;
 
 
     public boolean isAutoStaging(ProductionRequest request) throws ProductionException {

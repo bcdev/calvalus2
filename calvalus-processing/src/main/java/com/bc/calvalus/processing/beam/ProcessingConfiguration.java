@@ -20,13 +20,13 @@ package com.bc.calvalus.processing.beam;
  * Configuration constants.
  */
 public class ProcessingConfiguration {
-    static final String CALVALUS_IDENTIFIER = "calvalus.identifier";
-    static final String CALVALUS_BUNDLE = "calvalus.bundle";
+ public   static final String CALVALUS_IDENTIFIER = "calvalus.identifier";
+public    static final String CALVALUS_BUNDLE = "calvalus.bundle";
     public static final String CALVALUS_INPUT = "calvalus.input";
-    static final String CALVALUS_OUTPUT = "calvalus.output";
-    static final String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
-    static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
-    static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
-    static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
+public    static final String CALVALUS_OUTPUT = "calvalus.output";
+ public   static final String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
+ public   static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
+ public   static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
+ public   static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
 
 }

@@ -1,6 +1,6 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.processing.hadoop;
 
-import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.commons.WorkflowException;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -14,10 +14,10 @@ import java.util.Properties;
  * Generates the WPS XML.
  */
 @Deprecated
-class WpsXmlGenerator {
+public class WpsXmlGenerator {
     private final VelocityEngine velocityEngine;
 
-    WpsXmlGenerator() throws ProductionException {
+    public WpsXmlGenerator() throws WorkflowException {
         this.velocityEngine = new VelocityEngine();
         Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
@@ -25,14 +25,8 @@ class WpsXmlGenerator {
         try {
             velocityEngine.init(properties);
         } catch (Exception e) {
-            throw new ProductionException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
+            throw new WorkflowException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
         }
-    }
-
-    public String createL2WpsXml(L2ProcessingRequest l2ProcessingRequest) throws ProductionException {
-        // todo - write level2-wps-request.xml.vm
-        return interpolateTemplate("com/bc/calvalus/production/hadoop/level2-wps-request.xml.vm",
-                                   l2ProcessingRequest.getProcessingParameters());
     }
 
     /**
@@ -45,19 +39,19 @@ class WpsXmlGenerator {
      * @param productionId      A production ID.
      * @param productionName    A production name.
      * @param processingRequest The L3 processing request.  @return The WPS XML plain text.
-     * @throws ProductionException If the WPS XML cannot be created.
+     * @throws WorkflowException If the WPS XML cannot be created.
      */
     public String createL3WpsXml(String productionId,
                                  String productionName,
-                                 L3ProcessingRequest processingRequest) throws ProductionException {
+                                 L3ProcessingRequest processingRequest) throws WorkflowException {
         Map<String, Object> templateParameters = new HashMap<String, Object>(processingRequest.getProcessingParameters());
         templateParameters.put("productionId", productionId);
         templateParameters.put("productionName", productionName);
-        return interpolateTemplate("com/bc/calvalus/production/hadoop/level3-wps-request.xml.vm",
+        return interpolateTemplate("com/bc/calvalus/processing/hadoop/level3-wps-request.xml.vm",
                                    templateParameters);
     }
 
-    private String interpolateTemplate(String templatePath, Map<String, Object> templateParameters) throws ProductionException {
+    private String interpolateTemplate(String templatePath, Map<String, Object> templateParameters) throws WorkflowException {
         VelocityContext context = new VelocityContext(templateParameters);
         String wpsXml;
         try {
@@ -66,7 +60,7 @@ class WpsXmlGenerator {
             wpsXmlTemplate.merge(context, writer);
             wpsXml = writer.toString();
         } catch (Exception e) {
-            throw new ProductionException("Failed to generate WPS XML request", e);
+            throw new WorkflowException("Failed to generate WPS XML request", e);
         }
         return wpsXml;
     }

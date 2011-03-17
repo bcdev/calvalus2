@@ -1,4 +1,4 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.processing.beam.L3Config;
 import com.bc.calvalus.processing.beam.L3FormatterConfig;

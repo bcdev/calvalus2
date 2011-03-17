@@ -3,6 +3,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.processing.beam.L3Config;
 import com.bc.calvalus.processing.beam.L3FormatterConfig;
+import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
@@ -14,14 +15,14 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class L3ProcessingRequestTest {
+public class L3ProcessingRequestFactoryTest {
     @Test
     public void testGetProcessingParameters() throws ProductionException {
 
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3ProcessingRequestFactory requestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
         );
-        L3ProcessingRequest[] processingRequests = requestFactory.createProcessingRequests("A25F", productionRequest);
+        L3ProcessingRequest[] processingRequests = requestFactory.createWorkflowItems("A25F", productionRequest);
         assertNotNull(processingRequests);
         assertEquals(1, processingRequests.length);
 

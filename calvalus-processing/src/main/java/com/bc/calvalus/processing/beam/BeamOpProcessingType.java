@@ -72,13 +72,13 @@ public class BeamOpProcessingType {
         return job;
     }
 
-    private static void addIfNotEmpty(Configuration conf, String key, String value) {
+    public static void addIfNotEmpty(Configuration conf, String key, String value) {
         if (value != null && !value.isEmpty()) {
             conf.set(key, value);
         }
     }
 
-    private Job createJobFromParameters(Map<String, Object> parameters) throws IOException {
+    public Job createJobFromParameters(Map<String, Object> parameters) throws IOException {
         String productionId = getString(parameters, "productionId");
 
         Job job = new Job(jobClient.getConf(), productionId);
@@ -104,7 +104,7 @@ public class BeamOpProcessingType {
         return job;
     }
 
-    private static String getString(Map<String, Object> map, String key) {
+    public static String getString(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (value == null) {
             throw new IllegalArgumentException(String.format("Missing parameter '%s'.", key));
@@ -189,7 +189,7 @@ public class BeamOpProcessingType {
     }
 
 
-    private JobID submitJobImpl(Job job) throws Exception {
+    public JobID submitJobImpl(Job job) throws Exception {
         Configuration configuration = job.getConfiguration();
         //add calvalus itself to classpath of hadoop jobs
         CalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);

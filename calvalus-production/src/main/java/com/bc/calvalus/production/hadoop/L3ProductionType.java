@@ -2,6 +2,8 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
+import com.bc.calvalus.processing.hadoop.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -40,8 +42,8 @@ public class L3ProductionType implements ProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        L3ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(productionId,
-                                                                                                     productionRequest);
+        L3ProcessingRequest[] processingRequests = processingRequestFactory.createWorkflowItems(productionId,
+                                                                                                productionRequest);
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (L3ProcessingRequest processingRequest : processingRequests) {
             workflow.add(new L3WorkflowItem(processingService, processingRequest));
@@ -58,8 +60,8 @@ public class L3ProductionType implements ProductionType {
     public L3Staging createStaging(Production hadoopProduction) throws ProductionException {
         JobClient jobClient = processingService.getJobClient();
         ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
-        L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
-                                                                                                       productionRequest);
+        L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createWorkflowItems(hadoopProduction.getId(),
+                                                                                                  productionRequest);
         L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingDir());
         try {
             stagingService.submitStaging(l3Staging);

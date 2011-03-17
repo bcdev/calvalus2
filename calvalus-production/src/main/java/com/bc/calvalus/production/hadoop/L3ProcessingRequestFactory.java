@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
@@ -18,7 +19,7 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
     @Override
-    public L3ProcessingRequest[] createProcessingRequests(String productionId, ProductionRequest productionRequest) throws ProductionException {
+    public L3ProcessingRequest[] createWorkflowItems(String productionId, ProductionRequest productionRequest) throws ProductionException {
 
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
         productionRequest.ensureProductionParameterSet("processorBundleName");

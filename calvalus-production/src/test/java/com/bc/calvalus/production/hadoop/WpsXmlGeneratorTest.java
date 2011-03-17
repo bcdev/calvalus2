@@ -1,5 +1,8 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
+import com.bc.calvalus.processing.hadoop.WpsXmlGenerator;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
@@ -13,11 +16,11 @@ import static org.junit.Assert.*;
 public class WpsXmlGeneratorTest {
 
     @Test
-    public void testL3WpsXml() throws ProductionException {
+    public void testL3WpsXml() throws WorkflowException, ProductionException {
         L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
         );
-        ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", productionRequest);
+        ProductionRequest productionRequest = L3ProcessingRequestFactoryTest.createValidL3ProductionRequest();
+        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createWorkflowItems("A25F", productionRequest);
 
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
         assertNotNull(xml);

@@ -1,8 +1,8 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.processing.hadoop;
 
 import java.util.Map;
 
-class ProcessingRequest {
+public class ProcessingRequest {
     private final Map<String, Object> processingParameters;
 
     public ProcessingRequest(Map<String, Object> processingParameters) {

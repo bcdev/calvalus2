@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.L3Config;
 import com.bc.calvalus.processing.beam.L3Formatter;
 import com.bc.calvalus.processing.beam.L3FormatterConfig;
+import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
