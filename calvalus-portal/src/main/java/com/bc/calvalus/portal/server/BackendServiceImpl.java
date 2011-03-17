@@ -165,7 +165,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private GsProduction convert(Production production) {
         return new GsProduction(production.getId(),
                                 production.getName(),
-                                production.getUser(),
+                                production.getProductionRequest().getUserName(),
                                 backendConfig.getStagingPath() + "/" + production.getStagingPath(),
                                 production.isAutoStaging(),
                                 convert(production.getProcessingStatus()),

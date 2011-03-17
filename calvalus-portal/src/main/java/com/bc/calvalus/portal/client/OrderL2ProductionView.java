@@ -65,7 +65,7 @@ public class OrderL2ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("calvalus-level2", getValueMap());
+        return new GsProductionRequest("calvalus-level2", "ewa", getValueMap());
     }
 
     // todo - Provide JUnit test for this method
