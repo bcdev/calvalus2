@@ -12,44 +12,44 @@ import java.util.Map;
  */
 public class ProductionRequest {
     private final String productionType;
+    private final String userName;
     private final Map<String, String> productionParameters;
 
     public ProductionRequest(String productionType,
+                             String userName,
                              String... productionParametersKeyValuePairs) {
+        this(productionType, userName, mapify(productionParametersKeyValuePairs));
+    }
+
+    public ProductionRequest(String productionType,
+                             String userName,
+                             Map<String, String> productionParameters) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
         }
         if (productionType.isEmpty()) {
             throw new IllegalArgumentException("productionType.isEmpty()");
         }
-        this.productionType = productionType;
-        this.productionParameters = new HashMap<String, String>();
-        for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
-            String name = productionParametersKeyValuePairs[i];
-             if (name == null) {
-                throw new NullPointerException("name");
-            }
-            String value = productionParametersKeyValuePairs[i + 1];
-            if (value == null) {
-                throw new NullPointerException("value");
-            }
-            productionParameters.put(name, value);
+        if (userName == null) {
+            throw new NullPointerException("userName");
         }
-    }
-
-    public ProductionRequest(String productionType, Map<String, String> productionParameters) {
-        if (productionType == null) {
-            throw new NullPointerException("productionType");
+        if (userName.isEmpty()) {
+            throw new IllegalArgumentException("userName.isEmpty()");
         }
         if (productionParameters == null) {
             throw new NullPointerException("productionParameters");
         }
         this.productionType = productionType;
+        this.userName = userName;
         this.productionParameters = new HashMap<String, String>(productionParameters);
     }
 
     public String getProductionType() {
         return productionType;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public String getProductionParameter(String name)  {
@@ -70,5 +70,21 @@ public class ProductionRequest {
 
     public Map<String, String> getProductionParameters() {
         return Collections.unmodifiableMap(productionParameters);
+    }
+
+    private static Map<String, String> mapify(String[] productionParametersKeyValuePairs) {
+        Map<String, String> productionParameters = new HashMap<String, String>();
+        for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
+            String name = productionParametersKeyValuePairs[i];
+             if (name == null) {
+                throw new NullPointerException("name");
+            }
+            String value = productionParametersKeyValuePairs[i + 1];
+            if (value == null) {
+                throw new NullPointerException("value");
+            }
+            productionParameters.put(name, value);
+        }
+        return productionParameters;
     }
 }

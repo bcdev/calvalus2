@@ -17,7 +17,7 @@ public class WpsXmlGeneratorTest {
         L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
         );
         ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
+        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", productionRequest);
 
         String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
         assertNotNull(xml);

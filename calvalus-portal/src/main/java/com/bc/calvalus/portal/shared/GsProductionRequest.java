@@ -14,6 +14,7 @@ import java.util.Map;
  */
 public class GsProductionRequest implements IsSerializable {
     private String productionType;
+    private String userName;
     private Map<String, String> productionParameters;
 
     /**
@@ -23,18 +24,46 @@ public class GsProductionRequest implements IsSerializable {
     }
 
     public GsProductionRequest(String productionType,
+                               String userName,
                                String... productionParametersKeyValuePairs) {
+        this(productionType, userName, mapify(productionParametersKeyValuePairs));
+    }
+
+    public GsProductionRequest(String productionType,
+                               String userName,
+                               Map<String, String> productionParameters) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
         }
-        if (productionType.isEmpty()) {
-            throw new IllegalArgumentException("productionType.isEmpty()");
+        if (userName == null) {
+            throw new NullPointerException("userName");
+        }
+        if (productionParameters == null) {
+            throw new NullPointerException("productionParameters");
         }
         this.productionType = productionType;
-        this.productionParameters = new HashMap<String, String>();
+        this.userName = userName;
+        this.productionParameters = new HashMap<String, String>(productionParameters);
+    }
+
+    public String getProductionType() {
+        return productionType;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+
+    public Map<String, String> getProductionParameters() {
+        return Collections.unmodifiableMap(productionParameters);
+    }
+
+    private static Map<String, String> mapify(String[] productionParametersKeyValuePairs) {
+        Map<String, String> productionParameters = new HashMap<String, String>();
         for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
             String name = productionParametersKeyValuePairs[i];
-             if (name == null) {
+            if (name == null) {
                 throw new NullPointerException("name");
             }
             String value = productionParametersKeyValuePairs[i + 1];
@@ -43,35 +72,6 @@ public class GsProductionRequest implements IsSerializable {
             }
             productionParameters.put(name, value);
         }
+        return productionParameters;
     }
-
-    public GsProductionRequest(String productionType, Map<String, String> productionParameters) {
-        if (productionType == null) {
-            throw new NullPointerException("productionType");
-        }
-        if (productionParameters == null) {
-            throw new NullPointerException("productionParameters");
-        }
-        this.productionType = productionType;
-        this.productionParameters = new HashMap<String, String>(productionParameters);
-    }
-
-    public String getProductionType() {
-        return productionType;
-    }
-
-    public Map<String, String> getProductionParameters() {
-        return Collections.unmodifiableMap(productionParameters);
-    }
-
-
-    public static boolean isValid(GsProductionRequest req) {
-        if (req.getProductionType() == null || req.getProductionType().isEmpty()) {
-            return false;
-        }
-        return true;
-    }
-
-
-
 }

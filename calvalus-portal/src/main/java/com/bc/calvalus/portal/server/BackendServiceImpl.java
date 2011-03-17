@@ -183,7 +183,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private ProductionRequest convert(GsProductionRequest gwtProductionRequest) {
-        return new ProductionRequest(gwtProductionRequest.getProductionType(), gwtProductionRequest.getProductionParameters());
+        return new ProductionRequest(gwtProductionRequest.getProductionType(),
+                                     gwtProductionRequest.getUserName(),
+                                     gwtProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(ProductionException e) {

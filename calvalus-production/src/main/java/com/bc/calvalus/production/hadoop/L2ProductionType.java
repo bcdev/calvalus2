@@ -46,12 +46,11 @@ public class L2ProductionType implements ProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        String productionId = Production.createId(productionRequest.getProductionType());
-        String productionName = createL2ProductionName(productionRequest);
-        String userName = "ewa";  // todo - get user from productionRequest
+        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String productionName = createL2ProductionName(productionRequest);
+        final String userName = productionRequest.getUserName();
 
         ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(productionId,
-                                                                                                   userName,
                                                                                                    productionRequest);
 
         Workflow.Parallel workflow = new Workflow.Parallel();
@@ -61,7 +60,6 @@ public class L2ProductionType implements ProductionType {
 
         return new Production(productionId,
                               productionName,
-                              userName,
                               userName + "/" + productionId,
                               productionRequest,
                               workflow);
@@ -72,7 +70,6 @@ public class L2ProductionType implements ProductionType {
         ProductionRequest productionRequest = production.getProductionRequest();
 
         final ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(production.getId(),
-                                                                                                         production.getUser(),
                                                                                                          productionRequest);
         final String jobOutputDir = processingRequests[0].getOutputDir();
         Staging staging = new Staging() {

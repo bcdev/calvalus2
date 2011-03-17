@@ -23,19 +23,26 @@ public class SimpleProductionStoreTest {
         File unusedDbFile = new File("x");
         SimpleProductionStore db = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
 
-        Production prod1 = new Production("id1", "name1", "marco",
+        Production prod1 = new Production("id1", "name1",
                                           "path1",
-                                          new ProductionRequest("test", "a", "5", "b", "9"),
+                                          new ProductionRequest("test", "marco",
+                                                                "a", "5",
+                                                                "b", "9"),
                                           new Workflow.Parallel(new TestWorkflowItem<String>("job5")));
         prod1.setProcessingStatus(new ProcessStatus(ProcessState.RUNNING, 0.6f));
 
-        Production prod2 = new Production("id2", "name2", "martin", null,
-                                          new ProductionRequest("test", "a", "9", "b", "2"),
+        Production prod2 = new Production("id2", "name2", null,
+                                          new ProductionRequest("test", "martin",
+                                                                "a", "9",
+                                                                "b", "2"),
                                           new Workflow.Parallel(new TestWorkflowItem<String>("job9")));
         prod2.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
 
-        Production prod3 = new Production("id3", "name3", "norman", "path3",
-                                          new ProductionRequest("test", "a", "1", "b", "0", "autoStaging", "true"),
+        Production prod3 = new Production("id3", "name3", "path3",
+                                          new ProductionRequest("test", "norman",
+                                                                "a", "1",
+                                                                "b", "0",
+                                                                "autoStaging", "true"),
                                           new Workflow.Parallel(new TestWorkflowItem<String>("job2")));
         prod3.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
         prod3.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED));
@@ -57,7 +64,6 @@ public class SimpleProductionStoreTest {
         Production restoredProd1 = productions[0];
         assertEquals("id1", restoredProd1.getId());
         assertEquals("name1", restoredProd1.getName());
-        assertEquals("marco", restoredProd1.getUser());
         assertEquals("path1", restoredProd1.getStagingPath());
         assertEquals("job5", restoredProd1.getJobIds()[0]);
         assertEquals(false, restoredProd1.isAutoStaging());
@@ -65,13 +71,13 @@ public class SimpleProductionStoreTest {
         assertEquals(ProcessStatus.UNKNOWN, restoredProd1.getStagingStatus());
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
+        assertEquals("marco", restoredProd1.getProductionRequest().getUserName());
         assertEquals("5", restoredProd1.getProductionRequest().getProductionParameter("a"));
         assertEquals("9", restoredProd1.getProductionRequest().getProductionParameter("b"));
 
         Production restoredProd2 = productions[1];
         assertEquals("id2", restoredProd2.getId());
         assertEquals("name2", restoredProd2.getName());
-        assertEquals("martin", restoredProd2.getUser());
         assertEquals(null, restoredProd2.getStagingPath());
         assertEquals("job9", restoredProd2.getJobIds()[0]);
         assertEquals(false, restoredProd2.isAutoStaging());
@@ -79,13 +85,13 @@ public class SimpleProductionStoreTest {
         assertEquals(ProcessStatus.UNKNOWN, restoredProd2.getStagingStatus());
         assertNotNull(restoredProd2.getProductionRequest());
         assertEquals("test", restoredProd2.getProductionRequest().getProductionType());
+        assertEquals("martin", restoredProd2.getProductionRequest().getUserName());
         assertEquals("9", restoredProd2.getProductionRequest().getProductionParameter("a"));
         assertEquals("2", restoredProd2.getProductionRequest().getProductionParameter("b"));
 
         Production restoredProd3 = productions[2];
         assertEquals("id3", restoredProd3.getId());
         assertEquals("name3", restoredProd3.getName());
-        assertEquals("norman", restoredProd3.getUser());
         assertEquals("path3", restoredProd3.getStagingPath());
         assertEquals("job2", restoredProd3.getJobIds()[0]);
         assertEquals(true, restoredProd3.isAutoStaging());
@@ -93,6 +99,7 @@ public class SimpleProductionStoreTest {
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getStagingStatus());
         assertNotNull(restoredProd3.getProductionRequest());
         assertEquals("test", restoredProd3.getProductionRequest().getProductionType());
+        assertEquals("norman", restoredProd3.getProductionRequest().getUserName());
         assertEquals("1", restoredProd3.getProductionRequest().getProductionParameter("a"));
         assertEquals("0", restoredProd3.getProductionRequest().getProductionParameter("b"));
     }

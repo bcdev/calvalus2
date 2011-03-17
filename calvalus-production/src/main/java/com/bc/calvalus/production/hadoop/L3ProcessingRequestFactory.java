@@ -18,7 +18,7 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
     @Override
-    public L3ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException {
+    public L3ProcessingRequest[] createProcessingRequests(String productionId, ProductionRequest productionRequest) throws ProductionException {
 
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
         productionRequest.ensureProductionParameterSet("processorBundleName");
@@ -31,7 +31,7 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
         Map<String, Object> commonProcessingParameters = new HashMap<String, Object>(productionParameters);
 
         commonProcessingParameters.put("productionId", productionId);
-        commonProcessingParameters.put("userName", userName);
+        commonProcessingParameters.put("userName", productionRequest.getUserName());
         commonProcessingParameters.put("binningParameters", getLevel3(getNumRows(productionRequest),
                                                                       getBBox(productionRequest),
                                                                       productionRequest.getProductionParameter("maskExpr"),
@@ -57,7 +57,10 @@ public class L3ProcessingRequestFactory extends ProcessingRequestFactory {
             processingParameters.put("dateStart", getDateFormat().format(date1));
             processingParameters.put("dateStop", getDateFormat().format(date2));
             processingParameters.put("inputFiles", getInputFiles(productionRequest.getProductionParameterSafe("inputProductSetId"), date1, date2));
-            processingParameters.put("outputDir", getProcessingService().getDataOutputPath() + "/" + userName + "/" + productionId + "_" + i);
+            processingParameters.put("outputDir", String.format("%s/%s/%s_%d",
+                                                                getProcessingService().getDataOutputPath(),
+                                                                productionRequest.getUserName(),
+                                                                productionId, i));
 
             time += periodLengthMillis;
 

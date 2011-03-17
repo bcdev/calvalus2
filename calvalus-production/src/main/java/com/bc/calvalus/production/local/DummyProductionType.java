@@ -40,13 +40,7 @@ class DummyProductionType implements ProductionType {
         if (name == null) {
             name = "Doing something";
         }
-        String user = productionRequest.getProductionParameter("user");
-        if (user == null) {
-            user = "someone";
-        }
 
-
-        // todo - WORKFLOW {{{
         Workflow.Sequential sequential = new Workflow.Sequential();
         sequential.add(new AbstractWorkflowItem() {
             String jobId;
@@ -80,12 +74,10 @@ class DummyProductionType implements ProductionType {
                 return jobId != null ? new Object[]{jobId} : new Object[0];
             }
         });
-        // todo - }}} WORKFLOW
 
         String productionId = Production.createId(productionRequest.getProductionType());
         return new Production(productionId,
                               name,
-                              user,
                               productionId,
                               productionRequest,
                               sequential);

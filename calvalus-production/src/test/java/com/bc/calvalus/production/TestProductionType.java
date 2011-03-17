@@ -33,7 +33,6 @@ public class TestProductionType implements ProductionType {
                                                            new MyWorkflowItem("job_" + productionCount + "_2"));
         return new Production("id_" + productionCount,
                               "name_" + productionCount,
-                              "user_" + productionCount,
                               "stagingPath_" + productionCount,
                               productionRequest,
                               workflow);

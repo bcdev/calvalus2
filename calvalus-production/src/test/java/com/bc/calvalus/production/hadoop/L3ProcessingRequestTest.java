@@ -21,7 +21,7 @@ public class L3ProcessingRequestTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3ProcessingRequestFactory requestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
         );
-        L3ProcessingRequest[] processingRequests = requestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
+        L3ProcessingRequest[] processingRequests = requestFactory.createProcessingRequests("A25F", productionRequest);
         assertNotNull(processingRequests);
         assertEquals(1, processingRequests.length);
 
@@ -73,7 +73,7 @@ public class L3ProcessingRequestTest {
     }
 
     static ProductionRequest createValidL3ProductionRequest() {
-        return new ProductionRequest("calvalus-level3",
+        return new ProductionRequest("calvalus-level3", "ewa",
                                      // GeneralLevel 3 parameters
                                      "inputProductSetId", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",

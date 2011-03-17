@@ -32,7 +32,7 @@ abstract class ProcessingRequestFactory {
         return processingService;
     }
 
-    public abstract ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException;
+    public abstract ProcessingRequest[] createProcessingRequests(String productionId, ProductionRequest productionRequest) throws ProductionException;
 
 
     public boolean isAutoStaging(ProductionRequest request) throws ProductionException {

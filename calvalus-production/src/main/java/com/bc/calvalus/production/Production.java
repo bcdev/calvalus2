@@ -17,7 +17,6 @@ public class Production {
     private static long uniqueLong = System.nanoTime();
     private final String id;
     private final String name;
-    private final String user;
     private final WorkflowItem workflow;
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
@@ -26,7 +25,6 @@ public class Production {
 
     public Production(String id,
                       String name,
-                      String user,
                       String stagingPath,
                       ProductionRequest productionRequest,
                       WorkflowItem workflow) {
@@ -36,15 +34,11 @@ public class Production {
         if (name == null) {
             throw new NullPointerException("name");
         }
-        if (user == null) {
-            throw new NullPointerException("user");
-        }
         if (productionRequest == null) {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
-        this.user = user; // todo - check: remove param, instead derive from  productionRequest?
         this.stagingPath = stagingPath;
         this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
         this.workflow = workflow;
@@ -65,10 +59,6 @@ public class Production {
 
     public String getName() {
         return name;
-    }
-
-    public String getUser() {
-        return user;
     }
 
     public WorkflowItem getWorkflow() {

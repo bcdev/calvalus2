@@ -32,7 +32,7 @@ class L2ProcessingRequestFactory extends ProcessingRequestFactory {
     }
 
     @Override
-    public ProcessingRequest[] createProcessingRequests(String productionId, String userName, ProductionRequest productionRequest) throws ProductionException {
+    public ProcessingRequest[] createProcessingRequests(String productionId, ProductionRequest productionRequest) throws ProductionException {
         Map<String, String> productionParameters = productionRequest.getProductionParameters();
         productionRequest.ensureProductionParameterSet("processorBundleName");
         productionRequest.ensureProductionParameterSet("processorBundleVersion");
@@ -51,6 +51,7 @@ class L2ProcessingRequestFactory extends ProcessingRequestFactory {
         String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
         processingParameters.put("inputFiles", getInputFiles(inputProductSetId, startDate, stopDate));
 
+        String userName = productionRequest.getUserName();
         String jobDir = getProcessingService().getDataOutputPath() + "/" + userName + "/" + productionId;
         processingParameters.put("outputDir", jobDir);
 

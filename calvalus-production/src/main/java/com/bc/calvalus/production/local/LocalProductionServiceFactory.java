@@ -66,15 +66,15 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
 
         if (new SimpleProductionStore(processingService.getJobIdFormat(),
                                       new File("test-productions.csv")).getProductions().length == 0) {
-            productionService.orderProduction(new ProductionRequest("test",
+            productionService.orderProduction(new ProductionRequest("test", "ewa",
                                                                     "name", "Formatting all hard drives",
                                                                     "user", "martin",
                                                                     "autoStaging", "true"));
-            productionService.orderProduction(new ProductionRequest("test",
+            productionService.orderProduction(new ProductionRequest("test", "ewa",
                                                                     "name", "Drying CD slots",
                                                                     "user", "marcoz",
                                                                     "autoStaging", "true"));
-            productionService.orderProduction(new ProductionRequest("test",
+            productionService.orderProduction(new ProductionRequest("test", "ewa",
                                                                     "name", "Rewriting kernel using BASIC",
                                                                     "user", "norman",
                                                                     "autoStaging", "false"));

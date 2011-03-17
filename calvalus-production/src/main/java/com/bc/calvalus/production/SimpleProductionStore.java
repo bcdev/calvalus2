@@ -105,15 +105,14 @@ public class SimpleProductionStore implements ProductionStore {
             String[] tokens = line.split("\t");
             String id = decodeTSV(tokens[0]);
             String name = decodeTSV(tokens[1]);
-            String user = decodeTSV(tokens[2]);
-            String stagingPath = decodeTSV(tokens[3]);
-            int[] offpt = new int[]{4};
+            String stagingPath = decodeTSV(tokens[2]);
+            int[] offpt = new int[]{3};
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
             Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
             WorkflowItem workflow = createWorkflow(jobIDs);
-            Production production = new Production(id, name, user,
+            Production production = new Production(id, name,
                                                    stagingPath,
                                                    productionRequest,
                                                    workflow);
@@ -126,10 +125,9 @@ public class SimpleProductionStore implements ProductionStore {
 
     void store(PrintWriter writer) {
         for (Production production : productionsList) {
-            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tEoR\n",
+            writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\tEoR\n",
                           encodeTSV(production.getId()),
                           encodeTSV(production.getName()),
-                          encodeTSV(production.getUser()),
                           encodeTSV(production.getStagingPath()),
                           encodeProductionRequestTSV(production.getProductionRequest()),
                           encodeJobIdsTSV(production.getJobIds()),
@@ -166,6 +164,8 @@ public class SimpleProductionStore implements ProductionStore {
         StringBuilder sb = new StringBuilder();
         sb.append(productionRequest.getProductionType());
         sb.append("\t");
+        sb.append(productionRequest.getUserName());
+        sb.append("\t");
         sb.append(productionParameters.size());
         for (Map.Entry<String, String> entry : productionParameters.entrySet()) {
             sb.append("\t");
@@ -179,6 +179,7 @@ public class SimpleProductionStore implements ProductionStore {
     private static ProductionRequest decodeProductionRequestTSV(String[] tokens, int[] offpt) {
         int off = offpt[0];
         String productionType = decodeTSV(tokens[off++]);
+        String userName = decodeTSV(tokens[off++]);
         int numParams = Integer.parseInt(tokens[off++]);
         Map<String, String> productionParameters = new HashMap<String, String>();
         for (int i = 0; i < numParams; i++) {
@@ -187,7 +188,7 @@ public class SimpleProductionStore implements ProductionStore {
             productionParameters.put(name, value);
         }
         offpt[0] = off;
-        return new ProductionRequest(productionType, productionParameters);
+        return new ProductionRequest(productionType, userName, productionParameters);
     }
 
     static String encodeProductionStatusTSV(ProcessStatus processStatus) {

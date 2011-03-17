@@ -38,10 +38,9 @@ public class L3ProductionType implements ProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createL3ProductionName(productionRequest);
-        final String userName = "ewa";  // todo - get user from productionRequest
+        final String userName = productionRequest.getUserName();
 
         L3ProcessingRequest[] processingRequests = processingRequestFactory.createProcessingRequests(productionId,
-                                                                                                     userName,
                                                                                                      productionRequest);
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (L3ProcessingRequest processingRequest : processingRequests) {
@@ -50,7 +49,6 @@ public class L3ProductionType implements ProductionType {
 
         return new Production(productionId,
                               productionName,
-                              userName,
                               userName + "/" + productionId,
                               productionRequest,
                               workflow);
@@ -61,7 +59,6 @@ public class L3ProductionType implements ProductionType {
         JobClient jobClient = processingService.getJobClient();
         ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
         L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
-                                                                                                       hadoopProduction.getUser(),
                                                                                                        productionRequest);
         L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingDir());
         try {

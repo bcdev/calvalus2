@@ -33,7 +33,7 @@ public class BackendServiceTest extends GWTTestCase {
         delayTestFinish(10000);
 
         // Send a request to the server.
-        backendService.orderProduction(new GsProductionRequest("x*y",
+        backendService.orderProduction(new GsProductionRequest("x*y", "ewa",
                                                                "x", "3",
                                                                "y", "-1"),
                                        new PortalProductionResponseAsyncCallback());
