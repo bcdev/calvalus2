@@ -43,8 +43,8 @@ public class L3ProductionType extends HadoopProductionType {
         productionRequest.ensureProductionParameterSet("superSampling");
 
         String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
-        Date startDate = getDate(productionRequest, "dateStart");
-        Date stopDate = getDate(productionRequest, "dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
+        Date startDate = productionRequest.getDate("dateStart");
+        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
 
         String processorBundle = String.format("%s-%s",
                                                productionParameters.get("processorBundleName"),
@@ -78,8 +78,8 @@ public class L3ProductionType extends HadoopProductionType {
                                                                inputFiles,
                                                                outputDir,
                                                                l3Config,
-                                                               getDateFormat().format(date1),
-                                                               getDateFormat().format(date2));
+                                                               ProductionRequest.getDateFormat().format(date1),
+                                                               ProductionRequest.getDateFormat().format(date2));
             workflow.add(l3WorkflowItem);
             time += periodLengthMillis;
         }
@@ -117,7 +117,7 @@ public class L3ProductionType extends HadoopProductionType {
         L3Config l3Config = new L3Config();
         l3Config.setNumRows(getNumRows(productionRequest));
         l3Config.setSuperSampling(Integer.parseInt(productionRequest.getProductionParameter("superSampling")));
-        l3Config.setBbox(getBBox(productionRequest));
+        l3Config.setBbox(productionRequest.getBBox());
         l3Config.setMaskExpr(productionRequest.getProductionParameter("maskExpr"));
         l3Config.setVariables(getVariables(productionRequest));
         l3Config.setAggregators(getAggregators(productionRequest));
@@ -127,9 +127,9 @@ public class L3ProductionType extends HadoopProductionType {
     static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         String inputVariablesStr = request.getProductionParameterSafe("inputVariables");
         String aggregatorName = request.getProductionParameterSafe("aggregator");
-        Integer percentage = getInteger(request, "percentage", null);
-        Double weightCoeff = getDouble(request, "weightCoeff", null);
-        Double fillValue = getDouble(request, "fillValue", null);
+        Integer percentage = request.getInteger("percentage", null);
+        Double weightCoeff = request.getDouble("weightCoeff", null);
+        Double fillValue = request.getDouble("fillValue", null);
         String[] inputVariables = inputVariablesStr.split(",");
         for (int i = 0; i < inputVariables.length; i++) {
             inputVariables[i] = inputVariables[i].trim();

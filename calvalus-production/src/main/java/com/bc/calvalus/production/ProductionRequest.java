@@ -1,7 +1,12 @@
 package com.bc.calvalus.production;
 
 
+import org.esa.beam.framework.datamodel.ProductData;
+
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +16,7 @@ import java.util.Map;
  * @author Norman
  */
 public class ProductionRequest {
+    public final static DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
     private final String productionType;
     private final String userName;
     private final Map<String, String> productionParameters;
@@ -42,6 +48,53 @@ public class ProductionRequest {
         this.productionType = productionType;
         this.userName = userName;
         this.productionParameters = new HashMap<String, String>(productionParameters);
+    }
+
+    public static DateFormat getDateFormat() {
+        return dateFormat;
+    }
+
+    public boolean getBoolean(String name, Boolean def) {
+        String text = getProductionParameter(name);
+        if (text != null) {
+            return Boolean.parseBoolean(text);
+        } else {
+            return def;
+        }
+    }
+
+    public String getBBox() throws ProductionException {
+        return String.format("%s,%s,%s,%s",
+                             getProductionParameterSafe("lonMin"),
+                             getProductionParameterSafe("latMin"),
+                             getProductionParameterSafe("lonMax"),
+                             getProductionParameterSafe("latMax"));
+    }
+
+    public Double getDouble(String name, Double def) {
+        String text = getProductionParameter(name);
+        if (text != null) {
+            return Double.parseDouble(text);
+        } else {
+            return def;
+        }
+    }
+
+    public Date getDate(String name) throws ProductionException {
+        try {
+            return dateFormat.parse(getProductionParameterSafe(name));
+        } catch (ParseException e) {
+            throw new ProductionException("Illegal date format for production parameter '" + name + "'");
+        }
+    }
+
+    public Integer getInteger(String name, Integer def) {
+        String text = getProductionParameter(name);
+        if (text != null) {
+            return Integer.parseInt(text);
+        } else {
+            return def;
+        }
     }
 
     public String getProductionType() {
