@@ -25,10 +25,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
@@ -126,8 +124,6 @@ public class BeamOpProcessingType {
                 jobControl.run();
 
             }
-
-
         } else {
             job.setMapperClass(BeamOperatorMapper.class);
             job.setNumReduceTasks(0);
@@ -143,23 +139,4 @@ public class BeamOpProcessingType {
 
         CalvalusClasspath.configure(configuration.get(ProcessingConfiguration.CALVALUS_BUNDLE), configuration);
     }
-
-
-    public JobID submitJobImpl(Job job) throws Exception {
-        Configuration configuration = job.getConfiguration();
-        //add calvalus itself to classpath of hadoop jobs
-        CalvalusClasspath.addPackageToClassPath("calvalus-1.0-SNAPSHOT", configuration);
-        JobConf jobConf;
-        if (configuration instanceof JobConf) {
-            jobConf = (JobConf) configuration;
-        } else {
-            jobConf = new JobConf(configuration);
-        }
-        jobConf.setUseNewMapper(true);
-        jobConf.setUseNewReducer(true);
-        RunningJob runningJob = jobClient.submitJob(jobConf);
-        return runningJob.getID();
-    }
-
-
 }
