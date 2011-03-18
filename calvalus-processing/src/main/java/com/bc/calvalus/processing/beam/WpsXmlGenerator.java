@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.hadoop;
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.WorkflowException;
 import org.apache.velocity.Template;
@@ -6,7 +6,6 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -36,17 +35,11 @@ public class WpsXmlGenerator {
      *
      * </pre>
      *
-     * @param productionId      A production ID.
-     * @param productionName    A production name.
-     * @param processingRequest The L3 processing request.  @return The WPS XML plain text.
+     * @param templateParameters The L3 processing parameters.
+     * @return The WPS XML plain text.
      * @throws WorkflowException If the WPS XML cannot be created.
      */
-    public String createL3WpsXml(String productionId,
-                                 String productionName,
-                                 L3ProcessingRequest processingRequest) throws WorkflowException {
-        Map<String, Object> templateParameters = new HashMap<String, Object>(processingRequest.getProcessingParameters());
-        templateParameters.put("productionId", productionId);
-        templateParameters.put("productionName", productionName);
+    public String createL3WpsXml(Map<String, Object> templateParameters) throws WorkflowException {
         return interpolateTemplate("com/bc/calvalus/processing/hadoop/level3-wps-request.xml.vm",
                                    templateParameters);
     }

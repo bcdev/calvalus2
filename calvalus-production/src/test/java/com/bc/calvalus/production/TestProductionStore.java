@@ -11,6 +11,7 @@ import java.util.ArrayList;
 @Ignore
 public class TestProductionStore implements ProductionStore {
     private final ArrayList<Production> list = new ArrayList<Production>();
+    boolean closed;
 
     @Override
     public void addProduction(Production production) {
@@ -43,5 +44,10 @@ public class TestProductionStore implements ProductionStore {
 
     @Override
     public void store() throws IOException {
+    }
+
+    @Override
+    public void close() throws IOException {
+        closed = true;
     }
 }

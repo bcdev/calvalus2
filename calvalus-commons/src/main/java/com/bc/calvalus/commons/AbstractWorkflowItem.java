@@ -25,6 +25,7 @@ import java.util.List;
  * @author Norman
  */
 public abstract class AbstractWorkflowItem implements WorkflowItem {
+    private static final WorkflowItem[] NO_ITEMS = new WorkflowItem[0];
     private final List<WorkflowStatusListener> statusListeners;
     private ProcessStatus status;
 
@@ -51,6 +52,11 @@ public abstract class AbstractWorkflowItem implements WorkflowItem {
             status = newStatus;
             fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus));
         }
+    }
+
+    @Override
+    public WorkflowItem[] getItems() {
+        return NO_ITEMS;
     }
 
     protected void fireStatusChanged(WorkflowStatusEvent event) {

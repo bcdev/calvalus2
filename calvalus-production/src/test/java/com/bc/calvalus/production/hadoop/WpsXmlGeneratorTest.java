@@ -1,12 +1,14 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
-import com.bc.calvalus.processing.hadoop.WpsXmlGenerator;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.WpsXmlGenerator;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.TestProcessingService;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -17,12 +19,24 @@ public class WpsXmlGeneratorTest {
 
     @Test
     public void testL3WpsXml() throws WorkflowException, ProductionException {
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
-        );
-        ProductionRequest productionRequest = L3ProcessingRequestFactoryTest.createValidL3ProductionRequest();
-        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createWorkflowItems("A25F", productionRequest);
+        ProductionRequest productionRequest = L3ProductionTypeTest.createValidL3ProductionRequest();
 
-        String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
+        L3Config binningConfig = L3ProductionType.createBinningConfig(productionRequest);
+
+        Map<String, Object> templateParameters = new HashMap<String, Object>(productionRequest.getProductionParameters());
+        templateParameters.put("productionId", "ID_pi-pa-po");
+        templateParameters.put("productionType", "A25F");
+        templateParameters.put("productionName", "Wonderful L3");
+        templateParameters.put("binningParameters", binningConfig);
+        templateParameters.put("inputFiles", new String[]{
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F2.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F3.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F4.N1",
+        });
+        templateParameters.put("outputDir", "hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0");
+
+        String xml = new WpsXmlGenerator().createL3WpsXml(templateParameters);
         assertNotNull(xml);
 
         // System.out.println(xml);

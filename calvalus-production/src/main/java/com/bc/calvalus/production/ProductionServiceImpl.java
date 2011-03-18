@@ -12,7 +12,6 @@ import com.bc.calvalus.staging.StagingService;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +35,6 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, Action> productionActionMap;
     private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
-    private Timer statusObserver;
 
     public ProductionServiceImpl(ProcessingService processingService,
                                  StagingService stagingService,
@@ -220,6 +218,19 @@ public class ProductionServiceImpl implements ProductionService {
             productionStore.store();
         } catch (IOException e) {
             logger.warning("Failed to persist productions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            stagingService.close();
+        } finally {
+            try {
+                processingService.close();
+            } finally {
+                productionStore.close();
+            }
         }
     }
 

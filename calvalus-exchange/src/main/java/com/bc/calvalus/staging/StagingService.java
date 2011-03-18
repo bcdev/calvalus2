@@ -24,4 +24,10 @@ public interface StagingService {
      * @throws IOException If an error occurs
      */
     void deleteTree(String path) throws IOException;
+
+    /**
+     * Indicates the service will no longer be used.
+     * Invocation has no additional effect if already closed.
+     */
+    void close();
 }

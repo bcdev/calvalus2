@@ -35,7 +35,6 @@ import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Creates a beam hadoop job
@@ -46,12 +45,6 @@ public class BeamOpProcessingType {
 
     public BeamOpProcessingType(JobClient jobClient) {
         this.jobClient = jobClient;
-    }
-
-    public JobID submitJob(Map<String, Object> parameters) throws Exception {
-        Job job = createJobFromParameters(parameters);
-        configureJob(job);
-        return submitJobImpl(job);
     }
 
     public Job createJobFromWps(String wpsXmlRequest) throws Exception {
@@ -76,43 +69,6 @@ public class BeamOpProcessingType {
         if (value != null && !value.isEmpty()) {
             conf.set(key, value);
         }
-    }
-
-    public Job createJobFromParameters(Map<String, Object> parameters) throws IOException {
-        String productionId = getString(parameters, "productionId");
-
-        Job job = new Job(jobClient.getConf(), productionId);
-        Configuration configuration = job.getConfiguration();
-
-        //TODO generalise this (copy everything from parameters map?)
-        configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, productionId);
-        String name = getString(parameters, "processorBundleName");
-        String version = getString(parameters, "processorBundleVersion");
-        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, name + "-" + version);
-        String[] inputFiles = (String[]) parameters.get("inputFiles");
-        String inputs = StringUtils.join(inputFiles, ",");
-        configuration.set(ProcessingConfiguration.CALVALUS_INPUT, inputs);
-        configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, getString(parameters, "outputDir"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, getString(parameters, "processorName"));
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, getString(parameters, "processorParameters"));
-        Object level3Parameters = parameters.get("binningParameters");
-        if (level3Parameters instanceof L3Config) {
-            L3Config l3Config = (L3Config) level3Parameters;
-            String l3Params = BeamUtils.saveAsXml(l3Config);
-            configuration.set(ProcessingConfiguration.CALVALUS_L3_PARAMETER, l3Params);
-        }
-        return job;
-    }
-
-    public static String getString(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            throw new IllegalArgumentException(String.format("Missing parameter '%s'.", key));
-        }
-        if (!(value instanceof String)) {
-            throw new IllegalArgumentException(String.format("Parameter '%s' must be a String.", key));
-        }
-        return (String) value;
     }
 
     public void configureJob(Job job) throws IOException {

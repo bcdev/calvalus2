@@ -84,6 +84,10 @@ class LocalProcessingService implements ProcessingService<String> {
         return false;
     }
 
+    @Override
+    public void close() throws IOException {
+    }
+
     public synchronized String submitJob() {
         Job job = new Job(createJobId(), 1000 * (10 + (int) (50 * Math.random())));
         job.submit();

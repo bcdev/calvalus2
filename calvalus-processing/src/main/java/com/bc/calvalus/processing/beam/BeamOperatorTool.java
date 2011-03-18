@@ -109,8 +109,8 @@ public class BeamOperatorTool extends Configured implements Tool {
                     WpsConfig wpsConfig = new WpsConfig(requestContent);
 
                     L3Config l3Config = L3Config.create(wpsConfig.getLevel3Paramter());
-                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
+                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     L3Formatter formatter = new L3Formatter(LOG, getConf());
                     result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir);
                 } else {

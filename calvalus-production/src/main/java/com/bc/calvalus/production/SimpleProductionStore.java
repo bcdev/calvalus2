@@ -75,6 +75,10 @@ public class SimpleProductionStore implements ProductionStore {
         store(databaseFile);
     }
 
+    @Override
+    public void close() throws IOException {
+    }
+
     private void load(File databaseFile) throws IOException {
         if (databaseFile.exists()) {
             BufferedReader reader = new BufferedReader(new FileReader(databaseFile));

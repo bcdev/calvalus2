@@ -22,6 +22,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +69,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public void destroy() {
         if (productionService != null) {
             statusObserver.cancel();
+            try {
+                productionService.close();
+            } catch (IOException e) {
+                log("Failed to close production service", e);
+            }
             productionService = null;
         }
         super.destroy();

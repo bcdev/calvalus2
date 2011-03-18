@@ -1,7 +1,5 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.production.Production;
-
 import java.io.IOException;
 
 /**
@@ -21,4 +19,10 @@ public interface ProductionStore {
     void load() throws IOException;
 
     void store() throws IOException;
+
+    /**
+     * Indicates the service will no longer be used.
+     * Invocation has no additional effect if already closed.
+     */
+    void close() throws IOException;
 }

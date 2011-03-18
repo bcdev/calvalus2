@@ -12,6 +12,7 @@ import java.util.List;
 @Ignore
 public class TestStagingService implements StagingService {
     private List<Staging> stagings = new ArrayList<Staging>();
+    boolean closed;
 
     public TestStagingService() {
     }
@@ -32,6 +33,10 @@ public class TestStagingService implements StagingService {
 
     @Override
     public void deleteTree(String path) throws IOException {
+    }
 
+    @Override
+    public void close() {
+        closed = true;
     }
 }

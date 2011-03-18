@@ -14,12 +14,11 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.hadoop;
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.beam.BeamOperatorMapper;
-import com.bc.calvalus.processing.beam.CalvalusClasspath;
-import com.bc.calvalus.processing.beam.ProcessingConfiguration;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,15 +31,14 @@ import org.esa.beam.util.StringUtils;
 import java.io.IOException;
 
 /**
- * A workflow item for BEAM GPF operators.
+ * A workflow item creating a Hadoop job for n input products processed to n output products using a BEAM GPF operator.
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
     private final String productionId;
     private final String[] inputFiles;
     private final String outputDir;
-    private final String processorBundleName;
-    private final String processorBundleVersion;
+    private final String processorBundle;
     private final String processorName;
     private final String processorParameters;
 
@@ -48,16 +46,14 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                           String productionId,
                           String[] inputFiles,
                           String outputDir,
-                          String processorBundleName,
-                          String processorBundleVersion,
+                          String processorBundle,
                           String processorName,
                           String processorParameters) {
         super(processingService);
         this.productionId = productionId;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
-        this.processorBundleName = processorBundleName;
-        this.processorBundleVersion = processorBundleVersion;
+        this.processorBundle = processorBundle;
         this.processorName = processorName;
         this.processorParameters = processorParameters;
     }
@@ -71,8 +67,11 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         }
     }
 
+    public String getOutputDir() {
+        return outputDir;
+    }
+
     private void submitImpl() throws IOException {
-        String bundle = this.processorBundleName + "-" + this.processorBundleVersion;
 
         Job job = new Job(getProcessingService().getJobClient().getConf(), this.productionId);
         Configuration configuration = job.getConfiguration();
@@ -85,7 +84,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         // configuration.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
 
         configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, this.productionId);
-        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, bundle);
+        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, processorBundle);
         configuration.set(ProcessingConfiguration.CALVALUS_INPUT, StringUtils.join(this.inputFiles, ","));
         configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, this.outputDir);
         configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, this.processorName);
@@ -101,7 +100,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 
-        CalvalusClasspath.configure(bundle, configuration);
+        CalvalusClasspath.configure(processorBundle, configuration);
         JobID jobId = submitJob(job);
         setJobId(jobId);
     }

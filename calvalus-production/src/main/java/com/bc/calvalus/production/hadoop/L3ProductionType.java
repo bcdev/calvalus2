@@ -1,17 +1,19 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.L3WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.hadoop.L3ProcessingRequest;
-import com.bc.calvalus.processing.hadoop.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.hadoop.mapred.JobClient;
 
-import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
+
+import static java.lang.Math.*;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -19,20 +21,10 @@ import java.io.IOException;
  * @author MarcoZ
  * @author Norman
  */
-public class L3ProductionType implements ProductionType {
-    private final HadoopProcessingService processingService;
-    private final StagingService stagingService;
-    private final L3ProcessingRequestFactory processingRequestFactory;
+public class L3ProductionType extends HadoopProductionType {
 
-    L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        this.processingService = processingService;
-        this.stagingService = stagingService;
-        processingRequestFactory = new L3ProcessingRequestFactory(processingService);
-    }
-
-    @Override
-    public String getName() {
-        return "calvalus-level3";
+    public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super("calvalus-level3", processingService, stagingService);
     }
 
     @Override
@@ -42,11 +34,54 @@ public class L3ProductionType implements ProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        L3ProcessingRequest[] processingRequests = processingRequestFactory.createWorkflowItems(productionId,
-                                                                                                productionRequest);
+        Map<String, String> productionParameters = productionRequest.getProductionParameters();
+        productionRequest.ensureProductionParameterSet("processorBundleName");
+        productionRequest.ensureProductionParameterSet("processorBundleVersion");
+        productionRequest.ensureProductionParameterSet("processorName");
+        productionRequest.ensureProductionParameterSet("processorParameters");
+        productionRequest.ensureProductionParameterSet("maskExpr");
+        productionRequest.ensureProductionParameterSet("superSampling");
+
+        String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
+        Date startDate = getDate(productionRequest, "dateStart");
+        Date stopDate = getDate(productionRequest, "dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
+
+        String processorBundle = String.format("%s-%s",
+                                               productionParameters.get("processorBundleName"),
+                                               productionParameters.get("processorBundleVersion"));
+        String processorName = productionParameters.get("processorName");
+        String processorParameters = productionParameters.get("processorParameters");
+
+        L3Config l3Config = createBinningConfig(productionRequest);
+
+        int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
+        int periodLength = Integer.parseInt(productionRequest.getProductionParameter("periodLength")); // unit=days
+
+        long time = startDate.getTime();
+        long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+
         Workflow.Parallel workflow = new Workflow.Parallel();
-        for (L3ProcessingRequest processingRequest : processingRequests) {
-            workflow.add(new L3WorkflowItem(processingService, processingRequest));
+        for (int i = 0; i < periodCount; i++) {
+
+            Date date1 = new Date(time);
+            Date date2 = new Date(time + periodLengthMillis - 1L);
+
+            // todo - use l3Config.bbox to filter input files
+            String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
+            String outputDir = getOutputDir(productionId, productionRequest, i);
+
+            L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
+                                                               productionId,
+                                                               processorBundle,
+                                                               processorName,
+                                                               processorParameters,
+                                                               inputFiles,
+                                                               outputDir,
+                                                               l3Config,
+                                                               getDateFormat().format(date1),
+                                                               getDateFormat().format(date2));
+            workflow.add(l3WorkflowItem);
+            time += periodLengthMillis;
         }
 
         return new Production(productionId,
@@ -57,24 +92,17 @@ public class L3ProductionType implements ProductionType {
     }
 
     @Override
-    public L3Staging createStaging(Production hadoopProduction) throws ProductionException {
-        JobClient jobClient = processingService.getJobClient();
-        ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
-        L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createWorkflowItems(hadoopProduction.getId(),
-                                                                                                  productionRequest);
-        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingDir());
-        try {
-            stagingService.submitStaging(l3Staging);
-        } catch (IOException e) {
-            throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
-                                                        hadoopProduction.getId(), e.getMessage()), e);
-        }
-        return l3Staging;
+    protected Staging createUnsubmittedStaging(Production production) {
+        return new L3Staging(production,
+                             getProcessingService().getJobClient().getConf(),
+                             getStagingService().getStagingDir());
     }
 
-    @Override
-    public boolean accepts(ProductionRequest productionRequest) {
-        return getName().equalsIgnoreCase(productionRequest.getProductionType());
+    String getOutputDir(String productionId, ProductionRequest productionRequest, int index) {
+        return String.format("%s/%s/%s_%d",
+                             getProcessingService().getDataOutputPath(),
+                             productionRequest.getUserName(),
+                             productionId, index);
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) {
@@ -84,4 +112,57 @@ public class L3ProductionType implements ProductionType {
 
     }
 
+    static L3Config createBinningConfig(ProductionRequest productionRequest) throws ProductionException {
+        L3Config l3Config = new L3Config();
+        l3Config.setNumRows(getNumRows(productionRequest));
+        l3Config.setSuperSampling(Integer.parseInt(productionRequest.getProductionParameter("superSampling")));
+        l3Config.setBbox(getBBox(productionRequest));
+        l3Config.setMaskExpr(productionRequest.getProductionParameter("maskExpr"));
+        l3Config.setVariables(getVariables(productionRequest));
+        l3Config.setAggregators(getAggregators(productionRequest));
+        return l3Config;
+    }
+
+    static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+        String inputVariablesStr = request.getProductionParameterSafe("inputVariables");
+        String aggregatorName = request.getProductionParameterSafe("aggregator");
+        Integer percentage = getInteger(request, "percentage", null);
+        Double weightCoeff = getDouble(request, "weightCoeff", null);
+        Double fillValue = getDouble(request, "fillValue", null);
+        String[] inputVariables = inputVariablesStr.split(",");
+        for (int i = 0; i < inputVariables.length; i++) {
+            inputVariables[i] = inputVariables[i].trim();
+        }
+        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[inputVariables.length];
+        for (int i = 0; i < inputVariables.length; i++) {
+            L3Config.AggregatorConfiguration aggregatorConfiguration = new L3Config.AggregatorConfiguration(aggregatorName);
+            aggregatorConfiguration.setVarName(inputVariables[i]);
+            aggregatorConfiguration.setPercentage(percentage);
+            aggregatorConfiguration.setWeightCoeff(weightCoeff);
+            aggregatorConfiguration.setFillValue(fillValue);
+            aggregatorConfigurations[i] = aggregatorConfiguration;
+        }
+        return aggregatorConfigurations;
+    }
+
+    static L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+        // todo - implement L3 variables
+        return new L3Config.VariableConfiguration[0];
+    }
+
+    static int getNumRows(ProductionRequest request) throws ProductionException {
+        double resolution = Double.parseDouble(request.getProductionParameterSafe("resolution"));
+        return computeBinningGridRowCount(resolution);
+    }
+
+    static int computeBinningGridRowCount(double res) {
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
+        if (numRows % 2 == 0) {
+            return numRows;
+        } else {
+            return numRows + 1;
+        }
+    }
 }

@@ -249,4 +249,15 @@ public class ProductionServiceImplTest {
             // ok
         }
     }
+
+    @Test
+    public void testClose() throws IOException {
+        assertEquals(false, stagingServiceMock.closed);
+        assertEquals(false, processingServiceMock.closed);
+        assertEquals(false, productionStoreMock.closed);
+        productionServiceUnderTest.close();
+        assertEquals(true, stagingServiceMock.closed);
+        assertEquals(true, processingServiceMock.closed);
+        assertEquals(true, productionStoreMock.closed);
+    }
 }

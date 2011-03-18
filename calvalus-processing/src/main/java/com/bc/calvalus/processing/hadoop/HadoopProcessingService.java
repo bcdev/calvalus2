@@ -14,7 +14,6 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,6 +90,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void close() throws IOException {
+        jobClient.close();
     }
 
     /**

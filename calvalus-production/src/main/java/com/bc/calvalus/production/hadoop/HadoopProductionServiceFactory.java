@@ -21,7 +21,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
-    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME ="calvalus-productions-db.csv";
+    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME = "calvalus-productions-db.csv";
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
@@ -41,8 +41,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);
             return new ProductionServiceImpl(processingService, stagingService, productionStore,
-                                                                                l2ProductionType,
-                                                                                l3ProductionType);
+                                             l2ProductionType,
+                                             l3ProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

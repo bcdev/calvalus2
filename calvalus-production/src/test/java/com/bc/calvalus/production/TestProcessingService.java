@@ -8,7 +8,6 @@ import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Test implementation of ProductionStore.
@@ -18,6 +17,7 @@ import java.util.Map;
 @Ignore
 public class TestProcessingService implements ProcessingService<String> {
     private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
+    boolean closed;
 
     @Override
     public JobIdFormat<String> getJobIdFormat() {
@@ -68,5 +68,10 @@ public class TestProcessingService implements ProcessingService<String> {
         }
         jobStatusMap.put(jobId, new ProcessStatus(ProcessState.CANCELLED, processStatus.getProgress()));
         return true;
+    }
+
+    @Override
+    public void close() throws IOException {
+        closed = true;
     }
 }

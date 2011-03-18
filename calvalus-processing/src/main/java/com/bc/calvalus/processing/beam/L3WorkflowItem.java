@@ -14,19 +14,13 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.hadoop;
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.beam.BeamOpProcessingType;
-import com.bc.calvalus.processing.beam.BeamUtils;
-import com.bc.calvalus.processing.beam.CalvalusClasspath;
-import com.bc.calvalus.processing.beam.L3Config;
-import com.bc.calvalus.processing.beam.L3Mapper;
-import com.bc.calvalus.processing.beam.L3Partitioner;
-import com.bc.calvalus.processing.beam.L3Reducer;
-import com.bc.calvalus.processing.beam.ProcessingConfiguration;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,18 +33,12 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: Norman
- * Date: 15.03.11
- * Time: 16:56
- * To change this template use File | Settings | File Templates.
+ * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
  */
 public class L3WorkflowItem extends HadoopWorkflowItem {
 
-    private L3ProcessingRequest processingRequest;
     private final String productionId;
     private final String processorBundle;
     private final String processorName;
@@ -58,23 +46,9 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
     private final String[] inputFiles;
     private final String outputDir;
     private final L3Config l3Config;
+    private final String startDate;
+    private final String stopDate;
 
-    public L3WorkflowItem(HadoopProcessingService processingService, L3ProcessingRequest processingRequest) {
-        super(processingService);
-        this.processingRequest = processingRequest;
-        Map<String, Object> parameters = processingRequest.getProcessingParameters();
-         productionId = BeamOpProcessingType.getString(parameters, "productionId");
-         processorBundleName = BeamOpProcessingType.getString(parameters, "processorBundleName");
-         processorBundleVersion = BeamOpProcessingType.getString(parameters, "processorBundleVersion");
-         processorBundle = processorBundleName + "-" + processorBundleVersion;
-         processorName = BeamOpProcessingType.getString(parameters, "processorName");
-         processorParameters = BeamOpProcessingType.getString(parameters, "processorParameters");
-        inputFiles = (String[]) parameters.get("inputFiles");
-         outputDir = BeamOpProcessingType.getString(parameters, "outputDir");
-         l3Config = (L3Config) parameters.get("binningParameters");
-
-
-    }
 
     public L3WorkflowItem(HadoopProcessingService processingService,
                           String productionId,
@@ -83,7 +57,9 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           String processorParameters,
                           String[] inputFiles,
                           String outputDir,
-                          L3Config l3Config) {
+                          L3Config l3Config,
+                          String startDate,
+                          String stopDate) {
         super(processingService);
         this.productionId = productionId;
         this.processorBundle = processorBundle;
@@ -92,14 +68,30 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
+        this.startDate = startDate;
+        this.stopDate = stopDate;
+    }
+
+    public String getStopDate() {
+        return stopDate;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public L3Config getL3Config() {
+        return l3Config;
     }
 
     @Override
     public void submit() throws WorkflowException {
         try {
-
             Job job = createJob(productionId, processorBundle, processorName, processorParameters, inputFiles, outputDir, l3Config);
-
             JobID jobId = submitJob(job);
             setJobId(jobId);
         } catch (Exception e) {
@@ -147,4 +139,5 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         CalvalusClasspath.configure(processorBundle, configuration);
         return job;
     }
+
 }

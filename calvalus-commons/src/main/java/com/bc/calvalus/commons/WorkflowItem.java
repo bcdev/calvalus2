@@ -75,4 +75,8 @@ public interface WorkflowItem {
     @Deprecated
     Object[] getJobIds();
 
+    /**
+     * @return The array of child items. The array will be empty, if there are no children.
+     */
+    WorkflowItem[] getItems();
 }

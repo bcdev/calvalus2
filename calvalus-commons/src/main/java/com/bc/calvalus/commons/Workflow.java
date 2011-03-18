@@ -83,6 +83,11 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
         return list.toArray(new Object[list.size()]);
     }
 
+    @Override
+    public WorkflowItem[] getItems() {
+        return itemList.toArray(new WorkflowItem[itemList.size()]);
+    }
+
     /**
      * A sequential workflow. An item is submitted only after its predecessor has completed.
      */
