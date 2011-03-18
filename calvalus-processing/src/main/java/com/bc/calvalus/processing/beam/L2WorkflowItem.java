@@ -16,16 +16,11 @@
 
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
@@ -35,7 +30,7 @@ import java.io.IOException;
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
-    private final String productionId;
+    private final String jobName;
     private final String[] inputFiles;
     private final String outputDir;
     private final String processorBundle;
@@ -43,14 +38,14 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
     private final String processorParameters;
 
     public L2WorkflowItem(HadoopProcessingService processingService,
-                          String productionId,
+                          String jobName,
                           String[] inputFiles,
                           String outputDir,
                           String processorBundle,
                           String processorName,
                           String processorParameters) {
         super(processingService);
-        this.productionId = productionId;
+        this.jobName = jobName;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.processorBundle = processorBundle;
@@ -58,50 +53,27 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         this.processorParameters = processorParameters;
     }
 
-    @Override
-    public void submit() throws WorkflowException {
-        try {
-            submitImpl();
-        } catch (IOException e) {
-            throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
-        }
-    }
-
     public String getOutputDir() {
         return outputDir;
     }
 
-    private void submitImpl() throws IOException {
-
-        Job job = new Job(getProcessingService().getJobClient().getConf(), this.productionId);
+    protected Job createJob() throws IOException {
+        Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();
 
-        configuration.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
-        configuration.set("mapred.map.tasks.speculative.execution", "false");
-        configuration.set("mapred.reduce.tasks.speculative.execution", "false");
-        configuration.set("mapred.child.java.opts", "-Xmx1024m");
-        // For debugging uncomment following line:
-        // configuration.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+        configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(this.inputFiles, ","));
+        configuration.set(JobConfNames.CALVALUS_OUTPUT, this.outputDir);
+        configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
+        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, this.processorName);
+        configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, this.processorParameters);
 
-        configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, this.productionId);
-        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, processorBundle);
-        configuration.set(ProcessingConfiguration.CALVALUS_INPUT, StringUtils.join(this.inputFiles, ","));
-        configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, this.outputDir);
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, this.processorName);
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, this.processorParameters);
-
-        // clear output directory
-        final Path outputPath = new Path(this.outputDir);
-        final FileSystem fileSystem = outputPath.getFileSystem(configuration);
-        fileSystem.delete(outputPath, true);
-        FileOutputFormat.setOutputPath(job, outputPath);
+        setAndClearOutputDir(job, this.outputDir);
 
         job.setInputFormatClass(ExecutablesInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 
-        CalvalusClasspath.configure(processorBundle, configuration);
-        JobID jobId = submitJob(job);
-        setJobId(jobId);
+        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
+        return job;
     }
 }

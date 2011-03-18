@@ -17,16 +17,15 @@
 package com.bc.calvalus.processing.beam;
 
 /**
- * Configuration constants.
+ * Names of Hadoop job configuration parameters.
  */
-public class ProcessingConfiguration {
- public   static final String CALVALUS_IDENTIFIER = "calvalus.identifier";
-public    static final String CALVALUS_BUNDLE = "calvalus.bundle";
+public interface JobConfNames {
+    public static final String CALVALUS_IDENTIFIER = "calvalus.identifier";
+    public static final String CALVALUS_BUNDLE = "calvalus.bundle";
     public static final String CALVALUS_INPUT = "calvalus.input";
-public    static final String CALVALUS_OUTPUT = "calvalus.output";
- public   static final String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
- public   static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
- public   static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
- public   static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
-
+    public static final String CALVALUS_OUTPUT = "calvalus.output";
+    public static final String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
+    public static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
+    public static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
+    public static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
 }

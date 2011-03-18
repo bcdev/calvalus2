@@ -19,26 +19,24 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.beam.CalvalusClasspath;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
 /**
  * A workflow item that corresponds to a single Hadoop job.
  */
 public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
-    private static final String CALVALUS_HDFS_INSTALL_DIR = "calvalus-1.0-SNAPSHOT";
+
     private final HadoopProcessingService processingService;
     private JobID jobId;
 
@@ -50,43 +48,56 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         return processingService;
     }
 
-    public JobID getJobId() {
+    protected JobID getJobId() {
         return jobId;
     }
 
-    public void setJobId(JobID jobId) {
+    protected void setJobId(JobID jobId) {
         this.jobId = jobId;
     }
 
     @Override
-     public void kill() throws WorkflowException {
-         try {
-             processingService.killJob(jobId);
-         } catch (IOException e) {
-             throw new WorkflowException("Failed to kill Hadoop job: " + e.getMessage(), e);
-         }
-     }
+    public void kill() throws WorkflowException {
+        try {
+            processingService.killJob(getJobId());
+        } catch (IOException e) {
+            throw new WorkflowException("Failed to kill Hadoop job: " + e.getMessage(), e);
+        }
+    }
 
-     @Override
-     public void updateStatus() {
-         if (jobId != null) {
-             ProcessStatus jobStatus = processingService.getJobStatus(jobId);
-             if (jobStatus != null) {
-                 setStatus(jobStatus);
-             }
-         }
-     }
+    @Override
+    public void updateStatus() {
+        if (jobId != null) {
+            ProcessStatus jobStatus = processingService.getJobStatus(jobId);
+            if (jobStatus != null) {
+                setStatus(jobStatus);
+            }
+        }
+    }
 
-     @Override
-     public Object[] getJobIds() {
-         return jobId != null ? new Object[]{jobId} : new Object[0];
-     }
+    @Override
+    public Object[] getJobIds() {
+        return jobId != null ? new Object[]{getJobId()} : new Object[0];
+    }
 
+    @Override
+    public void submit() throws WorkflowException {
+        try {
+            Job job = createJob();
+            JobID jobId = submitJob(job);
+            setJobId(jobId);
+        } catch (Exception e) {
+            throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
+        }
+    }
+
+    protected abstract Job createJob() throws IOException;
 
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
-        //add calvalus itself to classpath of hadoop jobs
-        CalvalusClasspath.addPackageToClassPath(CALVALUS_HDFS_INSTALL_DIR, configuration);
+        // Add Calvalus modules to classpath of Hadoop jobs
+        addBundleToClassPath(CALVALUS_BUNDLE, configuration);
+        addBundleToClassPath(BEAM_BUNDLE, configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
@@ -97,6 +108,13 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         jobConf.setUseNewReducer(true);
         RunningJob runningJob = processingService.getJobClient().submitJob(jobConf);
         return runningJob.getID();
+    }
+
+    protected static void setAndClearOutputDir(Job job, String outputDir) throws IOException {
+        final Path outputPath = new Path(outputDir);
+        final FileSystem fileSystem = outputPath.getFileSystem(job.getConfiguration());
+        fileSystem.delete(outputPath, true);
+        FileOutputFormat.setOutputPath(job, outputPath);
     }
 
 

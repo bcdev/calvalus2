@@ -18,17 +18,12 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
@@ -39,7 +34,7 @@ import java.io.IOException;
  */
 public class L3WorkflowItem extends HadoopWorkflowItem {
 
-    private final String productionId;
+    private final String jobName;
     private final String processorBundle;
     private final String processorName;
     private final String processorParameters;
@@ -51,7 +46,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
 
     public L3WorkflowItem(HadoopProcessingService processingService,
-                          String productionId,
+                          String jobName,
                           String processorBundle,
                           String processorName,
                           String processorParameters,
@@ -61,7 +56,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           String startDate,
                           String stopDate) {
         super(processingService);
-        this.productionId = productionId;
+        this.jobName = jobName;
         this.processorBundle = processorBundle;
         this.processorName = processorName;
         this.processorParameters = processorParameters;
@@ -88,42 +83,19 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         return l3Config;
     }
 
-    @Override
-    public void submit() throws WorkflowException {
-        try {
-            Job job = createJob(productionId, processorBundle, processorName, processorParameters, inputFiles, outputDir, l3Config);
-            JobID jobId = submitJob(job);
-            setJobId(jobId);
-        } catch (Exception e) {
-            throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
-        }
-    }
+    protected Job createJob() throws IOException {
 
-    private Job createJob(String productionId, String processorBundle, String processorName, String processorParameters,
-                          String[] inputFiles, String outputDir, L3Config l3Config) throws IOException {
-        Job job = new Job(getProcessingService().getJobClient().getConf(), productionId);
-
+        Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();
 
-        configuration.set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
-        configuration.set("mapred.map.tasks.speculative.execution", "false");
-        configuration.set("mapred.reduce.tasks.speculative.execution", "false");
-        configuration.set("mapred.child.java.opts", "-Xmx1024m");
+        configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
+        configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
+        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
+        configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, processorParameters);
+        configuration.set(JobConfNames.CALVALUS_L3_PARAMETER, BeamUtils.saveAsXml(l3Config));
 
-
-        configuration.set(ProcessingConfiguration.CALVALUS_IDENTIFIER, productionId);
-        configuration.set(ProcessingConfiguration.CALVALUS_BUNDLE, processorBundle);
-        configuration.set(ProcessingConfiguration.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-        configuration.set(ProcessingConfiguration.CALVALUS_OUTPUT, outputDir);
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_OPERATOR, processorName);
-        configuration.set(ProcessingConfiguration.CALVALUS_L2_PARAMETER, processorParameters);
-        configuration.set(ProcessingConfiguration.CALVALUS_L3_PARAMETER, BeamUtils.saveAsXml(l3Config));
-
-        // clear output directory
-        final Path outputPath = new Path(outputDir);
-        final FileSystem fileSystem = outputPath.getFileSystem(configuration);
-        fileSystem.delete(outputPath, true);
-        FileOutputFormat.setOutputPath(job, outputPath);
+        setAndClearOutputDir(job, outputDir);
 
         job.setInputFormatClass(ExecutablesInputFormat.class);
         job.setNumReduceTasks(4);
@@ -136,7 +108,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(TemporalBin.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        CalvalusClasspath.configure(processorBundle, configuration);
+        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
         return job;
     }
 

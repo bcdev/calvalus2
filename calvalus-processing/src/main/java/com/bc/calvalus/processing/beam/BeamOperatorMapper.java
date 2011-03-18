@@ -48,9 +48,9 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             // parse request
             Configuration configuration = context.getConfiguration();
 
-            final String operatorName = configuration.get(ProcessingConfiguration.CALVALUS_L2_OPERATOR);
-            final String level2Parameters = configuration.get(ProcessingConfiguration.CALVALUS_L2_PARAMETER);
-            final String requestOutputPath = configuration.get(ProcessingConfiguration.CALVALUS_OUTPUT);
+            final String operatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            final String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            final String requestOutputPath = configuration.get(JobConfNames.CALVALUS_OUTPUT);
 
             // transform request into parameter objects
             Map<String, Object> parameters = BeamUtils.getLevel2ParameterMap(operatorName, level2Parameters);

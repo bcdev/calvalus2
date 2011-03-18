@@ -64,7 +64,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     public void run(Context context) throws IOException, InterruptedException {
         BeamUtils.initGpf();
         final Configuration configuration = context.getConfiguration();
-        L3Config l3Config = L3Config.create(configuration.get(ProcessingConfiguration.CALVALUS_L3_PARAMETER));
+        L3Config l3Config = L3Config.create(configuration.get(JobConfNames.CALVALUS_L3_PARAMETER));
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -79,8 +79,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final Path inputPath = split.getPath();
         Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        String level2OperatorName = configuration.get(ProcessingConfiguration.CALVALUS_L2_OPERATOR);
-        String level2Parameters = configuration.get(ProcessingConfiguration.CALVALUS_L2_PARAMETER);
+        String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
         Map<String,Object> level2ParameterMap = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
         final Product product = l3Config.getPreProcessedProduct(source, level2OperatorName, level2ParameterMap);
         if (product != null) {

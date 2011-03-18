@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.ProcessingConfiguration;
+import com.bc.calvalus.processing.beam.JobConfNames;
 import com.bc.calvalus.processing.beam.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
@@ -41,7 +41,7 @@ public class ExecutablesInputFormat extends InputFormat {
         try {
             // parse request
             Configuration configuration = job.getConfiguration();
-            String[] requestInputPaths = configuration.get(ProcessingConfiguration.CALVALUS_INPUT).split(",");
+            String[] requestInputPaths = configuration.get(JobConfNames.CALVALUS_INPUT).split(",");
 
             // create splits for each calvalus.input in request
             List<FileSplit> splits = new ArrayList<FileSplit>(requestInputPaths.length);

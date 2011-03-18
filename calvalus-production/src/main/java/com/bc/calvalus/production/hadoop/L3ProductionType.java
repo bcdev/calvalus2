@@ -68,10 +68,10 @@ public class L3ProductionType extends HadoopProductionType {
 
             // todo - use l3Config.bbox to filter input files
             String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
-            String outputDir = getOutputDir(productionId, productionRequest, i);
+            String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
 
             L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                               productionId,
+                                                               productionId + "_" + (i+1),
                                                                processorBundle,
                                                                processorName,
                                                                processorParameters,
@@ -98,11 +98,12 @@ public class L3ProductionType extends HadoopProductionType {
                              getStagingService().getStagingDir());
     }
 
-    String getOutputDir(String productionId, ProductionRequest productionRequest, int index) {
+    String getOutputDir(String userName, String productionId, int index) {
         return String.format("%s/%s/%s_%d",
                              getProcessingService().getDataOutputPath(),
-                             productionRequest.getUserName(),
-                             productionId, index);
+                             userName,
+                             productionId,
+                             index);
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) {

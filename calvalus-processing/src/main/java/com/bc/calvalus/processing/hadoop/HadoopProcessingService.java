@@ -5,12 +5,16 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
@@ -18,6 +22,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HadoopProcessingService implements ProcessingService<JobID> {
+
+    public static final String CALVALUS_EODATA_PATH = "/calvalus/eodata";
+    public static final String CALVALUS_OUTPUTS_PATH = "/calvalus/outputs";
+    public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/0.5";
+    public static final String CALVALUS_BUNDLE = "calvalus-0.1-SNAPSHOT";
+    public static final String BEAM_BUNDLE = "beam-4.9-SNAPSHOT";
+
     private final JobClient jobClient;
     private final FileSystem fileSystem;
     private final Path dataInputPath;
@@ -28,9 +39,46 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.jobClient = jobClient;
         this.fileSystem = FileSystem.get(jobClient.getConf());
         // String fsName = jobClient.getConf().get("fs.default.name");
-        this.dataInputPath = fileSystem.makeQualified(new Path("/calvalus/eodata"));
-        this.dataOutputPath =  fileSystem.makeQualified(new Path("/calvalus/outputs"));
+        this.dataInputPath = fileSystem.makeQualified(new Path(CALVALUS_EODATA_PATH));
+        this.dataOutputPath = fileSystem.makeQualified(new Path(CALVALUS_OUTPUTS_PATH));
         jobStatusMap = new HashMap<JobID, ProcessStatus>();
+    }
+
+    public static void addBundleToClassPath(String bundle, Configuration configuration) throws IOException {
+        final FileSystem fileSystem = FileSystem.get(configuration);
+        final Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH + "/" + bundle);
+
+        final FileStatus[] beamJars = fileSystem.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith("jar");
+            }
+        });
+        for (FileStatus beamJar : beamJars) {
+            final Path path = beamJar.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());  // for hadoops sake!
+            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration);
+        }
+    }
+
+    public Job createJob(String jobName) throws IOException {
+        Job job = new Job(getJobClient().getConf(), jobName);
+        Configuration configuration = job.getConfiguration();
+        // Make user hadoop owns the outputs
+        configuration.set("hadoop.job.ugi", "hadoop,hadoop");
+        configuration.set("mapred.map.tasks.speculative.execution", "false");
+        configuration.set("mapred.reduce.tasks.speculative.execution", "false");
+        boolean debug = false;
+        if (debug) {
+            // For debugging uncomment following line:
+            configuration.set("mapred.child.java.opts",
+                              "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+        } else {
+            // Set VM maximum heap size
+            configuration.set("mapred.child.java.opts",
+                              "-Xmx1024m");
+        }
+        return job;
     }
 
     public JobClient getJobClient() {
@@ -119,4 +167,5 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
         return ProcessStatus.UNKNOWN;
     }
+
 }

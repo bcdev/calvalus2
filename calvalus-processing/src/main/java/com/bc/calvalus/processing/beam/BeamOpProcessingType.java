@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +34,8 @@ import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
 /**
  * Creates a beam hadoop job
@@ -50,16 +53,16 @@ public class BeamOpProcessingType {
         String identifier = wpsConfig.getIdentifier();
         Job job = new Job(jobClient.getConf(), identifier);
         Configuration conf = job.getConfiguration();
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_IDENTIFIER, wpsConfig.getIdentifier());
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_BUNDLE, wpsConfig.getProcessorPackage());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_IDENTIFIER, wpsConfig.getIdentifier());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_BUNDLE, wpsConfig.getProcessorPackage());
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
         String inputs = StringUtils.join(requestInputPaths, ",");
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_INPUT, inputs);
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());
-        addIfNotEmpty(conf, ProcessingConfiguration.CALVALUS_FORMATTER_PARAMETER, wpsConfig.getFormatterParameter());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETER, wpsConfig.getFormatterParameter());
         return job;
     }
 
@@ -71,7 +74,7 @@ public class BeamOpProcessingType {
 
     public void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
-        String output = configuration.get(ProcessingConfiguration.CALVALUS_OUTPUT);
+        String output = configuration.get(JobConfNames.CALVALUS_OUTPUT);
         // clear output directory
         final Path outputPath = new Path(output);
         final FileSystem fileSystem = outputPath.getFileSystem(configuration);
@@ -80,7 +83,7 @@ public class BeamOpProcessingType {
 
         job.setInputFormatClass(ExecutablesInputFormat.class);
 
-        if (configuration.get(ProcessingConfiguration.CALVALUS_L3_PARAMETER) != null) {
+        if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETER) != null) {
             job.setNumReduceTasks(4);
 
             job.setMapperClass(L3Mapper.class);
@@ -137,6 +140,7 @@ public class BeamOpProcessingType {
         //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
 
-        CalvalusClasspath.configure(configuration.get(ProcessingConfiguration.CALVALUS_BUNDLE), configuration);
+        addBundleToClassPath(BEAM_BUNDLE, configuration);
+        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BUNDLE), configuration);
     }
 }

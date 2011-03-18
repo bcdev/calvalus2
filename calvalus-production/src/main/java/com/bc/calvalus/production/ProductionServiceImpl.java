@@ -59,10 +59,12 @@ public class ProductionServiceImpl implements ProductionService {
     public ProductSet[] getProductSets(String filter) throws ProductionException {
         // todo - load & update from persistent storage
         return new ProductSet[]{
-                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
+                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "MERIS RR L1b (R3)"),
+                /*
                 new ProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
                 new ProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
                 new ProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
+                */
         };
     }
 
