@@ -58,9 +58,9 @@ public class InputOutputPanel implements IsWidget {
         layout.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
         layout.setCellSpacing(4);
         layout.setWidget(0, 0, new HTML("<b>Input</b>"));
-        layout.setWidget(1, 0, createLabeledWidgetV("Input product set:", inputProductSet));
+        layout.setWidget(1, 0, createLabeledWidgetV("Input product file set:", inputProductSet));
         layout.setWidget(2, 0, new HTML("<b>Output</b>"));
-        layout.setWidget(3, 0, createLabeledWidgetV("Output format:", outputFormat));
+        layout.setWidget(3, 0, createLabeledWidgetV("Output product file format:", outputFormat));
         layout.setWidget(4, 0, autoStaging);
 
         // Wrap the contents in a DecoratorPanel
