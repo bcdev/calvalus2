@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
@@ -55,14 +71,30 @@ class L2Staging extends Staging {
             if (!stagingDir.exists()) {
                 stagingDir.mkdirs();
             }
+
+            String outputFormat = production.getProductionRequest().getProductionParameterSafe("outputFormat");
+            String extension;
+            if (outputFormat.equals("BEAM-DIMAP")) {
+                extension = ".dim";
+            } else if (outputFormat.equals("NetCDF")) {
+                extension = ".nc";
+                outputFormat = "NetCDF-BEAM"; // use NetCDF with beam extensions
+            } else if (outputFormat.equals("GeoTIFF")) {
+                extension = ".tif";
+            } else {
+                extension = ".xxx"; // todo  what else to handle ?
+            }
+
             int index = 0;
             for (FileStatus seqFile : seqFiles) {
                 Path seqProductPath = seqFile.getPath();
                 StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConfiguration);
                 Product product = reader.readProductNodes(null, null);
-                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");   // todo - make use of "outputFormat" parameter
+
+
+                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", extension);
                 File productFile = new File(stagingDir, dimapProductName);
-                ProductIO.writeProduct(product, productFile, ProductIO.DEFAULT_FORMAT_NAME, false);
+                ProductIO.writeProduct(product, productFile, outputFormat, false);
                 index++;
                 progress = (index + 1) / seqFiles.length;
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
