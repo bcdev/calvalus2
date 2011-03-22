@@ -58,16 +58,14 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             Product sourceProduct = BeamUtils.readProduct(inputPath, configuration);
 
             String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
-            Product subsetProduct = null;
-            if (roiWkt != null && !roiWkt.isEmpty()) {
-                subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, roiWkt);
-                if (subsetProduct == null) {
-                    sourceProduct.dispose();
-                    LOG.info("Product not used");
-                    return;
-                }
-                sourceProduct = subsetProduct;
+            Product subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, roiWkt);
+            if (subsetProduct == null) {
+                sourceProduct.dispose();
+                LOG.info("Product not used");
+                return;
             }
+            sourceProduct = subsetProduct;
+
             // set up operator and target product
             String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
             String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
