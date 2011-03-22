@@ -33,11 +33,9 @@ import java.util.logging.Logger;
 /**
  * The server side implementation of the RPC processing service.
  * <p/>
- * The actual service is implemented by a class given by
+ * The actual service object is created by a factory whose implementing class name is given by
  * the servlet initialisation parameter 'calvalus.portal.productionServiceFactory.class'
- * (in context.xml or web.xml). Its value must be the name of a class that
- * implements the {@link BackendService} interface and has a one-argument constructor
- * taking the current {@link javax.servlet.ServletContext}.
+ * (in context.xml or web.xml).
  *
  * @author Norman
  * @author MarcoZ
