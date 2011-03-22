@@ -28,6 +28,7 @@ public class WpsXmlGeneratorTest {
         templateParameters.put("productionType", "A25F");
         templateParameters.put("productionName", "Wonderful L3");
         templateParameters.put("binningParameters", binningConfig);
+        templateParameters.put("regionWkt", productionRequest.getRoiGeometry().toString());
         templateParameters.put("inputFiles", new String[]{
                 "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1",
                 "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F2.N1",
@@ -59,6 +60,9 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F3.N1\"/>"));
         assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F4.N1\"/>"));
 
+        assertTrue(xml.contains("<ows:Identifier>calvalus.geometry</ows:Identifier>"));
+        assertTrue(xml.contains("<wps:LiteralData>POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))</wps:LiteralData>"));
+
         assertTrue(xml.contains("<ows:Identifier>calvalus.l2.operator</ows:Identifier>"));
         assertTrue(xml.contains("<wps:LiteralData>BandMaths</wps:LiteralData>"));
 
@@ -68,7 +72,6 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<ows:Identifier>calvalus.l3.parameters</ows:Identifier>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<maskExpr>NOT INVALID</maskExpr>"));
-        assertTrue(xml.contains("<bbox>5,50,25,60</bbox>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<superSampling>1</superSampling>"));
         assertTrue(xml.contains("<fillValue>-999.9</fillValue>"));

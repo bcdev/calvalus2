@@ -70,7 +70,7 @@ public class L3Formatter {
         this.configuration = configuration;
     }
 
-    public int format(L3FormatterConfig formatterConfig, L3Config l3Config, String hadoopJobOutputDir) throws Exception {
+    public int format(L3FormatterConfig formatterConfig, L3Config l3Config, String hadoopJobOutputDir, Geometry roiGeometry) throws Exception {
         outputType = formatterConfig.getOutputType();
 
         outputFile = new File(formatterConfig.getOutputFile());
@@ -116,7 +116,7 @@ public class L3Formatter {
             logger.info("aggregators." + i + " = " + aggregator);
         }
 
-        computeOutputRegion(l3Config);
+        computeOutputRegion(roiGeometry);
 
         outputFile.getParentFile().mkdirs();
         if (outputType.equalsIgnoreCase("Product")) {
@@ -128,8 +128,7 @@ public class L3Formatter {
         return 0;
     }
 
-    private void computeOutputRegion(L3Config l3Config) {
-        final Geometry roiGeometry = l3Config.getRegionOfInterest();
+    private void computeOutputRegion(Geometry roiGeometry) {
         final BinningGrid binningGrid = binningContext.getBinningGrid();
 
         final int gridWidth = binningGrid.getNumRows() * 2;

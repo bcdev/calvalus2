@@ -9,10 +9,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,39 +39,45 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
         BeamUtils.initGpf();
+
+        final FileSplit split = (FileSplit) context.getInputSplit();
+
+        // write initial log entry for runtime measurements
+        LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
+        final long startTime = System.nanoTime();
+
         try {
-            final FileSplit split = (FileSplit) context.getInputSplit();
-            final Path input = split.getPath();
+            final Path inputPath = split.getPath();
 
             // parse request
             Configuration configuration = context.getConfiguration();
-
-            final String operatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            final String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
             final String requestOutputPath = configuration.get(JobConfNames.CALVALUS_OUTPUT);
 
-            // transform request into parameter objects
-            Map<String, Object> parameters = BeamUtils.getLevel2ParameterMap(operatorName, level2Parameters);
-
-            // write initial log entry for runtime measurements
-            LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
-            final long startTime = System.nanoTime();
 
             // set up input reader
-            final Product sourceProduct = BeamUtils.readProduct(input, configuration);
+            Product sourceProduct = BeamUtils.readProduct(inputPath, configuration);
 
+            String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
+            Product subsetProduct = null;
+            if (roiWkt != null && !roiWkt.isEmpty()) {
+                subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, roiWkt);
+                if (subsetProduct == null) {
+                    sourceProduct.dispose();
+                    LOG.info("Product not used");
+                    return;
+                }
+                sourceProduct = subsetProduct;
+            }
             // set up operator and target product
-            final Product targetProduct = GPF.createProduct(operatorName, parameters, sourceProduct);
+            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            final Product targetProduct = BeamUtils.getProcessedProduct(sourceProduct, level2OperatorName, level2Parameters);
             LOG.info(context.getTaskAttemptID() + " target product created");
 
             // process input and write target product
-            final String outputFileName = "L2_of_" + input.getName() + ".seq";
+            final String outputFileName = "L2_of_" + inputPath.getName() + ".seq";
             final Path outputProductPath = new Path(requestOutputPath, outputFileName);
             StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, BeamUtils.getTileHeight(configuration));
-
-            // write final log entry for runtime measurements
-            final long stopTime = System.nanoTime();
-            LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
 
         } catch (ProcessorException e) {
             LOG.warning(e.getMessage());
@@ -81,6 +85,10 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "ExecutablesMapper exception: " + e.toString(), e);
             throw new ProcessorException("ExecutablesMapper exception: " + e.toString(), e);
+        } finally {
+            // write final log entry for runtime measurements
+            final long stopTime = System.nanoTime();
+            LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
         }
     }
 

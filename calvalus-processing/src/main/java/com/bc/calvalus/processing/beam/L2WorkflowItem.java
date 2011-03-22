@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.esa.beam.util.StringUtils;
@@ -31,6 +32,7 @@ import java.io.IOException;
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
     private final String jobName;
+    private final Geometry roiGeometry;
     private final String[] inputFiles;
     private final String outputDir;
     private final String processorBundle;
@@ -39,13 +41,15 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
 
     public L2WorkflowItem(HadoopProcessingService processingService,
                           String jobName,
-                          String[] inputFiles,
-                          String outputDir,
                           String processorBundle,
                           String processorName,
-                          String processorParameters) {
+                          String processorParameters,
+                          Geometry roiGeometry,
+                          String[] inputFiles,
+                          String outputDir) {
         super(processingService);
         this.jobName = jobName;
+        this.roiGeometry = roiGeometry;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.processorBundle = processorBundle;
@@ -66,6 +70,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, this.processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, this.processorParameters);
+        configuration.set(JobConfNames.CALVALUS_ROI_WKT, roiGeometry != null ? roiGeometry.toString() : "");
 
         setAndClearOutputDir(job, this.outputDir);
 

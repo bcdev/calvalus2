@@ -21,6 +21,7 @@ import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -41,6 +42,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
     private final String[] inputFiles;
     private final String outputDir;
     private final L3Config l3Config;
+    private final Geometry roiGeometry;
     private final String startDate;
     private final String stopDate;
 
@@ -50,6 +52,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           String processorBundle,
                           String processorName,
                           String processorParameters,
+                          Geometry roiGeometry,
                           String[] inputFiles,
                           String outputDir,
                           L3Config l3Config,
@@ -63,6 +66,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
+        this.roiGeometry = roiGeometry;
         this.startDate = startDate;
         this.stopDate = stopDate;
     }
@@ -83,6 +87,10 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         return l3Config;
     }
 
+    public Geometry getRoiGeometry() {
+        return roiGeometry;
+    }
+
     protected Job createJob() throws IOException {
 
         Job job = getProcessingService().createJob(jobName);
@@ -93,6 +101,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, processorParameters);
+        configuration.set(JobConfNames.CALVALUS_ROI_WKT, roiGeometry != null ? roiGeometry.toString() : "");
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETER, BeamUtils.saveAsXml(l3Config));
 
         setAndClearOutputDir(job, outputDir);

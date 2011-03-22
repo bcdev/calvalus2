@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -59,6 +58,7 @@ public class BeamOpProcessingType {
         String inputs = StringUtils.join(requestInputPaths, ",");
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_ROI_WKT, wpsConfig.getRoiWkt());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());

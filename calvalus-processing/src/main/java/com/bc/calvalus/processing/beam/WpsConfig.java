@@ -38,6 +38,7 @@ public class WpsConfig {
     private static final String PROCESSOR_VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
     private static final String OPERATOR_NAME_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.operator']/Data/LiteralData";
+    private static final String GEOMETRY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.geometry']/Data/LiteralData";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.parameters']/Data/ComplexData/parameters";
     private static final String L3_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
     private static final String FORMATTER_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
@@ -154,4 +155,11 @@ public class WpsConfig {
         return new Xpp3DomElement(destination.getConfiguration());
     }
 
+    public String getRoiWkt() {
+        try {
+            return requestXmlDoc.getString(GEOMETRY_XPATH, "");
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+        }
+    }
 }

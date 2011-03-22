@@ -10,6 +10,7 @@ import com.bc.calvalus.processing.beam.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.staging.Staging;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.io.FileUtils;
 
@@ -43,6 +44,8 @@ class L3Staging extends Staging {
             stagingDir.mkdirs();
         }
 
+        Geometry roiGeometry = production.getProductionRequest().getRoiGeometry();
+
         Logger logger = Logger.getLogger("com.bc.calvalus");
         float progress = 0f;
 
@@ -62,7 +65,7 @@ class L3Staging extends Staging {
             L3Formatter formatter = new L3Formatter(logger, hadoopConfiguration);
             try {
                 // todo - need a progress monitor here
-                formatter.format(formatterConfig, l3Config, outputDir);
+                formatter.format(formatterConfig, l3Config, outputDir, roiGeometry);
                 progress = 1f;
                 // todo - if job has been cancelled, it must not change its state anymore
                 production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));

@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
 import java.util.Map;
@@ -65,10 +66,11 @@ public class L2ProductionType extends HadoopProductionType {
         productionRequest.ensureProductionParameterSet("dateStop");
 
         String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
-        Date startDate = getDate(productionRequest, "dateStart");
-        Date stopDate = getDate(productionRequest, "dateStop");
-        String bBox = getBBox(productionRequest);
-        // todo - use bbox to filter input files
+        Date startDate = productionRequest.getDate("dateStart");
+        Date stopDate = productionRequest.getDate("dateStop");
+
+        Geometry roiGeometry = productionRequest.getRoiGeometry();
+        // todo - use geoRegion to filter input files
         String[] inputFiles = getInputFiles(inputProductSetId, startDate, stopDate);
         String outputDir = getOutputDir(productionId, productionRequest);
 
@@ -80,11 +82,13 @@ public class L2ProductionType extends HadoopProductionType {
 
         return new L2WorkflowItem(getProcessingService(),
                                   productionId,
-                                  inputFiles,
-                                  outputDir,
                                   processorBundle,
                                   processorName,
-                                  processorParameters);
+                                  processorParameters,
+                                  roiGeometry,
+                                  inputFiles,
+                                  outputDir
+        );
     }
 
     String getOutputDir(String productionId, ProductionRequest productionRequest) {

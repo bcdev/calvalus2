@@ -7,7 +7,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class L3ProductionTypeTest {
     @Test
@@ -20,9 +21,6 @@ public class L3ProductionTypeTest {
         float[] superSamplingSteps = l3Config.getSuperSamplingSteps();
         assertEquals(1, superSamplingSteps.length);
         assertEquals(0.5f, superSamplingSteps[0], 1e-5);
-        Geometry regionOfInterest = l3Config.getRegionOfInterest();
-        assertNotNull(regionOfInterest);
-        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
         assertEquals(3, l3Config.getVariableContext().getVariableCount());
         assertEquals("a", l3Config.getVariableContext().getVariableName(0));
         assertEquals("b", l3Config.getVariableContext().getVariableName(1));
@@ -33,6 +31,14 @@ public class L3ProductionTypeTest {
         assertEquals(2, binManager.getAggregator(0).getOutputPropertyCount());
         assertEquals(-999.9, binManager.getAggregator(0).getOutputPropertyFillValue(0), 1E-5);
         assertEquals(-999.9, binManager.getAggregator(0).getOutputPropertyFillValue(1), 1E-5);
+    }
+
+    @Test
+    public void testGeoRegion() throws ProductionException {
+        ProductionRequest productionRequest = createValidL3ProductionRequest();
+        Geometry regionOfInterest = productionRequest.getRoiGeometry();
+        assertNotNull(regionOfInterest);
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
     }
 
     /*

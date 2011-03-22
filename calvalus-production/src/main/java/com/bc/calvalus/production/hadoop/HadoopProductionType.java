@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -10,8 +26,6 @@ import com.bc.calvalus.staging.StagingService;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -25,7 +39,6 @@ import java.util.List;
  * @author Norman
  */
 public abstract class HadoopProductionType implements ProductionType {
-    private final static DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
     private final String name;
     private final HadoopProcessingService processingService;
     private final StagingService stagingService;
@@ -101,59 +114,7 @@ public abstract class HadoopProductionType implements ProductionType {
     }
 
     public static boolean isAutoStaging(ProductionRequest request) throws ProductionException {
-        return getBoolean(request, "autoStaging", false);
+        return request.getBoolean("autoStaging", false);
     }
 
-    // todo - move to ProductionRequest
-    public static String getBBox(ProductionRequest request) throws ProductionException {
-        return String.format("%s,%s,%s,%s",
-                             request.getProductionParameterSafe("lonMin"),
-                             request.getProductionParameterSafe("latMin"),
-                             request.getProductionParameterSafe("lonMax"),
-                             request.getProductionParameterSafe("latMax"));
-    }
-
-    // todo - move to ProductionRequest
-    public static boolean getBoolean(ProductionRequest request, String name, Boolean def) {
-        String text = request.getProductionParameter(name);
-        if (text != null) {
-            return Boolean.parseBoolean(text);
-        } else {
-            return def;
-        }
-    }
-
-    // todo - move to ProductionRequest
-    public static Double getDouble(ProductionRequest request, String name, Double def) {
-        String text = request.getProductionParameter(name);
-        if (text != null) {
-            return Double.parseDouble(text);
-        } else {
-            return def;
-        }
-    }
-
-    // todo - move to ProductionRequest
-    public static Integer getInteger(ProductionRequest request, String name, Integer def) {
-        String text = request.getProductionParameter(name);
-        if (text != null) {
-            return Integer.parseInt(text);
-        } else {
-            return def;
-        }
-    }
-
-    // todo - move to ProductionRequest
-    public static Date getDate(ProductionRequest productionRequest, String name) throws ProductionException {
-        try {
-            return dateFormat.parse(productionRequest.getProductionParameterSafe(name));
-        } catch (ParseException e) {
-            throw new ProductionException("Illegal date format for production parameter '" + name + "'");
-        }
-    }
-
-   // todo - move to ProductionRequest
-     public static DateFormat getDateFormat() {
-        return dateFormat;
-    }
 }
