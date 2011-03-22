@@ -78,7 +78,7 @@ public class ManageProductionsView extends PortalView {
         TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
             @Override
             public String getValue(GsProduction production) {
-                return production.getName();
+                return production.getName() + " (requested by '" + production.getUser() + "')";
             }
         };
         nameColumn.setSortable(true);
