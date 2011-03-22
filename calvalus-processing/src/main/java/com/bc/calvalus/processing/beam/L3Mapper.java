@@ -79,9 +79,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         Product source = BeamUtils.readProduct(inputPath, configuration);
 
         String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
-        if (roiWkt != null && !roiWkt.isEmpty()) {
-            source = BeamUtils.createSubsetProduct(source, roiWkt);
-        }
+        source = BeamUtils.createSubsetProduct(source, roiWkt);
         if (source != null) {
             String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
             String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
