@@ -46,6 +46,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private static final String PRODUCTION_SERVICE_FACTORY_CLASS = "calvalus.portal.productionServiceFactory.class";
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
+
     private ProductionService productionService;
     private BackendConfig backendConfig;
     private Timer statusObserver;
@@ -189,8 +190,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private ProductionRequest convert(GsProductionRequest gwtProductionRequest) {
+        String userName = getThreadLocalRequest().getRemoteUser();
         return new ProductionRequest(gwtProductionRequest.getProductionType(),
-                                     gwtProductionRequest.getUserName(),
+                                     userName != null ? userName : "calvalus",
                                      gwtProductionRequest.getProductionParameters());
     }
 
