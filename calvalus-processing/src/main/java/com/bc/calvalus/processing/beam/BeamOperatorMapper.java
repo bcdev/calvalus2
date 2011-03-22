@@ -9,6 +9,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -73,8 +74,9 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             LOG.info(context.getTaskAttemptID() + " target product created");
 
             // process input and write target product
-            final String outputFileName = "L2_of_" + inputPath.getName() + ".seq";
-            final Path outputProductPath = new Path(requestOutputPath, outputFileName);
+            String inputFilename = inputPath.getName();
+            String outputFilename = "L2_of_" +  FileUtils.exchangeExtension(inputFilename, ".seq");
+            final Path outputProductPath = new Path(requestOutputPath, outputFilename);
             StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, BeamUtils.getTileHeight(configuration));
 
         } catch (ProcessorException e) {

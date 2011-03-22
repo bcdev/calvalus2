@@ -60,12 +60,30 @@ class L3Staging extends Staging {
             String outputDir = l3WorkflowItem.getOutputDir();
             L3Config l3Config = l3WorkflowItem.getL3Config();
 
-            L3FormatterConfig formatterConfig = createFormatterConfig(l3WorkflowItem);
 
             L3Formatter formatter = new L3Formatter(logger, hadoopConfiguration);
             try {
-                // todo - need a progress monitor here
-                formatter.format(formatterConfig, l3Config, outputDir, roiGeometry);
+                File tmpDir = new File(stagingDir, "tmp");
+                try {
+                    tmpDir.mkdir();
+                    L3FormatterConfig formatterConfig = createFormatterConfig(tmpDir,
+                                                                              l3WorkflowItem.getStartDate(),
+                                                                              l3WorkflowItem.getStopDate());
+
+                    // todo - need a progress monitor here
+                    formatter.format(formatterConfig, l3Config, outputDir, roiGeometry);
+
+                    String outputFilename = new File(formatterConfig.getOutputFile()).getName();
+                    String zipFileName = FileUtils.exchangeExtension(outputFilename, ".zip");
+                    zip(tmpDir, new File(stagingDir, zipFileName));
+                } finally {
+                  FileUtils.deleteTree(tmpDir);
+                }
+
+
+
+
+
                 progress = 1f;
                 // todo - if job has been cancelled, it must not change its state anymore
                 production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
@@ -81,9 +99,7 @@ class L3Staging extends Staging {
         return null;
     }
 
-    private L3FormatterConfig createFormatterConfig(L3WorkflowItem l3WorkflowItem) throws ProductionException {
-        String dateStart = l3WorkflowItem.getStartDate();
-        String dateStop = l3WorkflowItem.getStopDate();
+    private L3FormatterConfig createFormatterConfig(File outputDir, String dateStart, String dateStop) throws ProductionException {
 
         String outputFormat = production.getProductionRequest().getProductionParameterSafe("outputFormat");
         String extension;
@@ -97,7 +113,7 @@ class L3Staging extends Staging {
             extension = "xxx"; // todo  what else to handle ?
         }
         String filename = String.format("L3_%s_%s.%s", dateStart, dateStop, extension);  // todo - specify Calvalus L3 filename convention
-        String stagingFilePath = new File(stagingDir, filename).getPath();
+        String stagingFilePath = new File(outputDir, filename).getPath();
 
         String outputType = "Product"; // todo - from production request
         L3FormatterConfig.BandConfiguration[] rgbBandConfig = new L3FormatterConfig.BandConfiguration[0];  // todo -  from production request

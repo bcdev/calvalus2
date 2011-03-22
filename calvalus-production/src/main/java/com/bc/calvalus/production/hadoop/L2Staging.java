@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 
@@ -91,10 +92,19 @@ class L2Staging extends Staging {
                 StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConfiguration);
                 Product product = reader.readProductNodes(null, null);
 
+                File tmpDir = new File(stagingDir, "tmp");
+                try {
+                    tmpDir.mkdir();
+                    String name = seqProductPath.getName();
+                    String productFileName = FileUtils.exchangeExtension(name, extension);
+                    File productFile = new File(tmpDir, productFileName);
+                    ProductIO.writeProduct(product, productFile, outputFormat, false);
 
-                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", extension);
-                File productFile = new File(stagingDir, dimapProductName);
-                ProductIO.writeProduct(product, productFile, outputFormat, false);
+                    String zipFileName = FileUtils.exchangeExtension(name, ".zip");
+                    zip(tmpDir, new File(stagingDir, zipFileName));
+                } finally {
+                  FileUtils.deleteTree(tmpDir);
+                }
                 index++;
                 progress = (index + 1) / seqFiles.length;
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
