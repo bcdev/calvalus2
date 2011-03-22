@@ -142,10 +142,6 @@ public class L3Config {
     @Parameter
     Integer superSampling;
     @Parameter
-    String bbox;
-    @Parameter
-    String regionWkt;
-    @Parameter
     String maskExpr;
     @Parameter(itemAlias = "variable")
     VariableConfiguration[] variables;
@@ -166,14 +162,6 @@ public class L3Config {
         return superSampling;
     }
 
-    public String getBbox() {
-        return bbox;
-    }
-
-    public String getRegionWkt() {
-        return regionWkt;
-    }
-
     public String getMaskExpr() {
         return maskExpr;
     }
@@ -192,14 +180,6 @@ public class L3Config {
 
     public void setSuperSampling(Integer superSampling) {
         this.superSampling = superSampling;
-    }
-
-    public void setBbox(String bbox) {
-        this.bbox = bbox;
-    }
-
-    public void setRegionWkt(String regionWkt) {
-        this.regionWkt = regionWkt;
     }
 
     public void setMaskExpr(String maskExpr) {
@@ -316,63 +296,5 @@ public class L3Config {
 
      private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
         return new AggregatorPercentile(varCtx, aggregatorConf.varName, aggregatorConf.percentage, aggregatorConf.fillValue);
-    }
-
-    public Product getPreProcessedProduct(Product source,  String operatorName, Map<String, Object> operatorParameters) {
-        Product product = getProductSpatialSubset(source);
-        if (product == null) {
-            return null;
-        }
-        if (operatorName != null && !operatorName.isEmpty()) {
-            product = GPF.createProduct(operatorName, operatorParameters, product);
-        }
-        return product;
-    }
-
-    private Product getProductSpatialSubset(Product product) {
-        final Geometry geoRegion = getRegionOfInterest();
-        if (geoRegion == null || geoRegion.isEmpty()) {
-            return product;
-        }
-
-        final Rectangle pixelRegion = SubsetOp.computePixelRegion(product, geoRegion, 1);
-        if (pixelRegion.isEmpty()) {
-            return null;
-        }
-
-        final SubsetOp op = new SubsetOp();
-        op.setSourceProduct(product);
-        op.setRegion(pixelRegion);
-        op.setCopyMetadata(false);
-        return op.getTargetProduct();
-    }
-
-    public Geometry getRegionOfInterest() {
-        if (regionWkt == null) {
-            if (bbox == null) {
-                return null;
-            }
-            final String[] coords = bbox.split(",");
-            if (coords.length != 4) {
-                throw new IllegalArgumentException(MessageFormat.format("Illegal BBOX value: {0}", bbox));
-            }
-            String x1 = coords[0];
-            String y1 = coords[1];
-            String x2 = coords[2];
-            String y2 = coords[3];
-            regionWkt = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                                      x1, y1,
-                                      x2, y1,
-                                      x2, y2,
-                                      x1, y2,
-                                      x1, y1);
-        }
-
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(regionWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + regionWkt, e);
-        }
     }
 }

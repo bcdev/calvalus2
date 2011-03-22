@@ -28,6 +28,8 @@ import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.Xpp3Dom;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -40,10 +42,12 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.SystemUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.MessageFormat;
@@ -140,7 +144,6 @@ public class BeamUtils {
 
     public static String saveAsXml(Object object) {
         ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
         DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
 
         try {
@@ -152,4 +155,43 @@ public class BeamUtils {
         }
     }
 
+    public static Product createSubsetProduct(Product product, String roiWkt) {
+        final Geometry roiGeometry = createGeometry(roiWkt);
+        if (roiGeometry == null || roiGeometry.isEmpty()) {
+            return product;
+        }
+
+        final Rectangle pixelRegion = SubsetOp.computePixelRegion(product, roiGeometry, 1);
+        if (pixelRegion.isEmpty()) {
+            return null;
+        }
+
+        final SubsetOp op = new SubsetOp();
+        op.setSourceProduct(product);
+        op.setRegion(pixelRegion);
+        op.setCopyMetadata(false);
+        return op.getTargetProduct();
+    }
+
+    static Geometry createGeometry(String roiWkt) {
+        if (roiWkt == null || roiWkt.isEmpty()) {
+            return null;
+        }
+        final WKTReader wktReader = new WKTReader();
+        try {
+            return wktReader.read(roiWkt);
+        } catch (com.vividsolutions.jts.io.ParseException e) {
+            throw new IllegalArgumentException("Illegal region geometry: " + roiWkt, e);
+        }
+    }
+
+    public static Product getProcessedProduct(Product source, String level2OperatorName, String level2Parameters) {
+        Product product = source;
+        if (level2OperatorName != null && !level2OperatorName.isEmpty()) {
+            // transform request into parameter objects
+            Map<String, Object> level2ParameterMap = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
+            product = GPF.createProduct(level2OperatorName, level2ParameterMap, product);
+        }
+        return product;
+    }
 }

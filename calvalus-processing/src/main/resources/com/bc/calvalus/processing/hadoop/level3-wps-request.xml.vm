@@ -43,6 +43,16 @@
             </wps:Data>
         </wps:Input>
 
+        #if ($regionWkt)
+        <wps:Input>
+            <ows:Identifier>calvalus.geometry</ows:Identifier>
+            <ows:Title>The parameter for the WKT that defines the geometry the operation is restricted to</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>${regionWkt}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        #end
+
         <wps:Input>
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
             <ows:Title>The name of the Level 2 BEAM processor (GPF operator name)</ows:Title>

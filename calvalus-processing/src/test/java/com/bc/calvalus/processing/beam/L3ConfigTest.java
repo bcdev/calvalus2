@@ -90,35 +90,6 @@ public class L3ConfigTest {
 
     }
 
-    @Test
-    public void testGetRegionOfInterest() {
-        L3Config l3Config = new L3Config();
-        Geometry regionOfInterest;
-
-        regionOfInterest = l3Config.getRegionOfInterest();
-        assertNull(regionOfInterest);
-
-        l3Config.bbox = "-60.0, 13.4, -20.0, 23.4";
-        regionOfInterest = l3Config.getRegionOfInterest();
-        assertTrue(regionOfInterest instanceof Polygon);
-        assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());
-
-        l3Config.regionWkt = "POINT(-60.0 13.4)";
-        regionOfInterest = l3Config.getRegionOfInterest();
-        assertTrue(regionOfInterest instanceof Point);
-        assertEquals("POINT (-60 13.4)", regionOfInterest.toString());
-
-        l3Config.regionWkt = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))";
-        regionOfInterest = l3Config.getRegionOfInterest();
-        assertTrue(regionOfInterest instanceof Polygon);
-        assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionOfInterest.toString());
-
-        l3Config.regionWkt = null;
-        l3Config.bbox = null;
-        regionOfInterest = l3Config.getRegionOfInterest();
-        assertNull(regionOfInterest);
-    }
-
 //    @Test
 //    public void testStartEndTime() throws ParseException {
 //        Properties properties = new Properties();

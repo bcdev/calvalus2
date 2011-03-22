@@ -28,4 +28,5 @@ public interface JobConfNames {
     public static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
     public static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
     public static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
+    public static final String CALVALUS_ROI_WKT = "calvalus.roiWKT";
 }

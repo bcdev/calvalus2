@@ -44,7 +44,6 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,11 +78,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final Path inputPath = split.getPath();
         Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
-        Map<String,Object> level2ParameterMap = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
-        final Product product = l3Config.getPreProcessedProduct(source, level2OperatorName, level2ParameterMap);
-        if (product != null) {
+        String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
+        if (roiWkt != null && !roiWkt.isEmpty()) {
+            source = BeamUtils.createSubsetProduct(source, roiWkt);
+        }
+        if (source != null) {
+            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            final Product product = BeamUtils.getProcessedProduct(source, level2OperatorName, level2Parameters);
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
                 if (numObs > 0L) {
@@ -94,6 +96,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             } finally {
                 product.dispose();
             }
+            source.dispose();
         } else {
             LOG.info("Product not used");
         }

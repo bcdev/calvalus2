@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.FileUtil;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -112,7 +113,8 @@ public class BeamOperatorTool extends Configured implements Tool {
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
                     L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     L3Formatter formatter = new L3Formatter(LOG, getConf());
-                    result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir);
+                    Geometry roiGeometry = BeamUtils.createGeometry(job.getConfiguration().get(JobConfNames.CALVALUS_ROI_WKT));
+                    result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);
                 } else {
                     LOG.info("no formatting performed");
                 }

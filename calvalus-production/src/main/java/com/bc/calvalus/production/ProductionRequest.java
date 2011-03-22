@@ -1,6 +1,8 @@
 package com.bc.calvalus.production;
 
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.WKTReader;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
@@ -69,6 +71,28 @@ public class ProductionRequest {
                              getProductionParameterSafe("latMin"),
                              getProductionParameterSafe("lonMax"),
                              getProductionParameterSafe("latMax"));
+    }
+
+    public Geometry getRoiGeometry() throws ProductionException {
+        String roiWkt = getProductionParameter("regionWKT");
+        if (roiWkt == null) {
+            String x1 = getProductionParameterSafe("lonMin");
+            String y1 = getProductionParameterSafe("latMin");
+            String x2 = getProductionParameterSafe("lonMax");
+            String y2 = getProductionParameterSafe("latMax");
+            roiWkt = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
+                                         x1, y1,
+                                         x2, y1,
+                                         x2, y2,
+                                         x1, y2,
+                                         x1, y1);
+        }
+        final WKTReader wktReader = new WKTReader();
+        try {
+            return wktReader.read(roiWkt);
+        } catch (com.vividsolutions.jts.io.ParseException e) {
+            throw new IllegalArgumentException("Illegal region geometry: " + roiWkt, e);
+        }
     }
 
     public Double getDouble(String name, Double def) {

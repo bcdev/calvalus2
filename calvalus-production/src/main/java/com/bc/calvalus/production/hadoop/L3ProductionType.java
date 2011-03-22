@@ -9,6 +9,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
 import java.util.Map;
@@ -52,6 +53,8 @@ public class L3ProductionType extends HadoopProductionType {
         String processorName = productionParameters.get("processorName");
         String processorParameters = productionParameters.get("processorParameters");
 
+        Geometry roiGeometry = productionRequest.getRoiGeometry();
+
         L3Config l3Config = createBinningConfig(productionRequest);
 
         int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
@@ -66,7 +69,7 @@ public class L3ProductionType extends HadoopProductionType {
             Date date1 = new Date(time);
             Date date2 = new Date(time + periodLengthMillis - 1L);
 
-            // todo - use l3Config.bbox to filter input files
+            // todo - use geoRegion to filter input files
             String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
             String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
 
@@ -75,6 +78,7 @@ public class L3ProductionType extends HadoopProductionType {
                                                                processorBundle,
                                                                processorName,
                                                                processorParameters,
+                                                               roiGeometry,
                                                                inputFiles,
                                                                outputDir,
                                                                l3Config,
@@ -117,7 +121,6 @@ public class L3ProductionType extends HadoopProductionType {
         L3Config l3Config = new L3Config();
         l3Config.setNumRows(getNumRows(productionRequest));
         l3Config.setSuperSampling(Integer.parseInt(productionRequest.getProductionParameter("superSampling")));
-        l3Config.setBbox(productionRequest.getBBox());
         l3Config.setMaskExpr(productionRequest.getProductionParameter("maskExpr"));
         l3Config.setVariables(getVariables(productionRequest));
         l3Config.setAggregators(getAggregators(productionRequest));
