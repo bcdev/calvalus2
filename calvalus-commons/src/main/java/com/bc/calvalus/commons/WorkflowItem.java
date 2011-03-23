@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.commons;
 
+import java.util.Date;
+
 /**
  * A workflow item. Clients should not implement this interface directly. Instead, they should
  * use {@link AbstractWorkflowItem} as base class.
@@ -79,4 +81,23 @@ public interface WorkflowItem {
      * @return The array of child items. The array will be empty, if there are no children.
      */
     WorkflowItem[] getItems();
+
+    /**
+     * @return The time when this workflow item has been submitted. It will be {@code null},
+     *         if this item has not been submitted.
+     */
+    Date getSubmitTime();
+
+    /**
+     * @return The time when processing for this workflow item has been started. It will be {@code null},
+     *         if this item has not been started.
+     */
+    Date getStartTime();
+
+    /**
+     * @return The time when processing for this workflow item has stopped.
+     *         This means either the item has completed, has been canceled or an error occurred.
+     *         It will be {@code null}, if this item has not been stopped.
+     */
+    Date getStopTime();
 }

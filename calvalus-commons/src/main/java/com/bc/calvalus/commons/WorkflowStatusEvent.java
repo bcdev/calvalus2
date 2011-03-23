@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.commons;
 
+import java.util.Date;
 import java.util.EventObject;
 
 /**
@@ -24,11 +25,13 @@ import java.util.EventObject;
 public class WorkflowStatusEvent extends EventObject {
     private final ProcessStatus oldStatus;
     private final ProcessStatus newStatus;
+    private final Date time;
 
-    public WorkflowStatusEvent(WorkflowItem source, ProcessStatus oldStatus, ProcessStatus newStatus) {
+    public WorkflowStatusEvent(WorkflowItem source, ProcessStatus oldStatus, ProcessStatus newStatus, Date time) {
         super(source);
         this.oldStatus = oldStatus;
         this.newStatus = newStatus;
+        this.time = time;
     }
 
     @Override
@@ -42,5 +45,9 @@ public class WorkflowStatusEvent extends EventObject {
 
     public ProcessStatus getNewStatus() {
         return newStatus;
+    }
+
+    public Date getTime() {
+        return time;
     }
 }

@@ -18,6 +18,8 @@ package com.bc.calvalus.commons;
 
 import org.junit.Ignore;
 
+import java.util.Date;
+
 /**
  * A workflow item that runs through the regular life cycle steps UNKNOWN, SCHEDULED, RUNNING and finally COMPLETED.
  *
@@ -27,13 +29,18 @@ import org.junit.Ignore;
 @Ignore
 public class LifeStepWorkflowItem extends AbstractWorkflowItem {
     private int submitCount;
+    private Date time;
 
     public boolean isSubmitted() {
-        return submitCount >0;
+        return submitCount > 0;
     }
 
     public int getSubmitCount() {
         return submitCount;
+    }
+
+    public void setTime(Date time) {
+        this.time = time;
     }
 
     void incLifeStep() {
@@ -68,5 +75,13 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
     @Override
     public Object[] getJobIds() {
         return new Object[0];
+    }
+
+    @Override
+    protected void fireStatusChanged(WorkflowStatusEvent event) {
+        super.fireStatusChanged(new WorkflowStatusEvent(event.getSource(),
+                                                        event.getOldStatus(),
+                                                        event.getNewStatus(),
+                                                        time));
     }
 }

@@ -17,6 +17,7 @@
 package com.bc.calvalus.commons;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -24,14 +25,18 @@ import java.util.List;
  *
  * @author Norman
  */
-public abstract class AbstractWorkflowItem implements WorkflowItem {
+public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStatusListener {
     private static final WorkflowItem[] NO_ITEMS = new WorkflowItem[0];
     private final List<WorkflowStatusListener> statusListeners;
     private ProcessStatus status;
+    private Date submitTime;
+    private Date startTime;
+    private Date stopTime;
 
     public AbstractWorkflowItem() {
-        this.statusListeners = new ArrayList<WorkflowStatusListener>();
         this.status = ProcessStatus.UNKNOWN;
+        this.statusListeners = new ArrayList<WorkflowStatusListener>();
+        this.statusListeners.add(this);
     }
 
     @Override
@@ -47,10 +52,9 @@ public abstract class AbstractWorkflowItem implements WorkflowItem {
     @Override
     public void setStatus(ProcessStatus newStatus) {
         if (!status.equals(newStatus)) {
-            // todo: do not allow transition to unknown state
             ProcessStatus oldStatus = status;
             status = newStatus;
-            fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus));
+            fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus, new Date()));
         }
     }
 
@@ -59,9 +63,53 @@ public abstract class AbstractWorkflowItem implements WorkflowItem {
         return NO_ITEMS;
     }
 
+    @Override
+    public void handleStatusChanged(WorkflowStatusEvent event) {
+        ProcessState oldState = event.getOldStatus().getState();
+        ProcessState newState = event.getNewStatus().getState();
+        if (oldState != newState) {
+            if (newState == ProcessState.UNKNOWN) {
+               throw new IllegalStateException("Transition to unknown state is not allowed.");
+            } else if (newState == ProcessState.SCHEDULED) {
+                setSubmitTime(event.getTime());
+            } else if (newState == ProcessState.RUNNING) {
+                setStartTime(event.getTime());
+            } else if (newState.isDone()) {
+                setStopTime(event.getTime());
+            }
+        }
+    }
+
     protected void fireStatusChanged(WorkflowStatusEvent event) {
         for (WorkflowStatusListener changeListener : statusListeners) {
             changeListener.handleStatusChanged(event);
         }
+    }
+
+    @Override
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
+    @Override
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public Date getStopTime() {
+        return stopTime;
+    }
+
+    protected void setSubmitTime(Date submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    protected void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    protected void setStopTime(Date stopTime) {
+        this.stopTime = stopTime;
     }
 }
