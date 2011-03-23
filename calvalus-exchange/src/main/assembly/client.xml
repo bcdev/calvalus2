@@ -1,0 +1,34 @@
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>client</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>bin</directory>
+            <includes><include>mycalvalus</include></includes>
+            <outputDirectory>.</outputDirectory>
+            <fileMode>0775</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>bin</directory>
+            <includes><include>*.sh</include></includes>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>0775</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>target</directory>
+            <includes><include>*.jar</include></includes>
+            <outputDirectory>lib</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../calvalus-processing/conf</directory>
+            <includes><include>*</include></includes>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>
