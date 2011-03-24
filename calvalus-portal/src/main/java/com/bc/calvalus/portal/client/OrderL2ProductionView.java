@@ -19,17 +19,17 @@ import java.util.HashMap;
  */
 public class OrderL2ProductionView extends PortalView {
     public static final int ID = 1;
-    private InputOutputPanel inputOutputPanel;
-    private GeneralProcessorPanel processingPanel;
-    private L2ProductFilterPanel productFilterPanel;
+    private InputOutputForm inputOutputForm;
+    private GeneralProcessorForm processingForm;
+    private L2ProductFilterForm productFilterForm;
     private FlexTable widget;
 
     public OrderL2ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
-        inputOutputPanel = new InputOutputPanel(calvalusPortal, "L2 Input/Output");
-        processingPanel = new GeneralProcessorPanel(getPortal(), "L2 Processor");
-        productFilterPanel = new L2ProductFilterPanel();
+        inputOutputForm = new InputOutputForm(calvalusPortal, "L2 Input/Output");
+        processingForm = new GeneralProcessorForm(getPortal(), "L2 Processor");
+        productFilterForm = new L2ProductFilterForm();
 
         widget = new FlexTable();
         widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
@@ -42,9 +42,9 @@ public class OrderL2ProductionView extends PortalView {
         widget.addStyleName("cw-FlexTable");
         widget.setCellSpacing(2);
         widget.setCellPadding(2);
-        widget.setWidget(0, 0, inputOutputPanel.asWidget());
-        widget.setWidget(0, 1, processingPanel.asWidget());
-        widget.setWidget(1, 0, productFilterPanel.asWidget());
+        widget.setWidget(0, 0, inputOutputForm.asWidget());
+        widget.setWidget(0, 1, processingForm.asWidget());
+        widget.setWidget(1, 0, productFilterForm.asWidget());
         widget.setWidget(2, 0, new Button("Order Production", new OrderProductionHandler()));
     }
 
@@ -70,24 +70,37 @@ public class OrderL2ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public HashMap<String, String> getValueMap() {
-        GsProcessorDescriptor selectedProcessor = processingPanel.getSelectedProcessor();
+        GsProcessorDescriptor selectedProcessor = processingForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", inputOutputPanel.getInputProductSetId());
-        parameters.put("outputFormat", inputOutputPanel.getOutputFormat());
-        parameters.put("autoStaging", inputOutputPanel.isAutoStaging() + "");
+        parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
+        parameters.put("outputFormat", inputOutputForm.getOutputFormat());
+        parameters.put("autoStaging", inputOutputForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
-        parameters.put("processorBundleVersion", processingPanel.getBundleVersion());
+        parameters.put("processorBundleVersion", processingForm.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", processingPanel.getProcessorParameters());
-        parameters.putAll(productFilterPanel.getValueMap());
+        parameters.put("processorParameters", processingForm.getProcessorParameters());
+        parameters.putAll(productFilterForm.getValueMap());
         return parameters;
     }
+
+    private boolean validateForm() {
+        try {
+            productFilterForm.validateForm(3);
+            return true;
+        } catch (ValidationException e) {
+            e.handle();
+            return false;
+        }
+    }
+
 
     private class OrderProductionHandler implements ClickHandler {
 
         public void onClick(ClickEvent event) {
-            GsProductionRequest request = getProductionRequest();
-            getPortal().orderProduction(request);
+            if (validateForm()) {
+                GsProductionRequest request = getProductionRequest();
+                getPortal().orderProduction(request);
+            }
         }
     }
 

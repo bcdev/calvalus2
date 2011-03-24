@@ -25,7 +25,7 @@ import static com.bc.calvalus.portal.client.CalvalusPortal.*;
  *
  * @author Norman
  */
-public class GeneralProcessorPanel implements IsWidget {
+public class GeneralProcessorForm implements IsWidget {
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
     private ListBox processorName;
     private TextArea processorParameters;
@@ -35,7 +35,7 @@ public class GeneralProcessorPanel implements IsWidget {
     private DecoratorPanel widget;
     private FormPanel uploadForm;
 
-    public GeneralProcessorPanel(CalvalusPortal portal, String title) {
+    public GeneralProcessorForm(CalvalusPortal portal, String title) {
         this.portal = portal;
 
         processorName = new ListBox();
@@ -154,6 +154,9 @@ public class GeneralProcessorPanel implements IsWidget {
 
     private void updateParametersWidget() {
         processorParameters.setValue(getSelectedProcessor().getDefaultParameters());
+    }
+
+    public void validateForm() throws ValidationException {
     }
 
     private class FileUploadChangeHandler implements ChangeHandler {

@@ -19,13 +19,13 @@ import static com.bc.calvalus.portal.client.CalvalusPortal.*;
  *
  * @author Norman
  */
-public class InputOutputPanel implements IsWidget {
+public class InputOutputForm implements IsWidget {
     private ListBox inputProductSet;
     private ListBox outputFormat;
     private DecoratorPanel widget;
     private CheckBox autoStaging;
 
-    public InputOutputPanel(CalvalusPortal portal, String title) {
+    public InputOutputForm(CalvalusPortal portal, String title) {
 
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");

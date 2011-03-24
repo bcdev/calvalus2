@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class L3ParametersPanel implements IsWidget {
+public class L3ParametersForm implements IsWidget {
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     private DecoratorPanel widget;
@@ -37,18 +37,20 @@ public class L3ParametersPanel implements IsWidget {
     private DoubleBox fillValue;
     private ListBox aggregator;
     private DoubleBox weightCoeff;
-    private DateBox dateStart;
-    private DateBox dateStop;
+    private DateBox startDate;
+    private DateBox stopDate;
     private IntegerBox periodLength;
-    private DoubleBox lonMin;
-    private DoubleBox lonMax;
-    private DoubleBox latMin;
-    private DoubleBox latMax;
+    private DoubleBox minLon;
+    private DoubleBox maxLon;
+    private DoubleBox minLat;
+    private DoubleBox maxLat;
     private DoubleBox resolution;
     private IntegerBox periodCount;
     private IntegerBox superSampling;
 
-    public L3ParametersPanel() {
+    boolean adjustingEndTime;
+
+    public L3ParametersForm() {
 
         inputVariables = new ListBox();
         inputVariables.addItem("chl_conc");
@@ -104,16 +106,16 @@ public class L3ParametersPanel implements IsWidget {
         contentParams.setWidget(6, 1, superSampling);
         contentParams.setWidget(6, 2, new Label("pixel/pixel"));
 
-        dateStart = new DateBox();
-        dateStart.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        dateStart.setValue(DATE_FORMAT.parse("2008-06-01"));
-        dateStart.setWidth("6em");
+        startDate = new DateBox();
+        startDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        startDate.setValue(DATE_FORMAT.parse("2008-06-01"));
+        startDate.setWidth("6em");
 
-        dateStop = new DateBox();
-        dateStop.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        dateStop.setValue(DATE_FORMAT.parse("2008-06-07"));
-        dateStop.setWidth("6em");
-        dateStop.addValueChangeHandler(new ValueChangeHandler<Date>() {
+        stopDate = new DateBox();
+        stopDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        stopDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+        stopDate.setWidth("6em");
+        stopDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
                 updateTimeParams(true);
@@ -141,9 +143,9 @@ public class L3ParametersPanel implements IsWidget {
         });
 
         HorizontalPanel timeRange = new HorizontalPanel();
-        timeRange.add(dateStart);
+        timeRange.add(startDate);
         timeRange.add(new HTML("&nbsp;to&nbsp;"));
-        timeRange.add(dateStop);
+        timeRange.add(stopDate);
 
         HorizontalPanel period = new HorizontalPanel();
         period.add(periodCount);
@@ -163,29 +165,29 @@ public class L3ParametersPanel implements IsWidget {
         temporalParams.setWidget(2, 1, period);
         temporalParams.setWidget(2, 2, new Label("days"));
 
-        lonMin = new DoubleBox();  // todo - validate against -180 <= x <= 180
-        lonMin.setValue(3.0);
-        lonMin.setWidth("6em");
-        lonMax = new DoubleBox();   // todo - validate against -180 <= x <= 180
-        lonMax.setValue(14.5);
-        lonMax.setWidth("6em");
+        minLon = new DoubleBox();  // todo - validate against -180 <= x <= 180
+        minLon.setValue(3.0);
+        minLon.setWidth("6em");
+        maxLon = new DoubleBox();   // todo - validate against -180 <= x <= 180
+        maxLon.setValue(14.5);
+        maxLon.setWidth("6em");
 
         HorizontalPanel lonRange = new HorizontalPanel();
-        lonRange.add(lonMin);
+        lonRange.add(minLon);
         lonRange.add(new HTML("&nbsp;to&nbsp;"));
-        lonRange.add(lonMax);
+        lonRange.add(maxLon);
 
-        latMin = new DoubleBox();  // todo - validate against -90 <= x <= 90
-        latMin.setValue(52.0);
-        latMin.setWidth("6em");
-        latMax = new DoubleBox();  // todo - validate against -90 <= x <= 90
-        latMax.setValue(56.5);
-        latMax.setWidth("6em");
+        minLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
+        minLat.setValue(52.0);
+        minLat.setWidth("6em");
+        maxLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
+        maxLat.setValue(56.5);
+        maxLat.setWidth("6em");
 
         HorizontalPanel latRange = new HorizontalPanel();
-        latRange.add(latMin);
+        latRange.add(minLat);
         latRange.add(new HTML("&nbsp;to&nbsp;"));
-        latRange.add(latMax);
+        latRange.add(maxLat);
 
         resolution = new DoubleBox();   // todo - validate against 0 < x <= 100
         resolution.setValue(9.28);
@@ -219,12 +221,10 @@ public class L3ParametersPanel implements IsWidget {
         widget.setWidget(panel);
     }
 
-    boolean adjustingEndTime;
-
     private void updateTimeParams(boolean endTimeAdjusted) {
         if (!adjustingEndTime) {
             long millisPerDay = 24L * 60L * 60L * 1000L;
-            long deltaMillis = dateStop.getValue().getTime() - dateStart.getValue().getTime();
+            long deltaMillis = stopDate.getValue().getTime() - startDate.getValue().getTime();
             int deltaDays = (int) ((millisPerDay + deltaMillis - 1) / millisPerDay);
 
             if (endTimeAdjusted) {
@@ -232,7 +232,7 @@ public class L3ParametersPanel implements IsWidget {
             } else {
                 try {
                     adjustingEndTime = true;
-                    dateStop.setValue(new Date(dateStart.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
+                    stopDate.setValue(new Date(startDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
                 } finally {
                     adjustingEndTime = false;
                 }
@@ -245,59 +245,57 @@ public class L3ParametersPanel implements IsWidget {
         return widget;
     }
 
-    public String validate() {
+    public void validateForm() throws ValidationException {
         boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
         if (!weightCoeffValid) {
-            return "Weight coefficient must be >= 0 and <= 1.";
+            throw new ValidationException(weightCoeff, "Weight coefficient must be >= 0 and <= 1");
         }
 
         boolean periodCountValid = periodCount.getValue() >= 1;
         if (!periodCountValid) {
-            return "Period count must be >= 1.";
+            throw new ValidationException(periodCount, "Period count must be >= 1");
         }
 
         boolean periodLengthValid = periodLength.getValue() >= 1;
         if (!periodLengthValid) {
-            return "Period length must be >= 1.";
+            throw new ValidationException(periodLength, "Period length must be >= 1");
         }
 
-        boolean lonMinValid = lonMin.getValue() >= -180 && lonMin.getValue() < +180;
-        if (!lonMinValid) {
-            return "Minimum longitude must be >= -180 and < +180 degree.";
+        boolean minLonValid = minLon.getValue() >= -180 && minLon.getValue() < +180;
+        if (!minLonValid) {
+            throw new ValidationException(minLon, "Minimum longitude must be >= -180 and < +180 degree");
         }
-        boolean lonMaxValid = lonMax.getValue() > -180 && lonMax.getValue() <= +180;
-        if (!lonMaxValid) {
-            return "Maximum longitude must be > -180 and <= +180 degree.";
+        boolean maxLonValid = maxLon.getValue() > -180 && maxLon.getValue() <= +180;
+        if (!maxLonValid) {
+            throw new ValidationException(maxLon, "Maximum longitude must be > -180 and <= +180 degree");
         }
-        boolean lonMinMaxValid = lonMax.getValue() > lonMin.getValue();
-        if (!lonMinMaxValid) {
-            return "Maximum longitude must greater than minimum longitude.";
+        boolean lonRangeValid = maxLon.getValue() > minLon.getValue();
+        if (!lonRangeValid) {
+            throw new ValidationException(minLon, "Maximum longitude must greater than minimum longitude");
         }
 
-        boolean latMinValid = latMin.getValue() >= -90 && latMin.getValue() < +90;
-        if (!latMinValid) {
-            return "Minimum latitude must be >= -90 and < +90 degree.";
+        boolean minLatValid = minLat.getValue() >= -90 && minLat.getValue() < +90;
+        if (!minLatValid) {
+           throw new ValidationException(weightCoeff, "Minimum latitude must be >= -90 and < +90 degree");
         }
-        boolean latMaxValid = latMax.getValue() > -90 && latMax.getValue() <= +90;
-        if (!latMaxValid) {
-            return "Maximum latitude must be > -90 and <= +90 degree.";
+        boolean maxLatValid = this.maxLat.getValue() > -90 && this.maxLat.getValue() <= +90;
+        if (!maxLatValid) {
+            throw new ValidationException(this.maxLat, "Maximum latitude must be > -90 and <= +90 degree");
         }
-        boolean latMinMaxValid = latMax.getValue() > latMin.getValue();
-        if (!latMinMaxValid) {
-            return "Maximum latitude must greater than minimum latitude.";
+        boolean latRangeValid = this.maxLat.getValue() > minLat.getValue();
+        if (!latRangeValid) {
+            throw new ValidationException(minLat, "Maximum latitude must greater than minimum latitude.");
         }
 
         boolean resolutionValid = resolution.getValue() > 0.0;
         if (!resolutionValid) {
-            return "Resolution must greater than zero.";
+            throw new ValidationException(resolution, "Resolution must greater than zero");
         }
 
         boolean superSamplingValid = superSampling.getValue() >= 1 && superSampling.getValue() <= 9;
         if (!superSamplingValid) {
-            return "Super-sampling must be >= 1 and <= 9.";
+            throw new ValidationException(superSampling, "Super-sampling must be >= 1 and <= 9");
         }
-
-        return null;
     }
 
     public Map<String, String> getValueMap() {
@@ -307,14 +305,14 @@ public class L3ParametersPanel implements IsWidget {
         parameters.put("fillValue", fillValue.getText());
         parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
         parameters.put("weightCoeff", weightCoeff.getText());
-        parameters.put("dateStart", dateStart.getFormat().format(dateStart, dateStart.getValue()));
-        parameters.put("dateStop", dateStop.getFormat().format(dateStop, dateStop.getValue()));
+        parameters.put("dateStart", startDate.getFormat().format(startDate, startDate.getValue()));
+        parameters.put("dateStop", stopDate.getFormat().format(stopDate, stopDate.getValue()));
         parameters.put("periodCount", periodCount.getText());
         parameters.put("periodLength", periodLength.getText());
-        parameters.put("lonMin", lonMin.getText());
-        parameters.put("lonMax", lonMax.getText());
-        parameters.put("latMin", latMin.getText());
-        parameters.put("latMax", latMax.getText());
+        parameters.put("lonMin", minLon.getText());
+        parameters.put("lonMax", maxLon.getText());
+        parameters.put("latMin", minLat.getText());
+        parameters.put("latMax", maxLat.getText());
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
         return parameters;
