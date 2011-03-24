@@ -37,5 +37,7 @@ public class GsProcessStatusTest extends GWTTestCase {
                 new GsProcessStatus(GsProcessState.RUNNING, "", 0.22f)));
         assertFalse(new GsProcessStatus(GsProcessState.RUNNING, "Dabei!", 0.2f).equals(
                 new GsProcessStatus(GsProcessState.RUNNING, "Vorbei!", 0.2f)));
+        assertFalse(new GsProcessStatus(GsProcessState.RUNNING, "Dabei!", 0.2f, 34).equals(
+                new GsProcessStatus(GsProcessState.RUNNING, "Dabei!", 0.2f, 35)));
     }
 }
