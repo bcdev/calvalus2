@@ -18,6 +18,7 @@ package com.bc.calvalus.commons;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -67,10 +68,32 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
     @Override
     public void handleStatusChanged(WorkflowStatusEvent event) {
         ProcessStatus[] statuses = new ProcessStatus[itemList.size()];
+        Date submitTime = null;
+        Date startTime = null;
+        Date stopTime = null;
         for (int i = 0; i < statuses.length; i++) {
-            statuses[i] = itemList.get(i).getStatus();
+            WorkflowItem workflowItem = itemList.get(i);
+            statuses[i] = workflowItem.getStatus();
+
+            Date itemSubmitTime = workflowItem.getSubmitTime();
+            if (submitTime == null || itemSubmitTime != null && itemSubmitTime.before(submitTime)) {
+                submitTime = itemSubmitTime;
+            }
+            Date itemStartTime = workflowItem.getStartTime();
+            if (startTime == null || itemStartTime != null && itemStartTime.before(startTime)) {
+                startTime = itemStartTime;
+            }
+            Date itemStopTime = workflowItem.getStopTime();
+            if (stopTime == null || itemStopTime != null && itemStopTime.after(stopTime)) {
+                stopTime = itemStopTime;
+            }
         }
         setStatus(ProcessStatus.aggregate(statuses));
+        setSubmitTime(submitTime);
+        setStartTime(startTime);
+        if (getStatus().getState().isDone()) {
+            setStopTime(stopTime);
+        }
     }
 
     @Override
