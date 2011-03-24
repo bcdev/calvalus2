@@ -67,7 +67,7 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
     public void handleStatusChanged(WorkflowStatusEvent event) {
         ProcessState oldState = event.getOldStatus().getState();
         ProcessState newState = event.getNewStatus().getState();
-        if (oldState != newState) {
+        if (oldState != newState && event.getSource() == this) {
             if (newState == ProcessState.UNKNOWN) {
                throw new IllegalStateException("Transition to unknown state is not allowed.");
             } else if (newState == ProcessState.SCHEDULED) {
@@ -101,15 +101,15 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
         return stopTime;
     }
 
-    protected void setSubmitTime(Date submitTime) {
+    public void setSubmitTime(Date submitTime) {
         this.submitTime = submitTime;
     }
 
-    protected void setStartTime(Date startTime) {
+    public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
 
-    protected void setStopTime(Date stopTime) {
+    public void setStopTime(Date stopTime) {
         this.stopTime = stopTime;
     }
 }
