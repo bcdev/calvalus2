@@ -1,13 +1,15 @@
+<%@ taglib prefix="bean" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
+
+<%@page language="java" import="java.security.Principal" %>
 
 <html>
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <link type="text/css" rel="stylesheet" href="calvalus.css">
     <title>Calvalus Portal</title>
+    <link type="text/css" rel="stylesheet" href="calvalus.css">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
     <script type="text/javascript" language="javascript" src="http://openlayers.org/api/2.9/OpenLayers.js"></script>
-
 </head>
 
 <body>
@@ -22,19 +24,27 @@
     </div>
 </noscript>
 
-<table>
+
+<table class="headerPanel">
     <tr>
         <td>
-            <img src="images/esa-logo.jpg"/>
+            <img src="images/esa-logo.jpg" alt="ESA logo"/>
         </td>
         <td>
             <h1 class="title">Calvalus</h1>
+
             <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+        </td>
+        <td class="userName">
+            <% final Principal userPrincipal = request.getUserPrincipal(); %>
+            <% if (userPrincipal != null) { %>
+            User <b><%=userPrincipal.getName()%></b>
+            <% } else { %>
+            Not logged in.
+            <% } %>
         </td>
     </tr>
 </table>
-
-
 <hr/>
 
 <div id="mainPanel"></div>
