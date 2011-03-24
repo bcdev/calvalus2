@@ -85,6 +85,9 @@ public class SimpleProductionStore implements ProductionStore {
             BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
             try {
                 load(reader);
+            } catch (Throwable t) {
+                String message = String.format("Failed to load production store from: %s\n%s", databaseFile.getPath(), t.getMessage());
+                throw new IOException(message, t);
             } finally {
                 reader.close();
             }
@@ -122,8 +125,6 @@ public class SimpleProductionStore implements ProductionStore {
                                                    stagingPath,
                                                    productionRequest,
                                                    workflow);
-//            workflow.setStatus(processStatus);
-//            production.setProcessingStatus(processStatus);
             production.setStagingStatus(stagingStatus);
             addProduction(production);
         }
