@@ -54,6 +54,15 @@ public class ManageProductionsViewTest extends GWTTestCase {
         assertEquals("Stage", getResultAutoStaging(COMPLETED, ERROR));
     }
 
+    public void testGetTimeText() {
+        assertEquals("", ManageProductionsView.getTimeText(0));
+        assertEquals("0:00:01", ManageProductionsView.getTimeText(1));
+        assertEquals("0:00:10", ManageProductionsView.getTimeText(10));
+        assertEquals("0:01:40", ManageProductionsView.getTimeText(100));
+        assertEquals("1:00:00", ManageProductionsView.getTimeText(3600));
+        assertEquals("100:00:00", ManageProductionsView.getTimeText(360000));
+    }
+
     private String getAction(GsProcessState productionState, GsProcessState stagingState) {
         return ManageProductionsView.getAction(createProduction(productionState, stagingState, false));
     }

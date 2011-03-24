@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.GsProcessState;
@@ -23,6 +24,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -173,8 +175,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                 production.getProductionRequest().getUserName(),
                                 backendConfig.getStagingPath() + "/" + production.getStagingPath(),
                                 production.isAutoStaging(),
-                                convert(production.getProcessingStatus()),
+                                convert(production.getProcessingStatus(), production.getWorkflow()),
                                 convert(production.getStagingStatus()));
+    }
+
+    private GsProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {
+        Date startTime = workflow.getStartTime();
+        Date stopTime = workflow.getStopTime();
+        int processingSeconds = 0;
+        if (startTime != null) {
+            if (stopTime == null) {
+                stopTime = new Date();
+            }
+            processingSeconds = (int) ((stopTime.getTime() - startTime.getTime()) / 1000);
+        }
+        return new GsProcessStatus(GsProcessState.valueOf(status.getState().name()),
+                                   status.getMessage(),
+                                   status.getProgress(),
+                                   processingSeconds);
     }
 
     private GsProcessStatus convert(ProcessStatus status) {

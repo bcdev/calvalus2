@@ -41,6 +41,9 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
             item.addWorkflowStatusListener(this);
         }
         itemList.addAll(Arrays.asList(items));
+        if (!itemList.isEmpty()) {
+            aggregateChildInformation();
+        }
     }
 
     @Override
@@ -67,6 +70,12 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
      */
     @Override
     public void handleStatusChanged(WorkflowStatusEvent event) {
+        if (itemList.contains(event.getSource())) {
+            aggregateChildInformation();
+        }
+    }
+
+    private void aggregateChildInformation() {
         ProcessStatus[] statuses = new ProcessStatus[itemList.size()];
         Date submitTime = null;
         Date startTime = null;

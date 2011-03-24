@@ -164,6 +164,7 @@ public class BinManagerImpl implements BinManager {
             outputVectorImpl.setOffsetAndSize(outputPropertyOffsets[i], aggregator.getOutputPropertyCount());
             aggregator.computeOutput(temporalVector, outputVector);
         }
+        outputVectorImpl.setOffsetAndSize(0, outputPropertyCount);
     }
 
     private void initSpatialBin(SpatialBin bin) {

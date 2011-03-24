@@ -3,7 +3,6 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobIdFormat;
 import org.junit.Test;
 
@@ -13,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -28,23 +28,32 @@ public class SimpleProductionStoreTest {
                                           new ProductionRequest("test", "marco",
                                                                 "a", "5",
                                                                 "b", "9"),
-                                          new Workflow.Parallel(new TestWorkflowItem<String>("job5")));
-        prod1.setProcessingStatus(new ProcessStatus(ProcessState.RUNNING, 0.6f));
+                                          new TestWorkflowItem<String>("job5",
+                                                                       new ProcessStatus(ProcessState.RUNNING, 0.6f),
+                                                                       new Date(1),
+                                                                       new Date(5),
+                                                                       null));
 
         Production prod2 = new Production("id2", "name2", null,
                                           new ProductionRequest("test", "martin",
                                                                 "a", "9",
                                                                 "b", "2"),
-                                          new Workflow.Parallel(new TestWorkflowItem<String>("job9")));
-        prod2.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
+                                          new TestWorkflowItem<String>("job9",
+                                                                       new ProcessStatus(ProcessState.COMPLETED),
+                                                                       new Date(1),
+                                                                       new Date(2),
+                                                                       new Date(13)));
 
         Production prod3 = new Production("id3", "name3", "path3",
                                           new ProductionRequest("test", "norman",
                                                                 "a", "1",
                                                                 "b", "0",
                                                                 "autoStaging", "true"),
-                                          new Workflow.Parallel(new TestWorkflowItem<String>("job2")));
-        prod3.setProcessingStatus(new ProcessStatus(ProcessState.COMPLETED));
+                                          new TestWorkflowItem<String>("job2",
+                                                                       new ProcessStatus(ProcessState.COMPLETED),
+                                                                       new Date(1),
+                                                                       new Date(7),
+                                                                       new Date(42)));
         prod3.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED));
 
         db.addProduction(prod1);
@@ -69,6 +78,9 @@ public class SimpleProductionStoreTest {
         assertEquals(false, restoredProd1.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.6f), restoredProd1.getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, restoredProd1.getStagingStatus());
+        assertEquals(1, restoredProd1.getWorkflow().getSubmitTime().getTime());
+        assertEquals(5, restoredProd1.getWorkflow().getStartTime().getTime());
+        assertEquals(null, restoredProd1.getWorkflow().getStopTime());
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
         assertEquals("marco", restoredProd1.getProductionRequest().getUserName());
@@ -83,6 +95,9 @@ public class SimpleProductionStoreTest {
         assertEquals(false, restoredProd2.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd2.getProcessingStatus());
         assertEquals(ProcessStatus.UNKNOWN, restoredProd2.getStagingStatus());
+        assertEquals(1, restoredProd2.getWorkflow().getSubmitTime().getTime());
+        assertEquals(2, restoredProd2.getWorkflow().getStartTime().getTime());
+        assertEquals(13, restoredProd2.getWorkflow().getStopTime().getTime());
         assertNotNull(restoredProd2.getProductionRequest());
         assertEquals("test", restoredProd2.getProductionRequest().getProductionType());
         assertEquals("martin", restoredProd2.getProductionRequest().getUserName());
@@ -97,6 +112,9 @@ public class SimpleProductionStoreTest {
         assertEquals(true, restoredProd3.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getProcessingStatus());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getStagingStatus());
+        assertEquals(1, restoredProd3.getWorkflow().getSubmitTime().getTime());
+        assertEquals(7, restoredProd3.getWorkflow().getStartTime().getTime());
+        assertEquals(42, restoredProd3.getWorkflow().getStopTime().getTime());
         assertNotNull(restoredProd3.getProductionRequest());
         assertEquals("test", restoredProd3.getProductionRequest().getProductionType());
         assertEquals("norman", restoredProd3.getProductionRequest().getUserName());

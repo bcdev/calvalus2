@@ -86,10 +86,6 @@ public class Production {
         return workflow.getStatus();
     }
 
-    public void setProcessingStatus(ProcessStatus processingStatus) {
-        this.workflow.setStatus( processingStatus);
-    }
-
     public ProcessStatus getStagingStatus() {
         return stagingStatus;
     }

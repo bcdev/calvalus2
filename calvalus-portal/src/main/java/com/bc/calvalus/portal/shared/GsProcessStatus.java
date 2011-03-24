@@ -12,6 +12,7 @@ public class GsProcessStatus implements IsSerializable {
     private GsProcessState state;
     private String message;
     private float progress;
+    private int processingSeconds;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}.
@@ -21,14 +22,14 @@ public class GsProcessStatus implements IsSerializable {
     }
 
     public GsProcessStatus(GsProcessState state) {
-        this(state, 0.0f);
-    }
-
-    public GsProcessStatus(GsProcessState state, float progress) {
-        this(state, "", progress);
+        this(state, "", 0.0f);
     }
 
     public GsProcessStatus(GsProcessState state, String message, float progress) {
+        this(state, message, progress, 0);
+    }
+
+    public GsProcessStatus(GsProcessState state, String message, float progress, int processingSeconds) {
         if (state == null) {
             throw new NullPointerException("state");
         }
@@ -38,6 +39,7 @@ public class GsProcessStatus implements IsSerializable {
         this.state = state;
         this.message = message;
         this.progress = progress;
+        this.processingSeconds = processingSeconds;
     }
 
     public GsProcessState getState() {
@@ -60,6 +62,10 @@ public class GsProcessStatus implements IsSerializable {
         return progress;
     }
 
+    public int getProcessingSeconds() {
+        return processingSeconds;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -77,6 +83,7 @@ public class GsProcessStatus implements IsSerializable {
         }
 
         return delta <= EPS
+                && processingSeconds == that.processingSeconds
                 && message.equals(that.message)
                 && state == that.state;
     }
@@ -86,6 +93,7 @@ public class GsProcessStatus implements IsSerializable {
         int result = state.hashCode();
         result = 31 * result + message.hashCode();
         result = 31 * result + (int) (progress / EPS);
+        result = 31 * result + processingSeconds;
         return result;
     }
 
@@ -95,6 +103,7 @@ public class GsProcessStatus implements IsSerializable {
                 "state=" + state +
                 ", message='" + message + '\'' +
                 ", progress=" + progress +
+                ", processingSeconds=" + processingSeconds +
                 '}';
     }
 }

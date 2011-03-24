@@ -17,8 +17,11 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import org.junit.Ignore;
+
+import java.util.Date;
 
 /**
  * A simple WorkflowItem with an ID but that does nothing on submit(), kill() and updateStatus().
@@ -29,6 +32,14 @@ public class TestWorkflowItem<T> extends AbstractWorkflowItem {
 
     TestWorkflowItem(T jobId) {
         this.jobId = jobId;
+    }
+
+    public TestWorkflowItem(T jobId, ProcessStatus status,  Date submitTime, Date startTime, Date stopTime) {
+        this.jobId = jobId;
+        setStatus(status);
+        setSubmitTime(submitTime);
+        setStartTime(startTime);
+        setStopTime(stopTime);
     }
 
     public T getJobId() {
