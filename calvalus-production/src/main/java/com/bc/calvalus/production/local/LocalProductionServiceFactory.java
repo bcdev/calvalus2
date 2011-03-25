@@ -49,15 +49,15 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                 // Return some dummy processors
                 return new ProcessorDescriptor[]{
                         new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
-                                                "",
+                                                new String[] {"a=2\nb=5", "a=1\nb=4", "a=2\nb=1" ,"a=3\nb=5"},
                                                 "beam-meris-case2r",
                                                 new String[]{"1.5-SNAPSHOT", "1.4", "1.3", "1.3-marco3"}),
                         new ProcessorDescriptor("pc2", "MERIS IOP QAA",
-                                                "",
+                                                new String[] {"u = 2\nv = 5", "u = 2\nv = 7", "u = 1\nv = 2" },
                                                 "beam-meris-qaa",
                                                 new String[]{"1.2-SNAPSHOT", "1.1.3", "1.0.1"}),
                         new ProcessorDescriptor("pc3", "Band Maths",
-                                                "",
+                                                new String[] {"x = 0.988\ny = 0.113\nz = 0.324"},
                                                 "beam-gpf",
                                                 new String[]{"4.8"}),
                 };

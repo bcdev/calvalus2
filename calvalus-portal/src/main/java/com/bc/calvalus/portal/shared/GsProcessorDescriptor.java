@@ -2,6 +2,8 @@ package com.bc.calvalus.portal.shared;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
+import java.util.Arrays;
+
 /**
  * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessorDescriptor} class.
  *
@@ -10,7 +12,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class GsProcessorDescriptor implements IsSerializable {
     private String executableName;
     private String processorName;
-    private String defaultParameters;
+    private String[] defaultParameters;
     private String bundleName;
     private String[] bundleVersions;
 
@@ -20,7 +22,11 @@ public class GsProcessorDescriptor implements IsSerializable {
     public GsProcessorDescriptor() {
     }
 
-    public GsProcessorDescriptor(String executableName, String processorName, String defaultParameters, String bundleName, String[] bundleVersions) {
+    public GsProcessorDescriptor(String executableName,
+                                 String processorName,
+                                 String[] defaultParameters,
+                                 String bundleName,
+                                 String[] bundleVersions) {
         this.executableName = executableName;
         this.processorName = processorName;
         this.defaultParameters = defaultParameters;
@@ -36,7 +42,7 @@ public class GsProcessorDescriptor implements IsSerializable {
         return processorName;
     }
 
-    public String getDefaultParameters() {
+    public String[] getDefaultParameters() {
         return defaultParameters;
     }
 

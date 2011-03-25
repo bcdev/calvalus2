@@ -40,7 +40,7 @@ public class GeneralProcessorForm implements IsWidget {
 
         processorName = new ListBox();
         processorName.setName("processorName");
-        processorName.setWidth("20em");
+        processorName.setWidth("25em");
         for (GsProcessorDescriptor processor : portal.getProcessors()) {
             String label = processor.getProcessorName() + " (from " + processor.getBundleName() + ")";
             this.processorName.addItem(label, processor.getExecutableName());
@@ -52,32 +52,39 @@ public class GeneralProcessorForm implements IsWidget {
         processorName.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                updateParametersWidget();
                 updateProcessorVersionsWidget();
+                updateParametersWidget();
             }
         });
 
         processorParameters = new TextArea();
         processorParameters.setName("processorParameters");
-        processorParameters.setCharacterWidth(48);
+        processorParameters.setWidth("35em");
         processorParameters.setVisibleLines(16);
 
         bundleVersion = new ListBox();
         bundleVersion.setName("bundleVersion");
         bundleVersion.setVisibleItemCount(3);
+        bundleVersion.setWidth("10em");
+        bundleVersion.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                updateParametersWidget();
+            }
+        });
 
         fileUpload = new FileUpload();
         fileUpload.setName("fileUpload");
         fileUpload.addChangeHandler(new FileUploadChangeHandler());
-        fileUpload.setWidth("30em");
 
         HorizontalPanel processorPanel = new HorizontalPanel();
         processorPanel.setSpacing(2);
         processorPanel.add(createLabeledWidgetV("Processor:", processorName));
-        processorPanel.add(createLabeledWidgetV("Bundle version:", bundleVersion));
+        processorPanel.add(createLabeledWidgetV("Version:", bundleVersion));
 
         uploadForm = new FormPanel();
         uploadForm.setWidget(createLabeledWidgetH("From file:", fileUpload));
+        uploadForm.setWidth("35em");
         uploadForm.addSubmitHandler(new FormPanel.SubmitHandler() {
             public void onSubmit(FormPanel.SubmitEvent event) {
                 // todo - check inputs
@@ -116,8 +123,8 @@ public class GeneralProcessorForm implements IsWidget {
         widget.setWidget(layout);
 
         if (portal.getProcessors().length > 0) {
-            updateParametersWidget();
             updateProcessorVersionsWidget();
+            updateParametersWidget();
         }
     }
 
@@ -153,7 +160,11 @@ public class GeneralProcessorForm implements IsWidget {
     }
 
     private void updateParametersWidget() {
-        processorParameters.setValue(getSelectedProcessor().getDefaultParameters());
+        int selectedIndex = bundleVersion.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            String[] defaultParameters = getSelectedProcessor().getDefaultParameters();
+            processorParameters.setValue(defaultParameters[selectedIndex]);
+        }
     }
 
     public void validateForm() throws ValidationException {
