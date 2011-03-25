@@ -52,7 +52,7 @@
         </init-param>
         <init-param>
             <param-name>readmeFile</param-name>
-            <param-value>/staging/readme.txt</param-value>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
         </init-param>
         <init-param>
             <param-name>contextXsltFile</param-name>
@@ -116,6 +116,7 @@
             <web-resource-name>Calvalus Protected Area</web-resource-name>
             <!-- Define the context-relative URL(s) to be protected -->
             <url-pattern>/calvalus.jsp</url-pattern>
+            <url-pattern>/staging</url-pattern>
             <url-pattern>/staging/*</url-pattern>
             <url-pattern>/calvalus/backend</url-pattern>
             <url-pattern>/calvalus/upload</url-pattern>
