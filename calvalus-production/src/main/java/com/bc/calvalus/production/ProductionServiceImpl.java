@@ -65,6 +65,7 @@ public class ProductionServiceImpl implements ProductionService {
                 new ProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
                 new ProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
                 */
+                new ProductSet("MER_FRS_1P/waqs", "MER_FRS_1P", "MERIS FRS L1b (WAQS)"),
         };
     }
 
