@@ -71,15 +71,30 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
         // todo - load & update from persistent storage
+//        return new ProcessorDescriptor[]{
+//                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
+//                                        "<parameters>\n" +
+//                                                "  <useIdepix>true</useIdepix>\n" +
+//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+//                                                "  <outputReflec>false</outputReflec>\n" +
+//                                                "</parameters>",
+//                                        "beam-lkn",
+//                                        new String[]{"1.0-SNAPSHOT"}),
+//        };
         return new ProcessorDescriptor[]{
                 new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
                                         "<parameters>\n" +
+                                                "  <doCalibration>true</doCalibration>\n" +
+                                                "  <doSmile>true</doSmile>\n" +
+                                                "  <doEqualization>true</doEqualization>\n" +
                                                 "  <useIdepix>true</useIdepix>\n" +
-                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                "  <outputReflec>false</outputReflec>\n" +
+                                                "  <algorithm>CoastColour</algorithm>\n" +
+                                                "  <landExpression>l1p_flags.F_LANDCONS</landExpression>\n" +
+                                                "  <cloudIceExpression>l1p_flags.F_CLOUD || l1p_flags.F_SNOW_ICE</cloudIceExpression>\n" +
+                                                "  <outputReflec>true</outputReflec>\n" +
                                                 "</parameters>",
-                                        "beam-lkn",
-                                        new String[]{"1.0-SNAPSHOT"}),
+                                        "coastcolour-processing",
+                                        new String[]{"0.5-SNAPSHOT","1.0-SNAPSHOT"}),
         };
     }
 
