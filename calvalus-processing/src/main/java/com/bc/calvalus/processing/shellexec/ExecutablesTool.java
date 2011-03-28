@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.shellexec;
 
-import com.bc.calvalus.commons.Args;
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,14 +11,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.logging.Logger;
 
 /**
@@ -82,13 +80,13 @@ public class ExecutablesTool extends Configured implements Tool {
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
             final XmlDoc request = new XmlDoc(requestContent);
             final String requestType = request.getString(TYPE_XPATH);
-            final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
+            //final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
 
             // clear output directory
-            final Path output = new Path(requestOutputDir);
-            final FileSystem fileSystem = output.getFileSystem(getConf());
-            fileSystem.delete(output, true);
-            //fileSystem.mkdirs(output);
+            //final Path output = new Path(requestOutputDir);
+            //final FileSystem fileSystem = output.getFileSystem(getConf());
+            //fileSystem.delete(output, true);
+            ////fileSystem.mkdirs(output);
 
             LOG.info("start processing " + requestType + " (" + requestPath + ")");
             long startTime = System.nanoTime();
@@ -96,6 +94,12 @@ public class ExecutablesTool extends Configured implements Tool {
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), requestPath);  // TODO improve job identification
             job.getConfiguration().set("calvalus.request", requestContent);
+
+//            final WpsConfig wpsConfig = new WpsConfig(requestContent);
+//            final String[] requestInputPaths = wpsConfig.getRequestInputPaths();
+//            String inputs = StringUtils.join(requestInputPaths, ",");
+//            job.getConfiguration().set(JobConfNames.CALVALUS_INPUT, inputs);
+
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);
             job.getConfiguration().set("hadoop.job.ugi", "hadoop,hadoop");  // user hadoop owns the outputs
@@ -104,10 +108,8 @@ public class ExecutablesTool extends Configured implements Tool {
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
             // TODO is this necessary?
-            FileOutputFormat.setOutputPath(job, output);
-            //job.setOutputFormatClass(TextOutputFormat.class);
-            //job.setOutputKeyClass(Text.class);
-            //job.setOutputValueClass(Text.class);
+            //FileOutputFormat.setOutputPath(job, output);
+            job.setOutputFormatClass(NullOutputFormat.class);
 
             // look up job jar either by class (if deployed) or by path (idea)
             //job.setJarByClass(getClass());

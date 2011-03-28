@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
@@ -74,7 +73,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
 
         setAndClearOutputDir(job, this.outputDir);
 
-        job.setInputFormatClass(ExecutablesInputFormat.class);
+        job.setInputFormatClass(CalvalusInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 

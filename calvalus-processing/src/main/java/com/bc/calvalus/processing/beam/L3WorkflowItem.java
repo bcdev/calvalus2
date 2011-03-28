@@ -20,7 +20,6 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -106,7 +105,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
         setAndClearOutputDir(job, outputDir);
 
-        job.setInputFormatClass(ExecutablesInputFormat.class);
+        job.setInputFormatClass(CalvalusInputFormat.class);
         job.setNumReduceTasks(4);
         job.setMapperClass(L3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);

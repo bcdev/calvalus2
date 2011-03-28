@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -81,7 +80,7 @@ public class BeamOpProcessingType {
         fileSystem.delete(outputPath, true);
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        job.setInputFormatClass(ExecutablesInputFormat.class);
+        job.setInputFormatClass(CalvalusInputFormat.class);
 
         if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETER) != null) {
             job.setNumReduceTasks(4);

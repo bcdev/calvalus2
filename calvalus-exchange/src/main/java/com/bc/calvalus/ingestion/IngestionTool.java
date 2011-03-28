@@ -45,6 +45,7 @@ public class IngestionTool extends Configured implements Tool {
         options.addOption("c", "replication", true, "replication factor of uploaded files, defaults to Hadoop default");
         options.addOption("b", "blocksize", true, "block size in MB for uploaded files, defaults to file size");
         options.addOption("f", "filenamepattern", true, "regular expression matching filenames, defaults to 'type.*\\.N1'");
+        options.addOption("v", "verify", false, "verify existence and size to avoid double copying, defaults to false");
     }
 
     public static void main(String[] args) throws Exception {
@@ -57,6 +58,7 @@ public class IngestionTool extends Configured implements Tool {
             String productType = DEFAULT_PRODUCT_TYPE;
             String revision = DEFAULT_REVISION;
             long blockSizeParameter = -1;
+            boolean verify = false;
 
             // parse command line arguments
             CommandLineParser commandLineParser = new PosixParser();
@@ -71,13 +73,13 @@ public class IngestionTool extends Configured implements Tool {
             if (commandLine.hasOption("blocksize")) {
                 blockSizeParameter = Long.parseLong(commandLine.getOptionValue("blocksize"));
             }
-            final String filenamepattern;
-            if (commandLine.hasOption("filenamepattern")) {
-                filenamepattern = commandLine.getOptionValue("filenamepattern");
+            final String filenamePattern;
+            if (commandLine.hasOption("filenamePattern")) {
+                filenamePattern = commandLine.getOptionValue("filenamePattern");
             } else {
-                filenamepattern = productType + ".*\\.N1";
+                filenamePattern = productType + ".*\\.N1";
             }
-            Pattern pattern = Pattern.compile(filenamepattern);
+            Pattern pattern = Pattern.compile(filenamePattern);
 
             FileSystem hdfs = FileSystem.get(getConf());
             final short replication;
@@ -86,6 +88,8 @@ public class IngestionTool extends Configured implements Tool {
             } else {
                 replication = hdfs.getDefaultReplication();
             }
+
+            verify = commandLine.hasOption("verify");
 
             // determine input files
             List<File> sourceFiles = new ArrayList<File>();
@@ -105,7 +109,6 @@ public class IngestionTool extends Configured implements Tool {
             // loop over input files
             for (File sourceFile : sourceFiles) {
                 String archivePath = getArchivePath(sourceFile.getName(), productType, revision);
-                System.out.println(MessageFormat.format("Archiving {0} in {1}", sourceFile, archivePath));
 
                 // calculate block size to cover complete N1
                 // blocksize must be a multiple of checksum size
@@ -119,8 +122,19 @@ public class IngestionTool extends Configured implements Tool {
 
                 // construct HDFS output stream
                 Path destPath = new Path(archivePath, sourceFile.getName());
-                OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
-                IOUtils.copyBytes(new FileInputStream(sourceFile), out, getConf(), true);
+                // copy if either verification is off or target does not exist or target has different size
+//                System.out.println("destPath=" + destPath);
+//                System.out.println("! verify=" + (! verify));
+//                System.out.println("! hdfs.exists(destPath) " + (! hdfs.exists(destPath)));
+//                System.out.println("hdfs.listStatus(destPath) " + hdfs.listStatus(destPath));
+//                if (hdfs.listStatus(destPath) != null) System.out.format("hdfs.listStatus(destPath)[0].getLen(%d) >= fileSize(%d)\n", hdfs.listStatus(destPath)[0].getLen(), fileSize);
+                if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
+                    System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
+                    OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
+                    IOUtils.copyBytes(new FileInputStream(sourceFile), out, getConf(), true);
+                } else {
+                    System.out.println(MessageFormat.format("skipping {0} existing in {1}", sourceFile, archivePath));
+                }
             }
 
             return 0;
