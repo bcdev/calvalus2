@@ -37,6 +37,7 @@
         <param-name>calvalus.hadoop.mapred.job.tracker</param-name>
         <param-value>cvmaster00:9001</param-value>
     </context-param>
+
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
