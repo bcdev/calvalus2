@@ -4,6 +4,8 @@ import com.bc.calvalus.commons.ProcessState;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;
 
+import java.text.SimpleDateFormat;
+
 import static org.junit.Assert.*;
 
 public class ProductionTest {
