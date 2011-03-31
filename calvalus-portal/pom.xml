@@ -205,7 +205,7 @@
                     <configuration>
                         <type>runtime</type>
                         <properties>
-                            <cargo.tomcat.manager.url>http://bcvm03:8080/manager/html</cargo.tomcat.manager.url>
+                            <cargo.tomcat.manager.url>http://bcvm03:8080/manager/text</cargo.tomcat.manager.url>
                             <cargo.remote.username>buildserver</cargo.remote.username>
                             <cargo.remote.password>gHGugShf$3dFe4s#6u!igs</cargo.remote.password>
                         </properties>
