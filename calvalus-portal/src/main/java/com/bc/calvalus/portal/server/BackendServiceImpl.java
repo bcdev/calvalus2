@@ -227,6 +227,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private void initProductionService(ServletContext servletContext) throws ServletException {
         String className = servletContext.getInitParameter(PRODUCTION_SERVICE_FACTORY_CLASS);
+
         if (className == null) {
             throw new ServletException(String.format("Missing servlet initialisation parameter '%s'",
                                                      PRODUCTION_SERVICE_FACTORY_CLASS));
