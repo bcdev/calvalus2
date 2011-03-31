@@ -123,7 +123,7 @@ ls -ltr ; cat errors.txt ; cd
 rm -r <xsl:value-of select="$calvalus.tmp.dir" />
 #
 date
-test -f select="$calvalus.output.physical" />/<xsl:value-of
+test -f <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of
           select="$calvalus.input.year" />/<xsl:value-of
           select="$calvalus.input.month" />/<xsl:value-of
           select="$calvalus.input.day" />/$outputfile
