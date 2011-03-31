@@ -60,77 +60,47 @@
   <!-- constructs call with env script, executable, input, output, move of temporal output to target dir -->
 
   <xsl:template match="/">
-    <!-- create tmp dir -->
-    <xsl:text>mkdir -p </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text> ; </xsl:text>
-    <!-- create output dir -->
-    <xsl:text>mkdir -p </xsl:text>
-    <xsl:value-of select="$calvalus.output.physical" />
-    <xsl:text> ; </xsl:text>
-    <!-- call geochildgen per subset -->
-    <xsl:apply-templates />
-    <!-- cleanup -->
-    <xsl:text>rm -r </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
+# create output dir and tmp dir
+mkdir -p <xsl:value-of select="$calvalus.output.physical" />
+mkdir -p <xsl:value-of select="$calvalus.tmp.dir" />
+cd <xsl:value-of select="$calvalus.tmp.dir" />
+# call geochildgen per subset
+result=0
+<xsl:apply-templates />
+# cleanup
+cd
+rm -r <xsl:value-of select="$calvalus.tmp.dir" />
+test $result = 0
   </xsl:template>
 
   <!-- prints out one call of geochildgen and the output transfer command -->
 
   <xsl:template match="wps:Input[ows:Identifier='subset']">
-    <!-- cleanup -->
-    <xsl:text>rm -f </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text>/*.N1 ; </xsl:text>
     <!-- write properties file -->
     <xsl:result-document href="{$calvalus.tmp.dir}/{wps:Data/wps:ComplexData/identifier}.properties">
       <xsl:text>geometry[0] = </xsl:text>
       <xsl:value-of select="wps:Data/wps:ComplexData/coverage" />
     </xsl:result-document>
-    <!-- executable -->
-    <xsl:value-of select="$calvalus.package.dir" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$geochildgen.executable" />
-    <!-- parameters -->
-    <xsl:text> -g </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="wps:Data/wps:ComplexData/identifier" />
-    <xsl:text>.properties -c -o </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text> </xsl:text>
-    <xsl:value-of select="$calvalus.input.physical" />
-    <xsl:text> ; </xsl:text>
-    <!-- move tmp output to (hdfs) destination -->
-    <xsl:text>if test -e </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text>/*.N1 ; then mkdir -p </xsl:text>
-    <xsl:value-of select="$calvalus.output.physical" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="wps:Data/wps:ComplexData/identifier" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.year" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.month" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.day" />
-    <xsl:text> ; mv </xsl:text>
-    <xsl:value-of select="$calvalus.tmp.dir" />
-    <xsl:text>/*.N1 </xsl:text>
-    <xsl:value-of select="$calvalus.output.physical" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="wps:Data/wps:ComplexData/identifier" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.year" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.month" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="$calvalus.input.day" />
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="substring-before($calvalus.input.filename,'.N1')" />
-    <xsl:text>-</xsl:text>
-    <xsl:value-of select="wps:Data/wps:ComplexData/identifier" />
-    <xsl:text>.N1 ; fi ; </xsl:text>
+# cleanup
+rm -f <xsl:value-of select="$calvalus.tmp.dir" />/*.N1
+# executable
+<xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$geochildgen.executable" /> \
+  -g <xsl:value-of select="$calvalus.tmp.dir" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />.properties \
+  -c \
+  -o <xsl:value-of select="$calvalus.tmp.dir" /> \
+  <xsl:value-of select="$calvalus.input.physical" />
+# name of result file
+outputfilename=`head -1 *.N1 | cut -d'=' -f2 | sed s/\"//g`
+# move tmp output to (hdfs) destination
+if test -e <xsl:value-of select="$calvalus.tmp.dir" />/*.N1
+then
+  mkdir -p  <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />
+  mv *.N1 <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
+fi
+if test ! -f <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename<text> </text>-a $result = 0
+then
+  result=1
+fi
   </xsl:template>
 
   <!-- catches all other stuff -->
