@@ -13,6 +13,7 @@
   <xsl:param name="calvalus.archive.mount">/mnt/hdfs</xsl:param>
   <xsl:param name="calvalus.tmp.dir">/home/hadoop/tmp/<xsl:value-of select="$calvalus.task.id" /></xsl:param>
   <xsl:variable name="geochildgen.executable">geochildgen.sh</xsl:variable>
+  <xsl:variable name="geochildgen.reportprogress">geochildgen-reportprogress.sh</xsl:variable>
 
   <!-- variables computed from parameters -->
 
@@ -60,13 +61,19 @@
   <!-- constructs call with env script, executable, input, output, move of temporal output to target dir -->
 
   <xsl:template match="/">
+# switch on job control
+set -m
 # create output dir and tmp dir
 mkdir -p <xsl:value-of select="$calvalus.output.physical" />
 mkdir -p <xsl:value-of select="$calvalus.tmp.dir" />
 cd <xsl:value-of select="$calvalus.tmp.dir" />
+# start concurrent status reporting job
+<xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$geochildgen.reportprogress" />  &amp;
 # call geochildgen per subset
 result=0
 <xsl:apply-templates />
+# stop concurrent status reporting job
+kill %1
 # cleanup
 cd
 rm -r <xsl:value-of select="$calvalus.tmp.dir" />
