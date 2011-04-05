@@ -110,10 +110,14 @@ public class ExecutablesInputFormat extends InputFormat {
                 if (filter == null || filter.matcher(path.getName()).matches()) {
                     long length = file.getLen();
                     BlockLocation[] locations = fs.getFileBlockLocations(file, 0, length);
-                    // create file split for the input
-                    FileSplit split = new FileSplit(path, 0, length, locations[0].getHosts());
-                    accu.add(split);
-                    LOG.info("split " + path);
+                    if (locations == null || locations.length == 0) {
+                        LOG.warning("failed to fs.getFileBlockLocations for: " + path);
+                    } else {
+                        // create file split for the input
+                        FileSplit split = new FileSplit(path, 0, length, locations[0].getHosts());
+                        accu.add(split);
+                        LOG.info("split " + path);
+                    }
                 }
             }
         }
