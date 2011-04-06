@@ -51,20 +51,59 @@ import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class BeamUtils {
     //TODO make this a configurable option
+    private static final String DEFAULT_TILE_HEIGHT = "64";
     private static final int TILE_HEIGHT = 64;
     private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
 
-    static void initGpf() {
+    static void initGpf(Configuration configuration) {
         SystemUtils.init3rdPartyLibs(BeamUtils.class.getClassLoader());
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(TILE_CACHE_SIZE_M * 1024 * 1024);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        Map<String, String> properties = convertProperties(configuration.get(JobConfNames.CALVALUS_PROPERTIES));
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            System.setProperty(entry.getKey(), entry.getValue());
+        }
+    }
+
+    static String convertProperties(Properties properties) {
+        if (properties.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        List<String> nameList = new ArrayList<String>(properties.stringPropertyNames());
+        Collections.sort(nameList);
+        for (String name : nameList) {
+            sb.append(name);
+            sb.append("=");
+            sb.append(properties.getProperty(name));
+            sb.append(",");
+        }
+        int length = sb.length();
+        return sb.substring(0, length-1);
+    }
+
+    static Map<String, String> convertProperties(String propertieString) {
+        Map<String, String> map = new HashMap<String, String>();
+        if (propertieString != null) {
+            String[] properties = propertieString.split(",");
+            for (String property : properties) {
+                String[] keyValue = property.split("=");
+                if (keyValue.length == 2) {
+                    map.put(keyValue[0].trim(), keyValue[1].trim());
+                }
+            }
+        }
+        return  map;
     }
 
     //TODO use conf fo extract value

@@ -29,6 +29,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -141,5 +142,28 @@ public class BeamUtilsTest {
         assertEquals(2, targetBands.length);
         assertEquals("reflec_13", targetBands[0].name);
         assertEquals("reflec_14", targetBands[1].name);
+    }
+
+    @Test
+    public void testConvertProperties() throws Exception {
+        Properties p = new Properties();
+        assertEquals("", BeamUtils.convertProperties(p));
+
+        p.setProperty("name1", "value1");
+        p.setProperty("name2", "value2");
+        assertEquals("name1=value1,name2=value2", BeamUtils.convertProperties(p));
+
+        Map<String, String> map = BeamUtils.convertProperties("");
+        assertEquals(0, map.size());
+
+        map = BeamUtils.convertProperties((String)null);
+        assertEquals(0, map.size());
+
+        map = BeamUtils.convertProperties("name1=value1,name2=value2");
+        assertEquals(2, map.size());
+        assertTrue(map.containsKey("name1"));
+        assertTrue(map.containsKey("name2"));
+        assertEquals("value1", map.get("name1"));
+        assertEquals("value2", map.get("name2"));
     }
 }

@@ -39,7 +39,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
      */
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        BeamUtils.initGpf();
+        BeamUtils.initGpf(context.getConfiguration());
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 

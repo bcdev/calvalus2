@@ -61,8 +61,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        BeamUtils.initGpf();
         final Configuration configuration = context.getConfiguration();
+        BeamUtils.initGpf(configuration);
         L3Config l3Config = L3Config.create(configuration.get(JobConfNames.CALVALUS_L3_PARAMETER));
 
         final BinningContext ctx = l3Config.getBinningContext();
