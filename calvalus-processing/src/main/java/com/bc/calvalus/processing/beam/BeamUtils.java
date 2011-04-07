@@ -60,8 +60,6 @@ import java.util.Properties;
 
 public class BeamUtils {
     //TODO make this a configurable option
-    private static final String DEFAULT_TILE_HEIGHT = "64";
-    private static final int TILE_HEIGHT = 64;
     private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
 
     static void initGpf(Configuration configuration) {
@@ -69,6 +67,10 @@ public class BeamUtils {
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(TILE_CACHE_SIZE_M * 1024 * 1024);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        initSystemProperties(configuration);
+    }
+
+    private static void initSystemProperties(Configuration configuration) {
         Map<String, String> properties = convertProperties(configuration.get(JobConfNames.CALVALUS_PROPERTIES));
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             System.setProperty(entry.getKey(), entry.getValue());
@@ -106,11 +108,6 @@ public class BeamUtils {
         return  map;
     }
 
-    //TODO use conf fo extract value
-    static int getTileHeight(Configuration conf) {
-        return TILE_HEIGHT;
-    }
-
     /**
      * Reads a product from the distributed file system.
      *
@@ -124,8 +121,6 @@ public class BeamUtils {
         final FileStatus status = fs.getFileStatus(inputPath);
         final FSDataInputStream in = fs.open(inputPath);
         final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(getTileHeight(configuration)));
-        System.setProperty("beam.envisat.tileWidth", "*");
         final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
         final ProductReader productReader = plugIn.createReaderInstance();
         Product product = productReader.readProductNodes(imageInputStream, null);

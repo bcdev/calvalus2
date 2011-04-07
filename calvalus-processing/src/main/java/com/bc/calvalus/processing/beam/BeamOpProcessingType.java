@@ -32,6 +32,8 @@ import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Properties;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
@@ -62,6 +64,21 @@ public class BeamOpProcessingType {
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETER, wpsConfig.getFormatterParameter());
+
+        Map<String,String> properiesMap = BeamUtils.convertProperties(wpsConfig.getSystemProperties());
+        Properties properties = new Properties();
+        for (Map.Entry<String, String> entry : properiesMap.entrySet()) {
+            properties.setProperty(entry.getKey(), entry.getValue());
+        }
+        if (!properties.containsKey("beam.envisat.tileHeight")) {
+            properties.setProperty("beam.envisat.tileHeight", "64");
+        }
+        if (!properties.containsKey("beam.envisat.tileWidth")) {
+            properties.setProperty("beam.envisat.tileWidth", "*");
+        }
+        String propertiesString = BeamUtils.convertProperties(properties);
+        conf.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
+
         return job;
     }
 

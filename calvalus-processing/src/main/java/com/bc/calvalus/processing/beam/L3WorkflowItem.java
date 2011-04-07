@@ -28,6 +28,7 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
@@ -102,6 +103,12 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, processorParameters);
         configuration.set(JobConfNames.CALVALUS_ROI_WKT, roiGeometry != null ? roiGeometry.toString() : "");
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETER, BeamUtils.saveAsXml(l3Config));
+
+        Properties properties = new Properties();
+        properties.setProperty("beam.envisat.tileHeight", "64");
+        properties.setProperty("beam.envisat.tileWidth", "*");
+        String propertiesString = BeamUtils.convertProperties(properties);
+        configuration.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
 
         setAndClearOutputDir(job, outputDir);
 

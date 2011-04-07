@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for n input products processed to n output products using a BEAM GPF operator.
@@ -70,6 +71,12 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, this.processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, this.processorParameters);
         configuration.set(JobConfNames.CALVALUS_ROI_WKT, roiGeometry != null ? roiGeometry.toString() : "");
+
+        Properties properties = new Properties();
+        properties.setProperty("beam.envisat.tileHeight", "64");
+        properties.setProperty("beam.envisat.tileWidth", "*");
+        String propertiesString = BeamUtils.convertProperties(properties);
+        configuration.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
 
         setAndClearOutputDir(job, this.outputDir);
 

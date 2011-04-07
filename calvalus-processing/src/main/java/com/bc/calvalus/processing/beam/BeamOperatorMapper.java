@@ -11,6 +11,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
  */
 public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
+    private static final int DEFAULT_TILE_HEIGHT = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
@@ -77,7 +79,12 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             String inputFilename = inputPath.getName();
             String outputFilename = "L2_of_" +  FileUtils.exchangeExtension(inputFilename, ".seq");
             final Path outputProductPath = new Path(requestOutputPath, outputFilename);
-            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, BeamUtils.getTileHeight(configuration));
+            int tileHeight = DEFAULT_TILE_HEIGHT;
+            Dimension preferredTileSize = targetProduct.getPreferredTileSize();
+            if (preferredTileSize != null) {
+                tileHeight = preferredTileSize.height;
+            }
+            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, tileHeight);
 
         } catch (ProcessorException e) {
             LOG.warning(e.getMessage());
