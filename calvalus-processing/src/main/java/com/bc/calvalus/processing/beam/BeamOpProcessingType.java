@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -32,8 +33,10 @@ import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
@@ -55,9 +58,12 @@ public class BeamOpProcessingType {
         Configuration conf = job.getConfiguration();
         addIfNotEmpty(conf, JobConfNames.CALVALUS_IDENTIFIER, wpsConfig.getIdentifier());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_BUNDLE, wpsConfig.getProcessorPackage());
+
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
-        String inputs = StringUtils.join(requestInputPaths, ",");
+        String filenamePattern = wpsConfig.getFilenamePattern();
+        String inputs = collectInputPaths(requestInputPaths, filenamePattern, conf);
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
+
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_ROI_WKT, wpsConfig.getRoiWkt());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
@@ -80,6 +86,32 @@ public class BeamOpProcessingType {
         conf.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
 
         return job;
+    }
+
+    private String collectInputPaths(String[] requestInputPaths, String filenamePattern, Configuration conf) throws IOException {
+        Pattern filter = (filenamePattern != null) ? Pattern.compile(filenamePattern) : null;
+        List<String> collectedInputPaths = new ArrayList<String>();
+        for (String inputUrl : requestInputPaths) {
+            Path input = new Path(inputUrl);
+            FileSystem fs = input.getFileSystem(conf);
+            FileStatus[] fileStatuses = fs.listStatus(input);
+            collectedInputPaths(fileStatuses, fs, filter, collectedInputPaths);
+        }
+        return StringUtils.join(collectedInputPaths, ",");
+    }
+
+    private void collectedInputPaths(FileStatus[] fileStatuses, FileSystem fs, Pattern filter, List<String> collectedInputPaths) throws IOException {
+        for (FileStatus fileStatus : fileStatuses) {
+            final Path path = fileStatus.getPath();
+            if (fileStatus.isDir()) {
+                FileStatus[] subdir = fs.listStatus(path);
+                collectedInputPaths(subdir, fs, filter, collectedInputPaths);
+            } else {
+                if (filter == null || filter.matcher(path.getName()).matches()) {
+                    collectedInputPaths.add(path.toString());
+                }
+            }
+        }
     }
 
     public static void addIfNotEmpty(Configuration conf, String key, String value) {
