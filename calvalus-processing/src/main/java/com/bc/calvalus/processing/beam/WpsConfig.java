@@ -127,7 +127,11 @@ public class WpsConfig {
     String getLevel2Paramter() {
         try {
             Node node = requestXmlDoc.getNode(OPERATOR_PARAMETERS_XPATH);
-            return convertToDomElement(node).toXml();
+            if (node != null) {
+                return convertToDomElement(node).toXml();
+            } else {
+                return "";
+            }
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
