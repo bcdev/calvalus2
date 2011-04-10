@@ -36,12 +36,20 @@
     <value>/tmp/hadoop</value>
     <description>A base for other temporary directories.</description>
   </property>
+<!-- values suitable for slave datanodes
   <property>
     <name>dfs.datanode.du.reserved</name>
     <value>1073741824</value>
     <description>Reserved space in bytes per volume. Always leave this much space free for non dfs use.</description>
   </property>
- <property>
+-->
+<!-- values suitable for master node (namenode) -->
+  <property>
+    <name>dfs.datanode.du.reserved</name>
+    <value>107374182400</value>
+    <description>Reserved space in bytes per volume. Always leave this much space free for non dfs use.</description>
+  </property>
+  <property>
     <name>dfs.permissions</name>
     <value>false</value>
     <description>
@@ -51,6 +59,10 @@
       Switching from one parameter value to the other does not change the mode,
       owner or group of files or directories.
     </description>
+  </property>
+  <property>
+    <name>dfs.block.size</name>
+    <value>2147483648</value>
   </property>
 
 </configuration>
