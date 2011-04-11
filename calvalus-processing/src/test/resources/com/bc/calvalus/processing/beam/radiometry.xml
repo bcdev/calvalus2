@@ -1,4 +1,6 @@
 <parameters>
+    <doCalibration>false</doCalibration>
     <doSmile>true</doSmile>
-    <reproVersion>AUTO_DETECT</reproVersion>
+    <doEqualization>false</doEqualization>
+    <reproVersion>REPROCESSING_2</reproVersion>
 </parameters>

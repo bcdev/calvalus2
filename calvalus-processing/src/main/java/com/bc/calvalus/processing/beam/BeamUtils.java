@@ -137,6 +137,7 @@ public class BeamUtils {
             Map<String, Object> parameterMap = new HashMap<String, Object>();
             ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
             PropertySet parameterSet = PropertyContainer.createMapBacked(parameterMap, operatorClass, parameterDescriptorFactory);
+            parameterSet.setDefaultValues();
             DefaultDomConverter domConverter = new DefaultDomConverter(operatorClass, parameterDescriptorFactory);
 
             DomElement parametersElement = createDomElement(level2Parameters);

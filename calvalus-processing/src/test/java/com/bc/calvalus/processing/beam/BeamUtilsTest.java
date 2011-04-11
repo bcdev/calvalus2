@@ -57,27 +57,47 @@ public class BeamUtilsTest {
         DomElement element = BeamUtils.createDomElement(level2Parameters);
         assertNotNull(element);
         assertEquals("parameters", element.getName());
-        assertEquals(2, element.getChildCount());
+        assertEquals(4, element.getChildCount());
+
         DomElement child1 = element.getChild(0);
-        assertEquals("doSmile", child1.getName());
-        assertEquals("true", child1.getValue());
+        assertEquals("doCalibration", child1.getName());
+        assertEquals("false", child1.getValue());
+
         DomElement child2 = element.getChild(1);
-        assertEquals("reproVersion", child2.getName());
-        assertEquals("AUTO_DETECT", child2.getValue());
+        assertEquals("doSmile", child2.getName());
+        assertEquals("true", child2.getValue());
+
+        DomElement child3 = element.getChild(2);
+        assertEquals("doEqualization", child3.getName());
+        assertEquals("false", child3.getValue());
+
+        DomElement child4 = element.getChild(3);
+        assertEquals("reproVersion", child4.getName());
+        assertEquals("REPROCESSING_2", child4.getValue());
 
         Map<String,Object> operatorParameters = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
-        assertEquals(2, operatorParameters.size());
+        assertEquals(4, operatorParameters.size());
 
-        Object doSmileObj = operatorParameters.get("doSmile");
-        assertNotNull(doSmileObj);
-        assertSame(Boolean.class, doSmileObj.getClass());
-        assertEquals(true, doSmileObj);
+        Object obj = operatorParameters.get("doCalibration");
+        assertNotNull(obj);
+        assertSame(Boolean.class, obj.getClass());
+        assertEquals(false, obj);
 
-        Object reproVersionObj = operatorParameters.get("reproVersion");
-        assertNotNull(reproVersionObj);
-        assertSame(ReprocessingVersion.class, reproVersionObj.getClass());
-        assertEquals(ReprocessingVersion.AUTO_DETECT, reproVersionObj);
+        obj = operatorParameters.get("doCalibration");
+        assertNotNull(obj);
+        assertSame(Boolean.class, obj.getClass());
+        assertEquals(false, obj);
+
+        obj = operatorParameters.get("doCalibration");
+        assertNotNull(obj);
+        assertSame(Boolean.class, obj.getClass());
+        assertEquals(false, obj);
+
+        obj = operatorParameters.get("reproVersion");
+        assertNotNull(obj);
+        assertSame(ReprocessingVersion.class, obj.getClass());
+        assertEquals(ReprocessingVersion.REPROCESSING_2, obj);
 
     }
 
