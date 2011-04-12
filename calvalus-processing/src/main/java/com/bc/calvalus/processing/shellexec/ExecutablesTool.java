@@ -107,6 +107,7 @@ public class ExecutablesTool extends Configured implements Tool {
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
+            job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
             // TODO is this necessary?
             //FileOutputFormat.setOutputPath(job, output);
             job.setOutputFormatClass(NullOutputFormat.class);
