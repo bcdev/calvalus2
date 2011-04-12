@@ -80,8 +80,11 @@ cd <xsl:value-of select="$calvalus.tmp.dir" />
 cat amorgos.parameters
 # cleanup
 rm -f *.txt MER_FRG_1P MER_FRG_1P.lock
+# start concurrent status reporting job
+<xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$amorgos.reportprogress" />  &amp;
 # link input file
-ln -sf <xsl:value-of select="$calvalus.input.physical" /> MER_FRX_1P
+###ln -sf <xsl:value-of select="$calvalus.input.physical" /> MER_FRX_1P
+hadoop fs -get <xsl:value-of select="$calvalus.input" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.tmp.dir" />/MER_FRX_1P
 # link att file
 ln -sf <xsl:value-of
           select="$calvalus.archive.mount" />/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/<xsl:value-of
@@ -96,8 +99,6 @@ ln -sf <xsl:value-of
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
           select="$calvalus.input.day" /> DOR_VOR_AX
-# start concurrent status reporting job
-<xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$amorgos.reportprogress" />  &amp;
 # call executable
 <xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$amorgos.executable" /> amorgos.parameters
 # stop concurrent status reporting job
@@ -107,16 +108,21 @@ outputfile=`head -1 MER_FSG_1P | cut -d'=' -f2 | sed s/\"//g`
 mv MER_FSG_1P $outputfile
 # move tmp output to (hdfs) destination
 if test -e <xsl:value-of select="$calvalus.tmp.dir" />/*.N1 ; then
-  mkdir -p <xsl:value-of
-          select="$calvalus.output.physical" />/<xsl:value-of
+#  mkdir -p <xsl:value-of
+#          select="$calvalus.output.physical" />/<xsl:value-of
+#          select="$calvalus.input.year" />/<xsl:value-of
+#          select="$calvalus.input.month" />/<xsl:value-of
+#          select="$calvalus.input.day" />
+#  mv <xsl:value-of select="$calvalus.tmp.dir" />/*.N1 <xsl:value-of
+#          select="$calvalus.output.physical" />/<xsl:value-of
+#          select="$calvalus.input.year" />/<xsl:value-of
+#          select="$calvalus.input.month" />/<xsl:value-of
+#          select="$calvalus.input.day" />/
+  hadoop fs -put $outputfile <xsl:value-of select="$calvalus.output" />/<xsl:value-of
           select="$calvalus.input.year" />/<xsl:value-of
           select="$calvalus.input.month" />/<xsl:value-of
-          select="$calvalus.input.day" />
-  mv <xsl:value-of select="$calvalus.tmp.dir" />/*.N1 <xsl:value-of
-          select="$calvalus.output.physical" />/<xsl:value-of
-          select="$calvalus.input.year" />/<xsl:value-of
-          select="$calvalus.input.month" />/<xsl:value-of
-          select="$calvalus.input.day" />/
+          select="$calvalus.input.day" />/$outputfile
+  rm -f $outputfile
 fi
 ls -ltr ; cat errors.txt ; cd
 # cleanup
