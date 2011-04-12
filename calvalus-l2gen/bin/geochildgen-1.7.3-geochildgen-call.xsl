@@ -23,6 +23,8 @@
   <xsl:variable name="calvalus.input.month" select="substring($calvalus.input.filename,19,2)" />
   <xsl:variable name="calvalus.input.day"   select="substring($calvalus.input.filename,21,2)" />
 
+  <xsl:variable name="calvalus.output" select="/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:Reference/@xlink:href" />
+
   <xsl:variable name="calvalus.input.physical">
     <xsl:choose>
       <xsl:when test="starts-with($calvalus.input,'hdfs:')">
@@ -64,12 +66,14 @@
 # switch on job control
 set -m
 # create output dir and tmp dir
-mkdir -p <xsl:value-of select="$calvalus.output.physical" />
+###mkdir -p <xsl:value-of select="$calvalus.output.physical" />
 mkdir -p <xsl:value-of select="$calvalus.tmp.dir" />
 cd <xsl:value-of select="$calvalus.tmp.dir" />
 # start concurrent status reporting job
 <xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$geochildgen.reportprogress" />  &amp;
 # call geochildgen per subset
+###
+hadoop fs -get <xsl:value-of select="$calvalus.input" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.tmp.dir" />/<xsl:value-of select="$calvalus.input.filename" />.orig
 result=0
 <xsl:apply-templates />
 # stop concurrent status reporting job
@@ -95,23 +99,26 @@ if <xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$geochi
   -g <xsl:value-of select="$calvalus.tmp.dir" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />.properties \
   -c \
   -o <xsl:value-of select="$calvalus.tmp.dir" /> \
-  <xsl:value-of select="$calvalus.input.physical" />
+  <xsl:value-of select="$calvalus.tmp.dir" />/<xsl:value-of select="$calvalus.input.filename" />.orig
+###  <xsl:value-of select="$calvalus.input.physical" />
 then
   # move tmp output to (hdfs) destination
   if test -e <xsl:value-of select="$calvalus.tmp.dir" />/*.N1
   then
     # name of result file
     outputfilename=`head -1 *.N1 | cut -d'=' -f2 | sed s/\"//g`
-    mkdir -p  <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />
-    mv *.N1 <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
-    if test ! -f <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
-    then
-      echo "<xsl:value-of select="wps:Data/wps:ComplexData/identifier" /> of <xsl:value-of select="$calvalus.input.physical" /> copying to <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename failed"
-      result=1
-    else
-      echo "<xsl:value-of select="wps:Data/wps:ComplexData/identifier" /> of <xsl:value-of select="$calvalus.input.physical" /> processing succeeded"
-      echo "result is <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename"
-    fi
+    hadoop fs -put *.N1 <xsl:value-of select="$calvalus.output" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
+    rm -f $outputfilename
+###    mkdir -p  <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />
+###    mv *.N1 <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
+###    if test ! -f <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename
+###    then
+###      echo "<xsl:value-of select="wps:Data/wps:ComplexData/identifier" /> of <xsl:value-of select="$calvalus.input.physical" /> copying to <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename failed"
+###      result=1
+###    else
+###      echo "<xsl:value-of select="wps:Data/wps:ComplexData/identifier" /> of <xsl:value-of select="$calvalus.input.physical" /> processing succeeded"
+###      echo "result is <xsl:value-of select="$calvalus.output.physical" />/<xsl:value-of select="wps:Data/wps:ComplexData/identifier" />/<xsl:value-of select="$calvalus.input.year" />/<xsl:value-of select="$calvalus.input.month" />/<xsl:value-of select="$calvalus.input.day" />/$outputfilename"
+###    fi
   fi
 else
   echo "<xsl:value-of select="wps:Data/wps:ComplexData/identifier" /> of <xsl:value-of select="$calvalus.input.physical" /> processing failed"
