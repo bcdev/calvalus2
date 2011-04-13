@@ -122,8 +122,6 @@
         <!-- Generate compiled stuff in the folder used for developing mode -->
         <outputDirectory>target/www/WEB-INF/classes</outputDirectory>
 
-        <finalName>calvalus</finalName>
-
         <plugins>
 
             <!-- GWT Maven Plugin-->
@@ -253,6 +251,9 @@
                                 <groupId>com.bc.calvalus</groupId>
                                 <artifactId>calvalus-portal</artifactId>
                                 <type>war</type>
+                                <properties>
+                                    <context>calvalus</context>
+                                </properties>
                             </deployable>
                         </deployables>
                     </deployer>
