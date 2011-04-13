@@ -103,4 +103,18 @@ public class TemporalBinTest {
         assertEquals(5.612667f, agg3Copy.get(1), 1e-5f);
         assertEquals(3.0f, agg3Copy.get(2), 1e-5f);
     }
+
+    @Test
+    public void testToString() {
+        TemporalBin bin = new TemporalBin(42, 0);
+        assertEquals("TemporalBin{index=42, numObs=0, numPasses=0, properties=[]}", bin.toString());
+        bin = new TemporalBin(43, 3);
+        assertEquals("TemporalBin{index=43, numObs=0, numPasses=0, properties=[0.0, 0.0, 0.0]}", bin.toString());
+        bin.setNumPasses(7);
+        bin.setNumObs(3);
+        assertEquals("TemporalBin{index=43, numObs=3, numPasses=7, properties=[0.0, 0.0, 0.0]}", bin.toString());
+        bin.properties[0] = 1.2f;
+        bin.properties[2] = 2.4f;
+        assertEquals("TemporalBin{index=43, numObs=3, numPasses=7, properties=[1.2, 0.0, 2.4]}", bin.toString());
+    }
 }

@@ -49,7 +49,7 @@ public class L3FormatterConfig {
 
     public static L3FormatterConfig create(String formatterParameters) {
         L3FormatterConfig formatterConfig = new L3FormatterConfig();
-        ProcessingConfiguration.loadFromXml(formatterParameters, formatterConfig);
+        BeamUtils.loadFromXml(formatterParameters, formatterConfig);
         return formatterConfig;
     }
 

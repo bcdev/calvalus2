@@ -16,12 +16,27 @@ public interface BinningGrid {
     long getBinIndex(double lat, double lon);
 
     /**
-     * Gets the row index for the given bin index.
+     * Gets the row index for the given bin index. The pseudo code for the implementation is
+     * <pre>
+     *       int row = numRows - 1;
+     *       while (idx < baseBin[row]) {
+     *            row--;
+     *       }
+     *       return row;
+     * </pre>
+     *
      *
      * @param bin The bin index.
      * @return The row index.
      */
     int getRowIndex(long bin);
+
+    /**
+     * Gets the total number of bins in the binning grid.
+     *
+     * @return The total number of bins.
+     */
+    long getNumBins();
 
     /**
      * Gets the number of rows in this grid.
@@ -37,4 +52,12 @@ public interface BinningGrid {
      * @return The number of columns.
      */
     int getNumCols(int row);
+
+    /**
+     * Gets geographical longitude and latitude (in this order) for the center of the given bin.
+     *
+     * @param bin The bin index.
+     * @return longitude and latitude (in this order)
+     */
+    double[] getCenterLonLat(long bin);
 }

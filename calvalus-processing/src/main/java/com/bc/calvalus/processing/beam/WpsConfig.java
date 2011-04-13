@@ -38,10 +38,13 @@ public class WpsConfig {
     private static final String PROCESSOR_VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
     private static final String OPERATOR_NAME_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.operator']/Data/LiteralData";
+    private static final String SYSTEM_PROPERTIES_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.system.properties']/Data/LiteralData";
+    private static final String GEOMETRY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.geometry']/Data/LiteralData";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.parameters']/Data/ComplexData/parameters";
     private static final String L3_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
     private static final String FORMATTER_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
+    private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']";
     private static final String INPUT_HREF_XPATH = "Reference/@href";
 
     private final XmlDoc requestXmlDoc;
@@ -88,6 +91,14 @@ public class WpsConfig {
         }
     }
 
+    String getFilenamePattern() {
+        try {
+            return requestXmlDoc.getString(INPUT_PATTERN_XPATH, (String)null);
+        } catch (XPathExpressionException e) {
+           throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+        }
+    }
+
 
     String getRequestOutputDir() {
         try {
@@ -105,10 +116,22 @@ public class WpsConfig {
         }
     }
 
+    String getSystemProperties() {
+        try {
+            return requestXmlDoc.getString(SYSTEM_PROPERTIES_XPATH, (String)null);
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+        }
+    }
+
     String getLevel2Paramter() {
         try {
             Node node = requestXmlDoc.getNode(OPERATOR_PARAMETERS_XPATH);
-            return convertToDomElement(node).toXml();
+            if (node != null) {
+                return convertToDomElement(node).toXml();
+            } else {
+                return "";
+            }
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
@@ -154,4 +177,11 @@ public class WpsConfig {
         return new Xpp3DomElement(destination.getConfiguration());
     }
 
+    public String getRoiWkt() {
+        try {
+            return requestXmlDoc.getString(GEOMETRY_XPATH, "");
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+        }
+    }
 }

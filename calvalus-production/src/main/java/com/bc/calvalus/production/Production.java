@@ -2,6 +2,7 @@ package com.bc.calvalus.production;
 
 
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,40 +17,32 @@ public class Production {
     private static long uniqueLong = System.nanoTime();
     private final String id;
     private final String name;
-    private final String user;
-    private final Object[] jobIds;
+    private final WorkflowItem workflow;
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
     private final String stagingPath;
-    private ProcessStatus processingStatus;
     private ProcessStatus stagingStatus;
 
     public Production(String id,
                       String name,
-                      String user,
                       String stagingPath,
                       ProductionRequest productionRequest,
-                      Object... jobIds) {
+                      WorkflowItem workflow) {
         if (id == null) {
             throw new NullPointerException("id");
         }
         if (name == null) {
             throw new NullPointerException("name");
         }
-        if (user == null) {
-            throw new NullPointerException("user");
-        }
         if (productionRequest == null) {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
-        this.user = user; // todo - check: remove param, instead derive from  productionRequest?
         this.stagingPath = stagingPath;
         this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
-        this.jobIds = jobIds;
+        this.workflow = workflow;
         this.productionRequest = productionRequest;
-        this.processingStatus = ProcessStatus.UNKNOWN;
         this.stagingStatus = ProcessStatus.UNKNOWN;
     }
 
@@ -68,12 +61,13 @@ public class Production {
         return name;
     }
 
-    public String getUser() {
-        return user;
+    public WorkflowItem getWorkflow() {
+        return workflow;
     }
 
+    @Deprecated
     public Object[] getJobIds() {
-        return jobIds.clone();
+        return workflow.getJobIds();
     }
 
     public boolean isAutoStaging() {
@@ -89,11 +83,7 @@ public class Production {
     }
 
     public ProcessStatus getProcessingStatus() {
-        return processingStatus;
-    }
-
-    public void setProcessingStatus(ProcessStatus processingStatus) {
-        this.processingStatus = processingStatus;
+        return workflow.getStatus();
     }
 
     public ProcessStatus getStagingStatus() {
@@ -114,7 +104,7 @@ public class Production {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", stagingPath=" + stagingPath +
-                ", productionStatus=" + processingStatus +
+                ", processingStatus=" + getProcessingStatus() +
                 ", stagingStatus=" + stagingStatus +
                 '}';
     }

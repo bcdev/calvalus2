@@ -78,7 +78,7 @@ public class ManageProductionsView extends PortalView {
         TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
             @Override
             public String getValue(GsProduction production) {
-                return production.getName();
+                return production.getName() + " (requested by '" + production.getUser() + "')";
             }
         };
         nameColumn.setSortable(true);
@@ -90,6 +90,14 @@ public class ManageProductionsView extends PortalView {
             }
         };
         productionStatusColumn.setSortable(true);
+
+        TextColumn<GsProduction> productionTimeColumn = new TextColumn<GsProduction>() {
+            @Override
+            public String getValue(GsProduction production) {
+                return getTimeText(production.getProcessingStatus().getProcessingSeconds());
+            }
+        };
+        productionTimeColumn.setSortable(true);
 
         TextColumn<GsProduction> stagingStatusColumn = new TextColumn<GsProduction>() {
             @Override
@@ -142,6 +150,7 @@ public class ManageProductionsView extends PortalView {
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
         productionTable.addColumn(nameColumn, "Production Name");
         productionTable.addColumn(productionStatusColumn, "Processing Status");
+        productionTable.addColumn(productionTimeColumn, "Processing Time");
         productionTable.addColumn(stagingStatusColumn, "Staging Status");
         productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
         productionTable.addColumn(resultColumn, "Result");
@@ -312,7 +321,7 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private String getStatusText(GsProcessStatus status) {
+    private static String getStatusText(GsProcessStatus status) {
         GsProcessState state = status.getState();
         String message = status.getMessage();
         if (state == GsProcessState.UNKNOWN) {
@@ -329,6 +338,25 @@ public class ManageProductionsView extends PortalView {
             return "Error" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
+    }
+
+    static String getTimeText(int processingSeconds) {
+        if (processingSeconds <= 0) {
+            return "";
+        } else {
+            int hours = processingSeconds / 3600;
+            int minutes = processingSeconds / 60 - hours * 60;
+            int seconds = processingSeconds - minutes * 60 - hours * 3600;
+            return hours + ":" + zeroPadded(minutes) + ":" + zeroPadded(seconds);
+        }
+    }
+
+    private static String zeroPadded(int value) {
+        if (value < 10) {
+            return "0" + value;
+        } else {
+            return "" + value;
+        }
     }
 
     private class ProductionActionUpdater implements FieldUpdater<GsProduction, String> {

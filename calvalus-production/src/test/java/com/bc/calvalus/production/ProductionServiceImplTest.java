@@ -21,7 +21,8 @@ public class ProductionServiceImplTest {
     public void setUp() throws Exception {
         processingServiceMock = new TestProcessingService();
         stagingServiceMock = new TestStagingService();
-        productionTypeMock = new TestProductionType(stagingServiceMock);
+        productionTypeMock = new TestProductionType(processingServiceMock,
+                                                    stagingServiceMock);
         productionStoreMock = new TestProductionStore();
         productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock,
                                                                stagingServiceMock,
@@ -32,13 +33,12 @@ public class ProductionServiceImplTest {
     @Test
     public void testOrderProduction() throws Exception {
 
-        ProductionRequest request = new ProductionRequest("test");
+        ProductionRequest request = new ProductionRequest("test", "ewa");
         ProductionResponse productionResponse = productionServiceUnderTest.orderProduction(request);
         assertNotNull(productionResponse);
         assertNotNull(productionResponse.getProduction());
         assertEquals("id_1", productionResponse.getProduction().getId());
         assertEquals("name_1", productionResponse.getProduction().getName());
-        assertEquals("user_1", productionResponse.getProduction().getUser());
         assertNotNull(productionResponse.getProduction().getJobIds());
         assertEquals(2, productionResponse.getProduction().getJobIds().length);
         assertEquals("job_1_1", productionResponse.getProduction().getJobIds()[0]);
@@ -51,8 +51,8 @@ public class ProductionServiceImplTest {
     @Test
     public void testOrderUnknownProductionType() throws Exception {
         try {
-            productionServiceUnderTest.orderProduction(new ProductionRequest("erase"));
-            fail("ProductionException expected, since 'erase' is not a valid production type");
+            productionServiceUnderTest.orderProduction(new ProductionRequest("erase-hdfs", "devil"));
+            fail("ProductionException expected, since 'erase-hdfs' is not a valid production type");
         } catch (ProductionException e) {
             // expected
         }
@@ -61,9 +61,9 @@ public class ProductionServiceImplTest {
     @Test
     public void testGetProductions() throws ProductionException {
 
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
 
         Production[] productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -83,9 +83,9 @@ public class ProductionServiceImplTest {
     @Test
     public void testGetProductionStatusPropagation() throws ProductionException, IOException {
 
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
 
         Production[] productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -103,7 +103,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_3_2", new ProcessStatus(ProcessState.RUNNING, 0.8f));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f), productions[0].getProcessingStatus());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), productions[1].getProcessingStatus());
@@ -114,11 +114,11 @@ public class ProductionServiceImplTest {
     @Test
     public void testDeleteProductions() throws ProductionException, IOException {
 
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
 
         productionServiceUnderTest.deleteProductions("id_2", "id_4");
 
@@ -132,7 +132,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -142,7 +142,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.COMPLETED));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -162,10 +162,10 @@ public class ProductionServiceImplTest {
     @Test
     public void testCancelProductions() throws ProductionException, IOException {
 
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa"));
 
         processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.SCHEDULED));
         processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.RUNNING));
@@ -177,7 +177,7 @@ public class ProductionServiceImplTest {
         processingServiceMock.setJobStatus("job_4_2", new ProcessStatus(ProcessState.RUNNING));
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         Production[] productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -190,7 +190,7 @@ public class ProductionServiceImplTest {
         productionServiceUnderTest.cancelProductions("id_1", "id_2", "id_4");
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         productions = productionServiceUnderTest.getProductions(null);
         assertNotNull(productions);
@@ -214,10 +214,10 @@ public class ProductionServiceImplTest {
     @Test
     public void testStageProduction() throws ProductionException, IOException {
 
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "false"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "false"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "true"));
-        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "autoStaging", "true"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa", "autoStaging", "false"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa", "autoStaging", "false"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa", "autoStaging", "true"));
+        productionServiceUnderTest.orderProduction(new ProductionRequest("test", "ewa", "autoStaging", "true"));
 
         processingServiceMock.setJobStatus("job_1_1", new ProcessStatus(ProcessState.COMPLETED));
         processingServiceMock.setJobStatus("job_1_2", new ProcessStatus(ProcessState.COMPLETED));
@@ -231,7 +231,7 @@ public class ProductionServiceImplTest {
         assertTrue(stagingServiceMock.getStagings().isEmpty());
 
         // this would be called by the StatusObserver timer task
-        productionServiceUnderTest.updateProductions();
+        productionServiceUnderTest.updateStatuses();
 
         assertEquals(2, stagingServiceMock.getStagings().size());
 
@@ -248,5 +248,16 @@ public class ProductionServiceImplTest {
         } catch (ProductionException e) {
             // ok
         }
+    }
+
+    @Test
+    public void testClose() throws IOException {
+        assertEquals(false, stagingServiceMock.closed);
+        assertEquals(false, processingServiceMock.closed);
+        assertEquals(false, productionStoreMock.closed);
+        productionServiceUnderTest.close();
+        assertEquals(true, stagingServiceMock.closed);
+        assertEquals(true, processingServiceMock.closed);
+        assertEquals(true, productionStoreMock.closed);
     }
 }

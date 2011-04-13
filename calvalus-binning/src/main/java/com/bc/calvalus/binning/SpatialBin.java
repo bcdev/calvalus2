@@ -1,7 +1,5 @@
 package com.bc.calvalus.binning;
 
-import org.apache.hadoop.io.Writable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -14,38 +12,14 @@ import java.util.Arrays;
  *
  * @author Norman Fomferra
  */
-public final class SpatialBin implements Writable {
-
-    long index;
-    int numObs;
-    float[] properties;
+public final class SpatialBin extends Bin {
 
     public SpatialBin() {
-        this.index = -1;
+        super();
     }
 
     public SpatialBin(long index, int numProperties) {
-        if (numProperties < 0) {
-            throw new IllegalArgumentException("numProperties < 0");
-        }
-        this.index = index;
-        this.properties = new float[numProperties];
-    }
-
-    public long getIndex() {
-        return index;
-    }
-
-    public int getNumObs() {
-        return numObs;
-    }
-
-    public int getPropertyCount() {
-        return properties.length;
-    }
-
-    public float getProperty(int i) {
-        return properties[i];
+        super(index, numProperties);
     }
 
     @Override

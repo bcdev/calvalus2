@@ -68,37 +68,41 @@ public class AggregatorAverageML implements Aggregator {
     }
 
     @Override
-    public void initSpatial(WritableVector vector) {
+    public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
         vector.set(1, 0.0f);
     }
 
     @Override
-    public void initTemporal(WritableVector vector) {
+    public void initTemporal(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
         vector.set(1, 0.0f);
         vector.set(2, 0.0f);
     }
 
     @Override
-    public void aggregateSpatial(Vector observationVector, WritableVector spatialVector) {
+    public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final float value = (float) Math.log(observationVector.get(varIndex));
         spatialVector.set(0, spatialVector.get(0) + value);
         spatialVector.set(1, spatialVector.get(1) + value * value);
     }
 
     @Override
-    public void completeSpatial(int numObs, WritableVector numSpatialObs) {
+    public void completeSpatial(BinContext ctx, int numObs, WritableVector numSpatialObs) {
         final float w = weightFn.eval(numObs);
         numSpatialObs.set(0, numSpatialObs.get(0) / w);
         numSpatialObs.set(1, numSpatialObs.get(1) / w);
     }
 
     @Override
-    public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
-        temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));
-        temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));
-        temporalVector.set(2, temporalVector.get(2) + weightFn.eval(numSpatialObs));
+    public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
+        temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0));  // sumX
+        temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1));  // sumXX
+        temporalVector.set(2, temporalVector.get(2) + weightFn.eval(numSpatialObs)); // sumW
+    }
+
+    @Override
+    public void completeTemporal(BinContext ctx, int numTemporalObs, WritableVector temporalVector) {
     }
 
     @Override

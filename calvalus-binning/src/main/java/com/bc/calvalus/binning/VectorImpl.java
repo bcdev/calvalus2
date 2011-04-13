@@ -3,18 +3,28 @@ package com.bc.calvalus.binning;
 import java.util.Arrays;
 
 /**
+ * The {@code VectorImpl} class is a light-weight implementation of
+ * the {@link WritableVector} interface. It operates on an array of {@code float}
+ * elements. The array object is used by reference and is passed into the constructor.
  * The class is final for allowing method in-lining.
  *
  * @author Norman Fomferra
  */
 public final class VectorImpl implements WritableVector {
-    private final float[] array;
+    private final float[] elements;
     private int offset;
     private int size;
 
-    public VectorImpl(float[] array) {
-        this.array = array;
-        this.size = array.length;
+    /**
+     * Constructs a new writable {@code float} vector.
+     * The given array is passed by reference and will be queried by calls to {@link #get(int)} and modified
+     * by {@link #set(int, float)}.
+     *
+     * @param elements The underlying array of {@code float} elements.
+     */
+    public VectorImpl(float[] elements) {
+        this.elements = elements;
+        this.size = elements.length;
     }
 
     @Override
@@ -23,18 +33,18 @@ public final class VectorImpl implements WritableVector {
     }
 
     @Override
-    public float get(int i) {
-        return array[offset + i];
+    public float get(int index) {
+        return elements[offset + index];
     }
 
     @Override
-    public void set(int i, float v) {
-        array[offset + i] = v;
+    public void set(int index, float element) {
+        elements[offset + index] = element;
     }
 
     @Override
     public String toString() {
-        return Arrays.toString(Arrays.copyOfRange(array, offset, offset + size));
+        return Arrays.toString(Arrays.copyOfRange(elements, offset, offset + size));
     }
 
     void setOffsetAndSize(int offset, int size) {

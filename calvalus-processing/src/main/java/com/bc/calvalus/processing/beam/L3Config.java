@@ -22,6 +22,7 @@ import com.bc.calvalus.binning.AggregatorAverage;
 import com.bc.calvalus.binning.AggregatorAverageML;
 import com.bc.calvalus.binning.AggregatorMinMax;
 import com.bc.calvalus.binning.AggregatorOnMaxSet;
+import com.bc.calvalus.binning.AggregatorPercentile;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
 import com.bc.calvalus.binning.BinningContext;
@@ -30,31 +31,16 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.VariableContextImpl;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateFilter;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.util.ProductUtils;
 
 import java.awt.Rectangle;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Map;
-
-import static java.lang.Math.*;
 
 public class L3Config {
     static final String L3_REQUEST_FILENAME = "wps-request.xml";
@@ -88,6 +74,8 @@ public class L3Config {
 
         String[] varNames;
 
+        Integer percentage;
+
         Double weightCoeff;
 
         Double fillValue;
@@ -95,11 +83,8 @@ public class L3Config {
         public AggregatorConfiguration() {
         }
 
-        public AggregatorConfiguration(String type, String varName, Double weightCoeff, Double fillValue) {
+        public AggregatorConfiguration(String type) {
             this.type = type;
-            this.varName = varName;
-            this.weightCoeff = weightCoeff;
-            this.fillValue = fillValue;
         }
 
         public String getType() {
@@ -114,12 +99,41 @@ public class L3Config {
             return varNames;
         }
 
+        public Integer getPercentage() {
+            return percentage;
+        }
+
         public Double getWeightCoeff() {
             return weightCoeff;
         }
 
         public Double getFillValue() {
             return fillValue;
+
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setVarName(String varName) {
+            this.varName = varName;
+        }
+
+        public void setVarNames(String[] varNames) {
+            this.varNames = varNames;
+        }
+
+        public void setPercentage(Integer percentage) {
+            this.percentage = percentage;
+        }
+
+        public void setWeightCoeff(Double weightCoeff) {
+            this.weightCoeff = weightCoeff;
+        }
+
+        public void setFillValue(Double fillValue) {
+            this.fillValue = fillValue;
         }
     }
 
@@ -127,10 +141,6 @@ public class L3Config {
     int numRows;
     @Parameter
     Integer superSampling;
-    @Parameter
-    String bbox;
-    @Parameter
-    String regionWkt;
     @Parameter
     String maskExpr;
     @Parameter(itemAlias = "variable")
@@ -140,8 +150,28 @@ public class L3Config {
 
     public static L3Config create(String level3ParametersXml) {
         L3Config l3Config = new L3Config();
-        ProcessingConfiguration.loadFromXml(level3ParametersXml, l3Config);
+        BeamUtils.loadFromXml(level3ParametersXml, l3Config);
         return l3Config;
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public Integer getSuperSampling() {
+        return superSampling;
+    }
+
+    public String getMaskExpr() {
+        return maskExpr;
+    }
+
+    public VariableConfiguration[] getVariables() {
+        return variables;
+    }
+
+    public AggregatorConfiguration[] getAggregators() {
+        return aggregators;
     }
 
     public void setNumRows(int numRows) {
@@ -150,14 +180,6 @@ public class L3Config {
 
     public void setSuperSampling(Integer superSampling) {
         this.superSampling = superSampling;
-    }
-
-    public void setBbox(String bbox) {
-        this.bbox = bbox;
-    }
-
-    public void setRegionWkt(String regionWkt) {
-        this.regionWkt = regionWkt;
     }
 
     public void setMaskExpr(String maskExpr) {
@@ -211,6 +233,8 @@ public class L3Config {
                 aggregator = getAggregatorMinMax(varCtx, aggregators[i]);
             } else if (type.equals("ON_MAX_SET")) {
                 aggregator = getAggregatorOnMaxSet(varCtx, aggregators[i]);
+            } else if (type.equals("PERCENTILE")) {
+                aggregator = getAggregatorPercentile(varCtx, aggregators[i]);
             } else {
                 throw new IllegalArgumentException("Unknown aggregator type: " + type);
             }
@@ -270,148 +294,7 @@ public class L3Config {
         return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
     }
 
-    public Product getPreProcessedProduct(Product source,  String operatorName, Map<String, Object> operatorParameters) {
-        Product product = getProductSpatialSubset(source);
-        if (product == null) {
-            return null;
-        }
-        if (operatorName != null && !operatorName.isEmpty()) {
-            product = GPF.createProduct(operatorName, operatorParameters, product);
-        }
-        return product;
+     private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
+        return new AggregatorPercentile(varCtx, aggregatorConf.varName, aggregatorConf.percentage, aggregatorConf.fillValue);
     }
-
-    private Product getProductSpatialSubset(Product product) {
-        final Geometry geoRegion = getRegionOfInterest();
-        if (geoRegion == null || geoRegion.isEmpty()) {
-            return product;
-        }
-
-        final Rectangle pixelRegion = computePixelRegion(product, geoRegion);
-        if (pixelRegion == null || pixelRegion.isEmpty()) {
-            return null;
-        }
-
-        final SubsetOp op = new SubsetOp();
-        op.setSourceProduct(product);
-        op.setRegion(pixelRegion);
-        op.setCopyMetadata(false);
-        return op.getTargetProduct();
-    }
-
-    static Rectangle computePixelRegion(Product product, Geometry geoRegion) {
-        return computePixelRegion(product, geoRegion, 1);
-    }
-
-    static Rectangle computePixelRegion(Product product, Geometry geoRegion, int numBorderPixels) {
-        final Geometry productGeometry = computeProductGeometry(product);
-        final Geometry regionIntersection = geoRegion.intersection(productGeometry);
-        if (regionIntersection.isEmpty()) {
-            return null;
-        }
-        final PixelRegionFinder pixelRegionFinder = new PixelRegionFinder(product.getGeoCoding());
-        regionIntersection.apply(pixelRegionFinder);
-        final Rectangle pixelRegion = pixelRegionFinder.getPixelRegion();
-        pixelRegion.grow(numBorderPixels, numBorderPixels);
-        return pixelRegion.intersection(new Rectangle(product.getSceneRasterWidth(),
-                                                      product.getSceneRasterHeight()));
-    }
-
-    static Geometry computeProductGeometry(Product product) {
-        final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
-        final Polygon[] polygons = new Polygon[paths.length];
-        final GeometryFactory factory = new GeometryFactory();
-        for (int i = 0; i < paths.length; i++) {
-            polygons[i] = convertAwtPathToJtsPolygon(paths[i], factory);
-        }
-        final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(polygons.length == 1 ? polygons[0] : factory.createMultiPolygon(polygons));
-        return peuckerSimplifier.getResultGeometry();
-    }
-
-    private static Polygon convertAwtPathToJtsPolygon(Path2D path, GeometryFactory factory) {
-        final PathIterator pathIterator = path.getPathIterator(null);
-        ArrayList<double[]> coordList = new ArrayList<double[]>();
-        int lastOpenIndex = 0;
-        while (!pathIterator.isDone()) {
-            final double[] coords = new double[6];
-            final int segType = pathIterator.currentSegment(coords);
-            if (segType == PathIterator.SEG_CLOSE) {
-                // we should only detect a single SEG_CLOSE
-                coordList.add(coordList.get(lastOpenIndex));
-                lastOpenIndex = coordList.size();
-            } else {
-                coordList.add(coords);
-            }
-            pathIterator.next();
-        }
-        final Coordinate[] coordinates = new Coordinate[coordList.size()];
-        for (int i1 = 0; i1 < coordinates.length; i1++) {
-            final double[] coord = coordList.get(i1);
-            coordinates[i1] = new Coordinate(coord[0], coord[1]);
-        }
-
-        return factory.createPolygon(factory.createLinearRing(coordinates), null);
-    }
-
-    public Geometry getRegionOfInterest() {
-        if (regionWkt == null) {
-            if (bbox == null) {
-                return null;
-            }
-            final String[] coords = bbox.split(",");
-            if (coords.length != 4) {
-                throw new IllegalArgumentException(MessageFormat.format("Illegal BBOX value: {0}", bbox));
-            }
-            String x1 = coords[0];
-            String y1 = coords[1];
-            String x2 = coords[2];
-            String y2 = coords[3];
-            regionWkt = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                                      x1, y1,
-                                      x2, y1,
-                                      x2, y2,
-                                      x1, y2,
-                                      x1, y1);
-        }
-
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(regionWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + regionWkt, e);
-        }
-    }
-
-    private static class PixelRegionFinder implements CoordinateFilter {
-        private final GeoCoding geoCoding;
-        private int x1;
-        private int y1;
-        private int x2;
-        private int y2;
-
-        public PixelRegionFinder(GeoCoding geoCoding) {
-            this.geoCoding = geoCoding;
-            x1 = Integer.MAX_VALUE;
-            x2 = Integer.MIN_VALUE;
-            y1 = Integer.MAX_VALUE;
-            y2 = Integer.MIN_VALUE;
-        }
-
-        @Override
-        public void filter(Coordinate coordinate) {
-            final GeoPos geoPos = new GeoPos((float) coordinate.y, (float) coordinate.x);
-            final PixelPos pixelPos = geoCoding.getPixelPos(geoPos, null);
-            if (pixelPos.isValid()) {
-                x1 = min(x1, (int) floor(pixelPos.x));
-                x2 = max(x2, (int) ceil(pixelPos.x));
-                y1 = min(y1, (int) floor(pixelPos.y));
-                y2 = max(y2, (int) ceil(pixelPos.y));
-            }
-        }
-
-        public Rectangle getPixelRegion() {
-            return new Rectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-        }
-    }
-
 }

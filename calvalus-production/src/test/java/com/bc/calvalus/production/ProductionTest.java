@@ -4,6 +4,8 @@ import com.bc.calvalus.commons.ProcessState;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;
 
+import java.text.SimpleDateFormat;
+
 import static org.junit.Assert.*;
 
 public class ProductionTest {
@@ -13,15 +15,17 @@ public class ProductionTest {
         Production production;
         JobID jobID = new JobID("34627598547", 6);
 
-        production = new Production("9A3F", "Toasting", "ewa", null, new ProductionRequest("test"), new JobID[]{jobID});
+        production = new Production("9A3F", "Toasting", null,
+                                    new ProductionRequest("test", "ewa"),
+                                    new MyWorkflowItem(jobID));
         assertEquals("9A3F", production.getId());
         assertEquals("Toasting", production.getName());
-        assertEquals("ewa", production.getUser());
         assertEquals(null, production.getStagingPath());
         assertEquals(false, production.isAutoStaging());
         assertEquals(1, production.getJobIds().length);
         assertEquals(jobID, production.getJobIds()[0]);
         assertEquals("test", production.getProductionRequest().getProductionType());
+        assertEquals("ewa", production.getProductionRequest().getUserName());
         assertEquals(ProcessState.UNKNOWN, production.getProcessingStatus().getState());
         assertEquals(ProcessState.UNKNOWN, production.getStagingStatus().getState());
     }
@@ -31,7 +35,9 @@ public class ProductionTest {
         Production production;
         JobID jobID = new JobID("34627985F47", 4);
 
-        production = new Production("9A3F", "Toasting", "ewa", null, new ProductionRequest("test"), new JobID[]{jobID});
+        production = new Production("9A3F", "Toasting", null,
+                                    new ProductionRequest("test", "ewa"),
+                                    new MyWorkflowItem(jobID));
 
         assertEquals(jobID, production.getJobIds()[0]);
 
@@ -46,5 +52,11 @@ public class ProductionTest {
         String id = Production.createId("level4");
         assertTrue(id.contains("level4"));
         assertFalse(id.equals(Production.createId("level4")));
+    }
+
+    private static class MyWorkflowItem extends TestWorkflowItem<JobID> {
+        MyWorkflowItem(JobID id) {
+            super(id);
+        }
     }
 }

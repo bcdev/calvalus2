@@ -4,17 +4,14 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.esa.beam.util.SystemUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +22,12 @@ import java.util.logging.Logger;
  */
 public class ProductionServiceImpl implements ProductionService {
 
+    public static enum Action {
+        CANCEL,
+        DELETE,
+        RESTART,// todo - implement restart
+    }
+
     private final ProcessingService processingService;
     private final StagingService stagingService;
     private final ProductionType[] productionTypes;
@@ -32,7 +35,6 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, Action> productionActionMap;
     private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
-    private Timer statusObserver;
 
     public ProductionServiceImpl(ProcessingService processingService,
                                  StagingService stagingService,
@@ -53,39 +55,57 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    public void startStatusObserver(int period) {
-        statusObserver = new Timer("StatusObserver", true);
-        statusObserver.scheduleAtFixedRate(new ProductionUpdater(), period, period);
-    }
-
-    public void stopStatusObserver() {
-        statusObserver.cancel();
-        statusObserver = null;
-    }
-
     @Override
     public ProductSet[] getProductSets(String filter) throws ProductionException {
         // todo - load & update from persistent storage
         return new ProductSet[]{
-                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "All MERIS RR L1b"),
+                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "MERIS RR L1b (R3)"),
+                /*
                 new ProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
                 new ProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
                 new ProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
+                */
+                new ProductSet("MER_FRS_1P/waqs", "MER_FRS_1P", "MERIS FRS L1b (WAQS)"),
         };
     }
 
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
         // todo - load & update from persistent storage
+//        return new ProcessorDescriptor[]{
+//                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
+//                                        "<parameters>\n" +
+//                                                "  <useIdepix>true</useIdepix>\n" +
+//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+//                                                "  <outputReflec>false</outputReflec>\n" +
+//                                                "</parameters>",
+//                                        "beam-lkn",
+//                                        new String[]{"1.0-SNAPSHOT"}),
+//        };
         return new ProcessorDescriptor[]{
                 new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
-                                        "<parameters>\n" +
-                                                "  <useIdepix>true</useIdepix>\n" +
-                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                "  <outputReflec>false</outputReflec>\n" +
-                                                "</parameters>",
-                                        "beam-lkn",
-                                        new String[]{"1.0-SNAPSHOT"}),
+                                        new String[]{
+                                                "<parameters>\n" +
+                                                        "  <useIdepix>true</useIdepix>\n" +
+                                                        "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                                        "  <outputReflec>false</outputReflec>\n" +
+                                                        "</parameters>",
+                                                "<parameters>\n" +
+                                                        "  <doCalibration>true</doCalibration>\n" +
+                                                        "  <doSmile>true</doSmile>\n" +
+                                                        "  <doEqualization>true</doEqualization>\n" +
+                                                        "  <useIdepix>true</useIdepix>\n" +
+                                                        "  <algorithm>CoastColour</algorithm>\n" +
+                                                        "  <landExpression>l1p_flags.F_LANDCONS</landExpression>\n" +
+                                                        "  <cloudIceExpression>l1p_flags.F_CLOUD || l1p_flags.F_SNOW_ICE</cloudIceExpression>\n" +
+                                                        "  <outputReflec>true</outputReflec>\n" +
+                                                        "</parameters>"
+                                        },
+                                        "coastcolour-processing",
+                                        new String[]{
+                                                "0.5-SNAPSHOT",
+                                                "1.0-SNAPSHOT"
+                                        }),
         };
     }
 
@@ -99,6 +119,11 @@ public class ProductionServiceImpl implements ProductionService {
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
             Production production = productionType.createProduction(productionRequest);
+            try {
+                production.getWorkflow().submit();
+            } catch (WorkflowException e) {
+                throw new ProductionException(String.format("Failed to sumbit production '%s'workflow: %s", production.getId(), e.getMessage()), e);
+            }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
         }
@@ -125,12 +150,12 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public  void cancelProductions(String... productionIds) throws ProductionException {
+    public void cancelProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.CANCEL);
     }
 
     @Override
-    public  void deleteProductions(String... productionIds) throws ProductionException {
+    public void deleteProductions(String... productionIds) throws ProductionException {
         requestProductionKill(productionIds, Action.DELETE);
     }
 
@@ -152,14 +177,11 @@ public class ProductionServiceImpl implements ProductionService {
                         removeProduction(production);
                     }
                 } else {
-                    Object[] jobIds = production.getJobIds();
-                    for (Object jobId : jobIds) {
-                        try {
-                            processingService.killJob(jobId);
-                        } catch (IOException e) {
-                            logger.log(Level.SEVERE, String.format("Failed to kill Hadoop job '%s' of production '%s': %s",
-                                                                   jobId, production.getId(), e.getMessage()), e);
-                        }
+                    try {
+                        production.getWorkflow().kill();
+                    } catch (WorkflowException e) {
+                        logger.log(Level.SEVERE, String.format("Failed to kill production '%s': %s",
+                                                               production.getId(), e.getMessage()), e);
                     }
                 }
 
@@ -181,20 +203,18 @@ public class ProductionServiceImpl implements ProductionService {
         productionStagingsMap.put(production.getId(), staging);
     }
 
-    public void updateProductions() throws IOException, ProductionException {
-        Map<Object, ProcessStatus> jobStatusMap = processingService.getJobStatusMap();
-        Production[] productions = productionStore.getProductions();
+    @Override
+    public void updateStatuses() {
+        try {
+            processingService.updateStatuses();
+        } catch (IOException e) {
+            logger.warning("Failed to update job statuses: " + e.getMessage());
+        }
 
         // Update state of all registered productions
+        Production[] productions = productionStore.getProductions();
         for (Production production : productions) {
-            Object[] jobIds = production.getJobIds();
-            ProcessStatus[] jobStatuses = new ProcessStatus[jobIds.length];
-            for (int i = 0; i < jobIds.length; i++) {
-                Object jobId = jobIds[i];
-                ProcessStatus processStatus = jobStatusMap.get(jobId);
-                jobStatuses[i] = processStatus != null ? processStatus : ProcessStatus.UNKNOWN;
-            }
-            production.setProcessingStatus(ProcessStatus.aggregate(jobStatuses));
+            production.getWorkflow().updateStatus();
         }
 
         // Now try to delete productions
@@ -213,12 +233,33 @@ public class ProductionServiceImpl implements ProductionService {
                     && production.getProcessingStatus().getState() == ProcessState.COMPLETED
                     && production.getStagingStatus().getState() == ProcessState.UNKNOWN
                     && productionStagingsMap.get(production.getId()) == null) {
-                stageProductionResults(production);
+                try {
+                    stageProductionResults(production);
+                } catch (ProductionException e) {
+                    logger.warning("Failed to stage production: " + e.getMessage());
+                }
             }
         }
 
         // write to persistent storage
-        productionStore.store();
+        try {
+            productionStore.store();
+        } catch (IOException e) {
+            logger.warning("Failed to persist productions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            stagingService.close();
+        } finally {
+            try {
+                processingService.close();
+            } finally {
+                productionStore.close();
+            }
+        }
     }
 
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {
@@ -248,31 +289,5 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    public static enum Action {
-        CANCEL,
-        DELETE,
-        RESTART,// todo - implement restart
-    }
 
-    private class ProductionUpdater extends TimerTask {
-        private long lastLog;
-
-        @Override
-        public void run() {
-            try {
-                updateProductions();
-            } catch (Exception e) {
-                logError(e);
-            }
-        }
-
-        private void logError(Exception e) {
-            long time = System.currentTimeMillis();
-            // only log errors every 2 minutes
-            if (time - lastLog > 120 * 1000L) {
-                logger.log(Level.SEVERE, "Failed to update production state:" + e.getMessage(), e);
-                lastLog = time;
-            }
-        }
-    }
 }

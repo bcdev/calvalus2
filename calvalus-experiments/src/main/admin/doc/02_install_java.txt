@@ -12,7 +12,9 @@ apt-get -y install sun-java6-jdk
 # install ntp (for automatic time synchronisation)
 apt-get -y install ntp
 
+# install 32 bit libraries for amorgos
+sudo aptitude install ia32-libs
 
 ## copy and paste line
 
-echo "deb http://archive.canonical.com/ubuntu lucid partner" > /etc/apt/sources.list.d/partner.list && apt-get update && apt-get -y install sun-java6-jdk ntp
+echo "deb http://archive.canonical.com/ubuntu lucid partner" > /etc/apt/sources.list.d/partner.list && apt-get update && apt-get -y install sun-java6-jdk ntp ia32-libs

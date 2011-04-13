@@ -4,18 +4,20 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Test implementation of ProductionStore.
  *
  * @author Norman
  */
+@Ignore
 public class TestProcessingService implements ProcessingService<String> {
     private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
+    boolean closed;
 
     @Override
     public JobIdFormat<String> getJobIdFormat() {
@@ -42,13 +44,17 @@ public class TestProcessingService implements ProcessingService<String> {
         };
     }
 
-    public void setJobStatus(String jobId, ProcessStatus status) {
-        this.jobStatusMap.put(jobId, status);
+    @Override
+    public void updateStatuses() throws IOException {
     }
 
     @Override
-    public Map<String, ProcessStatus> getJobStatusMap() throws IOException {
-        return new HashMap<String, ProcessStatus>(jobStatusMap);
+    public ProcessStatus getJobStatus(String jobId) {
+        return jobStatusMap.get(jobId);
+    }
+
+    public void setJobStatus(String jobId, ProcessStatus status) {
+        this.jobStatusMap.put(jobId, status);
     }
 
     @Override
@@ -62,5 +68,10 @@ public class TestProcessingService implements ProcessingService<String> {
         }
         jobStatusMap.put(jobId, new ProcessStatus(ProcessState.CANCELLED, processStatus.getProgress()));
         return true;
+    }
+
+    @Override
+    public void close() throws IOException {
+        closed = true;
     }
 }

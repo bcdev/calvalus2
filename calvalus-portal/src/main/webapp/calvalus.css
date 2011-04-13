@@ -17,6 +17,7 @@
 }
 
 .title {
+    font-family: Calibri,Verdana,Arial,sans-serif;
     color: #7b8fae;
     font-size: 32pt;
     font-weight: bold;
@@ -26,16 +27,40 @@
 }
 
 .subTitle {
-    color: #888;
+    font-family: Calibri,Verdana,Arial,sans-serif;
     font-size: 16pt;
+    color: #888;
     margin: 0;
-    padding: 0 0 0 4px;
+    padding: 0 0 0 4pt;
+}
+
+.userName {
+    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-size: 10pt;
+    color: #AAA;
+    text-align: right;
+    width: 15%;
+    vertical-align: top;
+}
+
+.loginPanel {
+    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-size: 12pt;
+    text-align: center;
+    padding-top: 20px;
+    width: 100%;
+}
+
+.headerPanel {
+    width: 816px;
+
 }
 
 .formPanel {
     margin: 10px;
     padding: 5px;
 }
+
 
 /** Most GWT widgets already have a style name defined */
 

@@ -44,4 +44,9 @@ public class SimpleStagingService implements StagingService {
            throw new IOException("Illegal path: " + treeToDeletePath);
         }
     }
+
+    @Override
+    public void close() {
+        executorService.shutdown();
+    }
 }

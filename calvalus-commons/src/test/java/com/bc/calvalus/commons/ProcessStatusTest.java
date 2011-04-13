@@ -45,6 +45,14 @@ public class ProcessStatusTest {
                      ProcessStatus.aggregate());
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!"),
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!")));
+        assertEquals(new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "Starting"),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "Starting"),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, ""),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "")));
+        assertEquals(new ProcessStatus(ProcessState.SCHEDULED, 0.0f, "Waiting"),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.SCHEDULED, 0.0f, "Waiting"),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, ""),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "")));
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f, ""),
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
                                              new ProcessStatus(ProcessState.RUNNING, 0.4f, ""),
@@ -57,13 +65,20 @@ public class ProcessStatusTest {
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, "This was hard"),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
+        // 'ERROR' has priority over 'COMPLETED'
         assertEquals(new ProcessStatus(ProcessState.ERROR, 0.8f, "I/O problem"),
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
                                              new ProcessStatus(ProcessState.ERROR, 0.4f, "I/O problem"),
                                              new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
+        // 'CANCELLED' has priority over 'RUNNING'
         assertEquals(new ProcessStatus(ProcessState.CANCELLED, 0.3f, "Go away"),
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
                                              new ProcessStatus(ProcessState.RUNNING, 0.6f, ""),
+                                             new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
+        // 'CANCELLED' has priority over 'ERROR'
+        assertEquals(new ProcessStatus(ProcessState.CANCELLED, 0.3f, "Go away"),
+                     ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.ERROR, 0.6f, ""),
                                              new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
 
         // test illegal null-statuses
@@ -110,4 +125,13 @@ public class ProcessStatusTest {
         assertFalse(new ProcessStatus(ProcessState.RUNNING, 0.2f, "Dabei!").equals(
                 new ProcessStatus(ProcessState.RUNNING, 0.2f, "Vorbei!")));
     }
+
+    @Test
+     public void testToString() {
+         assertEquals("ProductionStatus{state=RUNNING, message='Dabei!', progress=0.2}", new ProcessStatus(ProcessState.RUNNING, 0.2f, "Dabei!").toString());
+         assertEquals("ProductionStatus{state=CANCELLED, message='Go away', progress=0.1}", new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away").toString());
+         assertEquals("ProductionStatus{state=COMPLETED, message='This was hard', progress=1.0}", new ProcessStatus(ProcessState.COMPLETED, 1.0f, "This was hard").toString());
+         assertEquals("ProductionStatus{state=ERROR, message='I/O problem', progress=0.8}", new ProcessStatus(ProcessState.ERROR, 0.8f, "I/O problem").toString());
+     }
+
 }

@@ -1,22 +1,23 @@
-xterm -geometry 80x8+0+000 -e 'ssh hadoop@cvslave00' &
-xterm -geometry 80x8+0+000 -e 'ssh hadoop@cvslave01' &
-xterm -geometry 80x8+0+160 -e 'ssh hadoop@cvslave02' &
-xterm -geometry 80x8+0+320 -e 'ssh hadoop@cvslave03' &
-xterm -geometry 80x8+0+480 -e 'ssh hadoop@cvslave04' &
-xterm -geometry 80x8+0+640 -e 'ssh hadoop@cvslave05' &
-xterm -geometry 80x8+500+000 -e 'ssh hadoop@cvslave06' &
-xterm -geometry 80x8+500+160 -e 'ssh hadoop@cvslave07' &
-xterm -geometry 80x8+500+320 -e 'ssh hadoop@cvslave08' &
-xterm -geometry 80x8+0+000 -e 'ssh hadoop@cvslave09' &
-xterm -geometry 80x8+0+160 -e 'ssh hadoop@cvslave10' &
-xterm -geometry 80x8+0+320 -e 'ssh hadoop@cvslave11' &
-xterm -geometry 80x8+0+480 -e 'ssh hadoop@cvslave12' &
-xterm -geometry 80x8+0+640 -e 'ssh hadoop@cvslave13' &
-xterm -geometry 80x8+500+000 -e 'ssh hadoop@cvslave14' &
-xterm -geometry 80x8+500+160 -e 'ssh hadoop@cvslave15' &
-xterm -geometry 80x8+500+320 -e 'ssh hadoop@cvslave16' &
-xterm -geometry 80x8+500+480 -e 'ssh hadoop@cvslave17' &
-xterm -geometry 80x8+500+640 -e 'ssh hadoop@cvslave18' &
+xterm -geometry 80x8+0+000 -e 'ssh hadoop@cvmaster00' &
+xterm -geometry 80x8+0+160 -e 'ssh hadoop@cvslave00' &
+xterm -geometry 80x8+0+320 -e 'ssh hadoop@cvslave01' &
+xterm -geometry 80x8+0+480 -e 'ssh hadoop@cvslave02' &
+xterm -geometry 80x8+0+640 -e 'ssh hadoop@cvslave03' &
+xterm -geometry 80x8+400+000 -e 'ssh hadoop@cvslave04' &
+xterm -geometry 80x8+400+160 -e 'ssh hadoop@cvslave05' &
+xterm -geometry 80x8+400+320 -e 'ssh hadoop@cvslave06' &
+xterm -geometry 80x8+400+480 -e 'ssh hadoop@cvslave07' &
+xterm -geometry 80x8+400+640 -e 'ssh hadoop@cvslave08' &
+xterm -geometry 80x8+800+000 -e 'ssh hadoop@cvslave09' &
+xterm -geometry 80x8+800+160 -e 'ssh hadoop@cvslave10' &
+xterm -geometry 80x8+800+320 -e 'ssh hadoop@cvslave11' &
+xterm -geometry 80x8+800+480 -e 'ssh hadoop@cvslave12' &
+xterm -geometry 80x8+800+640 -e 'ssh hadoop@cvslave13' &
+xterm -geometry 80x8+1200+000 -e 'ssh hadoop@cvslave14' &
+xterm -geometry 80x8+1200+160 -e 'ssh hadoop@cvslave15' &
+xterm -geometry 80x8+1200+320 -e 'ssh hadoop@cvslave16' &
+xterm -geometry 80x8+1200+480 -e 'ssh hadoop@cvslave17' &
+xterm -geometry 80x8+1200+640 -e 'ssh hadoop@cvslave18' &
 
 xterm -geometry 80x12+0+000 -e 'ssh hadoop@cvslave00 "export TERM=linux ; htop"' &
 xterm -geometry 80x12+0+000 -e 'ssh hadoop@cvslave01 "export TERM=linux ; htop"' &

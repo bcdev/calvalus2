@@ -74,17 +74,17 @@ public final class AggregatorOnMaxSet implements Aggregator {
     }
 
     @Override
-    public void initSpatial(WritableVector vector) {
+    public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, Float.NEGATIVE_INFINITY);
     }
 
     @Override
-    public void initTemporal(WritableVector vector) {
+    public void initTemporal(BinContext ctx, WritableVector vector) {
         vector.set(0, Float.NEGATIVE_INFINITY);
     }
 
     @Override
-    public void aggregateSpatial(Vector observationVector, WritableVector spatialVector) {
+    public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final float value = observationVector.get(varIndexes[0]);
         final float currentMax = spatialVector.get(0);
         if (value > currentMax) {
@@ -96,11 +96,11 @@ public final class AggregatorOnMaxSet implements Aggregator {
     }
 
     @Override
-    public void completeSpatial(int numObs, WritableVector numSpatialObs) {
+    public void completeSpatial(BinContext ctx, int numObs, WritableVector numSpatialObs) {
     }
 
     @Override
-    public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
+    public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
         final float value = spatialVector.get(0);
         final float currentMax = temporalVector.get(0);
         if (value > currentMax) {
@@ -109,6 +109,10 @@ public final class AggregatorOnMaxSet implements Aggregator {
                 temporalVector.set(i, spatialVector.get(i));
             }
         }
+    }
+
+    @Override
+    public void completeTemporal(BinContext ctx, int numTemporalObs, WritableVector temporalVector) {
     }
 
     @Override

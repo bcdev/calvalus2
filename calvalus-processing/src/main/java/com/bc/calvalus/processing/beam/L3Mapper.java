@@ -61,10 +61,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        BeamProductHandler.init();
         final Configuration configuration = context.getConfiguration();
-        ProcessingConfiguration processingConfiguration = new ProcessingConfiguration(configuration);
-        L3Config l3Config = L3Config.create(processingConfiguration.getLevel3Parameters());
+        BeamUtils.initGpf(configuration);
+        L3Config l3Config = L3Config.create(configuration.get(JobConfNames.CALVALUS_L3_PARAMETER));
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -77,11 +76,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         final Path inputPath = split.getPath();
-        BeamProductHandler beamProductHandler = new BeamProductHandler();
-        Product source = beamProductHandler.readProduct(inputPath, configuration);
+        Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        final Product product = l3Config.getPreProcessedProduct(source, processingConfiguration.getLevel2OperatorName(), processingConfiguration.getLevel2ParameterMap());
-        if (product != null) {
+        String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
+        source = BeamUtils.createSubsetProduct(source, roiWkt);
+        if (source != null) {
+            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            final Product product = BeamUtils.getProcessedProduct(source, level2OperatorName, level2Parameters);
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
                 if (numObs > 0L) {
@@ -92,6 +94,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             } finally {
                 product.dispose();
             }
+            source.dispose();
         } else {
             LOG.info("Product not used");
         }
@@ -106,7 +109,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         // write final log entry for runtime measurements
         LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
-
     }
 
     static long processProduct(Product product,
@@ -118,7 +120,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         }
 
         final int sliceWidth = product.getSceneRasterWidth();
-
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);
             String variableExpr = ctx.getVariableContext().getVariableExpr(i);
@@ -175,8 +176,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                            int sliceWidth,
                                                            int sliceHeight,
                                                            float[] superSamplingSteps) {
-        final float weight = 1f;//superSamplingSteps.length * superSamplingSteps.length;
-
         final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
         final Raster[] varTiles = new Raster[varImages.length];
         for (int i = 0; i < varImages.length; i++) {
@@ -193,10 +192,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         for (int y = y1; y < y2; y++) {
             for (int x = x1; x < x2; x++) {
                 if (maskTile.getSample(x, y, 0) != 0) {
-                    final float[] samples = observationSlice.createObservationSamples(x, y, weight);
-                    for (int sy = 0; sy < superSamplingSteps.length; sy++) {
-                        for (int sx = 0; sx < superSamplingSteps.length; sx++) {
-                            pixelPos.setLocation(x + superSamplingSteps[sx], y + superSamplingSteps[sy]);
+                    final float[] samples = observationSlice.createObservationSamples(x, y);
+                    for (float dy : superSamplingSteps) {
+                        for (float dx : superSamplingSteps) {
+                            pixelPos.setLocation(x + dx, y + dy);
                             geoCoding.getGeoPos(pixelPos, geoPos);
                             observationSlice.addObservation(geoPos.lat, geoPos.lon, samples);
                         }

@@ -237,6 +237,7 @@ public class CalvalusPortal implements EntryPoint {
             }
 
             public void onFailure(Throwable caught) {
+                caught.printStackTrace(System.err);
                 Window.alert("Failed to order production:\n" + caught.getMessage());
             }
         });
@@ -252,6 +253,7 @@ public class CalvalusPortal implements EntryPoint {
 
         @Override
         public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
             CalvalusPortal.this.productSets = new GsProductSet[0];
         }
@@ -266,6 +268,7 @@ public class CalvalusPortal implements EntryPoint {
 
         @Override
         public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
             CalvalusPortal.this.processors = new GsProcessorDescriptor[0];
         }
@@ -280,6 +283,7 @@ public class CalvalusPortal implements EntryPoint {
 
         @Override
         public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
             CalvalusPortal.this.productions = new ListDataProvider<GsProduction>();
         }
@@ -293,6 +297,7 @@ public class CalvalusPortal implements EntryPoint {
 
         @Override
         public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
             GWT.log("Failed to get productions from server", caught);
         }
     }

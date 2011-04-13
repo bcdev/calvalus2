@@ -1,5 +1,8 @@
 package com.bc.calvalus.commons;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Provides status information about a server-side production transaction.
  *
@@ -43,21 +46,20 @@ public class ProcessStatus {
 
         if (statuses.length == 0) {
             return null;
-        }
-
-        if (statuses.length == 1) {
+        } else if (statuses.length == 1) {
             return statuses[0];
         }
 
-        float averageProgress = 0f;
-        for (ProcessStatus status : statuses) {
-            averageProgress += status.getProgress();
-        }
-        averageProgress /= statuses.length;
+        float averageProgress = getAverageProgress(statuses);
 
         for (ProcessStatus status : statuses) {
-            if (status.getState() == ProcessState.ERROR
-                    || status.getState() == ProcessState.CANCELLED) {
+            if (status.getState() == ProcessState.CANCELLED) {
+                return new ProcessStatus(status.getState(), averageProgress, status.getMessage());
+            }
+        }
+
+        for (ProcessStatus status : statuses) {
+            if (status.getState() == ProcessState.ERROR) {
                 return new ProcessStatus(status.getState(), averageProgress, status.getMessage());
             }
         }
@@ -70,31 +72,40 @@ public class ProcessStatus {
             }
         }
 
-        int numCompleted = 0;
-        int numWaiting = 0;
-        int numUnknown = 0;
-        for (ProcessStatus status : statuses) {
-            if (status.getState() == ProcessState.COMPLETED) {
-                numCompleted++;
-            } else if (status.getState() == ProcessState.SCHEDULED) {
-                numWaiting++;
-            } else if (status.getState() == ProcessState.UNKNOWN) {
-                numUnknown++;
-            }
-        }
-
-        final ProcessState state;
-        if (numCompleted == statuses.length) {
-            state = ProcessState.COMPLETED;
-        } else if (numWaiting == statuses.length) {
-            state = ProcessState.SCHEDULED;
-        } else if (numUnknown == statuses.length) {
-            state = ProcessState.UNKNOWN;
-        } else {
-            state = ProcessState.RUNNING;
-        }
+        final ProcessState state = getCummulativeState(statuses);
 
         return new ProcessStatus(state, averageProgress, message);
+    }
+
+    private static float getAverageProgress(ProcessStatus[] statuses) {
+        float averageProgress = 0f;
+        for (ProcessStatus status : statuses) {
+            averageProgress += status.getProgress();
+        }
+        return averageProgress / statuses.length;
+    }
+
+    private static ProcessState getCummulativeState(ProcessStatus[] statuses) {
+        Map<ProcessState, Integer> map = new EnumMap<ProcessState, Integer>(ProcessState.class);
+        for (ProcessState value : ProcessState.values()) {
+            map.put(value, 0);
+        }
+        for (ProcessStatus status : statuses) {
+            map.put(status.getState(), map.get(status.getState()) + 1);
+        }
+        if (map.get(ProcessState.COMPLETED) == statuses.length) {
+            return ProcessState.COMPLETED;
+        }
+        if (map.get(ProcessState.COMPLETED) > 0) {
+            return ProcessState.RUNNING;
+        }
+        if (map.get(ProcessState.RUNNING) > 0) {
+            return ProcessState.RUNNING;
+        }
+        if (map.get(ProcessState.SCHEDULED) > 0) {
+            return ProcessState.SCHEDULED;
+        }
+        return ProcessState.UNKNOWN;
     }
 
     public ProcessState getState() {

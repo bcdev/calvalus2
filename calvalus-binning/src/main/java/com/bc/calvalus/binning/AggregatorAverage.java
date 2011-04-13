@@ -1,7 +1,5 @@
 package com.bc.calvalus.binning;
 
-import org.esa.beam.util.math.DoubleList;
-
 import java.util.Arrays;
 
 /**
@@ -74,37 +72,41 @@ public final class AggregatorAverage implements Aggregator {
     }
 
     @Override
-    public void initSpatial(WritableVector vector) {
+    public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
         vector.set(1, 0.0f);
     }
 
     @Override
-    public void initTemporal(WritableVector vector) {
+    public void initTemporal(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
         vector.set(1, 0.0f);
         vector.set(2, 0.0f);
     }
 
     @Override
-    public void aggregateSpatial(Vector observationVector, WritableVector spatialVector) {
+    public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final float value = observationVector.get(varIndex);
         spatialVector.set(0, spatialVector.get(0) + value);
         spatialVector.set(1, spatialVector.get(1) + value * value);
     }
 
     @Override
-    public void completeSpatial(int numSpatialObs, WritableVector spatialVector) {
+    public void completeSpatial(BinContext ctx, int numSpatialObs, WritableVector spatialVector) {
         spatialVector.set(0, spatialVector.get(0) / numSpatialObs);
         spatialVector.set(1, spatialVector.get(1) / numSpatialObs);
     }
 
     @Override
-    public void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
+    public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
         final float w = weightFn.eval(numSpatialObs);
         temporalVector.set(0, temporalVector.get(0) + spatialVector.get(0) * w);
         temporalVector.set(1, temporalVector.get(1) + spatialVector.get(1) * w);
         temporalVector.set(2, temporalVector.get(2) + w);
+    }
+
+    @Override
+    public void completeTemporal(BinContext ctx, int numTemporalObs, WritableVector temporalVector) {
     }
 
     @Override

@@ -1,16 +1,20 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.processing.beam.BeamOpProcessingType;
+import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.L3WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapreduce.JobID;
+import com.vividsolutions.jts.geom.Geometry;
 
-import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
+
+import static java.lang.Math.*;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -18,85 +22,151 @@ import java.io.IOException;
  * @author MarcoZ
  * @author Norman
  */
-public class L3ProductionType implements ProductionType {
-    private final HadoopProcessingService processingService;
-    private final StagingService stagingService;
-    private WpsXmlGenerator wpsXmlGenerator;
-    private final L3ProcessingRequestFactory processingRequestFactory;
+public class L3ProductionType extends HadoopProductionType {
 
-    L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        this.processingService = processingService;
-        this.stagingService = stagingService;
-        wpsXmlGenerator = new WpsXmlGenerator();
-        processingRequestFactory = new L3ProcessingRequestFactory(processingService);
-    }
-
-    @Override
-    public String getName() {
-        return "calvalus-level3";
+    public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super("calvalus-level3", processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
-        String productionId = Production.createId(productionRequest.getProductionType());
-        String productionName = createL3ProductionName(productionRequest);
-        String userName = "ewa";  // todo - get user from productionRequest
+        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String productionName = createL3ProductionName(productionRequest);
+        final String userName = productionRequest.getUserName();
 
-        L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(productionId,
-                                                                                                       userName,
-                                                                                                       productionRequest);
-        JobID[] jobIds = new JobID[l3ProcessingRequests.length];
-        for (int i = 0; i < l3ProcessingRequests.length; i++) {
-            String wpsXml = wpsXmlGenerator.createL3WpsXml(productionId, productionName, l3ProcessingRequests[i]);
-            jobIds[i] = submitL3Job(wpsXml);
+        Map<String, String> productionParameters = productionRequest.getProductionParameters();
+        productionRequest.ensureProductionParameterSet("processorBundleName");
+        productionRequest.ensureProductionParameterSet("processorBundleVersion");
+        productionRequest.ensureProductionParameterSet("processorName");
+        productionRequest.ensureProductionParameterSet("processorParameters");
+        productionRequest.ensureProductionParameterSet("maskExpr");
+        productionRequest.ensureProductionParameterSet("superSampling");
+
+        String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
+        Date startDate = productionRequest.getDate("dateStart");
+        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
+
+        String processorBundle = String.format("%s-%s",
+                                               productionParameters.get("processorBundleName"),
+                                               productionParameters.get("processorBundleVersion"));
+        String processorName = productionParameters.get("processorName");
+        String processorParameters = productionParameters.get("processorParameters");
+
+        Geometry roiGeometry = productionRequest.getRoiGeometry();
+
+        L3Config l3Config = createBinningConfig(productionRequest);
+
+        int periodCount = Integer.parseInt(productionRequest.getProductionParameter("periodCount"));
+        int periodLength = Integer.parseInt(productionRequest.getProductionParameter("periodLength")); // unit=days
+
+        long time = startDate.getTime();
+        long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+
+        Workflow.Parallel workflow = new Workflow.Parallel();
+        for (int i = 0; i < periodCount; i++) {
+
+            Date date1 = new Date(time);
+            Date date2 = new Date(time + periodLengthMillis - 1L);
+
+            // todo - use geoRegion to filter input files
+            String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
+            String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
+
+            L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
+                                                               productionId + "_" + (i+1),
+                                                               processorBundle,
+                                                               processorName,
+                                                               processorParameters,
+                                                               roiGeometry,
+                                                               inputFiles,
+                                                               outputDir,
+                                                               l3Config,
+                                                               ProductionRequest.getDateFormat().format(date1),
+                                                               ProductionRequest.getDateFormat().format(date2));
+            workflow.add(l3WorkflowItem);
+            time += periodLengthMillis;
         }
 
         return new Production(productionId,
                               productionName,
-                              userName,
                               userName + "/" + productionId,
                               productionRequest,
-                              jobIds);
-    }
-
-    private JobID submitL3Job(String wpsXml) throws ProductionException {
-        try {
-            JobClient jobClient = processingService.getJobClient();
-            BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(jobClient);
-            return beamOpProcessingType.submitJob(wpsXml);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ProductionException("Failed to submit Hadoop job: " + e.getMessage(), e);
-        }
+                              workflow);
     }
 
     @Override
-    public L3Staging createStaging(Production hadoopProduction) throws ProductionException {
-        JobClient jobClient = processingService.getJobClient();
-        ProductionRequest productionRequest = hadoopProduction.getProductionRequest();
-        L3ProcessingRequest[] l3ProcessingRequests = processingRequestFactory.createProcessingRequests(hadoopProduction.getId(),
-                                                                                                       hadoopProduction.getUser(),
-                                                                                                       productionRequest);
-        L3Staging l3Staging = new L3Staging(hadoopProduction, l3ProcessingRequests, jobClient.getConf(), stagingService.getStagingDir());
-        try {
-            stagingService.submitStaging(l3Staging);
-        } catch (IOException e) {
-            throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
-                                                        hadoopProduction.getId(), e.getMessage()), e);
-        }
-        return l3Staging;
+    protected Staging createUnsubmittedStaging(Production production) {
+        return new L3Staging(production,
+                             getProcessingService().getJobClient().getConf(),
+                             getStagingService().getStagingDir());
     }
 
-    @Override
-    public boolean accepts(ProductionRequest productionRequest) {
-        return getName().equalsIgnoreCase(productionRequest.getProductionType());
+    String getOutputDir(String userName, String productionId, int index) {
+        return String.format("%s/%s/%s_%d",
+                             getProcessingService().getDataOutputPath(),
+                             userName,
+                             productionId,
+                             index);
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) {
         return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getProductionParameter("inputProductSetId"),
-                             productionRequest.getProductionParameter("l2ProcessorName"));
+                             productionRequest.getProductionParameter("processorName"));
 
+    }
+
+    static L3Config createBinningConfig(ProductionRequest productionRequest) throws ProductionException {
+        L3Config l3Config = new L3Config();
+        l3Config.setNumRows(getNumRows(productionRequest));
+        l3Config.setSuperSampling(Integer.parseInt(productionRequest.getProductionParameter("superSampling")));
+        l3Config.setMaskExpr(productionRequest.getProductionParameter("maskExpr"));
+        l3Config.setVariables(getVariables(productionRequest));
+        l3Config.setAggregators(getAggregators(productionRequest));
+        return l3Config;
+    }
+
+    static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+        String inputVariablesStr = request.getProductionParameterSafe("inputVariables");
+        String aggregatorName = request.getProductionParameterSafe("aggregator");
+        Integer percentage = request.getInteger("percentage", null);
+        Double weightCoeff = request.getDouble("weightCoeff", null);
+        Double fillValue = request.getDouble("fillValue", null);
+        String[] inputVariables = inputVariablesStr.split(",");
+        for (int i = 0; i < inputVariables.length; i++) {
+            inputVariables[i] = inputVariables[i].trim();
+        }
+        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[inputVariables.length];
+        for (int i = 0; i < inputVariables.length; i++) {
+            L3Config.AggregatorConfiguration aggregatorConfiguration = new L3Config.AggregatorConfiguration(aggregatorName);
+            aggregatorConfiguration.setVarName(inputVariables[i]);
+            aggregatorConfiguration.setPercentage(percentage);
+            aggregatorConfiguration.setWeightCoeff(weightCoeff);
+            aggregatorConfiguration.setFillValue(fillValue);
+            aggregatorConfigurations[i] = aggregatorConfiguration;
+        }
+        return aggregatorConfigurations;
+    }
+
+    static L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+        // todo - implement L3 variables
+        return new L3Config.VariableConfiguration[0];
+    }
+
+    static int getNumRows(ProductionRequest request) throws ProductionException {
+        double resolution = Double.parseDouble(request.getProductionParameterSafe("resolution"));
+        return computeBinningGridRowCount(resolution);
+    }
+
+    static int computeBinningGridRowCount(double res) {
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
+        if (numRows % 2 == 0) {
+            return numRows;
+        } else {
+            return numRows + 1;
+        }
     }
 }

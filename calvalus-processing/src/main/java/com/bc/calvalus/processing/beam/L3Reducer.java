@@ -43,13 +43,14 @@ public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, T
         for (SpatialBin spatialBin : spatialBins) {
             binManager.aggregateTemporalBin(spatialBin, temporalBin);
         }
+        binManager.completeTemporalBin(temporalBin);
         context.write(binIndex, temporalBin);
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = new ProcessingConfiguration(conf).getLevel3Parameters();
+        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETER);
         L3Config l3Config = L3Config.create(level3Parameters);
         this.binManager = l3Config.getBinningContext().getBinManager();
     }

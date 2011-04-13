@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.shellexec.FileUtil;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -77,7 +78,8 @@ public class BeamOperatorTool extends Configured implements Tool {
             // parse request
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
             BeamOpProcessingType beamOpProcessingType = new BeamOpProcessingType(new JobClient(new JobConf(getConf())));
-            Job job = beamOpProcessingType.createBeamHadoopJob(requestContent);
+            Job job = beamOpProcessingType.createJobFromWps(requestContent);
+            beamOpProcessingType.configureJob(job);
 
             // look up job jar either by class (if deployed) or by path (idea)
             // job.setJarByClass(getClass());
@@ -108,10 +110,11 @@ public class BeamOperatorTool extends Configured implements Tool {
                     WpsConfig wpsConfig = new WpsConfig(requestContent);
 
                     L3Config l3Config = L3Config.create(wpsConfig.getLevel3Paramter());
-                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
+                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
                     L3Formatter formatter = new L3Formatter(LOG, getConf());
-                    result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir);
+                    Geometry roiGeometry = BeamUtils.createGeometry(job.getConfiguration().get(JobConfNames.CALVALUS_ROI_WKT));
+                    result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);
                 } else {
                     LOG.info("no formatting performed");
                 }

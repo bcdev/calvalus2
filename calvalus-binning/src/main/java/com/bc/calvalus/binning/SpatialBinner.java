@@ -44,7 +44,7 @@ public class SpatialBinner {
      * @return The exceptions occured during processing.
      */
     public Exception[] getExceptions() {
-        return exceptions.toArray(new Exception[0]);
+        return exceptions.toArray(new Exception[exceptions.size()]);
     }
 
     /**

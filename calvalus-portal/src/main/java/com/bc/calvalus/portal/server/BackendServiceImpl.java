@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.GsProcessState;
@@ -22,44 +23,61 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 /**
  * The server side implementation of the RPC processing service.
  * <p/>
- * The actual service is implemented by a class given by
+ * The actual service object is created by a factory whose implementing class name is given by
  * the servlet initialisation parameter 'calvalus.portal.productionServiceFactory.class'
- * (in context.xml or web.xml). Its value must be the name of a class that
- * implements the {@link BackendService} interface and has a one-argument constructor
- * taking the current {@link javax.servlet.ServletContext}.
+ * (in context.xml or web.xml).
  *
  * @author Norman
  * @author MarcoZ
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    private static final String CALVALUS_PORTAL_PRODUCTION_SERVICE_FACTORY_CLASS = "calvalus.portal.productionServiceFactory.class";
+    private static final String PRODUCTION_SERVICE_FACTORY_CLASS = "calvalus.portal.productionServiceFactory.class";
+    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
+
     private ProductionService productionService;
     private BackendConfig backendConfig;
+    private Timer statusObserver;
 
     @Override
-    public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-        initDelegate();
-        super.service(req, res);
+    public void init() throws ServletException {
+        if (productionService == null) {
+            synchronized (this) {
+                if (productionService == null) {
+                    ServletContext servletContext = getServletContext();
+                    initLogger(servletContext);
+                    initBackendConfig(servletContext);
+                    initProductionService(servletContext);
+                    startObservingProductionService();
+                }
+            }
+        }
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        initDelegate();
-        super.service(req, resp);
+    public void destroy() {
+        if (productionService != null) {
+            statusObserver.cancel();
+            try {
+                productionService.close();
+            } catch (IOException e) {
+                log("Failed to close production service", e);
+            }
+            productionService = null;
+        }
+        super.destroy();
     }
 
     @Override
@@ -154,11 +172,27 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private GsProduction convert(Production production) {
         return new GsProduction(production.getId(),
                                 production.getName(),
-                                production.getUser(),
-                                backendConfig.getStagingPath() + "/" + production.getStagingPath(),
+                                production.getProductionRequest().getUserName(),
+                                backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
                                 production.isAutoStaging(),
-                                convert(production.getProcessingStatus()),
+                                convert(production.getProcessingStatus(), production.getWorkflow()),
                                 convert(production.getStagingStatus()));
+    }
+
+    private GsProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {
+        Date startTime = workflow.getStartTime();
+        Date stopTime = workflow.getStopTime();
+        int processingSeconds = 0;
+        if (startTime != null) {
+            if (stopTime == null) {
+                stopTime = new Date();
+            }
+            processingSeconds = (int) ((stopTime.getTime() - startTime.getTime()) / 1000);
+        }
+        return new GsProcessStatus(GsProcessState.valueOf(status.getState().name()),
+                                   status.getMessage(),
+                                   status.getProgress(),
+                                   processingSeconds);
     }
 
     private GsProcessStatus convert(ProcessStatus status) {
@@ -172,44 +206,46 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private ProductionRequest convert(GsProductionRequest gwtProductionRequest) {
-        return new ProductionRequest(gwtProductionRequest.getProductionType(), gwtProductionRequest.getProductionParameters());
+        String userName = getThreadLocalRequest().getRemoteUser();
+        return new ProductionRequest(gwtProductionRequest.getProductionType(),
+                                     userName != null ? userName : "calvalus",
+                                     gwtProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(ProductionException e) {
         return new BackendServiceException(e.getMessage(), e);
     }
 
-    private void initDelegate() throws ServletException {
-        if (productionService == null) {
-            synchronized (this) {
-                if (productionService == null) {
-                    ServletContext servletContext = getServletContext();
-                    String className = servletContext.getInitParameter(CALVALUS_PORTAL_PRODUCTION_SERVICE_FACTORY_CLASS);
-                    if (className != null) {
-                        initLogger(servletContext);
-                        Map<String, String> serviceConfiguration = getServiceConfiguration(servletContext);
-                        try {
-                            Class<?> productionServiceFactoryClass = Class.forName(className);
-                            ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
-                            backendConfig = new BackendConfig(servletContext);
-                            productionService = productionServiceFactory.create(serviceConfiguration,
-                                                                                backendConfig.getLocalContextDir(),
-                                                                                backendConfig.getLocalStagingDir());
-                        } catch (Exception e) {
-                            throw new ServletException(e);
-                        }
-                    } else {
-                        throw new ServletException(String.format("Missing servlet initialisation parameter '%s'",
-                                                                 CALVALUS_PORTAL_PRODUCTION_SERVICE_FACTORY_CLASS));
-                    }
-                }
-            }
-        }
-    }
-
     private void initLogger(ServletContext servletContext) {
         Logger logger = Logger.getLogger("com.bc.calvalus");
         logger.addHandler(new ServletContextLogHandler(servletContext));
+    }
+
+    private void initBackendConfig(ServletContext servletContext) throws ServletException {
+        backendConfig = new BackendConfig(servletContext);
+    }
+
+    private void initProductionService(ServletContext servletContext) throws ServletException {
+        String className = backendConfig.getProperty(PRODUCTION_SERVICE_FACTORY_CLASS);
+        try {
+            Class<?> productionServiceFactoryClass = Class.forName(className);
+            ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
+            productionService = productionServiceFactory.create(getServiceConfiguration(servletContext),
+                                                                backendConfig.getLocalContextDir(),
+                                                                backendConfig.getLocalStagingDir());
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void startObservingProductionService() {
+        statusObserver = new Timer("StatusObserver", true);
+        statusObserver.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateProductionStatuses();
+            }
+        }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
     }
 
     private static Map<String, String> getServiceConfiguration(ServletContext servletContext) {
@@ -221,6 +257,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             map.put(name, value);
         }
         return map;
+    }
+
+    private void updateProductionStatuses() {
+        final ProductionService productionService = this.productionService;
+        if (productionService != null) {
+            synchronized (this) {
+                productionService.updateStatuses();
+            }
+        }
     }
 
 }

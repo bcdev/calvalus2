@@ -97,4 +97,25 @@ public class SpatialBinTest {
         assertEquals(2.235039f, agg3Copy.get(0), 1e-5f);
         assertEquals(3.240475f, agg3Copy.get(1), 1e-5f);
     }
+
+    @Test
+    public void testBinContext() {
+        BinContext ctx = new SpatialBin(0, 0);
+        assertEquals(null, ctx.get("a"));
+        ctx.put("a", 42);
+        assertEquals(42, ctx.get("a"));
+    }
+
+    @Test
+    public void testToString() {
+        SpatialBin bin = new SpatialBin(0, 0);
+        assertEquals("SpatialBin{index=0, numObs=0, properties=[]}", bin.toString());
+        bin = new SpatialBin(42, 2);
+        assertEquals("SpatialBin{index=42, numObs=0, properties=[0.0, 0.0]}", bin.toString());
+        bin.setNumObs(13);
+        assertEquals("SpatialBin{index=42, numObs=13, properties=[0.0, 0.0]}", bin.toString());
+        bin.properties[0] = 56.7f;
+        bin.properties[1] = 8.9f;
+        assertEquals("SpatialBin{index=42, numObs=13, properties=[56.7, 8.9]}", bin.toString());
+    }
 }

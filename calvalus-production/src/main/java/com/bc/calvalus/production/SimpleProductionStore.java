@@ -1,7 +1,10 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobIdFormat;
 
 import java.io.BufferedReader;
@@ -11,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,11 +76,18 @@ public class SimpleProductionStore implements ProductionStore {
         store(databaseFile);
     }
 
+    @Override
+    public void close() throws IOException {
+    }
+
     private void load(File databaseFile) throws IOException {
         if (databaseFile.exists()) {
             BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
             try {
                 load(reader);
+            } catch (Throwable t) {
+                String message = String.format("Failed to load production store from: %s\n%s", databaseFile.getPath(), t.getMessage());
+                throw new IOException(message, t);
             } finally {
                 reader.close();
             }
@@ -102,22 +113,20 @@ public class SimpleProductionStore implements ProductionStore {
             String[] tokens = line.split("\t");
             String id = decodeTSV(tokens[0]);
             String name = decodeTSV(tokens[1]);
-            String user = decodeTSV(tokens[2]);
-            String stagingPath = decodeTSV(tokens[3]);
-            int[] offpt = new int[]{4};
+            String stagingPath = decodeTSV(tokens[2]);
+            int[] offpt = new int[]{3};
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
             Object[] jobIDs = decodeJobIdsTSV(tokens, offpt);
+            Date[] dates = decodeTimesTSV(tokens, offpt);
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
-
-            Production hadoopProduction = new Production(id, name, user,
-                                                         stagingPath,
-                                                         productionRequest, jobIDs
-            );
-
-            hadoopProduction.setProcessingStatus(processStatus);
-            hadoopProduction.setStagingStatus(stagingStatus);
-            addProduction(hadoopProduction);
+            WorkflowItem workflow = createWorkflow(jobIDs, dates, processStatus);
+            Production production = new Production(id, name,
+                                                   stagingPath,
+                                                   productionRequest,
+                                                   workflow);
+            production.setStagingStatus(stagingStatus);
+            addProduction(production);
         }
     }
 
@@ -126,10 +135,10 @@ public class SimpleProductionStore implements ProductionStore {
             writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tEoR\n",
                           encodeTSV(production.getId()),
                           encodeTSV(production.getName()),
-                          encodeTSV(production.getUser()),
                           encodeTSV(production.getStagingPath()),
                           encodeProductionRequestTSV(production.getProductionRequest()),
                           encodeJobIdsTSV(production.getJobIds()),
+                          encodeTimesTSV(production.getWorkflow()),
                           encodeProductionStatusTSV(production.getProcessingStatus()),
                           encodeProductionStatusTSV(production.getStagingStatus()));
         }
@@ -145,6 +154,31 @@ public class SimpleProductionStore implements ProductionStore {
         }
         offpt[0] = off;
         return jobIds;
+    }
+
+    private Date[] decodeTimesTSV(String[] tokens, int[] offpt) {
+        int off = offpt[0];
+        Date[] dates = new Date[3];
+        for (int i = 0; i < dates.length; i++) {
+            String text = decodeTSV(tokens[off++]);
+            dates[i] = text != null ? new Date(Long.parseLong(text)) : null;
+        }
+        offpt[0] = off;
+        return dates;
+    }
+
+    private String encodeTimesTSV(WorkflowItem workflowItem) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(encodeTSV(encodeTime(workflowItem.getSubmitTime())));
+        sb.append("\t");
+        sb.append(encodeTSV(encodeTime(workflowItem.getStartTime())));
+        sb.append("\t");
+        sb.append(encodeTSV(encodeTime(workflowItem.getStopTime())));
+        return sb.toString();
+    }
+
+    private String encodeTime(Date time) {
+        return time != null ? Long.toString(time.getTime()) : null;
     }
 
     private String encodeJobIdsTSV(Object[] jobIds) {
@@ -163,6 +197,8 @@ public class SimpleProductionStore implements ProductionStore {
         StringBuilder sb = new StringBuilder();
         sb.append(productionRequest.getProductionType());
         sb.append("\t");
+        sb.append(productionRequest.getUserName());
+        sb.append("\t");
         sb.append(productionParameters.size());
         for (Map.Entry<String, String> entry : productionParameters.entrySet()) {
             sb.append("\t");
@@ -176,6 +212,7 @@ public class SimpleProductionStore implements ProductionStore {
     private static ProductionRequest decodeProductionRequestTSV(String[] tokens, int[] offpt) {
         int off = offpt[0];
         String productionType = decodeTSV(tokens[off++]);
+        String userName = decodeTSV(tokens[off++]);
         int numParams = Integer.parseInt(tokens[off++]);
         Map<String, String> productionParameters = new HashMap<String, String>();
         for (int i = 0; i < numParams; i++) {
@@ -184,7 +221,7 @@ public class SimpleProductionStore implements ProductionStore {
             productionParameters.put(name, value);
         }
         offpt[0] = off;
-        return new ProductionRequest(productionType, productionParameters);
+        return new ProductionRequest(productionType, userName, productionParameters);
     }
 
     static String encodeProductionStatusTSV(ProcessStatus processStatus) {
@@ -220,5 +257,53 @@ public class SimpleProductionStore implements ProductionStore {
             return null;
         }
         return tsv.replace("\\n", "\n").replace("\\t", "\t");
+    }
+
+    /**
+     * Creates the appropriate workflow for the given array of job identifiers.
+     * The default implementation creates a proxy workflow that can neither be submitted, killed nor
+     * updated.
+     *
+     *
+     *
+     * @param jobIds Array of job identifiers
+     * @param dates
+     * @param processStatus
+     * @return The workflow.
+     */
+    protected WorkflowItem createWorkflow(Object[] jobIds, Date[] dates, ProcessStatus processStatus) {
+        // todo - we need a factory that creates the correct Workflow for a production
+        ProxyWorkflowItem workflowItem = new ProxyWorkflowItem(jobIds);
+        workflowItem.setStatus(processStatus);
+        workflowItem.setSubmitTime(dates[0]);
+        workflowItem.setStartTime(dates[1]);
+        workflowItem.setStopTime(dates[2]);
+        return workflowItem;
+    }
+
+    private static class ProxyWorkflowItem extends AbstractWorkflowItem {
+        private final Object[] jobIds;
+
+        public ProxyWorkflowItem(Object[] jobIds) {
+            this.jobIds = jobIds;
+        }
+
+        @Override
+        public void submit() throws WorkflowException {
+        }
+
+        @Override
+        public void kill() throws WorkflowException {
+        }
+
+        @Override
+        public void updateStatus() {
+        }
+
+        @Deprecated
+        @Override
+        public Object[] getJobIds() {
+            return jobIds;
+        }
     }
 }

@@ -13,6 +13,11 @@ class MyBinningGrid implements BinningGrid {
     }
 
     @Override
+    public long getNumBins() {
+        return 0;
+    }
+
+    @Override
     public int getNumRows() {
         return 1;
     }
@@ -20,5 +25,10 @@ class MyBinningGrid implements BinningGrid {
     @Override
     public int getNumCols(int row) {
         return 1;
+    }
+
+    @Override
+    public double[] getCenterLonLat(long bin) {
+        return new double[0];
     }
 }

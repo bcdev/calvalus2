@@ -1,25 +1,16 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.beam.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapreduce.JobID;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
+import com.vividsolutions.jts.geom.Geometry;
 
-import java.io.File;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -27,75 +18,80 @@ import java.io.File;
  * @author MarcoZ
  * @author Norman
  */
-public class L2ProductionType implements ProductionType {
-    private HadoopProcessingService processingService;
-    private StagingService stagingService;
+public class L2ProductionType extends HadoopProductionType {
 
-    L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        this.processingService = processingService;
-        this.stagingService = stagingService;
-    }
-
-
-    @Override
-    public String getName() {
-        return "calvalus-level2";
+    public L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super("calvalus-level2", processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        throw new ProductionException("L2 production not implemented yet.");
+        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String productionName = createL2ProductionName(productionRequest);
+        final String userName = productionRequest.getUserName();
+
+        L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
+
+        // todo - if autoStaging=true, create sequential workflow and add staging job
+        boolean autoStaging = isAutoStaging(productionRequest);
+
+        return new Production(productionId,
+                              productionName,
+                              userName + "/" + productionId,
+                              productionRequest,
+                              workflowItem);
     }
 
     @Override
-    public Staging createStaging(Production production) throws ProductionException {
-        JobClient jobClient = processingService.getJobClient();
-        Object[] jobIds = production.getJobIds();
-        // todo - spawn separate thread, use StagingRequest/StagingResponse/WorkStatus
-        try {
-            RunningJob job = jobClient.getJob(org.apache.hadoop.mapred.JobID.downgrade((JobID) jobIds[0]));
-            String jobFile = job.getJobFile();
-            // System.out.printf("jobFile = %n%s%n", jobFile);
-            Configuration configuration = new Configuration(jobClient.getConf());
-            configuration.addResource(new Path(jobFile));
-
-            String jobOutputDir = configuration.get("mapred.output.dir");
-            // System.out.println("mapred.output.dir = " + jobOutputDir);
-            Path outputPath = new Path(jobOutputDir);
-            FileSystem fileSystem = outputPath.getFileSystem(jobClient.getConf());
-            FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return path.getName().endsWith(".seq");
-                }
-            });
-
-
-            File downloadDir = new File(stagingService.getStagingDir(), outputPath.getName());
-            if (!downloadDir.exists()) {
-                downloadDir.mkdirs();
-            }
-            for (FileStatus seqFile : seqFiles) {
-                Path seqProductPath = seqFile.getPath();
-                System.out.println("seqProductPath = " + seqProductPath);
-                StreamingProductReader reader = new StreamingProductReader(seqProductPath, jobClient.getConf());
-                Product product = reader.readProductNodes(null, null);
-                String dimapProductName = seqProductPath.getName().replaceFirst(".seq", ".dim");
-                System.out.println("dimapProductName = " + dimapProductName);
-                File productFile = new File(downloadDir, dimapProductName);
-                ProductIO.writeProduct(product, productFile, ProductIO.DEFAULT_FORMAT_NAME, false);
-            }
-            // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
-            // return outputPath.getName() + ".zip";
-        } catch (Exception e) {
-            throw new ProductionException("Error: " + e.getMessage(), e);
-        }
-        return null; // todo
+    protected Staging createUnsubmittedStaging(Production production) {
+        return new L2Staging(production,
+                             getProcessingService().getJobClient().getConf(),
+                             getStagingService().getStagingDir());
     }
 
-    @Override
-    public boolean accepts(ProductionRequest productionRequest) {
-        return getName().equalsIgnoreCase(productionRequest.getProductionType());
+    static String createL2ProductionName(ProductionRequest productionRequest) {
+        return String.format("Level 2 production using product set '%s' and L2 processor '%s'",
+                             productionRequest.getProductionParameter("inputProductSetId"),
+                             productionRequest.getProductionParameter("processorName"));
     }
 
+    L2WorkflowItem createWorkflowItem(String productionId,
+                                      ProductionRequest productionRequest) throws ProductionException {
+        Map<String, String> productionParameters = productionRequest.getProductionParameters();
+        productionRequest.ensureProductionParameterSet("processorBundleName");
+        productionRequest.ensureProductionParameterSet("processorBundleVersion");
+        productionRequest.ensureProductionParameterSet("processorName");
+        productionRequest.ensureProductionParameterSet("processorParameters");
+        productionRequest.ensureProductionParameterSet("dateStart");
+        productionRequest.ensureProductionParameterSet("dateStop");
+
+        String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
+        Date startDate = productionRequest.getDate("dateStart");
+        Date stopDate = productionRequest.getDate("dateStop");
+
+        Geometry roiGeometry = productionRequest.getRoiGeometry();
+        // todo - use geoRegion to filter input files
+        String[] inputFiles = getInputFiles(inputProductSetId, startDate, stopDate);
+        String outputDir = getOutputDir(productionId, productionRequest);
+
+        String processorBundle = String.format("%s-%s",
+                                               productionParameters.get("processorBundleName"),
+                                               productionParameters.get("processorBundleVersion"));
+        String processorName = productionParameters.get("processorName");
+        String processorParameters = productionParameters.get("processorParameters");
+
+        return new L2WorkflowItem(getProcessingService(),
+                                  productionId,
+                                  processorBundle,
+                                  processorName,
+                                  processorParameters,
+                                  roiGeometry,
+                                  inputFiles,
+                                  outputDir
+        );
+    }
+
+    String getOutputDir(String productionId, ProductionRequest productionRequest) {
+        return getProcessingService().getDataOutputPath() + "/" + productionRequest.getUserName() + "/" + productionId;
+    }
 }

@@ -2,6 +2,8 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.catalogue.ProductSet;
 
+import java.io.IOException;
+
 /**
  * The interface to the Calvalus production service.
  *
@@ -66,4 +68,16 @@ public interface ProductionService {
      * @throws ProductionException If a service error occurred.
      */
     void stageProductions(String ... productionIds) throws ProductionException;
+
+    // todo - actually the service shall update itself on a regular basis
+    /**
+     * A request to retrieve and update the status of all workflows.
+     */
+    void updateStatuses();
+
+    /**
+     * Indicates the service will no longer be used.
+     * Invocation has no additional effect if already closed.
+     */
+    void close() throws IOException;
 }

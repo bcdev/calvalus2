@@ -28,43 +28,63 @@ public interface Aggregator {
     double getOutputPropertyFillValue(int i);
 
     /**
-     * Initialises the spatial aggregation.
+     * Initialises the spatial aggregation vector.
      *
-     * @param vector The aggregation to initialise.
+     * @param ctx    The bin context which is shared between calls to {@link #initSpatial},
+     *               {@link #aggregateSpatial} and {@link #completeSpatial}.
+     * @param vector The aggregation vector to initialise.
      */
-    void initSpatial(WritableVector vector);
+    void initSpatial(BinContext ctx, WritableVector vector);
 
     /**
-     * Initialises the spatial aggregation.
+     * Aggregates a new observation to a spatial aggregation vector.
      *
-     * @param vector The aggregation to initialise.
-     */
-    void initTemporal(WritableVector vector);
-
-    /**
-     * Aggregates a new observation to a spatial aggregation.
-     *
+     * @param ctx               The bin context which is shared between calls to {@link #initSpatial},
+     *                          {@link #aggregateSpatial} and {@link #completeSpatial}.
      * @param observationVector The observation.
-     * @param spatialVector     The spatial aggregation to update.
+     * @param spatialVector     The spatial aggregation vector to update.
      */
-    void aggregateSpatial(Vector observationVector, WritableVector spatialVector);
+    void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector);
 
     /**
-     * Informs this aggregation instance that no more measurement will be added.
+     * Informs this aggregation instance that no more measurements will be added to the spatial vector.
      *
+     * @param ctx           The bin context which is shared between calls to {@link #initSpatial},
+     *                      {@link #aggregateSpatial} and {@link #completeSpatial}.
      * @param numSpatialObs The number of observations added so far.
-     * @param spatialVector The spatial aggregation to complete.
+     * @param spatialVector The spatial aggregation vector to complete.
      */
-    void completeSpatial(int numSpatialObs, WritableVector spatialVector);
+    void completeSpatial(BinContext ctx, int numSpatialObs, WritableVector spatialVector);
 
     /**
-     * Aggregates a spatial aggregation to a temporal aggregation.
+     * Initialises the temporal aggregation vector.
      *
+     * @param ctx    The bin context which is shared between calls to {@link #initTemporal},
+     *               {@link #aggregateTemporal} and {@link #completeTemporal}.
+     * @param vector The aggregation vector to initialise.
+     */
+    void initTemporal(BinContext ctx, WritableVector vector);
+
+    /**
+     * Aggregates a spatial aggregation to a temporal aggregation vector.
+     *
+     * @param ctx            The bin context which is shared between calls to {@link #initTemporal},
+     *                       {@link #aggregateTemporal} and {@link #completeTemporal}.
      * @param spatialVector  The spatial aggregation.
      * @param numSpatialObs  The number of total observations made in the spatial aggregation.
-     * @param temporalVector The temporal aggregation to be updated.
+     * @param temporalVector The temporal aggregation vector to be updated.
      */
-    void aggregateTemporal(Vector spatialVector, int numSpatialObs, WritableVector temporalVector);
+    void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector);
+
+    /**
+     * Informs this aggregation instance that no more measurements will be added to the temporal vector.
+     *
+     * @param ctx            The bin context which is shared between calls to {@link #initTemporal},
+     *                       {@link #aggregateTemporal} and {@link #completeTemporal}.
+     * @param numTemporalObs The number of observations added so far.
+     * @param temporalVector The temporal aggregation vector to complete.
+     */
+    void completeTemporal(BinContext ctx, int numTemporalObs, WritableVector temporalVector);
 
     /**
      * Computes the output vector from the temporal vector.

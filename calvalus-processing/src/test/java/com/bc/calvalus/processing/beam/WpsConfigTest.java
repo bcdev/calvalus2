@@ -89,6 +89,13 @@ public class WpsConfigTest {
         assertTrue(wpsConfig.getFormatterParameter().equals(""));
     }
 
+    @Test
+    public void getRoiWkt() throws Exception {
+        WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
+        String roiWkt = wpsConfig.getRoiWkt();
+        assertEquals("POLYGON((23.0 42.0, 11.0 42.0, 11.0 22.0, 23.0 22.0, 23.0 42.0)", roiWkt);
+    }
+
     private WpsConfig createFromResource(String name) throws IOException, SAXException, ParserConfigurationException {
         InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(name));
         String wpsXML = FileUtils.readText(inputStreamReader).trim();

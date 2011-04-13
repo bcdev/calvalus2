@@ -5,11 +5,18 @@
 
 <web-app>
 
+    <display-name>Calvalus Portal</display-name>
     <description>Calvalus Portal</description>
 
-    <display-name>Calvalus Portal</display-name>
+    <!-- Configuration properties for the Calvalus portal -->
 
-    <!-- Default servlet (used to customise directory listings) -->
+    <context-param>
+        <param-name>calvalus.properties</param-name>
+        <param-value>config/calvalus.properties</param-value>
+    </context-param>
+
+
+    <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
         <servlet-name>staging</servlet-name>
@@ -22,14 +29,17 @@
             <param-name>readonly</param-name>
             <param-value>true</param-value>
         </init-param>
+        <init-param>
+            <param-name>readmeFile</param-name>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextXsltFile</param-name>
+            <param-value>/staging/directory-listing.xsl</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-
-    <servlet-mapping>
-        <servlet-name>staging</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
 
     <!-- Backend servlet -->
 
@@ -38,22 +48,12 @@
         <servlet-class>com.bc.calvalus.portal.server.BackendServiceImpl</servlet-class>
     </servlet>
 
-    <servlet-mapping>
-        <servlet-name>backendServlet</servlet-name>
-        <url-pattern>/calvalus/backend</url-pattern>
-    </servlet-mapping>
-
     <!-- File upload & echo  servlet -->
 
     <servlet>
         <servlet-name>uploadServlet</servlet-name>
         <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
     </servlet>
-
-    <servlet-mapping>
-        <servlet-name>uploadServlet</servlet-name>
-        <url-pattern>/calvalus/upload</url-pattern>
-    </servlet-mapping>
 
     <!-- File download servlet -->
 
@@ -63,6 +63,20 @@
     </servlet>
 
     <servlet-mapping>
+        <servlet-name>staging</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>backendServlet</servlet-name>
+        <url-pattern>/calvalus/backend</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>uploadServlet</servlet-name>
+        <url-pattern>/calvalus/upload</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
         <servlet-name>downloadServlet</servlet-name>
         <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
@@ -70,37 +84,51 @@
     <!-- Default page to serve -->
 
     <welcome-file-list>
-        <welcome-file>calvalus.html</welcome-file>
+        <welcome-file>calvalus.jsp</welcome-file>
     </welcome-file-list>
 
-    <!-- Hadoop parameters -->
 
-    <context-param>
-        <param-name>calvalus.portal.productionServiceFactory.class</param-name>
-        <param-value>com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory</param-value>
-        <!--<param-value>com.bc.calvalus.production.local.LocalProductionServiceFactory</param-value>-->
-    </context-param>
+    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
+    <security-constraint>
+        <display-name>Calvalus Security Constraint</display-name>
+        <web-resource-collection>
+            <web-resource-name>Calvalus Protected Area</web-resource-name>
+            <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/calvalus.jsp</url-pattern>
+            <url-pattern>/staging</url-pattern>
+            <url-pattern>/staging/*</url-pattern>
+            <url-pattern>/calvalus/backend</url-pattern>
+            <url-pattern>/calvalus/upload</url-pattern>
+            <url-pattern>/calvalus/download</url-pattern>
+            <url-pattern>/calvalus/backend/*</url-pattern>
+            <url-pattern>/calvalus/upload/*</url-pattern>
+            <url-pattern>/calvalus/download/*</url-pattern>
+            <!-- If you list http methods, only those methods are protected -->
+            <http-method>DELETE</http-method>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+            <http-method>PUT</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <!-- Anyone with one of the listed roles may access this area -->
+            <role-name>calvalus-user</role-name>
+        </auth-constraint>
+    </security-constraint>
 
-    <!-- value is relative to the context's directory -->
-    <context-param>
-        <param-name>calvalus.portal.staging.path</param-name>
-        <param-value>staging</param-value>
-    </context-param>
+    <!-- Default login configuration uses form-based authentication -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>Calvalus</realm-name>
+        <form-login-config>
+            <form-login-page>/login.jsp</form-login-page>
+            <form-error-page>/login-failure.jsp</form-error-page>
+        </form-login-config>
+    </login-config>
 
-    <!-- value is relative to the context's directory -->
-    <context-param>
-        <param-name>calvalus.portal.upload.path</param-name>
-        <param-value>uploads</param-value>
-    </context-param>
+    <!-- Security roles referenced by this web application -->
+    <security-role>
+        <role-name>calvalus-user</role-name>
+    </security-role>
 
-    <context-param>
-        <param-name>calvalus.hadoop.fs.default.name</param-name>
-        <param-value>hdfs://cvmaster00:9000</param-value>
-    </context-param>
-
-    <context-param>
-        <param-name>calvalus.hadoop.mapred.job.tracker</param-name>
-        <param-value>cvmaster00:9001</param-value>
-    </context-param>
 
 </web-app>

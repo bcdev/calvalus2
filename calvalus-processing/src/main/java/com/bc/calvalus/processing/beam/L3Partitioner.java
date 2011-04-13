@@ -45,7 +45,7 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = new ProcessingConfiguration(conf).getLevel3Parameters();
+        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETER);
         L3Config l3Config = L3Config.create(level3Parameters);
         setL3Config(l3Config);
     }

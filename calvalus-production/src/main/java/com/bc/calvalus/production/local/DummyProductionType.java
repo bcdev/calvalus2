@@ -2,10 +2,13 @@ package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
@@ -37,21 +40,47 @@ class DummyProductionType implements ProductionType {
         if (name == null) {
             name = "Doing something";
         }
-        String user = productionRequest.getProductionParameter("user");
-        if (user == null) {
-            user = "someone";
-        }
 
-        String jobId = processingService.submitJob();
+        Workflow.Sequential sequential = new Workflow.Sequential();
+        sequential.add(new AbstractWorkflowItem() {
+            String jobId;
+
+            @Override
+            public void submit() {
+                jobId = processingService.submitJob();
+            }
+
+            @Override
+            public void kill() throws WorkflowException {
+                try {
+                    processingService.killJob(jobId);
+                } catch (IOException e) {
+                    throw new WorkflowException("Failed to kill job: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public void updateStatus() {
+                if (jobId != null) {
+                    ProcessStatus jobStatus = processingService.getJobStatus(jobId);
+                    if (jobStatus != null) {
+                        setStatus(jobStatus);
+                    }
+                }
+            }
+
+            @Override
+            public Object[] getJobIds() {
+                return jobId != null ? new Object[]{jobId} : new Object[0];
+            }
+        });
 
         String productionId = Production.createId(productionRequest.getProductionType());
-
         return new Production(productionId,
                               name,
-                              user,
                               productionId,
                               productionRequest,
-                              jobId);
+                              sequential);
     }
 
     @Override

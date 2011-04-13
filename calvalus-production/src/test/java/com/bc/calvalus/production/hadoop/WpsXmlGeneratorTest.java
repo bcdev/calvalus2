@@ -1,9 +1,14 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.beam.WpsXmlGenerator;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.TestProcessingService;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -13,13 +18,26 @@ import static org.junit.Assert.*;
 public class WpsXmlGeneratorTest {
 
     @Test
-    public void testL3WpsXml() throws ProductionException {
-        L3ProcessingRequestFactory l3ProcessingRequestFactory = new L3ProcessingRequestFactory(new TestProcessingService()
-        );
-        ProductionRequest productionRequest = L3ProcessingRequestTest.createValidL3ProductionRequest();
-        L3ProcessingRequest[] processingRequests = l3ProcessingRequestFactory.createProcessingRequests("A25F", "ewa", productionRequest);
+    public void testL3WpsXml() throws WorkflowException, ProductionException {
+        ProductionRequest productionRequest = L3ProductionTypeTest.createValidL3ProductionRequest();
 
-        String xml = new WpsXmlGenerator().createL3WpsXml("ID_pi-pa-po", "Wonderful L3", processingRequests[0]);
+        L3Config binningConfig = L3ProductionType.createBinningConfig(productionRequest);
+
+        Map<String, Object> templateParameters = new HashMap<String, Object>(productionRequest.getProductionParameters());
+        templateParameters.put("productionId", "ID_pi-pa-po");
+        templateParameters.put("productionType", "A25F");
+        templateParameters.put("productionName", "Wonderful L3");
+        templateParameters.put("binningParameters", binningConfig);
+        templateParameters.put("regionWkt", productionRequest.getRoiGeometry().toString());
+        templateParameters.put("inputFiles", new String[]{
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F2.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F3.N1",
+                "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F4.N1",
+        });
+        templateParameters.put("outputDir", "hdfs://cvmaster00:9000/calvalus/output/ewa/A25F_0");
+
+        String xml = new WpsXmlGenerator().createL3WpsXml(templateParameters);
         assertNotNull(xml);
 
         // System.out.println(xml);
@@ -42,6 +60,9 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F3.N1\"/>"));
         assertTrue(xml.contains("<wps:Reference xlink:href=\"hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F4.N1\"/>"));
 
+        assertTrue(xml.contains("<ows:Identifier>calvalus.geometry</ows:Identifier>"));
+        assertTrue(xml.contains("<wps:LiteralData>POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))</wps:LiteralData>"));
+
         assertTrue(xml.contains("<ows:Identifier>calvalus.l2.operator</ows:Identifier>"));
         assertTrue(xml.contains("<wps:LiteralData>BandMaths</wps:LiteralData>"));
 
@@ -51,10 +72,9 @@ public class WpsXmlGeneratorTest {
         assertTrue(xml.contains("<ows:Identifier>calvalus.l3.parameters</ows:Identifier>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<maskExpr>NOT INVALID</maskExpr>"));
-        assertTrue(xml.contains("<fillValue>NaN</fillValue>"));
-        assertTrue(xml.contains("<bbox>5,50,25,60</bbox>"));
         assertTrue(xml.contains("<numRows>4320</numRows>"));
         assertTrue(xml.contains("<superSampling>1</superSampling>"));
+        assertTrue(xml.contains("<fillValue>-999.9</fillValue>"));
 
     }
 
