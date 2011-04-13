@@ -8,39 +8,13 @@
     <display-name>Calvalus Portal</display-name>
     <description>Calvalus Portal</description>
 
-    <!-- Hadoop parameters -->
-
-    <!--
-        Possible values are:
-        com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory (default)
-        com.bc.calvalus.production.local.LocalProductionServiceFactory
-     -->
-    <context-param>
-        <param-name>calvalus.portal.productionServiceFactory.class</param-name>
-        <param-value>${calvalus.portal.productionServiceFactory.class}</param-value>
-    </context-param>
-
-    <!-- value is relative to the context's directory -->
-    <context-param>
-        <param-name>calvalus.portal.staging.path</param-name>
-        <param-value>staging</param-value>
-    </context-param>
-
-    <!-- value is relative to the context's directory -->
-    <context-param>
-        <param-name>calvalus.portal.upload.path</param-name>
-        <param-value>uploads</param-value>
-    </context-param>
+    <!-- Configuration properties for the Calvalus portal -->
 
     <context-param>
-        <param-name>calvalus.hadoop.fs.default.name</param-name>
-        <param-value>hdfs://cvmaster00:9000</param-value>
+        <param-name>calvalus.properties</param-name>
+        <param-value>config/calvalus.properties</param-value>
     </context-param>
 
-    <context-param>
-        <param-name>calvalus.hadoop.mapred.job.tracker</param-name>
-        <param-value>cvmaster00:9001</param-value>
-    </context-param>
 
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
