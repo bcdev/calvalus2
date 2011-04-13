@@ -115,8 +115,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
         synchronized (jobStatusMap) {
             jobStatusMap.clear();
-            for (JobStatus jobStatus : jobStatuses) {
-                jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
+            if (jobStatuses != null) {
+                for (JobStatus jobStatus : jobStatuses) {
+                    jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
+                }
             }
         }
     }
