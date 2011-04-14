@@ -134,6 +134,7 @@
                         <additionalClasspathElement>${project.build.sourceDirectory}</additionalClasspathElement>
                         <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
                     </additionalClasspathElements>
+                    <skipTests>true</skipTests>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <forkMode>always</forkMode>
 
@@ -196,6 +197,7 @@
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>
                 <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.0.6</version>
                 <configuration>
                     <wait>true</wait>
                     <container>
@@ -217,6 +219,7 @@
                                 <groupId>com.bc.calvalus</groupId>
                                 <artifactId>calvalus-portal</artifactId>
                                 <type>war</type>
+                                <!-- Use the following config to change the name of the deployed app. -->
                                 <!--<properties>-->
                                     <!--<context>calvalus</context>-->
                                 <!--</properties>-->
@@ -225,34 +228,34 @@
                     </deployer>
                 </configuration>
                 <executions>
+                    <!--<execution>-->
+                        <!--<id>start-container</id>-->
+                        <!--<phase>pre-integration-test</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>deployer-deploy</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                    <!--<execution>-->
+                        <!--<id>stop-container</id>-->
+                        <!--<phase>post-integration-test</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>deployer-undeploy</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
                     <execution>
-                        <id>start-container</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>deployer-deploy</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-container</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>deployer-undeploy</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify-deploy</id>
+                        <id>deploy-to-tomcat</id>
                         <phase>install</phase>
                         <goals>
-                            <goal>deployer-deploy</goal>
+                            <goal>redeploy</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>clean-undeploy</id>
-                        <phase>pre-clean</phase>
-                        <goals>
-                            <goal>deployer-undeploy</goal>
-                        </goals>
-                    </execution>
+                    <!--<execution>-->
+                        <!--<id>clean-undeploy</id>-->
+                        <!--<phase>pre-clean</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>deployer-undeploy</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
                 </executions>
             </plugin>
 

@@ -25,9 +25,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -44,7 +41,6 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    private static final String PRODUCTION_SERVICE_FACTORY_CLASS = "calvalus.portal.productionServiceFactory.class";
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
     private ProductionService productionService;
@@ -59,7 +55,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     ServletContext servletContext = getServletContext();
                     initLogger(servletContext);
                     initBackendConfig(servletContext);
-                    initProductionService(servletContext);
+                    initProductionService();
                     startObservingProductionService();
                 }
             }
@@ -225,12 +221,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         backendConfig = new BackendConfig(servletContext);
     }
 
-    private void initProductionService(ServletContext servletContext) throws ServletException {
-        String className = backendConfig.getProperty(PRODUCTION_SERVICE_FACTORY_CLASS);
+    private void initProductionService() throws ServletException {
         try {
-            Class<?> productionServiceFactoryClass = Class.forName(className);
+            Class<?> productionServiceFactoryClass = Class.forName(backendConfig.getProductionServiceFactoryClassName());
             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
-            productionService = productionServiceFactory.create(getServiceConfiguration(servletContext),
+            productionService = productionServiceFactory.create(backendConfig.getConfigMap(),
                                                                 backendConfig.getLocalContextDir(),
                                                                 backendConfig.getLocalStagingDir());
         } catch (Exception e) {
@@ -246,17 +241,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 updateProductionStatuses();
             }
         }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
-    }
-
-    private static Map<String, String> getServiceConfiguration(ServletContext servletContext) {
-        Map<String, String> map = new HashMap<String, String>();
-        Enumeration elements = servletContext.getInitParameterNames();
-        while (elements.hasMoreElements()) {
-            String name = (String) elements.nextElement();
-            String value = servletContext.getInitParameter(name);
-            map.put(name, value);
-        }
-        return map;
     }
 
     private void updateProductionStatuses() {

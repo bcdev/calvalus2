@@ -36,8 +36,7 @@ import java.util.List;
  * @author Norman
  */
 public class ManageProductionsView extends PortalView {
-    public static final String DOWNLOAD_ACTION_URL = GWT.getModuleBaseURL() + "download";
-    public static final int ID = 3;
+    public static final String ID = ManageProductionsView.class.getName();
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
     private static final String STAGE = "Stage";
@@ -75,13 +74,29 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
+        TextColumn<GsProduction> idColumn = new TextColumn<GsProduction>() {
+            @Override
+            public String getValue(GsProduction production) {
+                return production.getId();
+            }
+        };
+        idColumn.setSortable(false);
+
         TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
             @Override
             public String getValue(GsProduction production) {
-                return production.getName() + " (requested by '" + production.getUser() + "')";
+                return production.getName();
             }
         };
         nameColumn.setSortable(true);
+
+        TextColumn<GsProduction> userColumn = new TextColumn<GsProduction>() {
+            @Override
+            public String getValue(GsProduction production) {
+                return production.getUser();
+            }
+        };
+        userColumn.setSortable(true);
 
         TextColumn<GsProduction> productionStatusColumn = new TextColumn<GsProduction>() {
             @Override
@@ -148,7 +163,9 @@ public class ManageProductionsView extends PortalView {
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(idColumn, "Production ID");
         productionTable.addColumn(nameColumn, "Production Name");
+        productionTable.addColumn(userColumn, "User");
         productionTable.addColumn(productionStatusColumn, "Processing Status");
         productionTable.addColumn(productionTimeColumn, "Processing Time");
         productionTable.addColumn(stagingStatusColumn, "Staging Status");
@@ -217,7 +234,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return ID;
     }
 

@@ -86,7 +86,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             Job job = createJob();
             JobID jobId = submitJob(job);
             setJobId(jobId);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
     }

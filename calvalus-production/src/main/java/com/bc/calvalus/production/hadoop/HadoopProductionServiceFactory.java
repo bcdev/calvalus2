@@ -31,12 +31,14 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
 
+        final File calvalusDataDir = getCalvalusDataDir(localContextDir);
+
         JobConf jobConf = createJobConf(serviceConfiguration);
         try {
             JobClient jobClient = new JobClient(jobConf);
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             ProductionStore productionStore = new SimpleProductionStore(processingService.getJobIdFormat(),
-                                                                        new File(localContextDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
+                                                                        new File(calvalusDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
             StagingService stagingService = new SimpleStagingService(localStagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);
@@ -46,6 +48,20 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
+    }
+
+    private File getCalvalusDataDir(File localContextDir) {
+        final File calvalusDataDir;
+        final String userHome = System.getProperty("user.home");
+        if (userHome != null) {
+            calvalusDataDir = new File(userHome, ".calvalus");
+            if (!calvalusDataDir.exists()) {
+                calvalusDataDir.mkdir();
+            }
+        } else {
+            calvalusDataDir = localContextDir;
+        }
+        return calvalusDataDir;
     }
 
     private static JobConf createJobConf(Map<String, String> hadoopProp) {

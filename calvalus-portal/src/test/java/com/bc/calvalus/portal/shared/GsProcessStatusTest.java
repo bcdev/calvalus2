@@ -1,12 +1,15 @@
 package com.bc.calvalus.portal.shared;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import junit.framework.TestCase;
 
-public class GsProcessStatusTest extends GWTTestCase {
+public class GsProcessStatusTest extends TestCase {
 
-    @Override
-    public String getModuleName() {
-        return "com.bc.calvalus.portal.CalvalusPortalJUnit";
+    public void testDefaultConstructorForGWTSerialisation() {
+        GsProcessStatus processStatus = new GsProcessStatus();
+        assertEquals("", processStatus.getMessage());
+        assertEquals(0, processStatus.getProcessingSeconds());
+        assertEquals(GsProcessState.UNKNOWN, processStatus.getState());
+        assertEquals(0.0F, processStatus.getProgress(), 1e-5F);
     }
 
     public void testIsDone() {

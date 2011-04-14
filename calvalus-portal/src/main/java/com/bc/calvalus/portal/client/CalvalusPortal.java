@@ -48,6 +48,7 @@ public class CalvalusPortal implements EntryPoint {
     private ListDataProvider<GsProduction> productions;
     private Map<String, GsProduction> productionsMap;
     private PortalView[] views;
+    private Map<String, Integer> viewTabIndices;
     private HorizontalPanel mainPanel;
 
     public CalvalusPortal() {
@@ -80,12 +81,9 @@ public class CalvalusPortal implements EntryPoint {
         return backendService;
     }
 
-    public void showView(int id) {
-        tabPanel.selectTab(id);
-    }
-
-    public PortalView getView(int id) {
-        return views[id];
+    public void showView(String id) {
+        Integer integer = viewTabIndices.get(id);
+        tabPanel.selectTab(integer);
     }
 
     private void maybeInitFrontend() {
@@ -96,14 +94,21 @@ public class CalvalusPortal implements EntryPoint {
     }
 
     private void initFrontend() {
+
         views = new PortalView[]{
-                new ManageProductSetsView(this),
+// todo nf/nf 20110414 add ManageProductSetsView
+//                new ManageProductSetsView(this),
                 new OrderL2ProductionView(this),
                 new OrderL3ProductionView(this),
                 new ManageProductionsView(this),
-                new FrameView(this, 4, "File System", "http://cvmaster00:50070/dfshealth.jsp"),
-                new FrameView(this, 5, "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
+                new FrameView(this, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"),
+                new FrameView(this, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
         };
+
+        viewTabIndices = new HashMap<String, Integer>();
+        for (int i = 0; i < views.length; i++) {
+            viewTabIndices.put(views[i].getViewId(), i);
+        }
 
         tabPanel = new DecoratedTabPanel();
         tabPanel.setWidth("640px");
@@ -232,8 +237,7 @@ public class CalvalusPortal implements EntryPoint {
     public void orderProduction(GsProductionRequest request) {
         getBackendService().orderProduction(request, new AsyncCallback<GsProductionResponse>() {
             public void onSuccess(final GsProductionResponse response) {
-                ManageProductionsView view = (ManageProductionsView) getView(ManageProductionsView.ID);
-                view.show();
+                showView(ManageProductionsView.ID);
             }
 
             public void onFailure(Throwable caught) {

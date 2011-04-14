@@ -96,7 +96,11 @@ public class SimpleProductionStore implements ProductionStore {
 
     private void store(File databaseFile) throws IOException {
         // System.out.printf("%s: Storing %d production(s) to %s%n", this, productionsList.size(), databaseFile.getAbsolutePath());
-        File bakFile = new File(databaseFile.getParentFile(), databaseFile.getName() + ".bak");
+        File parentFile = databaseFile.getParentFile();
+        if (parentFile != null && !parentFile.exists()) {
+            parentFile.mkdirs();
+        }
+        File bakFile = new File(parentFile, databaseFile.getName() + ".bak");
         bakFile.delete();
         databaseFile.renameTo(bakFile);
         PrintWriter writer = new PrintWriter(new FileWriter(databaseFile));

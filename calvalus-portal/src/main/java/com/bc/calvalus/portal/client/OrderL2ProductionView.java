@@ -18,7 +18,7 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderL2ProductionView extends PortalView {
-    public static final int ID = 1;
+    public static final String ID = OrderL2ProductionView.class.getName();
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm processingForm;
     private L2ProductFilterForm productFilterForm;
@@ -54,7 +54,7 @@ public class OrderL2ProductionView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return ID;
     }
 
@@ -65,7 +65,7 @@ public class OrderL2ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("calvalus-level2", "ewa", getValueMap());
+        return new GsProductionRequest("calvalus-level2", getValueMap());
     }
 
     // todo - Provide JUnit test for this method

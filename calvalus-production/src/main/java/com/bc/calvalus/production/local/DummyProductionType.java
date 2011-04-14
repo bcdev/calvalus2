@@ -75,10 +75,11 @@ class DummyProductionType implements ProductionType {
             }
         });
 
+        String userName = productionRequest.getUserName();
         String productionId = Production.createId(productionRequest.getProductionType());
         return new Production(productionId,
                               name,
-                              productionId,
+                              userName + "/" + productionId,
                               productionRequest,
                               sequential);
     }
