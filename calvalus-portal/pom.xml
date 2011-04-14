@@ -134,6 +134,7 @@
                         <additionalClasspathElement>${project.build.sourceDirectory}</additionalClasspathElement>
                         <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
                     </additionalClasspathElements>
+                    <skipTests>true</skipTests>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <forkMode>always</forkMode>
 
