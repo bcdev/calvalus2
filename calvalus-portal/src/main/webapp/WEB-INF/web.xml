@@ -19,7 +19,7 @@
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
-        <servlet-name>staging</servlet-name>
+        <servlet-name>stagingServlet</servlet-name>
         <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
         <init-param>
             <param-name>listings</param-name>
@@ -48,7 +48,7 @@
         <servlet-class>com.bc.calvalus.portal.server.BackendServiceImpl</servlet-class>
     </servlet>
 
-    <!-- File upload & echo  servlet -->
+    <!-- File upload & echo servlet -->
 
     <servlet>
         <servlet-name>uploadServlet</servlet-name>
@@ -63,7 +63,7 @@
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>staging</servlet-name>
+        <servlet-name>stagingServlet</servlet-name>
         <url-pattern>/staging/*</url-pattern>
     </servlet-mapping>
 
