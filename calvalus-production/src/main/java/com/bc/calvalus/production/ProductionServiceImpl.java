@@ -122,7 +122,8 @@ public class ProductionServiceImpl implements ProductionService {
             try {
                 production.getWorkflow().submit();
             } catch (WorkflowException e) {
-                throw new ProductionException(String.format("Failed to sumbit production '%s'workflow: %s", production.getId(), e.getMessage()), e);
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                throw new ProductionException(String.format("Failed to submit production '%s': %s", production.getId(), e.getMessage()), e);
             }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
