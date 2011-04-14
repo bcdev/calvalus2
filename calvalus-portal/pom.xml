@@ -196,6 +196,7 @@
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>
                 <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.0.6</version>
                 <configuration>
                     <wait>true</wait>
                     <container>
@@ -217,9 +218,9 @@
                                 <groupId>com.bc.calvalus</groupId>
                                 <artifactId>calvalus-portal</artifactId>
                                 <type>war</type>
-                                <!--<properties>-->
-                                    <!--<context>calvalus</context>-->
-                                <!--</properties>-->
+                                <properties>
+                                    <context>calvalus</context>
+                                </properties>
                             </deployable>
                         </deployables>
                     </deployer>
