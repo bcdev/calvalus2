@@ -74,13 +74,29 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
+        TextColumn<GsProduction> idColumn = new TextColumn<GsProduction>() {
+            @Override
+            public String getValue(GsProduction production) {
+                return production.getId();
+            }
+        };
+        idColumn.setSortable(false);
+
         TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
             @Override
             public String getValue(GsProduction production) {
-                return production.getName() + " (requested by '" + production.getUser() + "')";
+                return production.getName();
             }
         };
         nameColumn.setSortable(true);
+
+        TextColumn<GsProduction> userColumn = new TextColumn<GsProduction>() {
+            @Override
+            public String getValue(GsProduction production) {
+                return production.getUser();
+            }
+        };
+        userColumn.setSortable(true);
 
         TextColumn<GsProduction> productionStatusColumn = new TextColumn<GsProduction>() {
             @Override
@@ -147,7 +163,9 @@ public class ManageProductionsView extends PortalView {
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(idColumn, "Production ID");
         productionTable.addColumn(nameColumn, "Production Name");
+        productionTable.addColumn(userColumn, "User");
         productionTable.addColumn(productionStatusColumn, "Processing Status");
         productionTable.addColumn(productionTimeColumn, "Processing Time");
         productionTable.addColumn(stagingStatusColumn, "Staging Status");
