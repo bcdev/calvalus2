@@ -23,7 +23,7 @@ import org.gwtopenmaps.openlayers.client.layer.WMSParams;
  */
 public class ManageProductSetsView extends PortalView {
 
-    public static final int ID = 0;
+    public static final String ID = ManageProductSetsView.class.getName();
     private MapWidget mapWidget;
 
 
@@ -75,7 +75,7 @@ public class ManageProductSetsView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return ID;
     }
 

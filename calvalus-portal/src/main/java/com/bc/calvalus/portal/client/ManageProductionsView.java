@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class ManageProductionsView extends PortalView {
     public static final String DOWNLOAD_ACTION_URL = GWT.getModuleBaseURL() + "download";
-    public static final int ID = 3;
+    public static final String ID = ManageProductionsView.class.getName();
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
     private static final String STAGE = "Stage";
@@ -217,7 +217,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return ID;
     }
 

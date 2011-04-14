@@ -18,7 +18,7 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderL3ProductionView extends PortalView {
-    public static final int ID = 2;
+    public static final String ID = OrderL3ProductionView.class.getName();
     private FlexTable widget;
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm l2ProcessorForm;
@@ -56,7 +56,7 @@ public class OrderL3ProductionView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return ID;
     }
 

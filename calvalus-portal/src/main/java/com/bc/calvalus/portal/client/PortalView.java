@@ -28,11 +28,9 @@ public abstract class PortalView implements IsWidget {
     public void handlePortalStartedUp() {
     }
 
-    public abstract int getViewId();
+    public String getViewId() {
+        return getClass().getName();
+    }
 
     public abstract String getTitle();
-
-    public void show()  {
-         getPortal().showView(getViewId());
-    }
 }

@@ -10,12 +10,12 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class FrameView extends PortalView {
 
-    private int id;
+    private String id;
     private String title;
     private String url;
     private Frame widget;
 
-    public FrameView(CalvalusPortal portal, int id, String title, String url) {
+    public FrameView(CalvalusPortal portal, String id, String title, String url) {
         super(portal);
         this.id = id;
         this.title = title;
@@ -31,7 +31,7 @@ public class FrameView extends PortalView {
     }
 
     @Override
-    public int getViewId() {
+    public String getViewId() {
         return id;
     }
 

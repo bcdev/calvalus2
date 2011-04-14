@@ -138,8 +138,8 @@ public class MainMenuModel implements TreeViewModel {
         {
             Category category = new Category("Cluster");
             catList.add(category);
-            category.addItem(new FrameView(portal, 100, "File System", "http://cvmaster00:50070/dfshealth.jsp"));
-            category.addItem(new FrameView(portal, 101, "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"));
+            category.addItem(new FrameView(portal, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"));
+            category.addItem(new FrameView(portal, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"));
         }
 
      }
