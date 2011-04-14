@@ -219,9 +219,10 @@
                                 <groupId>com.bc.calvalus</groupId>
                                 <artifactId>calvalus-portal</artifactId>
                                 <type>war</type>
-                                <properties>
-                                    <context>calvalus</context>
-                                </properties>
+                                <!-- Use the following config to change the name of the deployed app. -->
+                                <!--<properties>-->
+                                    <!--<context>calvalus</context>-->
+                                <!--</properties>-->
                             </deployable>
                         </deployables>
                     </deployer>
