@@ -78,8 +78,7 @@ public class OrderL3ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public GsProductionRequest getProductionRequest() {
-        HashMap<String, String> parameters = getValueMap();
-        return new GsProductionRequest("calvalus-level3", "ewa", parameters);
+        return new GsProductionRequest("calvalus-level3", getValueMap());
     }
 
     // todo - Provide JUnit test for this method
