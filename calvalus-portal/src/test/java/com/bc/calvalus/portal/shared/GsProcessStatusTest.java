@@ -4,6 +4,14 @@ import junit.framework.TestCase;
 
 public class GsProcessStatusTest extends TestCase {
 
+    public void testDefaultConstructorForGWTSerialisation() {
+        GsProcessStatus processStatus = new GsProcessStatus();
+        assertEquals("", processStatus.getMessage());
+        assertEquals(0, processStatus.getProcessingSeconds());
+        assertEquals(GsProcessState.UNKNOWN, processStatus.getState());
+        assertEquals(0.0F, processStatus.getProgress(), 1e-5F);
+    }
+
     public void testIsDone() {
         assertEquals(false, new GsProcessStatus(GsProcessState.SCHEDULED).isDone());
         assertEquals(false, new GsProcessStatus(GsProcessState.RUNNING).isDone());
