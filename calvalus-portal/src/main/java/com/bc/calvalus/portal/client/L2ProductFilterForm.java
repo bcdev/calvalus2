@@ -45,7 +45,7 @@ public class L2ProductFilterForm implements IsWidget {
 
         maxDate = new DateBox();
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        maxDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+        maxDate.setValue(DATE_FORMAT.parse("2008-06-01"));
         maxDate.setWidth("6em");
 
         HorizontalPanel timeRange = new HorizontalPanel();
