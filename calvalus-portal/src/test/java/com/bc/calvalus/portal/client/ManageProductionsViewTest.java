@@ -3,14 +3,11 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.GsProcessState;
 import com.bc.calvalus.portal.shared.GsProcessStatus;
 import com.bc.calvalus.portal.shared.GsProduction;
-import com.google.gwt.junit.client.GWTTestCase;
+import junit.framework.TestCase;
 
 import static com.bc.calvalus.portal.shared.GsProcessState.*;
 
-public class ManageProductionsViewTest extends GWTTestCase {
-    public String getModuleName() {
-        return "com.bc.calvalus.portal.CalvalusPortalJUnit";
-    }
+public class ManageProductionsViewTest  extends TestCase {
 
     public void testGetAction() {
         assertEquals(null, getAction(UNKNOWN, UNKNOWN));
@@ -77,7 +74,7 @@ public class ManageProductionsViewTest extends GWTTestCase {
 
     private GsProduction createProduction(GsProcessState productionState, GsProcessState stagingState, boolean autoStaging) {
         return new GsProduction("id", "name", "user", "outputUrl", autoStaging,
-                                                                new GsProcessStatus(productionState),
-                                                                new GsProcessStatus(stagingState));
+                                new GsProcessStatus(productionState),
+                                new GsProcessStatus(stagingState));
     }
 }

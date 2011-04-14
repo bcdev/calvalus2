@@ -1,13 +1,8 @@
 package com.bc.calvalus.portal.shared;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import junit.framework.TestCase;
 
-public class GsProcessStatusTest extends GWTTestCase {
-
-    @Override
-    public String getModuleName() {
-        return "com.bc.calvalus.portal.CalvalusPortalJUnit";
-    }
+public class GsProcessStatusTest extends TestCase {
 
     public void testIsDone() {
         assertEquals(false, new GsProcessStatus(GsProcessState.SCHEDULED).isDone());
