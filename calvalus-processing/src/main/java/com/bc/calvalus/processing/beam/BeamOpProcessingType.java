@@ -187,6 +187,7 @@ public class BeamOpProcessingType {
         configuration.set("mapred.reduce.tasks.speculative.execution", "false");
         //conf.set("mapred.child.java.opts", "-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
+        job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
 
         addBundleToClassPath(BEAM_BUNDLE, configuration);
         addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BUNDLE), configuration);
