@@ -23,15 +23,16 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Demo view that shows the list of productions taking place
@@ -86,24 +87,36 @@ public class ManageProductionsView extends PortalView {
 
         };
         idColumn.setFieldUpdater(new FieldUpdater<GsProduction, String>() {
-            public void update(int index, GsProduction production, String value) {
-                getPortal().getBackendService().getProductionRequest(production.getId(),
-                                                                     new AsyncCallback<GsProductionRequest>() {
-                                                                         @Override
-                                                                         public void onFailure(Throwable caught) {
-                                                                         }
+            public void update(final int index, final GsProduction production, final String value) {
+                AsyncCallback<GsProductionRequest> callback = new AsyncCallback<GsProductionRequest>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                    }
 
-                                                                         @Override
-                                                                         public void onSuccess(GsProductionRequest result) {
-                                                                             Map<String,String> productionParameters = result.getProductionParameters();
-                                                                             Set<Map.Entry<String,String>> entries = productionParameters.entrySet();
-                                                                             StringBuilder sb = new StringBuilder();
-                                                                             for (Map.Entry<String, String> entry: entries){
-                                                                                sb.append(entry.getKey() + " = <b>" + entry.getValue() + "</b><br/>");
-                                                                             }
-                                                                             Dialog.showMessage(sb.toString());
-                                                                         }
-                                                                     });
+                    @Override
+                    public void onSuccess(GsProductionRequest result) {
+                        FlexTable flexTable = new FlexTable();
+                        FlexTable.FlexCellFormatter flexCellFormatter = flexTable.getFlexCellFormatter();
+                        flexCellFormatter.setColSpan(0, 0, 2);
+                        flexTable.setCellSpacing(5);
+                        flexTable.setCellPadding(3);
+                        flexTable.setHTML(0, 0, "<i>Production type: " + result.getProductionType() + "</i>");
+                        flexTable.setHTML(1, 0, "<b>Parameter Name</b>");
+                        flexTable.setHTML(1, 1, "<b>Parameter Value</b>");
+                        Map<String, String> productionParameters = result.getProductionParameters();
+                        ArrayList<String> names = new ArrayList<String>(productionParameters.keySet());
+                        Collections.sort(names);
+                        int i = 2;
+                        for (String name : names) {
+                            flexTable.setHTML(i, 0, "<code>" + name + " = </code>");
+                            flexTable.setHTML(i, 1, "<code>" + productionParameters.get(name) + "</code>");
+                            i++;
+                        }
+                        ScrollPanel scrollPanel = new ScrollPanel(flexTable);
+                        Dialog.showMessage(production.getId(), scrollPanel);
+                    }
+                };
+                getPortal().getBackendService().getProductionRequest(production.getId(), callback);
             }
         });
         idColumn.setSortable(false);

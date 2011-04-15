@@ -48,12 +48,12 @@ public class Dialog {
         this.buttonTypes = buttonTypes;
     }
 
-    public static void showMessage(String htmlMessage) {
-        new Dialog("Message", new HTML(htmlMessage), ButtonType.CLOSE).show();
+    public static void showMessage(String title, String htmlMessage) {
+        new Dialog(title, new HTML(htmlMessage), ButtonType.CLOSE).show();
     }
 
-    public static void showWarning(String htmlMessage) {
-        new Dialog("Warning", new HTML(htmlMessage), ButtonType.CLOSE).show();
+    public static void showMessage(String title, Widget message) {
+        new Dialog(title, message, ButtonType.CLOSE).show();
     }
 
     public ButtonType show() {
