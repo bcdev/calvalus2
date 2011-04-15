@@ -3,9 +3,11 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.GsProcessState;
 import com.bc.calvalus.portal.shared.GsProcessStatus;
 import com.bc.calvalus.portal.shared.GsProduction;
+import com.bc.calvalus.portal.shared.GsProductionRequest;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -28,6 +30,8 @@ import com.google.gwt.view.client.SelectionModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Demo view that shows the list of productions taking place
@@ -74,12 +78,34 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
-        TextColumn<GsProduction> idColumn = new TextColumn<GsProduction>() {
+        Column<GsProduction, String> idColumn = new Column<GsProduction, String>(new ClickableTextCell()) {
             @Override
             public String getValue(GsProduction production) {
                 return production.getId();
             }
+
         };
+        idColumn.setFieldUpdater(new FieldUpdater<GsProduction, String>() {
+            public void update(int index, GsProduction production, String value) {
+                getPortal().getBackendService().getProductionRequest(production.getId(),
+                                                                     new AsyncCallback<GsProductionRequest>() {
+                                                                         @Override
+                                                                         public void onFailure(Throwable caught) {
+                                                                         }
+
+                                                                         @Override
+                                                                         public void onSuccess(GsProductionRequest result) {
+                                                                             Map<String,String> productionParameters = result.getProductionParameters();
+                                                                             Set<Map.Entry<String,String>> entries = productionParameters.entrySet();
+                                                                             StringBuilder sb = new StringBuilder();
+                                                                             for (Map.Entry<String, String> entry: entries){
+                                                                                sb.append(entry.getKey() + " = <b>" + entry.getValue() + "</b><br/>");
+                                                                             }
+                                                                             Dialog.showMessage(sb.toString());
+                                                                         }
+                                                                     });
+            }
+        });
         idColumn.setSortable(false);
 
         TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {

@@ -119,6 +119,20 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public GsProductionRequest getProductionRequest(String productionId) throws BackendServiceException {
+        try {
+            Production production = productionService.getProduction(productionId);
+            if (production != null) {
+                return convert(production.getProductionRequest());
+            }else {
+                return null;
+            }
+        } catch (ProductionException e) {
+           throw convert(e);
+        }
+    }
+
+    @Override
     public GsProductionResponse orderProduction(GsProductionRequest productionRequest) throws BackendServiceException {
         try {
             ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
@@ -173,6 +187,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                 production.isAutoStaging(),
                                 convert(production.getProcessingStatus(), production.getWorkflow()),
                                 convert(production.getStagingStatus()));
+    }
+
+    private GsProductionRequest convert(ProductionRequest productionRequest) {
+        return new GsProductionRequest(productionRequest.getProductionType(),
+                                       productionRequest.getProductionParameters());
     }
 
     private GsProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {

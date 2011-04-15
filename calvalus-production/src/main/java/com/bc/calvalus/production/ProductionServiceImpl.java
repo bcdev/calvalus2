@@ -115,6 +115,11 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
+    public Production getProduction(String id) throws ProductionException {
+        return productionStore.getProduction(id);
+    }
+
+    @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {

@@ -21,4 +21,6 @@ public interface BackendServiceAsync {
     void deleteProductions(String[] productionIds, AsyncCallback<Void> callback);
 
     void stageProductions(String[] productionIds, AsyncCallback<Void> callback);
+
+    void getProductionRequest(String productionId, AsyncCallback<GsProductionRequest> async);
 }

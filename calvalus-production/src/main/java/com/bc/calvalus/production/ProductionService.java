@@ -40,6 +40,15 @@ public interface ProductionService {
     Production[] getProductions(String filter) throws ProductionException;
 
     /**
+     * Gets the production for the given ID.
+     *
+     * @param id The production ID.
+     * @return The production, or {@code null} if none with the given ID was found.
+     * @throws ProductionException If a service error occurred.
+     */
+    Production getProduction(String id) throws ProductionException;
+
+    /**
      * Orders a new productions.
      *
      * @param request The request.

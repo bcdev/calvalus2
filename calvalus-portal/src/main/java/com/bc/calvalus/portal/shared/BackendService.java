@@ -44,6 +44,15 @@ public interface BackendService extends RemoteService {
      */
     GsProductionResponse orderProduction(GsProductionRequest request) throws BackendServiceException;
 
+    /**
+     * Gets the production request for the given production ID.
+     *
+     * @param productionId The production ID
+     * @return The production request, or {@code null} if none with the given ID was found.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    GsProductionRequest getProductionRequest(String productionId) throws BackendServiceException;
+
     void cancelProductions(String[] productionIds) throws BackendServiceException;
 
     void deleteProductions(String[] productionIds) throws BackendServiceException;
