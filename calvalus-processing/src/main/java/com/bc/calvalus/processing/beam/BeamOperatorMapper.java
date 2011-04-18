@@ -8,6 +8,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
  */
 public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
     private static final int DEFAULT_TILE_HEIGHT = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -54,8 +56,6 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
             // parse request
             Configuration configuration = context.getConfiguration();
-            final String requestOutputPath = configuration.get(JobConfNames.CALVALUS_OUTPUT);
-
 
             // set up input reader
             Product sourceProduct = BeamUtils.readProduct(inputPath, configuration);
@@ -74,24 +74,26 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
             final Product targetProduct = BeamUtils.getProcessedProduct(sourceProduct, level2OperatorName, level2Parameters);
             LOG.info(context.getTaskAttemptID() + " target product created");
+            if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
+                LOG.warning("target product is empty, skip writing.");
+            } else {
+                // process input and write target product
+                String inputFilename = inputPath.getName();
+                String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+                Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+                final Path outputProductPath = new Path(workOutputPath, outputFilename);
+                int tileHeight = DEFAULT_TILE_HEIGHT;
+                Dimension preferredTileSize = targetProduct.getPreferredTileSize();
+                if (preferredTileSize != null) {
+                    tileHeight = preferredTileSize.height;
+                }
+                StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, tileHeight);
 
-            // process input and write target product
-            String inputFilename = inputPath.getName();
-            String outputFilename = "L2_of_" +  FileUtils.exchangeExtension(inputFilename, ".seq");
-            final Path outputProductPath = new Path(requestOutputPath, outputFilename);
-            int tileHeight = DEFAULT_TILE_HEIGHT;
-            Dimension preferredTileSize = targetProduct.getPreferredTileSize();
-            if (preferredTileSize != null) {
-                tileHeight = preferredTileSize.height;
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             }
-            StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, tileHeight);
-
-        } catch (ProcessorException e) {
-            LOG.warning(e.getMessage());
-            throw e;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "ExecutablesMapper exception: " + e.toString(), e);
-            throw new ProcessorException("ExecutablesMapper exception: " + e.toString(), e);
+            LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
+            throw new ProcessorException("BeamOperatorMapper exception: " + e.toString(), e);
         } finally {
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();
