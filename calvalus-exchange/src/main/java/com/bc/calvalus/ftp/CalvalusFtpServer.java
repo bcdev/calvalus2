@@ -4,12 +4,8 @@ import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.Authentication;
 import org.apache.ftpserver.ftplet.AuthenticationFailedException;
-import org.apache.ftpserver.ftplet.Authority;
 import org.apache.ftpserver.ftplet.DefaultFtplet;
-import org.apache.ftpserver.ftplet.FileSystemFactory;
-import org.apache.ftpserver.ftplet.FileSystemView;
 import org.apache.ftpserver.ftplet.FtpException;
-import org.apache.ftpserver.ftplet.FtpFile;
 import org.apache.ftpserver.ftplet.FtpRequest;
 import org.apache.ftpserver.ftplet.FtpSession;
 import org.apache.ftpserver.ftplet.Ftplet;
@@ -18,14 +14,13 @@ import org.apache.ftpserver.ftplet.User;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.impl.DefaultConnectionConfig;
 import org.apache.ftpserver.listener.ListenerFactory;
+import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.apache.ftpserver.usermanager.AnonymousAuthentication;
-import org.apache.ftpserver.usermanager.ClearTextPasswordEncryptor;
 import org.apache.ftpserver.usermanager.Md5PasswordEncryptor;
+import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.apache.ftpserver.usermanager.impl.ConcurrentLoginPermission;
-import org.apache.ftpserver.usermanager.impl.PropertiesUserManager;
-import org.apache.ftpserver.usermanager.impl.TransferRatePermission;
 import org.apache.ftpserver.usermanager.impl.WritePermission;
 
 import java.io.File;
@@ -36,9 +31,12 @@ import java.util.Map;
 
 public class CalvalusFtpServer {
     public static void main(String[] args) throws FtpException {
-        PropertiesUserManager userManager = new PropertiesUserManager(new Md5PasswordEncryptor(),
-                                                                      new File("ftpserver-users.properties"),
-                                                                      "cvop");
+        PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
+        userManagerFactory.setFile(new File("ftpserver-users.properties"));
+        userManagerFactory.setAdminName("cvop");
+        userManagerFactory.setPasswordEncryptor(new Md5PasswordEncryptor());
+
+        UserManager userManager = userManagerFactory.createUserManager();
 
         FtpServerFactory serverFactory = new FtpServerFactory();
         serverFactory.setUserManager(userManager);
@@ -47,25 +45,21 @@ public class CalvalusFtpServer {
 
         ListenerFactory factory = new ListenerFactory();
 
-
         factory.setPort(2121);
 
+        // define SSL configuration
+        SslConfigurationFactory ssl = new SslConfigurationFactory();
+        ssl.setKeystoreFile(new File("ftpserver.jks"));
+        ssl.setKeystorePassword("cvop4u");
+
+         // set the SSL configuration for the listener
+        factory.setSslConfiguration(ssl.createSslConfiguration());
+        factory.setImplicitSsl(true);
         serverFactory.addListener("default", factory.createListener());
 
         FtpServer server = serverFactory.createServer();
 
         server.start();
-    }
-
-    private static BaseUser createUser(String name, String password, String homeDir) {
-        BaseUser user = new BaseUser();
-        user.setName(name);
-        user.setPassword(password);
-        user.setEnabled(true);
-        user.setHomeDirectory(homeDir);
-        user.setAuthorities(Arrays.asList(new WritePermission(),
-                                          new ConcurrentLoginPermission(16, 16)));
-        return user;
     }
 
     private static Map<String, Ftplet> createDefaultFtpletMap() {
@@ -86,7 +80,7 @@ public class CalvalusFtpServer {
         return ftpletMap;
     }
 
-   private static class MyAbstractUserManager implements UserManager {
+    private static class MyAbstractUserManager implements UserManager {
 
         private final Map<String, User> userMap;
 
