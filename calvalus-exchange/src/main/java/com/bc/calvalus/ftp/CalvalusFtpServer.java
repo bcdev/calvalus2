@@ -1,31 +1,19 @@
 package com.bc.calvalus.ftp;
 
+import org.apache.ftpserver.DataConnectionConfiguration;
+import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
-import org.apache.ftpserver.ftplet.Authentication;
-import org.apache.ftpserver.ftplet.AuthenticationFailedException;
-import org.apache.ftpserver.ftplet.DefaultFtplet;
-import org.apache.ftpserver.ftplet.FtpException;
-import org.apache.ftpserver.ftplet.FtpRequest;
-import org.apache.ftpserver.ftplet.FtpSession;
-import org.apache.ftpserver.ftplet.Ftplet;
-import org.apache.ftpserver.ftplet.FtpletResult;
-import org.apache.ftpserver.ftplet.User;
-import org.apache.ftpserver.ftplet.UserManager;
+import org.apache.ftpserver.ftplet.*;
 import org.apache.ftpserver.impl.DefaultConnectionConfig;
 import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.apache.ftpserver.usermanager.AnonymousAuthentication;
 import org.apache.ftpserver.usermanager.Md5PasswordEncryptor;
 import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
-import org.apache.ftpserver.usermanager.impl.BaseUser;
-import org.apache.ftpserver.usermanager.impl.ConcurrentLoginPermission;
-import org.apache.ftpserver.usermanager.impl.WritePermission;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,19 +31,15 @@ public class CalvalusFtpServer {
         serverFactory.setFtplets(createDefaultFtpletMap());
         serverFactory.setConnectionConfig(new DefaultConnectionConfig(true, 3, 16, 16, 3, 10));
 
-        ListenerFactory factory = new ListenerFactory();
+        //configure specific ports for passive mode so they can be explicitly configured in the firewall NAT rule
+        DataConnectionConfigurationFactory dataConnectionConfigurationFactory = new DataConnectionConfigurationFactory();
+        dataConnectionConfigurationFactory.setPassivePorts("2221-2229");
+        DataConnectionConfiguration dataConnectionConfiguration = dataConnectionConfigurationFactory.createDataConnectionConfiguration();
 
-        factory.setPort(2121);
-
-        // define SSL configuration
-        SslConfigurationFactory ssl = new SslConfigurationFactory();
-        ssl.setKeystoreFile(new File("ftpserver.jks"));
-        ssl.setKeystorePassword("cvop4u");
-
-         // set the SSL configuration for the listener
-        factory.setSslConfiguration(ssl.createSslConfiguration());
-        factory.setImplicitSsl(true);
-        serverFactory.addListener("default", factory.createListener());
+        ListenerFactory listenerFactory = new ListenerFactory();
+        listenerFactory.setPort(2220);
+        listenerFactory.setDataConnectionConfiguration(dataConnectionConfiguration);
+        serverFactory.addListener("default", listenerFactory.createListener());
 
         FtpServer server = serverFactory.createServer();
 
