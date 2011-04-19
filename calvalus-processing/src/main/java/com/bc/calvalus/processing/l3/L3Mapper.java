@@ -78,10 +78,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         final Path inputPath = split.getPath();
+        // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
         Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        String roiWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-        source = BeamUtils.createSubsetProduct(source, roiWkt);
+        String regionGeometry = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        source = BeamUtils.createSubsetProduct(source, regionGeometry);
         if (source != null) {
             String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
             String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);

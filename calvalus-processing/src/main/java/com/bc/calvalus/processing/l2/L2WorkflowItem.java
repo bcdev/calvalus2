@@ -82,7 +82,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         String propertiesString = JobUtils.convertProperties(properties);
         configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 
-        setAndClearOutputDir(job, this.outputDir);
+        JobUtils.clearAndSetOutputDir(job, this.outputDir);
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);

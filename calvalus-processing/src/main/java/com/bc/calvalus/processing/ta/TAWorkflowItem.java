@@ -17,59 +17,52 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.WorkflowStatusEvent;
+import com.bc.calvalus.commons.WorkflowStatusListener;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 
 /**
- * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
+ * A workflow item that outputs a sequence file of {@link TAPoint}s from a L3 output sequence file.
  */
 public class TAWorkflowItem extends HadoopWorkflowItem {
 
     private final String jobName;
-    private final String processorBundle;
-    private final String processorName;
-    private final String processorParameters;
-    private final String[] inputFiles;
+    private final String inputDir;
     private final String outputDir;
     private final L3Config l3Config;
-    private final Geometry roiGeometry;
+    private final TAConfig taConfig;
     private final String startDate;
     private final String stopDate;
 
-
     public TAWorkflowItem(HadoopProcessingService processingService,
                           String jobName,
-                          String processorBundle,
-                          String processorName,
-                          String processorParameters,
-                          Geometry roiGeometry,
-                          String[] inputFiles,
+                          String inputDir,
                           String outputDir,
                           L3Config l3Config,
+                          TAConfig taConfig,
                           String startDate,
                           String stopDate) {
         super(processingService);
         this.jobName = jobName;
-        this.processorBundle = processorBundle;
-        this.processorName = processorName;
-        this.processorParameters = processorParameters;
-        this.inputFiles = inputFiles;
+        this.inputDir = inputDir;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
-        this.roiGeometry = roiGeometry;
+        this.taConfig = taConfig;
         this.startDate = startDate;
         this.stopDate = stopDate;
     }
@@ -90,37 +83,59 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         return l3Config;
     }
 
-    public Geometry getRoiGeometry() {
-        return roiGeometry;
-    }
-
     protected Job createJob() throws IOException {
 
-        Job job = getProcessingService().createJob(jobName);
+        final Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();
 
-        configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
-        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
-        configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));
+        configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, BeamUtils.convertObjectToXml(taConfig));
+        configuration.set(JobConfNames.CALVALUS_START_DATE, startDate);
+        configuration.set(JobConfNames.CALVALUS_STOP_DATE, stopDate);
 
-        setAndClearOutputDir(job, outputDir);
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setNumReduceTasks(4);
+        SequenceFileInputFormat.addInputPath(job, new Path(inputDir));
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+
+        JobUtils.clearAndSetOutputDir(job, outputDir);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        job.setNumReduceTasks(1);
         job.setMapperClass(TAMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(SpatialBin.class);
         job.setReducerClass(TAReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(TAPoint.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
+        // If this item is completed, clear L3 output dir, which is not used anymore
+        addWorkflowStatusListener(new InputDirCleaner(job));
+
         return job;
     }
 
+    private class InputDirCleaner implements WorkflowStatusListener {
+        private final Job job;
+
+        public InputDirCleaner(Job job) {
+            this.job = job;
+        }
+
+        @Override
+        public void handleStatusChanged(WorkflowStatusEvent event) {
+            if (event.getSource() == TAWorkflowItem.this
+                    && event.getNewStatus().getState() == ProcessState.COMPLETED) {
+                clearInputDir(job);
+            }
+        }
+
+        private void clearInputDir(Job job) {
+            try {
+                JobUtils.clearDir(job, inputDir);
+            } catch (IOException e) {
+                // todo - nf/** 19.04.2011: log error
+            }
+        }
+    }
 }

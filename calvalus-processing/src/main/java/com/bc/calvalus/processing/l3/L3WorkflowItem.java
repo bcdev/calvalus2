@@ -112,7 +112,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         String propertiesString = JobUtils.convertProperties(properties);
         configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 
-        setAndClearOutputDir(job, outputDir);
+        JobUtils.clearAndSetOutputDir(job, outputDir);
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setNumReduceTasks(4);

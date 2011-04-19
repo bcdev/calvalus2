@@ -30,8 +30,10 @@ public interface JobConfNames {
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
     String CALVALUS_SYSTEM_PROPERTIES = "calvalus.system.properties";
+    String CALVALUS_FAIL_FAST =  "calvalus.failFast";
+
+    // todo - nf/** 19.04.2011: check if we can put the following into L2Config, L3Config, TAConfig
     String CALVALUS_START_DATE = "calvalus.startDate";
     String CALVALUS_STOP_DATE = "calvalus.stopDate";
     String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
-    String CALVALUS_FAIL_FAST =  "calvalus.failFast";
 }

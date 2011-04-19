@@ -20,7 +20,12 @@ package com.bc.calvalus.processing;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,4 +90,15 @@ public class JobUtils {
         }
     }
 
+    public static void clearAndSetOutputDir(Job job, String outputDir) throws IOException {
+        final Path outputPath = clearDir(job, outputDir);
+        FileOutputFormat.setOutputPath(job, outputPath);
+    }
+
+    public static Path clearDir(Job job, String dir) throws IOException {
+        final Path dirPath = new Path(dir);
+        final FileSystem fileSystem = dirPath.getFileSystem(job.getConfiguration());
+        fileSystem.delete(dirPath, true);
+        return dirPath;
+    }
 }

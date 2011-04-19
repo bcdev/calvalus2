@@ -110,12 +110,5 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         return runningJob.getID();
     }
 
-    protected static void setAndClearOutputDir(Job job, String outputDir) throws IOException {
-        final Path outputPath = new Path(outputDir);
-        final FileSystem fileSystem = outputPath.getFileSystem(job.getConfiguration());
-        fileSystem.delete(outputPath, true);
-        FileOutputFormat.setOutputPath(job, outputPath);
-    }
-
 
 }

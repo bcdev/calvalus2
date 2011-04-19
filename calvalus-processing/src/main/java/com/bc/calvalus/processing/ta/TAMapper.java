@@ -24,14 +24,14 @@ public class TAMapper extends Mapper<LongWritable, TemporalBin, Text, TemporalBi
     private TAConfig taConfig;
 
     @Override
-    protected void map(LongWritable key, TemporalBin value, Context context) throws IOException, InterruptedException {
+    protected void map(LongWritable binIndex, TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
         GeometryFactory geometryFactory = new GeometryFactory();
-        double[] centerLonLat = binningGrid.getCenterLonLat(key.get());
+        double[] centerLonLat = binningGrid.getCenterLonLat(binIndex.get());
         Point point = geometryFactory.createPoint(new Coordinate(centerLonLat[0], centerLonLat[1]));
         TAConfig.RegionConfiguration[] regions = taConfig.getRegions();
         for (TAConfig.RegionConfiguration region : regions) {
             if (region.getGeometry().contains(point)) {
-                context.write(new Text(region.getName()), value);
+                context.write(new Text(region.getName()), temporalBin);
             }
         }
     }
