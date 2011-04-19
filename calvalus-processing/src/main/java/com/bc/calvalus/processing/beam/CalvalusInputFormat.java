@@ -55,7 +55,6 @@ public class CalvalusInputFormat extends InputFormat {
                         // create file split for the input
                         FileSplit split = new FileSplit(input, 0, length, locations[0].getHosts());
                         splits.add(split);
-                        LOG.info("split " + inputUrl);
                     } else {
                         LOG.warning("failed to fs.getFileBlockLocations for: " + inputUrl);
                     }
