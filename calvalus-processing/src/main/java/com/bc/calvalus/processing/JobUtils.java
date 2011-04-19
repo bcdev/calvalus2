@@ -17,21 +17,10 @@
 package com.bc.calvalus.processing;
 
 
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.dom.DefaultDomConverter;
-import com.bc.ceres.binding.dom.DomElement;
-import com.bc.ceres.binding.dom.Xpp3DomElement;
-import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
-import com.thoughtworks.xstream.io.xml.XppDomWriter;
-import com.thoughtworks.xstream.io.xml.XppReader;
-import com.thoughtworks.xstream.io.xml.xppdom.Xpp3Dom;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,7 +56,7 @@ public class JobUtils {
             sb.append(",");
         }
         int length = sb.length();
-        return sb.substring(0, length-1);
+        return sb.substring(0, length - 1);
     }
 
     public static Map<String, String> convertProperties(String propertiesString) {
@@ -81,7 +70,7 @@ public class JobUtils {
                 }
             }
         }
-        return  map;
+        return map;
     }
 
     public static Geometry createGeometry(String geometryWkt) {

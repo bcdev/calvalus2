@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.CalvalusInputFormat;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.beam.BeamOperatorMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -84,7 +84,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
 
         setAndClearOutputDir(job, this.outputDir);
 
-        job.setInputFormatClass(CalvalusInputFormat.class);
+        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 

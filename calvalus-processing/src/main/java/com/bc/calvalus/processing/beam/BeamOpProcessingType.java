@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.CalvalusInputFormat;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.WpsConfig;
 import com.bc.calvalus.processing.l3.L3Mapper;
@@ -136,7 +136,7 @@ public class BeamOpProcessingType {
         fileSystem.delete(outputPath, true);
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        job.setInputFormatClass(CalvalusInputFormat.class);
+        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
 
         if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETERS) != null) {
             job.setNumReduceTasks(4);

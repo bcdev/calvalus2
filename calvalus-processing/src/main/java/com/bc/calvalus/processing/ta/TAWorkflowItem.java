@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.processing.CalvalusInputFormat;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.processing.l3.L3Config;
@@ -109,7 +109,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
         setAndClearOutputDir(job, outputDir);
 
-        job.setInputFormatClass(CalvalusInputFormat.class);
+        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setNumReduceTasks(4);
         job.setMapperClass(TAMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
