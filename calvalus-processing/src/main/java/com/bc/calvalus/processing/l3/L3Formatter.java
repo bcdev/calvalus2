@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.Aggregator;
 import com.bc.calvalus.binning.BinManager;

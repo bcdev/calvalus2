@@ -1,8 +1,8 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.beam.L3Config;
-import com.bc.calvalus.processing.beam.WpsXmlGenerator;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.WpsXmlGenerator;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;

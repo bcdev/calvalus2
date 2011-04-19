@@ -1,8 +1,8 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.processing.beam.L3Config;
-import com.bc.calvalus.processing.beam.L3WorkflowItem;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;

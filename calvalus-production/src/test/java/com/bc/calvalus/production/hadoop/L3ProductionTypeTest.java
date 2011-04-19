@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.processing.beam.L3Config;
+import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.vividsolutions.jts.geom.Geometry;

@@ -14,8 +14,9 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.beam.BeamUtils;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
@@ -47,9 +48,14 @@ public class L3FormatterConfig {
     @Parameter
     private String endTime;
 
-    public static L3FormatterConfig create(String formatterParameters) {
+    /**
+     * Creates a new formatter configuration object.
+     * @param xml The configuration as an XML string.
+     * @return The new formatter configuration object.
+     */
+    public static L3FormatterConfig create(String xml) {
         L3FormatterConfig formatterConfig = new L3FormatterConfig();
-        BeamUtils.loadFromXml(formatterParameters, formatterConfig);
+        BeamUtils.convertXmlToObject(xml, formatterConfig);
         return formatterConfig;
     }
 

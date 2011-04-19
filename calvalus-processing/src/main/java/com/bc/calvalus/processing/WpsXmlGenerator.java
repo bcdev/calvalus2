@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.WorkflowException;
 import org.apache.velocity.Template;
@@ -40,7 +40,7 @@ public class WpsXmlGenerator {
      * @throws WorkflowException If the WPS XML cannot be created.
      */
     public String createL3WpsXml(Map<String, Object> templateParameters) throws WorkflowException {
-        return interpolateTemplate("com/bc/calvalus/processing/hadoop/level3-wps-request.xml.vm",
+        return interpolateTemplate("com/bc/calvalus/processing/level3-wps-request.xml.vm",
                                    templateParameters);
     }
 

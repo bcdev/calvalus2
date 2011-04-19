@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.ObservationSlice;
@@ -22,6 +22,8 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -63,7 +65,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration configuration = context.getConfiguration();
         BeamUtils.initGpf(configuration);
-        L3Config l3Config = L3Config.create(configuration.get(JobConfNames.CALVALUS_L3_PARAMETER));
+        L3Config l3Config = L3Config.fromXml(configuration.get(JobConfNames.CALVALUS_L3_PARAMETERS));
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -78,11 +80,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final Path inputPath = split.getPath();
         Product source = BeamUtils.readProduct(inputPath, configuration);
 
-        String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
+        String roiWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
         source = BeamUtils.createSubsetProduct(source, roiWkt);
         if (source != null) {
             String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
             final Product product = BeamUtils.getProcessedProduct(source, level2OperatorName, level2Parameters);
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());

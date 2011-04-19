@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.AggregatorAverage;
 import com.bc.calvalus.binning.BinManager;
@@ -26,6 +26,7 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.binning.VariableContextImpl;
+import com.bc.calvalus.processing.l3.L3Mapper;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;

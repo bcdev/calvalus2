@@ -14,8 +14,9 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.WpsConfig;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Test;
 import org.xml.sax.SAXException;
@@ -23,13 +24,11 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link com.bc.calvalus.processing.beam.WpsConfig}.
+ * Test for {@link com.bc.calvalus.processing.WpsConfig}.
  */
 public class WpsConfigTest {
 
@@ -78,21 +77,9 @@ public class WpsConfigTest {
     }
 
     @Test
-    public void getParameters() throws Exception {
-        WpsConfig wpsConfig = createFromResource("l3-request.xml");
-
-        assertNotNull(wpsConfig.getLevel2Paramter());
-        assertFalse(wpsConfig.getLevel2Paramter().equals(""));
-        assertNotNull(wpsConfig.getLevel3Paramter());
-        assertFalse(wpsConfig.getLevel3Paramter().equals(""));
-        assertNotNull(wpsConfig.getFormatterParameter());
-        assertTrue(wpsConfig.getFormatterParameter().equals(""));
-    }
-
-    @Test
     public void getRoiWkt() throws Exception {
         WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
-        String roiWkt = wpsConfig.getRoiWkt();
+        String roiWkt = wpsConfig.getGeometry();
         assertEquals("POLYGON((23.0 42.0, 11.0 42.0, 11.0 22.0, 23.0 22.0, 23.0 42.0)", roiWkt);
     }
 

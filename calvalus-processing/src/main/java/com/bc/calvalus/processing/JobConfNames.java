@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 /**
  * Names of Hadoop job configuration parameters.
@@ -25,9 +25,12 @@ public interface JobConfNames {
     public static final String CALVALUS_INPUT = "calvalus.input";
     public static final String CALVALUS_OUTPUT = "calvalus.output";
     public static final String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
-    public static final String CALVALUS_L2_PARAMETER = "calvalus.l2.parameter";
-    public static final String CALVALUS_L3_PARAMETER = "calvalus.l3.parameter";
-    public static final String CALVALUS_FORMATTER_PARAMETER = "calvalus.formatter.parameter";
-    public static final String CALVALUS_ROI_WKT = "calvalus.roiWKT";
-    public static final String CALVALUS_PROPERTIES = "calvalus.properties";
+    public static final String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
+    public static final String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
+    public static final String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
+    public static final String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
+    public static final String CALVALUS_SYSTEM_PROPERTIES = "calvalus.system.properties";
+    public static final String CALVALUS_START_DATE = "calvalus.startDate";
+    public static final String CALVALUS_STOP_DATE = "calvalus.stopDate";
+    public static final String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
 }

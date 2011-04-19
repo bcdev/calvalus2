@@ -1,13 +1,12 @@
 package com.bc.calvalus.processing.shellexec;
 
-import com.bc.calvalus.processing.shellexec.ExecutablesTool;
+import com.bc.calvalus.processing.beam.HadoopStandaloneAndAccountTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import sun.tools.jar.resources.jar;
 
 import java.io.File;
 import java.io.IOException;

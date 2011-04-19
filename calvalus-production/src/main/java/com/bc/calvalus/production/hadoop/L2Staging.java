@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.beam.L2WorkflowItem;
+import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.staging.Staging;

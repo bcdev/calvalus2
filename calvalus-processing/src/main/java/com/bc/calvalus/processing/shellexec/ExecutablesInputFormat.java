@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.NoRecordReader;
+import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;

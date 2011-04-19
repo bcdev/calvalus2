@@ -60,11 +60,11 @@ public class StreamingProductWriter {
             for (Band band : bands) {
                 Raster data = band.getSourceImage().getData(new Rectangle(x, y, w, h));
                 ProductData productData = ProductData.createInstance(band.getDataType(),
-                        ImageUtils.getPrimitiveArray(data.getDataBuffer()));
+                                                                     ImageUtils.getPrimitiveArray(data.getDataBuffer()));
                 String key = band.getName() + ":" + sliceIndex;
                 writeProductData(writer, key, productData);
             }
-            LOG.info(" written y="+y+" h="+h);
+            LOG.info(" written y=" + y + " h=" + h);
         }
         writer.close();
     }
@@ -74,17 +74,17 @@ public class StreamingProductWriter {
         Configuration configuration = context.getConfiguration();
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         SequenceFile.Writer sequenceFileWriter = SequenceFile.createWriter(fileSystem,
-                configuration,
-                outputPath,
-                Text.class,
-                ByteArrayWritable.class,
-                1024 * 1024, //buffersize,
-                (short)1, //replication,
-                fileSystem.getDefaultBlockSize(),
-                SequenceFile.CompressionType.NONE,
-                null, // new DefaultCodec(),
-                context,
-                metadata);
+                                                                           configuration,
+                                                                           outputPath,
+                                                                           Text.class,
+                                                                           ByteArrayWritable.class,
+                                                                           1024 * 1024, //buffersize,
+                                                                           (short) 1, //replication,
+                                                                           fileSystem.getDefaultBlockSize(),
+                                                                           SequenceFile.CompressionType.NONE,
+                                                                           null, // new DefaultCodec(),
+                                                                           context,
+                                                                           metadata);
 
         writeTiePointData(product, sequenceFileWriter);
         return sequenceFileWriter;

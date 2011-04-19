@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -60,7 +61,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             // set up input reader
             Product sourceProduct = BeamUtils.readProduct(inputPath, configuration);
 
-            String roiWkt = configuration.get(JobConfNames.CALVALUS_ROI_WKT);
+            String roiWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
             Product subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, roiWkt);
             if (subsetProduct == null) {
                 sourceProduct.dispose();
@@ -71,7 +72,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
             // set up operator and target product
             String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETER);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
             final Product targetProduct = BeamUtils.getProcessedProduct(sourceProduct, level2OperatorName, level2Parameters);
             LOG.info(context.getTaskAttemptID() + " target product created");
             if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {

@@ -14,52 +14,50 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinningGrid;
+import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.SpatialBin;
+import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.processing.JobConfNames;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import java.io.IOException;
 
 /**
- * Partitions the bins by their bin index.
- * Reduces will recive spatial bins of contiguous latitude ranges.
+ * Reduces list of spatial bins to a temporal bin.
  *
- * @author Marco Zuehlke
  * @author Norman Fomferra
+ * @author Marco Zuehlke
  */
-public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> implements Configurable {
+public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, TemporalBin> implements Configurable {
 
     private Configuration conf;
-    private BinningGrid binningGrid;
+    private BinManager binManager;
 
     @Override
-    public int getPartition(LongWritable binIndex, SpatialBin spatialBin, int numPartitions) {
-        long idx = binIndex.get();
-        int row = binningGrid.getRowIndex(idx);
-        return (row * numPartitions) / binningGrid.getNumRows();
+    protected void reduce(LongWritable binIndex, Iterable<SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
+        TemporalBin temporalBin = binManager.createTemporalBin(binIndex.get());
+        for (SpatialBin spatialBin : spatialBins) {
+            binManager.aggregateTemporalBin(spatialBin, temporalBin);
+        }
+        binManager.completeTemporalBin(temporalBin);
+        context.write(binIndex, temporalBin);
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETER);
-        L3Config l3Config = L3Config.create(level3Parameters);
-        setL3Config(l3Config);
-    }
-
-    void setL3Config(L3Config l3Config) {
-        this.binningGrid = l3Config.getBinningGrid();
+        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETERS);
+        L3Config l3Config = L3Config.fromXml(level3Parameters);
+        this.binManager = l3Config.getBinningContext().getBinManager();
     }
 
     @Override
     public Configuration getConf() {
         return conf;
     }
-
-    BinningGrid getBinningGrid() {
-        return binningGrid;
-    }
-}
+ }

@@ -14,9 +14,11 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningGrid;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3Partitioner;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.Test;
 

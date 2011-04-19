@@ -14,8 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l2;
 
+import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.CalvalusInputFormat;
+import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.beam.BeamOperatorMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.vividsolutions.jts.geom.Geometry;
@@ -69,14 +73,14 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_OUTPUT, this.outputDir);
         configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, this.processorName);
-        configuration.set(JobConfNames.CALVALUS_L2_PARAMETER, this.processorParameters);
-        configuration.set(JobConfNames.CALVALUS_ROI_WKT, roiGeometry != null ? roiGeometry.toString() : "");
+        configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, this.processorParameters);
+        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
 
         Properties properties = new Properties();
         properties.setProperty("beam.envisat.tileHeight", "64");
         properties.setProperty("beam.envisat.tileWidth", "*");
-        String propertiesString = BeamUtils.convertProperties(properties);
-        configuration.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
+        String propertiesString = JobUtils.convertProperties(properties);
+        configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 
         setAndClearOutputDir(job, this.outputDir);
 

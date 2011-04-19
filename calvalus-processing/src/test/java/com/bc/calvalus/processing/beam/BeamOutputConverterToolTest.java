@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.processing.hadoop.HadoopStandaloneTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -11,7 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;

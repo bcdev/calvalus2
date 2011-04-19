@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
@@ -23,6 +23,7 @@ import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.VariableContextImpl;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.processing.l3.L3Reprojector;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;

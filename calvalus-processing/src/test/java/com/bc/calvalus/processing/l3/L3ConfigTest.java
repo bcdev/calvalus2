@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.AggregatorAverage;
 import com.bc.calvalus.binning.AggregatorAverageML;
@@ -24,9 +24,7 @@ import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
+import com.bc.calvalus.processing.WpsConfig;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -162,7 +160,7 @@ public class L3ConfigTest {
     private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
         String wpsRequest = loadConfigProperties(configPath);
         WpsConfig wpsConfig = new WpsConfig(wpsRequest);
-        return L3Config.create(wpsConfig.getLevel3Paramter());
+        return L3Config.fromXml(wpsConfig.getLevel3Parameters());
     }
 
     private String loadConfigProperties(String configPath) throws IOException {

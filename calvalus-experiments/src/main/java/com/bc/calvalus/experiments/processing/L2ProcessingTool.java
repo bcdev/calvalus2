@@ -2,7 +2,6 @@ package com.bc.calvalus.experiments.processing;
 
 import com.bc.calvalus.commons.Args;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.N1InputFormat;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;

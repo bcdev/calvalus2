@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.WpsConfig;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -1,6 +1,7 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -21,7 +22,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Generates list of input splits for input files in job's request.
+ * An input format that maps each input file to a single (file) split.
+ * Input files are given by the configuration parameter with the name
+ * {@link JobConfNames#CALVALUS_INPUT}. Its value is expected to
+ * be a comma-separated list of file paths (HDFS URLs).
+ * <p/>
+ * <b>Imporatnt Note:</b> The implementation
  *
  * @author Boe
  */
@@ -47,10 +53,11 @@ public class CalvalusInputFormat extends InputFormat {
                 // inquire "status" of file from HDFS
                 Path input = new Path(inputUrl);
                 FileSystem fs = input.getFileSystem(configuration);
-                FileStatus[] file = fs.listStatus(input);
-                if (file.length == 1) {
-                    long length = file[0].getLen();
-                    BlockLocation[] locations = fs.getFileBlockLocations(file[0], 0, length);
+                FileStatus[] fileStatuses = fs.listStatus(input);
+                if (fileStatuses.length == 1) {
+                    FileStatus fileStatus = fileStatuses[0];
+                    long length = fileStatus.getLen();
+                    BlockLocation[] locations = fs.getFileBlockLocations(fileStatus, 0, length);
                     if (locations != null && locations.length != 0) {
                         // create file split for the input
                         FileSplit split = new FileSplit(input, 0, length, locations[0].getHosts());

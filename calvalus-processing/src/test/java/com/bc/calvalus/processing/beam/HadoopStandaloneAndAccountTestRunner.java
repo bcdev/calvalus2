@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.shellexec;
+package com.bc.calvalus.processing.beam;
 
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;

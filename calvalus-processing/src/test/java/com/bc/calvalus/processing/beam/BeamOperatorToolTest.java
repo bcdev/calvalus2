@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.processing.shellexec.ExecutablesTool;
+import com.bc.calvalus.processing.hadoop.HadoopStandaloneTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;

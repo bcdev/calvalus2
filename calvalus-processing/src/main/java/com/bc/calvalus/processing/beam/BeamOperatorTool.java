@@ -1,6 +1,12 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.WpsConfig;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3Formatter;
+import com.bc.calvalus.processing.l3.L3FormatterConfig;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.cli.CommandLine;
@@ -109,11 +115,11 @@ public class BeamOperatorTool extends Configured implements Tool {
                 if (requestContent.contains("calvalus.formatter.parameters")) {
                     WpsConfig wpsConfig = new WpsConfig(requestContent);
 
-                    L3Config l3Config = L3Config.create(wpsConfig.getLevel3Paramter());
+                    L3Config l3Config = L3Config.fromXml(wpsConfig.getLevel3Parameters());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
-                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameter());
+                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameters());
                     L3Formatter formatter = new L3Formatter(LOG, getConf());
-                    Geometry roiGeometry = BeamUtils.createGeometry(job.getConfiguration().get(JobConfNames.CALVALUS_ROI_WKT));
+                    Geometry roiGeometry = JobUtils.createGeometry(job.getConfiguration().get(JobConfNames.CALVALUS_REGION_GEOMETRY));
                     result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);
                 } else {
                     LOG.info("no formatting performed");

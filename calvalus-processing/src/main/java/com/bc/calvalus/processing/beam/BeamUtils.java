@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.ceres.binding.ConversionException;
 import com.bc.ceres.binding.PropertyContainer;
@@ -29,7 +30,6 @@ import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.Xpp3Dom;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -51,61 +51,25 @@ import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+/**
+ * Diverse utilities.
+ *
+ * @author MarcoZ
+ */
 public class BeamUtils {
     //TODO make this a configurable option
     private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
 
-    static void initGpf(Configuration configuration) {
-        SystemUtils.init3rdPartyLibs(BeamUtils.class.getClassLoader());
+    public static void initGpf(Configuration configuration) {
+        SystemUtils.init3rdPartyLibs(JobUtils.class.getClassLoader());
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(TILE_CACHE_SIZE_M * 1024 * 1024);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-        initSystemProperties(configuration);
-    }
-
-    private static void initSystemProperties(Configuration configuration) {
-        Map<String, String> properties = convertProperties(configuration.get(JobConfNames.CALVALUS_PROPERTIES));
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
-            System.setProperty(entry.getKey(), entry.getValue());
-        }
-    }
-
-    static String convertProperties(Properties properties) {
-        if (properties.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        List<String> nameList = new ArrayList<String>(properties.stringPropertyNames());
-        Collections.sort(nameList);
-        for (String name : nameList) {
-            sb.append(name);
-            sb.append("=");
-            sb.append(properties.getProperty(name));
-            sb.append(",");
-        }
-        int length = sb.length();
-        return sb.substring(0, length-1);
-    }
-
-    static Map<String, String> convertProperties(String propertieString) {
-        Map<String, String> map = new HashMap<String, String>();
-        if (propertieString != null) {
-            String[] properties = propertieString.split(",");
-            for (String property : properties) {
-                String[] keyValue = property.split("=");
-                if (keyValue.length == 2) {
-                    map.put(keyValue[0].trim(), keyValue[1].trim());
-                }
-            }
-        }
-        return  map;
+        JobUtils.initSystemProperties(configuration);
     }
 
     /**
@@ -114,9 +78,9 @@ public class BeamUtils {
      * @param inputPath         The input path
      * @param configuration the configuration
      * @return The product
-     * @throws java.io.IOException
+     * @throws java.io.IOException If an I/O error occurs
      */
-    static Product readProduct(Path inputPath, Configuration configuration) throws IOException {
+    public static Product readProduct(Path inputPath, Configuration configuration) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
         final FileStatus status = fs.getFileStatus(inputPath);
         final FSDataInputStream in = fs.open(inputPath);
@@ -130,7 +94,7 @@ public class BeamUtils {
         return product;
     }
 
-    static Map<String, Object> getLevel2ParameterMap(String operatorName, String level2Parameters) {
+    public static Map<String, Object> getLevel2ParameterMap(String operatorName, String level2Parameters) {
         try {
             Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
 
@@ -149,7 +113,7 @@ public class BeamUtils {
 
     }
 
-    private static Class<? extends Operator> getOperatorClass(String operatorName) throws ConversionException {
+    public static Class<? extends Operator> getOperatorClass(String operatorName) throws ConversionException {
         OperatorSpi operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
         if (operatorSpi == null) {
             throw new ConversionException(MessageFormat.format("Unknown operator ''{0}''", operatorName));
@@ -157,41 +121,8 @@ public class BeamUtils {
         return operatorSpi.getOperatorClass();
     }
 
-    static DomElement createDomElement(String xml) {
-        XppDomWriter domWriter = new XppDomWriter();
-        new HierarchicalStreamCopier().copy(new XppReader(new StringReader(xml)), domWriter);
-        Xpp3Dom xpp3Dom = domWriter.getConfiguration();
-        return new Xpp3DomElement(xpp3Dom);
-    }
-
-    static void loadFromXml(String xml, Object object) {
-        DomElement domElement = createDomElement(xml);
-        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
-        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-
-        try {
-            domConverter.convertDomToValue(domElement, parameterSet);
-        } catch (Exception e) {
-           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
-        }
-    }
-
-    public static String saveAsXml(Object object) {
-        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-
-        try {
-            DomElement parametersDom = new Xpp3DomElement("parameters");
-            domConverter.convertValueToDom(object, parametersDom);
-            return parametersDom.toXml();
-        } catch (Exception e) {
-           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
-        }
-    }
-
     public static Product createSubsetProduct(Product product, String roiWkt) {
-        final Geometry roiGeometry = createGeometry(roiWkt);
+        final Geometry roiGeometry = JobUtils.createGeometry(roiWkt);
         if (roiGeometry == null || roiGeometry.isEmpty()) {
             return product;
         }
@@ -208,25 +139,46 @@ public class BeamUtils {
         return op.getTargetProduct();
     }
 
-    static Geometry createGeometry(String roiWkt) {
-        if (roiWkt == null || roiWkt.isEmpty()) {
-            return null;
-        }
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(roiWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + roiWkt, e);
-        }
-    }
-
     public static Product getProcessedProduct(Product source, String level2OperatorName, String level2Parameters) {
         Product product = source;
         if (level2OperatorName != null && !level2OperatorName.isEmpty()) {
             // transform request into parameter objects
-            Map<String, Object> level2ParameterMap = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
+            Map<String, Object> level2ParameterMap = getLevel2ParameterMap(level2OperatorName, level2Parameters);
             product = GPF.createProduct(level2OperatorName, level2ParameterMap, product);
         }
         return product;
+    }
+
+    public static DomElement createDomElement(String xml) {
+        XppDomWriter domWriter = new XppDomWriter();
+        new HierarchicalStreamCopier().copy(new XppReader(new StringReader(xml)), domWriter);
+        Xpp3Dom xpp3Dom = domWriter.getConfiguration();
+        return new Xpp3DomElement(xpp3Dom);
+    }
+
+    public static void convertXmlToObject(String xml, Object object) {
+        DomElement domElement = createDomElement(xml);
+        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
+        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
+
+        try {
+            domConverter.convertDomToValue(domElement, parameterSet);
+        } catch (Exception e) {
+           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
+        }
+    }
+
+    public static String convertObjectToXml(Object object) {
+        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
+
+        try {
+            DomElement parametersDom = new Xpp3DomElement("parameters");
+            domConverter.convertValueToDom(object, parametersDom);
+            return parametersDom.toXml();
+        } catch (Exception e) {
+           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
+        }
     }
 }

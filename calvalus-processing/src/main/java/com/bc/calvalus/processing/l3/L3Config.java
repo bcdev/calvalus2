@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 
 import com.bc.calvalus.binning.Aggregator;
@@ -31,19 +31,11 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.VariableContextImpl;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.WKTReader;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
+import com.bc.calvalus.processing.beam.BeamUtils;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
-
-import java.awt.Rectangle;
-import java.text.MessageFormat;
-import java.util.Map;
 
 public class L3Config {
-    static final String L3_REQUEST_FILENAME = "wps-request.xml";
+    public static final String L3_REQUEST_FILENAME = "wps-request.xml";
 
     public static class VariableConfiguration {
         String name;
@@ -148,9 +140,9 @@ public class L3Config {
     @Parameter(itemAlias = "aggregator")
     AggregatorConfiguration[] aggregators;
 
-    public static L3Config create(String level3ParametersXml) {
+    public static L3Config fromXml(String level3ParametersXml) {
         L3Config l3Config = new L3Config();
-        BeamUtils.loadFromXml(level3ParametersXml, l3Config);
+        BeamUtils.convertXmlToObject(level3ParametersXml, l3Config);
         return l3Config;
     }
 
@@ -294,7 +286,7 @@ public class L3Config {
         return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
     }
 
-     private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
+    private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
         return new AggregatorPercentile(varCtx, aggregatorConf.varName, aggregatorConf.percentage, aggregatorConf.fillValue);
     }
 }

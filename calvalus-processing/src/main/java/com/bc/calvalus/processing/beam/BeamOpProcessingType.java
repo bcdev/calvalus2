@@ -18,6 +18,13 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.CalvalusInputFormat;
+import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.WpsConfig;
+import com.bc.calvalus.processing.l3.L3Mapper;
+import com.bc.calvalus.processing.l3.L3Partitioner;
+import com.bc.calvalus.processing.l3.L3Reducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -65,13 +72,13 @@ public class BeamOpProcessingType {
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
 
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_ROI_WKT, wpsConfig.getRoiWkt());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETER, wpsConfig.getLevel2Paramter());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETER, wpsConfig.getLevel3Paramter());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETER, wpsConfig.getFormatterParameter());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETERS, wpsConfig.getLevel2Parameters());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
 
-        Map<String,String> properiesMap = BeamUtils.convertProperties(wpsConfig.getSystemProperties());
+        Map<String,String> properiesMap = JobUtils.convertProperties(wpsConfig.getSystemProperties());
         Properties properties = new Properties();
         for (Map.Entry<String, String> entry : properiesMap.entrySet()) {
             properties.setProperty(entry.getKey(), entry.getValue());
@@ -82,8 +89,8 @@ public class BeamOpProcessingType {
         if (!properties.containsKey("beam.envisat.tileWidth")) {
             properties.setProperty("beam.envisat.tileWidth", "*");
         }
-        String propertiesString = BeamUtils.convertProperties(properties);
-        conf.set(JobConfNames.CALVALUS_PROPERTIES, propertiesString);
+        String propertiesString = JobUtils.convertProperties(properties);
+        conf.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 
         return job;
     }
@@ -131,7 +138,7 @@ public class BeamOpProcessingType {
 
         job.setInputFormatClass(CalvalusInputFormat.class);
 
-        if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETER) != null) {
+        if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETERS) != null) {
             job.setNumReduceTasks(4);
 
             job.setMapperClass(L3Mapper.class);

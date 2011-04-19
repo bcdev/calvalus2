@@ -71,12 +71,12 @@ public class StreamingProductReader extends AbstractProductReader {
 
     @Override
     protected synchronized void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY,
-                                          int sourceWidth, int sourceHeight,
-                                          int sourceStepX, int sourceStepY,
-                                          Band destBand,
-                                          int destOffsetX, int destOffsetY,
-                                          int destWidth, int destHeight,
-                                          ProductData destBuffer, ProgressMonitor pm) throws IOException {
+                                                       int sourceWidth, int sourceHeight,
+                                                       int sourceStepX, int sourceStepY,
+                                                       Band destBand,
+                                                       int destOffsetX, int destOffsetY,
+                                                       int destWidth, int destHeight,
+                                                       ProductData destBuffer, ProgressMonitor pm) throws IOException {
         int sliceIndex = MathUtils.floorInt(sourceOffsetY / sliceHeight);
         String expectedKey = destBand.getName() + ":" + sliceIndex;
 
@@ -164,7 +164,7 @@ public class StreamingProductReader extends AbstractProductReader {
     private void buildKeyIndex() throws IOException {
         Text key = new Text();
         long currentPos = reader.getPosition();
-        while(reader.next(key)) {
+        while (reader.next(key)) {
             keyIndex.put(key.toString(), currentPos);
             currentPos = reader.getPosition();
         }
@@ -179,7 +179,7 @@ public class StreamingProductReader extends AbstractProductReader {
 
         //        ProductWriter writer = ProductIO.getProductWriter(ProductIO.DEFAULT_FORMAT_NAME);
 //        writer.writeProductNodes(product, "/home/marcoz/tmp/inermediate_product.dim");
-        
+
         ProductIO.writeProduct(product, args[1], ProductIO.DEFAULT_FORMAT_NAME);
     }
 

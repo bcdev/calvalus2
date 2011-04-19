@@ -14,8 +14,9 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
@@ -34,9 +35,9 @@ import java.util.Properties;
 import static org.junit.Assert.*;
 
 /**
- * Test for {@link BeamUtils}.
+ * Test for {@link JobUtils}.
  */
-public class BeamUtilsTest {
+public class JobUtilsTest {
 
     @Before
     public void before() {
@@ -167,19 +168,19 @@ public class BeamUtilsTest {
     @Test
     public void testConvertProperties() throws Exception {
         Properties p = new Properties();
-        assertEquals("", BeamUtils.convertProperties(p));
+        assertEquals("", JobUtils.convertProperties(p));
 
         p.setProperty("name1", "value1");
         p.setProperty("name2", "value2");
-        assertEquals("name1=value1,name2=value2", BeamUtils.convertProperties(p));
+        assertEquals("name1=value1,name2=value2", JobUtils.convertProperties(p));
 
-        Map<String, String> map = BeamUtils.convertProperties("");
+        Map<String, String> map = JobUtils.convertProperties("");
         assertEquals(0, map.size());
 
-        map = BeamUtils.convertProperties((String)null);
+        map = JobUtils.convertProperties((String) null);
         assertEquals(0, map.size());
 
-        map = BeamUtils.convertProperties("name1=value1,name2=value2");
+        map = JobUtils.convertProperties("name1=value1,name2=value2");
         assertEquals(2, map.size());
         assertTrue(map.containsKey("name1"));
         assertTrue(map.containsKey("name2"));

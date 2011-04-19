@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
@@ -57,7 +57,7 @@ public class WpsConfig {
         }
     }
 
-    String getIdentifier() {
+    public String getIdentifier() {
         try {
             return requestXmlDoc.getString(TYPE_XPATH);
         } catch (XPathExpressionException e) {
@@ -65,7 +65,7 @@ public class WpsConfig {
         }
     }
 
-    String getProcessorPackage() {
+    public String getProcessorPackage() {
         try {
             final String processorPackage = requestXmlDoc.getString(PROCESSOR_PACKAGE_XPATH);
             final String processorVersion = requestXmlDoc.getString(PROCESSOR_VERSION_XPATH);
@@ -91,7 +91,7 @@ public class WpsConfig {
         }
     }
 
-    String getFilenamePattern() {
+    public String getFilenamePattern() {
         try {
             return requestXmlDoc.getString(INPUT_PATTERN_XPATH, (String)null);
         } catch (XPathExpressionException e) {
@@ -100,7 +100,7 @@ public class WpsConfig {
     }
 
 
-    String getRequestOutputDir() {
+    public String getRequestOutputDir() {
         try {
             return requestXmlDoc.getString(OUTPUT_DIR_XPATH);
         } catch (XPathExpressionException e) {
@@ -108,7 +108,7 @@ public class WpsConfig {
         }
     }
 
-    String getOperatorName() {
+    public String getOperatorName() {
         try {
             return requestXmlDoc.getString(OPERATOR_NAME_XPATH);
         } catch (XPathExpressionException e) {
@@ -116,7 +116,7 @@ public class WpsConfig {
         }
     }
 
-    String getSystemProperties() {
+    public String getSystemProperties() {
         try {
             return requestXmlDoc.getString(SYSTEM_PROPERTIES_XPATH, (String)null);
         } catch (XPathExpressionException e) {
@@ -124,7 +124,7 @@ public class WpsConfig {
         }
     }
 
-    String getLevel2Paramter() {
+    public String getLevel2Parameters() {
         try {
             Node node = requestXmlDoc.getNode(OPERATOR_PARAMETERS_XPATH);
             if (node != null) {
@@ -137,7 +137,7 @@ public class WpsConfig {
         }
     }
 
-    String getLevel3Paramter() {
+    public String getLevel3Parameters() {
         try {
             Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
             if (node != null) {
@@ -150,7 +150,7 @@ public class WpsConfig {
         }
     }
 
-    String getFormatterParameter() {
+    public String getFormatterParameters() {
         try {
             Node node = requestXmlDoc.getNode(FORMATTER_PARAMETERS_XPATH);
             if (node != null) {
@@ -163,7 +163,7 @@ public class WpsConfig {
         }
     }
 
-    static DomElement convertToDomElement(Node node) {
+    public static DomElement convertToDomElement(Node node) {
         Element element;
         if (node instanceof Element) {
             element = (Element) node;
@@ -177,7 +177,7 @@ public class WpsConfig {
         return new Xpp3DomElement(destination.getConfiguration());
     }
 
-    public String getRoiWkt() {
+    public String getGeometry() {
         try {
             return requestXmlDoc.getString(GEOMETRY_XPATH, "");
         } catch (XPathExpressionException e) {

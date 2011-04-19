@@ -14,9 +14,11 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.WpsConfig;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.io.IOUtils;
 import com.vividsolutions.jts.geom.Geometry;
@@ -94,16 +96,16 @@ public class L3FormatterTool extends Configured implements Tool {
         final String formattingWpsRequest = FileUtil.readFile(requestPath);
 
         WpsConfig formattingWpsConfig = new WpsConfig(formattingWpsRequest);
-        L3FormatterConfig formatterConfig = L3FormatterConfig.create(formattingWpsConfig.getFormatterParameter());
+        L3FormatterConfig formatterConfig = L3FormatterConfig.create(formattingWpsConfig.getFormatterParameters());
         String hadoopJobOutputDir = formattingWpsConfig.getRequestOutputDir();
 
         String processingWps = loadProcessingWpsXml(hadoopJobOutputDir);
         WpsConfig level3Wpsconfig = new WpsConfig(processingWps);
-        L3Config l3Config = L3Config.create(level3Wpsconfig.getLevel3Paramter());
+        L3Config l3Config = L3Config.fromXml(level3Wpsconfig.getLevel3Parameters());
 
         L3Formatter formatter = new L3Formatter(LOG, getConf());
 
-        Geometry roiGeometry = BeamUtils.createGeometry(level3Wpsconfig.getRoiWkt());
+        Geometry roiGeometry = JobUtils.createGeometry(level3Wpsconfig.getGeometry());
         return formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);
     }
 
