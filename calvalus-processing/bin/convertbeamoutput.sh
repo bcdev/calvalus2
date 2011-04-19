@@ -20,10 +20,6 @@ cp1=`echo ${baseDir}/lib/beam/*.jar | tr ' ' ':'`
 cp2=`echo ${baseDir}/lib/saxon*.jar | tr ' ' ':'`
 export HADOOP_CLASSPATH=$cp1:$cp2
 
-input=$1
-shift
-output=${2:-$1}
-
-#echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
-time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool ${input} ${output} $@
+#echo hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool $@
+time hadoop jar ${jobJar} com.bc.calvalus.processing.beam.BeamOutputConverterTool $@
 
