@@ -28,13 +28,15 @@ public interface BinManager {
 
     Vector getTemporalVector(TemporalBin bin, int aggIndex);
 
-    void aggregateSpatialBin(Observation obs, SpatialBin bin);
+    void aggregateSpatialBin(Observation obs, SpatialBin outputBin);
 
     void completeSpatialBin(SpatialBin bin);
 
-    void aggregateTemporalBin(SpatialBin sBin, TemporalBin tBin);
+    void aggregateTemporalBin(SpatialBin inputBin, TemporalBin outputBin);
 
-    void completeTemporalBin(TemporalBin tBin);
+    void aggregateTemporalBin(TemporalBin inputBin, TemporalBin outputBin);
+
+    void completeTemporalBin(TemporalBin bin);
 
     void computeOutput(TemporalBin temporalBin, WritableVector outputVector);
 

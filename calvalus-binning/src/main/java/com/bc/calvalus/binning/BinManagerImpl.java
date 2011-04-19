@@ -131,17 +131,27 @@ public class BinManagerImpl implements BinManager {
      }
 
     @Override
-    public void aggregateTemporalBin(SpatialBin spatialBin, TemporalBin temporalBin) {
-        final VectorImpl spatialVector = new VectorImpl(spatialBin.properties);
-        final VectorImpl temporalVector = new VectorImpl(temporalBin.properties);
+    public void aggregateTemporalBin(SpatialBin inputBin, TemporalBin outputBin) {
+        aggregateBin(inputBin, outputBin);
+        outputBin.numPasses++;
+    }
+
+    @Override
+    public void aggregateTemporalBin(TemporalBin inputBin, TemporalBin outputBin) {
+        aggregateBin(inputBin, outputBin);
+        outputBin.numPasses += inputBin.numPasses;
+    }
+
+    private void aggregateBin(Bin inputBin, Bin outputBin) {
+        final VectorImpl spatialVector = new VectorImpl(inputBin.properties);
+        final VectorImpl temporalVector = new VectorImpl(outputBin.properties);
         for (int i = 0; i < aggregators.length; i++) {
             final Aggregator aggregator = aggregators[i];
             spatialVector.setOffsetAndSize(spatialPropertyOffsets[i], aggregator.getSpatialPropertyCount());
             temporalVector.setOffsetAndSize(temporalPropertyOffsets[i], aggregator.getTemporalPropertyCount());
-            aggregator.aggregateTemporal(temporalBin, spatialVector, spatialBin.numObs, temporalVector);
+            aggregator.aggregateTemporal(outputBin, spatialVector, inputBin.numObs, temporalVector);
         }
-        temporalBin.numObs += spatialBin.numObs;
-        temporalBin.numPasses++;
+        outputBin.numObs += inputBin.numObs;
     }
 
     @Override
