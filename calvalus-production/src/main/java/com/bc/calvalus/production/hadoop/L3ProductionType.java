@@ -12,7 +12,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
-import java.util.Map;
 
 import static java.lang.Math.*;
 
@@ -35,23 +34,16 @@ public class L3ProductionType extends HadoopProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        productionRequest.ensureProductionParameterSet("processorBundleName");
-        productionRequest.ensureProductionParameterSet("processorBundleVersion");
-        productionRequest.ensureProductionParameterSet("processorName");
-        productionRequest.ensureProductionParameterSet("processorParameters");
-        productionRequest.ensureProductionParameterSet("maskExpr");
-        productionRequest.ensureProductionParameterSet("superSampling");
 
         String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
         Date startDate = productionRequest.getDate("dateStart");
         Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
 
+        String processorName = productionRequest.getProductionParameterSafe("processorName");
+        String processorParameters = productionRequest.getProductionParameterSafe("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionParameters.get("processorBundleName"),
-                                               productionParameters.get("processorBundleVersion"));
-        String processorName = productionParameters.get("processorName");
-        String processorParameters = productionParameters.get("processorParameters");
+                                               productionRequest.getProductionParameterSafe("processorBundleName"),
+                                               productionRequest.getProductionParameterSafe("processorBundleVersion"));
 
         Geometry roiGeometry = productionRequest.getRoiGeometry();
 

@@ -10,7 +10,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -57,13 +56,6 @@ public class L2ProductionType extends HadoopProductionType {
 
     L2WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
-        Map<String, String> productionParameters = productionRequest.getProductionParameters();
-        productionRequest.ensureProductionParameterSet("processorBundleName");
-        productionRequest.ensureProductionParameterSet("processorBundleVersion");
-        productionRequest.ensureProductionParameterSet("processorName");
-        productionRequest.ensureProductionParameterSet("processorParameters");
-        productionRequest.ensureProductionParameterSet("dateStart");
-        productionRequest.ensureProductionParameterSet("dateStop");
 
         String inputProductSetId = productionRequest.getProductionParameterSafe("inputProductSetId");
         Date startDate = productionRequest.getDate("dateStart");
@@ -74,11 +66,11 @@ public class L2ProductionType extends HadoopProductionType {
         String[] inputFiles = getInputFiles(inputProductSetId, startDate, stopDate);
         String outputDir = getOutputDir(productionId, productionRequest);
 
+        String processorName = productionRequest.getProductionParameterSafe("processorName");
+        String processorParameters = productionRequest.getProductionParameterSafe("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionParameters.get("processorBundleName"),
-                                               productionParameters.get("processorBundleVersion"));
-        String processorName = productionParameters.get("processorName");
-        String processorParameters = productionParameters.get("processorParameters");
+                                               productionRequest.getProductionParameterSafe("processorBundleName"),
+                                               productionRequest.getProductionParameterSafe("processorBundleVersion"));
 
         return new L2WorkflowItem(getProcessingService(),
                                   productionId,
