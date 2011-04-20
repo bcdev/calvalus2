@@ -26,7 +26,7 @@ public class L3ProductionType extends HadoopProductionType {
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
     public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super("calvalus-level3", processingService, stagingService);
+        super("L3", processingService, stagingService);
     }
 
     @Override
@@ -38,8 +38,8 @@ public class L3ProductionType extends HadoopProductionType {
 
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date startDate = productionRequest.getDate("dateStart");
-        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter; we use startDate + i * periodLength here (nf)
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");  // todo - clarify meaning of this parameter; we use startDate + i * periodLength here (nf)
 
         String processorName = productionRequest.getParameter("processorName");
         String processorParameters = productionRequest.getParameter("processorParameters");
@@ -51,11 +51,11 @@ public class L3ProductionType extends HadoopProductionType {
 
         L3Config l3Config = createL3Config(productionRequest);
 
-        // todo - compute default value: periodLengthDefault =(stopDate - startDate)  (nf,20.04.2011)
-        int periodLength = productionRequest.getInteger("periodLength", 4); // unit=days
         int periodCount = productionRequest.getInteger("periodCount", 1);// unit=1
+        int periodLengthDefault = computeDefaultPeriodLength(minDate, maxDate, periodCount);
+        int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
 
-        long time = startDate.getTime();
+        long time = minDate.getTime();
         long periodLengthMillis = periodLength * MILLIS_PER_DAY;
 
         Workflow.Parallel workflow = new Workflow.Parallel();
@@ -63,6 +63,9 @@ public class L3ProductionType extends HadoopProductionType {
 
             Date date1 = new Date(time);
             Date date2 = new Date(time + periodLengthMillis - 1L);
+
+            String date1Str = ProductionRequest.getDateFormat().format(date1);
+            String date2Str = ProductionRequest.getDateFormat().format(date2);
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
@@ -77,8 +80,8 @@ public class L3ProductionType extends HadoopProductionType {
                                                                inputFiles,
                                                                outputDir,
                                                                l3Config,
-                                                               ProductionRequest.getDateFormat().format(date1),
-                                                               ProductionRequest.getDateFormat().format(date2));
+                                                               date1Str,
+                                                               date2Str);
             workflow.add(l3WorkflowItem);
             time += periodLengthMillis;
         }
@@ -91,6 +94,10 @@ public class L3ProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               workflow);
+    }
+
+    public static int computeDefaultPeriodLength(Date minDate, Date maxDate, int periodCount) {
+        return (int)((maxDate.getTime() - minDate.getTime() + MILLIS_PER_DAY - 1) / (MILLIS_PER_DAY * periodCount));
     }
 
     @Override

@@ -98,9 +98,9 @@ public abstract class HadoopProductionType implements ProductionType {
         return stagingService;
     }
 
-    public String[] getInputFiles(String inputProductSetId, Date startDate, Date stopDate) throws ProductionException {
+    public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
         String eoDataPath = processingService.getDataInputPath();
-        List<String> dayPathList = getDayPathList(startDate, stopDate, inputProductSetId);
+        List<String> dayPathList = getDayPathList(minDate, maxDate, inputProductSetId);
         try {
             List<String> inputFileList = new ArrayList<String>();
             for (String dayPath : dayPathList) {

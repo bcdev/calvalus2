@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.vividsolutions.jts.geom.Geometry;
@@ -10,6 +11,14 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TAProductionTypeTest {
+    @Test
+    public void testCreateTAConfig() throws ProductionException {
+        TAConfig taConfig = TAProductionType.createTAConfig(new ProductionRequest("TA", "ewa"));
+        assertNotNull(taConfig);
+        assertNotNull(taConfig.getRegions());
+        assertEquals(29, taConfig.getRegions().length);
+    }
+
     @Test
     public void testCreateBinningConfig() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
@@ -57,14 +66,14 @@ public class TAProductionTypeTest {
                                      "maskExpr", "NOT INVALID",
                                      "aggregator", "MIN_MAX",
                                      "weightCoeff", "1.0",
-                                     "dateStart", "2010-06-03",
-                                     "dateStop", "2010-06-05",
+                                     "minDate", "2010-06-03",
+                                     "maxDate", "2010-06-05",
                                      "periodCount", "1",
                                      "periodLength", "3",
-                                     "lonMin", "5",
-                                     "lonMax", "25",
-                                     "latMin", "50",
-                                     "latMax", "60",
+                                     "minLon", "5",
+                                     "maxLon", "25",
+                                     "minLat", "50",
+                                     "maxLat", "60",
                                      "resolution", "4.64",
                                      "fillValue", "-999.9",
                                      "superSampling", "1"

@@ -30,7 +30,6 @@ public class TAConfig {
 
 
     public static class RegionConfiguration {
-        public static final RegionConfiguration GLOBE;
 
         @Parameter
         String name;
@@ -40,19 +39,6 @@ public class TAConfig {
         Double minElevation;
         @Parameter
         Double maxElevation;
-
-        static {
-            GeometryFactory geometryFactory = new GeometryFactory();
-            LinearRing linearRing = geometryFactory.createLinearRing(new Coordinate[]{
-                    new Coordinate(-180.0, -90),
-                    new Coordinate(+180.0, -90),
-                    new Coordinate(+180.0, +90),
-                    new Coordinate(-180.0, +90),
-                    new Coordinate(-180.0, -90),
-            });
-            Polygon polygon = geometryFactory.createPolygon(linearRing, null);
-            GLOBE = new RegionConfiguration("Globe", polygon);
-        }
 
         public RegionConfiguration() {
         }

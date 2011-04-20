@@ -136,10 +136,10 @@ public class ProductionRequestTest {
 
         //-60.0, 13.4, -20.0, 23.4
         req = new ProductionRequest("typeA", "ewa",
-                                    "lonMin", "-60.0",
-                                    "lonMax", "-20.0",
-                                    "latMin", "13.4",
-                                    "latMax", "23.4");
+                                    "minLon", "-60.0",
+                                    "maxLon", "-20.0",
+                                    "minLat", "13.4",
+                                    "maxLat", "23.4");
         regionOfInterest = req.getRegionGeometry();
         assertTrue(regionOfInterest instanceof Polygon);
         assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());

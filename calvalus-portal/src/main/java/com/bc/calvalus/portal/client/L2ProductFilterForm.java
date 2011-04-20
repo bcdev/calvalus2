@@ -163,12 +163,12 @@ public class L2ProductFilterForm implements IsWidget {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("dateStart", minDate.getFormat().format(minDate, minDate.getValue()));
-        parameters.put("dateStop", maxDate.getFormat().format(maxDate, maxDate.getValue()));
-        parameters.put("lonMin", minLon.getText());
-        parameters.put("lonMax", maxLon.getText());
-        parameters.put("latMin", minLat.getText());
-        parameters.put("latMax", maxLat.getText());
+        parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
+        parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
+        parameters.put("minLon", minLon.getText());
+        parameters.put("maxLon", maxLon.getText());
+        parameters.put("minLat", minLat.getText());
+        parameters.put("maxLat", maxLat.getText());
         return parameters;
     }
 }

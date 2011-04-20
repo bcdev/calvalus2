@@ -21,7 +21,7 @@ import java.util.Date;
 public class L2ProductionType extends HadoopProductionType {
 
     public L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super("calvalus-level2", processingService, stagingService);
+        super("L2", processingService, stagingService);
     }
 
     @Override
@@ -60,12 +60,12 @@ public class L2ProductionType extends HadoopProductionType {
                                       ProductionRequest productionRequest) throws ProductionException {
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date startDate = productionRequest.getDate("dateStart");
-        Date stopDate = productionRequest.getDate("dateStop");
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");
 
-        Geometry roiGeometry = productionRequest.getRegionGeometry();
-        // todo - use geoRegion to filter input files
-        String[] inputFiles = getInputFiles(inputProductSetId, startDate, stopDate);
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        // todo - use regionGeometry to filter input files
+        String[] inputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
         String outputDir = getOutputDir(productionId, productionRequest);
 
         String processorName = productionRequest.getParameter("processorName");
@@ -79,7 +79,7 @@ public class L2ProductionType extends HadoopProductionType {
                                   processorBundle,
                                   processorName,
                                   processorParameters,
-                                  roiGeometry,
+                                  regionGeometry,
                                   inputFiles,
                                   outputDir
         );

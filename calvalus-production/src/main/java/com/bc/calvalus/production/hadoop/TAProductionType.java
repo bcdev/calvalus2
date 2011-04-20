@@ -1,9 +1,9 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -12,9 +12,17 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
+import java.util.Set;
+
+import static com.bc.calvalus.production.hadoop.L3ProductionType.*;
 
 /**
  * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
@@ -24,7 +32,24 @@ import java.util.Date;
  * @author Norman
  */
 public class TAProductionType extends HadoopProductionType {
-
+    private static final String TA_REGIONS_PROPERTIES = "ta-regions.properties";
+    /*
+     public static void main(String[] args) throws IOException {
+         File[] files = new File("C:\\Users\\Norman\\Downloads\\cc_sites").listFiles();
+         for (File file : files) {
+             Properties properties = new Properties();
+             FileReader reader = new FileReader(file);
+             try {
+                 properties.load(reader);
+                 String geometry = properties.getProperty("geometry[0]");
+                 String s1 = file.getName() + " = " + geometry;
+                 System.out.println(s1);
+             } finally {
+                 reader.close();
+             }
+         }
+     }
+    */
 
     public TAProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super("TA", processingService, stagingService);
@@ -37,8 +62,8 @@ public class TAProductionType extends HadoopProductionType {
         final String productionName = createTAProductionName(productionRequest);
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date startDate = productionRequest.getDate("dateStart");
-        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
 
         String processorName = productionRequest.getParameter("processorName");
         String processorParameters = productionRequest.getParameter("processorParameters");
@@ -48,14 +73,14 @@ public class TAProductionType extends HadoopProductionType {
 
         Geometry roiGeometry = productionRequest.getRegionGeometry();
 
-        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
+        L3Config l3Config = createL3Config(productionRequest);
         TAConfig taConfig = createTAConfig(productionRequest);
 
-        // todo - compute default value: periodLengthDefault =(stopDate - startDate)  (nf,20.04.2011)
-        int periodLength = productionRequest.getInteger("periodLength", 4); // unit=days
         int periodCount = productionRequest.getInteger("periodCount", 1);// unit=1
+        int periodLengthDefault = computeDefaultPeriodLength(minDate, maxDate, periodCount);
+        int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
 
-        long time = startDate.getTime();
+        long time = minDate.getTime();
         long periodLengthMillis = periodLength * L3ProductionType.MILLIS_PER_DAY;
 
         Workflow.Parallel parallel = new Workflow.Parallel();
@@ -72,7 +97,7 @@ public class TAProductionType extends HadoopProductionType {
             String l3JobName = String.format("%s_%d_L3", productionId, (i + 1));
             String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
 
-            // todo - use geoRegion to filter input files
+            // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] l1InputFiles = getInputFiles(inputProductSetId, date1, date2);
             String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
             String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
@@ -138,10 +163,44 @@ public class TAProductionType extends HadoopProductionType {
     }
 
     static TAConfig createTAConfig(ProductionRequest productionRequest) {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        // todo - read requested regions from  productionRequest
-        return new TAConfig(TAConfig.RegionConfiguration.GLOBE);
-        // todo - add all required regions here
+        Properties regions = loadRegions(TA_REGIONS_PROPERTIES);
+        ArrayList<TAConfig.RegionConfiguration> regionList = createRegionList(regions);
+        return new TAConfig(regionList.toArray(new TAConfig.RegionConfiguration[regionList.size()]));
+    }
+
+    private static ArrayList<TAConfig.RegionConfiguration> createRegionList(Properties properties) {
+        WKTReader wktReader = new WKTReader();
+        Set<String> regionNames = properties.stringPropertyNames();
+        ArrayList<TAConfig.RegionConfiguration> regionList = new ArrayList<TAConfig.RegionConfiguration>();
+        for (String regionName : regionNames) {
+            String wkt = properties.getProperty(regionName);
+            Geometry geometry;
+            try {
+                geometry = wktReader.read(wkt);
+            } catch (ParseException e) {
+                throw new IllegalStateException(regionName + " = " + wkt, e);
+            }
+            regionList.add(new TAConfig.RegionConfiguration(regionName, geometry));
+        }
+        return regionList;
+    }
+
+    private static Properties loadRegions(String resource) {
+        Properties properties = new Properties();
+        InputStream inputStream = TAProductionType.class.getResourceAsStream(resource);
+        if (inputStream == null) {
+            throw new IllegalStateException("Resource not found: " + resource);
+        }
+        try {
+            try {
+                properties.load(inputStream);
+            } finally {
+                inputStream.close();
+            }
+            return properties;
+        } catch (IOException e) {
+            throw new IllegalStateException("Error reading resource: " + resource, e);
+        }
     }
 
 

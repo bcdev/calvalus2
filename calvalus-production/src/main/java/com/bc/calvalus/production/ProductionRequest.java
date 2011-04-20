@@ -222,10 +222,10 @@ public class ProductionRequest {
     public Geometry getRegionGeometry() throws ProductionException {
         Geometry geometry = getGeometry("regionWKT", null);
         if (geometry == null) {
-            double x1 = getDouble("lonMin");
-            double y1 = getDouble("latMin");
-            double x2 = getDouble("lonMax");
-            double y2 = getDouble("latMax");
+            double x1 = getDouble("minLon");
+            double y1 = getDouble("minLat");
+            double x2 = getDouble("maxLon");
+            double y2 = getDouble("maxLat");
             GeometryFactory factory = new GeometryFactory();
             return factory.createPolygon(factory.createLinearRing(new Coordinate[]{
                     new Coordinate(x1, y1),

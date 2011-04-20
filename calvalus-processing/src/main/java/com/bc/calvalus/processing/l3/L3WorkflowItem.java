@@ -47,8 +47,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
     private final String outputDir;
     private final L3Config l3Config;
     private final Geometry roiGeometry;
-    private final String startDate;
-    private final String stopDate;
+    private final String minDate;
+    private final String maxDate;
 
 
     public L3WorkflowItem(HadoopProcessingService processingService,
@@ -60,8 +60,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           String[] inputFiles,
                           String outputDir,
                           L3Config l3Config,
-                          String startDate,
-                          String stopDate) {
+                          String minDate,
+                          String maxDate) {
         super(processingService);
         this.jobName = jobName;
         this.processorBundle = processorBundle;
@@ -71,16 +71,16 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         this.outputDir = outputDir;
         this.l3Config = l3Config;
         this.roiGeometry = roiGeometry;
-        this.startDate = startDate;
-        this.stopDate = stopDate;
+        this.minDate = minDate;
+        this.maxDate = maxDate;
     }
 
-    public String getStopDate() {
-        return stopDate;
+    public String getMaxDate() {
+        return maxDate;
     }
 
-    public String getStartDate() {
-        return startDate;
+    public String getMinDate() {
+        return minDate;
     }
 
     public String getOutputDir() {
@@ -103,8 +103,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
-        configuration.set(JobConfNames.CALVALUS_START_DATE, startDate);
-        configuration.set(JobConfNames.CALVALUS_STOP_DATE, stopDate);
+        configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
+        configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 
         Properties properties = new Properties();
         properties.setProperty("beam.envisat.tileHeight", "64");

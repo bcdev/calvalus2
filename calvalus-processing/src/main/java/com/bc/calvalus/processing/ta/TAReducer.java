@@ -43,8 +43,8 @@ public class TAReducer extends Reducer<Text, TemporalBin, Text, TAPoint> impleme
             binManager.aggregateTemporalBin(bin, outputBin);
         }
         context.write(regionName, new TAPoint(regionName.toString(),
-                                              conf.get(JobConfNames.CALVALUS_START_DATE),
-                                              conf.get(JobConfNames.CALVALUS_STOP_DATE),
+                                              conf.get(JobConfNames.CALVALUS_MIN_DATE),
+                                              conf.get(JobConfNames.CALVALUS_MAX_DATE),
                                               outputBin));
     }
 

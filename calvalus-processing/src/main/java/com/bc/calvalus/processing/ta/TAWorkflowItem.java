@@ -46,8 +46,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     private final String outputDir;
     private final L3Config l3Config;
     private final TAConfig taConfig;
-    private final String startDate;
-    private final String stopDate;
+    private final String minDate;
+    private final String maxDate;
 
     public TAWorkflowItem(HadoopProcessingService processingService,
                           String jobName,
@@ -55,24 +55,24 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
                           String outputDir,
                           L3Config l3Config,
                           TAConfig taConfig,
-                          String startDate,
-                          String stopDate) {
+                          String minDate,
+                          String maxDate) {
         super(processingService);
         this.jobName = jobName;
         this.inputDir = inputDir;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
         this.taConfig = taConfig;
-        this.startDate = startDate;
-        this.stopDate = stopDate;
+        this.minDate = minDate;
+        this.maxDate = maxDate;
     }
 
-    public String getStopDate() {
-        return stopDate;
+    public String getMaxDate() {
+        return maxDate;
     }
 
-    public String getStartDate() {
-        return startDate;
+    public String getMinDate() {
+        return minDate;
     }
 
     public String getOutputDir() {
@@ -91,8 +91,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));
         configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, BeamUtils.convertObjectToXml(taConfig));
-        configuration.set(JobConfNames.CALVALUS_START_DATE, startDate);
-        configuration.set(JobConfNames.CALVALUS_STOP_DATE, stopDate);
+        configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
+        configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 
 
         SequenceFileInputFormat.addInputPath(job, new Path(inputDir));

@@ -67,8 +67,8 @@ class L3Staging extends Staging {
                 try {
                     tmpDir.mkdir();
                     L3FormatterConfig formatterConfig = createFormatterConfig(tmpDir,
-                                                                              l3WorkflowItem.getStartDate(),
-                                                                              l3WorkflowItem.getStopDate());
+                                                                              l3WorkflowItem.getMinDate(),
+                                                                              l3WorkflowItem.getMaxDate());
 
                     // todo - need a progress monitor here
                     formatter.format(formatterConfig, l3Config, outputDir, roiGeometry);

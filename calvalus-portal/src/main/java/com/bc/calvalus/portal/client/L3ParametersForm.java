@@ -37,8 +37,8 @@ public class L3ParametersForm implements IsWidget {
     private DoubleBox fillValue;
     private ListBox aggregator;
     private DoubleBox weightCoeff;
-    private DateBox startDate;
-    private DateBox stopDate;
+    private DateBox minDate;
+    private DateBox maxDate;
     private IntegerBox periodLength;
     private DoubleBox minLon;
     private DoubleBox maxLon;
@@ -106,16 +106,16 @@ public class L3ParametersForm implements IsWidget {
         contentParams.setWidget(6, 1, superSampling);
         contentParams.setWidget(6, 2, new Label("pixel/pixel"));
 
-        startDate = new DateBox();
-        startDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        startDate.setValue(DATE_FORMAT.parse("2008-06-01"));
-        startDate.setWidth("6em");
+        minDate = new DateBox();
+        minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
+        minDate.setWidth("6em");
 
-        stopDate = new DateBox();
-        stopDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        stopDate.setValue(DATE_FORMAT.parse("2008-06-07"));
-        stopDate.setWidth("6em");
-        stopDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
+        maxDate = new DateBox();
+        maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        maxDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+        maxDate.setWidth("6em");
+        maxDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
                 updateTimeParams(true);
@@ -143,9 +143,9 @@ public class L3ParametersForm implements IsWidget {
         });
 
         HorizontalPanel timeRange = new HorizontalPanel();
-        timeRange.add(startDate);
+        timeRange.add(minDate);
         timeRange.add(new HTML("&nbsp;to&nbsp;"));
-        timeRange.add(stopDate);
+        timeRange.add(maxDate);
 
         HorizontalPanel period = new HorizontalPanel();
         period.add(periodCount);
@@ -224,7 +224,7 @@ public class L3ParametersForm implements IsWidget {
     private void updateTimeParams(boolean endTimeAdjusted) {
         if (!adjustingEndTime) {
             long millisPerDay = 24L * 60L * 60L * 1000L;
-            long deltaMillis = stopDate.getValue().getTime() - startDate.getValue().getTime();
+            long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
             int deltaDays = (int) ((millisPerDay + deltaMillis - 1) / millisPerDay);
 
             if (endTimeAdjusted) {
@@ -232,7 +232,7 @@ public class L3ParametersForm implements IsWidget {
             } else {
                 try {
                     adjustingEndTime = true;
-                    stopDate.setValue(new Date(startDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
+                    maxDate.setValue(new Date(minDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
                 } finally {
                     adjustingEndTime = false;
                 }
@@ -305,14 +305,14 @@ public class L3ParametersForm implements IsWidget {
         parameters.put("fillValue", fillValue.getText());
         parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
         parameters.put("weightCoeff", weightCoeff.getText());
-        parameters.put("dateStart", startDate.getFormat().format(startDate, startDate.getValue()));
-        parameters.put("dateStop", stopDate.getFormat().format(stopDate, stopDate.getValue()));
+        parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
+        parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
         parameters.put("periodCount", periodCount.getText());
         parameters.put("periodLength", periodLength.getText());
-        parameters.put("lonMin", minLon.getText());
-        parameters.put("lonMax", maxLon.getText());
-        parameters.put("latMin", minLat.getText());
-        parameters.put("latMax", maxLat.getText());
+        parameters.put("minLon", minLon.getText());
+        parameters.put("maxLon", maxLon.getText());
+        parameters.put("minLat", minLat.getText());
+        parameters.put("maxLat", maxLat.getText());
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
         return parameters;
