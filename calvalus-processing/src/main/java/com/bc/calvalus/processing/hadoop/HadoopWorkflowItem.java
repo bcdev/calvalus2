@@ -19,14 +19,12 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.processing.JobConfNames;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
@@ -96,8 +94,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
-        addBundleToClassPath(CALVALUS_BUNDLE, configuration);
-        addBundleToClassPath(BEAM_BUNDLE, configuration);
+        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE), configuration);
+        // Add BEAM modules to classpath of Hadoop jobs
+        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

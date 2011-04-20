@@ -26,8 +26,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static final String CALVALUS_EODATA_PATH = "/calvalus/eodata";
     public static final String CALVALUS_OUTPUTS_PATH = "/calvalus/outputs";
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/0.5";
-    public static final String CALVALUS_BUNDLE = "calvalus-0.1-SNAPSHOT";
-    public static final String BEAM_BUNDLE = "beam-4.9-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.2-SNAPSHOT";
+    public static final String DEFAULT_BEAM_BUNDLE = "beam-4.9-SNAPSHOT";
 
     private final JobClient jobClient;
     private final FileSystem fileSystem;

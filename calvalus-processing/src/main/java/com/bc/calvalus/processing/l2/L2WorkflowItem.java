@@ -36,7 +36,7 @@ import java.util.Properties;
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
     private final String jobName;
-    private final Geometry roiGeometry;
+    private final Geometry regionGeometry;
     private final String[] inputFiles;
     private final String outputDir;
     private final String processorBundle;
@@ -48,12 +48,12 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                           String processorBundle,
                           String processorName,
                           String processorParameters,
-                          Geometry roiGeometry,
+                          Geometry regionGeometry,
                           String[] inputFiles,
                           String outputDir) {
         super(processingService);
         this.jobName = jobName;
-        this.roiGeometry = roiGeometry;
+        this.regionGeometry = regionGeometry;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.processorBundle = processorBundle;
@@ -71,10 +71,10 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(this.inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_OUTPUT, this.outputDir);
-        configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
+        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, this.processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, this.processorParameters);
-        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
+        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
         Properties properties = new Properties();
         properties.setProperty("beam.envisat.tileHeight", "64");

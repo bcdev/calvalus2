@@ -98,7 +98,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_BUNDLE, processorBundle); // only informal
+        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));

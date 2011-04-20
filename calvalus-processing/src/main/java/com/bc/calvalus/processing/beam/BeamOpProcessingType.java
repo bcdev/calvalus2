@@ -63,24 +63,22 @@ public class BeamOpProcessingType {
         String identifier = wpsConfig.getIdentifier();
         Job job = new Job(jobClient.getConf(), identifier);
         Configuration conf = job.getConfiguration();
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_IDENTIFIER, wpsConfig.getIdentifier());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_BUNDLE, wpsConfig.getProcessorPackage());
 
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
         String filenamePattern = wpsConfig.getFilenamePattern();
         String inputs = collectInputPaths(requestInputPaths, filenamePattern, conf);
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
-
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_BUNDLE, wpsConfig.getProcessorPackage());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETERS, wpsConfig.getLevel2Parameters());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
 
-        Map<String,String> properiesMap = JobUtils.convertProperties(wpsConfig.getSystemProperties());
+        Map<String,String> propertiesMap = JobUtils.convertProperties(wpsConfig.getSystemProperties());
         Properties properties = new Properties();
-        for (Map.Entry<String, String> entry : properiesMap.entrySet()) {
+        for (Map.Entry<String, String> entry : propertiesMap.entrySet()) {
             properties.setProperty(entry.getKey(), entry.getValue());
         }
         if (!properties.containsKey("beam.envisat.tileHeight")) {
@@ -196,7 +194,7 @@ public class BeamOpProcessingType {
         configuration.set("mapred.child.java.opts", "-Xmx1024m");
         job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
 
-        addBundleToClassPath(BEAM_BUNDLE, configuration);
-        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_L2_BUNDLE), configuration);
     }
 }

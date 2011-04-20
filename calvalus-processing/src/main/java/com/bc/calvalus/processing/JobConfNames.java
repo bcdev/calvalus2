@@ -20,11 +20,12 @@ package com.bc.calvalus.processing;
  * Names of Hadoop job configuration parameters.
  */
 public interface JobConfNames {
-    String CALVALUS_IDENTIFIER = "calvalus.identifier";
-    String CALVALUS_BUNDLE = "calvalus.bundle";
+    String CALVALUS_CALVALUS_BUNDLE = "calvalus.calvalus.bundle";
+    String CALVALUS_BEAM_BUNDLE = "calvalus.beam.bundle";
     String CALVALUS_INPUT = "calvalus.input";
     String CALVALUS_OUTPUT = "calvalus.output";
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
+    String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
