@@ -10,7 +10,7 @@ fi
 
 baseDir="`dirname ${0}`/.."
 configDir=${baseDir}/src/main/admin/conf
-jobJar=${baseDir}/target/calvalus-experiments-0.1-SNAPSHOT-job.jar
+jobJar=${baseDir}/target/calvalus-experiments-0.2-SNAPSHOT-job.jar
 
 commandline="$0 $*"
 command=$0

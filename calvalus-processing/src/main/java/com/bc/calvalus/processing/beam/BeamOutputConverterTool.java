@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * <p/>
  * Call with:
  * <pre>
- *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
+ *    hadoop jar target/calvalus-experiments-0.2-SNAPSHOT-job.jar \
  *    com.bc.calvalus.processing.shellexec.ExecutablesTool \
  *    l2gen-request.xml \
  *    [-wait=false]

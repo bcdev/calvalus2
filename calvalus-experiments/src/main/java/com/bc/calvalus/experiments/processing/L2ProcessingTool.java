@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  * <p/>
  * Call with:
  * <pre>
- *    hadoop jar target/calvalus-experiments-0.1-SNAPSHOT-job.jar \
+ *    hadoop jar target/calvalus-experiments-0.2-SNAPSHOT-job.jar \
  *    com.bc.calvalus.experiments.processing.L2ProcessingTool \
  *    hdfs://cvmaster00:9000/input \
  *    hdfs://cvmaster00:9000/output \
