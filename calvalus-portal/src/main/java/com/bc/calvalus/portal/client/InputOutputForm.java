@@ -9,7 +9,6 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import static com.bc.calvalus.portal.client.CalvalusPortal.*;
@@ -25,7 +24,7 @@ public class InputOutputForm implements IsWidget {
     private DecoratorPanel widget;
     private CheckBox autoStaging;
 
-    public InputOutputForm(CalvalusPortal portal, String title) {
+    public InputOutputForm(CalvalusPortal portal, String title, boolean hasOutput) {
 
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
@@ -59,9 +58,11 @@ public class InputOutputForm implements IsWidget {
         layout.setCellSpacing(4);
         layout.setWidget(0, 0, new HTML("<b>Input</b>"));
         layout.setWidget(1, 0, createLabeledWidgetV("Input product file set:", inputProductSet));
-        layout.setWidget(2, 0, new HTML("<b>Output</b>"));
-        layout.setWidget(3, 0, createLabeledWidgetV("Output product file format:", outputFormat));
-        layout.setWidget(4, 0, autoStaging);
+        if (hasOutput) {
+            layout.setWidget(2, 0, new HTML("<b>Output</b>"));
+            layout.setWidget(3, 0, createLabeledWidgetV("Output product file format:", outputFormat));
+            layout.setWidget(4, 0, autoStaging);
+        }
 
         // Wrap the contents in a DecoratorPanel
         widget = new DecoratorPanel();
@@ -85,5 +86,8 @@ public class InputOutputForm implements IsWidget {
     @Override
     public Widget asWidget() {
         return widget;
+    }
+
+    public void validateForm() {
     }
 }

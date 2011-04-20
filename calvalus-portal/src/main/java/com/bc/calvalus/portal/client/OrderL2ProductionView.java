@@ -27,7 +27,7 @@ public class OrderL2ProductionView extends PortalView {
     public OrderL2ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
-        inputOutputForm = new InputOutputForm(calvalusPortal, "L2 Input/Output");
+        inputOutputForm = new InputOutputForm(calvalusPortal, "L1 Input / L2 Output", true);
         processingForm = new GeneralProcessorForm(getPortal(), "L2 Processor");
         productFilterForm = new L2ProductFilterForm();
 
@@ -60,12 +60,12 @@ public class OrderL2ProductionView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Order L2 Production";
+        return "Level 2";
     }
 
     // todo - Provide JUnit test for this method
     public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("calvalus-level2", getValueMap());
+        return new GsProductionRequest("L2", getValueMap());
     }
 
     // todo - Provide JUnit test for this method

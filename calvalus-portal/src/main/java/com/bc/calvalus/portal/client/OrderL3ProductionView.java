@@ -13,7 +13,7 @@ import com.google.gwt.user.client.ui.Widget;
 import java.util.HashMap;
 
 /**
- * Demo view that lets users submit a new L2 production.
+ * Demo view that lets users submit a new L3 production.
  *
  * @author Norman
  */
@@ -27,7 +27,7 @@ public class OrderL3ProductionView extends PortalView {
     public OrderL3ProductionView(CalvalusPortal calvalusPortal) {
         super(calvalusPortal);
 
-        inputOutputForm = new InputOutputForm(getPortal(), "L3 Input/Output");
+        inputOutputForm = new InputOutputForm(getPortal(), "L1 Input / L3 Output", true);
         l2ProcessorForm = new GeneralProcessorForm(getPortal(), "L2 Processor");
         l3ParametersForm = new L3ParametersForm();
 
@@ -62,11 +62,12 @@ public class OrderL3ProductionView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Order L3 Production";
+        return "Level 3";
     }
 
     private boolean validateView() {
         try {
+            inputOutputForm.validateForm();
             l2ProcessorForm.validateForm();
             l3ParametersForm.validateForm();
             return true;
@@ -78,7 +79,7 @@ public class OrderL3ProductionView extends PortalView {
 
     // todo - Provide JUnit test for this method
     public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("calvalus-level3", getValueMap());
+        return new GsProductionRequest("L3", getValueMap());
     }
 
     // todo - Provide JUnit test for this method

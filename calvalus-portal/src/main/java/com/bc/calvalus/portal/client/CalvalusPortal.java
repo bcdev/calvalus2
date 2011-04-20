@@ -100,6 +100,7 @@ public class CalvalusPortal implements EntryPoint {
 //                new ManageProductSetsView(this),
                 new OrderL2ProductionView(this),
                 new OrderL3ProductionView(this),
+                new OrderTAProductionView(this),
                 new ManageProductionsView(this),
                 new FrameView(this, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"),
                 new FrameView(this, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
