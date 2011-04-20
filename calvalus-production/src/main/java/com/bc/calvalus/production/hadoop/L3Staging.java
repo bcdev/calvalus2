@@ -44,7 +44,7 @@ class L3Staging extends Staging {
             stagingDir.mkdirs();
         }
 
-        Geometry roiGeometry = production.getProductionRequest().getRoiGeometry();
+        Geometry roiGeometry = production.getProductionRequest().getRegionGeometry();
 
         Logger logger = Logger.getLogger("com.bc.calvalus");
         float progress = 0f;
@@ -101,7 +101,7 @@ class L3Staging extends Staging {
 
     private L3FormatterConfig createFormatterConfig(File outputDir, String dateStart, String dateStop) throws ProductionException {
 
-        String outputFormat = production.getProductionRequest().getProductionParameterSafe("outputFormat");
+        String outputFormat = production.getProductionRequest().getParameterSafe("outputFormat");
         String extension;
         if (outputFormat.equals("BEAM-DIMAP")) {
             extension = "dim";

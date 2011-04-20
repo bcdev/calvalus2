@@ -17,15 +17,15 @@ public class ProductionRequestTest {
         ProductionRequest req = new ProductionRequest("typeA", "ewa");
         assertEquals("typeA", req.getProductionType());
         assertEquals("ewa", req.getUserName());
-        assertNotNull(req.getProductionParameters());
-        assertEquals(0, req.getProductionParameters().size());
+        assertNotNull(req.getParameters());
+        assertEquals(0, req.getParameters().size());
 
         req = new ProductionRequest("typeB", "ewa",
                                     "a", "3", "b", "8");
         assertEquals("typeB", req.getProductionType());
         assertEquals("ewa", req.getUserName());
-        assertNotNull(req.getProductionParameters());
-        assertEquals(2, req.getProductionParameters().size());
+        assertNotNull(req.getParameters());
+        assertEquals(2, req.getParameters().size());
 
         try {
             new ProductionRequest(null, "ewa");
@@ -87,7 +87,7 @@ public class ProductionRequestTest {
         Geometry regionOfInterest;
 
         try {
-            req.getRoiGeometry();
+            req.getRegionGeometry();
             fail("No production parameters for geometry present");
         } catch (ProductionException e) {
             // ok
@@ -99,19 +99,19 @@ public class ProductionRequestTest {
                                     "lonMax", "-20.0",
                                     "latMin", "13.4",
                                     "latMax", "23.4");
-        regionOfInterest = req.getRoiGeometry();
+        regionOfInterest = req.getRegionGeometry();
         assertTrue(regionOfInterest instanceof Polygon);
         assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POINT(-60.0 13.4)");
-        regionOfInterest = req.getRoiGeometry();
+        regionOfInterest = req.getRegionGeometry();
         assertTrue(regionOfInterest instanceof Point);
         assertEquals("POINT (-60 13.4)", regionOfInterest.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))");
-        regionOfInterest = req.getRoiGeometry();
+        regionOfInterest = req.getRegionGeometry();
         assertTrue(regionOfInterest instanceof Polygon);
         assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionOfInterest.toString());
     }

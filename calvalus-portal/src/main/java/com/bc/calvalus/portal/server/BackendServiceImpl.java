@@ -191,7 +191,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private GsProductionRequest convert(ProductionRequest productionRequest) {
         return new GsProductionRequest(productionRequest.getProductionType(),
-                                       productionRequest.getProductionParameters());
+                                       productionRequest.getParameters());
     }
 
     private GsProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {

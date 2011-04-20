@@ -40,7 +40,7 @@ public class Production {
         this.id = id;
         this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
         this.stagingPath = stagingPath;
-        this.autoStaging = Boolean.parseBoolean(productionRequest.getProductionParameter("autoStaging"));
+        this.autoStaging = Boolean.parseBoolean(productionRequest.getParameter("autoStaging"));
         this.workflow = workflow;
         this.productionRequest = productionRequest;
         this.stagingStatus = ProcessStatus.UNKNOWN;

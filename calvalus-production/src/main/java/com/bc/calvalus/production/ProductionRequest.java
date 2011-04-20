@@ -52,12 +52,43 @@ public class ProductionRequest {
         this.productionParameters = new HashMap<String, String>(productionParameters);
     }
 
+    public String getProductionType() {
+        return productionType;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public Map<String, String> getParameters() {
+        return Collections.unmodifiableMap(productionParameters);
+    }
+
+    public String getParameter(String name) {
+        return productionParameters.get(name);
+    }
+
+    public String getParameterSafe(String name) throws ProductionException {
+        String value = getParameter(name);
+        if (value == null) {
+            throw new ProductionException("Missing production parameter '" + name + "'");
+        }
+        return value;
+    }
+
+    public void ensureParameterSet(String name) throws ProductionException {
+        getParameterSafe(name);
+    }
+
     public static DateFormat getDateFormat() {
         return dateFormat;
     }
 
+    /////////////////////////////////////////////////////////////////////////
+    // Support for parameters of different types
+
     public boolean getBoolean(String name, Boolean def) {
-        String text = getProductionParameter(name);
+        String text = getParameter(name);
         if (text != null) {
             return Boolean.parseBoolean(text);
         } else {
@@ -65,38 +96,17 @@ public class ProductionRequest {
         }
     }
 
-    public String getBBox() throws ProductionException {
-        return String.format("%s,%s,%s,%s",
-                             getProductionParameterSafe("lonMin"),
-                             getProductionParameterSafe("latMin"),
-                             getProductionParameterSafe("lonMax"),
-                             getProductionParameterSafe("latMax"));
-    }
-
-    public Geometry getRoiGeometry() throws ProductionException {
-        String roiWkt = getProductionParameter("regionWKT");
-        if (roiWkt == null) {
-            String x1 = getProductionParameterSafe("lonMin");
-            String y1 = getProductionParameterSafe("latMin");
-            String x2 = getProductionParameterSafe("lonMax");
-            String y2 = getProductionParameterSafe("latMax");
-            roiWkt = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                                   x1, y1,
-                                   x2, y1,
-                                   x2, y2,
-                                   x1, y2,
-                                   x1, y1);
-        }
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(roiWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + roiWkt, e);
+    public Integer getInteger(String name, Integer def) {
+        String text = getParameter(name);
+        if (text != null) {
+            return Integer.parseInt(text);
+        } else {
+            return def;
         }
     }
 
     public Double getDouble(String name, Double def) {
-        String text = getProductionParameter(name);
+        String text = getParameter(name);
         if (text != null) {
             return Double.parseDouble(text);
         } else {
@@ -106,57 +116,49 @@ public class ProductionRequest {
 
     public Date getDate(String name) throws ProductionException {
         try {
-            return dateFormat.parse(getProductionParameterSafe(name));
+            return dateFormat.parse(getParameterSafe(name));
         } catch (ParseException e) {
             throw new ProductionException("Illegal date format for production parameter '" + name + "'");
         }
     }
 
-    public Integer getInteger(String name, Integer def) {
-        String text = getProductionParameter(name);
-        if (text != null) {
-            return Integer.parseInt(text);
-        } else {
-            return def;
+
+    /////////////////////////////////////////////////////////////////////////
+    // Support for specific parameters
+
+    public Geometry getRegionGeometry() throws ProductionException {
+        String regionWKT = getParameter("regionWKT");
+        if (regionWKT == null) {
+            String x1 = getParameterSafe("lonMin");
+            String y1 = getParameterSafe("latMin");
+            String x2 = getParameterSafe("lonMax");
+            String y2 = getParameterSafe("latMax");
+            regionWKT = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
+                                      x1, y1,
+                                      x2, y1,
+                                      x2, y2,
+                                      x1, y2,
+                                      x1, y1);
+        }
+        final WKTReader wktReader = new WKTReader();
+        try {
+            return wktReader.read(regionWKT);
+        } catch (com.vividsolutions.jts.io.ParseException e) {
+            throw new IllegalArgumentException("Illegal region geometry: " + regionWKT, e);
         }
     }
 
-    public String getProductionType() {
-        return productionType;
-    }
+    /////////////////////////////////////////////////////////////////////////
+    // Implementation helpers
 
-    public String getUserName() {
-        return userName;
-    }
-
-    public String getProductionParameter(String name) {
-        return productionParameters.get(name);
-    }
-
-    public String getProductionParameterSafe(String name) throws ProductionException {
-        String value = getProductionParameter(name);
-        if (value == null) {
-            throw new ProductionException("Missing production parameter '" + name + "'");
-        }
-        return value;
-    }
-
-    public void ensureProductionParameterSet(String name) throws ProductionException {
-        getProductionParameterSafe(name);
-    }
-
-    public Map<String, String> getProductionParameters() {
-        return Collections.unmodifiableMap(productionParameters);
-    }
-
-    private static Map<String, String> mapify(String[] productionParametersKeyValuePairs) {
+    private static Map<String, String> mapify(String[] parametersKeyValuePairs) {
         Map<String, String> productionParameters = new HashMap<String, String>();
-        for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
-            String name = productionParametersKeyValuePairs[i];
+        for (int i = 0; i < parametersKeyValuePairs.length; i += 2) {
+            String name = parametersKeyValuePairs[i];
             if (name == null) {
                 throw new NullPointerException("name");
             }
-            String value = productionParametersKeyValuePairs[i + 1];
+            String value = parametersKeyValuePairs[i + 1];
             if (value == null) {
                 throw new NullPointerException("value");
             }

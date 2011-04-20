@@ -84,8 +84,8 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
         assertEquals("marco", restoredProd1.getProductionRequest().getUserName());
-        assertEquals("5", restoredProd1.getProductionRequest().getProductionParameter("a"));
-        assertEquals("9", restoredProd1.getProductionRequest().getProductionParameter("b"));
+        assertEquals("5", restoredProd1.getProductionRequest().getParameter("a"));
+        assertEquals("9", restoredProd1.getProductionRequest().getParameter("b"));
 
         Production restoredProd2 = productions[1];
         assertEquals("id2", restoredProd2.getId());
@@ -101,8 +101,8 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd2.getProductionRequest());
         assertEquals("test", restoredProd2.getProductionRequest().getProductionType());
         assertEquals("martin", restoredProd2.getProductionRequest().getUserName());
-        assertEquals("9", restoredProd2.getProductionRequest().getProductionParameter("a"));
-        assertEquals("2", restoredProd2.getProductionRequest().getProductionParameter("b"));
+        assertEquals("9", restoredProd2.getProductionRequest().getParameter("a"));
+        assertEquals("2", restoredProd2.getProductionRequest().getParameter("b"));
 
         Production restoredProd3 = productions[2];
         assertEquals("id3", restoredProd3.getId());
@@ -118,7 +118,7 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd3.getProductionRequest());
         assertEquals("test", restoredProd3.getProductionRequest().getProductionType());
         assertEquals("norman", restoredProd3.getProductionRequest().getUserName());
-        assertEquals("1", restoredProd3.getProductionRequest().getProductionParameter("a"));
-        assertEquals("0", restoredProd3.getProductionRequest().getProductionParameter("b"));
+        assertEquals("1", restoredProd3.getProductionRequest().getParameter("a"));
+        assertEquals("0", restoredProd3.getProductionRequest().getParameter("b"));
     }
 }

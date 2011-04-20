@@ -196,7 +196,7 @@ public class SimpleProductionStore implements ProductionStore {
     }
 
     String encodeProductionRequestTSV(ProductionRequest productionRequest) {
-        Map<String, String> productionParameters = productionRequest.getProductionParameters();
+        Map<String, String> productionParameters = productionRequest.getParameters();
 
         StringBuilder sb = new StringBuilder();
         sb.append(productionRequest.getProductionType());

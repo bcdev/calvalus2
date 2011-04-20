@@ -14,7 +14,7 @@ public class L3ProductionTypeTest {
     @Test
     public void testCreateBinningConfig() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3Config l3Config = L3ProductionType.createBinningConfig(productionRequest);
+        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
         assertNotNull(l3Config);
         assertEquals(4320, l3Config.getBinningContext().getBinningGrid().getNumRows());
         assertEquals("NOT INVALID", l3Config.getVariableContext().getMaskExpr());
@@ -36,7 +36,7 @@ public class L3ProductionTypeTest {
     @Test
     public void testGeoRegion() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        Geometry regionOfInterest = productionRequest.getRoiGeometry();
+        Geometry regionOfInterest = productionRequest.getRegionGeometry();
         assertNotNull(regionOfInterest);
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
     }

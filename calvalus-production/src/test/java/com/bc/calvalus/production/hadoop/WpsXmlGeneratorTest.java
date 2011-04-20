@@ -21,14 +21,14 @@ public class WpsXmlGeneratorTest {
     public void testL3WpsXml() throws WorkflowException, ProductionException {
         ProductionRequest productionRequest = L3ProductionTypeTest.createValidL3ProductionRequest();
 
-        L3Config binningConfig = L3ProductionType.createBinningConfig(productionRequest);
+        L3Config binningConfig = L3ProductionType.createL3Config(productionRequest);
 
-        Map<String, Object> templateParameters = new HashMap<String, Object>(productionRequest.getProductionParameters());
+        Map<String, Object> templateParameters = new HashMap<String, Object>(productionRequest.getParameters());
         templateParameters.put("productionId", "ID_pi-pa-po");
         templateParameters.put("productionType", "A25F");
         templateParameters.put("productionName", "Wonderful L3");
         templateParameters.put("binningParameters", binningConfig);
-        templateParameters.put("regionWkt", productionRequest.getRoiGeometry().toString());
+        templateParameters.put("regionWkt", productionRequest.getRegionGeometry().toString());
         templateParameters.put("inputFiles", new String[]{
                 "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F1.N1",
                 "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/06/05/F2.N1",

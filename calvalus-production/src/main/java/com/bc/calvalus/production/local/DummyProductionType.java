@@ -36,7 +36,7 @@ class DummyProductionType implements ProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        String name = productionRequest.getProductionParameter("name");
+        String name = productionRequest.getParameter("name");
         if (name == null) {
             name = "Doing something";
         }
