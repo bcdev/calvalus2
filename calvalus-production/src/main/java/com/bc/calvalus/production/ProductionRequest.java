@@ -81,11 +81,11 @@ public class ProductionRequest {
             String x2 = getProductionParameterSafe("lonMax");
             String y2 = getProductionParameterSafe("latMax");
             roiWkt = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                                         x1, y1,
-                                         x2, y1,
-                                         x2, y2,
-                                         x1, y2,
-                                         x1, y1);
+                                   x1, y1,
+                                   x2, y1,
+                                   x2, y2,
+                                   x1, y2,
+                                   x1, y1);
         }
         final WKTReader wktReader = new WKTReader();
         try {
@@ -129,7 +129,7 @@ public class ProductionRequest {
         return userName;
     }
 
-    public String getProductionParameter(String name)  {
+    public String getProductionParameter(String name) {
         return productionParameters.get(name);
     }
 
@@ -153,7 +153,7 @@ public class ProductionRequest {
         Map<String, String> productionParameters = new HashMap<String, String>();
         for (int i = 0; i < productionParametersKeyValuePairs.length; i += 2) {
             String name = productionParametersKeyValuePairs[i];
-             if (name == null) {
+            if (name == null) {
                 throw new NullPointerException("name");
             }
             String value = productionParametersKeyValuePairs[i + 1];
