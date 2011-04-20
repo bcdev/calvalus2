@@ -23,24 +23,14 @@ import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.VariableContextImpl;
 import com.bc.calvalus.binning.WritableVector;
-import com.bc.calvalus.processing.l3.L3Reprojector;
-import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
 import org.junit.Test;
 
 import java.awt.Rectangle;
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class L3ReprojectorTest {
     static final int NAN = -1;
@@ -266,33 +256,6 @@ public class L3ReprojectorTest {
         assertEquals(NAN, nobsData[y * width + 9]);
         assertEquals(NAN, nobsData[y * width + 10]);
         assertEquals(NAN, nobsData[y * width + 11]);
-    }
-
-    @Test
-    public void testThatProductCanBeTiledInSlices() throws IOException {
-        File input = new File("testdata/MER_RR__1P_TEST.N1");
-        if (!input.exists()) {
-            System.out.println("Warning: test not performed: can't find " + input);
-            return;
-        }
-
-        System.setProperty("beam.envisat.tileHeight", Integer.toString(64));
-        EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
-        ProductReader productReader = plugIn.createReaderInstance();
-
-        Product sourceProduct = productReader.readProductNodes(input, null);
-        Band band = sourceProduct.getBand("radiance_13");
-        assertThatImageIsSliced(sourceProduct, band.getSourceImage());
-        assertThatImageIsSliced(sourceProduct, band.getValidMaskImage());
-        assertThatImageIsSliced(sourceProduct, band.getGeophysicalImage());
-    }
-
-    private void assertThatImageIsSliced(Product product, MultiLevelImage image) {
-        int tileWidth = image.getTileWidth();
-        int sceneRasterWidth = product.getSceneRasterWidth();
-        String msg = MessageFormat.format("Product not sliced: image.tileSize = {0}x{1}, product.sceneRasterSize = {2}x{3}",
-                                          tileWidth, image.getTileHeight(), sceneRasterWidth, product.getSceneRasterHeight());
-        assertTrue(msg, tileWidth == sceneRasterWidth);
     }
 
     /**
