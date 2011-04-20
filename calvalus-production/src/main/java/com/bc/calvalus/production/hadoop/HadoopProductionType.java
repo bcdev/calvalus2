@@ -112,9 +112,4 @@ public abstract class HadoopProductionType implements ProductionType {
             throw new ProductionException("Failed to compute input file list.", e);
         }
     }
-
-    public static boolean isAutoStaging(ProductionRequest request) throws ProductionException {
-        return request.getBoolean("autoStaging", false);
-    }
-
 }

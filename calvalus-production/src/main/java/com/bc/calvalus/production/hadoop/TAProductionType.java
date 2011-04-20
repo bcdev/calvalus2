@@ -25,6 +25,7 @@ import java.util.Date;
  */
 public class TAProductionType extends HadoopProductionType {
 
+
     public TAProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super("TA", processingService, stagingService);
     }
@@ -35,26 +36,27 @@ public class TAProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createTAProductionName(productionRequest);
 
-        String inputProductSetId = productionRequest.getParameterSafe("inputProductSetId");
+        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
         Date startDate = productionRequest.getDate("dateStart");
         Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
 
-        String processorName = productionRequest.getParameterSafe("processorName");
-        String processorParameters = productionRequest.getParameterSafe("processorParameters");
+        String processorName = productionRequest.getParameter("processorName");
+        String processorParameters = productionRequest.getParameter("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameterSafe("processorBundleName"),
-                                               productionRequest.getParameterSafe("processorBundleVersion"));
+                                               productionRequest.getParameter("processorBundleName"),
+                                               productionRequest.getParameter("processorBundleVersion"));
 
         Geometry roiGeometry = productionRequest.getRegionGeometry();
 
         L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
         TAConfig taConfig = createTAConfig(productionRequest);
 
-        int periodCount = Integer.parseInt(productionRequest.getParameter("periodCount"));
-        int periodLength = Integer.parseInt(productionRequest.getParameter("periodLength")); // unit=days
+        // todo - compute default value: periodLengthDefault =(stopDate - startDate)  (nf,20.04.2011)
+        int periodLength = productionRequest.getInteger("periodLength", 4); // unit=days
+        int periodCount = productionRequest.getInteger("periodCount", 1);// unit=1
 
         long time = startDate.getTime();
-        long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+        long periodLengthMillis = periodLength * L3ProductionType.MILLIS_PER_DAY;
 
         Workflow.Parallel parallel = new Workflow.Parallel();
         for (int i = 0; i < periodCount; i++) {
@@ -104,9 +106,11 @@ public class TAProductionType extends HadoopProductionType {
         }
 
         String stagingDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
+        boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
                               stagingDir,
+                              autoStaging,
                               productionRequest,
                               parallel);
     }
@@ -126,7 +130,7 @@ public class TAProductionType extends HadoopProductionType {
                              dirName);
     }
 
-    static String createTAProductionName(ProductionRequest productionRequest) {
+    static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Trend analysis using product set '%s' and L2 processor '%s'",
                              productionRequest.getParameter("inputProductSetId"),
                              productionRequest.getParameter("processorName"));

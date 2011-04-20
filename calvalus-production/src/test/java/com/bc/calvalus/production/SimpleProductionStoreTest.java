@@ -25,7 +25,7 @@ public class SimpleProductionStoreTest {
 
         Production prod1 = new Production("id1", "name1",
                                           "path1",
-                                          new ProductionRequest("test", "marco",
+                                          false, new ProductionRequest("test", "marco",
                                                                 "a", "5",
                                                                 "b", "9"),
                                           new TestWorkflowItem<String>("job5",
@@ -35,7 +35,7 @@ public class SimpleProductionStoreTest {
                                                                        null));
 
         Production prod2 = new Production("id2", "name2", null,
-                                          new ProductionRequest("test", "martin",
+                                          false, new ProductionRequest("test", "martin",
                                                                 "a", "9",
                                                                 "b", "2"),
                                           new TestWorkflowItem<String>("job9",
@@ -45,7 +45,7 @@ public class SimpleProductionStoreTest {
                                                                        new Date(13)));
 
         Production prod3 = new Production("id3", "name3", "path3",
-                                          new ProductionRequest("test", "norman",
+                                          true, new ProductionRequest("test", "norman",
                                                                 "a", "1",
                                                                 "b", "0",
                                                                 "autoStaging", "true"),
@@ -84,8 +84,8 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd1.getProductionRequest());
         assertEquals("test", restoredProd1.getProductionRequest().getProductionType());
         assertEquals("marco", restoredProd1.getProductionRequest().getUserName());
-        assertEquals("5", restoredProd1.getProductionRequest().getParameter("a"));
-        assertEquals("9", restoredProd1.getProductionRequest().getParameter("b"));
+        assertEquals("5", restoredProd1.getProductionRequest().getParameter("a", null));
+        assertEquals("9", restoredProd1.getProductionRequest().getParameter("b", null));
 
         Production restoredProd2 = productions[1];
         assertEquals("id2", restoredProd2.getId());
@@ -101,8 +101,8 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd2.getProductionRequest());
         assertEquals("test", restoredProd2.getProductionRequest().getProductionType());
         assertEquals("martin", restoredProd2.getProductionRequest().getUserName());
-        assertEquals("9", restoredProd2.getProductionRequest().getParameter("a"));
-        assertEquals("2", restoredProd2.getProductionRequest().getParameter("b"));
+        assertEquals("9", restoredProd2.getProductionRequest().getParameter("a", null));
+        assertEquals("2", restoredProd2.getProductionRequest().getParameter("b", null));
 
         Production restoredProd3 = productions[2];
         assertEquals("id3", restoredProd3.getId());
@@ -118,7 +118,7 @@ public class SimpleProductionStoreTest {
         assertNotNull(restoredProd3.getProductionRequest());
         assertEquals("test", restoredProd3.getProductionRequest().getProductionType());
         assertEquals("norman", restoredProd3.getProductionRequest().getUserName());
-        assertEquals("1", restoredProd3.getProductionRequest().getParameter("a"));
-        assertEquals("0", restoredProd3.getProductionRequest().getParameter("b"));
+        assertEquals("1", restoredProd3.getProductionRequest().getParameter("a", null));
+        assertEquals("0", restoredProd3.getProductionRequest().getParameter("b", null));
     }
 }

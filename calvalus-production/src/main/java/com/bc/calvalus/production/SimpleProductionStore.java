@@ -125,8 +125,10 @@ public class SimpleProductionStore implements ProductionStore {
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
             WorkflowItem workflow = createWorkflow(jobIDs, dates, processStatus);
+            boolean autoStaging = Boolean.parseBoolean(productionRequest.getParameter("autoStaging", "false"));
             Production production = new Production(id, name,
                                                    stagingPath,
+                                                   autoStaging,
                                                    productionRequest,
                                                    workflow);
             production.setStagingStatus(stagingStatus);

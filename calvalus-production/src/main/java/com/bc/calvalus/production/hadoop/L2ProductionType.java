@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -32,11 +33,12 @@ public class L2ProductionType extends HadoopProductionType {
         L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
-        boolean autoStaging = isAutoStaging(productionRequest);
-
+        String stagingDir = userName + "/" + productionId;
+        boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              userName + "/" + productionId,
+                              stagingDir,
+                              autoStaging,
                               productionRequest,
                               workflowItem);
     }
@@ -48,7 +50,7 @@ public class L2ProductionType extends HadoopProductionType {
                              getStagingService().getStagingDir());
     }
 
-    static String createL2ProductionName(ProductionRequest productionRequest) {
+    static String createL2ProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Level 2 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getParameter("inputProductSetId"),
                              productionRequest.getParameter("processorName"));
@@ -57,7 +59,7 @@ public class L2ProductionType extends HadoopProductionType {
     L2WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        String inputProductSetId = productionRequest.getParameterSafe("inputProductSetId");
+        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
         Date startDate = productionRequest.getDate("dateStart");
         Date stopDate = productionRequest.getDate("dateStop");
 
@@ -66,11 +68,11 @@ public class L2ProductionType extends HadoopProductionType {
         String[] inputFiles = getInputFiles(inputProductSetId, startDate, stopDate);
         String outputDir = getOutputDir(productionId, productionRequest);
 
-        String processorName = productionRequest.getParameterSafe("processorName");
-        String processorParameters = productionRequest.getParameterSafe("processorParameters");
+        String processorName = productionRequest.getParameter("processorName");
+        String processorParameters = productionRequest.getParameter("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameterSafe("processorBundleName"),
-                                               productionRequest.getParameterSafe("processorBundleVersion"));
+                                               productionRequest.getParameter("processorBundleName"),
+                                               productionRequest.getParameter("processorBundleVersion"));
 
         return new L2WorkflowItem(getProcessingService(),
                                   productionId,

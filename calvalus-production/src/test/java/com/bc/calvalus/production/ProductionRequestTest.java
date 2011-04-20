@@ -1,14 +1,17 @@
 package com.bc.calvalus.production;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class ProductionRequestTest {
 
@@ -82,7 +85,45 @@ public class ProductionRequestTest {
     }
 
     @Test
-    public void testGetRoiGeometry() throws ProductionException {
+    public void testBasicParameterAccessors() throws ProductionException, ParseException {
+        ProductionRequest req = new ProductionRequest("typeA", "ewa",
+                                                      "s", "Calvalus rules!",
+                                                      "b", "true",
+                                                      "i", "4",
+                                                      "f", "-2.3",
+                                                      "d", "2011-07-13",
+                                                      "g", "POINT(15.1 11.6)");
+
+        GeometryFactory gf = new GeometryFactory();
+        Date date = ProductionRequest.DATE_FORMAT.parse("2011-07-13");
+        Point point = gf.createPoint(new Coordinate(15.1, 11.6));
+
+        assertEquals("Calvalus rules!", req.getParameter("s"));
+        assertEquals(true, req.getBoolean("b"));
+        assertEquals(4, req.getInteger("i"));
+        assertEquals(-2.3, req.getDouble("f"), 1e-10);
+        assertEquals(date, req.getDate("d"));
+        assertTrue(point.equalsExact(req.getGeometry("g")));
+
+        assertEquals("Calvalus sucks?", req.getParameter("missingParam", "Calvalus sucks?"));
+        assertEquals(true, req.getBoolean("missingParam", true));
+        assertEquals(234, (int) req.getInteger("missingParam", 234));
+        assertEquals(1.9, req.getDouble("missingParam", 1.9), 1e-10);
+        assertSame(date, req.getDate("missingParam", date));
+        assertSame(point, req.getGeometry("missingParam", point));
+
+        try {
+            req.getParameter("missingParam");
+            fail("ProductionException expected");
+        } catch (ProductionException e) {
+            // ok
+        }
+
+    }
+
+
+    @Test
+    public void testGetRegionGeometry() throws ProductionException {
         ProductionRequest req = new ProductionRequest("typeA", "ewa");
         Geometry regionOfInterest;
 

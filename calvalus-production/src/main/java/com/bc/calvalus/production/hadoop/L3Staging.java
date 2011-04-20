@@ -101,7 +101,7 @@ class L3Staging extends Staging {
 
     private L3FormatterConfig createFormatterConfig(File outputDir, String dateStart, String dateStop) throws ProductionException {
 
-        String outputFormat = production.getProductionRequest().getParameterSafe("outputFormat");
+        String outputFormat = production.getProductionRequest().getParameter("outputFormat");
         String extension;
         if (outputFormat.equals("BEAM-DIMAP")) {
             extension = "dim";

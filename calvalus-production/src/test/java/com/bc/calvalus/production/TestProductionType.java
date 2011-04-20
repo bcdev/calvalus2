@@ -31,9 +31,11 @@ public class TestProductionType implements ProductionType {
         productionCount++;
         Workflow.Parallel workflow = new Workflow.Parallel(new MyWorkflowItem("job_" + productionCount + "_1"),
                                                            new MyWorkflowItem("job_" + productionCount + "_2"));
+        boolean autoStaging = productionRequest.isAutoStaging();
         return new Production("id_" + productionCount,
                               "name_" + productionCount,
                               "stagingPath_" + productionCount,
+                              autoStaging,
                               productionRequest,
                               workflow);
     }

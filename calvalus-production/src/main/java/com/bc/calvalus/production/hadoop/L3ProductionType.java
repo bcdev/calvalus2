@@ -23,6 +23,8 @@ import static java.lang.Math.*;
  */
 public class L3ProductionType extends HadoopProductionType {
 
+    static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
+
     public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super("calvalus-level3", processingService, stagingService);
     }
@@ -35,25 +37,26 @@ public class L3ProductionType extends HadoopProductionType {
         final String userName = productionRequest.getUserName();
 
 
-        String inputProductSetId = productionRequest.getParameterSafe("inputProductSetId");
+        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
         Date startDate = productionRequest.getDate("dateStart");
-        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter (we use startDate + i * periodLength here)
+        Date stopDate = productionRequest.getDate("dateStop");  // todo - clarify meaning of this parameter; we use startDate + i * periodLength here (nf)
 
-        String processorName = productionRequest.getParameterSafe("processorName");
-        String processorParameters = productionRequest.getParameterSafe("processorParameters");
+        String processorName = productionRequest.getParameter("processorName");
+        String processorParameters = productionRequest.getParameter("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameterSafe("processorBundleName"),
-                                               productionRequest.getParameterSafe("processorBundleVersion"));
+                                               productionRequest.getParameter("processorBundleName"),
+                                               productionRequest.getParameter("processorBundleVersion"));
 
         Geometry roiGeometry = productionRequest.getRegionGeometry();
 
         L3Config l3Config = createL3Config(productionRequest);
 
-        int periodCount = Integer.parseInt(productionRequest.getParameter("periodCount"));
-        int periodLength = Integer.parseInt(productionRequest.getParameter("periodLength")); // unit=days
+        // todo - compute default value: periodLengthDefault =(stopDate - startDate)  (nf,20.04.2011)
+        int periodLength = productionRequest.getInteger("periodLength", 4); // unit=days
+        int periodCount = productionRequest.getInteger("periodCount", 1);// unit=1
 
         long time = startDate.getTime();
-        long periodLengthMillis = periodLength * 24L * 60L * 60L * 1000L;
+        long periodLengthMillis = periodLength * MILLIS_PER_DAY;
 
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (int i = 0; i < periodCount; i++) {
@@ -61,7 +64,7 @@ public class L3ProductionType extends HadoopProductionType {
             Date date1 = new Date(time);
             Date date2 = new Date(time + periodLengthMillis - 1L);
 
-            // todo - use geoRegion to filter input files
+            // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
             String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
 
@@ -80,9 +83,12 @@ public class L3ProductionType extends HadoopProductionType {
             time += periodLengthMillis;
         }
 
+        String stagingDir = userName + "/" + productionId;
+        boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              userName + "/" + productionId,
+                              stagingDir,
+                              autoStaging,
                               productionRequest,
                               workflow);
     }
@@ -102,7 +108,7 @@ public class L3ProductionType extends HadoopProductionType {
                              index);
     }
 
-    static String createL3ProductionName(ProductionRequest productionRequest) {
+    static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
                              productionRequest.getParameter("inputProductSetId"),
                              productionRequest.getParameter("processorName"));
@@ -112,16 +118,16 @@ public class L3ProductionType extends HadoopProductionType {
     static L3Config createL3Config(ProductionRequest productionRequest) throws ProductionException {
         L3Config l3Config = new L3Config();
         l3Config.setNumRows(getNumRows(productionRequest));
-        l3Config.setSuperSampling(Integer.parseInt(productionRequest.getParameter("superSampling")));
-        l3Config.setMaskExpr(productionRequest.getParameter("maskExpr"));
+        l3Config.setSuperSampling(productionRequest.getInteger("superSampling", 1));
+        l3Config.setMaskExpr(productionRequest.getParameter("maskExpr", ""));
         l3Config.setVariables(getVariables(productionRequest));
         l3Config.setAggregators(getAggregators(productionRequest));
         return l3Config;
     }
 
     static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
-        String inputVariablesStr = request.getParameterSafe("inputVariables");
-        String aggregatorName = request.getParameterSafe("aggregator");
+        String inputVariablesStr = request.getParameter("inputVariables");
+        String aggregatorName = request.getParameter("aggregator");
         Integer percentage = request.getInteger("percentage", null);
         Double weightCoeff = request.getDouble("weightCoeff", null);
         Double fillValue = request.getDouble("fillValue", null);
@@ -147,7 +153,7 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static int getNumRows(ProductionRequest request) throws ProductionException {
-        double resolution = Double.parseDouble(request.getParameterSafe("resolution"));
+        double resolution = request.getDouble("resolution");
         return computeBinningGridRowCount(resolution);
     }
 

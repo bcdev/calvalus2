@@ -4,8 +4,6 @@ import com.bc.calvalus.commons.ProcessState;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;
 
-import java.text.SimpleDateFormat;
-
 import static org.junit.Assert.*;
 
 public class ProductionTest {
@@ -16,7 +14,7 @@ public class ProductionTest {
         JobID jobID = new JobID("34627598547", 6);
 
         production = new Production("9A3F", "Toasting", null,
-                                    new ProductionRequest("test", "ewa"),
+                                    false, new ProductionRequest("test", "ewa"),
                                     new MyWorkflowItem(jobID));
         assertEquals("9A3F", production.getId());
         assertEquals("Toasting", production.getName());
@@ -36,7 +34,7 @@ public class ProductionTest {
         JobID jobID = new JobID("34627985F47", 4);
 
         production = new Production("9A3F", "Toasting", null,
-                                    new ProductionRequest("test", "ewa"),
+                                    false, new ProductionRequest("test", "ewa"),
                                     new MyWorkflowItem(jobID));
 
         assertEquals(jobID, production.getJobIds()[0]);

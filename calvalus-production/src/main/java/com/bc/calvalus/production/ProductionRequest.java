@@ -1,7 +1,9 @@
 package com.bc.calvalus.production;
 
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -18,7 +20,9 @@ import java.util.Map;
  * @author Norman
  */
 public class ProductionRequest {
-    public final static DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+    public static final String DATE_PATTERN = "yyyy-MM-dd";
+    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
+
     private final String productionType;
     private final String userName;
     private final Map<String, String> productionParameters;
@@ -64,88 +68,174 @@ public class ProductionRequest {
         return Collections.unmodifiableMap(productionParameters);
     }
 
-    public String getParameter(String name) {
-        return productionParameters.get(name);
+    public String getParameter(String name, String def) {
+        String value = productionParameters.get(name);
+        return value != null ? value : def;
     }
 
-    public String getParameterSafe(String name) throws ProductionException {
-        String value = getParameter(name);
-        if (value == null) {
-            throw new ProductionException("Missing production parameter '" + name + "'");
+    public String getParameter(String name) throws ProductionException {
+        return getParameter(name, true);
+    }
+
+    public String getParameter(String name, boolean notNull) throws ProductionException {
+        String value = productionParameters.get(name);
+        if (value == null && notNull) {
+            throw new ProductionException("Production parameter '" + name + "' not set.");
         }
         return value;
     }
 
+
     public void ensureParameterSet(String name) throws ProductionException {
-        getParameterSafe(name);
+        getParameter(name);
     }
 
     public static DateFormat getDateFormat() {
-        return dateFormat;
+        return DATE_FORMAT;
     }
 
     /////////////////////////////////////////////////////////////////////////
     // Support for parameters of different types
 
-    public boolean getBoolean(String name, Boolean def) {
-        String text = getParameter(name);
-        if (text != null) {
-            return Boolean.parseBoolean(text);
-        } else {
-            return def;
-        }
+    /**
+     * Gets a mandatory Boolean parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public boolean getBoolean(String name) throws ProductionException {
+        return parseBoolean(name, getParameter(name, true));
     }
 
-    public Integer getInteger(String name, Integer def) {
-        String text = getParameter(name);
-        if (text != null) {
-            return Integer.parseInt(text);
-        } else {
-            return def;
-        }
+    /**
+     * Gets an optional Boolean parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Boolean getBoolean(String name, Boolean def) throws ProductionException {
+        String text = getParameter(name, false);
+        return text != null ? parseBoolean(name, text) : def;
     }
 
-    public Double getDouble(String name, Double def) {
-        String text = getParameter(name);
-        if (text != null) {
-            return Double.parseDouble(text);
-        } else {
-            return def;
-        }
+    /**
+     * Gets a mandatory integer parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public int getInteger(String name) throws ProductionException {
+        return parseInteger(name, getParameter(name, true));
     }
 
+    /**
+     * Gets an optional integer parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Integer getInteger(String name, Integer def) throws ProductionException {
+        String text = getParameter(name, false);
+        return text != null ? parseInteger(name, text) : def;
+    }
+
+    /**
+     * Gets a mandatory double precision parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public double getDouble(String name) throws ProductionException {
+        return parseDouble(name, getParameter(name, true));
+    }
+
+    /**
+     * Gets an optional double precision parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Double getDouble(String name, Double def) throws ProductionException {
+        String text = getParameter(name, false);
+        return text != null ? parseDouble(name, text) : def;
+    }
+
+    /**
+     * Gets a mandatory date parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
     public Date getDate(String name) throws ProductionException {
-        try {
-            return dateFormat.parse(getParameterSafe(name));
-        } catch (ParseException e) {
-            throw new ProductionException("Illegal date format for production parameter '" + name + "'");
-        }
+        return parseDate(name, getParameter(name, true));
     }
 
+    /**
+     * Gets an optional date parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Date getDate(String name, Date def) throws ProductionException {
+        String text = getParameter(name, false);
+        return text != null ? parseDate(name, text) : def;
+    }
+
+    /**
+     * Gets a mandatory geometry parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public Geometry getGeometry(String name) throws ProductionException {
+        return parseGeometry(name, getParameter(name, true));
+    }
+
+    /**
+     * Gets an optional geometry parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Geometry getGeometry(String name, Geometry def) throws ProductionException {
+        String text = getParameter(name, false);
+        return text != null ? parseGeometry(name, text) : def;
+    }
 
     /////////////////////////////////////////////////////////////////////////
     // Support for specific parameters
 
+    public boolean isAutoStaging() throws ProductionException {
+        return getBoolean("autoStaging", false);
+    }
+
     public Geometry getRegionGeometry() throws ProductionException {
-        String regionWKT = getParameter("regionWKT");
-        if (regionWKT == null) {
-            String x1 = getParameterSafe("lonMin");
-            String y1 = getParameterSafe("latMin");
-            String x2 = getParameterSafe("lonMax");
-            String y2 = getParameterSafe("latMax");
-            regionWKT = String.format("POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                                      x1, y1,
-                                      x2, y1,
-                                      x2, y2,
-                                      x1, y2,
-                                      x1, y1);
+        Geometry geometry = getGeometry("regionWKT", null);
+        if (geometry == null) {
+            double x1 = getDouble("lonMin");
+            double y1 = getDouble("latMin");
+            double x2 = getDouble("lonMax");
+            double y2 = getDouble("latMax");
+            GeometryFactory factory = new GeometryFactory();
+            return factory.createPolygon(factory.createLinearRing(new Coordinate[]{
+                    new Coordinate(x1, y1),
+                    new Coordinate(x2, y1),
+                    new Coordinate(x2, y2),
+                    new Coordinate(x1, y2),
+                    new Coordinate(x1, y1),
+            }), null);
         }
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(regionWKT);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + regionWKT, e);
-        }
+        return geometry;
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -165,5 +255,48 @@ public class ProductionRequest {
             productionParameters.put(name, value);
         }
         return productionParameters;
+    }
+
+    private static boolean parseBoolean(String name, String text) throws ProductionException {
+        if (text.equalsIgnoreCase("true")) {
+            return Boolean.TRUE;
+        } else if (text.equalsIgnoreCase("false")) {
+            return Boolean.FALSE;
+        } else {
+            throw new ProductionException("Production parameter '" + name + "' must be a Boolean ('true' or 'false').");
+        }
+    }
+
+    private static Integer parseInteger(String name, String text) throws ProductionException {
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            throw new ProductionException("Production parameter '" + name + "' must be an integer number.");
+        }
+    }
+
+    private static double parseDouble(String name, String text) throws ProductionException {
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            throw new ProductionException("Production parameter '" + name + "' must be a number.");
+        }
+    }
+
+    private static Date parseDate(String name, String text) throws ProductionException {
+        try {
+            return DATE_FORMAT.parse(text);
+        } catch (ParseException e) {
+            throw new ProductionException("Parameter '" + name + "' must be date of format '" + DATE_PATTERN + "'.");
+        }
+    }
+
+    private static Geometry parseGeometry(String name, String text) throws ProductionException {
+        final WKTReader wktReader = new WKTReader();
+        try {
+            return wktReader.read(text);
+        } catch (com.vividsolutions.jts.io.ParseException e) {
+            throw new ProductionException("Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
+        }
     }
 }

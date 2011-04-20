@@ -36,7 +36,7 @@ class DummyProductionType implements ProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        String name = productionRequest.getParameter("name");
+        String name = productionRequest.getParameter("name", null);
         if (name == null) {
             name = "Doing something";
         }
@@ -77,9 +77,12 @@ class DummyProductionType implements ProductionType {
 
         String userName = productionRequest.getUserName();
         String productionId = Production.createId(productionRequest.getProductionType());
+        String stagingDir = userName + "/" + productionId;
+        boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               name,
-                              userName + "/" + productionId,
+                              stagingDir,
+                              autoStaging,
                               productionRequest,
                               sequential);
     }

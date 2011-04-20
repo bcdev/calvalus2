@@ -26,6 +26,7 @@ public class Production {
     public Production(String id,
                       String name,
                       String stagingPath,
+                      boolean autoStaging,
                       ProductionRequest productionRequest,
                       WorkflowItem workflow) {
         if (id == null) {
@@ -38,9 +39,9 @@ public class Production {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
-        this.name = name;  // todo - check: remove param, instead derive from  productionRequest?
+        this.name = name;  // todo - check: remove field, instead get from productionRequest.name? (nf)
         this.stagingPath = stagingPath;
-        this.autoStaging = Boolean.parseBoolean(productionRequest.getParameter("autoStaging"));
+        this.autoStaging = autoStaging;
         this.workflow = workflow;
         this.productionRequest = productionRequest;
         this.stagingStatus = ProcessStatus.UNKNOWN;
