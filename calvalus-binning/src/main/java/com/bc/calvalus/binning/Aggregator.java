@@ -1,10 +1,45 @@
 package com.bc.calvalus.binning;
 
+import java.util.List;
+
 /**
+ * An aggregator provides the strategies for spatial and temporal binning. Operating on single bin cells,
+ * an aggregator provides the answers for
+ * <ul>
+ * <li>A. Spatial binning: how are input samples of a single observation (swath) aggregated to spatial bins?</li>
+ * <li>B. Temporal binning: how are spatial bins aggregated to temporal bins?</li>
+ * <li>C. Final statistics: how are final statistic computed?</li>
+ * </ul>
+ * <p/>
+ * A. Spatial binning: For each bin found in a single observation (swath).
+ * <ol>
+ * <li>{@link #initSpatial(BinContext, WritableVector)}</li>
+ * <li>For each contributing measurement: {@link #aggregateSpatial(BinContext, Vector, WritableVector)}</li>
+ * <li>{@link #completeSpatial(BinContext, int, WritableVector)}</li>
+ * </ol>
+ * <p/>
+ * B. Temporal binning: For all bins found in all swaths.
+ * <ol>
+ * <li>{@link #initTemporal(BinContext, WritableVector)}</li>
+ * <li>For each contributing spatial bin: {@link #aggregateTemporal(BinContext, Vector, int, WritableVector)}</li>
+ * <li>{@link #completeTemporal(BinContext, int, WritableVector)}</li>
+ * </ol>
+ * <p/>
+ * C. Final statistics: For all bins found in all swaths compute the final statistics.
+ * <ol>
+ * <li>{@link #computeOutput(Vector, WritableVector)}</li>
+ * </ol>
+ * <p/>
+ * Note for implementors: Aggregators have no state, in order to exchange information within the spatial or temporal
+ * binning calling sequences, use the {@link BinContext}.
+ *
  * @author Norman Fomferra
  */
 public interface Aggregator {
 
+    /**
+     * @return The aggregator's name.
+     */
     String getName();
 
     // todo - replace next 2 by PropertyContext getSpatialPropertyContext()
@@ -13,11 +48,15 @@ public interface Aggregator {
 
     String getSpatialPropertyName(int i);
 
+    // Feature[] getSpatialFeatures();
+
     // todo - replace next 2 by PropertyContext getTemporalPropertyContext()
 
     int getTemporalPropertyCount();
 
     String getTemporalPropertyName(int i);
+
+    // Feature[] getTemporalFeatures();
 
     // todo - replace next 2 by PropertyContext getOutputPropertyContext()
 
@@ -26,6 +65,8 @@ public interface Aggregator {
     String getOutputPropertyName(int i);
 
     double getOutputPropertyFillValue(int i);
+
+    // OutputFeature[] getOutputFeatures();
 
     /**
      * Initialises the spatial aggregation vector.
