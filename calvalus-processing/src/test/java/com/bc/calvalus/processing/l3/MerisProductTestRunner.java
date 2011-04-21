@@ -22,6 +22,9 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * A test runner that is used to run unit-level tests that require a MERIS data product
@@ -31,8 +34,7 @@ import java.io.File;
  */
 public class MerisProductTestRunner extends BlockJUnit4ClassRunner {
 
-    private static final String TESTDATA_DIR = "testdata";
-    private static final String MERIS_PRODUCT = "MER_RR__1P_TEST.N1";
+    static final String TEST_DATA = "/eodata/MER_RR__1P_TEST.N1";
 
     public MerisProductTestRunner(Class<?> testClass) throws InitializationError {
         super(testClass);
@@ -40,17 +42,27 @@ public class MerisProductTestRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        File testproductFile = getTestProductFile();
-        if (testproductFile.exists()) {
+        File file = getTestProductFile();
+        if (file.exists()) {
             super.runChild(method, notifier);
         } else {
-            System.err.println("Warning: test not performed: can't find " + testproductFile);
+            System.err.println("Warning: test not performed: can't find " + file);
             notifier.fireTestIgnored(describeChild(method));
         }
     }
 
     static File getTestProductFile() {
-        return new File(TESTDATA_DIR, MERIS_PRODUCT);
+        final URL resource = MerisProductTestRunner.class.getResource(TEST_DATA);
+        if (resource == null) {
+            throw new IllegalStateException("Resource not found: " + TEST_DATA);
+        }
+        final URI uri;
+        try {
+            uri = resource.toURI();
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
+        return new File(uri);
     }
 
 }
