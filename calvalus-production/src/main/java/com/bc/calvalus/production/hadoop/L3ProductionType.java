@@ -137,7 +137,7 @@ public class L3ProductionType extends HadoopProductionType {
         String aggregatorName = request.getParameter("aggregator");
         Integer percentage = request.getInteger("percentage", null);
         Double weightCoeff = request.getDouble("weightCoeff", null);
-        Double fillValue = request.getDouble("fillValue", null);
+        Float fillValue = request.getFloat("fillValue", null);
         String[] inputVariables = inputVariablesStr.split(",");
         for (int i = 0; i < inputVariables.length; i++) {
             inputVariables[i] = inputVariables[i].trim();

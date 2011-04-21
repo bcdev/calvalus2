@@ -17,11 +17,11 @@ public class BinManagerImplTest {
 
         SpatialBin sbin = binManager.createSpatialBin(42);
         assertEquals(42, sbin.getIndex());
-        assertEquals(2 + 2 + 2 + 3, sbin.getPropertyCount());
+        assertEquals(2 + 2 + 2 + 3, sbin.getFeatureValues().length);
 
         TemporalBin tbin = binManager.createTemporalBin(42);
         assertEquals(42, tbin.getIndex());
-        assertEquals(3 + 3 + 2 + 3, tbin.getPropertyCount());
+        assertEquals(3 + 3 + 2 + 3, tbin.getFeatureValues().length);
     }
 
 

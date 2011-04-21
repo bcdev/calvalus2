@@ -70,7 +70,7 @@ public class L3Config {
 
         Double weightCoeff;
 
-        Double fillValue;
+        Float fillValue;
 
         public AggregatorConfiguration() {
         }
@@ -99,7 +99,7 @@ public class L3Config {
             return weightCoeff;
         }
 
-        public Double getFillValue() {
+        public Float getFillValue() {
             return fillValue;
 
         }
@@ -124,7 +124,7 @@ public class L3Config {
             this.weightCoeff = weightCoeff;
         }
 
-        public void setFillValue(Double fillValue) {
+        public void setFillValue(Float fillValue) {
             this.fillValue = fillValue;
         }
     }

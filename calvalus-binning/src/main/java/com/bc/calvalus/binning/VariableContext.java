@@ -1,11 +1,9 @@
 package com.bc.calvalus.binning;
 
-// todo - rename to InputPropertyContext
 public interface VariableContext {
     int getVariableCount();
-    String getVariableName(int i);
-    String getVariableExpr(int i);
+    String getVariableName(int varIndex);
+    String getVariableExpr(int varIndex);
     int getVariableIndex(String varName);
-
     String getMaskExpr();
 }

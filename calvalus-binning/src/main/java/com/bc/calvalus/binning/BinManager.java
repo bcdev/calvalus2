@@ -1,18 +1,15 @@
 package com.bc.calvalus.binning;
 
 /**
- * todo - add api doc
+ * The bin manager class comprises a number of {@link Aggregator}s
  *
  * @author Norman Fomferra
  */
 public interface BinManager {
-    // todo - add PropertyContext getInputPropertyContext()
-    // todo - add PropertyContext getOutputPropertyContext()
-    int getOutputPropertyCount();
 
-    String getOutputPropertyName(int i);
+    String[] getOutputFeatureNames();
 
-    double getOutputPropertyFillValue(int i);
+    double getOutputFeatureFillValue(int i);
 
     int getAggregatorCount();
 

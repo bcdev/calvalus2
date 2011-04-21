@@ -25,71 +25,35 @@ import java.util.Arrays;
  * @author MarcoZ
  * @author Norman
  */
-public class AggregatorPercentile implements Aggregator {
+public class AggregatorPercentile extends AbstractAggregator  {
     private final int varIndex;
-    private final String[] spatialPropertyNames;
-    private final String[] temporalPropertyNames;
     private final int percentage;
-    private final double fillValue;
 
-    public AggregatorPercentile(VariableContext varCtx, String varName, Integer percentage, Double fillValue) {
+    public AggregatorPercentile(VariableContext varCtx, String varName, Integer percentage, Float fillValue) {
+        this(varCtx, varName, percentage != null ? percentage : 90, fillValue);
+    }
+
+    private  AggregatorPercentile(VariableContext varCtx, String varName, int percentage, Float fillValue) {
+        super("PERCENTILE",
+              createFeatureNames(varName, "sum_x"),
+              createFeatureNames(varName, "P" + percentage),
+              createFeatureNames(varName, "P" + percentage),
+              fillValue);
+
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
         if (varName == null) {
             throw new NullPointerException("varName");
         }
-        if (percentage != null && (percentage < 0 || percentage > 100)) {
+        if (percentage < 0 || percentage > 100) {
             throw new IllegalArgumentException("percentage < 0 || percentage > 100");
         }
         this.varIndex = varCtx.getVariableIndex(varName);
-        this.spatialPropertyNames = new String[]{varName + "_sum_x"};
-        this.percentage = percentage != null ? percentage : 90;
-        this.temporalPropertyNames = new String[]{varName + "_P" + this.percentage};
-        this.fillValue = fillValue != null ? fillValue : Double.NaN;
+        this.percentage = percentage;
     }
 
-    @Override
-    public String getName() {
-        return "PERCENTILE";
-    }
-
-    @Override
-    public int getSpatialPropertyCount() {
-        return spatialPropertyNames.length;
-    }
-
-    @Override
-    public String getSpatialPropertyName(int i) {
-        return spatialPropertyNames[i];
-    }
-
-    @Override
-    public int getTemporalPropertyCount() {
-        return temporalPropertyNames.length;
-    }
-
-    @Override
-    public String getTemporalPropertyName(int i) {
-        return temporalPropertyNames[i];
-    }
-
-    @Override
-    public int getOutputPropertyCount() {
-        return temporalPropertyNames.length;
-    }
-
-    @Override
-    public String getOutputPropertyName(int i) {
-        return temporalPropertyNames[i];
-    }
-
-    @Override
-    public double getOutputPropertyFillValue(int i) {
-        return fillValue;
-    }
-
-    @Override
+     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
     }
@@ -136,8 +100,9 @@ public class AggregatorPercentile implements Aggregator {
         return "AggregatorPercentile{" +
                 "varIndex=" + varIndex +
                 ", percentage=" + percentage +
-                ", spatialPropertyNames=" + (spatialPropertyNames == null ? null : Arrays.toString(spatialPropertyNames)) +
-                ", temporalPropertyNames=" + (temporalPropertyNames == null ? null : Arrays.toString(temporalPropertyNames)) +
+                ", spatialFeatureNames=" + Arrays.toString(getSpatialFeatureNames()) +
+                ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
+                ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                 '}';
     }
 

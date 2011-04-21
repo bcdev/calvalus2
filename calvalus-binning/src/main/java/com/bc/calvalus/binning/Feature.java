@@ -10,4 +10,9 @@ public interface Feature {
      * @return The feature's name.
      */
     String getName();
+
+    /**
+     * @return The feature's fill value.
+     */
+    float getFillValue();
 }

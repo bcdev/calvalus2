@@ -2,69 +2,24 @@ package com.bc.calvalus.binning;
 
 import java.util.Arrays;
 
-import static com.bc.calvalus.binning.AggregatorAverage.getWeightFn;
-import static java.lang.Math.exp;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 
 /**
  * An aggregator that computes a maximum-likelihood average.
  */
-public class AggregatorAverageML implements Aggregator {
+public class AggregatorAverageML extends AbstractAggregator {
 
     private final int varIndex;
-    private final String[] spatialPropertyNames;
-    private final String[] temporalPropertyNames;
-    private final String[] outputPropertyNames;
-    private final AggregatorAverage.WeightFn weightFn;
-    private final double fillValue;
+    private final WeightFn weightFn;
 
-    public AggregatorAverageML(VariableContext ctx, String varName, Double weightCoeff, Double fillValue) {
+    public AggregatorAverageML(VariableContext ctx, String varName, Double weightCoeff, Float fillValue) {
+        super("AVG_ML",
+              createFeatureNames(varName, "sum_x", "sum_xx"),
+              createFeatureNames(varName, "sum_x", "sum_xx", "sum_w"),
+              createFeatureNames(varName, "mean", "sigma", "median", "mode"),
+              fillValue);
         this.varIndex = ctx.getVariableIndex(varName);
-        this.spatialPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx"};
-        this.temporalPropertyNames = new String[]{varName + "_sum_x", varName + "_sum_xx", varName + "_sum_w"};
-        this.outputPropertyNames = new String[]{varName + "_mean", varName + "_sigma", varName + "_median", varName + "_mode"};
-        this.weightFn = getWeightFn(weightCoeff != null ? weightCoeff : 0.5);
-        this.fillValue = fillValue != null ? fillValue : Double.NaN;
-    }
-
-    @Override
-    public String getName() {
-        return "AVG_ML";
-    }
-
-    @Override
-    public int getSpatialPropertyCount() {
-        return 2;
-    }
-
-    @Override
-    public String getSpatialPropertyName(int i) {
-        return spatialPropertyNames[i];
-    }
-
-    @Override
-    public int getTemporalPropertyCount() {
-        return 3;
-    }
-
-    @Override
-    public String getTemporalPropertyName(int i) {
-        return temporalPropertyNames[i];
-    }
-
-    @Override
-    public int getOutputPropertyCount() {
-        return 4;
-    }
-
-    @Override
-    public String getOutputPropertyName(int i) {
-        return outputPropertyNames[i];
-    }
-
-    @Override
-    public double getOutputPropertyFillValue(int i) {
-        return fillValue;
+        this.weightFn = WeightFn.createPow(weightCoeff != null ? weightCoeff : 0.5);
     }
 
     @Override
@@ -126,8 +81,10 @@ public class AggregatorAverageML implements Aggregator {
     public String toString() {
         return "AggregatorAverageML{" +
                 "varIndex=" + varIndex +
-                ", outputPropertyNames=" + (outputPropertyNames == null ? null : Arrays.toString(outputPropertyNames)) +
                 ", weightFn=" + weightFn +
+                ", spatialFeatureNames=" + Arrays.toString(getSpatialFeatureNames()) +
+                ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
+                ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                 '}';
     }
 }

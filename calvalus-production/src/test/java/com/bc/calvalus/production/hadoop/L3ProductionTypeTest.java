@@ -28,9 +28,8 @@ public class L3ProductionTypeTest {
         BinManager binManager = l3Config.getBinningContext().getBinManager();
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
-        assertEquals(2, binManager.getAggregator(0).getOutputPropertyCount());
-        assertEquals(-999.9, binManager.getAggregator(0).getOutputPropertyFillValue(0), 1E-5);
-        assertEquals(-999.9, binManager.getAggregator(0).getOutputPropertyFillValue(1), 1E-5);
+        assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);
+        assertEquals(-999.9F, binManager.getAggregator(0).getOutputFillValue(), 1E-5F);
     }
 
     @Test

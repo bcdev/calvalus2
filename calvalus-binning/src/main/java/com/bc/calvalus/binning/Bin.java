@@ -30,7 +30,7 @@ public abstract class Bin implements BinContext, Writable {
 
     long index;
     int numObs;
-    float[] properties;
+    float[] featureValues;
 
     // Not serialized for Hadoop
     private transient HashMap<String, Object> contextMap;
@@ -44,7 +44,7 @@ public abstract class Bin implements BinContext, Writable {
             throw new IllegalArgumentException("numFeatures < 0");
         }
         this.index = index;
-        this.properties = new float[numFeatures];
+        this.featureValues = new float[numFeatures];
     }
 
     @Override
@@ -64,16 +64,8 @@ public abstract class Bin implements BinContext, Writable {
         this.numObs = numObs;
     }
 
-    public int getPropertyCount() {
-        return properties.length;
-    }
-
-    public float getProperty(int i) {
-        return properties[i];
-    }
-
-    public float[] getProperties() {
-        return properties;
+    public float[] getFeatureValues() {
+        return featureValues;
     }
 
     @Override

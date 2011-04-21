@@ -296,7 +296,7 @@ public class L3Reprojector {
         }
 
         /**
-         * Processes a temporal bin and its output properties.
+         * Processes a temporal bin and its statistical output features.
          *
          * @param x            current pixel X coordinate
          * @param y            current pixel Y coordinate

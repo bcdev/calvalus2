@@ -117,7 +117,11 @@ public class ProductionRequest {
      */
     public Boolean getBoolean(String name, Boolean def) throws ProductionException {
         String text = getParameter(name, false);
-        return text != null ? parseBoolean(name, text) : def;
+        if (text != null) {
+            return parseBoolean(name, text);
+        } else {
+            return def;
+        }
     }
 
     /**
@@ -144,6 +148,34 @@ public class ProductionRequest {
     }
 
     /**
+     * Gets a mandatory single precision parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public float getFloat(String name) throws ProductionException {
+        return parseFloat(name, getParameter(name, true));
+    }
+
+    /**
+     * Gets an optional single precision parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public Float getFloat(String name, Float def) throws ProductionException {
+        String text = getParameter(name, false);
+        if (text != null) {
+            return parseFloat(name, text);
+        } else {
+            return def;
+        }
+    }
+
+
+    /**
      * Gets a mandatory double precision parameter value.
      *
      * @param name The parameter name.
@@ -163,7 +195,11 @@ public class ProductionRequest {
      */
     public Double getDouble(String name, Double def) throws ProductionException {
         String text = getParameter(name, false);
-        return text != null ? parseDouble(name, text) : def;
+        if (text != null) {
+            return parseDouble(name, text);
+        } else {
+            return def;
+        }
     }
 
     /**
@@ -272,6 +308,14 @@ public class ProductionRequest {
             return Integer.parseInt(text);
         } catch (NumberFormatException e) {
             throw new ProductionException("Production parameter '" + name + "' must be an integer number.");
+        }
+    }
+
+    private static float parseFloat(String name, String text) throws ProductionException {
+        try {
+            return Float.parseFloat(text);
+        } catch (NumberFormatException e) {
+            throw new ProductionException("Production parameter '" + name + "' must be a number.");
         }
     }
 

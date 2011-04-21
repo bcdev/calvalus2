@@ -18,17 +18,17 @@ public final class SpatialBin extends Bin {
         super();
     }
 
-    public SpatialBin(long index, int numProperties) {
-        super(index, numProperties);
+    public SpatialBin(long index, int numFeatures) {
+        super(index, numFeatures);
     }
 
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         // Note, we don't serialise the index, because it is usually the MapReduce key
         dataOutput.writeInt(numObs);
-        dataOutput.writeInt(properties.length);
-        for (float property : properties) {
-            dataOutput.writeFloat(property);
+        dataOutput.writeInt(featureValues.length);
+        for (float value : featureValues) {
+            dataOutput.writeFloat(value);
         }
     }
 
@@ -36,10 +36,10 @@ public final class SpatialBin extends Bin {
     public void readFields(DataInput dataInput) throws IOException {
         // // Note, we don't serialise the index, because it is usually the MapReduce key
         numObs = dataInput.readInt();
-        final int numProps = dataInput.readInt();
-        properties = new float[numProps];
-        for (int i = 0; i < numProps; i++) {
-            properties[i] = dataInput.readFloat();
+        final int numFeatures = dataInput.readInt();
+        featureValues = new float[numFeatures];
+        for (int i = 0; i < numFeatures; i++) {
+            featureValues[i] = dataInput.readFloat();
         }
     }
 
@@ -51,7 +51,7 @@ public final class SpatialBin extends Bin {
 
     @Override
     public String toString() {
-        return String.format("%s{index=%d, numObs=%d, properties=%s}",
-                             getClass().getSimpleName(), index, numObs, Arrays.toString(properties));
+        return String.format("%s{index=%d, numObs=%d, featureValues=%s}",
+                             getClass().getSimpleName(), index, numObs, Arrays.toString(featureValues));
     }
 }

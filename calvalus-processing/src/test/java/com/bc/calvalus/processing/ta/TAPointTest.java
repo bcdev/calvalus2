@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.ta.TAPoint;
 import org.junit.*;
 
 import java.io.ByteArrayInputStream;
@@ -17,8 +16,8 @@ public class TAPointTest {
     @Before
     public void setUp() throws Exception {
         TemporalBin temporalBin = new TemporalBin(-1, 2);
-        temporalBin.getProperties()[0] = 1.2F;
-        temporalBin.getProperties()[1] = 3.4F;
+        temporalBin.getFeatureValues()[0] = 1.2F;
+        temporalBin.getFeatureValues()[1] = 3.4F;
         point = new TAPoint("Mediteranean", "2011-01-01", "2011-01-02", temporalBin);
     }
 
@@ -28,8 +27,8 @@ public class TAPointTest {
         assertEquals("2011-01-01", point.getStartDate());
         assertEquals("2011-01-02", point.getStopDate());
         assertNotNull(point.getTemporalBin());
-        assertEquals(1.2F, point.getTemporalBin().getProperties()[0], 1E-5F);
-        assertEquals(3.4F, point.getTemporalBin().getProperties()[1], 1E-5F);
+        assertEquals(1.2F, point.getTemporalBin().getFeatureValues()[0], 1E-5F);
+        assertEquals(3.4F, point.getTemporalBin().getFeatureValues()[1], 1E-5F);
     }
 
     @Test
@@ -43,7 +42,7 @@ public class TAPointTest {
         assertEquals("2011-01-01", point2.getStartDate());
         assertEquals("2011-01-02", point2.getStopDate());
         assertNotNull(point2.getTemporalBin());
-        assertEquals(1.2F, point2.getTemporalBin().getProperties()[0], 1E-5F);
-        assertEquals(3.4F, point2.getTemporalBin().getProperties()[1], 1E-5F);
+        assertEquals(1.2F, point2.getTemporalBin().getFeatureValues()[0], 1E-5F);
+        assertEquals(3.4F, point2.getTemporalBin().getFeatureValues()[1], 1E-5F);
     }
 }

@@ -5,12 +5,12 @@ import java.util.Arrays;
 /**
  * An aggregator that computes the minimum and maximum values.
  */
-public class AggregatorMinMax implements Aggregator {
+public class AggregatorMinMax extends AbstractAggregator {
     private final int varIndex;
-    private final String[] propertyNames;
-    private final double fillValue;
 
-    public AggregatorMinMax(VariableContext varCtx, String varName, Double fillValue) {
+    public AggregatorMinMax(VariableContext varCtx, String varName, Float fillValue) {
+        super("MIN_MAX", createFeatureNames(varName, "min", "max"), fillValue);
+
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
@@ -18,49 +18,8 @@ public class AggregatorMinMax implements Aggregator {
             throw new NullPointerException("varName");
         }
         this.varIndex = varCtx.getVariableIndex(varName);
-        this.propertyNames = new String[]{varName + "_min", varName + "_max"};
-        this.fillValue = fillValue != null ? fillValue : Double.NaN;
     }
 
-    @Override
-    public String getName() {
-        return "MIN_MAX";
-    }
-
-    @Override
-    public int getSpatialPropertyCount() {
-        return 2;
-    }
-
-    @Override
-    public String getSpatialPropertyName(int i) {
-        return propertyNames[i];
-    }
-
-    @Override
-    public int getTemporalPropertyCount() {
-        return 2;
-    }
-
-    @Override
-    public String getTemporalPropertyName(int i) {
-        return propertyNames[i];
-    }
-
-    @Override
-    public int getOutputPropertyCount() {
-        return 2;
-    }
-
-    @Override
-    public String getOutputPropertyName(int i) {
-       return propertyNames[i];
-    }
-
-    @Override
-    public double getOutputPropertyFillValue(int i) {
-        return fillValue;
-    }
 
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
@@ -105,7 +64,9 @@ public class AggregatorMinMax implements Aggregator {
     public String toString() {
         return "AggregatorMinMax{" +
                 "varIndex=" + varIndex +
-                ", propertyNames=" + (propertyNames == null ? null : Arrays.toString(propertyNames)) +
+                ", spatialFeatureNames=" + Arrays.toString(getSpatialFeatureNames()) +
+                ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
+                ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                 '}';
     }
 }

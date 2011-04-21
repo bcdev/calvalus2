@@ -26,7 +26,6 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.binning.VariableContextImpl;
-import com.bc.calvalus.processing.l3.L3Mapper;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
@@ -91,8 +90,8 @@ public class L3MapperTest {
         public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
             // System.out.println("spatialBins = " + Arrays.toString(spatialBins.toArray()));
             for (SpatialBin spatialBin : spatialBins) {
-                assertEquals(2.4f, spatialBin.getProperty(0), 0.01f);  // mean of a
-                assertEquals(1.8f, spatialBin.getProperty(2), 0.01f);  // mean of b
+                assertEquals(2.4f, spatialBin.getFeatureValues()[0], 0.01f);  // mean of a
+                assertEquals(1.8f, spatialBin.getFeatureValues()[2], 0.01f);  // mean of b
                 numObs += spatialBin.getNumObs();
             }
         }

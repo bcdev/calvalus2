@@ -101,6 +101,7 @@ public class ProductionRequestTest {
         assertEquals("Calvalus rules!", req.getParameter("s"));
         assertEquals(true, req.getBoolean("b"));
         assertEquals(4, req.getInteger("i"));
+        assertEquals(-2.3F, req.getFloat("f"), 1e-5F);
         assertEquals(-2.3, req.getDouble("f"), 1e-10);
         assertEquals(date, req.getDate("d"));
         assertTrue(point.equalsExact(req.getGeometry("g")));
@@ -108,9 +109,18 @@ public class ProductionRequestTest {
         assertEquals("Calvalus sucks?", req.getParameter("missingParam", "Calvalus sucks?"));
         assertEquals(true, req.getBoolean("missingParam", true));
         assertEquals(234, (int) req.getInteger("missingParam", 234));
+        assertEquals(1.9F, req.getFloat("missingParam", 1.9F), 1e-5F);
         assertEquals(1.9, req.getDouble("missingParam", 1.9), 1e-10);
         assertSame(date, req.getDate("missingParam", date));
         assertSame(point, req.getGeometry("missingParam", point));
+
+        assertNull(req.getParameter("missingParam", null));
+        assertNull(req.getBoolean("missingParam", null));
+        assertNull(req.getInteger("missingParam", null));
+        assertNull(req.getFloat("missingParam", null));
+        assertNull(req.getDouble("missingParam", null));
+        assertNull(req.getDate("missingParam", null));
+        assertNull(req.getGeometry("missingParam", null));
 
         try {
             req.getParameter("missingParam");

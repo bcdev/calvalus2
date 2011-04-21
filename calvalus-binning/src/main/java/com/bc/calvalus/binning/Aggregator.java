@@ -42,31 +42,25 @@ public interface Aggregator {
      */
     String getName();
 
-    // todo - replace next 2 by PropertyContext getSpatialPropertyContext()
+    /**
+     * @return The array of names of all statistical features used for spatial binning.
+     */
+    String[] getSpatialFeatureNames();
 
-    int getSpatialPropertyCount();
+    /**
+     * @return The array of names of all statistical features used for temporal binning.
+     */
+    String[] getTemporalFeatureNames();
 
-    String getSpatialPropertyName(int i);
+    /**
+     * @return The array of names of all statistical features produced as output.
+     */
+    String[] getOutputFeatureNames();
 
-    // Feature[] getSpatialFeatures();
-
-    // todo - replace next 2 by PropertyContext getTemporalPropertyContext()
-
-    int getTemporalPropertyCount();
-
-    String getTemporalPropertyName(int i);
-
-    // Feature[] getTemporalFeatures();
-
-    // todo - replace next 2 by PropertyContext getOutputPropertyContext()
-
-    int getOutputPropertyCount();
-
-    String getOutputPropertyName(int i);
-
-    double getOutputPropertyFillValue(int i);
-
-    // OutputFeature[] getOutputFeatures();
+    /**
+     * @return The fill value (no-data value, missing value) used in the output.
+     */
+    float getOutputFillValue();
 
     /**
      * Initialises the spatial aggregation vector.

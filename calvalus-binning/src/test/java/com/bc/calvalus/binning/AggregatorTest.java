@@ -2,9 +2,6 @@ package com.bc.calvalus.binning;
 
 import org.junit.Test;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.HashMap;
 
 import static java.lang.Float.*;
@@ -17,30 +14,30 @@ public class AggregatorTest {
 
     @Test
     public void testWeightFN() {
-        AggregatorAverage.WeightFn f;
+        WeightFn f;
 
-        f = AggregatorAverage.getWeightFn(0.0);
+        f = WeightFn.createPow(0.0);
         assertNotNull(f);
         assertEquals(1.0f, f.eval(0), 1e-10f);
         assertEquals(1.0f, f.eval(1), 1e-10f);
         assertEquals(1.0f, f.eval(2), 1e-10f);
         assertEquals(1.0f, f.eval(4), 1e-10f);
 
-        f = AggregatorAverage.getWeightFn(1.0);
+        f = WeightFn.createPow(1.0);
         assertNotNull(f);
         assertEquals(0.0f, f.eval(0), 1e-10f);
         assertEquals(1.0f, f.eval(1), 1e-10f);
         assertEquals(2.0f, f.eval(2), 1e-10f);
         assertEquals(4.0f, f.eval(4), 1e-10f);
 
-        f = AggregatorAverage.getWeightFn(0.5);
+        f = WeightFn.createPow(0.5);
         assertNotNull(f);
         assertEquals(0.0f, f.eval(0), 1e-10f);
         assertEquals(1.0f, f.eval(1), 1e-10f);
         assertEquals((float)Math.sqrt(2), f.eval(2), 1e-10f);
         assertEquals(2.0f, f.eval(4), 1e-10f);
 
-        f = AggregatorAverage.getWeightFn(0.42);
+        f = WeightFn.createPow(0.42);
         assertNotNull(f);
         assertEquals((float)Math.pow(0, 0.42), f.eval(0), 1e-10f);
         assertEquals((float)Math.pow(1, 0.42), f.eval(1), 1e-10f);
@@ -50,22 +47,22 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorAverageNoWeight() {
-        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 0.0, null);
+        AggregatorAverage agg = new AggregatorAverage(new MyVariableContext("c"), "c", 0.0, null);
 
         assertEquals("AVG", agg.getName());
 
-        assertEquals(2, agg.getSpatialPropertyCount());
-        assertEquals("c_sum_x", agg.getSpatialPropertyName(0));
-        assertEquals("c_sum_xx", agg.getSpatialPropertyName(1));
+        assertEquals(2, agg.getSpatialFeatureNames().length);
+        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c_sum_xx", agg.getSpatialFeatureNames()[1]);
 
-        assertEquals(3, agg.getTemporalPropertyCount());
-        assertEquals("c_sum_x", agg.getTemporalPropertyName(0));
-        assertEquals("c_sum_xx", agg.getTemporalPropertyName(1));
-        assertEquals("c_sum_w", agg.getTemporalPropertyName(2));
+        assertEquals(3, agg.getTemporalFeatureNames().length);
+        assertEquals("c_sum_x", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c_sum_xx", agg.getTemporalFeatureNames()[1]);
+        assertEquals("c_sum_w", agg.getTemporalFeatureNames()[2]);
 
-        assertEquals(2, agg.getOutputPropertyCount());
-        assertEquals("c_mean", agg.getOutputPropertyName(0));
-        assertEquals("c_sigma", agg.getOutputPropertyName(1));
+        assertEquals(2, agg.getOutputFeatureNames().length);
+        assertEquals("c_mean", agg.getOutputFeatureNames()[0]);
+        assertEquals("c_sigma", agg.getOutputFeatureNames()[1]);
 
         VectorImpl svec = vec(NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN);
@@ -113,19 +110,20 @@ public class AggregatorTest {
         Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", 1.0, null);
 
         assertEquals("AVG", agg.getName());
+        assertTrue(Float.isNaN(agg.getOutputFillValue()));
 
-        assertEquals(2, agg.getSpatialPropertyCount());
-        assertEquals("c_sum_x", agg.getSpatialPropertyName(0));
-        assertEquals("c_sum_xx", agg.getSpatialPropertyName(1));
+        assertEquals(2, agg.getSpatialFeatureNames().length);
+        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c_sum_xx", agg.getSpatialFeatureNames()[1]);
 
-        assertEquals(3, agg.getTemporalPropertyCount());
-        assertEquals("c_sum_x", agg.getTemporalPropertyName(0));
-        assertEquals("c_sum_xx", agg.getTemporalPropertyName(1));
-        assertEquals("c_sum_w", agg.getTemporalPropertyName(2));
+        assertEquals(3, agg.getTemporalFeatureNames().length);
+        assertEquals("c_sum_x", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c_sum_xx", agg.getTemporalFeatureNames()[1]);
+        assertEquals("c_sum_w", agg.getTemporalFeatureNames()[2]);
 
-        assertEquals(2, agg.getOutputPropertyCount());
-        assertEquals("c_mean", agg.getOutputPropertyName(0));
-        assertEquals("c_sigma", agg.getOutputPropertyName(1));
+        assertEquals(2, agg.getOutputFeatureNames().length);
+        assertEquals("c_mean", agg.getOutputFeatureNames()[0]);
+        assertEquals("c_sigma", agg.getOutputFeatureNames()[1]);
 
         VectorImpl svec = vec(NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN);
@@ -169,56 +167,27 @@ public class AggregatorTest {
     }
 
     @Test
-    public void testSuperSampling() {
-        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", null, null);
-        VectorImpl svec = vec(NaN, NaN);
-        VectorImpl tvec = vec(NaN, NaN, NaN);
-        VectorImpl out = vec(NaN, NaN);
-
-        agg.initSpatial(ctx, svec);
-        agg.aggregateSpatial(ctx, vec(1.5f), svec);
-        agg.aggregateSpatial(ctx, vec(2.5f), svec);
-        agg.aggregateSpatial(ctx, vec(0.5f), svec);
-
-        agg.aggregateSpatial(ctx, vec(1.5f), svec);
-        agg.aggregateSpatial(ctx, vec(2.5f), svec);
-        agg.aggregateSpatial(ctx, vec(0.5f), svec);
-
-        agg.aggregateSpatial(ctx, vec(1.5f), svec);
-        agg.aggregateSpatial(ctx, vec(2.5f), svec);
-        agg.aggregateSpatial(ctx, vec(0.5f), svec);
-
-        float sumX = (1.5f + 2.5f + 0.5f) * 3;
-        float sumXX = (1.5f * 1.5f + 2.5f * 2.5f + 0.5f * 0.5f) * 3;
-        assertEquals(sumX, svec.get(0), 1e-5f);
-        assertEquals(sumXX, svec.get(1), 1e-5f);
-
-        int numObs = 9;
-        agg.completeSpatial(ctx, numObs, svec);
-        assertEquals(sumX / numObs, svec.get(0), 1e-5f);
-        assertEquals(sumXX / numObs, svec.get(1), 1e-5f);
-    }
-
-    @Test
     public void testAggregatorAverageML() {
-        Aggregator agg = new AggregatorAverageML(new MyVariableContext("b"), "b", null, null);
+        AggregatorAverageML agg = new AggregatorAverageML(new MyVariableContext("b"), "b", null, null);
 
         assertEquals("AVG_ML", agg.getName());
 
-        assertEquals(2, agg.getSpatialPropertyCount());
-        assertEquals("b_sum_x", agg.getSpatialPropertyName(0));
-        assertEquals("b_sum_xx", agg.getSpatialPropertyName(1));
+        assertTrue(Float.isNaN(agg.getOutputFillValue()));
 
-        assertEquals(3, agg.getTemporalPropertyCount());
-        assertEquals("b_sum_x", agg.getTemporalPropertyName(0));
-        assertEquals("b_sum_xx", agg.getTemporalPropertyName(1));
-        assertEquals("b_sum_w", agg.getTemporalPropertyName(2));
+        assertEquals(2, agg.getSpatialFeatureNames().length);
+        assertEquals("b_sum_x", agg.getSpatialFeatureNames()[0]);
+        assertEquals("b_sum_xx", agg.getSpatialFeatureNames()[1]);
 
-        assertEquals(4, agg.getOutputPropertyCount());
-        assertEquals("b_mean", agg.getOutputPropertyName(0));
-        assertEquals("b_sigma", agg.getOutputPropertyName(1));
-        assertEquals("b_median", agg.getOutputPropertyName(2));
-        assertEquals("b_mode", agg.getOutputPropertyName(3));
+        assertEquals(3, agg.getTemporalFeatureNames().length);
+        assertEquals("b_sum_x", agg.getTemporalFeatureNames()[0]);
+        assertEquals("b_sum_xx", agg.getTemporalFeatureNames()[1]);
+        assertEquals("b_sum_w", agg.getTemporalFeatureNames()[2]);
+
+        assertEquals(4, agg.getOutputFeatureNames().length);
+        assertEquals("b_mean", agg.getOutputFeatureNames()[0]);
+        assertEquals("b_sigma", agg.getOutputFeatureNames()[1]);
+        assertEquals("b_median", agg.getOutputFeatureNames()[2]);
+        assertEquals("b_mode", agg.getOutputFeatureNames()[3]);
 
         VectorImpl svec = vec(NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN);
@@ -267,26 +236,27 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorPercentile() {
-        Aggregator agg = new AggregatorPercentile(new MyVariableContext("c"), "c", null, null);
+        AggregatorPercentile agg = new AggregatorPercentile(new MyVariableContext("c"), "c", null, null);
 
-        assertTrue(Double.isNaN(agg.getOutputPropertyFillValue(0)));
-        assertEquals("c_P90", agg.getTemporalPropertyName(0));
-        assertEquals("c_P90", agg.getOutputPropertyName(0));
+        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c_P90", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c_P90", agg.getOutputFeatureNames()[0]);
+        assertTrue(Float.isNaN(agg.getOutputFillValue()));
 
-        agg = new AggregatorPercentile(new MyVariableContext("c"), "c", 70, 0.42);
+        agg = new AggregatorPercentile(new MyVariableContext("c"), "c", 70, 0.42F);
 
         assertEquals("PERCENTILE", agg.getName());
 
-        assertEquals(1, agg.getSpatialPropertyCount());
-        assertEquals("c_sum_x", agg.getSpatialPropertyName(0));
+        assertEquals(1, agg.getSpatialFeatureNames().length);
+        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
 
-        assertEquals(1, agg.getTemporalPropertyCount());
-        assertEquals("c_P70", agg.getTemporalPropertyName(0));
+        assertEquals(1, agg.getTemporalFeatureNames().length);
+        assertEquals("c_P70", agg.getTemporalFeatureNames()[0]);
 
-        assertEquals(1, agg.getOutputPropertyCount());
-        assertEquals("c_P70", agg.getOutputPropertyName(0));
+        assertEquals(1, agg.getOutputFeatureNames().length);
+        assertEquals("c_P70", agg.getOutputFeatureNames()[0]);
 
-        assertEquals(0.42, agg.getOutputPropertyFillValue(0), 1e-5);
+        assertEquals(0.42F, agg.getOutputFillValue(), 1e-5F);
 
         VectorImpl svec = vec(NaN);
         VectorImpl tvec = vec(NaN);
@@ -329,21 +299,21 @@ public class AggregatorTest {
 
     @Test
     public void tesAggregatorMinMax() {
-        Aggregator agg = new AggregatorMinMax(new MyVariableContext("a"), "a", null);
+        AggregatorMinMax agg = new AggregatorMinMax(new MyVariableContext("a"), "a", null);
 
         assertEquals("MIN_MAX", agg.getName());
 
-        assertEquals(2, agg.getSpatialPropertyCount());
-        assertEquals("a_min", agg.getSpatialPropertyName(0));
-        assertEquals("a_max", agg.getSpatialPropertyName(1));
+        assertEquals(2, agg.getSpatialFeatureNames().length);
+        assertEquals("a_min", agg.getSpatialFeatureNames()[0]);
+        assertEquals("a_max", agg.getSpatialFeatureNames()[1]);
 
-        assertEquals(2, agg.getTemporalPropertyCount());
-        assertEquals("a_min", agg.getTemporalPropertyName(0));
-        assertEquals("a_max", agg.getTemporalPropertyName(1));
+        assertEquals(2, agg.getTemporalFeatureNames().length);
+        assertEquals("a_min", agg.getTemporalFeatureNames()[0]);
+        assertEquals("a_max", agg.getTemporalFeatureNames()[1]);
 
-        assertEquals(2, agg.getOutputPropertyCount());
-        assertEquals("a_min", agg.getOutputPropertyName(0));
-        assertEquals("a_max", agg.getOutputPropertyName(1));
+        assertEquals(2, agg.getOutputFeatureNames().length);
+        assertEquals("a_min", agg.getOutputFeatureNames()[0]);
+        assertEquals("a_max", agg.getOutputFeatureNames()[1]);
 
         VectorImpl svec = vec(NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN);
@@ -382,24 +352,24 @@ public class AggregatorTest {
 
     @Test
     public void testAggregatorOnMaxSet() {
-        Aggregator agg = new AggregatorOnMaxSet(new MyVariableContext("a", "b", "c"), "c", "a", "b");
+        AggregatorOnMaxSet agg = new AggregatorOnMaxSet(new MyVariableContext("a", "b", "c"), "c", "a", "b");
 
         assertEquals("ON_MAX_SET", agg.getName());
 
-        assertEquals(3, agg.getSpatialPropertyCount());
-        assertEquals("c_max", agg.getSpatialPropertyName(0));
-        assertEquals("a", agg.getSpatialPropertyName(1));
-        assertEquals("b", agg.getSpatialPropertyName(2));
+        assertEquals(3, agg.getSpatialFeatureNames().length);
+        assertEquals("c_max", agg.getSpatialFeatureNames()[0]);
+        assertEquals("a", agg.getSpatialFeatureNames()[1]);
+        assertEquals("b", agg.getSpatialFeatureNames()[2]);
 
-        assertEquals(3, agg.getTemporalPropertyCount());
-        assertEquals("c_max", agg.getTemporalPropertyName(0));
-        assertEquals("a", agg.getTemporalPropertyName(1));
-        assertEquals("b", agg.getTemporalPropertyName(2));
+        assertEquals(3, agg.getTemporalFeatureNames().length);
+        assertEquals("c_max", agg.getTemporalFeatureNames()[0]);
+        assertEquals("a", agg.getTemporalFeatureNames()[1]);
+        assertEquals("b", agg.getTemporalFeatureNames()[2]);
 
-        assertEquals(3, agg.getOutputPropertyCount());
-        assertEquals("c_max", agg.getOutputPropertyName(0));
-        assertEquals("a", agg.getOutputPropertyName(1));
-        assertEquals("b", agg.getOutputPropertyName(2));
+        assertEquals(3, agg.getOutputFeatureNames().length);
+        assertEquals("c_max", agg.getOutputFeatureNames()[0]);
+        assertEquals("a", agg.getOutputFeatureNames()[1]);
+        assertEquals("b", agg.getOutputFeatureNames()[2]);
 
         VectorImpl svec = vec(NaN, NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN);
@@ -438,6 +408,37 @@ public class AggregatorTest {
         assertEquals(4.7f, out.get(0), 1e-5f);
         assertEquals(0.6f, out.get(1), 1e-5f);
         assertEquals(7.1f, out.get(2), 1e-5f);
+    }
+
+    @Test
+    public void testSuperSampling() {
+        Aggregator agg = new AggregatorAverage(new MyVariableContext("c"), "c", null, null);
+        VectorImpl svec = vec(NaN, NaN);
+        VectorImpl tvec = vec(NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN);
+
+        agg.initSpatial(ctx, svec);
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
+
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
+
+        agg.aggregateSpatial(ctx, vec(1.5f), svec);
+        agg.aggregateSpatial(ctx, vec(2.5f), svec);
+        agg.aggregateSpatial(ctx, vec(0.5f), svec);
+
+        float sumX = (1.5f + 2.5f + 0.5f) * 3;
+        float sumXX = (1.5f * 1.5f + 2.5f * 2.5f + 0.5f * 0.5f) * 3;
+        assertEquals(sumX, svec.get(0), 1e-5f);
+        assertEquals(sumXX, svec.get(1), 1e-5f);
+
+        int numObs = 9;
+        agg.completeSpatial(ctx, numObs, svec);
+        assertEquals(sumX / numObs, svec.get(0), 1e-5f);
+        assertEquals(sumXX / numObs, svec.get(1), 1e-5f);
     }
 
     private VectorImpl vec(float... values) {

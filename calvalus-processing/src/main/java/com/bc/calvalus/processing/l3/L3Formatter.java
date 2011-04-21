@@ -194,13 +194,13 @@ public class L3Formatter {
         numPassesBand.setNoDataValueUsed(true);
         final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
 
-        int outputPropertyCount = binningContext.getBinManager().getOutputPropertyCount();
-        final Band[] outputBands = new Band[outputPropertyCount];
-        final ProductData[] outputLines = new ProductData[outputPropertyCount];
-        for (int i = 0; i < outputPropertyCount; i++) {
-            String name = binningContext.getBinManager().getOutputPropertyName(i);
+        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
+        final Band[] outputBands = new Band[outputFeatureNames.length];
+        final ProductData[] outputLines = new ProductData[outputFeatureNames.length];
+        for (int i = 0; i < outputFeatureNames.length; i++) {
+            String name = outputFeatureNames[i];
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
-            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputPropertyFillValue(i));
+            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputFeatureFillValue(i));
             outputBands[i].setNoDataValueUsed(true);
             outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
         }
@@ -220,6 +220,7 @@ public class L3Formatter {
         if (numBands == 0) {
             throw new IllegalArgumentException("No output band given.");
         }
+        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
         int[] indices = new int[numBands];
         String[] names = new String[numBands];
         float[] v1s = new float[numBands];
@@ -229,7 +230,7 @@ public class L3Formatter {
             String nameStr = bandConfiguration.name;
 
             indices[i] = Integer.parseInt(bandConfiguration.index);
-            names[i] = nameStr != null ? nameStr : binningContext.getBinManager().getOutputPropertyName(indices[i]);
+            names[i] = nameStr != null ? nameStr : outputFeatureNames[indices[i]];
             v1s[i] = Float.parseFloat(bandConfiguration.v1);
             v2s[i] = Float.parseFloat(bandConfiguration.v2);
         }
