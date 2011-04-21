@@ -70,7 +70,7 @@ public final class AggregatorOnMaxSet implements Aggregator {
 
     @Override
     public double getOutputPropertyFillValue(int i) {
-        return Double.NaN; // todo - convert to field
+        return Double.NaN;
     }
 
     @Override
