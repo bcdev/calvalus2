@@ -38,7 +38,7 @@ class L3Staging extends Staging {
     }
 
     @Override
-    public String call() throws Exception {
+    public Object call() throws Exception {
 
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
@@ -79,11 +79,6 @@ class L3Staging extends Staging {
                 } finally {
                   FileUtils.deleteTree(tmpDir);
                 }
-
-
-
-
-
                 progress = 1f;
                 // todo - if job has been cancelled, it must not change its state anymore
                 production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));

@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public abstract class Staging implements Callable<String> {
+public abstract class Staging implements Callable<Object> {
     private boolean cancelled;
 
     /**
@@ -31,7 +31,7 @@ public abstract class Staging implements Callable<String> {
      * @throws Exception if an error occurs.
      */
     @Override
-    public abstract String call() throws Exception;
+    public abstract Object call() throws Exception;
 
     public final boolean isCancelled() {
         return cancelled;

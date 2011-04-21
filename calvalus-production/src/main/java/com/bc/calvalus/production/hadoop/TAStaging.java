@@ -40,7 +40,7 @@ class TAStaging extends Staging {
     }
 
     @Override
-    public String call() throws Exception {
+    public Object call() throws Exception {
 
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
@@ -61,13 +61,12 @@ class TAStaging extends Staging {
             L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) sequentialItems[0];
             TAWorkflowItem taWorkflowItem = (TAWorkflowItem) sequentialItems[1];
 
-
             String outputDir = taWorkflowItem.getOutputDir();
             progress += (i + 1) / parallelItems.length;
         }
         progress = 1.0f;
 
-        return null;
+        return null; // ok, no error
     }
 
     @Override

@@ -114,7 +114,7 @@ class DummyProductionType implements ProductionType {
         }
 
         @Override
-        public String call() throws Exception {
+        public Object call() throws Exception {
             try {
                 final File outputFile = new File(stagingService.getStagingDir(), production.getStagingPath());
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0f));
@@ -143,7 +143,7 @@ class DummyProductionType implements ProductionType {
             } catch (IOException e) {
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
             }
-            return production.getStagingPath();
+            return null;
         }
 
         @Override

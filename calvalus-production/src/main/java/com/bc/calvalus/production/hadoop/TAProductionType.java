@@ -142,8 +142,7 @@ public class TAProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        // todo - implement TAStaging
-        return new L3Staging(production,
+        return new TAStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
     }

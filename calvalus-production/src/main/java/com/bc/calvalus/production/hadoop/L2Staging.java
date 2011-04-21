@@ -54,7 +54,7 @@ class L2Staging extends Staging {
     }
 
     @Override
-    public String call() throws Exception {
+    public Object call() throws Exception {
         L2WorkflowItem workflow = (L2WorkflowItem) production.getWorkflow();
         String outputDir = workflow.getOutputDir();
 
