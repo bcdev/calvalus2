@@ -26,6 +26,8 @@
   <xsl:variable name="calvalus.input.month" select="substring($calvalus.input.filename,19,2)" />
   <xsl:variable name="calvalus.input.day"   select="substring($calvalus.input.filename,21,2)" />
 
+  <xsl:variable name="calvalus.output" select="/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:Reference/@xlink:href" />
+
   <xsl:variable name="calvalus.input.physical">
     <xsl:choose>
       <xsl:when test="starts-with($calvalus.input,'hdfs:')">
@@ -86,19 +88,29 @@ rm -f *.txt MER_FRG_1P MER_FRG_1P.lock
 ###ln -sf <xsl:value-of select="$calvalus.input.physical" /> MER_FRX_1P
 hadoop fs -get <xsl:value-of select="$calvalus.input" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.tmp.dir" />/MER_FRX_1P
 # link att file
-ln -sf <xsl:value-of
+#ln -sf <xsl:value-of
           select="$calvalus.archive.mount" />/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/<xsl:value-of
           select="$calvalus.input.year" />/AUX_FRA_AXVFOS<xsl:value-of
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
           select="$calvalus.input.day" /> AUX_FRA_AX
+hadoop fs -get hdfs://cvmaster00:9000/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/<xsl:value-of
+          select="$calvalus.input.year" />/AUX_FRA_AXVFOS<xsl:value-of
+          select="$calvalus.input.year" /><xsl:value-of
+          select="$calvalus.input.month" /><xsl:value-of
+          select="$calvalus.input.day" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.tmp.dir" />/AUX_FRA_AX
 # link orb file
-ln -sf <xsl:value-of
+#ln -sf <xsl:value-of
           select="$calvalus.archive.mount" />/calvalus/auxiliary/amorgos-3.0/DOR_VOR_AX/<xsl:value-of
           select="$calvalus.input.year" />/DOR_VOR_AXVF-P<xsl:value-of
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
           select="$calvalus.input.day" /> DOR_VOR_AX
+hadoop fs -get hdfs://cvmaster00:9000/calvalus/auxiliary/amorgos-3.0/DOR_VOR_AX/<xsl:value-of
+          select="$calvalus.input.year" />/DOR_VOR_AXVF-P<xsl:value-of
+          select="$calvalus.input.year" /><xsl:value-of
+          select="$calvalus.input.month" /><xsl:value-of
+          select="$calvalus.input.day" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.tmp.dir" />/DOR_VOR_AX
 # call executable
 <xsl:value-of select="$calvalus.package.dir" />/<xsl:value-of select="$amorgos.executable" /> amorgos.parameters
 # stop concurrent status reporting job
@@ -109,15 +121,15 @@ mv MER_FSG_1P $outputfile
 # move tmp output to (hdfs) destination
 if test -e <xsl:value-of select="$calvalus.tmp.dir" />/*.N1 ; then
 #  mkdir -p <xsl:value-of
-#          select="$calvalus.output.physical" />/<xsl:value-of
-#          select="$calvalus.input.year" />/<xsl:value-of
-#          select="$calvalus.input.month" />/<xsl:value-of
-#          select="$calvalus.input.day" />
+          select="$calvalus.output.physical" />/<xsl:value-of
+          select="$calvalus.input.year" />/<xsl:value-of
+          select="$calvalus.input.month" />/<xsl:value-of
+          select="$calvalus.input.day" />
 #  mv <xsl:value-of select="$calvalus.tmp.dir" />/*.N1 <xsl:value-of
-#          select="$calvalus.output.physical" />/<xsl:value-of
-#          select="$calvalus.input.year" />/<xsl:value-of
-#          select="$calvalus.input.month" />/<xsl:value-of
-#          select="$calvalus.input.day" />/
+          select="$calvalus.output.physical" />/<xsl:value-of
+          select="$calvalus.input.year" />/<xsl:value-of
+          select="$calvalus.input.month" />/<xsl:value-of
+          select="$calvalus.input.day" />/
   hadoop fs -put $outputfile <xsl:value-of select="$calvalus.output" />/<xsl:value-of
           select="$calvalus.input.year" />/<xsl:value-of
           select="$calvalus.input.month" />/<xsl:value-of
