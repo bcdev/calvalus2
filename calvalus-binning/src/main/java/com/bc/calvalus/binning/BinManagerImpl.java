@@ -1,7 +1,7 @@
 package com.bc.calvalus.binning;
 
 /**
- * todo - add api doc
+ * A default implementation of the {@link BinManager} interface.
  *
  * @author Norman Fomferra
  */

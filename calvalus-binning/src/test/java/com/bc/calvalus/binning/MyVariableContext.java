@@ -1,9 +1,9 @@
 package com.bc.calvalus.binning;
 
 /**
-* todo - add api doc
+* A simple VariableContext.
 *
-* @author Norman Fomferra
+* @author Norman
 */
 class MyVariableContext implements VariableContext {
     private String[] varNames;

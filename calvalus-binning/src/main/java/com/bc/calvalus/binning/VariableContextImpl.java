@@ -2,11 +2,16 @@ package com.bc.calvalus.binning;
 
 import java.util.ArrayList;
 
-// todo - this is the variable context for all variables in 'product' that are referenced ...
-// todo - ... by the given processing request. It therefore provided the list of actual...
-// todo - ... raster data nodes to be read from 'product'.
-// todo - It directly is associated with the 'ObservationImpl' used in L3Mapper. 
-
+/**
+ *  This is the variable context for all variables referenced
+ *  from a given L3 processing request. It therefore provides the list of actual
+ *  raster data nodes to be read from a given input data product.
+ *  <p/>
+ *  The i=0...n-1 measurements in an {@link Observation} directly correspond
+ *  to the i=0...n-1 variables provided by {@code VariableContext}.
+ *
+ *  @author Norman
+ */
 public class VariableContextImpl implements VariableContext {
     private final ArrayList<String> names;
     private final ArrayList<String> exprs;
