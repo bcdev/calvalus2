@@ -39,14 +39,15 @@ public abstract class Bin implements BinContext, Writable {
         this.index = -1;
     }
 
-    public Bin(long index, int numProperties) {
-        if (numProperties < 0) {
-            throw new IllegalArgumentException("numProperties < 0");
+    public Bin(long index, int numFeatures) {
+        if (numFeatures < 0) {
+            throw new IllegalArgumentException("numFeatures < 0");
         }
         this.index = index;
-        this.properties = new float[numProperties];
+        this.properties = new float[numFeatures];
     }
 
+    @Override
     public long getIndex() {
         return index;
     }

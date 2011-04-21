@@ -449,6 +449,11 @@ public class AggregatorTest {
             private  HashMap map = new HashMap();
 
             @Override
+            public long getIndex() {
+                return 0;
+            }
+
+            @Override
             public <T> T get(String name) {
                 return (T) map.get(name);
             }

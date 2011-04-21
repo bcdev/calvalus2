@@ -18,8 +18,15 @@ package com.bc.calvalus.binning;
 
 /**
  * A context is valid for a single bin.
+ *
+ * @author Norman
  */
 public interface BinContext {
+
+    /**
+     * @return The bin's unique index.
+     */
+    long getIndex();
 
     /**
      * Gets a named value from a temporary context. The context is valid for a
