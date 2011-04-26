@@ -1,3 +1,7 @@
+<!--
+   This assembly is part of the "client.xml" assembly.
+   It creates a JAR that can be submitted on the hadoop command line.
+-->
 <assembly
         xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
