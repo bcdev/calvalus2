@@ -73,7 +73,7 @@ public class TemporalBinReprojector {
         final int gridHeight = binningGrid.getNumRows();
 
         int lastRowIndex = -1;
-        final ArrayList<TemporalBin> binRow = new ArrayList<TemporalBin>();
+        final List<TemporalBin> binRow = new ArrayList<TemporalBin>();
         while (temporalBins.hasNext()) {
             TemporalBin temporalBin = temporalBins.next();
             int rowIndex = binningGrid.getRowIndex(temporalBin.getIndex());
