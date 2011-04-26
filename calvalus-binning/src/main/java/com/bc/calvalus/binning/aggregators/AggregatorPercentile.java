@@ -17,11 +17,15 @@
 package com.bc.calvalus.binning.aggregators;
 
 import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.AggregatorDescriptor;
 import com.bc.calvalus.binning.BinContext;
 import com.bc.calvalus.binning.GrowableVector;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.Vector;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.PropertySet;
 
 import java.util.Arrays;
 
@@ -40,8 +44,8 @@ public class AggregatorPercentile extends AbstractAggregator {
         this(varCtx, varName, percentage != null ? percentage : 90, fillValue);
     }
 
-    private  AggregatorPercentile(VariableContext varCtx, String varName, int percentage, Float fillValue) {
-        super("PERCENTILE",
+    private AggregatorPercentile(VariableContext varCtx, String varName, int percentage, Float fillValue) {
+        super(Descriptor.NAME,
               createFeatureNames(varName, "sum_x"),
               createFeatureNames(varName, "P" + percentage),
               createFeatureNames(varName, "P" + percentage),
@@ -60,7 +64,7 @@ public class AggregatorPercentile extends AbstractAggregator {
         this.percentage = percentage;
     }
 
-     @Override
+    @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
     }
@@ -137,5 +141,34 @@ public class AggregatorPercentile extends AbstractAggregator {
             yp = measurements[k - 1] + d * (measurements[k] - measurements[k - 1]);
         }
         return yp;
+    }
+
+
+    public static class Descriptor implements AggregatorDescriptor {
+
+        public static final String NAME = "PERCENTILE";
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public PropertyDescriptor[] getParameterDescriptors() {
+
+            return new PropertyDescriptor[]{
+                    new PropertyDescriptor("varName", String.class),
+                    new PropertyDescriptor("percentage", Integer.class),
+                    new PropertyDescriptor("fillValue", Float.class),
+            };
+        }
+
+        @Override
+        public Aggregator createAggregator(VariableContext varCtx, PropertySet propertySet) {
+            return new AggregatorPercentile(varCtx,
+                                            propertySet.<String>getValue("varName"),
+                                            propertySet.<Integer>getValue("percentage"),
+                                            propertySet.<Float>getValue("fillValue"));
+        }
     }
 }

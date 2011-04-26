@@ -1,11 +1,15 @@
 package com.bc.calvalus.binning.aggregators;
 
 import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.AggregatorDescriptor;
 import com.bc.calvalus.binning.BinContext;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.Vector;
 import com.bc.calvalus.binning.WeightFn;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.PropertySet;
 
 import java.util.Arrays;
 
@@ -17,7 +21,7 @@ public final class AggregatorAverage extends AbstractAggregator {
     private final WeightFn weightFn;
 
     public AggregatorAverage(VariableContext varCtx, String varName, Double weightCoeff, Float fillValue) {
-        super("AVG",
+        super(Descriptor.NAME,
               createFeatureNames(varName, "sum_x", "sum_xx"),
               createFeatureNames(varName, "sum_x", "sum_xx", "sum_w"),
               createFeatureNames(varName, "mean", "sigma"),
@@ -96,4 +100,31 @@ public final class AggregatorAverage extends AbstractAggregator {
     }
 
 
+    public static class Descriptor implements AggregatorDescriptor {
+
+        public static final String NAME = "AVG";
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public PropertyDescriptor[] getParameterDescriptors() {
+
+            return new PropertyDescriptor[] {
+                    new PropertyDescriptor("varName", String.class),
+                    new PropertyDescriptor("weightCoeff", Double.class),
+                    new PropertyDescriptor("fillValue", Float.class),
+            };
+        }
+
+        @Override
+        public Aggregator createAggregator(VariableContext varCtx, PropertySet propertySet) {
+            return new AggregatorAverage(varCtx,
+                                         propertySet.<String>getValue("varName"),
+                                         propertySet.<Double>getValue("weightCoeff"),
+                                         propertySet.<Float>getValue("fillValue"));
+        }
+    }
 }

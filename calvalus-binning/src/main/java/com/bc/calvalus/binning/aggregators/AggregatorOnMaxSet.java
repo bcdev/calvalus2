@@ -1,10 +1,14 @@
 package com.bc.calvalus.binning.aggregators;
 
 import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.AggregatorDescriptor;
 import com.bc.calvalus.binning.BinContext;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.Vector;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.PropertySet;
 
 import java.util.Arrays;
 
@@ -16,7 +20,7 @@ public final class AggregatorOnMaxSet extends AbstractAggregator {
     private int numFeatures;
 
     public AggregatorOnMaxSet(VariableContext varCtx, String... varNames) {
-        super("ON_MAX_SET", createFeatureNames(varNames), null);
+        super(Descriptor.NAME, createFeatureNames(varNames), null);
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
@@ -102,4 +106,27 @@ public final class AggregatorOnMaxSet extends AbstractAggregator {
         return featureNames;
     }
 
+    public static class Descriptor implements AggregatorDescriptor {
+
+        public static final String NAME = "ON_MAX_SET";
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public PropertyDescriptor[] getParameterDescriptors() {
+
+            return new PropertyDescriptor[] {
+                    new PropertyDescriptor("varNames", String[].class),
+            };
+        }
+
+        @Override
+        public Aggregator createAggregator(VariableContext varCtx, PropertySet propertySet) {
+            return new AggregatorOnMaxSet(varCtx,
+                                         (String[]) propertySet.getValue("varNames"));
+        }
+    }
 }

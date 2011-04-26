@@ -1,12 +1,17 @@
 package com.bc.calvalus.binning.aggregators;
 
 import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.AggregatorDescriptor;
 import com.bc.calvalus.binning.BinContext;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.Vector;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.PropertySet;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * An aggregator that computes the minimum and maximum values.
@@ -15,7 +20,7 @@ public class AggregatorMinMax extends AbstractAggregator {
     private final int varIndex;
 
     public AggregatorMinMax(VariableContext varCtx, String varName, Float fillValue) {
-        super("MIN_MAX", createFeatureNames(varName, "min", "max"), fillValue);
+        super(Descriptor.NAME, createFeatureNames(varName, "min", "max"), fillValue);
 
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
@@ -74,5 +79,31 @@ public class AggregatorMinMax extends AbstractAggregator {
                 ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
                 ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                 '}';
+    }
+
+    public static class Descriptor implements AggregatorDescriptor {
+
+        public static final String NAME = "MIN_MAX";
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public PropertyDescriptor[] getParameterDescriptors() {
+
+            return new PropertyDescriptor[] {
+                    new PropertyDescriptor("varName", String.class),
+                    new PropertyDescriptor("fillValue", Float.class),
+            };
+        }
+
+        @Override
+        public Aggregator createAggregator(VariableContext varCtx, PropertySet propertySet) {
+            return new AggregatorMinMax(varCtx,
+                                        (String) propertySet.getValue("varName"),
+                                        (Float) propertySet.getValue("fillValue"));
+        }
     }
 }

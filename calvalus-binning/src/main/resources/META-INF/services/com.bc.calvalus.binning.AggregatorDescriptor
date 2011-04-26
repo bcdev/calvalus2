@@ -1,0 +1,5 @@
+com.bc.calvalus.binning.aggregators.AggregatorAverage$Descriptor
+com.bc.calvalus.binning.aggregators.AggregatorAverageML$Descriptor
+com.bc.calvalus.binning.aggregators.AggregatorMinMax$Descriptor
+com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet$Descriptor
+com.bc.calvalus.binning.aggregators.AggregatorPercentile$Descriptor
