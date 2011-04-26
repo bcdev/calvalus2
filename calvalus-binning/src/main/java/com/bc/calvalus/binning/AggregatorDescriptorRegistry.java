@@ -8,11 +8,10 @@ import java.util.ServiceLoader;
 /**
  * A simple registry for {@link AggregatorDescriptor}s.
  *
- *
+ * @author MarcoZ
  * @author Norman
  */
 public class AggregatorDescriptorRegistry {
-    private static AggregatorDescriptorRegistry instance;
     private final HashMap<String, AggregatorDescriptor> map;
 
     private AggregatorDescriptorRegistry() {
@@ -23,14 +22,15 @@ public class AggregatorDescriptorRegistry {
     }
 
     public static AggregatorDescriptorRegistry getInstance() {
-        if (instance == null) {
-            instance = new AggregatorDescriptorRegistry();
-        }
-        return instance;
+        return Holder.instance;
     }
 
     public AggregatorDescriptor getAggregatorDescriptor(String name) {
         return map.get(name);
     }
 
+    // Initialization-on-demand holder idiom
+    private static class Holder {
+        private static final AggregatorDescriptorRegistry instance = new AggregatorDescriptorRegistry();
+    }
 }
