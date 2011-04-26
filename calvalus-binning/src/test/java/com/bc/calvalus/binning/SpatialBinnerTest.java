@@ -1,6 +1,7 @@
 package com.bc.calvalus.binning;
 
 
+import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
 import org.junit.Test;
 
 import java.awt.geom.AffineTransform;

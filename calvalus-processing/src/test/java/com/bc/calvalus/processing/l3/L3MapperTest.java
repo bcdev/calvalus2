@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.AggregatorAverage;
+import com.bc.calvalus.binning.aggregators.AggregatorAverage;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
 import com.bc.calvalus.binning.BinningContext;

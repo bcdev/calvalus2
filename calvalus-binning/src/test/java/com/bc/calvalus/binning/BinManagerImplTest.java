@@ -1,5 +1,9 @@
 package com.bc.calvalus.binning;
 
+import com.bc.calvalus.binning.aggregators.AggregatorAverage;
+import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
+import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
+import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

@@ -5,10 +5,10 @@ package com.bc.calvalus.binning;
 *
 * @author Norman
 */
-class MyVariableContext implements VariableContext {
+public class MyVariableContext implements VariableContext {
     private String[] varNames;
 
-    MyVariableContext(String ... varNames) {
+    public MyVariableContext(String ... varNames) {
         this.varNames = varNames;
     }
 

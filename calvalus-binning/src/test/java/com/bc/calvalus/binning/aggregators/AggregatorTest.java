@@ -1,49 +1,22 @@
-package com.bc.calvalus.binning;
+package com.bc.calvalus.binning.aggregators;
 
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.BinContext;
+import com.bc.calvalus.binning.MyVariableContext;
+import com.bc.calvalus.binning.VectorImpl;
 import org.junit.Test;
 
 import java.util.HashMap;
 
-import static java.lang.Float.*;
-import static java.lang.Math.*;
-import static org.junit.Assert.*;
+import static java.lang.Float.NaN;
+import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AggregatorTest {
 
-     BinContext ctx = createCtx();
-
-    @Test
-    public void testWeightFN() {
-        WeightFn f;
-
-        f = WeightFn.createPow(0.0);
-        assertNotNull(f);
-        assertEquals(1.0f, f.eval(0), 1e-10f);
-        assertEquals(1.0f, f.eval(1), 1e-10f);
-        assertEquals(1.0f, f.eval(2), 1e-10f);
-        assertEquals(1.0f, f.eval(4), 1e-10f);
-
-        f = WeightFn.createPow(1.0);
-        assertNotNull(f);
-        assertEquals(0.0f, f.eval(0), 1e-10f);
-        assertEquals(1.0f, f.eval(1), 1e-10f);
-        assertEquals(2.0f, f.eval(2), 1e-10f);
-        assertEquals(4.0f, f.eval(4), 1e-10f);
-
-        f = WeightFn.createPow(0.5);
-        assertNotNull(f);
-        assertEquals(0.0f, f.eval(0), 1e-10f);
-        assertEquals(1.0f, f.eval(1), 1e-10f);
-        assertEquals((float)Math.sqrt(2), f.eval(2), 1e-10f);
-        assertEquals(2.0f, f.eval(4), 1e-10f);
-
-        f = WeightFn.createPow(0.42);
-        assertNotNull(f);
-        assertEquals((float)Math.pow(0, 0.42), f.eval(0), 1e-10f);
-        assertEquals((float)Math.pow(1, 0.42), f.eval(1), 1e-10f);
-        assertEquals((float)Math.pow(2, 0.42), f.eval(2), 1e-10f);
-        assertEquals((float)Math.pow(4, 0.42), f.eval(4), 1e-10f);
-    }
+    BinContext ctx = createCtx();
 
     @Test
     public void testAggregatorAverageNoWeight() {
@@ -156,11 +129,11 @@ public class AggregatorTest {
         agg.aggregateTemporal(ctx, vec(0.2f, 0.04f), 1, tvec);
         agg.aggregateTemporal(ctx, vec(0.1f, 0.01f), 7, tvec);
         assertEquals(3 * 0.3f + 2 * 0.1f + 1 * 0.2f + 7 * 0.1f, tvec.get(0), 1e-5f);
-        assertEquals(3 *0.09f + 2 * 0.01f + 1 *0.04f + 7 * 0.01f, tvec.get(1), 1e-5f);
+        assertEquals(3 * 0.09f + 2 * 0.01f + 1 * 0.04f + 7 * 0.01f, tvec.get(1), 1e-5f);
         assertEquals(3f + 2f + 1f + 7f, tvec.get(2), 1e-5f);
 
         float mean = (3 * 0.3f + 2 * 0.1f + 1 * 0.2f + 7 * 0.1f) / (3f + 2f + 1f + 7f);
-        float sigma = (float) sqrt((3 *0.09f + 2 * 0.01f + 1 *0.04f + 7 * 0.01f) / (3f + 2f + 1f + 7f) - mean * mean);
+        float sigma = (float) sqrt((3 * 0.09f + 2 * 0.01f + 1 * 0.04f + 7 * 0.01f) / (3f + 2f + 1f + 7f) - mean * mean);
         agg.computeOutput(tvec, out);
         assertEquals(mean, out.get(0), 1e-5f);
         assertEquals(sigma, out.get(1), 1e-5f);
@@ -447,7 +420,7 @@ public class AggregatorTest {
 
     static BinContext createCtx() {
         return new BinContext() {
-            private  HashMap map = new HashMap();
+            private HashMap map = new HashMap();
 
             @Override
             public long getIndex() {

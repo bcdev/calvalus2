@@ -16,10 +16,10 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.AggregatorAverage;
-import com.bc.calvalus.binning.AggregatorAverageML;
-import com.bc.calvalus.binning.AggregatorMinMax;
-import com.bc.calvalus.binning.AggregatorOnMaxSet;
+import com.bc.calvalus.binning.aggregators.AggregatorAverage;
+import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
+import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
+import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;

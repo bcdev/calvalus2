@@ -14,7 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.binning;
+package com.bc.calvalus.binning.aggregators;
+
+import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.BinContext;
+import com.bc.calvalus.binning.GrowableVector;
+import com.bc.calvalus.binning.VariableContext;
+import com.bc.calvalus.binning.Vector;
+import com.bc.calvalus.binning.WritableVector;
 
 import java.util.Arrays;
 
@@ -25,7 +32,7 @@ import java.util.Arrays;
  * @author MarcoZ
  * @author Norman
  */
-public class AggregatorPercentile extends AbstractAggregator  {
+public class AggregatorPercentile extends AbstractAggregator {
     private final int varIndex;
     private final int percentage;
 

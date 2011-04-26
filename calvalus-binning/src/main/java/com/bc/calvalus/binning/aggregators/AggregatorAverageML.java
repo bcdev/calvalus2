@@ -1,4 +1,11 @@
-package com.bc.calvalus.binning;
+package com.bc.calvalus.binning.aggregators;
+
+import com.bc.calvalus.binning.AbstractAggregator;
+import com.bc.calvalus.binning.BinContext;
+import com.bc.calvalus.binning.VariableContext;
+import com.bc.calvalus.binning.Vector;
+import com.bc.calvalus.binning.WeightFn;
+import com.bc.calvalus.binning.WritableVector;
 
 import java.util.Arrays;
 

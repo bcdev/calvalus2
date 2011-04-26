@@ -1,5 +1,6 @@
 package com.bc.calvalus.binning;
 
+import com.bc.calvalus.binning.aggregators.AggregatorPercentile;
 import org.junit.Assert;
 import org.junit.Test;
 
