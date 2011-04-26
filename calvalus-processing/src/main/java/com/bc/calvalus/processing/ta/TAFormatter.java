@@ -38,6 +38,8 @@ import java.util.logging.Logger;
 
 /**
  * For formatting the results of a BEAM Level 3 Hadoop Job.
+ *
+ *  @author Norman
  */
 public class TAFormatter {
     private static final String PART_FILE_PREFIX = "part-r-";

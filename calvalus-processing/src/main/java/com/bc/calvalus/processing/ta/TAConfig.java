@@ -26,6 +26,11 @@ import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 
+/**
+ * The configuration for the trend analysis.
+ *
+ * @author Norman
+ */
 public class TAConfig {
 
 

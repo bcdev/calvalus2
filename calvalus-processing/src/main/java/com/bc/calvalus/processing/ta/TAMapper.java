@@ -17,6 +17,8 @@ import java.io.IOException;
 
 /**
  * Maps temporal bins (as produced by L3Reducer) to region keys.
+ *
+ * @author Norman
  */
 public class TAMapper extends Mapper<LongWritable, TemporalBin, Text, TemporalBin> implements Configurable {
     private Configuration conf;

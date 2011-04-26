@@ -38,6 +38,8 @@ import java.io.IOException;
 
 /**
  * A workflow item that outputs a sequence file of {@link TAPoint}s from a L3 output sequence file.
+ *
+ * @author Norman
  */
 public class TAWorkflowItem extends HadoopWorkflowItem {
 

@@ -24,6 +24,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+/**
+ * A {@code TAPoint} represents the L3 processing output of the trend analysis. It comprises a region name,
+ * start and stop date of the and final temporal bin that aggregates all bins in the given region.
+ *
+ * @author Norman
+ */
 public class TAPoint implements Writable {
 
     String regionName;
