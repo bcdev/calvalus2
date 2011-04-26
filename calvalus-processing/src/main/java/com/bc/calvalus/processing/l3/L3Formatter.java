@@ -21,6 +21,7 @@ import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.binning.TemporalBinProcessor;
 import com.bc.calvalus.binning.WritableVector;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -303,7 +304,7 @@ public class L3Formatter {
         return (byte) sample;
     }
 
-    private final static class ImageRaster extends L3Reprojector.TemporalBinProcessor {
+    private final static class ImageRaster extends TemporalBinProcessor {
         private final int rasterWidth;
         private final int[] bandIndices;
         private final float[][] bandData;
@@ -344,7 +345,7 @@ public class L3Formatter {
         }
     }
 
-    private final static class ProductDataWriter extends L3Reprojector.TemporalBinProcessor {
+    private final static class ProductDataWriter extends TemporalBinProcessor {
         private final int width;
         private final ProductData numObsLine;
         private final ProductData numPassesLine;
