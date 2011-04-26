@@ -18,11 +18,8 @@ package com.bc.calvalus.processing.l3;
 
 
 import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.aggregators.AggregatorAverage;
-import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
-import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
-import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
-import com.bc.calvalus.binning.aggregators.AggregatorPercentile;
+import com.bc.calvalus.binning.AggregatorDescriptor;
+import com.bc.calvalus.binning.AggregatorDescriptorRegistry;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
 import com.bc.calvalus.binning.BinningContext;
@@ -32,8 +29,10 @@ import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.VariableContextImpl;
 import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.ceres.binding.PropertyContainer;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
+@SuppressWarnings({"UnusedDeclaration"})
 public class L3Config {
     public static final String L3_REQUEST_FILENAME = "wps-request.xml";
 
@@ -215,22 +214,13 @@ public class L3Config {
     private BinManager getBinManager(VariableContext varCtx) {
         Aggregator[] aggs = new Aggregator[aggregators.length];
         for (int i = 0; i < aggs.length; i++) {
-            String type = aggregators[i].type;
-            Aggregator aggregator;
-            if (type.equals("AVG")) {
-                aggregator = getAggregatorAverage(varCtx, aggregators[i]);
-            } else if (type.equals("AVG_ML")) {
-                aggregator = getAggregatorAverageML(varCtx, aggregators[i]);
-            } else if (type.equals("MIN_MAX")) {
-                aggregator = getAggregatorMinMax(varCtx, aggregators[i]);
-            } else if (type.equals("ON_MAX_SET")) {
-                aggregator = getAggregatorOnMaxSet(varCtx, aggregators[i]);
-            } else if (type.equals("PERCENTILE")) {
-                aggregator = getAggregatorPercentile(varCtx, aggregators[i]);
+            AggregatorConfiguration aggregatorConfiguration = aggregators[i];
+            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfiguration.type);
+            if (descriptor != null) {
+                aggs[i] = descriptor.createAggregator(varCtx, PropertyContainer.createObjectBacked(aggregatorConfiguration));
             } else {
-                throw new IllegalArgumentException("Unknown aggregator type: " + type);
+                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfiguration.type);
             }
-            aggs[i] = aggregator;
         }
         return new BinManagerImpl(aggs);
     }
@@ -268,25 +258,5 @@ public class L3Config {
             }
         }
         return variableContext;
-    }
-
-    private Aggregator getAggregatorAverage(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        return new AggregatorAverage(varCtx, aggregatorConf.varName, aggregatorConf.weightCoeff, aggregatorConf.fillValue);
-    }
-
-    private Aggregator getAggregatorAverageML(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        return new AggregatorAverageML(varCtx, aggregatorConf.varName, aggregatorConf.weightCoeff, aggregatorConf.fillValue);
-    }
-
-    private Aggregator getAggregatorMinMax(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        return new AggregatorMinMax(varCtx, aggregatorConf.varName, aggregatorConf.fillValue);
-    }
-
-    private Aggregator getAggregatorOnMaxSet(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        return new AggregatorOnMaxSet(varCtx, aggregatorConf.varNames);
-    }
-
-    private Aggregator getAggregatorPercentile(VariableContext varCtx, AggregatorConfiguration aggregatorConf) {
-        return new AggregatorPercentile(varCtx, aggregatorConf.varName, aggregatorConf.percentage, aggregatorConf.fillValue);
     }
 }
