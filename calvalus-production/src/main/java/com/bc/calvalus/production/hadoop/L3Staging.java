@@ -61,7 +61,7 @@ class L3Staging extends Staging {
             L3Config l3Config = l3WorkflowItem.getL3Config();
 
 
-            L3Formatter formatter = new L3Formatter(logger, hadoopConfiguration);
+            L3Formatter formatter = new L3Formatter(hadoopConfiguration);
             try {
                 File tmpDir = new File(stagingDir, "tmp");
                 try {

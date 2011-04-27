@@ -1,5 +1,6 @@
 package com.bc.calvalus.binning;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,6 +24,7 @@ public class TemporalBinReprojectorTest {
     private NobsRaster raster;
     private int width;
     private int height;
+    private TemporalBinReprojector reprojector;
 
     @Before
     public void setUp() throws Exception {
@@ -51,17 +53,25 @@ public class TemporalBinReprojectorTest {
                              "------------\n" +
                              "------------\n",
                      raster.toString());
+
+        reprojector = new TemporalBinReprojector(getCtx(binningGrid), raster, rectangle);
+        reprojector.begin();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        reprojector.end();
     }
 
     @Test
-    public void testReprojectPart_Full() throws Exception {
+    public void testProcessBins_Full() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
         for (int i = 0; i < binningGrid.getNumBins(); i++) {
             bins.add(createTBin(i));
         }
 
-        reprojectPart(getCtx(binningGrid), rectangle, bins.iterator(), raster);
+        reprojector.processBins(bins.iterator());
 
         assertEquals("" +
                              "************\n" +
@@ -74,7 +84,46 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
-    public void testReprojectPart_Alternating() throws Exception {
+    public void testProcessBins_Empty() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+
+        reprojector.processBins(bins.iterator());
+
+        assertEquals("" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n",
+                     raster.toString());
+    }
+
+    @Test
+    public void testProcessBins_SomeLinesMissing() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        for (int i = 0; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
+            if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
+                bins.add(createTBin(i));
+            }
+        }
+
+        reprojector.processBins(bins.iterator());
+
+        assertEquals("" +
+                             "************\n" +
+                             "************\n" +
+                             "++++++++++++\n" +
+                             "************\n" +
+                             "++++++++++++\n" +
+                             "************\n",
+                     raster.toString());
+    }
+
+    @Test
+    public void testProcessBins_Alternating() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
         for (int i = 0; i < binningGrid.getNumBins(); i++) {
@@ -82,7 +131,7 @@ public class TemporalBinReprojectorTest {
             i++;  // SKIP!!!
         }
 
-        reprojectPart(getCtx(binningGrid), rectangle, bins.iterator(), raster);
+        reprojector.processBins(bins.iterator());
 
         assertEquals("" +
                              "****++++****\n" +
@@ -95,14 +144,34 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
-    public void testReprojectPart_BottomMissing() throws Exception {
+    public void testProcessBins_TopMissing() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        for (int i = 15; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
+            bins.add(createTBin(i));
+        }
+
+        reprojector.processBins(bins.iterator());
+
+        assertEquals("" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++********\n" +
+                             "************\n" +
+                             "************\n" +
+                             "************\n",
+                     raster.toString());
+    }
+
+    @Test
+    public void testProcessBins_BottomMissing() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
         for (int i = 0; i < 25; i++) {  // only up to 25!!!
             bins.add(createTBin(i));
         }
 
-        reprojectPart(getCtx(binningGrid), rectangle, bins.iterator(), raster);
+        reprojector.processBins(bins.iterator());
 
         assertEquals("" +
                              "************\n" +
@@ -115,50 +184,7 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
-    public void testReprojectPart_TopMissing() throws Exception {
-
-        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 15; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
-            bins.add(createTBin(i));
-        }
-
-        reprojectPart(getCtx(binningGrid), rectangle, bins.iterator(), raster);
-
-        assertEquals("" +
-                             "++++++++++++\n" +
-                             "++++++++++**\n" +
-                             "************\n" +
-                             "************\n" +
-                             "************\n" +
-                             "************\n",
-                     raster.toString());
-    }
-
-    @Test
-    public void testReprojectPart_SomeLinesMissing() throws Exception {
-
-        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
-            if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
-                bins.add(createTBin(i));
-            }
-        }
-
-        reprojectPart(getCtx(binningGrid), rectangle, bins.iterator(), raster);
-
-        assertEquals("" +
-                             "************\n" +
-                             "************\n" +
-                             "++++++++++++\n" +
-                             "************\n" +
-                             "++++++++++++\n" +
-                             "************\n",
-                     raster.toString());
-    }
-
-
-    @Test
-    public void testProcessBinRowCompleteEquator() throws Exception {
+    public void testProcessRowWithBins_CompleteEquator() throws Exception {
 
         List<TemporalBin> binRow = Arrays.asList(createTBin(11),
                                                  createTBin(12),
@@ -175,7 +201,7 @@ public class TemporalBinReprojectorTest {
         );
 
         int y = 2;
-        reprojectRow(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
+        processRowWithBins(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
         int[] nobsData = raster.nobsData;
 
         assertEquals(11, nobsData[y * width + 0]);
@@ -195,7 +221,7 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
-    public void testProcessBinRowIncompleteEquator() throws Exception {
+    public void testProcessRowWithBins_IncompleteEquator() throws Exception {
 
         List<TemporalBin> binRow = Arrays.asList(//createTBin(11),
                                                  createTBin(12),
@@ -212,7 +238,7 @@ public class TemporalBinReprojectorTest {
         );
 
         int y = 2;
-        reprojectRow(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
+        processRowWithBins(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
         int[] nobsData = raster.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0]);
@@ -233,14 +259,14 @@ public class TemporalBinReprojectorTest {
 
 
     @Test
-    public void testProcessBinRowCompletePolar() throws Exception {
+    public void testProcessRowWithBins_CompletePolar() throws Exception {
 
         List<TemporalBin> binRow = Arrays.asList(createTBin(0),
                                                  createTBin(1),
                                                  createTBin(2));
 
         int y = 0;
-        reprojectRow(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
+        processRowWithBins(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
         int[] nobsData = raster.nobsData;
 
         assertEquals(0, nobsData[y * width + 0]);
@@ -258,14 +284,14 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
-    public void testProcessBinRowIncompletePolar() throws Exception {
+    public void testProcessRowWithBins_IncompletePolar() throws Exception {
 
         List<TemporalBin> binRow = Arrays.asList(createTBin(0),
                                                  //createTBin(1),
                                                  createTBin(2));
 
         int y = 0;
-        reprojectRow(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
+        processRowWithBins(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
         int[] nobsData = raster.nobsData;
 
         assertEquals(0, nobsData[y * width + 0]);
@@ -282,27 +308,10 @@ public class TemporalBinReprojectorTest {
         assertEquals(2, nobsData[y * width + 11]);
     }
 
-    @Test
-    public void testProcessBinRowEmpty() throws Exception {
-
+    @Test(expected = IllegalArgumentException.class)
+    public void testProcessRowWithBins_Empty() throws Exception {
         List<TemporalBin> binRow = Arrays.asList();
-
-        int y = 0;
-        reprojectRow(getCtx(binningGrid), rectangle, y, binRow, raster, width, height);
-        int[] nobsData = raster.nobsData;
-
-        assertEquals(NAN, nobsData[y * width + 0]);
-        assertEquals(NAN, nobsData[y * width + 1]);
-        assertEquals(NAN, nobsData[y * width + 2]);
-        assertEquals(NAN, nobsData[y * width + 3]);
-        assertEquals(NAN, nobsData[y * width + 4]);
-        assertEquals(NAN, nobsData[y * width + 5]);
-        assertEquals(NAN, nobsData[y * width + 6]);
-        assertEquals(NAN, nobsData[y * width + 7]);
-        assertEquals(NAN, nobsData[y * width + 8]);
-        assertEquals(NAN, nobsData[y * width + 9]);
-        assertEquals(NAN, nobsData[y * width + 10]);
-        assertEquals(NAN, nobsData[y * width + 11]);
+        processRowWithBins(getCtx(binningGrid), rectangle, 0, binRow, raster, width, height);
     }
 
     /*

@@ -22,12 +22,18 @@ import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.TemporalBinProcessor;
+import com.bc.calvalus.binning.TemporalBinReprojector;
 import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.SequenceFile;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.Band;
@@ -53,6 +59,8 @@ import java.util.logging.Logger;
  */
 public class L3Formatter {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final String PART_FILE_PREFIX = "part-r-";
     private String outputType;
     private String outputFormat;
     private Path l3OutputDir;
@@ -63,12 +71,49 @@ public class L3Formatter {
     private double pixelSize;
     private Rectangle outputRegion;
 
-    private final Logger logger;
     private final Configuration configuration;
 
-    public L3Formatter(Logger logger, Configuration configuration) {
-        this.logger = logger;
+    public L3Formatter(Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public static void reproject(Configuration configuration,
+                                 BinningContext binningContext,
+                                 Rectangle pixelRegion,
+                                 Path partsDir,
+                                 TemporalBinProcessor temporalBinProcessor) throws Exception {
+
+        long startTime = System.nanoTime();
+
+        final FileSystem hdfs = partsDir.getFileSystem(configuration);
+        final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().startsWith(PART_FILE_PREFIX);
+            }
+        });
+
+        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", parts.length));
+
+        Arrays.sort(parts);
+
+        TemporalBinReprojector reprojector = new TemporalBinReprojector(binningContext, temporalBinProcessor, pixelRegion);
+
+        reprojector.begin();
+        for (FileStatus part : parts) {
+            Path partFile = part.getPath();
+            SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
+            LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
+            try {
+                reprojector.processBins(new SequenceFileBinIterator(reader));
+            } finally {
+                reader.close();
+            }
+        }
+        reprojector.end();
+
+        long stopTime = System.nanoTime();
+        LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
     }
 
     public int format(L3FormatterConfig formatterConfig, L3Config l3Config, String hadoopJobOutputDir, Geometry roiGeometry) throws Exception {
@@ -111,10 +156,10 @@ public class L3Formatter {
             throw new IllegalArgumentException("Illegal binning context: aggregatorCount == 0");
         }
 
-        logger.info("aggregators.length = " + aggregatorCount);
+        LOG.info("aggregators.length = " + aggregatorCount);
         for (int i = 0; i < aggregatorCount; i++) {
             Aggregator aggregator = binManager.getAggregator(i);
-            logger.info("aggregators." + i + " = " + aggregator);
+            LOG.info("aggregators." + i + " = " + aggregator);
         }
 
         computeOutputRegion(roiGeometry);
@@ -153,10 +198,10 @@ public class L3Formatter {
             final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
             final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
             final Rectangle unclippedOutputRegion = new Rectangle(x, y, width, height);
-            logger.info("unclippedOutputRegion = " + unclippedOutputRegion);
+            LOG.info("unclippedOutputRegion = " + unclippedOutputRegion);
             outputRegion = unclippedOutputRegion.intersection(outputRegion);
         }
-        logger.info("outputRegion = " + outputRegion);
+        LOG.info("outputRegion = " + outputRegion);
     }
 
     private void writeProductFile(ProductData.UTC startTime, ProductData.UTC endTime) throws Exception {
@@ -211,7 +256,7 @@ public class L3Formatter {
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
-        L3Reprojector.reproject(configuration, binningContext, outputRegion, l3OutputDir, dataWriter);
+        reproject(configuration, binningContext, outputRegion, l3OutputDir, dataWriter);
         productWriter.close();
     }
 
@@ -237,7 +282,7 @@ public class L3Formatter {
         }
 
         final ImageRaster raster = new ImageRaster(outputRegion.width, outputRegion.height, indices);
-        L3Reprojector.reproject(configuration, binningContext, outputRegion, l3OutputDir, raster);
+        reproject(configuration, binningContext, outputRegion, l3OutputDir, raster);
 
         if (outputType.equalsIgnoreCase("RGB")) {
             writeRgbImage(outputRegion.width, outputRegion.height, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
@@ -256,7 +301,7 @@ public class L3Formatter {
                                      float rawValue1, float rawValue2,
                                      String outputFormat, File outputImageFile) throws IOException {
 
-        logger.info(MessageFormat.format("writing image {0}", outputImageFile));
+        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
         final byte[] data = dataBuffer.getData();
@@ -272,7 +317,7 @@ public class L3Formatter {
                                float[][] rawData,
                                float[] rawValue1, float[] rawValue2,
                                String outputFormat, File outputImageFile) throws IOException {
-        logger.info(MessageFormat.format("writing image {0}", outputImageFile));
+        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
         final byte[] data = dataBuffer.getData();

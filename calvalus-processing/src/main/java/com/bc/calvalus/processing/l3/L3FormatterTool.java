@@ -103,7 +103,7 @@ public class L3FormatterTool extends Configured implements Tool {
         WpsConfig level3Wpsconfig = new WpsConfig(processingWps);
         L3Config l3Config = L3Config.fromXml(level3Wpsconfig.getLevel3Parameters());
 
-        L3Formatter formatter = new L3Formatter(LOG, getConf());
+        L3Formatter formatter = new L3Formatter(getConf());
 
         Geometry roiGeometry = JobUtils.createGeometry(level3Wpsconfig.getGeometry());
         return formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);
