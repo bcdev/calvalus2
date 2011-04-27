@@ -34,6 +34,8 @@
 
         <!-- Experimental code. Parts may become productive code later. -->
         <module>calvalus-experiments</module>
+
+        <module>calvalus-lc</module>
     </modules>
 
     <repositories>
