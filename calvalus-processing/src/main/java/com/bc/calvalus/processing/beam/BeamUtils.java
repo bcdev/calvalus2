@@ -83,14 +83,22 @@ public class BeamUtils {
      */
     public static Product readProduct(Path inputPath, Configuration configuration) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
-        final FileStatus status = fs.getFileStatus(inputPath);
-        final FSDataInputStream in = fs.open(inputPath);
-        final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
-        String formatName = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        ProductReader productReader = ProductIO.getProductReader(formatName);
-        Product product = productReader.readProductNodes(imageInputStream, null);
+        String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        Product product = null;
+        if (inputFormat.equals("HADOOP_STREAMING")) {
+            StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
+            product = reader.readProductNodes(null, null);
+        } else {
+            final FileStatus status = fs.getFileStatus(inputPath);
+            final FSDataInputStream in = fs.open(inputPath);
+            final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
+            ProductReader productReader = ProductIO.getProductReader(inputFormat);
+            if (productReader != null) {
+                product = productReader.readProductNodes(imageInputStream, null);
+            }
+        }
         if (product == null) {
-            throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", inputPath));
+            throw new IllegalStateException(MessageFormat.format("No reader found for product {0} (inputFormat={1}", inputPath, inputFormat));
         }
         return product;
     }
