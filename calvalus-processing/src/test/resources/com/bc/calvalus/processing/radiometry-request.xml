@@ -26,6 +26,14 @@
         </wps:Input>
 
         <wps:Input>
+            <ows:Identifier>calvalus.input.format</ows:Identifier>
+            <ows:Title>input format</ows:Title>
+            <wps:Data>
+                <wps:LiteralData>BEAM-DIMAP</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>output directory</ows:Title>
             <wps:Data>

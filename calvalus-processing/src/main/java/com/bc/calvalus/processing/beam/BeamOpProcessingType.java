@@ -68,6 +68,7 @@ public class BeamOpProcessingType {
         String filenamePattern = wpsConfig.getFilenamePattern();
         String inputs = collectInputPaths(requestInputPaths, filenamePattern, conf);
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT_FORMAT, wpsConfig.getInputFormat());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_BUNDLE, wpsConfig.getProcessorPackage());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());

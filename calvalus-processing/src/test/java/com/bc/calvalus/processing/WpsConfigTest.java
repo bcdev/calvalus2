@@ -53,6 +53,17 @@ public class WpsConfigTest {
     }
 
     @Test
+    public void inputFormat() throws Exception {
+        WpsConfig wpsConfig = createFromResource("bandmaths-request.xml");
+        String inputFormat = wpsConfig.getInputFormat();
+        assertEquals("", inputFormat);
+
+        wpsConfig = createFromResource("radiometry-request.xml");
+        inputFormat = wpsConfig.getInputFormat();
+        assertEquals("BEAM-DIMAP", inputFormat);
+    }
+
+    @Test
     public void outputPath() throws Exception {
         WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
         String requestOutputDir = wpsConfig.getRequestOutputDir();

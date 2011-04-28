@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 
+import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.ceres.binding.ConversionException;
@@ -35,7 +36,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -85,8 +86,8 @@ public class BeamUtils {
         final FileStatus status = fs.getFileStatus(inputPath);
         final FSDataInputStream in = fs.open(inputPath);
         final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
-        final EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
-        final ProductReader productReader = plugIn.createReaderInstance();
+        String formatName = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        ProductReader productReader = ProductIO.getProductReader(formatName);
         Product product = productReader.readProductNodes(imageInputStream, null);
         if (product == null) {
             throw new IllegalStateException(MessageFormat.format("No reader found for product {0}", inputPath));
