@@ -85,7 +85,7 @@ public class BeamUtils {
         final FileSystem fs = inputPath.getFileSystem(configuration);
         String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
         Product product = null;
-        if (inputFormat.equals("HADOOP_STREAMING")) {
+        if (inputFormat.equals("HADOOP-STREAMING")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
         } else {
