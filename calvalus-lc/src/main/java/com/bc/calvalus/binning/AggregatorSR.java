@@ -142,6 +142,11 @@ public class AggregatorSR extends AbstractAggregator {
     @Override
     public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final int status = (int) observationVector.get(varIndexes[0]);
+        for (int i = 0; i < numSdrBands + numSdrBands; i++) {
+            if (Float.isNaN(observationVector.get(varIndexes[1 + i]))) {
+                return;
+            }
+        }
         if (status == STATUS_LAND) {
             int landCount = (int) spatialVector.get(0);
             int snowCount = (int) spatialVector.get(2);
@@ -231,9 +236,9 @@ public class AggregatorSR extends AbstractAggregator {
         }
     }
 
-    private void addTemporalWs(WritableVector temporalVector, int snowCount) {
-        temporalVector.set(TBIN_W_SUM_INDEX, temporalVector.get(TBIN_W_SUM_INDEX) + (float) Math.sqrt(snowCount));
-        temporalVector.set(TBIN_WE_SUM_INDEX, temporalVector.get(TBIN_WE_SUM_INDEX) + snowCount);
+    private void addTemporalWs(WritableVector temporalVector, int counts) {
+        temporalVector.set(TBIN_W_SUM_INDEX, temporalVector.get(TBIN_W_SUM_INDEX) + (float) Math.sqrt(counts));
+        temporalVector.set(TBIN_WE_SUM_INDEX, temporalVector.get(TBIN_WE_SUM_INDEX) + counts);
     }
 
     @Override
