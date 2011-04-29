@@ -31,12 +31,21 @@ import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.PixelGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.jai.ImageManager;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.SingleBandedOpImage;
+import org.esa.beam.util.ImageUtils;
 import org.esa.beam.util.math.MathUtils;
 import org.jdom.Document;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
+import javax.media.jai.PlanarImage;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,6 +75,10 @@ public class StreamingProductReader extends AbstractProductReader {
         reader = new SequenceFile.Reader(fileSystem, path, configuration);
         Product product = readHeader();
         product.setPreferredTileSize(product.getSceneRasterWidth(), sliceHeight);
+        Band[] bands = product.getBands();
+        for (Band band : bands) {
+            band.setSourceImage(new BandImage(band, product.getPreferredTileSize()));
+        }
         return product;
     }
 
@@ -77,27 +90,7 @@ public class StreamingProductReader extends AbstractProductReader {
                                                        int destOffsetX, int destOffsetY,
                                                        int destWidth, int destHeight,
                                                        ProductData destBuffer, ProgressMonitor pm) throws IOException {
-        int sliceIndex = MathUtils.floorInt(sourceOffsetY / sliceHeight);
-        String expectedKey = destBand.getName() + ":" + sliceIndex;
-
-        Text key = new Text();
-        ByteArrayWritable value = new ByteArrayWritable();
-        synchronized (reader) {
-            Long keyPosition = keyIndex.get(expectedKey);
-            if (keyPosition != reader.getPosition()) {
-                reader.seek(keyPosition);
-            }
-            reader.next(key, value);
-        }
-        if (!key.toString().equals(expectedKey)) {
-            throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));
-        }
-        byte[] byteArray = value.getArray();
-
-        InputStream inputStream = new ByteArrayInputStream(byteArray);
-        ImageInputStream iis = new MemoryCacheImageInputStream(inputStream);
-
-        destBuffer.readFrom(iis);
+        throw new IllegalStateException("Reading is done though BandImage.");
     }
 
     public void close() throws IOException {
@@ -170,15 +163,75 @@ public class StreamingProductReader extends AbstractProductReader {
         }
     }
 
+    private final class BandImage extends SingleBandedOpImage {
+
+        private final RasterDataNode rasterDataNode;
+
+        protected BandImage(RasterDataNode rasterDataNode, Dimension tileSize) {
+            super(ImageManager.getDataBufferType(rasterDataNode.getDataType()),
+                  rasterDataNode.getSceneRasterWidth(),
+                  rasterDataNode.getSceneRasterHeight(),
+                  tileSize,
+                  null,
+                  ResolutionLevel.MAXRES);
+            this.rasterDataNode = rasterDataNode;
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sourceImages, WritableRaster tile, Rectangle destRect) {
+            ProductData productData;
+            boolean directMode = tile.getDataBuffer().getSize() == destRect.width * destRect.height;
+            if (directMode) {
+                productData = ProductData.createInstance(rasterDataNode.getDataType(),
+                                                         ImageUtils.getPrimitiveArray(tile.getDataBuffer()));
+            } else {
+                productData = ProductData.createInstance(rasterDataNode.getDataType(),
+                                                         destRect.width * destRect.height);
+            }
+
+            try {
+                computeProductData(productData, destRect.y);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (!directMode) {
+                tile.setDataElements(destRect.x, destRect.y, destRect.width, destRect.height, productData.getElems());
+            }
+        }
+
+        private void computeProductData(ProductData productData, int y) throws IOException {
+            int sliceIndex = MathUtils.floorInt(y / sliceHeight);
+            String expectedKey = rasterDataNode.getName() + ":" + sliceIndex;
+
+            Text key = new Text();
+            ByteArrayWritable value = new ByteArrayWritable();
+            synchronized (reader) {
+                Long keyPosition = keyIndex.get(expectedKey);
+                if (keyPosition != reader.getPosition()) {
+                    reader.seek(keyPosition);
+                }
+                reader.next(key, value);
+            }
+            if (!key.toString().equals(expectedKey)) {
+                throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));
+            }
+            byte[] byteArray = value.getArray();
+
+            InputStream inputStream = new ByteArrayInputStream(byteArray);
+            ImageInputStream iis = new MemoryCacheImageInputStream(inputStream);
+
+            productData.readFrom(iis);
+        }
+
+    }
+
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             System.out.println("Usage : StreamingProductFile DimapProductFile");
         }
         StreamingProductReader reader = new StreamingProductReader(new Path(args[0]), new Configuration());
         Product product = reader.readProductNodes(null, null);
-
-        //        ProductWriter writer = ProductIO.getProductWriter(ProductIO.DEFAULT_FORMAT_NAME);
-//        writer.writeProductNodes(product, "/home/marcoz/tmp/inermediate_product.dim");
 
         ProductIO.writeProduct(product, args[1], ProductIO.DEFAULT_FORMAT_NAME);
     }
