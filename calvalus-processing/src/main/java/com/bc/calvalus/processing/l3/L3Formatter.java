@@ -164,7 +164,10 @@ public class L3Formatter {
 
         computeOutputRegion(roiGeometry);
 
-        outputFile.getParentFile().mkdirs();
+        File parentFile = outputFile.getParentFile();
+        if (parentFile != null) {
+            parentFile.mkdirs();
+        }
         if (outputType.equalsIgnoreCase("Product")) {
             writeProductFile(formatterConfig.getStartTime(), formatterConfig.getEndTime());
         } else {
