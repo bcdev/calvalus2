@@ -77,7 +77,7 @@ public class AggregatorSR extends AbstractAggregator {
     private static int getVariableIndex(VariableContext varCtx, String varName) {
         int varIndex = varCtx.getVariableIndex(varName);
         if (varIndex < 0) {
-            throw new IllegalArgumentException("varIndex < 0");
+            throw new IllegalArgumentException(String.format("varIndex < 0 for varName='%s'", varName));
         }
         return varIndex;
     }
