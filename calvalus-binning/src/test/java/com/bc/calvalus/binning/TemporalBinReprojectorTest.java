@@ -64,6 +64,34 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
+    public void testSubPixelRegion() throws Exception {
+        Rectangle rectangle = new Rectangle(2, 2, 6, 3);
+        TemporalBinProcessor raster = new NobsRaster(6, 3);
+        assertEquals("" +
+                             "------\n" +
+                             "------\n" +
+                             "------\n",
+                     raster.toString());
+
+        TemporalBinReprojector reprojector = new TemporalBinReprojector(getCtx(binningGrid), raster, rectangle);
+        reprojector.begin();
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        for (int i = 0; i < binningGrid.getNumBins(); i++) {
+            bins.add(createTBin(i));
+        }
+
+        reprojector.processBins(bins.iterator());
+        assertEquals("" +
+                             "******\n" +
+                             "******\n" +
+                             "******\n",
+                     raster.toString());
+
+        reprojector.end();
+    }
+
+    @Test
     public void testProcessBins_Full() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();

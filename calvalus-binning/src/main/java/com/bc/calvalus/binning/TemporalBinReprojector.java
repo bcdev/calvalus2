@@ -55,7 +55,7 @@ public class TemporalBinReprojector {
         final List<TemporalBin> binRow = new ArrayList<TemporalBin>();
 
         int yUltimate = -1;
-        int yPenultimate = -1;
+        int yPenultimate = y1 - 1;
         while (temporalBins.hasNext()) {
             TemporalBin temporalBin = temporalBins.next();
             long temporalBinIndex = temporalBin.getIndex();
