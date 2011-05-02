@@ -18,6 +18,7 @@ public class TemporalBinReprojector {
     private final BinningContext binningContext;
     private final TemporalBinProcessor temporalBinProcessor;
     private final Rectangle pixelRegion;
+    private static int yGlobalUltimate;
 
     public TemporalBinReprojector(BinningContext binningContext, TemporalBinProcessor temporalBinProcessor, Rectangle pixelRegion) {
         Assert.notNull(binningContext, "binningContext");
@@ -29,21 +30,28 @@ public class TemporalBinReprojector {
     }
 
     public void processBins(Iterator<TemporalBin> temporalBins) throws Exception {
+
         reprojectRegion(binningContext, pixelRegion, temporalBins, temporalBinProcessor);
     }
 
     public void begin() throws Exception {
-       temporalBinProcessor.begin(binningContext);
+        yGlobalUltimate = pixelRegion.y - 1;
+        temporalBinProcessor.begin(binningContext);
     }
 
     public void end() throws Exception {
-       temporalBinProcessor.end(binningContext);
+        temporalBinProcessor.end(binningContext);
+        final int x1 = pixelRegion.x;
+        final int x2 = x1 + pixelRegion.width - 1;
+        final int y1 = pixelRegion.y;
+        final int y2 = y1 + pixelRegion.height - 1;
+        processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yGlobalUltimate + 1, y2);
     }
 
     static void reprojectRegion(BinningContext binningContext,
-                                       Rectangle pixelRegion,
-                                       Iterator<TemporalBin> temporalBins,
-                                       TemporalBinProcessor temporalBinProcessor) throws Exception {
+                                Rectangle pixelRegion,
+                                Iterator<TemporalBin> temporalBins,
+                                TemporalBinProcessor temporalBinProcessor) throws Exception {
         final int x1 = pixelRegion.x;
         final int x2 = x1 + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;
@@ -53,21 +61,19 @@ public class TemporalBinReprojector {
         final int gridHeight = binningGrid.getNumRows();
 
         final List<TemporalBin> binRow = new ArrayList<TemporalBin>();
-
         int yUltimate = -1;
-        int yPenultimate = y1 - 1;
         while (temporalBins.hasNext()) {
             TemporalBin temporalBin = temporalBins.next();
             long temporalBinIndex = temporalBin.getIndex();
             int y = binningGrid.getRowIndex(temporalBinIndex);
             if (y != yUltimate) {
                 if (yUltimate >= y1 && yUltimate <= y2) {
-                    processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yPenultimate + 1, yUltimate - 1);
+                    processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yGlobalUltimate + 1, yUltimate - 1);
                     processRowWithBins(binningContext,
                                        pixelRegion, yUltimate, binRow,
                                        temporalBinProcessor,
                                        gridWidth, gridHeight);
-                    yPenultimate = yUltimate;
+                    yGlobalUltimate = yUltimate;
                 }
                 binRow.clear();
                 yUltimate = y;
@@ -77,14 +83,12 @@ public class TemporalBinReprojector {
 
         if (yUltimate >= y1 && yUltimate <= y2) {
             // last row
-            processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yPenultimate + 1, yUltimate - 1);
+            processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yGlobalUltimate + 1, yUltimate - 1);
             processRowWithBins(binningContext,
                                pixelRegion, yUltimate, binRow,
                                temporalBinProcessor,
                                gridWidth, gridHeight);
-            processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, yUltimate + 1, y2);
-        } else if (yUltimate == -1) {
-            processRowsWithoutBins(temporalBinProcessor, x1, x2, y1, y1, y2);
+            yGlobalUltimate = yUltimate;
         }
     }
 

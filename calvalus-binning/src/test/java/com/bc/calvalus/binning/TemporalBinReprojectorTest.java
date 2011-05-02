@@ -58,11 +58,6 @@ public class TemporalBinReprojectorTest {
         reprojector.begin();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        reprojector.end();
-    }
-
     @Test
     public void testSubPixelRegion() throws Exception {
         Rectangle rectangle = new Rectangle(2, 2, 6, 3);
@@ -82,13 +77,14 @@ public class TemporalBinReprojectorTest {
         }
 
         reprojector.processBins(bins.iterator());
+        reprojector.end();
         assertEquals("" +
                              "******\n" +
                              "******\n" +
                              "******\n",
                      raster.toString());
 
-        reprojector.end();
+
     }
 
     @Test
@@ -100,6 +96,33 @@ public class TemporalBinReprojectorTest {
         }
 
         reprojector.processBins(bins.iterator());
+        reprojector.end();
+        assertEquals("" +
+                             "************\n" +
+                             "************\n" +
+                             "************\n" +
+                             "************\n" +
+                             "************\n" +
+                             "************\n",
+                     raster.toString());
+    }
+
+    @Test
+    public void testProcessBins_Full_multipleParts() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        int numRows = binningGrid.getNumRows();
+        int startBinIndex = 0;
+        for (int row = 0; row < numRows; row++) {
+            int numCols = binningGrid.getNumCols(row);
+            for (int i = startBinIndex; i < startBinIndex + numCols; i++) {
+                bins.add(createTBin(i));
+            }
+            startBinIndex += numCols;
+            reprojector.processBins(bins.iterator());
+            bins.clear();
+        }
+        reprojector.end();
 
         assertEquals("" +
                              "************\n" +
@@ -117,6 +140,7 @@ public class TemporalBinReprojectorTest {
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
 
         reprojector.processBins(bins.iterator());
+        reprojector.end();
 
         assertEquals("" +
                              "++++++++++++\n" +
@@ -129,16 +153,66 @@ public class TemporalBinReprojectorTest {
     }
 
     @Test
+    public void testProcessBins_Empty_multipleParts() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+
+        reprojector.processBins(bins.iterator());
+        reprojector.processBins(bins.iterator());
+        reprojector.processBins(bins.iterator());
+        reprojector.end();
+
+        assertEquals("" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n" +
+                             "++++++++++++\n",
+                     raster.toString());
+    }
+
+
+    @Test
     public void testProcessBins_SomeLinesMissing() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
+        for (int i = 0; i < binningGrid.getNumBins(); i++) {
             if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
                 bins.add(createTBin(i));
             }
         }
 
         reprojector.processBins(bins.iterator());
+        reprojector.end();
+        assertEquals("" +
+                             "************\n" +
+                             "************\n" +
+                             "++++++++++++\n" +
+                             "************\n" +
+                             "++++++++++++\n" +
+                             "************\n",
+                     raster.toString());
+    }
+
+       @Test
+    public void testProcessBins_SomeLinesMissing_multipleParts() throws Exception {
+
+        ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
+        int numRows = binningGrid.getNumRows();
+        int startBinIndex = 0;
+        for (int row = 0; row < numRows; row++) {
+            int numCols = binningGrid.getNumCols(row);
+            for (int i = startBinIndex; i < startBinIndex + numCols; i++) {
+                if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
+                    bins.add(createTBin(i));
+                }
+            }
+            startBinIndex += numCols;
+            reprojector.processBins(bins.iterator());
+            bins.clear();
+        }
+        reprojector.end();
 
         assertEquals("" +
                              "************\n" +
@@ -160,7 +234,7 @@ public class TemporalBinReprojectorTest {
         }
 
         reprojector.processBins(bins.iterator());
-
+        reprojector.end();
         assertEquals("" +
                              "****++++****\n" +
                              "+**+**+**+**\n" +
@@ -180,7 +254,7 @@ public class TemporalBinReprojectorTest {
         }
 
         reprojector.processBins(bins.iterator());
-
+        reprojector.end();
         assertEquals("" +
                              "++++++++++++\n" +
                              "++++++++++++\n" +
@@ -200,7 +274,7 @@ public class TemporalBinReprojectorTest {
         }
 
         reprojector.processBins(bins.iterator());
-
+        reprojector.end();
         assertEquals("" +
                              "************\n" +
                              "************\n" +
