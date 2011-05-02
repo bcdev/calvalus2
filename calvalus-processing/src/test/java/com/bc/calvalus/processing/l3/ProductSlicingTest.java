@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -37,10 +38,9 @@ public class ProductSlicingTest {
     public void testThatProductCanBeTiledInSlices() throws IOException {
         File testproductFile = MerisProductTestRunner.getTestProductFile();
 
-        System.setProperty("beam.envisat.tileHeight", "64");
-        System.setProperty("beam.envisat.tileWidth", "*");
-        EnvisatProductReaderPlugIn plugIn = new EnvisatProductReaderPlugIn();
-        ProductReader productReader = plugIn.createReaderInstance();
+        System.setProperty("beam.reader.tileHeight", "64");
+        System.setProperty("beam.reader.tileWidth", "*");
+        ProductReader productReader = ProductIO.getProductReader("ENVISAT");
 
         Product sourceProduct = productReader.readProductNodes(testproductFile, null);
         Band band = sourceProduct.getBand("radiance_13");

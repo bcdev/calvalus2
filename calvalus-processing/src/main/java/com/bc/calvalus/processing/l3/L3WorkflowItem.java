@@ -109,6 +109,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         Properties properties = new Properties();
         properties.setProperty("beam.envisat.tileHeight", "64");
         properties.setProperty("beam.envisat.tileWidth", "*");
+        properties.setProperty("beam.reader.tileHeight", "64");
+        properties.setProperty("beam.reader.tileWidth", "*");
         String propertiesString = JobUtils.convertProperties(properties);
         configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 

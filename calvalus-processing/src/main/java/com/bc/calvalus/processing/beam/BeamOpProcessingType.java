@@ -88,6 +88,13 @@ public class BeamOpProcessingType {
         if (!properties.containsKey("beam.envisat.tileWidth")) {
             properties.setProperty("beam.envisat.tileWidth", "*");
         }
+        if (!properties.containsKey("beam.reader.tileHeight")) {
+            properties.setProperty("beam.reader.tileHeight", "64");
+        }
+        if (!properties.containsKey("beam.reader.tileWidth")) {
+            properties.setProperty("beam.reader.tileWidth", "*");
+        }
+
         String propertiesString = JobUtils.convertProperties(properties);
         conf.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
 
