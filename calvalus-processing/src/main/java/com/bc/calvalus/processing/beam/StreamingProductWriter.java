@@ -61,6 +61,17 @@ public class StreamingProductWriter {
                 Raster data = band.getSourceImage().getData(new Rectangle(x, y, w, h));
                 ProductData productData = ProductData.createInstance(band.getDataType(),
                                                                      ImageUtils.getPrimitiveArray(data.getDataBuffer()));
+
+//                Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
+//                boolean directMode = tile.getDataBuffer().getSize() == w * h;
+//                ProductData productData;
+//                if (directMode) {
+//                    productData = ProductData.createInstance(band.getDataType(),
+//                                                             ImageUtils.getPrimitiveArray(tile.getDataBuffer()));
+//                } else {
+//                    productData = ProductData.createInstance(band.getDataType(), w * h);
+//                }
+
                 String key = band.getName() + ":" + sliceIndex;
                 writeProductData(writer, key, productData);
             }
