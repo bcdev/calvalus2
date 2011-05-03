@@ -66,6 +66,7 @@ public class StreamingProductWriter {
                                                              ImageUtils.getPrimitiveArray(tile.getDataBuffer()));
                 } else {
                     productData = ProductData.createInstance(band.getDataType(), w * h);
+                    tile.getDataElements(x, y, w, h, productData.getElems());
                 }
 
                 String key = band.getName() + ":" + sliceIndex;
