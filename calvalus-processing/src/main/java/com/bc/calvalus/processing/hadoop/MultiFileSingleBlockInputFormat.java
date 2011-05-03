@@ -55,6 +55,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
             Configuration configuration = job.getConfiguration();
             String[] inputUrls = configuration.get(JobConfNames.CALVALUS_INPUT).split(",");
             boolean failFast = Boolean.parseBoolean(configuration.get(JobConfNames.CALVALUS_FAIL_FAST, "false"));
+            String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
 
             // create splits for each calvalus.input in request
             List<FileSplit> splits = new ArrayList<FileSplit>(inputUrls.length);
@@ -70,7 +71,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                     BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
                     if (blocks != null && blocks.length > 0) {
                         BlockLocation block = blocks[0];
-                        if (blocks.length == 1 && block.getLength() >= fileLength) {
+                        if (blocks.length == 1 && block.getLength() >= fileLength || inputFormat.equals("HADOOP-STREAMING")) {
                             // create file split for the input
                             FileSplit split = new FileSplit(inputPath, 0, fileLength, block.getHosts());
                             splits.add(split);
