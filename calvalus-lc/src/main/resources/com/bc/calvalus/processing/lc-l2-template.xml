@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xssing:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xesi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+
+  <ows:Identifier>LC-level2-$REGION-$YEAR</ows:Identifier>
+
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier>
+      <ows:Title>software installation package name</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>lc</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.version</ows:Identifier>
+      <ows:Title>software installation package version</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>0.1-20110418</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <ows:Title>output directory</ows:Title>
+      <wps:Data>
+	<wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr/$REGION/$YEAR" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <ows:Title>MERIS L1B input</ows:Title>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-amorgos/$REGION/$YEAR" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.geometry</ows:Identifier>
+         <ows:Title>The parameter for the WKT that defines the geometry the operation is restricted to</ows:Title>
+         <wps:Data>
+             <wps:LiteralData>$GEOMETRY</wps:LiteralData>
+         </wps:Data>
+    </wps:Input>    
+
+      <wps:Input>
+          <ows:Identifier>calvalus.l2.operator</ows:Identifier>
+          <ows:Title>the name of the GPF operator</ows:Title>
+          <wps:Data>
+              <wps:LiteralData>lc.l2</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+
+      <wps:Input>
+          <ows:Identifier>calvalus.system.properties</ows:Identifier>
+          <wps:Data>
+              <wps:LiteralData>beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier>
+        <ows:Title>directory of l2 output files</ows:Title>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>

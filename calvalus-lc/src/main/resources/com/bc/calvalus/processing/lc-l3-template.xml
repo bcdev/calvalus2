@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xssing:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xesi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+
+  <ows:Identifier>LC-level3-$REGION-$PERIOD</ows:Identifier>
+
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier>
+      <ows:Title>software installation package name</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>lc</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+<!-- send together with the request
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.version</ows:Identifier>
+      <ows:Title>software installation package version</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>0.1-20110428</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+-->
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <ows:Title>output directory</ows:Title>
+      <wps:Data>
+	<wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/$REGION/$YEAR/$PERIOD" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input.format</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>HADOOP-STREAMING</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <!-- TODO input product generatioon for $PERIOD-->
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050101_092244_000000392033_00265_14848_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050102_085122_000000252033_00279_14862_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050102_085807_000000532033_00279_14862_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050103_082421_000002082033_00293_14876_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050104_092830_000000332033_00308_14891_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050104_092903_000000392033_00308_14891_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050105_085659_000000222033_00322_14905_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050105_085719_000000162033_00322_14905_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050106_082548_000003942033_00336_14919_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050108_090240_000004472033_00365_14948_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050108_091005_000000162033_00365_14948_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.geometry</ows:Identifier>
+         <ows:Title>The parameter for the WKT that defines the geometry the operation is restricted to</ows:Title>
+         <wps:Data>
+             <wps:LiteralData>$GEOMETRY</wps:LiteralData>
+         </wps:Data>
+    </wps:Input>
+
+       <wps:Input>
+            <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <numRows>66792</numRows>
+                    <superSampling>3</superSampling>
+                    <maskExpr>!l1_flags.INVALID and ndvi &gt; -1.0</maskExpr>
+                    <variables>
+                        <variable>
+                            <name>status</name>
+                            <expr>(not cloud_classif_flags.F_CLOUD and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 : ((cloud_classif_flags.F_CLOUD) ? 4: ((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :((not cloud_classif_flags.F_WATER) ? 1 : 2)))</expr>
+                        </variable>
+            			<variable><name>sdr_1</name></variable>
+			            <variable><name>sdr_2</name></variable>
+			            <variable><name>sdr_3</name></variable>
+			            <variable><name>sdr_4</name></variable>
+			            <variable><name>sdr_5</name></variable>
+			            <variable><name>sdr_6</name></variable>
+			            <variable><name>sdr_7</name></variable>
+			            <variable><name>sdr_8</name></variable>
+			            <variable><name>sdr_9</name></variable>
+			            <variable><name>sdr_10</name></variable>
+			            <variable><name>sdr_11</name></variable>
+			            <variable><name>sdr_12</name></variable>
+			            <variable><name>sdr_13</name></variable>
+			            <variable><name>sdr_14</name></variable>
+			            <variable><name>sdr_15</name></variable>
+			            <variable><name>ndvi</name></variable>
+			            <variable><name>sdr_error_1</name></variable>
+			            <variable><name>sdr_error_2</name></variable>
+			            <variable><name>sdr_error_3</name></variable>
+			            <variable><name>sdr_error_4</name></variable>
+			            <variable><name>sdr_error_5</name></variable>
+			            <variable><name>sdr_error_6</name></variable>
+			            <variable><name>sdr_error_7</name></variable>
+			            <variable><name>sdr_error_8</name></variable>
+			            <variable><name>sdr_error_9</name></variable>
+			            <variable><name>sdr_error_10</name></variable>
+			            <variable><name>sdr_error_11</name></variable>
+			            <variable><name>sdr_error_12</name></variable>
+			            <variable><name>sdr_error_13</name></variable>
+			            <variable><name>sdr_error_14</name></variable>
+			            <variable><name>sdr_error_15</name></variable>
+                    </variables>
+                    <aggregators>
+                        <aggregator>
+                            <type>LC_SR</type>
+                        </aggregator>
+                    </aggregators>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
+<!--
+      <wps:Input>
+          <ows:Identifier>calvalus.formatter.parameters</ows:Identifier>
+          <ows:Title></ows:Title>
+          <wps:Data>
+              <wps:ComplexData>
+                  <parameters>
+                      <outputType>Product</outputType>
+                      <outputFile>lc-2005-01-01.dim</outputFile>
+                      <startTime>2005-01-01</startTime>
+                      <endTime>2005-01-10</endTime>
+                  </parameters>
+              </wps:ComplexData>
+          </wps:Data>
+      </wps:Input>
+-->
+      <wps:Input>
+          <ows:Identifier>calvalus.system.properties</ows:Identifier>
+          <wps:Data>
+              <wps:LiteralData>beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.pixelGeoCoding.fractionAccuracy=true,beam.envisat.usePixelGeoCoding=true</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier>
+        <ows:Title>directory of l2 output files</ows:Title>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>
