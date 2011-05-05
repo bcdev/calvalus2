@@ -82,12 +82,6 @@ public class BeamOpProcessingType {
         for (Map.Entry<String, String> entry : propertiesMap.entrySet()) {
             properties.setProperty(entry.getKey(), entry.getValue());
         }
-        if (!properties.containsKey("beam.envisat.tileHeight")) {
-            properties.setProperty("beam.envisat.tileHeight", "64");
-        }
-        if (!properties.containsKey("beam.envisat.tileWidth")) {
-            properties.setProperty("beam.envisat.tileWidth", "*");
-        }
         if (!properties.containsKey("beam.reader.tileHeight")) {
             properties.setProperty("beam.reader.tileHeight", "64");
         }
