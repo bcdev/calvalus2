@@ -62,14 +62,26 @@ public class LcRequest {
     private static final String[] YEARS = {"2005", "2006", "2007", "2008", "2009"};
     private static final String[] MONTH = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
 
+    static int index = 0;
+
     public static void main(String[] args) throws Exception {
 //        formatL2Template("Africa", "2009");
 //        formatL2Template("WesternEurope", "2009");
 //        formatL2Template("NorthAmerica", "2009");
 
-        formatL3Template("Africa", "2009-01-01", "2009-03-31", 10);
-//        getInputs("Africa", "2009-01-01", "2009-12-31", 15);
-//        getInputs("Africa", "2009-01-01", "2009-12-31", 30);
+        formatL3Template("Africa", "2009-01-01", "2009-12-31", 10);
+        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 10);
+        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 10);
+
+        formatL3Template("Africa", "2009-01-01", "2009-12-31", 15);
+        formatL3Template("Africa", "2009-01-01", "2009-12-31", 30);
+
+        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 15);
+        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 15);
+
+        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 30);
+        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 30);
+
     }
 
     private static void formatL2Template(String region, String... years) throws IOException {
@@ -112,6 +124,7 @@ public class LcRequest {
                     replaceAll("\\$PERIOD", inputfile.perioID).
                     replaceAll("\\$INPUTS", formatInputFiles(inputfile.inputFiles));
             String filename = templateName.replace("template", String.format("%s-%s", region, inputfile.perioID));
+            filename = String.format("%04d-%s", index++, filename);
             writeRequest(request, new File(filename));
         }
     }
