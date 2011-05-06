@@ -42,50 +42,8 @@
         <wps:LiteralData>HADOOP-STREAMING</wps:LiteralData>
       </wps:Data>
     </wps:Input>
-    <!-- TODO input product generatioon for $PERIOD-->
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050101_092244_000000392033_00265_14848_0001.seq" />
-    </wps:Input>
 
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050102_085122_000000252033_00279_14862_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050102_085807_000000532033_00279_14862_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050103_082421_000002082033_00293_14876_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050104_092830_000000332033_00308_14891_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050104_092903_000000392033_00308_14891_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050105_085659_000000222033_00322_14905_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050105_085719_000000162033_00322_14905_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050106_082548_000003942033_00336_14919_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050108_090240_000004472033_00365_14948_0001.seq" />
-    </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier> <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-v4/L2_of_MER_FSG_1PNBCG20050108_091005_000000162033_00365_14948_0001.seq" />
-    </wps:Input>
+$INPUTS
 
     <wps:Input>
       <ows:Identifier>calvalus.geometry</ows:Identifier>
