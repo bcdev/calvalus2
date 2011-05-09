@@ -23,9 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
-import sun.swing.StringUIClientPropertyKey;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -69,19 +67,33 @@ public class LcRequest {
 //        formatL2Template("WesternEurope", "2009");
 //        formatL2Template("NorthAmerica", "2009");
 
-        formatL3Template("Africa", "2009-01-01", "2009-12-31", 10);
-        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 10);
-        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 10);
+//        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
+//        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
+//        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
+//
+//        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
+//        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 30);
+//
+//        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 15);
+//        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 15);
+//
+//        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 30);
+//        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
 
-        formatL3Template("Africa", "2009-01-01", "2009-12-31", 15);
-        formatL3Template("Africa", "2009-01-01", "2009-12-31", 30);
 
-        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 15);
-        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 15);
+        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
+        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
+        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
 
-        formatL3Template("WesternEurope", "2009-01-01", "2009-12-31", 30);
-        formatL3Template("NorthAmerica", "2009-01-01", "2009-12-31", 30);
-
+        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
+        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 30);
+//
+//        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 15);
+//        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 15);
+//
+//        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 30);
+//        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
+//
     }
 
     private static void formatL2Template(String region, String... years) throws IOException {
@@ -106,11 +118,14 @@ public class LcRequest {
         }
     }
 
-    private static void formatL3Template(String region, String startDate, String endDate, int periodLength) throws Exception {
-        formatL3("lc-l3-template.xml", region, startDate, endDate, periodLength);
+    private static void formatL3ProcessingTemplate(String region, String startDate, String endDate, int periodLength) throws Exception {
+        formatL3Processing("lc-l3-processing-template.xml", region, startDate, endDate, periodLength);
     }
 
-    private static void formatL3(String templateName, String region, String startDate, String endDate, int periodLength) throws Exception {
+    private static void formatL3FormattingTemplate(String region, String startDate, String endDate, int periodLength) throws Exception {
+        formatL3Formatting("lc-l3-format-template.xml", region, startDate, endDate, periodLength);
+    }
+    private static void formatL3Processing(String templateName, String region, String startDate, String endDate, int periodLength) throws Exception {
         String template = readTemplate(templateName);
         List<InputFiles> inputFilesList = getInputs(region, startDate, endDate, periodLength);
         String year = startDate.substring(0, 4);
@@ -123,6 +138,24 @@ public class LcRequest {
                     replaceAll("\\$GEOMETRY", geometry).
                     replaceAll("\\$PERIOD", inputfile.perioID).
                     replaceAll("\\$INPUTS", formatInputFiles(inputfile.inputFiles));
+            String filename = templateName.replace("template", String.format("%s-%s", region, inputfile.perioID));
+            filename = String.format("%04d-%s", index++, filename);
+            writeRequest(request, new File(filename));
+        }
+    }
+
+    private static void formatL3Formatting(String templateName, String region, String startDate, String endDate, int periodLength) throws Exception {
+        String template = readTemplate(templateName);
+        List<InputFiles> inputFilesList = getInputs(region, startDate, endDate, periodLength);
+        String year = startDate.substring(0, 4);
+
+        for (InputFiles inputfile : inputFilesList) {
+            String request = template.
+                    replaceAll("\\$YEAR", year).
+                    replaceAll("\\$REGION", region).
+                    replaceAll("\\$STARTDATE", inputfile.startDate).
+                    replaceAll("\\$STOPDATE", inputfile.stopDate).
+                    replaceAll("\\$PERIOD", inputfile.perioID);
             String filename = templateName.replace("template", String.format("%s-%s", region, inputfile.perioID));
             filename = String.format("%04d-%s", index++, filename);
             writeRequest(request, new File(filename));
@@ -200,19 +233,23 @@ public class LcRequest {
 
             System.out.println("periodID = " + periodID);
             String[] inputFiles = getInputFiles(fs, inputDir, date1, date2);
-            result.add(new InputFiles(periodID, inputFiles));
+            result.add(new InputFiles(periodID, inputFiles, date1Str, date2Str));
             time += periodLengthMillis;
         }
         return result;
     }
 
     private static class InputFiles {
-        String perioID;
-        String[] inputFiles;
+        final String perioID;
+        final String[] inputFiles;
+        final String startDate;
+        final String stopDate;
 
-        private InputFiles(String perioID, String[] inputFiles) {
+        private InputFiles(String perioID, String[] inputFiles, String startDate, String stopDate) {
             this.perioID = perioID;
             this.inputFiles = inputFiles;
+            this.startDate = startDate;
+            this.stopDate = stopDate;
         }
     }
 
