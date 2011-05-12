@@ -33,6 +33,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
@@ -104,7 +105,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        //job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
 
         job.setNumReduceTasks(1);
         job.setMapperClass(TAMapper.class);
