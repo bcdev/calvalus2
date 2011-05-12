@@ -40,15 +40,14 @@ public class L3ParametersForm implements IsWidget {
     private DateBox minDate;
     private DateBox maxDate;
     private IntegerBox periodLength;
+    private IntegerBox compositingPeriodLength;
+    private IntegerBox periodCount;
     private DoubleBox minLon;
     private DoubleBox maxLon;
     private DoubleBox minLat;
     private DoubleBox maxLat;
     private DoubleBox resolution;
-    private IntegerBox periodCount;
     private IntegerBox superSampling;
-
-    boolean adjustingEndTime;
 
     public L3ParametersForm() {
 
@@ -74,11 +73,11 @@ public class L3ParametersForm implements IsWidget {
         aggregator.setVisibleItemCount(1);
         aggregator.setSelectedIndex(1);
 
-        weightCoeff = new DoubleBox(); // todo - validate against 0 <= x <= 1.0
+        weightCoeff = new DoubleBox();
         weightCoeff.setValue(0.5);
         weightCoeff.setWidth("6em");
 
-        superSampling = new IntegerBox();  // todo - validate against 1 <= x <= 33
+        superSampling = new IntegerBox();
         superSampling.setValue(1);
         superSampling.setWidth("2em");
 
@@ -110,47 +109,47 @@ public class L3ParametersForm implements IsWidget {
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
         minDate.setWidth("6em");
+        minDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Date> event) {
+                updatePeriodCount();
+            }
+        });
 
         maxDate = new DateBox();
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        maxDate.setValue(DATE_FORMAT.parse("2008-06-07"));
+        maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
         maxDate.setWidth("6em");
         maxDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
-                updateTimeParams(true);
+                updatePeriodCount();
             }
         });
 
-        periodCount = new IntegerBox();  // todo - validate against 1 <= x <= 1000 (?)
-        periodCount.setValue(1);
-        periodCount.setWidth("2em");
-        periodCount.addValueChangeHandler(new ValueChangeHandler<Integer>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Integer> event) {
-                updateTimeParams(false);
-            }
-        });
-
-        periodLength = new IntegerBox(); // todo - validate against 1 <= x <= 365 (?)
-        periodLength.setValue(7);
+        periodLength = new IntegerBox();
+        periodLength.setValue(10);
         periodLength.setWidth("4em");
         periodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
-                updateTimeParams(false);
+                updatePeriodCount();
             }
         });
+
+        compositingPeriodLength  = new IntegerBox();
+        compositingPeriodLength.setValue(10);
+        compositingPeriodLength.setWidth("4em");
+
+        periodCount = new IntegerBox();
+        periodCount.setValue(0);
+        periodCount.setWidth("4em");
+        periodCount.setEnabled(false);
 
         HorizontalPanel timeRange = new HorizontalPanel();
         timeRange.add(minDate);
         timeRange.add(new HTML("&nbsp;to&nbsp;"));
         timeRange.add(maxDate);
-
-        HorizontalPanel period = new HorizontalPanel();
-        period.add(periodCount);
-        period.add(new HTML("&nbsp;x&nbsp;"));
-        period.add(periodLength);
 
         FlexTable temporalParams = new FlexTable();
         temporalParams.setWidth("100%");
@@ -162,13 +161,18 @@ public class L3ParametersForm implements IsWidget {
         temporalParams.setWidget(1, 0, new Label("Time range:"));
         temporalParams.setWidget(1, 1, timeRange);
         temporalParams.setWidget(2, 0, new Label("Period:"));
-        temporalParams.setWidget(2, 1, period);
+        temporalParams.setWidget(2, 1, periodLength);
         temporalParams.setWidget(2, 2, new Label("days"));
+        temporalParams.setWidget(3, 0, new Label("Compositing period:"));
+        temporalParams.setWidget(3, 1, compositingPeriodLength);
+        temporalParams.setWidget(3, 2, new Label("days"));
+        temporalParams.setWidget(4, 0, new Label("Number of periods:"));
+        temporalParams.setWidget(4, 1, periodCount);
 
-        minLon = new DoubleBox();  // todo - validate against -180 <= x <= 180
+        minLon = new DoubleBox();
         minLon.setValue(3.0);
         minLon.setWidth("6em");
-        maxLon = new DoubleBox();   // todo - validate against -180 <= x <= 180
+        maxLon = new DoubleBox();
         maxLon.setValue(14.5);
         maxLon.setWidth("6em");
 
@@ -177,10 +181,10 @@ public class L3ParametersForm implements IsWidget {
         lonRange.add(new HTML("&nbsp;to&nbsp;"));
         lonRange.add(maxLon);
 
-        minLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
+        minLat = new DoubleBox();
         minLat.setValue(52.0);
         minLat.setWidth("6em");
-        maxLat = new DoubleBox();  // todo - validate against -90 <= x <= 90
+        maxLat = new DoubleBox();
         maxLat.setValue(56.5);
         maxLat.setWidth("6em");
 
@@ -189,7 +193,7 @@ public class L3ParametersForm implements IsWidget {
         latRange.add(new HTML("&nbsp;to&nbsp;"));
         latRange.add(maxLat);
 
-        resolution = new DoubleBox();   // todo - validate against 0 < x <= 100
+        resolution = new DoubleBox();
         resolution.setValue(9.28);
         resolution.setWidth("6em");
 
@@ -219,25 +223,15 @@ public class L3ParametersForm implements IsWidget {
         widget = new DecoratorPanel();
         widget.setTitle("L3 Parameters");
         widget.setWidget(panel);
+
+        updatePeriodCount();
     }
 
-    private void updateTimeParams(boolean endTimeAdjusted) {
-        if (!adjustingEndTime) {
-            long millisPerDay = 24L * 60L * 60L * 1000L;
-            long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
-            int deltaDays = (int) ((millisPerDay + deltaMillis - 1) / millisPerDay);
-
-            if (endTimeAdjusted) {
-                periodCount.setValue(1 + (deltaDays - 1) / periodLength.getValue());
-            } else {
-                try {
-                    adjustingEndTime = true;
-                    maxDate.setValue(new Date(minDate.getValue().getTime() + periodCount.getValue() * periodLength.getValue() * millisPerDay));
-                } finally {
-                    adjustingEndTime = false;
-                }
-            }
-        }
+    private void updatePeriodCount() {
+        long millisPerDay = 24L * 60L * 60L * 1000L;
+        long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
+        int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
+        periodCount.setValue(deltaDays / periodLength.getValue());
     }
 
     @Override
@@ -246,19 +240,19 @@ public class L3ParametersForm implements IsWidget {
     }
 
     public void validateForm() throws ValidationException {
-        boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
-        if (!weightCoeffValid) {
-            throw new ValidationException(weightCoeff, "Weight coefficient must be >= 0 and <= 1");
-        }
-
         boolean periodCountValid = periodCount.getValue() >= 1;
         if (!periodCountValid) {
-            throw new ValidationException(periodCount, "Period count must be >= 1");
+            throw new ValidationException(maxDate, "Period count must be >= 1");
         }
 
         boolean periodLengthValid = periodLength.getValue() >= 1;
         if (!periodLengthValid) {
             throw new ValidationException(periodLength, "Period length must be >= 1");
+        }
+
+        boolean compositingPeriodLengthValid = compositingPeriodLength.getValue() >= 1 && compositingPeriodLength.getValue() <= periodLength.getValue();
+        if (!compositingPeriodLengthValid) {
+            throw new ValidationException(compositingPeriodLength, "Compositing period length must be >= 1 and less or equal to than period");
         }
 
         boolean minLonValid = minLon.getValue() >= -180 && minLon.getValue() < +180;
@@ -287,6 +281,11 @@ public class L3ParametersForm implements IsWidget {
             throw new ValidationException(minLat, "Maximum latitude must greater than minimum latitude.");
         }
 
+        boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
+        if (!weightCoeffValid) {
+            throw new ValidationException(weightCoeff, "Weight coefficient must be >= 0 and <= 1");
+        }
+
         boolean resolutionValid = resolution.getValue() > 0.0;
         if (!resolutionValid) {
             throw new ValidationException(resolution, "Resolution must greater than zero");
@@ -307,8 +306,8 @@ public class L3ParametersForm implements IsWidget {
         parameters.put("weightCoeff", weightCoeff.getText());
         parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
         parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
-        parameters.put("periodCount", periodCount.getText());
         parameters.put("periodLength", periodLength.getText());
+        parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
         parameters.put("minLon", minLon.getText());
         parameters.put("maxLon", maxLon.getText());
         parameters.put("minLat", minLat.getText());

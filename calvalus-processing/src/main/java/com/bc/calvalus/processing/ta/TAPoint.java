@@ -23,6 +23,7 @@ import org.apache.hadoop.io.Writable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A {@code TAPoint} represents the L3 processing output of the trend analysis. It comprises a region name,
@@ -86,4 +87,9 @@ public class TAPoint implements Writable {
         temporalBin.write(out);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s{regionName=%s, startDate=%s, stopDate=%s, temporalBin=%s}",
+                             getClass().getSimpleName(), regionName, startDate, stopDate, temporalBin);
+    }
 }

@@ -23,10 +23,12 @@ import static java.lang.Math.*;
  */
 public class L3ProductionType extends HadoopProductionType {
 
+    public static final String NAME = "L3";
+
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
     public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super("L3", processingService, stagingService);
+        super(NAME, processingService, stagingService);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class L3ProductionType extends HadoopProductionType {
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
         Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");  // todo - clarify meaning of this parameter; we use startDate + i * periodLength here (nf)
+        Date maxDate = productionRequest.getDate("maxDate");
 
         String processorName = productionRequest.getParameter("processorName");
         String processorParameters = productionRequest.getParameter("processorParameters");
@@ -51,21 +53,26 @@ public class L3ProductionType extends HadoopProductionType {
 
         L3Config l3Config = createL3Config(productionRequest);
 
-        int periodCount = productionRequest.getInteger("periodCount", 1);// unit=1
-        int periodLengthDefault = computeDefaultPeriodLength(minDate, maxDate, periodCount);
-        int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
+        int periodLength = productionRequest.getInteger("periodLength", 10); // unit=days
+        int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength", periodLength); // unit=days
+
+        final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
+        final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
 
         long time = minDate.getTime();
-        long periodLengthMillis = periodLength * MILLIS_PER_DAY;
-
         Workflow.Parallel workflow = new Workflow.Parallel();
-        for (int i = 0; i < periodCount; i++) {
+        for (int i = 0; ; i++) {
 
+            // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
             Date date1 = new Date(time);
-            Date date2 = new Date(time + periodLengthMillis - 1L);
+            Date date2 = new Date(time + compositingPeriodLengthMillis - 1L);
 
             String date1Str = ProductionRequest.getDateFormat().format(date1);
             String date2Str = ProductionRequest.getDateFormat().format(date2);
+
+            if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
+                break;
+            }
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);

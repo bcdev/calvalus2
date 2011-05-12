@@ -50,7 +50,6 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
     private final String minDate;
     private final String maxDate;
 
-
     public L3WorkflowItem(HadoopProcessingService processingService,
                           String jobName,
                           String processorBundle,
@@ -75,12 +74,12 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         this.maxDate = maxDate;
     }
 
-    public String getMaxDate() {
-        return maxDate;
-    }
-
     public String getMinDate() {
         return minDate;
+    }
+
+    public String getMaxDate() {
+        return maxDate;
     }
 
     public String getOutputDir() {

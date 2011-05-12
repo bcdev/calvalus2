@@ -1,7 +1,8 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.TemporalBin;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,5 +45,16 @@ public class TAPointTest {
         assertNotNull(point2.getTemporalBin());
         assertEquals(1.2F, point2.getTemporalBin().getFeatureValues()[0], 1E-5F);
         assertEquals(3.4F, point2.getTemporalBin().getFeatureValues()[1], 1E-5F);
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        assertEquals("TAPoint{" +
+                             "regionName=Mediteranean, " +
+                             "startDate=2011-01-01, " +
+                             "stopDate=2011-01-02, " +
+                             "temporalBin=TemporalBin{index=-1, numObs=0, numPasses=0, featureValues=[1.2, 3.4]}" +
+                             "}",
+                     point.toString());
     }
 }

@@ -77,6 +77,10 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         return minDate;
     }
 
+    public String getInputDir() {
+        return inputDir;
+    }
+
     public String getOutputDir() {
         return outputDir;
     }
@@ -95,7 +99,6 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, BeamUtils.convertObjectToXml(taConfig));
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
-
 
         SequenceFileInputFormat.addInputPath(job, new Path(inputDir));
         job.setInputFormatClass(SequenceFileInputFormat.class);
