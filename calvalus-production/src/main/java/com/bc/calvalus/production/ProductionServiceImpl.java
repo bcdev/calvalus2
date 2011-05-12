@@ -75,7 +75,7 @@ public class ProductionServiceImpl implements ProductionService {
 //        return new ProcessorDescriptor[]{
 //                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
 //                                        "<parameters>\n" +
-//                                                "  <useIdepix>true</useIdepix>\n" +
+//                                                "  <useIdepix>false</useIdepix>\n" +
 //                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
 //                                                "  <outputReflec>false</outputReflec>\n" +
 //                                                "</parameters>",
@@ -86,7 +86,7 @@ public class ProductionServiceImpl implements ProductionService {
                 new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
                                         new String[]{
                                                 "<parameters>\n" +
-                                                        "  <useIdepix>true</useIdepix>\n" +
+                                                        "  <useIdepix>false</useIdepix>\n" +
                                                         "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
                                                         "  <outputReflec>false</outputReflec>\n" +
                                                         "</parameters>",
@@ -94,10 +94,10 @@ public class ProductionServiceImpl implements ProductionService {
                                                         "  <doCalibration>true</doCalibration>\n" +
                                                         "  <doSmile>true</doSmile>\n" +
                                                         "  <doEqualization>true</doEqualization>\n" +
-                                                        "  <useIdepix>true</useIdepix>\n" +
+                                                        "  <useIdepix>false</useIdepix>\n" +
                                                         "  <algorithm>CoastColour</algorithm>\n" +
-                                                        "  <landExpression>l1p_flags.F_LANDCONS</landExpression>\n" +
-                                                        "  <cloudIceExpression>l1p_flags.F_CLOUD || l1p_flags.F_SNOW_ICE</cloudIceExpression>\n" +
+                                                        "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                                        "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
                                                         "  <outputReflec>true</outputReflec>\n" +
                                                         "</parameters>"
                                         },
