@@ -42,9 +42,11 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             StagingService stagingService = new SimpleStagingService(localStagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);
+            ProductionType taProductionType = new TAProductionType(processingService, stagingService);
             return new ProductionServiceImpl(processingService, stagingService, productionStore,
                                              l2ProductionType,
-                                             l3ProductionType);
+                                             l3ProductionType,
+                                             taProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
