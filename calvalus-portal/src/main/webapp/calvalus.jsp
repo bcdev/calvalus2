@@ -56,7 +56,7 @@
     <img src="images/progress-bar.gif"/>
 </div>
 
-<p>Calvalus - Version 0.1, &#169; 2011 Brockmann Consult GmbH</p>
+<p>Calvalus - Version 0.2, &#169; 2011 Brockmann Consult GmbH</p>
 
 </body>
 </html>
