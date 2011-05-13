@@ -53,7 +53,7 @@ public class ManageProductionsView extends PortalView {
     private static final String BEAM_NAME = "BEAM 4.9";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
-            "and further processed with <a href=\"" + BEAM_URL + "\">" + BEAM_NAME + "</a></small>";
+            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
 
     private FlexTable widget;
     private SelectionModel<GsProduction> selectionModel;
