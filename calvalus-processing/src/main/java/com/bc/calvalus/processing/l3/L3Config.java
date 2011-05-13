@@ -177,11 +177,11 @@ public class L3Config {
         this.maskExpr = maskExpr;
     }
 
-    public void setVariables(VariableConfiguration[] variables) {
+    public void setVariables(VariableConfiguration ... variables) {
         this.variables = variables;
     }
 
-    public void setAggregators(AggregatorConfiguration[] aggregators) {
+    public void setAggregators(AggregatorConfiguration ... aggregators) {
         this.aggregators = aggregators;
     }
 

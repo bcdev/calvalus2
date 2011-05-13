@@ -35,17 +35,20 @@ import java.io.IOException;
 public class TAReducer extends Reducer<Text, TemporalBin, Text, TAPoint> implements Configurable {
     private Configuration conf;
     private BinManager binManager;
+    private String minDate;
+    private String maxDate;
 
     @Override
     protected void reduce(Text regionName, Iterable<TemporalBin> bins, Context context) throws IOException, InterruptedException {
+        context.write(regionName, computeTaPoint(regionName.toString(), bins));
+    }
+
+    TAPoint computeTaPoint(String regionName, Iterable<TemporalBin> bins) {
         TemporalBin outputBin = binManager.createTemporalBin(-1);
         for (TemporalBin bin : bins) {
             binManager.aggregateTemporalBin(bin, outputBin);
         }
-        context.write(regionName, new TAPoint(regionName.toString(),
-                                              conf.get(JobConfNames.CALVALUS_MIN_DATE),
-                                              conf.get(JobConfNames.CALVALUS_MAX_DATE),
-                                              outputBin));
+        return new TAPoint(regionName, minDate, maxDate, outputBin);
     }
 
     @Override
@@ -54,6 +57,8 @@ public class TAReducer extends Reducer<Text, TemporalBin, Text, TAPoint> impleme
         String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETERS);
         L3Config l3Config = L3Config.fromXml(level3Parameters);
         this.binManager = l3Config.getBinningContext().getBinManager();
+        minDate = conf.get(JobConfNames.CALVALUS_MIN_DATE);
+        maxDate = conf.get(JobConfNames.CALVALUS_MAX_DATE);
     }
 
     @Override
