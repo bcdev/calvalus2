@@ -21,7 +21,7 @@
       <ows:Identifier>calvalus.processor.version</ows:Identifier>
       <ows:Title>software installation package version</ows:Title>
       <wps:Data>
-        <wps:LiteralData>1.0-SNAPSHOT</wps:LiteralData>
+        <wps:LiteralData>1.1-SNAPSHOT</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 
@@ -29,94 +29,89 @@
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <ows:Title>output directory</ows:Title>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-waqs-2009-06-23" />
+        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-waqs-2009-06-01-nos" />
       </wps:Data>
     </wps:Input>
 
-     <wps:Input>
+    <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_081354_000001552080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_080520_000001522079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_081556_000002032080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_080728_000001942079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_081559_000002002080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_080734_000001892079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_081848_000002002080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_081010_000002002079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_081850_000001042080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_081012_000000732079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_082145_000001942080_00107_38237_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_081310_000001912079_00293_37922_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_095329_000002172080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_094454_000002142079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_095629_000002062080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_094751_000002062079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_095647_000001892080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_094811_000001862079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_095924_000002002080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_095046_000002002079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_095926_000000702080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_095048_000000702079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_100221_000001942080_00108_38238_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_095343_000001942079_00294_37923_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_113441_000000872080_00109_38239_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_112529_000001582079_00295_37924_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_113507_000000622080_00109_38239_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_112827_000001012079_00295_37924_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_113701_000001802080_00109_38239_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_112843_000001662079_00295_37924_0001.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_113705_000001772080_00109_38239_0001.N1" />
-    </wps:Input>
-    <wps:Input>
-      <ows:Identifier>calvalus.input</ows:Identifier>
-      <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/23/MER_FRS_1PNMAP20090623_114000_000000992080_00109_38239_0001.N1" />
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/waqs/2009/06/01/MER_FRS_1PNMAP20090601_113122_000001662079_00295_37924_0001.N1" />
     </wps:Input>
 
       <wps:Input>
@@ -132,8 +127,10 @@
           <wps:Data>
               <wps:ComplexData>
                   <parameters>
-                      <!--<useIdepix>true</useIdepix>-->
+                      <useIdepix>true</useIdepix>
+                      <algorithm>GlobAlbedo</algorithm>
                       <landExpression>(toa_reflec_9  > toa_reflec_8 OR toa_reflec_10 > toa_reflec_8) AND toa_reflec_13 > 0.015</landExpression>
+                      <cloudIceExpression>toa_reflec_14 > 0.025</cloudIceExpression>
                   </parameters>
               </wps:ComplexData>
           </wps:Data>
@@ -146,9 +143,7 @@
                 <wps:ComplexData>
                     <numRows>66792</numRows>
                     <superSampling>3</superSampling>
-                    <!--<bbox>9.0, 53.0, 14.5, 56.5</bbox> &lt;!&ndash;baltic_sea_scene&ndash;&gt;-->
-                    <!--<bbox>3.0, 52.0, 9.5, 56.5</bbox> &lt;!&ndash;north_scene&ndash;&gt;-->
-                    <bbox>3.0, 52.0, 14.5, 56.5</bbox> <!--north_scene-->
+                    <bbox>3.0, 52.0, 9.5, 56.5</bbox>
                     <maskExpr>NOT case2_flags.INVALID</maskExpr>
                     <aggregators>
                         <aggregator>

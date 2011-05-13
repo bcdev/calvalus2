@@ -13,7 +13,7 @@
         <ows:Identifier>calvalus.output.dir</ows:Identifier>
         <ows:Title>output directory</ows:Title>
         <wps:Data>
-          <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-waqs-2009-06-23" />
+          <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-waqs-2009-06-01-nos" />
         </wps:Data>
       </wps:Input>
       <wps:Input>
@@ -23,9 +23,9 @@
               <wps:ComplexData>
                   <parameters>
                       <outputType>Product</outputType>
-                      <outputFile>lkn-2009-06-23.dim</outputFile>
-                      <startTime>2009-06-23</startTime>
-                      <endTime>2009-06-24</endTime>
+                      <outputFile>20090601_lkn_nos_l3.dim</outputFile>
+                      <startTime>2009-06-01</startTime>
+                      <endTime>2009-06-02</endTime>
                   </parameters>
               </wps:ComplexData>
           </wps:Data>
