@@ -60,7 +60,7 @@ public class L3ParametersForm implements IsWidget {
         inputVariables.setSelectedIndex(0);
 
         maskExpr = new TextBox();
-        maskExpr.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD");
+        maskExpr.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN");
 
         fillValue = new DoubleBox();
         fillValue.setValue(Double.NaN);
