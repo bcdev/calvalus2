@@ -63,7 +63,7 @@ import java.util.Map;
  */
 public class BeamUtils {
     //TODO make this a configurable option
-    private static final int TILE_CACHE_SIZE_M = 512;  // 512 MB
+    private static final int TILE_CACHE_SIZE_M = 800;  // 512 MB
 
     public static void initGpf(Configuration configuration) {
         SystemUtils.init3rdPartyLibs(JobUtils.class.getClassLoader());
