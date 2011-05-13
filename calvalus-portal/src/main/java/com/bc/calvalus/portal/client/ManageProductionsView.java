@@ -43,17 +43,20 @@ import java.util.Map;
  */
 public class ManageProductionsView extends PortalView {
     public static final String ID = ManageProductionsView.class.getName();
+
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
     private static final String STAGE = "Stage";
     private static final String DOWNLOAD = "Download";
     private static final String INFO = "Info";
 
+    private static final String BEAM_NAME = "BEAM 4.9";
+    private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
+    private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
+            "and further processed with <a href=\"" + BEAM_URL + "\">" + BEAM_NAME + "</a></small>";
+
     private FlexTable widget;
     private SelectionModel<GsProduction> selectionModel;
-    public static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
-    public static final String BEAM_NAME = "BEAM 4.9";
-    public static final String BEAM_NOTE = String.format("<small>Note: all generated data products may be viewed and further processed with <a href=\"%s\">%s</a></small>", BEAM_URL, BEAM_NAME);
 
     public ManageProductionsView(CalvalusPortal portal) {
         super(portal);
@@ -232,7 +235,7 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(0, 0, productionTable);
         widget.setWidget(1, 0, pager);
         widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
-        widget.setWidget(3, 0, new HTML(BEAM_NOTE));
+        widget.setWidget(3, 0, new HTML(BEAM_HTML));
     }
 
     static String getResult(GsProduction production) {
