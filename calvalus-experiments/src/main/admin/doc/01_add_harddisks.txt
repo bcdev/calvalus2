@@ -38,3 +38,14 @@ chmod 777 /hd2/hadoop
 # all in one paste line
 mkdir /hd1/hadoop && chown hadoop:hadoop /hd1/hadoop && chmod 777 /hd1/hadoop && mkdir /hd2/hadoop && chown hadoop:hadoop /hd2/hadoop && chmod 777 /hd2/hadoop
 
+# addition of 4th disk
+sudo su -
+hadoop4u
+mkdir /hd3
+parted /dev/sdd --script -- mklabel bsd mkpart primary 0 -1
+mkfs.ext4 /dev/sdd1
+UUID=`blkid -o value -s UUID /dev/sdd1` && echo "UUID=${UUID} /hd3            ext4    noatime,errors=remount-ro    0     2" >> /etc/fstab
+mount /hd3
+mkdir /hd3/hadoop
+chown hadoop:hadoop /hd3/hadoop
+chmod 777 /hd3/hadoop

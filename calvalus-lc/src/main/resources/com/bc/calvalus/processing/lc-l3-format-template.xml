@@ -25,9 +25,9 @@
               <wps:ComplexData>
                   <parameters>
                       <outputType>Product</outputType>
-                      <outputFile>lc-$REGION-$PERIOD.dim</outputFile>
-                      <startTime>2005-01-01</startTime>
-                      <endTime>2005-01-10</endTime>
+                      <outputFile>outputs/lc-$REGION-$PERIOD.nc</outputFile>
+                      <startTime>$STARTDATE</startTime>
+                      <endTime>$STOPDATE</endTime>
                   </parameters>
               </wps:ComplexData>
           </wps:Data>

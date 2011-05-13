@@ -36,8 +36,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 
 public class LcRequest {
@@ -46,26 +49,57 @@ public class LcRequest {
     public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
-    private static final Map<String, String> GEOMETRIES = new HashMap<String, String>();
+    private static final Map<String, String> LC_GEOMETRIES = new HashMap<String, String>();
+    private static final Map<String, String> CC_GEOMETRIES;
 
     static {
-        GEOMETRIES.put("Africa", "polygon((15 17, 15 -10, 22 -10, 22 17, 15 17))");
-        GEOMETRIES.put("WesternEurope", "polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))");
-        GEOMETRIES.put("NorthAmerica", "polygon((-117 55, -117 35, -107 35, -107 55, -117 55))");
-        GEOMETRIES.put("NorthwestAsia", "polygon((28.6 41.4, 28.6 39.3, 27.3 39.3, 27.3 41.4, 28.6 41.4))");
-        GEOMETRIES.put("Australia", "polygon((138.3 -14.6, 138.3 -36.2, 148.2 -36.2, 148.2 -14.6, 138.3 -14.6))");
-        GEOMETRIES.put("CentralAsia", "polygon((86.6 43.2, 86.6 33.3, 99.7 33.3, 99.7 43.2, 86.6 43.2))");
+        LC_GEOMETRIES.put("Africa", "polygon((15 17, 15 -10, 22 -10, 22 17, 15 17))");
+        LC_GEOMETRIES.put("WesternEurope", "polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))");
+        LC_GEOMETRIES.put("NorthAmerica", "polygon((-117 55, -117 35, -107 35, -107 55, -117 55))");
+        LC_GEOMETRIES.put("NorthwestAsia", "polygon((28.6 41.4, 28.6 39.3, 27.3 39.3, 27.3 41.4, 28.6 41.4))");
+        LC_GEOMETRIES.put("Australia", "polygon((138.3 -14.6, 138.3 -36.2, 148.2 -36.2, 148.2 -14.6, 138.3 -14.6))");
+        LC_GEOMETRIES.put("CentralAsia", "polygon((86.6 43.2, 86.6 33.3, 99.7 33.3, 99.7 43.2, 86.6 43.2))");
+        CC_GEOMETRIES = createRegionMap(loadRegions("cc-regions.properties"));
     }
 
     private static final String[] YEARS = {"2005", "2006", "2007", "2008", "2009"};
     private static final String[] MONTH = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
 
-    static int index = 0;
+    static int index = 100;
 
     public static void main(String[] args) throws Exception {
-//        formatL2Template("Africa", "2009");
-//        formatL2Template("WesternEurope", "2009");
-//        formatL2Template("NorthAmerica", "2009");
+
+        formatLCL2Template("Africa", "2005");
+        formatLCL2Template("WesternEurope", "2005");
+        formatLCL2Template("NorthAmerica", "2005");
+        formatLCL2Template("NorthwestAsia", "2005");
+        formatLCL2Template("Australia", "2005");
+        formatLCL2Template("CentralAsia", "2005");
+
+        formatLCL2Template("Africa", "2006");
+        formatLCL2Template("WesternEurope", "2006");
+        formatLCL2Template("NorthAmerica", "2006");
+        formatLCL2Template("NorthwestAsia", "2006");
+        formatLCL2Template("Australia", "2006");
+        formatLCL2Template("CentralAsia", "2006");
+
+        formatLCL2Template("Africa", "2007");
+        formatLCL2Template("WesternEurope", "2007");
+        formatLCL2Template("NorthAmerica", "2007");
+        formatLCL2Template("NorthwestAsia", "2007");
+        formatLCL2Template("Australia", "2007");
+        formatLCL2Template("CentralAsia", "2007");
+
+        formatLCL2Template("Africa", "2008");
+        formatLCL2Template("WesternEurope", "2008");
+        formatLCL2Template("NorthAmerica", "2008");
+        formatLCL2Template("NorthwestAsia", "2008");
+        formatLCL2Template("Australia", "2008");
+        formatLCL2Template("CentralAsia", "2008");
+
+        formatLCL2Template("NorthwestAsia", "2009");
+        formatLCL2Template("Australia", "2009");
+        formatLCL2Template("CentralAsia", "2009");
 
 //        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
@@ -81,12 +115,12 @@ public class LcRequest {
 //        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
 
 
-        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
-        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
-        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
-
-        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
-        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 30);
+//        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
+//        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
+//        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
+//
+//        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
+//        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 30);
 //
 //        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 15);
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 15);
@@ -94,19 +128,53 @@ public class LcRequest {
 //        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 30);
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
 //
+
+//        formatCCL2Template("acadia", "2006");
+//        formatCCL2Template("amazondelta", "2006");
+//        formatCCL2Template("antaresubatuba", "2006");
+//        formatCCL2Template("balticsea", "2006");
+//        formatCCL2Template("beibubay", "2006");
+//        formatCCL2Template("benguela", "2006");
+//        formatCCL2Template("capeverde", "2006");
+//        formatCCL2Template("centralcalifornia", "2006");
+//        formatCCL2Template("chesapeakebay", "2006");
+//        formatCCL2Template("chinakoreajapan", "2006");
+//        formatCCL2Template("greatbarrierreef", "2006");
+//        formatCCL2Template("gulfofmexico", "2006");
+//        formatCCL2Template("indonesianwaters", "2006");
+//        formatCCL2Template("karasea", "2006");
+//        formatCCL2Template("lakeseriestclair", "2006");
+//        formatCCL2Template("lenadelta", "2006");
+//        formatCCL2Template("mediterranean_blacksea", "2006");
+//        formatCCL2Template("morocco", "2006");
+//        formatCCL2Template("namibianwaters", "2006");
+//        formatCCL2Template("northsea", "2006");
+//        formatCCL2Template("oregon_washington", "2006");
+//        formatCCL2Template("puertorico", "2006");
+//        formatCCL2Template("redsea", "2006");
+//        formatCCL2Template("riolaplata", "2006");
+//        formatCCL2Template("southerncalifornia", "2006");
+//        formatCCL2Template("southindia", "2006");
+//        formatCCL2Template("tasmania", "2006");
     }
 
-    private static void formatL2Template(String region, String... years) throws IOException {
-        formatL2("lc-l2-template.xml", region, years);
+    private static void formatLCL2Template(String region, String... years) throws IOException {
+        Assert.argument(LC_GEOMETRIES.containsKey(region), "valid region");
+        String geometry = LC_GEOMETRIES.get(region);
+        formatL2("lc-l2-template.xml", region, geometry, years);
     }
 
-    private static void formatL2(String templateName, String region, String... years) throws IOException {
+    private static void formatCCL2Template(String region, String... years) throws IOException {
+        Assert.argument(CC_GEOMETRIES.containsKey(region), "valid region");
+        String geometry = CC_GEOMETRIES.get(region);
+        formatL2("cc-l2-template.xml", region, geometry, years);
+    }
+
+    private static void formatL2(String templateName, String region, String geometry, String... years) throws IOException {
         Assert.notNull(templateName, "templateName");
         Assert.notNull(region, "region");
-        Assert.argument(GEOMETRIES.containsKey(region), "valid region");
         Assert.argument(years.length > 0, "years.length > 0");
 
-        String geometry = GEOMETRIES.get(region);
         String template = readTemplate(templateName);
         for (String year : years) {
             String request = template.
@@ -114,6 +182,7 @@ public class LcRequest {
                     replaceAll("\\$REGION", region).
                     replaceAll("\\$GEOMETRY", geometry);
             String filename = templateName.replace("template", String.format("%s-%s", region, year));
+            filename = String.format("%04d-%s", index++, filename);
             writeRequest(request, new File(filename));
         }
     }
@@ -129,7 +198,7 @@ public class LcRequest {
         String template = readTemplate(templateName);
         List<InputFiles> inputFilesList = getInputs(region, startDate, endDate, periodLength);
         String year = startDate.substring(0, 4);
-        String geometry = GEOMETRIES.get(region);
+        String geometry = LC_GEOMETRIES.get(region);
 
         for (InputFiles inputfile : inputFilesList) {
             String request = template.
@@ -297,5 +366,33 @@ public class LcRequest {
 
         return list;
     }
+
+    private static Map<String, String> createRegionMap(Properties properties) {
+        Set<String> regionNames = properties.stringPropertyNames();
+        Map<String, String> map = new Hashtable<String, String>();
+        for (String regionName : regionNames) {
+            map.put(regionName, properties.getProperty(regionName));
+        }
+        return map;
+    }
+
+    private static Properties loadRegions(String resource) {
+        Properties properties = new Properties();
+        InputStream inputStream = LcRequest.class.getResourceAsStream(resource);
+        if (inputStream == null) {
+            throw new IllegalStateException("Resource not found: " + resource);
+        }
+        try {
+            try {
+                properties.load(inputStream);
+            } finally {
+                inputStream.close();
+            }
+            return properties;
+        } catch (IOException e) {
+            throw new IllegalStateException("Error reading resource: " + resource, e);
+        }
+    }
+
 
 }
