@@ -306,8 +306,8 @@ public class SimpleProductionStore implements ProductionStore {
         public void updateStatus() {
         }
 
-        @Deprecated
         @Override
+        @Deprecated
         public Object[] getJobIds() {
             return jobIds;
         }
