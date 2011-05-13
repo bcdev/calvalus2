@@ -103,7 +103,7 @@ public class L3ParametersForm implements IsWidget {
         contentParams.setWidget(5, 2, new Label("1"));
         contentParams.setWidget(6, 0, new Label("Super-sampling:"));
         contentParams.setWidget(6, 1, superSampling);
-        contentParams.setWidget(6, 2, new Label("pixel/pixel"));
+        contentParams.setWidget(6, 2, new Label("pixels/pixel"));
 
         minDate = new DateBox();
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
