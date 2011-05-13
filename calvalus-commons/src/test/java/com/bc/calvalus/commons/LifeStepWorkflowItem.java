@@ -73,11 +73,6 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
     }
 
     @Override
-    public Object[] getJobIds() {
-        return new Object[0];
-    }
-
-    @Override
     protected void fireStatusChanged(WorkflowStatusEvent event) {
         super.fireStatusChanged(new WorkflowStatusEvent(event.getSource(),
                                                         event.getOldStatus(),

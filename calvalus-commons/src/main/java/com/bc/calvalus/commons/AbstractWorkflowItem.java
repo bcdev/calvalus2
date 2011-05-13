@@ -60,9 +60,21 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
         }
     }
 
+    /**
+     * @return The default implementation returns an empty array.
+     */
     @Override
     public WorkflowItem[] getItems() {
         return NO_ITEMS;
+    }
+
+    /**
+     * @return The default implementation returns an empty array.
+     */
+    @Override
+    @Deprecated
+    public Object[] getJobIds() {
+        return new Object[0];
     }
 
     @Override
@@ -103,14 +115,35 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
         return stopTime;
     }
 
+    /**
+     * Sets the submit time.
+     * Called by {@link #handleStatusChanged(WorkflowStatusEvent)} whose call is triggered by {@link #setStatus(ProcessStatus)}.
+     * Overrides usually do not need to call this method.
+     *
+     * @param submitTime The submit time.
+     */
     public void setSubmitTime(Date submitTime) {
         this.submitTime = submitTime;
     }
 
+    /**
+     * Sets the start time.
+     * Called by {@link #handleStatusChanged(WorkflowStatusEvent)} whose call is triggered by {@link #setStatus(ProcessStatus)}.
+     * Overrides usually do not need to call this method.
+     *
+     * @param startTime The start time.
+     */
     public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
 
+    /**
+     * Sets the stop time.
+     * Called by {@link #handleStatusChanged(WorkflowStatusEvent)} whose call is triggered by {@link #setStatus(ProcessStatus)}.
+     * Overrides usually do not need to call this method.
+     *
+     * @param stopTime The stop time.
+     */
     public void setStopTime(Date stopTime) {
         this.stopTime = stopTime;
     }

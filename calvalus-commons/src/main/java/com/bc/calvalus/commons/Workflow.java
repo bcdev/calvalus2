@@ -106,7 +106,6 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
     }
 
     @Override
-    @Deprecated
     public Object[] getJobIds() {
         ArrayList<Object> list = new ArrayList<Object>();
         for (WorkflowItem item : itemList) {

@@ -73,6 +73,7 @@ public interface WorkflowItem {
      * The type of the job identifiers depends on the underlying job engine(s) used.
      *
      * @return The array of job identifiers.
+     * @deprecated No replacement. Not all types of workflow items have job IDs. A workflow shall not expose its job IDs.
      */
     @Deprecated
     Object[] getJobIds();
