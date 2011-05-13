@@ -59,6 +59,7 @@ class TAStaging extends Staging {
             stagingDir.mkdirs();
         }
 
+        float progress = 0f;
         TAResult taResult = new TAResult();
 
         WorkflowItem workflow = production.getWorkflow();
@@ -94,6 +95,7 @@ class TAStaging extends Staging {
                 }
             } catch (IOException e) {
                 // todo - or fail? (nf)
+                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to read TA output " + inputDir, e);
             }
 
@@ -106,9 +108,11 @@ class TAStaging extends Staging {
                 writeRegionFile(taResult, regionName);
             } catch (IOException e) {
                 // todo - or fail? (nf)
+                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to write TA region file " + getRegionFile(regionName), e);
             }
         }
+        production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
 
         return null;
     }
