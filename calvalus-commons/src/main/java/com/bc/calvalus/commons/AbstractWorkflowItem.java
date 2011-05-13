@@ -22,6 +22,8 @@ import java.util.List;
 
 /**
  * Base class for workflow item implementations.
+ * <p/>
+ * Clients must implement {@link #submit()}, {@link #kill()} and {@link #updateStatus()} ()}.
  *
  * @author Norman
  */
