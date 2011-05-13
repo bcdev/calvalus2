@@ -96,8 +96,12 @@ public class JobUtils {
     }
 
     public static Path clearDir(Job job, String dir) throws IOException {
+        return clearDir(dir, job.getConfiguration());
+    }
+
+    public static Path clearDir(String dir, Configuration configuration) throws IOException {
         final Path dirPath = new Path(dir);
-        final FileSystem fileSystem = dirPath.getFileSystem(job.getConfiguration());
+        final FileSystem fileSystem = dirPath.getFileSystem(configuration);
         fileSystem.delete(dirPath, true);
         return dirPath;
     }
