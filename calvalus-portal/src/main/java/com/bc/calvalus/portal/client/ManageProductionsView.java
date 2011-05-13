@@ -22,6 +22,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -50,6 +51,9 @@ public class ManageProductionsView extends PortalView {
 
     private FlexTable widget;
     private SelectionModel<GsProduction> selectionModel;
+    public static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
+    public static final String BEAM_NAME = "BEAM 4.9";
+    public static final String BEAM_NOTE = String.format("<small>Note: all generated data products may be viewed and further processed with <a href=\"%s\">%s</a></small>", BEAM_URL, BEAM_NAME);
 
     public ManageProductionsView(CalvalusPortal portal) {
         super(portal);
@@ -228,6 +232,7 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(0, 0, productionTable);
         widget.setWidget(1, 0, pager);
         widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
+        widget.setWidget(3, 0, new HTML(BEAM_NOTE));
     }
 
     static String getResult(GsProduction production) {
