@@ -142,23 +142,24 @@ class TAStaging extends Staging {
         return new File(stagingDir, regionName + ".csv");
     }
 
-    private void writeRecord(Writer fsDataOutputStream, TAResult.Record record) throws IOException {
-        fsDataOutputStream.write(record.startDate);
-        fsDataOutputStream.write("\t");
-        fsDataOutputStream.write(record.stopDate);
+    private void writeRecord(Writer writer, TAResult.Record record) throws IOException {
+        writer.write(record.startDate);
+        writer.write("\t");
+        writer.write(record.stopDate);
         for (int i = 0; i < record.outputVector.size(); i++) {
-            fsDataOutputStream.write("\t");
-            fsDataOutputStream.write(record.outputVector.get(i) + "");
+            writer.write("\t");
+            writer.write(record.outputVector.get(i) + "");
         }
+        writer.write("\n");
     }
 
-    private void writeHeader(Writer fsDataOutputStream, TAResult taResult) throws IOException {
+    private void writeHeader(Writer writer, TAResult taResult) throws IOException {
         List<String> header = taResult.getHeader();
         for (String s : header) {
-            fsDataOutputStream.write(s);
-            fsDataOutputStream.write("\t");
+            writer.write(s);
+            writer.write("\t");
         }
-        fsDataOutputStream.write("\n");
+        writer.write("\n");
     }
 
     private void clearInputDir(Configuration configuration, String inputDir) {
