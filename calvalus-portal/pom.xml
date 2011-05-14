@@ -19,7 +19,7 @@
     <description>The frontend for Calvalus.</description>
 
     <properties>
-        <gwt.version>2.2.0</gwt.version>
+        <gwt.version>2.3.0</gwt.version>
     </properties>
 
     <dependencies>
@@ -244,7 +244,7 @@
                     <!--</execution>-->
                     <execution>
                         <id>deploy-to-tomcat</id>
-                        <phase>install</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>redeploy</goal>
                         </goals>
