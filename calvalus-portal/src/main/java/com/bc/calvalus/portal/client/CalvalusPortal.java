@@ -9,6 +9,7 @@ import com.bc.calvalus.portal.shared.GsProductionRequest;
 import com.bc.calvalus.portal.shared.GsProductionResponse;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.maps.client.Maps;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
@@ -60,9 +61,21 @@ public class CalvalusPortal implements EntryPoint {
      */
     @Override
     public void onModuleLoad() {
-        backendService.getProductSets(null, new InitProductSetsCallback());
-        backendService.getProcessors(null, new InitProcessorsCallback());
-        backendService.getProductions(null, new InitProductionsCallback());
+
+       /*
+        * Asynchronously loads the Maps API.
+        *
+        * The first parameter should be a valid Maps API Key to deploy this
+        * application on a public server, but a blank key will work for an
+        * application served from localhost.
+       */
+       Maps.loadMapsApi("", "2", false, new Runnable() {
+           public void run() {
+               backendService.getProductSets(null, new InitProductSetsCallback());
+               backendService.getProcessors(null, new InitProcessorsCallback());
+               backendService.getProductions(null, new InitProductionsCallback());
+           }
+       });
     }
 
     public GsProductSet[] getProductSets() {

@@ -1,12 +1,20 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.GsRegion;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.maps.client.InfoWindowContent;
+import com.google.gwt.maps.client.MapWidget;
+import com.google.gwt.maps.client.control.SmallMapControl;
+import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.DecoratorPanel;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
@@ -188,11 +196,39 @@ public class L3ParametersForm implements IsWidget {
         boundingBoxPanel.setWidget(2, 1, latRange);
         boundingBoxPanel.setWidget(2, 2, new Label("deg"));
 
+
+        LatLng cawkerCity = LatLng.newInstance(39.509, -98.434);
+
+        Widget mapPanel;
+        try {
+            final MapWidget map = new MapWidget(cawkerCity, 2);
+            map.setSize("200px", "200px");
+            map.addControl(new SmallMapControl());
+            map.addOverlay(new Marker(cawkerCity));
+            map.getInfoWindow().open(map.getCenter(),
+                                     new InfoWindowContent("World's Largest Ball of Sisal Twine"));
+
+            mapPanel = map;
+        } catch (Throwable t) {
+            mapPanel = new Label("Failed to instantiate GoogleMaps widget.\n"
+                                         + "Type: \""+ t.getClass() + "\"\n"
+                                         + "Message: \""+ t.getMessage() + "\"\n"
+                                         + "Stack trace dumped to stderr.");
+            t.printStackTrace(System.err);
+        }
+        final DockPanel dock = new DockPanel();
+        dock.setStyleName("cw-DockPanel");
+        dock.ensureDebugId("cwDockPanel");
+        dock.setSpacing(4);
+        dock.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
+        dock.add(new ScrollPanel(predefinedRegions), DockPanel.WEST);
+        dock.add(mapPanel, DockPanel.CENTER);
+
         DecoratedTabPanel regionTabPanel = new DecoratedTabPanel();
         regionTabPanel.setWidth("400px");
         regionTabPanel.setAnimationEnabled(true);
         regionTabPanel.ensureDebugId("cwRegionTabPanel");
-        regionTabPanel.add(new ScrollPanel(predefinedRegions), "Predefined Regions");
+        regionTabPanel.add(dock, "Predefined Regions");
         regionTabPanel.add(boundingBoxPanel, "Bounding Box");
         regionTabPanel.selectTab(0);
 
