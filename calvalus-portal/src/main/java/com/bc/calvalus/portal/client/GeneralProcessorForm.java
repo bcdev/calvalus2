@@ -18,8 +18,6 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import static com.bc.calvalus.portal.client.CalvalusPortal.*;
-
 /**
  * Demo view that lets users submit a new L2 production.
  *
@@ -31,21 +29,21 @@ public class GeneralProcessorForm implements IsWidget {
     private TextArea processorParameters;
     private ListBox bundleVersion;
     private FileUpload fileUpload;
-    private final CalvalusPortal portal;
     private DecoratorPanel widget;
     private FormPanel uploadForm;
+    private GsProcessorDescriptor[] processors;
 
-    public GeneralProcessorForm(CalvalusPortal portal, String title) {
-        this.portal = portal;
+    public GeneralProcessorForm(GsProcessorDescriptor[] processors, String title) {
+        this.processors = processors;
 
         processorName = new ListBox();
         processorName.setName("processorName");
         processorName.setWidth("25em");
-        for (GsProcessorDescriptor processor : portal.getProcessors()) {
+        for (GsProcessorDescriptor processor : processors) {
             String label = processor.getProcessorName() + " (from " + processor.getBundleName() + ")";
             this.processorName.addItem(label, processor.getExecutableName());
         }
-        if (portal.getProcessors().length > 0) {
+        if (this.processors.length > 0) {
             processorName.setSelectedIndex(0);
         }
         processorName.setVisibleItemCount(3);
@@ -79,11 +77,11 @@ public class GeneralProcessorForm implements IsWidget {
 
         HorizontalPanel processorPanel = new HorizontalPanel();
         processorPanel.setSpacing(2);
-        processorPanel.add(createLabeledWidgetV("Processor:", processorName));
-        processorPanel.add(createLabeledWidgetV("Version:", bundleVersion));
+        processorPanel.add(UIUtils.createLabeledWidgetV("Processor:", processorName));
+        processorPanel.add(UIUtils.createLabeledWidgetV("Version:", bundleVersion));
 
         uploadForm = new FormPanel();
-        uploadForm.setWidget(createLabeledWidgetH("From file:", fileUpload));
+        uploadForm.setWidget(UIUtils.createLabeledWidgetH("From file:", fileUpload));
         uploadForm.setWidth("35em");
         uploadForm.addSubmitHandler(new FormPanel.SubmitHandler() {
             public void onSubmit(FormPanel.SubmitEvent event) {
@@ -99,14 +97,15 @@ public class GeneralProcessorForm implements IsWidget {
 
 
         VerticalPanel processorParamsPanel = new VerticalPanel();
+        processorParamsPanel.ensureDebugId("processorParamsPanel");
         processorPanel.setSpacing(2);
         processorParamsPanel.add(processorParameters);
         processorParamsPanel.add(uploadForm);
 
         // Add advanced options to form in a disclosure panel
         DisclosurePanel advancedDisclosure = new DisclosurePanel("Parameters");
+        advancedDisclosure.ensureDebugId("advancedDisclosure");
         advancedDisclosure.setAnimationEnabled(true);
-        advancedDisclosure.ensureDebugId("cwDisclosurePanel");
         advancedDisclosure.setContent(processorParamsPanel);
 
         FlexTable layout = new FlexTable();
@@ -122,7 +121,7 @@ public class GeneralProcessorForm implements IsWidget {
         widget.setTitle(title); //todo - check why title doesn't show
         widget.setWidget(layout);
 
-        if (portal.getProcessors().length > 0) {
+        if (this.processors.length > 0) {
             updateProcessorVersionsWidget();
             updateParametersWidget();
         }
@@ -130,7 +129,7 @@ public class GeneralProcessorForm implements IsWidget {
 
     public GsProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorName.getSelectedIndex();
-        return portal.getProcessors()[selectedIndex];
+        return processors[selectedIndex];
     }
 
     public String getBundleVersion() {

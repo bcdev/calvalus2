@@ -27,8 +27,8 @@ public class ManageProductSetsView extends PortalView {
     private MapWidget mapWidget;
 
 
-    public ManageProductSetsView(CalvalusPortal calvalusPortal) {
-        super(calvalusPortal);
+    public ManageProductSetsView(PortalContext portalContext) {
+        super(portalContext);
 
         // Defining a WMSLayer and adding it to a Map
         WMSParams wmsParams = new WMSParams();

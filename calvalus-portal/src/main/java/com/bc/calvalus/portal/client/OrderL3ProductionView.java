@@ -17,21 +17,23 @@ import java.util.HashMap;
  *
  * @author Norman
  */
-public class OrderL3ProductionView extends PortalView {
+public class OrderL3ProductionView extends OrderProductionView {
     public static final String ID = OrderL3ProductionView.class.getName();
     private FlexTable widget;
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm l2ProcessorForm;
     private L3ParametersForm l3ParametersForm;
 
-    public OrderL3ProductionView(CalvalusPortal calvalusPortal) {
-        super(calvalusPortal);
+    public OrderL3ProductionView(PortalContext portalContext) {
+        super(portalContext);
 
-        inputOutputForm = new InputOutputForm(getPortal(), "L1 Input / L3 Output", true);
-        l2ProcessorForm = new GeneralProcessorForm(getPortal(), "L2 Processor");
+        inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L3 Output", true);
+        l2ProcessorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
         l3ParametersForm = new L3ParametersForm();
 
         widget = new FlexTable();
+        widget.ensureDebugId("widget");
+        widget.setWidth("32em");
         widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setVerticalAlignment(1, 0, HasVerticalAlignment.ALIGN_TOP);
@@ -39,15 +41,16 @@ public class OrderL3ProductionView extends PortalView {
         widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.getFlexCellFormatter().setColSpan(2, 0, 2);
         widget.getFlexCellFormatter().setRowSpan(0, 1, 2);
-        widget.ensureDebugId("cwFlexTable");
-        widget.addStyleName("cw-FlexTable");
-        widget.setWidth("32em");
         widget.setCellSpacing(2);
         widget.setCellPadding(2);
         widget.setWidget(0, 0, inputOutputForm.asWidget());
         widget.setWidget(1, 0, l2ProcessorForm.asWidget());
         widget.setWidget(0, 1, l3ParametersForm.asWidget());
-        widget.setWidget(2, 0, new Button("Order Production", new OrderProductionHandler()));
+        widget.setWidget(2, 0, new Button("Order Production", new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        }));
     }
 
     @Override
@@ -65,7 +68,8 @@ public class OrderL3ProductionView extends PortalView {
         return "Level 3";
     }
 
-    private boolean validateView() {
+    @Override
+    protected boolean validateForm() {
         try {
             inputOutputForm.validateForm();
             l2ProcessorForm.validateForm();
@@ -77,13 +81,13 @@ public class OrderL3ProductionView extends PortalView {
         }
     }
 
-    // todo - Provide JUnit test for this method
-    public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("L3", getValueMap());
+    @Override
+    protected GsProductionRequest getProductionRequest() {
+        return new GsProductionRequest("L3", getProductionParameters());
     }
 
     // todo - Provide JUnit test for this method
-    public HashMap<String, String> getValueMap() {
+    public HashMap<String, String> getProductionParameters() {
         GsProcessorDescriptor selectedProcessor = l2ProcessorForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
@@ -96,16 +100,4 @@ public class OrderL3ProductionView extends PortalView {
         parameters.putAll(l3ParametersForm.getValueMap());
         return parameters;
     }
-
-    private class OrderProductionHandler implements ClickHandler {
-
-        public void onClick(ClickEvent event) {
-            if (validateView()) {
-                GsProductionRequest request = getProductionRequest();
-                getPortal().orderProduction(request);
-            }
-        }
-
-    }
-
 }

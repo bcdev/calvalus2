@@ -11,14 +11,14 @@ import com.google.gwt.user.client.ui.IsWidget;
  */
 public abstract class PortalView implements IsWidget {
 
-    private final CalvalusPortal portal;
+    private final PortalContext portalContext;
 
-    public PortalView(CalvalusPortal portal) {
-        this.portal = portal;
+    public PortalView(PortalContext portalContext) {
+        this.portalContext = portalContext;
     }
 
-    public CalvalusPortal getPortal() {
-        return portal;
+    public PortalContext getPortal() {
+        return portalContext;
     }
 
     /**

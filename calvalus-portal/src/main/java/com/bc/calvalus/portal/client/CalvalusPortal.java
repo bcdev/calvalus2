@@ -5,8 +5,6 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.bc.calvalus.portal.shared.GsProductSet;
 import com.bc.calvalus.portal.shared.GsProduction;
-import com.bc.calvalus.portal.shared.GsProductionRequest;
-import com.bc.calvalus.portal.shared.GsProductionResponse;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.maps.client.Maps;
@@ -35,7 +33,7 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class CalvalusPortal implements EntryPoint {
+public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private static final int UPDATE_PERIOD_MILLIS = 1000;
 
@@ -78,22 +76,27 @@ public class CalvalusPortal implements EntryPoint {
        });
     }
 
+    @Override
     public GsProductSet[] getProductSets() {
         return productSets;
     }
 
+    @Override
     public GsProcessorDescriptor[] getProcessors() {
         return processors;
     }
 
+    @Override
     public ListDataProvider<GsProduction> getProductions() {
         return productions;
     }
 
+    @Override
     public BackendServiceAsync getBackendService() {
         return backendService;
     }
 
+    @Override
     public void showView(String id) {
         Integer integer = viewTabIndices.get(id);
         tabPanel.selectTab(integer);
@@ -185,22 +188,6 @@ public class CalvalusPortal implements EntryPoint {
         DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
     }
 
-    static VerticalPanel createLabeledWidgetV(String labelText, Widget widget) {
-        VerticalPanel panel = new VerticalPanel();
-        panel.setSpacing(2);
-        panel.add(new Label(labelText));
-        panel.add(widget);
-        return panel;
-    }
-
-    static HorizontalPanel createLabeledWidgetH(String labelText, Widget widget) {
-        HorizontalPanel panel = new HorizontalPanel();
-        panel.setSpacing(2);
-        panel.add(new Label(labelText));
-        panel.add(widget);
-        return panel;
-    }
-
     private boolean isAllInputDataAvailable() {
         return productSets != null
                 && processors != null
@@ -247,20 +234,6 @@ public class CalvalusPortal implements EntryPoint {
             productions.refresh();
         }
     }
-
-    public void orderProduction(GsProductionRequest request) {
-        getBackendService().orderProduction(request, new AsyncCallback<GsProductionResponse>() {
-            public void onSuccess(final GsProductionResponse response) {
-                showView(ManageProductionsView.ID);
-            }
-
-            public void onFailure(Throwable caught) {
-                caught.printStackTrace(System.err);
-                Window.alert("Failed to order production:\n" + caught.getMessage());
-            }
-        });
-    }
-
 
     private class InitProductSetsCallback implements AsyncCallback<GsProductSet[]> {
         @Override

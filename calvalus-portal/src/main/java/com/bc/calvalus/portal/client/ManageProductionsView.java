@@ -58,8 +58,8 @@ public class ManageProductionsView extends PortalView {
     private FlexTable widget;
     private SelectionModel<GsProduction> selectionModel;
 
-    public ManageProductionsView(CalvalusPortal portal) {
-        super(portal);
+    public ManageProductionsView(PortalContext portalContext) {
+        super(portalContext);
 
         ProvidesKey<GsProduction> keyProvider = new ProvidesKey<GsProduction>() {
             public Object getKey(GsProduction production) {
@@ -219,7 +219,7 @@ public class ManageProductionsView extends PortalView {
         productionTable.addColumn(resultColumn, "Result");
 
         // Connect the table to the data provider.
-        portal.getProductions().addDataDisplay(productionTable);
+        getPortal().getProductions().addDataDisplay(productionTable);
 
         // Create a Pager to control the table.
         SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);

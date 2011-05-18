@@ -32,7 +32,7 @@ import java.util.Set;
  */
 public class MainMenuModel implements TreeViewModel {
 
-    private final CalvalusPortal portal;
+    private final PortalContext portalContext;
 
     /**
      * The top level categories.
@@ -59,8 +59,8 @@ public class MainMenuModel implements TreeViewModel {
      */
     private final SelectionModel<PortalView> selectionModel;
 
-    public MainMenuModel(CalvalusPortal portal, SelectionModel<PortalView> selectionModel) {
-        this.portal = portal;
+    public MainMenuModel(PortalContext portalContext, SelectionModel<PortalView> selectionModel) {
+        this.portalContext = portalContext;
         this.selectionModel = selectionModel;
         initialize();
     }
@@ -128,18 +128,18 @@ public class MainMenuModel implements TreeViewModel {
         {
             Category category = new Category("Production");
             catList.add(category);
-            category.addItem(new ManageProductSetsView(portal));
-            category.addItem(new OrderL2ProductionView(portal));
-            category.addItem(new OrderL3ProductionView(portal));
-            category.addItem(new ManageProductionsView(portal));
+            category.addItem(new ManageProductSetsView(portalContext));
+            category.addItem(new OrderL2ProductionView(portalContext));
+            category.addItem(new OrderL3ProductionView(portalContext));
+            category.addItem(new ManageProductionsView(portalContext));
         }
 
         // Cluster
         {
             Category category = new Category("Cluster");
             catList.add(category);
-            category.addItem(new FrameView(portal, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"));
-            category.addItem(new FrameView(portal, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"));
+            category.addItem(new FrameView(portalContext, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"));
+            category.addItem(new FrameView(portalContext, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"));
         }
 
      }

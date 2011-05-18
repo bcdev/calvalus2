@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
 
 import java.util.Date;
@@ -28,5 +28,21 @@ public class UIUtils {
         if (value > max) {
             throw new ValidationException(doubleBox, "Value for '" + label + "' must be greater than or equal to " + max);
         }
+    }
+
+    public static VerticalPanel createLabeledWidgetV(String labelText, Widget widget) {
+        VerticalPanel panel = new VerticalPanel();
+        panel.setSpacing(2);
+        panel.add(new Label(labelText));
+        panel.add(widget);
+        return panel;
+    }
+
+    public static HorizontalPanel createLabeledWidgetH(String labelText, Widget widget) {
+        HorizontalPanel panel = new HorizontalPanel();
+        panel.setSpacing(2);
+        panel.add(new Label(labelText));
+        panel.add(widget);
+        return panel;
     }
 }

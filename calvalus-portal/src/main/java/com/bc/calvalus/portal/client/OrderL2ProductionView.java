@@ -17,35 +17,38 @@ import java.util.HashMap;
  *
  * @author Norman
  */
-public class OrderL2ProductionView extends PortalView {
+public class OrderL2ProductionView extends OrderProductionView {
     public static final String ID = OrderL2ProductionView.class.getName();
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm processingForm;
     private L2ProductFilterForm productFilterForm;
     private FlexTable widget;
 
-    public OrderL2ProductionView(CalvalusPortal calvalusPortal) {
-        super(calvalusPortal);
+    public OrderL2ProductionView(PortalContext portalContext) {
+        super(portalContext);
 
-        inputOutputForm = new InputOutputForm(calvalusPortal, "L1 Input / L2 Output", true);
-        processingForm = new GeneralProcessorForm(getPortal(), "L2 Processor");
+        inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L2 Output", true);
+        processingForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
         productFilterForm = new L2ProductFilterForm();
 
         widget = new FlexTable();
+        widget.ensureDebugId("widget");
         widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setVerticalAlignment(1, 0, HasVerticalAlignment.ALIGN_TOP);
         widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.getFlexCellFormatter().setColSpan(2, 0, 2);
         widget.getFlexCellFormatter().setRowSpan(0, 1, 0);
-        widget.ensureDebugId("cwFlexTable");
-        widget.addStyleName("cw-FlexTable");
         widget.setCellSpacing(2);
         widget.setCellPadding(2);
         widget.setWidget(0, 0, inputOutputForm.asWidget());
         widget.setWidget(0, 1, processingForm.asWidget());
         widget.setWidget(1, 0, productFilterForm.asWidget());
-        widget.setWidget(2, 0, new Button("Order Production", new OrderProductionHandler()));
+        widget.setWidget(2, 0, new Button("Order Production", new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        }));
     }
 
     @Override
@@ -63,13 +66,23 @@ public class OrderL2ProductionView extends PortalView {
         return "Level 2";
     }
 
-    // todo - Provide JUnit test for this method
-    public GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("L2", getValueMap());
+    @Override
+    protected boolean validateForm() {
+        try {
+            productFilterForm.validateForm(3);
+            return true;
+        } catch (ValidationException e) {
+            e.handle();
+            return false;
+        }
     }
 
-    // todo - Provide JUnit test for this method
-    public HashMap<String, String> getValueMap() {
+    @Override
+    protected GsProductionRequest getProductionRequest() {
+        return new GsProductionRequest("L2", getProductionParameters());
+    }
+
+    private HashMap<String, String> getProductionParameters() {
         GsProcessorDescriptor selectedProcessor = processingForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
@@ -82,26 +95,4 @@ public class OrderL2ProductionView extends PortalView {
         parameters.putAll(productFilterForm.getValueMap());
         return parameters;
     }
-
-    private boolean validateForm() {
-        try {
-            productFilterForm.validateForm(3);
-            return true;
-        } catch (ValidationException e) {
-            e.handle();
-            return false;
-        }
-    }
-
-
-    private class OrderProductionHandler implements ClickHandler {
-
-        public void onClick(ClickEvent event) {
-            if (validateForm()) {
-                GsProductionRequest request = getProductionRequest();
-                getPortal().orderProduction(request);
-            }
-        }
-    }
-
 }

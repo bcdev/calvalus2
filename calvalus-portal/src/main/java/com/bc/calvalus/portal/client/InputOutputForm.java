@@ -11,24 +11,22 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
-import static com.bc.calvalus.portal.client.CalvalusPortal.*;
-
 /**
  * Demo view that lets users submit a new L2 production.
  *
  * @author Norman
  */
 public class InputOutputForm implements IsWidget {
-    private ListBox inputProductSet;
-    private ListBox outputFormat;
-    private DecoratorPanel widget;
-    private CheckBox autoStaging;
+    private final ListBox inputProductSet;
+    private final ListBox outputFormat;
+    private final DecoratorPanel widget;
+    private final CheckBox autoStaging;
 
-    public InputOutputForm(CalvalusPortal portal, String title, boolean hasOutput) {
+    public InputOutputForm(GsProductSet[] productSets, String title, boolean hasOutput) {
 
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
-        for (GsProductSet productSet : portal.getProductSets()) {
+        for (GsProductSet productSet : productSets) {
             inputProductSet.addItem(productSet.getName(), productSet.getId());
         }
         inputProductSet.setWidth("20em");
@@ -48,7 +46,7 @@ public class InputOutputForm implements IsWidget {
 
         HorizontalPanel outputControlPanel = new HorizontalPanel();
         outputControlPanel.setSpacing(2);
-        outputControlPanel.add(createLabeledWidgetV("Output format:", outputFormat));
+        outputControlPanel.add(UIUtils.createLabeledWidgetV("Output format:", outputFormat));
         outputControlPanel.add(autoStaging);
 
         FlexTable layout = new FlexTable();
@@ -57,16 +55,16 @@ public class InputOutputForm implements IsWidget {
         layout.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
         layout.setCellSpacing(4);
         layout.setWidget(0, 0, new HTML("<b>Input</b>"));
-        layout.setWidget(1, 0, createLabeledWidgetV("Input product file set:", inputProductSet));
+        layout.setWidget(1, 0, UIUtils.createLabeledWidgetV("Input product file set:", inputProductSet));
         if (hasOutput) {
             layout.setWidget(2, 0, new HTML("<b>Output</b>"));
-            layout.setWidget(3, 0, createLabeledWidgetV("Output product file format:", outputFormat));
+            layout.setWidget(3, 0, UIUtils.createLabeledWidgetV("Output product file format:", outputFormat));
             layout.setWidget(4, 0, autoStaging);
         }
 
         // Wrap the contents in a DecoratorPanel
         widget = new DecoratorPanel();
-        widget.setTitle(title); //todo - check why title doesn't show
+        widget.setTitle(title);
         widget.setWidget(layout);
     }
 

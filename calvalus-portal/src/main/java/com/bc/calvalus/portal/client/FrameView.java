@@ -15,8 +15,8 @@ public class FrameView extends PortalView {
     private String url;
     private Frame widget;
 
-    public FrameView(CalvalusPortal portal, String id, String title, String url) {
-        super(portal);
+    public FrameView(PortalContext portalContext, String id, String title, String url) {
+        super(portalContext);
         this.id = id;
         this.title = title;
         this.url = url;
