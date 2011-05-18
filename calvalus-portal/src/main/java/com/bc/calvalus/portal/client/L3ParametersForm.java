@@ -207,7 +207,6 @@ public class L3ParametersForm implements IsWidget {
             map.addOverlay(new Marker(cawkerCity));
             map.getInfoWindow().open(map.getCenter(),
                                      new InfoWindowContent("World's Largest Ball of Sisal Twine"));
-
             mapPanel = map;
         } catch (Throwable t) {
             mapPanel = new Label("Failed to instantiate GoogleMaps widget.\n"
@@ -216,19 +215,18 @@ public class L3ParametersForm implements IsWidget {
                                          + "Stack trace dumped to stderr.");
             t.printStackTrace(System.err);
         }
-        final DockPanel dock = new DockPanel();
-        dock.setStyleName("cw-DockPanel");
-        dock.ensureDebugId("cwDockPanel");
-        dock.setSpacing(4);
-        dock.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
-        dock.add(new ScrollPanel(predefinedRegions), DockPanel.WEST);
-        dock.add(mapPanel, DockPanel.CENTER);
+        final DockPanel regionDockPanel = new DockPanel();
+        regionDockPanel.ensureDebugId("regionDockPanel");
+        regionDockPanel.setSpacing(4);
+        regionDockPanel.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
+        regionDockPanel.add(new ScrollPanel(predefinedRegions), DockPanel.WEST);
+        regionDockPanel.add(mapPanel, DockPanel.CENTER);
 
         DecoratedTabPanel regionTabPanel = new DecoratedTabPanel();
+        regionTabPanel.ensureDebugId("regionTabPanel");
         regionTabPanel.setWidth("400px");
         regionTabPanel.setAnimationEnabled(true);
-        regionTabPanel.ensureDebugId("cwRegionTabPanel");
-        regionTabPanel.add(dock, "Predefined Regions");
+        regionTabPanel.add(regionDockPanel, "Predefined Regions");
         regionTabPanel.add(boundingBoxPanel, "Bounding Box");
         regionTabPanel.selectTab(0);
 

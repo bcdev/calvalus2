@@ -12,16 +12,15 @@ public class FrameView extends PortalView {
 
     private String id;
     private String title;
-    private String url;
     private Frame widget;
 
     public FrameView(PortalContext portalContext, String id, String title, String url) {
         super(portalContext);
         this.id = id;
         this.title = title;
-        this.url = url;
 
         widget = new Frame(url);
+        widget.setWidth("100%");
         widget.setHeight("800px");
     }
 

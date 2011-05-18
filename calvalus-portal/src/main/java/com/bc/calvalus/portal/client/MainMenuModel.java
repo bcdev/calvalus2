@@ -1,18 +1,3 @@
-/*
- * Copyright 2010 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.cell.client.AbstractCell;
@@ -21,11 +6,7 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionModel;
 import com.google.gwt.view.client.TreeViewModel;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The {@link com.google.gwt.view.client.TreeViewModel} used by the main menu.
@@ -54,13 +35,16 @@ public class MainMenuModel implements TreeViewModel {
      */
     private final Map<String, PortalView> viewMap = new HashMap<String, PortalView>();
 
+    private PortalView[] views;
+
     /**
      * The selection model used to select examples.
      */
     private final SelectionModel<PortalView> selectionModel;
 
-    public MainMenuModel(PortalContext portalContext, SelectionModel<PortalView> selectionModel) {
+    public MainMenuModel(PortalContext portalContext, PortalView[] views, SelectionModel<PortalView> selectionModel) {
         this.portalContext = portalContext;
+        this.views = views;
         this.selectionModel = selectionModel;
         initialize();
     }
@@ -128,21 +112,26 @@ public class MainMenuModel implements TreeViewModel {
         {
             Category category = new Category("Production");
             catList.add(category);
-            category.addItem(new ManageProductSetsView(portalContext));
-            category.addItem(new OrderL2ProductionView(portalContext));
-            category.addItem(new OrderL3ProductionView(portalContext));
-            category.addItem(new ManageProductionsView(portalContext));
+            for (PortalView view : views) {
+                if (!(view instanceof FrameView)) {
+                    category.addItem(view);
+                }
+            }
         }
 
-        // Cluster
+        // Cluster (FrameView instances)
         {
             Category category = new Category("Cluster");
             catList.add(category);
-            category.addItem(new FrameView(portalContext, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"));
-            category.addItem(new FrameView(portalContext, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"));
+            for (PortalView view : views) {
+                if (view instanceof FrameView) {
+                    FrameView frameView = (FrameView) view;
+                    category.addItem(frameView);
+                }
+            }
         }
 
-     }
+    }
 
     /**
      * The cell used to render categories.
