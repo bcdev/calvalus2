@@ -65,7 +65,7 @@ public class OrderTAProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "Trend Analysis";
+        return "L3 Trend Analysis";
     }
 
     @Override

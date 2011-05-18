@@ -65,7 +65,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "Level 3";
+        return "L3 Processing";
     }
 
     @Override
