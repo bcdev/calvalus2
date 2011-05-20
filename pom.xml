@@ -35,6 +35,11 @@
         <!-- Experimental code. Parts may become productive code later. -->
         <module>calvalus-experiments</module>
 
+        <!-- Experimental code. Parts may become productive code later. -->
+		<module>calvalus-regionmap</module>
+
+        <!-- Landcover_cci -->
+        <!-- todo - please rename to calvalus-lccci, ideally move code to another repo on github (nf) -->
         <module>calvalus-lc</module>
     </modules>
 
