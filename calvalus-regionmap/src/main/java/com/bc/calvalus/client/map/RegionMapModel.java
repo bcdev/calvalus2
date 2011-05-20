@@ -11,6 +11,4 @@ public interface RegionMapModel {
     MapAction[] getActions();
 
     ListDataProvider<Region> getRegionProvider();
-
-    RegionSelection getRegionSelection();
 }

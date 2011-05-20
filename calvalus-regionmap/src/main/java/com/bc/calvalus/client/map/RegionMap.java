@@ -16,5 +16,11 @@ public interface RegionMap {
     /**
      * @return The region model.
      */
-    RegionMapModel getModel();
+    RegionMapModel getRegionModel();
+
+
+    /**
+     * @return The region selection model.
+     */
+    RegionMapSelectionModel getRegionSelectionModel();
 }

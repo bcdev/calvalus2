@@ -1,4 +1,4 @@
-package com.bc.calvalus.client.map.interactions;
+package com.bc.calvalus.client.map.actions;
 
 import com.bc.calvalus.client.map.MapAction;
 import com.bc.calvalus.client.map.MapInteraction;
@@ -64,8 +64,9 @@ public class InsertPolygonInteraction extends MapInteraction implements MapClick
                 mapWidget.removeOverlay(polyline);
                 polyline = null;
                 Region region = Region.createUserRegion(polygon);
-                regionMap.getModel().getRegionProvider().getList().add(0, region);
-                regionMap.getModel().getRegionSelection().setSelectedRegions(region);
+                regionMap.getRegionModel().getRegionProvider().getList().add(0, region);
+                regionMap.getRegionSelectionModel().clearSelection();
+                regionMap.getRegionSelectionModel().setSelected(region, true);
                 // Interaction complete, invoke the actual action.
                 run(regionMap);
                 // System.out.println("polygon added with " + polygon.getVertexCount() + " vertices");

@@ -16,17 +16,17 @@ import java.util.Set;
 @SuppressWarnings("serial")
 public class MapServiceImpl extends RemoteServiceServlet implements MapService {
 
-  public EncodedRegion[] getRegions() throws IOException {
-      Properties properties = loadRegions();
-      ArrayList<EncodedRegion> regions = new ArrayList<EncodedRegion>();
-      Set<String> regionNames = properties.stringPropertyNames();
-      for (String regionName : regionNames) {
-          String regionWKT = properties.getProperty(regionName);
-          EncodedRegion region = new EncodedRegion(regionName, regionWKT);
-          regions.add(region);
-      }
-     return regions.toArray(new EncodedRegion[regions.size()]);
-  }
+    public EncodedRegion[] getRegions() throws IOException {
+        Properties properties = loadRegions();
+        ArrayList<EncodedRegion> regions = new ArrayList<EncodedRegion>();
+        Set<String> regionNames = properties.stringPropertyNames();
+        for (String regionName : regionNames) {
+            String regionWKT = properties.getProperty(regionName);
+            EncodedRegion region = new EncodedRegion(regionName, regionWKT);
+            regions.add(region);
+        }
+        return regions.toArray(new EncodedRegion[regions.size()]);
+    }
 
     private Properties loadRegions() throws IOException {
         Properties properties = new Properties();
@@ -40,17 +40,17 @@ public class MapServiceImpl extends RemoteServiceServlet implements MapService {
     }
 
     /**
-   * Escape an html string. Escaping data received from the client helps to
-   * prevent cross-site script vulnerabilities.
-   * 
-   * @param html the html string to escape
-   * @return the escaped string
-   */
-  private String escapeHtml(String html) {
-    if (html == null) {
-      return null;
+     * Escape an html string. Escaping data received from the client helps to
+     * prevent cross-site script vulnerabilities.
+     *
+     * @param html the html string to escape
+     * @return the escaped string
+     */
+    private String escapeHtml(String html) {
+        if (html == null) {
+            return null;
+        }
+        return html.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(
+                ">", "&gt;");
     }
-    return html.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(
-        ">", "&gt;");
-  }
 }

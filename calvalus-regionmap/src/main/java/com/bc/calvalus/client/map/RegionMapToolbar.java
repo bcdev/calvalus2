@@ -2,7 +2,12 @@ package com.bc.calvalus.client.map;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.PushButton;
+import com.google.gwt.user.client.ui.ToggleButton;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +19,8 @@ public class RegionMapToolbar implements IsWidget {
 
     private final RegionMap regionMap;
 
-    private  Map<ToggleButton, MapInteraction> interactions;
-    private  Map<MapInteraction, ToggleButton> interactionButtons;
+    private Map<ToggleButton, MapInteraction> interactions;
+    private Map<MapInteraction, ToggleButton> interactionButtons;
     private MapInteraction currentInteraction;
     private Widget widget;
 
@@ -54,13 +59,13 @@ public class RegionMapToolbar implements IsWidget {
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(2);
 
-        for (final MapAction action : regionMap.getModel().getActions()) {
+        for (final MapAction action : regionMap.getRegionModel().getActions()) {
             if (action instanceof MapAction.Separator) {
                 buttonPanel.add(new HTML("&nbsp;"));
             } else if (action instanceof MapInteraction) {
                 MapInteraction interaction = (MapInteraction) action;
-                ToggleButton toggleButton = new ToggleButton(interaction.getLabel(),
-                        interactionClickHandler);
+                // todo - use interaction.getIcon() images here (nf)
+                ToggleButton toggleButton = new ToggleButton(interaction.getLabel(), interactionClickHandler);
                 toggleButton.setTitle(interaction.getDescription());
                 interactions.put(toggleButton, interaction);
                 interactionButtons.put(interaction, toggleButton);
@@ -71,6 +76,7 @@ public class RegionMapToolbar implements IsWidget {
                 }
                 buttonPanel.add(toggleButton);
             } else {
+                // todo - use interaction.getIcon() images here (nf)
                 PushButton pushButton = new PushButton(action.getLabel(), new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {

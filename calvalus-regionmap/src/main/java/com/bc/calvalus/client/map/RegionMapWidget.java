@@ -5,16 +5,23 @@ import com.google.gwt.cell.client.Cell;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
-import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.geom.LatLngBounds;
+import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.HasKeyboardPagingPolicy;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SingleSelectionModel;
+import com.google.gwt.view.client.SelectionModel;
 
 import java.util.List;
 
@@ -24,17 +31,40 @@ import java.util.List;
  * @author Norman Fomferra
  */
 public class RegionMapWidget implements IsWidget, RegionMap {
-    private final RegionMapModel model;
+
+    private final RegionMapModel regionMapModel;
+    private final RegionMapSelectionModel regionMapSelectionModel;
     private Widget widget;
     private MapWidget mapWidget;
+    private boolean adjustingRegionSelection;
+    private boolean updatingRegionListSelection;
 
-    public RegionMapWidget(RegionMapModel model) {
-        this.model = model;
+    private PolyStyleOptions normalPolyStrokeStyle;
+    private PolyStyleOptions normalPolyFillStyle;
+    private PolyStyleOptions selectedPolyStrokeStyle;
+    private PolyStyleOptions selectedPolyFillStyle;
+
+    public RegionMapWidget(RegionMapModel regionMapModel) {
+        this(regionMapModel, new RegionMapSelectionModelImpl());
+    }
+
+    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel) {
+        this.regionMapModel = regionMapModel;
+        this.regionMapSelectionModel = regionMapSelectionModel;
+        this.normalPolyStrokeStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.8);
+        this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
+        this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
+        this.selectedPolyFillStyle = normalPolyFillStyle;
     }
 
     @Override
-    public RegionMapModel getModel() {
-        return model;
+    public RegionMapModel getRegionModel() {
+        return regionMapModel;
+    }
+
+    @Override
+    public RegionMapSelectionModel getRegionSelectionModel() {
+        return regionMapSelectionModel;
     }
 
     @Override
@@ -77,24 +107,40 @@ public class RegionMapWidget implements IsWidget, RegionMap {
             }
         };
 
-        CellList<Region> regionCellList = new CellList<Region>(regionCell, regionKey);
+        final CellList<Region> regionCellList = new CellList<Region>(regionCell, regionKey);
         regionCellList.setVisibleRange(0, 256);
         regionCellList.setKeyboardPagingPolicy(HasKeyboardPagingPolicy.KeyboardPagingPolicy.INCREASE_RANGE);
         regionCellList.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.ENABLED);
-        model.getRegionProvider().addDataDisplay(regionCellList);
+        regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
 
         // Add a selection model so we can select cells.
-        final SingleSelectionModel<Region> selectionModel = new SingleSelectionModel<Region>(regionKey);
-        regionCellList.setSelectionModel(selectionModel);
-        selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+        final MultiSelectionModel<Region> regionListSelectionModel = new MultiSelectionModel<Region>(regionKey);
+        regionCellList.setSelectionModel(regionListSelectionModel);
+        regionCellList.getSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
             public void onSelectionChange(SelectionChangeEvent event) {
-                Region region = selectionModel.getSelectedObject();
-                if (region != null) {
-                    model.getRegionSelection().setSelectedRegions(region);
-                    Polygon selectedPolygon = region.getPolygon();
-                    int zoomLevel = mapWidget.getBoundsZoomLevel(selectedPolygon.getBounds());
-                    mapWidget.panTo(selectedPolygon.getBounds().getCenter());
-                    mapWidget.setZoomLevel(zoomLevel);
+                if (!adjustingRegionSelection) {
+                    try {
+                        adjustingRegionSelection = true;
+                        updateRegionSelection(regionListSelectionModel, regionMapSelectionModel);
+                    } finally {
+                        adjustingRegionSelection = false;
+                    }
+                }
+            }
+        });
+
+        regionMapSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                if (!adjustingRegionSelection) {
+                    try {
+                        adjustingRegionSelection = true;
+                        updateRegionSelection(regionMapSelectionModel, regionListSelectionModel);
+                        updatePolygonStyles();
+                    } finally {
+                        adjustingRegionSelection = false;
+                    }
                 }
             }
         });
@@ -145,14 +191,34 @@ public class RegionMapWidget implements IsWidget, RegionMap {
         regionSplitLayoutPanel.addWest(regionPanel, 150);
         regionSplitLayoutPanel.add(mapWidget);
 
-        List<Region> regionList = model.getRegionProvider().getList();
+        List<Region> regionList = regionMapModel.getRegionProvider().getList();
         for (Region region : regionList) {
             Polygon polygon = region.getPolygon();
             polygon.setVisible(true);
+            polygon.setStrokeStyle(normalPolyStrokeStyle);
+            polygon.setFillStyle(normalPolyFillStyle);
             mapWidget.addOverlay(polygon);
         }
 
         this.widget = regionSplitLayoutPanel;
     }
+
+    private void updatePolygonStyles() {
+        for (Region region : regionMapModel.getRegionProvider().getList()) {
+            boolean selected = regionMapSelectionModel.isSelected(region);
+            region.getPolygon().setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
+            region.getPolygon().setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
+            if (region.isUserRegion()) {
+                region.getPolygon().setEditingEnabled(selected);
+            }
+        }
+    }
+
+    private void updateRegionSelection(SelectionModel<Region> source, SelectionModel<Region> target) {
+        for (Region region : regionMapModel.getRegionProvider().getList()) {
+            target.setSelected(region, source.isSelected(region));
+        }
+    }
+
 
 }

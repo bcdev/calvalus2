@@ -1,4 +1,4 @@
-package com.bc.calvalus.client.map.interactions;
+package com.bc.calvalus.client.map.actions;
 
 import com.bc.calvalus.client.map.MapAction;
 import com.bc.calvalus.client.map.MapInteraction;
@@ -66,8 +66,9 @@ public class InsertBoxInteraction extends MapInteraction implements MapClickHand
             mapWidget.removeOverlay(polyline);
             polyline = null;
             Region region = Region.createUserRegion(polygon);
-            regionMap.getModel().getRegionProvider().getList().add(0, region);
-            regionMap.getModel().getRegionSelection().setSelectedRegions(region);
+            regionMap.getRegionModel().getRegionProvider().getList().add(0, region);
+            regionMap.getRegionSelectionModel().clearSelection();
+            regionMap.getRegionSelectionModel().setSelected(region, true);
             run(regionMap);
         }
     }

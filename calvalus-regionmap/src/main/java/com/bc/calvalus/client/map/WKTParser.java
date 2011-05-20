@@ -21,7 +21,7 @@ public class WKTParser {
         return parser.parseOverlay();
     }
 
-    private  Overlay  parseOverlay() {
+    private Overlay parseOverlay() {
         int pos0 = pos;
         if (eat("POLYGON")) {
             ArrayList<LatLng> points = new ArrayList<LatLng>();
@@ -149,6 +149,7 @@ public class WKTParser {
     private boolean canEatMore() {
         return canEatMore(pos);
     }
+
     private boolean canEatMore(int pos) {
         return pos < wkt.length();
     }

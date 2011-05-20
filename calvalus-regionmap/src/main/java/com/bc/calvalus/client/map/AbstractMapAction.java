@@ -17,6 +17,12 @@ public abstract class AbstractMapAction implements MapAction {
         this.description = description;
     }
 
+    protected AbstractMapAction(String label, Image image, String description) {
+        this.label = label;
+        this.image = image;
+        this.description = description;
+    }
+
     @Override
     public Image getImage() {
         return image;
