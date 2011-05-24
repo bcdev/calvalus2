@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+  <ows:Identifier>convert</ows:Identifier>
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.converter</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>com.bc.calvalus.processing.converter.SeqToDimConverter</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+<!--
+    <wps:Input>
+      <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>.*\.seq</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+-->
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050101_092244_000000392033_00265_14848_0001.seq" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050102_085122_000000252033_00279_14862_0001.seq" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <wps:Data>
+        <wps:Reference xlink:href="file:///mnt/hdfs/calvalus/outputs/l2-dim" />
+      </wps:Data>
+    </wps:Input>
+
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>result</ows:Identifier>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>

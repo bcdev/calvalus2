@@ -109,6 +109,10 @@ public class L3FormatterConfig {
         return parseTime(endTime, "endTime");
     }
 
+    public void setOutputFile(String outputFile) {
+        this.outputFile = outputFile;
+    }
+
     private static ProductData.UTC parseTime(String timeString, String timeName) {
         if (timeString == null) {
             throw new IllegalArgumentException(MessageFormat.format("Parameter: {0} not given.", timeName));

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+  <ows:Identifier>format.l3</ows:Identifier>
+  <wps:DataInputs>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <wps:Data>
+        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/l3-netcdf" />
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-01" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-11" />
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>wps-request\.xml</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+        <ows:Identifier>calvalus.formatter.parameters</ows:Identifier>
+        <wps:Data>
+            <wps:ComplexData>
+                <parameters>
+                    <outputType>Product</outputType>
+                    <outputFile>tobeoverwritten.nc</outputFile>
+                    <startTime>2000-01-01</startTime>
+                    <endTime>2000-01-01</endTime>
+                </parameters>
+            </wps:ComplexData>
+        </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.format.outputType</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>Product</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.format.prefix</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>lc-Africa-15d</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.format.suffix</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>nc</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+  </wps:DataInputs>
+
+  <wps:ResponseForm>
+    <wps:ResponseDocument storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>l2-dir</ows:Identifier>
+        <ows:Title>directory of l2 output files</ows:Title>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>

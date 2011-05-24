@@ -49,6 +49,7 @@ public class WpsConfig {
     private static final String INPUT_HREF_XPATH = "Reference/@href";
 
     private final XmlDoc requestXmlDoc;
+    private static final String PRIORITY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.priority']/Data/LiteralData";
 
     public WpsConfig(String requestContent) {
         try {
@@ -56,6 +57,10 @@ public class WpsConfig {
         } catch (Exception e) {
             throw new IllegalStateException("Cannot create DOM: " + e.getMessage(), e);
         }
+    }
+
+    public XmlDoc getXmlDoc() {
+        return requestXmlDoc;
     }
 
     public String getIdentifier() {
@@ -112,6 +117,14 @@ public class WpsConfig {
     public String getOperatorName() {
         try {
             return requestXmlDoc.getString(OPERATOR_NAME_XPATH);
+        } catch (XPathExpressionException e) {
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+        }
+    }
+
+    public String getPriority() {
+        try {
+            return requestXmlDoc.getString(PRIORITY_XPATH, (String)null);
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
