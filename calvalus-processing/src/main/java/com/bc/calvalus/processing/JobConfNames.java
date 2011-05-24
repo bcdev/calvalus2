@@ -38,4 +38,5 @@ public interface JobConfNames {
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";
     String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
+    String CALVALUS_PRIORITY = "calvalus.priority";
 }

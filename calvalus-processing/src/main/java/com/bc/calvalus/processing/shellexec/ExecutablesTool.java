@@ -51,6 +51,8 @@ public class ExecutablesTool extends Configured implements Tool {
     private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
 
     private static Options options;
+    private static final String PRIORITY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.priority']/Data/LiteralData";
+
     static {
         options = new Options();
     }
@@ -80,6 +82,7 @@ public class ExecutablesTool extends Configured implements Tool {
             final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
             final XmlDoc request = new XmlDoc(requestContent);
             final String requestType = request.getString(TYPE_XPATH);
+            final String requestPriority = request.getString(PRIORITY_XPATH, "LOW");  // one of VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH
             //final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
 
             // clear output directory
@@ -94,11 +97,7 @@ public class ExecutablesTool extends Configured implements Tool {
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), requestPath);  // TODO improve job identification
             job.getConfiguration().set("calvalus.request", requestContent);
-
-//            final WpsConfig wpsConfig = new WpsConfig(requestContent);
-//            final String[] requestInputPaths = wpsConfig.getRequestInputPaths();
-//            String inputs = StringUtils.join(requestInputPaths, ",");
-//            job.getConfiguration().set(JobConfNames.CALVALUS_INPUT, inputs);
+            job.getConfiguration().set("mapred.job.priority", requestPriority);
 
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);

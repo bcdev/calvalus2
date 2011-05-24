@@ -67,6 +67,10 @@ public class BeamOpProcessingType {
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
         String filenamePattern = wpsConfig.getFilenamePattern();
         String inputs = collectInputPaths(requestInputPaths, filenamePattern, conf);
+        String priority = wpsConfig.getPriority();
+        if (priority == null) {
+            priority = "LOW";
+        }
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
         addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT_FORMAT, wpsConfig.getInputFormat());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
@@ -76,6 +80,7 @@ public class BeamOpProcessingType {
         addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
+        addIfNotEmpty(conf, JobConfNames.CALVALUS_PRIORITY, priority);
 
         Map<String,String> propertiesMap = JobUtils.convertProperties(wpsConfig.getSystemProperties());
         Properties properties = new Properties();

@@ -11,8 +11,16 @@
   <wps:DataInputs>
 
     <wps:Input>
-      <ows:Identifier>calvalus.processor.package</ows:Identifier> 
-      <ows:Title>software installation package name</ows:Title> 
+      <ows:Identifier>calvalus.priority</ows:Identifier>
+      <ows:Title>job priority</ows:Title>
+      <wps:Data>
+        <wps:LiteralData>VERY_LOW</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.processor.package</ows:Identifier>
+      <ows:Title>software installation package name</ows:Title>
       <wps:Data>
         <wps:LiteralData>seadas</wps:LiteralData>
       </wps:Data>

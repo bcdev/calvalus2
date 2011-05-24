@@ -69,42 +69,73 @@ public class LcRequest {
 
     public static void main(String[] args) throws Exception {
 
-        formatLCL2Template("Africa", "2005");
-        formatLCL2Template("WesternEurope", "2005");
-        formatLCL2Template("NorthAmerica", "2005");
-        formatLCL2Template("NorthwestAsia", "2005");
-        formatLCL2Template("Australia", "2005");
-        formatLCL2Template("CentralAsia", "2005");
+//        formatLCL2Template("Africa", "2005");
+//        formatLCL2Template("WesternEurope", "2005");
+//        formatLCL2Template("NorthAmerica", "2005");
+//        formatLCL2Template("NorthwestAsia", "2005");
+//        formatLCL2Template("Australia", "2005");
+//        formatLCL2Template("CentralAsia", "2005");
+//
+//        formatLCL2Template("Africa", "2006");
+//        formatLCL2Template("WesternEurope", "2006");
+//        formatLCL2Template("NorthAmerica", "2006");
+//        formatLCL2Template("NorthwestAsia", "2006");
+//        formatLCL2Template("Australia", "2006");
+//        formatLCL2Template("CentralAsia", "2006");
+//
+//        formatLCL2Template("Africa", "2007");
+//        formatLCL2Template("WesternEurope", "2007");
+//        formatLCL2Template("NorthAmerica", "2007");
+//        formatLCL2Template("NorthwestAsia", "2007");
+//        formatLCL2Template("Australia", "2007");
+//        formatLCL2Template("CentralAsia", "2007");
+//
+//        formatLCL2Template("Africa", "2008");
+//        formatLCL2Template("WesternEurope", "2008");
+//        formatLCL2Template("NorthAmerica", "2008");
+//        formatLCL2Template("NorthwestAsia", "2008");
+//        formatLCL2Template("Australia", "2008");
+//        formatLCL2Template("CentralAsia", "2008");
+//
+//        formatLCL2Template("NorthwestAsia", "2009");
+//        formatLCL2Template("Australia", "2009");
+//        formatLCL2Template("CentralAsia", "2009");
 
-        formatLCL2Template("Africa", "2006");
-        formatLCL2Template("WesternEurope", "2006");
-        formatLCL2Template("NorthAmerica", "2006");
-        formatLCL2Template("NorthwestAsia", "2006");
-        formatLCL2Template("Australia", "2006");
-        formatLCL2Template("CentralAsia", "2006");
-
-        formatLCL2Template("Africa", "2007");
-        formatLCL2Template("WesternEurope", "2007");
-        formatLCL2Template("NorthAmerica", "2007");
-        formatLCL2Template("NorthwestAsia", "2007");
-        formatLCL2Template("Australia", "2007");
-        formatLCL2Template("CentralAsia", "2007");
-
-        formatLCL2Template("Africa", "2008");
-        formatLCL2Template("WesternEurope", "2008");
-        formatLCL2Template("NorthAmerica", "2008");
-        formatLCL2Template("NorthwestAsia", "2008");
-        formatLCL2Template("Australia", "2008");
-        formatLCL2Template("CentralAsia", "2008");
-
-        formatLCL2Template("NorthwestAsia", "2009");
-        formatLCL2Template("Australia", "2009");
-        formatLCL2Template("CentralAsia", "2009");
-
+//        formatL3ProcessingTemplate("Africa", "2005-01-01", "2005-12-31", 10);
+//        formatL3ProcessingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
+//        formatL3ProcessingTemplate("NorthAmerica", "2005-01-01", "2005-12-31", 10);
+//        formatL3ProcessingTemplate("NorthwestAsia", "2005-01-01", "2005-12-31", 10);
+//        formatL3ProcessingTemplate("Australia", "2005-01-01", "2005-12-31", 10);
+//        formatL3ProcessingTemplate("CentralAsia", "2005-01-01", "2005-12-31", 10);
+//
+//        formatL3ProcessingTemplate("Africa", "2006-01-01", "2006-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2006-01-01", "2006-12-31", 10);
+//        formatL3ProcessingTemplate("NorthAmerica", "2006-01-01", "2006-12-31", 10);
+//        formatL3ProcessingTemplate("NorthwestAsia", "2006-01-01", "2006-12-31", 10);
+//        formatL3ProcessingTemplate("Australia", "2006-01-01", "2006-12-31", 10);
+//        formatL3ProcessingTemplate("CentralAsia", "2006-01-01", "2006-12-31", 10);
+//
+//        formatL3ProcessingTemplate("Africa", "2007-01-01", "2007-12-31", 10);
+//        formatL3ProcessingTemplate("WesternEurope", "2007-01-01", "2007-12-31", 10);
+//        formatL3ProcessingTemplate("NorthAmerica", "2007-01-01", "2007-12-31", 10);
+//        formatL3ProcessingTemplate("NorthwestAsia", "2007-01-01", "2007-12-31", 10);
+//        formatL3ProcessingTemplate("Australia", "2007-01-01", "2007-12-31", 10);
+//        formatL3ProcessingTemplate("CentralAsia", "2007-01-01", "2007-12-31", 10);
+//
+//        formatL3ProcessingTemplate("Africa", "2008-01-01", "2008-12-31", 10);
+//        formatL3ProcessingTemplate("WesternEurope", "2008-01-01", "2008-12-31", 10);
+//        formatL3ProcessingTemplate("NorthAmerica", "2008-01-01", "2008-12-31", 10);
+//        formatL3ProcessingTemplate("NorthwestAsia", "2008-01-01", "2008-12-31", 10);
+//        formatL3ProcessingTemplate("Australia", "2008-01-01", "2008-12-31", 10);
+//        formatL3ProcessingTemplate("CentralAsia", "2008-01-01", "2008-12-31", 10);
+//
 //        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
-//
+//        formatL3ProcessingTemplate("NorthwestAsia", "2009-01-01", "2009-12-31", 10);
+//        formatL3ProcessingTemplate("Australia", "2009-01-01", "2009-12-31", 10);
+//        formatL3ProcessingTemplate("CentralAsia", "2009-01-01", "2009-12-31", 10);
+
 //        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
 //        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 30);
 //

@@ -35,7 +35,7 @@ public class ExecutablesInputFormat extends InputFormat {
 
     //private static final String INPUTS_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.input']";
     //private static final String INPUT_HREF_XPATH = "wps:Reference/@xlink:href";
-    private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']";
+    private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']/Data/LiteralData";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
     private static final String INPUT_HREF_XPATH = "Reference/@href";
 
