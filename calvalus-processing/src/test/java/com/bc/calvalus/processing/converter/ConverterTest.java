@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.shellexec.FileUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -11,9 +12,8 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 
-/**
- * 
- */
+
+@Ignore
 public class ConverterTest {
     private static final String INPUT_DIR = "file:///tmp/converter-input";
     private static final String OUTPUT_DIR = "file:///tmp/converter-output";
@@ -22,7 +22,7 @@ public class ConverterTest {
     private static final String INPUT_RESOURCE_PATH = "calvalus-processing/src/test/resources/" + INPUT_FILE;
     private static final String INPUT_RESOURCE_PATH2 = "calvalus-processing/src/test/resources/" + INPUT_FILE2;
 
-    //@Test
+    @Test
     public void testSeqToDimConverter() throws Exception {
 
         final Configuration configuration = new Configuration();
@@ -41,7 +41,7 @@ public class ConverterTest {
                    outputPath.getFileSystem(configuration).exists(outputFile));
     }
 
-    //@Test
+    @Test
     public void testLcL3Converter() throws Exception {
 
         final Configuration configuration = new Configuration();

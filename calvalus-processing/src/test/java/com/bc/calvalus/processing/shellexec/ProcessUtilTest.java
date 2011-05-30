@@ -1,7 +1,9 @@
 package com.bc.calvalus.processing.shellexec;
 
+import com.bc.calvalus.processing.UnixTestRunner;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 
@@ -10,6 +12,7 @@ import java.io.File;
  *
  * @author Martin Boettcher
  */
+@RunWith(UnixTestRunner.class)
 public class ProcessUtilTest {
 
     @Test
