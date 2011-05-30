@@ -36,6 +36,32 @@ public class ConverterMapper extends Mapper<NullWritable, NullWritable, Text /*N
     private static final String TARGET_FORMAT_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.targetFormat']/Data/LiteralData";
     private static final String ARCHIVE_ROOT_DIR = "/mnt/hdfs";
 
+    private static class ProgressReporter extends Thread {
+        Context context;
+        private boolean haltFlag = false;
+        public synchronized void setHaltFlag() {
+            haltFlag = true;
+            notify();
+        }
+        public ProgressReporter(Context context) {
+            super("progess-reporter");
+            this.context = context;
+            setDaemon(true);
+        }
+        public void run() {
+            while (! haltFlag) {
+                try {
+                    context.progress();
+                    synchronized (this) {
+                        wait(60000);
+                    }
+                } catch (InterruptedException _) {
+                    // intentionally fall through
+                }
+            }
+        }
+    }
+
     /**
      * Mapper implementation method. See class comment.
      * @param context  task "configuration"
@@ -61,19 +87,28 @@ public class ConverterMapper extends Mapper<NullWritable, NullWritable, Text /*N
             final String converterClassName = request.getString(CONVERTER_CLASS_XPATH);
 
             // ensure that output dir exists
-            final String outputPath = (outputUri.startsWith("hdfs:"))
-                    ? ARCHIVE_ROOT_DIR + File.separator + new Path(outputUri).toUri().getPath()
-                    : new Path(outputUri).toUri().getPath();
-            final File outputDir = new File(outputPath);
-            outputDir.mkdirs();
+//            final String outputPath = (outputUri.startsWith("hdfs:"))
+//                    ? ARCHIVE_ROOT_DIR + File.separator + new Path(outputUri).toUri().getPath()
+//                    : new Path(outputUri).toUri().getPath();
+//            final File outputDir = new File(outputPath);
+//            outputDir.mkdirs();
 
-            // convert
-            final FormatConverter converter = (FormatConverter) Class.forName(converterClassName).newInstance();
-            converter.convert(context.getTaskAttemptID().toString(),
-                              inputPath,
-                              outputPath,
-                              request.getString(TARGET_FORMAT_XPATH, ProductIO.DEFAULT_FORMAT_NAME),
-                              context.getConfiguration());
+            // start concurrent thread to report progress
+            ProgressReporter progressReporter = new ProgressReporter(context);
+            try {
+                progressReporter.start();
+
+                // convert
+                final FormatConverter converter = (FormatConverter) Class.forName(converterClassName).newInstance();
+                converter.convert(context.getTaskAttemptID().toString(),
+                                  inputPath,
+                                  outputUri,
+                                  request.getString(TARGET_FORMAT_XPATH, ProductIO.DEFAULT_FORMAT_NAME),
+                                  context.getConfiguration());
+
+            } finally {
+                progressReporter.setHaltFlag();
+            }
 
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();

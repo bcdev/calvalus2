@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,8 +12,8 @@
 
     <properties>
         <hadoop.version>0.20.2</hadoop.version>
-        <calvalus.version>0.2-SNAPSHOT</calvalus.version>
-        <beam.version>4.9-SNAPSHOT</beam.version>
+        <calvalus.version>0.3-SNAPSHOT</calvalus.version>
+        <beam.version>4.10-SNAPSHOT</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -193,7 +193,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.4-SNAPSHOT</version>
+                <version>1.4</version>
             </dependency>
 
             <!--  JUnit -->

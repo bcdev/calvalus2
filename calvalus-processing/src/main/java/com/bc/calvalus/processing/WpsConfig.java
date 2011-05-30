@@ -45,7 +45,7 @@ public class WpsConfig {
     private static final String FORMATTER_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
     private static final String INPUT_FORMAT_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input.format']/Data/LiteralData";
-    private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']";
+    private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']/Data/LiteralData";
     private static final String INPUT_HREF_XPATH = "Reference/@href";
 
     private final XmlDoc requestXmlDoc;

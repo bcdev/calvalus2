@@ -66,7 +66,7 @@ public class ProcessUtil {
      */
     public int run(String ... call) throws IOException, InterruptedException {
         processBuilder.command(call);
-        processBuilder.redirectErrorStream();
+        processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
         // read output until process terminates
         output.setLength(0);

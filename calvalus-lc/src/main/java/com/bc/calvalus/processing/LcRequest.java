@@ -109,7 +109,7 @@ public class LcRequest {
 //        formatL3ProcessingTemplate("CentralAsia", "2005-01-01", "2005-12-31", 10);
 //
 //        formatL3ProcessingTemplate("Africa", "2006-01-01", "2006-12-31", 10);
-        formatL3ProcessingTemplate("WesternEurope", "2006-01-01", "2006-12-31", 10);
+//        formatL3ProcessingTemplate("WesternEurope", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("NorthAmerica", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2006-01-01", "2006-12-31", 10);
@@ -147,7 +147,7 @@ public class LcRequest {
 
 
 //        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
-//        formatL3FormattingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
+        formatL3FormattingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
 //
 //        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 15);

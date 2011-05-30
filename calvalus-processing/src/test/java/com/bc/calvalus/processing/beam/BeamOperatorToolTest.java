@@ -54,7 +54,7 @@ public class BeamOperatorToolTest {
     @Before
     public void init() throws IOException {
         clearWorkingDirs();
-        installJars(new File("calvalus-processing/target/calvalus-processing-0.2-SNAPSHOT-beam"), "beam-4.9-SNAPSHOT");
+        installJars(new File("calvalus-processing/target/calvalus-processing-0.3-SNAPSHOT-beam"), "beam-4.10-SNAPSHOT");
         installJars(new File("calvalus-processing/target/beam-meris-radiometry-1.0-SNAPSHOT"), "beam-meris-radiometry-1.0-SNAPSHOT");
     }
 

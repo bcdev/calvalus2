@@ -10,10 +10,10 @@ fi
 
 baseDir="`dirname ${0}`/.."
 baseDir=`( cd $baseDir ; pwd )`
-jobJar=${baseDir}/lib/calvalus-processing-0.2-SNAPSHOT-job.jar
+jobJar=${baseDir}/lib/calvalus-processing-0.3-SNAPSHOT-job.jar
 if [ ! -r $jobJar ] ; then
     # maven development environment
-    jobJar=${baseDir}/target/calvalus-processing-0.2-SNAPSHOT-job.jar
+    jobJar=${baseDir}/target/calvalus-processing-0.3-SNAPSHOT-job.jar
 fi
 
 cp1=`echo ${baseDir}/lib/beam/*.jar | tr ' ' ':'`

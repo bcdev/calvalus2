@@ -19,6 +19,7 @@ import java.io.IOException;
 public class SeqToDimConverter implements FormatConverter {
 
     private static final String TMP_DIR = "/home/hadoop/tmp";
+    private static final String ARCHIVE_ROOT_DIR = "/mnt/hdfs";
 
     public void convert(String taskId, Path inputPath, String outputDir, String targetFormat, Configuration configuration)
         throws IOException
@@ -34,12 +35,17 @@ public class SeqToDimConverter implements FormatConverter {
         final ProcessUtil copyProcess = new ProcessUtil();
         copyProcess.directory(tmpDir);
         try {
-            final int returnCode = copyProcess.run("/bin/bash", "-c", "cp -r * " + outputDir + "; rm -rf " + tmpDir.getPath());
+            final String outputPath = (outputDir.startsWith("hdfs:"))
+                    ? ARCHIVE_ROOT_DIR + File.separator + new Path(outputDir).toUri().getPath()
+                    : (outputDir.startsWith("file:"))
+                    ? new Path(outputDir).toUri().getPath()
+                    : outputDir;
+            final int returnCode = copyProcess.run("/bin/bash", "-c", "mkdir -p " + outputPath + "; cp -r * " + outputPath + "; rm -rf " + tmpDir.getPath());
             if (returnCode != 0) {
-                throw new ProcessorException("execution of cp -r * " + outputDir + " failed: " + copyProcess.getOutputString());
+                throw new ProcessorException("execution of cp -r * " + outputPath + " failed: " + copyProcess.getOutputString());
             }
         } catch (InterruptedException e) {
-            throw new ProcessorException("execution of cp -r * " + outputDir + " failed: " + e);
+            throw new ProcessorException("copying result to " + outputDir + " failed: " + e);
         }
     }
 }
