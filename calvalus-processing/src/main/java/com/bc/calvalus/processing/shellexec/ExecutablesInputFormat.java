@@ -19,6 +19,8 @@ import org.w3c.dom.NodeList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,6 +69,14 @@ public class ExecutablesInputFormat extends InputFormat {
                 collectInputFiles(files, fs, filter, splits);
             }
             if (splits.size() == 0) throw new FileNotFoundException("no file(s) found in input path(s)");
+
+            // largest first ...
+            Collections.sort(splits, new Comparator<FileSplit>() {
+                @Override
+                public int compare(FileSplit o1, FileSplit o2) {
+                    return o1.getLength() > o2.getLength() ? -1 : o1.getLength() < o2.getLength() ? 1 : 0;
+                }
+            });
 
             return splits;
 
