@@ -100,7 +100,7 @@ public class BeamOpProcessingType {
         return job;
     }
 
-    private String collectInputPaths(String[] requestInputPaths, String filenamePattern, Configuration conf) throws IOException {
+    public static String collectInputPaths(String[] requestInputPaths, String filenamePattern, Configuration conf) throws IOException {
         Pattern filter = (filenamePattern != null) ? Pattern.compile(filenamePattern) : null;
         List<String> collectedInputPaths = new ArrayList<String>();
         for (String inputUrl : requestInputPaths) {
@@ -112,7 +112,7 @@ public class BeamOpProcessingType {
         return StringUtils.join(collectedInputPaths, ",");
     }
 
-    private void collectedInputPaths(FileStatus[] fileStatuses, FileSystem fs, Pattern filter, List<String> collectedInputPaths) throws IOException {
+    private static void collectedInputPaths(FileStatus[] fileStatuses, FileSystem fs, Pattern filter, List<String> collectedInputPaths) throws IOException {
         for (FileStatus fileStatus : fileStatuses) {
             final Path path = fileStatus.getPath();
             if (fileStatus.isDir()) {
