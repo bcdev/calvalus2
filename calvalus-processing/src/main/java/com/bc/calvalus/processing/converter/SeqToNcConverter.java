@@ -36,8 +36,8 @@ public class SeqToNcConverter implements FormatConverter {
         try {
             final int returnCode;
             if (outputDir.startsWith("hdfs:")) {
-                returnCode = copyProcess.run("/bin/bash", "-c", "gzip " + outputFilename + "; hadoop fs -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
-                System.out.println("cmdline input : " + "gzip " + outputFilename + "; hadoop fs -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath());
+                returnCode = copyProcess.run("/bin/bash", "-c", "gzip " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
+                System.out.println("cmdline input : " + "gzip " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath());
             } else {
                 final String outputPath = (outputDir.startsWith("file:"))
                         ? new Path(outputDir).toUri().getPath()
