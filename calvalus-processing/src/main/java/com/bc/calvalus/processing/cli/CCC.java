@@ -16,49 +16,83 @@
 
 package com.bc.calvalus.processing.cli;
 
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.WpsConfig;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l2.L2WorkflowItem;
-import com.bc.calvalus.processing.shellexec.FileUtil;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * The Calalus Commandline Client.
+ *
+ * @author MarcoZ
  */
 public class CCC {
-    private HadoopProcessingService hps;
+    private final HadoopProcessingService hps;
 
-    public static void main(String[] args) throws IOException, WorkflowException {
-        String requestPath = args[0];
-        String requestContent = FileUtil.readFile(requestPath);
-        WpsConfig wps = new WpsConfig(requestContent);
-        CCC ccc = new CCC();
-        L2WorkflowItem workflowItem = ccc.createL2(wps);
-        workflowItem.submit();
+    public static void main(String[] args) throws Exception {
+        if (args.length < 2) {
+            showHelp(System.out);
+            System.exit(1);
+        } else {
+            CCC ccc = new CCC();
+            ccc.execute(args);
+        }
     }
 
     public CCC() throws IOException {
+        hps = createProcessingService();
+    }
+
+    private static HadoopProcessingService createProcessingService() throws IOException {
         JobConf jobConf = new JobConf();
         //TODO make this configurable
         jobConf.set("hadoop.fs.default.name", "hdfs://cvmaster00:9000");
         jobConf.set("hadoop.mapred.job.tracker", "cvmaster00:9001");
         JobClient jobClient = new JobClient(jobConf);
-        hps = new HadoopProcessingService(jobClient);
+        return new HadoopProcessingService(jobClient);
     }
 
-    private L2WorkflowItem createL2(WpsConfig wps) {
-        return new L2WorkflowItem(hps,
-                                  wps.getIdentifier(),
-                                  wps.getProcessorPackage(),
-                                  wps.getOperatorName(),
-                                  wps.getLevel2Parameters(),
-                                  JobUtils.createGeometry(wps.getGeometry()),
-                                  wps.getRequestInputPaths(),
-                                  wps.getRequestOutputDir());
+    private void execute(String[] args) throws InterruptedException, IOException {
+        String command = args[0];
+        String[] remainingArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
+        WorkflowItem workflowItem = null;
+        if (command.equals("l2")) {
+            workflowItem = new Level2WorkflowFactory().create(hps, remainingArgs);
+        } else if (command.equals("l3")) {
+            workflowItem = new Level3WorkflowFactory().create(hps, remainingArgs);
+        } else {
+            System.err.println("Unkown command: '" + command + "'");
+            System.err.println();
+            showHelp(System.out);
+            System.exit(1);
+        }
+        try {
+            workflowItem.submit();
+        } catch (WorkflowException e) {
+            System.err.println("Failed to submit job: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+        while (true) {
+            Thread.sleep(1000);
+            hps.updateStatuses();
+            ProcessStatus status = workflowItem.getStatus();
+            System.out.println(status);
+        }
+    }
+
+    private static void showHelp(PrintStream out) {
+        out.println("Usage: ccc <command> [<arguments>]");
+        out.println();
+        out.println("Available comands:");
+        //TODO maybe make this extendibe using a service ?
+        out.println("  * l2 <wpsFile.xml>  -- 'Level 2 processing'");
+        out.println("  * l3 <wpsFile.xml>  -- 'Level 3 processing'");
     }
 }
