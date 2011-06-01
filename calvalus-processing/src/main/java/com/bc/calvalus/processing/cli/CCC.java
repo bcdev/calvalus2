@@ -84,9 +84,10 @@ public class CCC {
         System.out.println("===================================");
         System.out.println("Job has been submitted.");
         System.out.println("===================================");
-        while (true) {
+        while (!workflowItem.getStatus().getState().isDone()) {
             Thread.sleep(1000);
             hps.updateStatuses();
+            workflowItem.updateStatus();
             System.out.println(workflowItem.getStatus());
         }
     }
