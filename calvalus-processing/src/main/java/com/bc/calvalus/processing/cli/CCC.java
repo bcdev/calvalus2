@@ -54,8 +54,8 @@ public class CCC {
     private static HadoopProcessingService createProcessingService() throws IOException {
         JobConf jobConf = new JobConf();
         //TODO make this configurable
-        jobConf.set("hadoop.fs.default.name", "hdfs://cvmaster00:9000");
-        jobConf.set("hadoop.mapred.job.tracker", "cvmaster00:9001");
+        jobConf.set("fs.default.name", "hdfs://cvmaster00:9000");
+        jobConf.set("mapred.job.tracker", "cvmaster00:9001");
         JobClient jobClient = new JobClient(jobConf);
         return new HadoopProcessingService(jobClient);
     }
