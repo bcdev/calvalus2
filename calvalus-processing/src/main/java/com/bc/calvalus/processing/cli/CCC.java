@@ -79,11 +79,13 @@ public class CCC {
             e.printStackTrace();
             System.exit(1);
         }
+        System.out.println("===================================");
+        System.out.println("Job has been submitted.");
+        System.out.println("===================================");
         while (true) {
             Thread.sleep(1000);
             hps.updateStatuses();
-            ProcessStatus status = workflowItem.getStatus();
-            System.out.println(status);
+            System.out.println(workflowItem.getStatus());
         }
     }
 
