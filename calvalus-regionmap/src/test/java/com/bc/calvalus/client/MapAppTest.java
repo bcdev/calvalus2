@@ -42,7 +42,7 @@ public class MapAppTest extends GWTTestCase {
 
             public void onSuccess(EncodedRegion[] result) {
                 assertNotNull(result);
-                assertEquals(29, result.length);
+                assertEquals(28, result.length);
                 finishTest();
             }
         });
