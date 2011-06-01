@@ -255,13 +255,18 @@
                             <!--<goal>deployer-undeploy</goal>-->
                         <!--</goals>-->
                     <!--</execution>-->
-                    <execution>
-                        <id>deploy-to-tomcat</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>redeploy</goal>
-                        </goals>
-                    </execution>
+
+
+                    <!-- DISABLED AUTOMATIC DEPLOYMENT-->
+                    <!--<execution>-->
+                        <!--<id>deploy-to-tomcat</id>-->
+                        <!--<phase>deploy</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>redeploy</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+
+
                     <!--<execution>-->
                         <!--<id>clean-undeploy</id>-->
                         <!--<phase>pre-clean</phase>-->
