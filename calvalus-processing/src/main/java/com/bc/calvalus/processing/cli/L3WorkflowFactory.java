@@ -27,13 +27,25 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * Level 3 workflow item factory.
  */
-public class Level3WorkflowFactory extends WpsWorkflowFactory {
+public class L3WorkflowFactory extends WpsWorkflowFactory {
+
+    @Override
+    public String getName() {
+        return "l3";
+    }
+
+    @Override
+    public String getUsage() {
+        return "l3 <wpsFile.xml>  -- 'Level 3 processing'";
+    }
 
     @Override
     public WorkflowItem create(HadoopProcessingService hps, WpsConfig wps) {
         L3Config l3Config = L3Config.fromXml(wps.getLevel3Parameters());
         Geometry geometry = JobUtils.createGeometry(wps.getGeometry());
-
+        //dates are not used for the l3 processing
+        String minDate = "";
+        String maxDate = "";
         return new L3WorkflowItem(hps,
                                   wps.getIdentifier(),
                                   wps.getProcessorPackage(),
@@ -43,8 +55,8 @@ public class Level3WorkflowFactory extends WpsWorkflowFactory {
                                   wps.getRequestInputPaths(),
                                   wps.getRequestOutputDir(),
                                   l3Config,
-                                  "",
-                                  "");
+                                  minDate,
+                                  maxDate);
     }
 
 }

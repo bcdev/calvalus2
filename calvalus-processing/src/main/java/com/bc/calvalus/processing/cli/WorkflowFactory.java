@@ -23,5 +23,10 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
  * A factory for creating workflow items.
 */
 public interface WorkflowFactory {
+
+    String getName();
+
+    String getUsage();
+
     WorkflowItem create(HadoopProcessingService hps, String[] args);
 }

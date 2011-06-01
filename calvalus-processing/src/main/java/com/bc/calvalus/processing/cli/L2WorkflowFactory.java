@@ -26,7 +26,17 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * Level 2 workflow item factory.
  */
-public class Level2WorkflowFactory extends WpsWorkflowFactory {
+public class L2WorkflowFactory extends WpsWorkflowFactory {
+
+    @Override
+    public String getName() {
+        return "l2";
+    }
+
+    @Override
+    public String getUsage() {
+        return "l2 <wpsFile.xml>  -- 'Level 2 processing'";
+    }
 
     @Override
     public WorkflowItem create(HadoopProcessingService hps, WpsConfig wps) {
@@ -41,5 +51,4 @@ public class Level2WorkflowFactory extends WpsWorkflowFactory {
                                   wps.getRequestInputPaths(),
                                   wps.getRequestOutputDir());
     }
-
 }
