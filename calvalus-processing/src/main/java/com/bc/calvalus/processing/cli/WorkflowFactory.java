@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.cli;
 
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 
@@ -28,5 +29,5 @@ public interface WorkflowFactory {
 
     String getUsage();
 
-    WorkflowItem create(HadoopProcessingService hps, String[] args);
+    WorkflowItem create(HadoopProcessingService hps, String[] args) throws WorkflowException;
 }

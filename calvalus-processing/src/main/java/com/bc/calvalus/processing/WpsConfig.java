@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.binding.dom.Xpp3DomElement;
@@ -28,6 +29,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
 
 /**
  * Encapsulation the WPS XML configuration
@@ -205,5 +207,10 @@ public class WpsConfig {
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
+    }
+
+    public static WpsConfig createFromFile(String filename) throws IOException {
+        String requestContent = FileUtil.readFile(filename);
+        return new WpsConfig(requestContent);
     }
 }

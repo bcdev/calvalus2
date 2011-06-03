@@ -73,7 +73,14 @@ public class CCC {
         String[] remainingArgs = new String[args.length - 1];
         System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
         WorkflowFactory workflowFactory = registry.getWorkflowFactory(command);
-        WorkflowItem workflowItem = workflowFactory.create(hps, remainingArgs);
+        WorkflowItem workflowItem = null;
+        try {
+            workflowItem = workflowFactory.create(hps, remainingArgs);
+        } catch (WorkflowException e) {
+            System.err.println("Failed to create workflow: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
         try {
             workflowItem.submit();
         } catch (WorkflowException e) {

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.cli;
 
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.WpsConfig;
@@ -23,10 +24,12 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.vividsolutions.jts.geom.Geometry;
 
+import java.io.IOException;
+
 /**
  * Level 2 workflow item factory.
  */
-public class L2WorkflowFactory extends WpsWorkflowFactory {
+public class L2WorkflowFactory implements WorkflowFactory {
 
     @Override
     public String getName() {
@@ -39,7 +42,14 @@ public class L2WorkflowFactory extends WpsWorkflowFactory {
     }
 
     @Override
-    public WorkflowItem create(HadoopProcessingService hps, WpsConfig wps) {
+    public WorkflowItem create(HadoopProcessingService hps, String[] args) throws WorkflowException {
+        WpsConfig wps;
+        try {
+            wps = WpsConfig.createFromFile(args[0]);
+        } catch (IOException e) {
+            throw new WorkflowException("Failed to read request file: '" + args[0] + "' " + e.getMessage(), e);
+        }
+
         Geometry geometry = JobUtils.createGeometry(wps.getGeometry());
 
         return new L2WorkflowItem(hps,

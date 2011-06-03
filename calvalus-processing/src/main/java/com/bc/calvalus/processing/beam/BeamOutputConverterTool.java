@@ -80,9 +80,7 @@ public class BeamOutputConverterTool extends Configured implements Tool {
                 Product product = reader.readProductNodes(null, null);
                 ProductIO.writeProduct(product, outputPath, ProductIO.DEFAULT_FORMAT_NAME);
             } else if (remainingArgs.length == 1) {
-                String requestFile = remainingArgs[0];
-                final String requestContent = FileUtil.readFile(requestFile);  // we need the content later on
-                WpsConfig wpsConfig = new WpsConfig(requestContent);
+                WpsConfig wpsConfig = WpsConfig.createFromFile(remainingArgs[0]);
                 String requestOutputDir = wpsConfig.getRequestOutputDir();
                 final Path outputPath = new Path(requestOutputDir);
                 final FileSystem fileSystem = outputPath.getFileSystem(getConf());
