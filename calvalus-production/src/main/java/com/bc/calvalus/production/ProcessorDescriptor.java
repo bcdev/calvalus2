@@ -7,9 +7,20 @@ import java.util.Arrays;
 public class ProcessorDescriptor {
     private String executableName;
     private String processorName;
-    private String[] defaultParameters;
+    private String[] defaultParameters;  // todo - array --> scalar
     private String bundleName;
-    private String[] bundleVersions;
+    private String[] bundleVersions;     // todo - array --> scalar
+
+    // todo - add following fields
+
+    // // Short description in XHTML
+    // String descriptionHtml;
+
+    // // List of output variables
+    // Variable[] outputVariables;
+
+    // // List of output variables
+    // String[] inputProductTypes;
 
     public ProcessorDescriptor(String executableName,
                                String processorName,
