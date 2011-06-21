@@ -10,6 +10,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -57,16 +58,34 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductSet[] getProductSets(String filter) throws ProductionException {
-        // todo - load & update from persistent storage
-        return new ProductSet[]{
-                new ProductSet("MER_RR__1P/r03/", "MERIS_RR__1P", "MERIS RR L1b (R3)"),
-                /*
-                new ProductSet("MER_RR__1P/r03/2004", "MERIS_RR__1P", "MERIS RR L1b 2004"),
-                new ProductSet("MER_RR__1P/r03/2005", "MERIS_RR__1P", "MERIS RR L1b 2005"),
-                new ProductSet("MER_RR__1P/r03/2006", "MERIS_RR__1P", "MERIS RR L1b 2006"),
-                */
-                new ProductSet("MER_FRS_1P/waqs", "MER_FRS_1P", "MERIS FRS L1b (WAQS)"),
-        };
+        ArrayList<ProductSet>  productSets = new ArrayList<ProductSet>();
+
+        try {
+            String inputPath = processingService.getDataInputPath();
+            String[] paths = processingService.listFilePaths(inputPath);
+            for (String path : paths) {
+                String id = path.substring(inputPath.length() + 1);
+                String type = id.indexOf('/') > 0 ? id.substring(0, id.indexOf('/')) : id;
+                String name = id;
+
+                String[] subPaths = processingService.listFilePaths(path);
+
+                if (subPaths.length > 1) {
+                    productSets.add(new ProductSet(id, type, name));
+                }
+
+                for (String subPath : subPaths) {
+                    String subId = subPath.substring(inputPath.length() + 1);
+                    String subName = subId;
+                    productSets.add(new ProductSet(subId, type, subName));
+                }
+
+            }
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+        }
+
+        return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
     @Override

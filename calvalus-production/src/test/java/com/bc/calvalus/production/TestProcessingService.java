@@ -37,10 +37,9 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public String[] listFilePaths(String dirPath) throws IOException {
         return new String[]{
-                dirPath + "/F1.N1",
-                dirPath + "/F2.N1",
-                dirPath + "/F3.N1",
-                dirPath + "/F4.N1",
+                dirPath + "/entry1",
+                dirPath + "/entry2",
+                dirPath + "/entry3",
         };
     }
 

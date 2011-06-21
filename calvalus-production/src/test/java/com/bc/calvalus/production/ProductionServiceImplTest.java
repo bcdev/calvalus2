@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Before;
@@ -31,7 +32,26 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testOrderProduction() throws Exception {
+    public void testGetProductSets() throws ProductionException {
+        ProductSet[] productSets = productionServiceUnderTest.getProductSets(null);
+        assertNotNull(productSets);
+        assertEquals(3 + 3 * 3, productSets.length);
+        assertEquals("entry1", productSets[0].getId());
+        assertEquals("entry1/entry1", productSets[1].getId());
+        assertEquals("entry1/entry2", productSets[2].getId());
+        assertEquals("entry1/entry3", productSets[3].getId());
+        assertEquals("entry2", productSets[4].getId());
+        assertEquals("entry2/entry1", productSets[5].getId());
+        assertEquals("entry2/entry2", productSets[6].getId());
+        assertEquals("entry2/entry3", productSets[7].getId());
+        assertEquals("entry3", productSets[8].getId());
+        assertEquals("entry3/entry1", productSets[9].getId());
+        assertEquals("entry3/entry2", productSets[10].getId());
+        assertEquals("entry3/entry3", productSets[11].getId());
+    }
+
+    @Test
+    public void testOrderProduction() throws ProductionException {
 
         ProductionRequest request = new ProductionRequest("test", "ewa");
         ProductionResponse productionResponse = productionServiceUnderTest.orderProduction(request);
@@ -49,7 +69,7 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testOrderUnknownProductionType() throws Exception {
+    public void testOrderUnknownProductionType() throws ProductionException {
         try {
             productionServiceUnderTest.orderProduction(new ProductionRequest("erase-hdfs", "devil"));
             fail("ProductionException expected, since 'erase-hdfs' is not a valid production type");
