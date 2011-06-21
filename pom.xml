@@ -33,7 +33,7 @@
         <!--<module>calvalus-trend</module>-->
 
         <!-- Experimental code. Parts may become productive code later. -->
-        <module>calvalus-experiments</module>
+        <!--<module>calvalus-experiments</module>-->
 
         <!-- Experimental code. Parts may become productive code later. -->
 		<module>calvalus-regionmap</module>
