@@ -24,7 +24,7 @@ public class ManageProductSetsView extends PortalView {
         ListBox inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
         for (GsProductSet productSet : portalContext.getProductSets()) {
-            inputProductSet.addItem(productSet.getName(), productSet.getId());
+            inputProductSet.addItem(productSet.getName(), productSet.getPath());
         }
         inputProductSet.setWidth("20em");
         inputProductSet.setVisibleItemCount(6);

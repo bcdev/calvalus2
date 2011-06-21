@@ -170,7 +170,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private GsProductSet convert(ProductSet productSet) {
-        return new GsProductSet(productSet.getId(), productSet.getType(), productSet.getName());
+        return new GsProductSet(productSet.getPath(), productSet.getType(), productSet.getName());
     }
 
     private GsProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {

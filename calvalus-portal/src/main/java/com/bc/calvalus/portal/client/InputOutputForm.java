@@ -27,7 +27,7 @@ public class InputOutputForm implements IsWidget {
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
         for (GsProductSet productSet : productSets) {
-            inputProductSet.addItem(productSet.getName(), productSet.getId());
+            inputProductSet.addItem(productSet.getName(), productSet.getPath());
         }
         inputProductSet.setWidth("20em");
         inputProductSet.setVisibleItemCount(6);

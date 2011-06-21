@@ -8,7 +8,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class GsProductSet implements IsSerializable {
-    private String id;
+    private String path;
     private String type;
     private String name;
 
@@ -20,13 +20,13 @@ public class GsProductSet implements IsSerializable {
     }
 
     public GsProductSet(String id, String type, String name) {
-        this.id = id;
+        this.path = id;
         this.type = type;
         this.name = name;
     }
 
-    public String getId() {
-        return id;
+    public String getPath() {
+        return path;
     }
 
     public String getType() {

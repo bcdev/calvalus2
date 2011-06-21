@@ -64,20 +64,20 @@ public class ProductionServiceImpl implements ProductionService {
             String inputPath = processingService.getDataInputPath();
             String[] paths = processingService.listFilePaths(inputPath);
             for (String path : paths) {
-                String id = path.substring(inputPath.length() + 1);
-                String type = id.indexOf('/') > 0 ? id.substring(0, id.indexOf('/')) : id;
-                String name = id;
+                String relPath = path.substring(inputPath.length() + 1);
+                String type = relPath.indexOf('/') > 0 ? relPath.substring(0, relPath.indexOf('/')) : relPath;
+                String name = relPath;
 
                 String[] subPaths = processingService.listFilePaths(path);
 
                 if (subPaths.length > 1) {
-                    productSets.add(new ProductSet(id, type, name));
+                    productSets.add(new ProductSet(relPath, type, name));
                 }
 
                 for (String subPath : subPaths) {
-                    String subId = subPath.substring(inputPath.length() + 1);
-                    String subName = subId;
-                    productSets.add(new ProductSet(subId, type, subName));
+                    String subRelPath= subPath.substring(inputPath.length() + 1);
+                    String subName = subRelPath;
+                    productSets.add(new ProductSet(subRelPath, type, subName));
                 }
 
             }
