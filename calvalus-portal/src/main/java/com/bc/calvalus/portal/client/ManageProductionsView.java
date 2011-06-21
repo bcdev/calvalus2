@@ -120,6 +120,8 @@ public class ManageProductionsView extends PortalView {
                             i++;
                         }
                         ScrollPanel scrollPanel = new ScrollPanel(flexTable);
+                        scrollPanel.setWidth("360px");
+                        scrollPanel.setHeight("360px");
                         Dialog.showMessage(production.getId(), scrollPanel);
                     }
                 };
