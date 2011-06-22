@@ -6,10 +6,14 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.bc.io.IOUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,6 +94,35 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
+        ArrayList<ProcessorDescriptor> processorDescriptors = new ArrayList<ProcessorDescriptor>();
+
+        try {
+            String softwarePath = processingService.getSoftwarePath();
+            String[] paths = processingService.listFilePaths(softwarePath);
+            for (String path : paths) {
+                String[] subPaths = processingService.listFilePaths(path);
+                for (String subPath : subPaths) {
+                    if (subPath.endsWith("ProcessorDescriptor.xml")) {
+                        try {
+                            InputStream is = processingService.open(subPath);
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            IOUtils.copyBytes(is, baos);
+                            String xmlContent = baos.toString();
+                            ProcessorDescriptor pd = new ProcessorDescriptor();
+                            BeamUtils.convertXmlToObject(xmlContent, pd);
+                            processorDescriptors.add(pd);
+                        } catch (Exception e) {
+                            logger.warning(e.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+        }
+
+        return processorDescriptors.toArray(new ProcessorDescriptor[processorDescriptors.size()]);
+
         // todo - load & update from persistent storage
 //        return new ProcessorDescriptor[]{
 //                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
@@ -101,31 +134,31 @@ public class ProductionServiceImpl implements ProductionService {
 //                                        "beam-lkn",
 //                                        new String[]{"1.0-SNAPSHOT"}),
 //        };
-        return new ProcessorDescriptor[]{
-                new ProcessorDescriptor("CoastColour.L2W",
-                                        "MERIS CoastColour",
-                                        "<parameters>\n" +
-                                                "  <useIdepix>false</useIdepix>\n" +
-                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                "  <outputReflec>false</outputReflec>\n" +
-                                                "</parameters>",
-                                        "coastcolour-processing",
-                                        "0.5-SNAPSHOT"),
-                new ProcessorDescriptor("CoastColour.L2W",
-                                        "MERIS CoastColour",
-                                        "<parameters>\n" +
-                                                "  <doCalibration>true</doCalibration>\n" +
-                                                "  <doSmile>true</doSmile>\n" +
-                                                "  <doEqualization>true</doEqualization>\n" +
-                                                "  <useIdepix>false</useIdepix>\n" +
-                                                "  <algorithm>CoastColour</algorithm>\n" +
-                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
-                                                "  <outputReflec>true</outputReflec>\n" +
-                                                "</parameters>",
-                                        "coastcolour-processing",
-                                        "1.0-SNAPSHOT")
-        };
+//        return new ProcessorDescriptor[]{
+//                new ProcessorDescriptor("CoastColour.L2W",
+//                                        "MERIS CoastColour",
+//                                        "<parameters>\n" +
+//                                                "  <useIdepix>false</useIdepix>\n" +
+//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+//                                                "  <outputReflec>false</outputReflec>\n" +
+//                                                "</parameters>",
+//                                        "coastcolour-processing",
+//                                        "0.5-SNAPSHOT"),
+//                new ProcessorDescriptor("CoastColour.L2W",
+//                                        "MERIS CoastColour",
+//                                        "<parameters>\n" +
+//                                                "  <doCalibration>true</doCalibration>\n" +
+//                                                "  <doSmile>true</doSmile>\n" +
+//                                                "  <doEqualization>true</doEqualization>\n" +
+//                                                "  <useIdepix>false</useIdepix>\n" +
+//                                                "  <algorithm>CoastColour</algorithm>\n" +
+//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+//                                                "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
+//                                                "  <outputReflec>true</outputReflec>\n" +
+//                                                "</parameters>",
+//                                        "coastcolour-processing",
+//                                        "1.0-SNAPSHOT")
+//        };
     }
 
     @Override

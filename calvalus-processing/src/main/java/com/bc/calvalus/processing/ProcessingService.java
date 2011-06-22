@@ -3,6 +3,7 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.commons.ProcessStatus;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Service offered by some processing system. Includes basic data access and job management.
@@ -17,7 +18,11 @@ public interface ProcessingService<JOBID> {
 
     String getDataOutputPath();
 
+    String getSoftwarePath();
+
     String[] listFilePaths(String dirPath) throws IOException;
+
+    InputStream open(String path) throws IOException;
 
     ProcessStatus getJobStatus(JOBID jobid);
 

@@ -6,7 +6,9 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 import org.junit.Ignore;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 /**
@@ -35,12 +37,22 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
+    public String getSoftwarePath() {
+        return "hdfs://cvmaster00:9000/calvalus/software/0.5";
+    }
+
+    @Override
     public String[] listFilePaths(String dirPath) throws IOException {
         return new String[]{
                 dirPath + "/entry1",
                 dirPath + "/entry2",
                 dirPath + "/entry3",
         };
+    }
+
+    @Override
+    public InputStream open(String path) throws IOException {
+        return new ByteArrayInputStream("dummy".getBytes());
     }
 
     @Override

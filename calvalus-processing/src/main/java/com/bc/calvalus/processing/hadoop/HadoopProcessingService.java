@@ -18,6 +18,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +34,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final FileSystem fileSystem;
     private final Path dataInputPath;
     private final Path dataOutputPath;
+    private final Path softwarePath;
     private final Map<JobID, ProcessStatus> jobStatusMap;
 
     public HadoopProcessingService(JobClient jobClient) throws IOException {
@@ -41,6 +43,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         // String fsName = jobClient.getConf().get("fs.default.name");
         this.dataInputPath = fileSystem.makeQualified(new Path(CALVALUS_EODATA_PATH));
         this.dataOutputPath = fileSystem.makeQualified(new Path(CALVALUS_OUTPUTS_PATH));
+        this.softwarePath = fileSystem.makeQualified(new Path(CALVALUS_SOFTWARE_PATH));
         jobStatusMap = new HashMap<JobID, ProcessStatus>();
     }
 
@@ -101,6 +104,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
+    public InputStream open(String path) throws IOException {
+        return fileSystem.open(new Path(path));
+    }
+
+    @Override
     public String getDataInputPath() {
         return dataInputPath.toString();
     }
@@ -108,6 +116,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     @Override
     public String getDataOutputPath() {
         return dataOutputPath.toString();
+    }
+
+    @Override
+    public String getSoftwarePath() {
+        return softwarePath.toString();
     }
 
     @Override

@@ -6,7 +6,9 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,8 +45,18 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
+    public String getSoftwarePath() {
+        return new File(System.getProperty("user.home"), ".calvalus/test-software").getPath();
+    }
+
+    @Override
     public String[] listFilePaths(String dirPath) throws IOException {
         return new File(dirPath).list();
+    }
+
+    @Override
+    public InputStream open(String path) throws IOException {
+        return new FileInputStream(path);
     }
 
     @Override
