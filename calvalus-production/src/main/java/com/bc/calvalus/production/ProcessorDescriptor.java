@@ -22,6 +22,14 @@ public class ProcessorDescriptor {
     // // List of output variables
     // String[] inputProductTypes;
 
+    // todo - use
+    public static class Variable {
+        String name;
+        String defaultAggregator;
+        String defaultValidMask;
+        String defaultWeightCoeff;
+    }
+
     public ProcessorDescriptor(String executableName,
                                String processorName,
                                String defaultParameters,
