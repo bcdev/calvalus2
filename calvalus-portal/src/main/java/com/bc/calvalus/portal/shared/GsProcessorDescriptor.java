@@ -2,8 +2,6 @@ package com.bc.calvalus.portal.shared;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-import java.util.Arrays;
-
 /**
  * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessorDescriptor} class.
  *
@@ -12,9 +10,9 @@ import java.util.Arrays;
 public class GsProcessorDescriptor implements IsSerializable {
     private String executableName;
     private String processorName;
-    private String[] defaultParameters;
+    private String defaultParameter;
     private String bundleName;
-    private String[] bundleVersions;
+    private String bundleVersion;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -24,14 +22,14 @@ public class GsProcessorDescriptor implements IsSerializable {
 
     public GsProcessorDescriptor(String executableName,
                                  String processorName,
-                                 String[] defaultParameters,
+                                 String defaultParameter,
                                  String bundleName,
-                                 String[] bundleVersions) {
+                                 String bundleVersion) {
         this.executableName = executableName;
         this.processorName = processorName;
-        this.defaultParameters = defaultParameters;
+        this.defaultParameter = defaultParameter;
         this.bundleName = bundleName;
-        this.bundleVersions = bundleVersions;
+        this.bundleVersion = bundleVersion;
     }
 
     public String getExecutableName() {
@@ -42,15 +40,15 @@ public class GsProcessorDescriptor implements IsSerializable {
         return processorName;
     }
 
-    public String[] getDefaultParameters() {
-        return defaultParameters;
+    public String getDefaultParameter() {
+        return defaultParameter;
     }
 
     public String getBundleName() {
         return bundleName;
     }
 
-    public String[] getBundleVersions() {
-        return bundleVersions;
+    public String getBundleVersion() {
+        return bundleVersion;
     }
 }

@@ -175,8 +175,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private GsProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
         return new GsProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
-                                         processorDescriptor.getDefaultParameters(), processorDescriptor.getBundleName(),
-                                         processorDescriptor.getBundleVersions());
+                                         processorDescriptor.getDefaultParameter(), processorDescriptor.getBundleName(),
+                                         processorDescriptor.getBundleVersion());
     }
 
     private GsProduction convert(Production production) {

@@ -93,7 +93,7 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.put("outputFormat", inputOutputForm.getOutputFormat());
         parameters.put("autoStaging", inputOutputForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
-        parameters.put("processorBundleVersion", l2ProcessorForm.getBundleVersion());
+        parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", l2ProcessorForm.getProcessorParameters());
         parameters.putAll(l3ParametersForm.getValueMap());

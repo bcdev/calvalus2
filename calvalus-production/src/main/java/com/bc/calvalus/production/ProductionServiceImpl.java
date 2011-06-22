@@ -58,7 +58,7 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductSet[] getProductSets(String filter) throws ProductionException {
-        ArrayList<ProductSet>  productSets = new ArrayList<ProductSet>();
+        ArrayList<ProductSet> productSets = new ArrayList<ProductSet>();
 
         try {
             String inputPath = processingService.getDataInputPath();
@@ -75,7 +75,7 @@ public class ProductionServiceImpl implements ProductionService {
                 }
 
                 for (String subPath : subPaths) {
-                    String subRelPath= subPath.substring(inputPath.length() + 1);
+                    String subRelPath = subPath.substring(inputPath.length() + 1);
                     String subName = subRelPath;
                     productSets.add(new ProductSet(subRelPath, type, subName));
                 }
@@ -102,29 +102,29 @@ public class ProductionServiceImpl implements ProductionService {
 //                                        new String[]{"1.0-SNAPSHOT"}),
 //        };
         return new ProcessorDescriptor[]{
-                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
-                                        new String[]{
-                                                "<parameters>\n" +
-                                                        "  <useIdepix>false</useIdepix>\n" +
-                                                        "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                        "  <outputReflec>false</outputReflec>\n" +
-                                                        "</parameters>",
-                                                "<parameters>\n" +
-                                                        "  <doCalibration>true</doCalibration>\n" +
-                                                        "  <doSmile>true</doSmile>\n" +
-                                                        "  <doEqualization>true</doEqualization>\n" +
-                                                        "  <useIdepix>false</useIdepix>\n" +
-                                                        "  <algorithm>CoastColour</algorithm>\n" +
-                                                        "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-                                                        "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
-                                                        "  <outputReflec>true</outputReflec>\n" +
-                                                        "</parameters>"
-                                        },
+                new ProcessorDescriptor("CoastColour.L2W",
+                                        "MERIS CoastColour",
+                                        "<parameters>\n" +
+                                                "  <useIdepix>false</useIdepix>\n" +
+                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                                "  <outputReflec>false</outputReflec>\n" +
+                                                "</parameters>",
                                         "coastcolour-processing",
-                                        new String[]{
-                                                "0.5-SNAPSHOT",
-                                                "1.0-SNAPSHOT"
-                                        }),
+                                        "0.5-SNAPSHOT"),
+                new ProcessorDescriptor("CoastColour.L2W",
+                                        "MERIS CoastColour",
+                                        "<parameters>\n" +
+                                                "  <doCalibration>true</doCalibration>\n" +
+                                                "  <doSmile>true</doSmile>\n" +
+                                                "  <doEqualization>true</doEqualization>\n" +
+                                                "  <useIdepix>false</useIdepix>\n" +
+                                                "  <algorithm>CoastColour</algorithm>\n" +
+                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
+                                                "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
+                                                "  <outputReflec>true</outputReflec>\n" +
+                                                "</parameters>",
+                                        "coastcolour-processing",
+                                        "1.0-SNAPSHOT")
         };
     }
 

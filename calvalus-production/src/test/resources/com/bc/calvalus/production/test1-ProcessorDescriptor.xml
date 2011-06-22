@@ -1,0 +1,36 @@
+<processorDescriptor>
+    <executableName>CoastColour.L2W</executableName>
+    <processorName>MERIS CoastColour</processorName>
+    <bundleName>coastcolour-processing</bundleName>
+    <bundleVersion>0.5-SNAPSHOT</bundleVersion>
+    <defaultParameter>
+        <![CDATA[
+<parameters>
+    <useIdepix>false</useIdepix>
+    <landExpression>l1_flags.LAND_OCEAN</landExpression>
+    <outputReflec>false</outputReflec>
+</parameters>
+    ]]>
+    </defaultParameter>
+    <outputFormats>N1,NetCDF</outputFormats>
+    <descriptionHtml>
+        <![CDATA[
+<p>
+<h1>This is a cool processor</h1>
+done by the cool folks at Brockmann-Consult.
+</p>
+      ]]>
+    </descriptionHtml>
+    <inputProductTypes>MER__RR_1P,MER__FR_1P,MER_FSG_1P</inputProductTypes>
+    <outputVariables>
+        <outputVariable>
+            <name>l1_flags</name>
+        </outputVariable>
+        <outputVariable>
+            <name>chl_conc</name>
+            <defaultAggregator>AVG_ML</defaultAggregator>
+            <defaultValidMask>!l1_flags.INVALID</defaultValidMask>
+            <defaultWeightCoeff>0.5</defaultWeightCoeff>
+        </outputVariable>
+    </outputVariables>
+</processorDescriptor>

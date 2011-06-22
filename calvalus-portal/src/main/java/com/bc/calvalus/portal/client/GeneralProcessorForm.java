@@ -27,7 +27,6 @@ public class GeneralProcessorForm implements IsWidget {
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
     private ListBox processorName;
     private TextArea processorParameters;
-    private ListBox bundleVersion;
     private FileUpload fileUpload;
     private DecoratorPanel widget;
     private FormPanel uploadForm;
@@ -38,9 +37,9 @@ public class GeneralProcessorForm implements IsWidget {
 
         processorName = new ListBox();
         processorName.setName("processorName");
-        processorName.setWidth("25em");
+        processorName.setWidth("30em");
         for (GsProcessorDescriptor processor : processors) {
-            String label = processor.getProcessorName() + " (from " + processor.getBundleName() + ")";
+            String label = processor.getProcessorName() + " (from " + processor.getBundleName() + "-" + processor.getBundleVersion() + ")";
             this.processorName.addItem(label, processor.getExecutableName());
         }
         if (this.processors.length > 0) {
@@ -50,7 +49,6 @@ public class GeneralProcessorForm implements IsWidget {
         processorName.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                updateProcessorVersionsWidget();
                 updateParametersWidget();
             }
         });
@@ -60,17 +58,6 @@ public class GeneralProcessorForm implements IsWidget {
         processorParameters.setWidth("35em");
         processorParameters.setVisibleLines(16);
 
-        bundleVersion = new ListBox();
-        bundleVersion.setName("bundleVersion");
-        bundleVersion.setVisibleItemCount(3);
-        bundleVersion.setWidth("10em");
-        bundleVersion.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                updateParametersWidget();
-            }
-        });
-
         fileUpload = new FileUpload();
         fileUpload.setName("fileUpload");
         fileUpload.addChangeHandler(new FileUploadChangeHandler());
@@ -78,7 +65,6 @@ public class GeneralProcessorForm implements IsWidget {
         HorizontalPanel processorPanel = new HorizontalPanel();
         processorPanel.setSpacing(2);
         processorPanel.add(UIUtils.createLabeledWidgetV("Processor:", processorName));
-        processorPanel.add(UIUtils.createLabeledWidgetV("Version:", bundleVersion));
 
         uploadForm = new FormPanel();
         uploadForm.setWidget(UIUtils.createLabeledWidgetH("From file:", fileUpload));
@@ -122,7 +108,6 @@ public class GeneralProcessorForm implements IsWidget {
         widget.setWidget(layout);
 
         if (this.processors.length > 0) {
-            updateProcessorVersionsWidget();
             updateParametersWidget();
         }
     }
@@ -130,11 +115,6 @@ public class GeneralProcessorForm implements IsWidget {
     public GsProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorName.getSelectedIndex();
         return processors[selectedIndex];
-    }
-
-    public String getBundleVersion() {
-        int processorVersionIndex = bundleVersion.getSelectedIndex();
-        return bundleVersion.getValue(processorVersionIndex);
     }
 
     public String getProcessorParameters() {
@@ -146,23 +126,10 @@ public class GeneralProcessorForm implements IsWidget {
         return widget;
     }
 
-    void updateProcessorVersionsWidget() {
-        bundleVersion.clear();
-        GsProcessorDescriptor selectedProcessor = getSelectedProcessor();
-        String[] versions = selectedProcessor.getBundleVersions();
-        for (String version : versions) {
-            bundleVersion.addItem(version);
-        }
-        if (versions.length > 0) {
-            bundleVersion.setSelectedIndex(0);
-        }
-    }
-
     private void updateParametersWidget() {
-        int selectedIndex = bundleVersion.getSelectedIndex();
+        int selectedIndex = processorName.getSelectedIndex();
         if (selectedIndex >= 0) {
-            String[] defaultParameters = getSelectedProcessor().getDefaultParameters();
-            processorParameters.setValue(defaultParameters[selectedIndex]);
+            processorParameters.setValue(getSelectedProcessor().getDefaultParameter());
         }
     }
 

@@ -2,7 +2,6 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.bc.calvalus.portal.shared.GsProductionRequest;
-import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
@@ -86,7 +85,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         parameters.put("outputFormat", inputOutputForm.getOutputFormat());
         parameters.put("autoStaging", inputOutputForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
-        parameters.put("processorBundleVersion", processingForm.getBundleVersion());
+        parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processingForm.getProcessorParameters());
         parameters.putAll(productFilterForm.getValueMap());
