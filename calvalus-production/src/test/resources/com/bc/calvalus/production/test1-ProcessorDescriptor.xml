@@ -12,7 +12,7 @@
 </parameters>
     ]]>
     </defaultParameter>
-    <outputFormats>N1,NetCDF</outputFormats>
+    <outputFormats>BEAM-DIMAP,NetCDF,GeoTIFF</outputFormats>
     <descriptionHtml>
         <![CDATA[
 <p>
@@ -21,7 +21,7 @@ done by the cool folks at Brockmann-Consult.
 </p>
       ]]>
     </descriptionHtml>
-    <inputProductTypes>MER__RR_1P,MER__FR_1P,MER_FSG_1P</inputProductTypes>
+    <inputProductTypes>MER_RR__1P,MER_FR__1P,MER_FSG_1P</inputProductTypes>
     <outputVariables>
         <outputVariable>
             <name>l1_flags</name>

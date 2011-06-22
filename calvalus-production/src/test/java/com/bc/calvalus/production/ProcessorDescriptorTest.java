@@ -53,9 +53,10 @@ public class ProcessorDescriptorTest {
 
         String[] outputFormats = processorDescriptor.getOutputFormats();
         assertNotNull(outputFormats);
-        assertEquals(2, outputFormats.length);
-        assertEquals("N1", outputFormats[0]);
+        assertEquals(3, outputFormats.length);
+        assertEquals("BEAM-DIMAP", outputFormats[0]);
         assertEquals("NetCDF", outputFormats[1]);
+        assertEquals("GeoTIFF", outputFormats[2]);
 
         String descriptionHtml = processorDescriptor.getDescriptionHtml().trim();
         String expectedDescription = "<p>\n" +
@@ -67,8 +68,8 @@ public class ProcessorDescriptorTest {
         String[] inputProductTypes = processorDescriptor.getInputProductTypes();
         assertNotNull(inputProductTypes);
         assertEquals(3, inputProductTypes.length);
-        assertEquals("MER__RR_1P", inputProductTypes[0]);
-        assertEquals("MER__FR_1P", inputProductTypes[1]);
+        assertEquals("MER_RR__1P", inputProductTypes[0]);
+        assertEquals("MER_FR__1P", inputProductTypes[1]);
         assertEquals("MER_FSG_1P", inputProductTypes[2]);
 
         ProcessorDescriptor.Variable[] outputVariables = processorDescriptor.getOutputVariables();
