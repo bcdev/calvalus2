@@ -39,6 +39,11 @@ public class SequenceFileBinIteratorTest {
         fs = FileSystem.getLocal(conf);
     }
 
+    @After
+    public void tearDown() throws Exception {
+        fs.deleteOnExit(PATH);
+    }
+
     @Test
     public void testIO() throws Exception {
         SequenceFile.Writer writer = SequenceFile.createWriter(fs,
