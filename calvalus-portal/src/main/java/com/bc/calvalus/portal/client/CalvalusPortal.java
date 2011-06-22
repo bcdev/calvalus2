@@ -65,7 +65,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
          * The first parameter should be a valid Maps API Key to deploy this
          * application on a public server, but a blank key will work for an
          * application served from localhost.
-        */
+         *
+         * IMPORTANT NOTE: The Maps API key has been generated for the site http://www.brockmann-consult.de/calvalus
+         * (see http://code.google.com/intl/de-DE/apis/maps/signup.html)
+         */
         Maps.loadMapsApi("ABQIAAAAoao5tcl7_u-gWl5HesZlmxSaer1-qP4ShOWPxJ58G8ekwdxdChSvOI8heCGc9YiMEXrF-nwn0BHQ_A", "2", false, new Runnable() {
             public void run() {
                 backendService.getRegions(NO_FILTER, new InitRegionsCallback());
