@@ -66,7 +66,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
          * application on a public server, but a blank key will work for an
          * application served from localhost.
         */
-        Maps.loadMapsApi("", "2", false, new Runnable() {
+        Maps.loadMapsApi("ABQIAAAAoao5tcl7_u-gWl5HesZlmxSaer1-qP4ShOWPxJ58G8ekwdxdChSvOI8heCGc9YiMEXrF-nwn0BHQ_A", "2", false, new Runnable() {
             public void run() {
                 backendService.getRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
