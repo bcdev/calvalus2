@@ -10,6 +10,7 @@ public class ProcessorDescriptor {
     private String[] defaultParameters;  // todo - array --> scalar
     private String bundleName;
     private String[] bundleVersions;     // todo - array --> scalar
+    private String[] outputFormats; // todo - support
 
     // todo - add following fields
 
