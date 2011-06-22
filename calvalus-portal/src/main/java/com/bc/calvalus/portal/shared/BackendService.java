@@ -8,6 +8,16 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendService extends RemoteService {
+
+    /**
+     * Gets all known regions.
+     *
+     * @param filter A filter expression (not yet used).
+     * @return The array of regions.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    GsRegion[] getRegions(String filter) throws BackendServiceException;
+
     /**
      * Gets all known product sets.
      *

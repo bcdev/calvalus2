@@ -5,9 +5,9 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.bc.calvalus.portal.shared.GsProductSet;
 import com.bc.calvalus.portal.shared.GsProduction;
+import com.bc.calvalus.portal.shared.GsRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.Maps;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
@@ -15,7 +15,9 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.DecoratedTabPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
@@ -38,6 +40,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private boolean initialised;
 
     // Data provided by various external services
+    private GsRegion[] regions;
     private GsProductSet[] productSets;
     private GsProcessorDescriptor[] processors;
     private ListDataProvider<GsProduction> productions;
@@ -56,20 +59,26 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public void onModuleLoad() {
 
-       /*
-        * Asynchronously loads the Maps API.
-        *
-        * The first parameter should be a valid Maps API Key to deploy this
-        * application on a public server, but a blank key will work for an
-        * application served from localhost.
-       */
-       Maps.loadMapsApi("", "2", false, new Runnable() {
-           public void run() {
-               backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
-               backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
-               backendService.getProductions(NO_FILTER, new InitProductionsCallback());
-           }
-       });
+        /*
+         * Asynchronously loads the Maps API.
+         *
+         * The first parameter should be a valid Maps API Key to deploy this
+         * application on a public server, but a blank key will work for an
+         * application served from localhost.
+        */
+        Maps.loadMapsApi("", "2", false, new Runnable() {
+            public void run() {
+                backendService.getRegions(NO_FILTER, new InitRegionsCallback());
+                backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
+                backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
+                backendService.getProductions(NO_FILTER, new InitProductionsCallback());
+            }
+        });
+    }
+
+    @Override
+    public GsRegion[] getRegions() {
+        return regions;
     }
 
     @Override
@@ -108,12 +117,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private void initFrontend() {
 
         views = new PortalView[]{
-// todo nf/nf 20110414 add ManageProductSetsView
-//                new ManageProductSetsView(this),
                 new OrderL2ProductionView(this),
                 new OrderL3ProductionView(this),
                 new OrderTAProductionView(this),
                 new ManageProductionsView(this),
+                new ManageRegionsView(this),
                 new FrameView(this, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"),
                 new FrameView(this, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
         };
@@ -159,7 +167,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private boolean isAllInputDataAvailable() {
-        return productSets != null
+        return regions != null
+                && productSets != null
                 && processors != null
                 && productions != null;
     }
@@ -227,6 +236,21 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     }
                 });
         return mainMenu;
+    }
+
+    private class InitRegionsCallback implements AsyncCallback<GsRegion[]> {
+        @Override
+        public void onSuccess(GsRegion[] regions) {
+            CalvalusPortal.this.regions = regions;
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Window.alert("Error!\n" + caught.getMessage());
+            CalvalusPortal.this.regions = new GsRegion[0];
+        }
     }
 
     private class InitProductSetsCallback implements AsyncCallback<GsProductSet[]> {

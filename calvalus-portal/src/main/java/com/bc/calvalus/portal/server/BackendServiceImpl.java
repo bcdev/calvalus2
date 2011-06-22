@@ -12,6 +12,7 @@ import com.bc.calvalus.portal.shared.GsProductSet;
 import com.bc.calvalus.portal.shared.GsProduction;
 import com.bc.calvalus.portal.shared.GsProductionRequest;
 import com.bc.calvalus.portal.shared.GsProductionResponse;
+import com.bc.calvalus.portal.shared.GsRegion;
 import com.bc.calvalus.production.ProcessorDescriptor;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -24,7 +25,11 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -75,6 +80,36 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
         super.destroy();
     }
+
+    @Override
+    public GsRegion[] getRegions(String filter) throws BackendServiceException {
+        Properties properties;
+        try {
+            properties = loadRegions();
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to load regions.", e);
+        }
+        ArrayList<GsRegion> regions = new ArrayList<GsRegion>();
+        Set<String> regionNames = properties.stringPropertyNames();
+        for (String regionName : regionNames) {
+            String regionWKT = properties.getProperty(regionName);
+            GsRegion region = new GsRegion(regionName, regionWKT);
+            regions.add(region);
+        }
+        return regions.toArray(new GsRegion[regions.size()]);
+    }
+
+    private Properties loadRegions() throws IOException {
+        Properties properties = new Properties();
+        InputStream stream = getClass().getResourceAsStream("regions.properties");
+        try {
+            properties.load(stream);
+        } finally {
+            stream.close();
+        }
+        return properties;
+    }
+
 
     @Override
     public GsProductSet[] getProductSets(String filter) throws BackendServiceException {
