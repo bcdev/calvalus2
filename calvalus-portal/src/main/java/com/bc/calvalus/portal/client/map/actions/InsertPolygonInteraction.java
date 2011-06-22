@@ -64,7 +64,7 @@ public class InsertPolygonInteraction extends MapInteraction implements MapClick
                 mapWidget.removeOverlay(polyline);
                 polyline = null;
                 Region region = Region.createUserRegion(polygon);
-                regionMap.getRegionModel().getRegionProvider().getList().add(0, region);
+                regionMap.getRegionModel().getRegionList().getList().add(0, region);
                 regionMap.getRegionSelectionModel().clearSelection();
                 regionMap.getRegionSelectionModel().setSelected(region, true);
                 // Interaction complete, invoke the actual action.

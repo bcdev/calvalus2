@@ -1,5 +1,7 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.client.map.Region;
+import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
@@ -24,6 +26,7 @@ import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,7 +43,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private boolean initialised;
 
     // Data provided by various external services
-    private GsRegion[] regions;
+    private ListDataProvider<Region> regions;
     private GsProductSet[] productSets;
     private GsProcessorDescriptor[] processors;
     private ListDataProvider<GsProduction> productions;
@@ -80,7 +83,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
-    public GsRegion[] getRegions() {
+    public ListDataProvider<Region> getRegions() {
         return regions;
     }
 
@@ -244,7 +247,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private class InitRegionsCallback implements AsyncCallback<GsRegion[]> {
         @Override
         public void onSuccess(GsRegion[] regions) {
-            CalvalusPortal.this.regions = regions;
+            List<Region> regionList = RegionConverter.decodeRegions(regions);
+            CalvalusPortal.this.regions = new ListDataProvider<Region>(regionList);
             maybeInitFrontend();
         }
 
@@ -252,7 +256,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.regions = new GsRegion[0];
+            CalvalusPortal.this.regions = new ListDataProvider<Region>();
         }
     }
 

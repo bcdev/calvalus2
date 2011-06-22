@@ -66,7 +66,7 @@ public class InsertBoxInteraction extends MapInteraction implements MapClickHand
             mapWidget.removeOverlay(polyline);
             polyline = null;
             Region region = Region.createUserRegion(polygon);
-            regionMap.getRegionModel().getRegionProvider().getList().add(0, region);
+            regionMap.getRegionModel().getRegionList().getList().add(0, region);
             regionMap.getRegionSelectionModel().clearSelection();
             regionMap.getRegionSelectionModel().setSelected(region, true);
             run(regionMap);

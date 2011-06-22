@@ -1,6 +1,8 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.client.map.Region;
 import com.google.gwt.junit.client.GWTTestCase;
+import com.google.gwt.view.client.ListDataProvider;
 
 import java.util.Map;
 
@@ -10,7 +12,7 @@ public class L3ParametersFormTest extends GWTTestCase {
     }
 
     public void testValueMap() {
-        L3ParametersForm l3ParametersPanel = new L3ParametersForm();
+        L3ParametersForm l3ParametersPanel = new L3ParametersForm(new ListDataProvider<Region>());
         Map<String, String> valueMap = l3ParametersPanel.getValueMap();
         assertNotNull(valueMap);
         assertEquals(15, valueMap.size());

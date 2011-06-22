@@ -1,20 +1,13 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsRegion;
-import com.google.gwt.dom.client.Style;
+import com.bc.calvalus.portal.client.map.Region;
+import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.maps.client.InfoWindowContent;
-import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.control.SmallMapControl;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.DecoratorPanel;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
@@ -24,10 +17,10 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
+import com.google.gwt.view.client.ListDataProvider;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -59,14 +52,10 @@ public class L3ParametersForm implements IsWidget {
     private DoubleBox maxLat;
     private DoubleBox resolution;
     private IntegerBox superSampling;
-    private ListBox predefinedRegions;
+    private RegionMapWidget predefinedRegions;
     private CheckBox useBoundingBox;
 
-    public L3ParametersForm() {
-        this(getDefaultRegions());
-    }
-
-    public L3ParametersForm(GsRegion[] regions) {
+    public L3ParametersForm(ListDataProvider<Region> regions) {
 
         inputVariables = new ListBox();
         inputVariables.addItem("chl_conc");
@@ -160,11 +149,8 @@ public class L3ParametersForm implements IsWidget {
         maxLat.setValue(56.5);
         maxLat.setWidth("6em");
 
-        predefinedRegions = new ListBox(true);
-        predefinedRegions.setVisibleItemCount(8);
-        for (GsRegion region : regions) {
-            predefinedRegions.addItem(region.getName());
-        }
+        predefinedRegions = RegionMapWidget.create(regions, false);
+        predefinedRegions.setSize("100%", "240px");
 
         HorizontalPanel timeRange = new HorizontalPanel();
         timeRange.add(minDate);
@@ -197,36 +183,12 @@ public class L3ParametersForm implements IsWidget {
         boundingBoxPanel.setWidget(2, 2, new Label("deg"));
 
 
-        LatLng cawkerCity = LatLng.newInstance(39.509, -98.434);
-
-        Widget mapPanel;
-        try {
-            final MapWidget map = new MapWidget(cawkerCity, 2);
-            map.setSize("200px", "200px");
-            map.addControl(new SmallMapControl());
-            map.addOverlay(new Marker(cawkerCity));
-            map.getInfoWindow().open(map.getCenter(),
-                                     new InfoWindowContent("World's Largest Ball of Sisal Twine"));
-            mapPanel = map;
-        } catch (Throwable t) {
-            mapPanel = new Label("Failed to instantiate GoogleMaps widget.\n"
-                                         + "Type: \""+ t.getClass() + "\"\n"
-                                         + "Message: \""+ t.getMessage() + "\"\n"
-                                         + "Stack trace dumped to stderr.");
-            t.printStackTrace(System.err);
-        }
-        final DockPanel regionDockPanel = new DockPanel();
-        regionDockPanel.ensureDebugId("regionDockPanel");
-        regionDockPanel.setSpacing(4);
-        regionDockPanel.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
-        regionDockPanel.add(new ScrollPanel(predefinedRegions), DockPanel.WEST);
-        regionDockPanel.add(mapPanel, DockPanel.CENTER);
 
         DecoratedTabPanel regionTabPanel = new DecoratedTabPanel();
         regionTabPanel.ensureDebugId("regionTabPanel");
         regionTabPanel.setWidth("400px");
         regionTabPanel.setAnimationEnabled(true);
-        regionTabPanel.add(regionDockPanel, "Predefined Regions");
+        regionTabPanel.add(predefinedRegions, "Predefined Regions");
         regionTabPanel.add(boundingBoxPanel, "Bounding Box");
         regionTabPanel.selectTab(0);
 
@@ -391,6 +353,8 @@ public class L3ParametersForm implements IsWidget {
     }
 
     public Map<String, String> getValueMap() {
+        Region region = predefinedRegions.getRegionSelectionModel().getSelectedRegion();
+
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex()));
         parameters.put("maskExpr", maskExpr.getText());
@@ -401,6 +365,10 @@ public class L3ParametersForm implements IsWidget {
         parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
         parameters.put("periodLength", steppingPeriodLength.getText());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
+        if (region != null) {
+            parameters.put("regionName", region.getName());
+            parameters.put("regionWKT", region.getWkt());
+        }
         parameters.put("minLon", minLon.getText());
         parameters.put("maxLon", maxLon.getText());
         parameters.put("minLat", minLat.getText());
@@ -408,39 +376,5 @@ public class L3ParametersForm implements IsWidget {
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
         return parameters;
-    }
-
-    private static GsRegion[] getDefaultRegions() {
-        return new GsRegion[]{
-                new GsRegion("globe", "polygon((-180 -90, 180 -90, 180 90, -180 90, -180 -90))"),
-                new GsRegion("acadia", "polygon((-69.00 42.00, -52.00 42.00, -52.00 52.00, -69.00 52.00, -69.00 42.00))"),
-                new GsRegion("amazondelta", "polygon((-54.00 8.00, -55.00 8.00, -55.00 5.10, -54.02 5.00, -52.04 3.96, -52.02 -0.98, -49.01 -2.99, -46.83 -1.76, -45.00 -3.50, -43.00 -3.50, -42.98 0.71, -51.06 6.93, -54.00 8.00))"),
-                new GsRegion("antaresubatuba", "polygon((-49.00 -30.00, -46.00 -30.00, -39.00 -23.00, -39.00 -20.00, -40.75 -20.00, -49.00 -24.50, -49.00 -30.00))"),
-                new GsRegion("balticsea", "polygon((10.00 54.00,  14.27 53.47,  20.00 54.00, 21.68 54.77, 22.00 56.70, 24.84 56.70, 30.86 60.01, 26.00 62.00, 26.00 66.00, 22.00 66.00, 10.00 60.00, 10.00 54.00))"),
-                new GsRegion("beibubay", "polygon((105.00 15.00, 115.00 15.00, 115.00 24.00, 105.00 24.00, 105.00 15.00))"),
-                new GsRegion("benguela", "polygon((17.00 -31.00, 17.00 -35.00, 20.00 -35.00, 20.00 -34.67, 18.99 -34.01, 18.50 -33.50, 18.20 -33.00, 18.50 -32.51, 18.50 -32.00, 18.30 -31.50, 17.80 -31.00, 17.00 -31.00))"),
-                new GsRegion("capeverde", "polygon((-26.50 23.50, -26.50 13.00, -15.00 13.00, -15.00 23.50, -26.50 23.50))"),
-                new GsRegion("centralcalifornia", "polygon((-123.50 36.33, -121.77 36.33, -121.77 38.50, -123.50 38.50, -123.50 36.33))"),
-                new GsRegion("chesapeakebay", "polygon((-70.00 34.00, -70.00 41.00, -74.43 40.99, -74.64 40.48, -75.00 40.00, -76.00 40.00, -76.68 39.65, -77.37 39.00, -77.62 38.49, -77.27 36.00, -78.01 34.50, -79.00 34.00, -70.00 34.00))"),
-                new GsRegion("chinakoreajapan", "polygon((147.00 25.00, 147.00 45.00, 117.00 45.00, 117.00 25.00, 147.00 25.00))"),
-                new GsRegion("dome_c", "polygon((123.20 -77.60, 123.60 -77.60, 123.60 -72.60, 123.20 -72.60, 123.20 -77.60))"),
-                new GsRegion("greatbarrierreef", "polygon((141.13 -17.77, 141.71 -17.00, 142.21 -15.06, 142.18 -14.06, 142.52 -12.20, 143.00 -14.04, 143.65 -15.05, 144.55 -15.01, 144.76 -16.51, 145.43 -18.03, 145.75 -19.37, 148.33 -21.02, 149.11 -22.87, 151.75 -25.00, 155.01 -25.01, 155.01 -10.02, 140.03 -10.01, 140.00 -18.10, 141.13 -17.77))"),
-                new GsRegion("gulfofmexico", "polygon((-95.00 27.00, -86.00 27.00, -86.00 30.83, -95.00 30.83, -95.00 27.00))"),
-                new GsRegion("indonesianwaters", "polygon((94.00 -10.00, 115.00 -10.00, 115.00 8.00, 94.00 8.00, 94.00 -10.00))"),
-                new GsRegion("karasea", "polygon((85.00 66.00, 85.00 75.00, 70.00 75.00, 70.00 66.00, 85.00 66.00))"),
-                new GsRegion("lakeseriestclair", "polygon((-83.63 41.67, -82.70 41.24, -81.58 41.42, -78.61 42.60,-78.71 43.03, -80.24 42.90, -81.32 42.79, -82.92 42.75, -83.63 41.67))"),
-                new GsRegion("lenadelta", "polygon((160.00 70.00, 160.00 76.00, 110.00 76.00, 110.00 70.00, 160.00 70.00))"),
-                new GsRegion("mediterranean_blacksea", "polygon((16.77 29.97, 35.80 30.00, 42.27 41.98, 39.63 47.43, 31.50 47.47, 25.95 41.74, 21.20 40.95, 13.85 46.17,  3.50 43.75, -5.50 36.20, -5.50 35.30, 16.77 29.97))"),
-                new GsRegion("morocco", "polygon((-26.50 23.50, -15.10 23.50, -5.50 34.00, -5.50 37.00, -8.51 37.50, -8.50 40.00, -26.55 40.00, -26.50 23.50))"),
-                new GsRegion("namibianwaters", "polygon((10.00 -29.00, 16.96 -28.98, 15.60 -27.01, 15.30 -26.01, 15.00 -24.00, 14.96 -23.04, 14.68 -22.04, 13.97 -21.04, 13.38 -20.03, 12.85 -19.00, 10.00 -19.00, 10.00 -29.00))"),
-                new GsRegion("northsea", "polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00, 0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))"),
-                new GsRegion("oregon_washington", "polygon((-122.00 42.00, -122.00 51.00, -129.00 51.00, -129.00 49.50, -127.00 49.50, -127.00 42.00, -122.00 42.00))"),
-                new GsRegion("puertorico", "polygon((-70.00 11.12, -68.92 10.99, -68.25 10.00, -66.60 10.17, -64.98  9.62, -63.33 10.26, -62.35  9.51, -61.01  8.98, -61.00 20.00, -70.00 20.00, -70.00 11.12))"),
-                new GsRegion("redsea", "polygon((32.00 30.00, 32.00 28.80,  39.00 14.99, 43.00 11.00, 44.02 13.00, 43.00 18.00, 39.01 25.00, 36.00 28.00, 35.80 30.00, 32.00 30.00))"),
-                new GsRegion("riolaplata", "polygon((-57.01 -41.00, -50.01 -33.03, -50.00 -30.00, -52.03 -30.02, -59.01 -32.98, -63.00 -38.00, -63.04 -41.01, -57.01 -41.00))"),
-                new GsRegion("southerncalifornia", "polygon((-117.00 33.78, -119.50 35.50, -122.00 38.00, -126.00 38.00, -126.00 32.50, -117.00 32.50, -117.00 33.78))"),
-                new GsRegion("southindia", "polygon((79.33 8.00, 79.35 10.75, 77.01 10.75, 74.87 16.00, 71.00 16.00, 71.00 8.00, 79.33 8.00))"),
-                new GsRegion("tasmania", "polygon((143.50 -45.00, 149.50 -45.00, 149.50 -39.50, 143.50 -39.50, 143.50 -45.00))"),
-        };
     }
 }

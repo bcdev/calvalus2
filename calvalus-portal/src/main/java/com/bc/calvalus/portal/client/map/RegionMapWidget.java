@@ -7,13 +7,11 @@ import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
 import com.bc.calvalus.portal.client.map.actions.RenameRegionAction;
 import com.bc.calvalus.portal.client.map.actions.SelectInteraction;
 import com.bc.calvalus.portal.client.map.actions.ShowRegionInfoAction;
-import com.bc.calvalus.portal.shared.GsRegion;
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
-import com.google.gwt.maps.client.overlay.Overlay;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -26,12 +24,12 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,76 +41,43 @@ public class RegionMapWidget implements IsWidget, RegionMap {
 
     private final RegionMapModel regionMapModel;
     private final RegionMapSelectionModel regionMapSelectionModel;
+    private final boolean editable;
     private Widget widget;
     private MapWidget mapWidget;
     private boolean adjustingRegionSelection;
     private boolean updatingRegionListSelection;
+    private String width;
+    private String height;
 
     private PolyStyleOptions normalPolyStrokeStyle;
     private PolyStyleOptions normalPolyFillStyle;
     private PolyStyleOptions selectedPolyStrokeStyle;
     private PolyStyleOptions selectedPolyFillStyle;
 
-    public RegionMapWidget(RegionMapModel regionMapModel) {
-        this(regionMapModel, new RegionMapSelectionModelImpl());
+    public static RegionMapWidget create(ListDataProvider<Region> regionList, boolean editable) {
+        final RegionMapModelImpl model;
+        if (editable) {
+            model = new RegionMapModelImpl(regionList, createDefaultEditingActions());
+        } else {
+            model = new RegionMapModelImpl(regionList, createDefaultNonEditingActions());
+        }
+        return new RegionMapWidget(model, editable);
     }
 
-    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel) {
+    public RegionMapWidget(RegionMapModel regionMapModel, boolean editable) {
+        this(regionMapModel, new RegionMapSelectionModelImpl(), editable);
+    }
+
+    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel, boolean editable) {
         this.regionMapModel = regionMapModel;
         this.regionMapSelectionModel = regionMapSelectionModel;
+        this.editable = editable;
         this.normalPolyStrokeStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.8);
         this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
         this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
         this.selectedPolyFillStyle = normalPolyFillStyle;
-    }
-
-    public static RegionMapWidget createRegionMapWidget(GsRegion[] encodedRegions) {
-        RegionMapModelImpl model = new RegionMapModelImpl(decodeRegions(encodedRegions),
-                createDefaultActions());
-        return new RegionMapWidget(model);
-    }
-
-    public static MapAction[] createDefaultActions() {
-        // todo: use the action constructor that takes an icon image (nf)
-        return new MapAction[]{
-                new SelectInteraction(new AbstractMapAction("S", "Select region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                        // Window.alert("Selected.");
-                    }
-                }),
-                new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                        // Window.alert("New polygon region created.");
-                    }
-                }),
-                new InsertBoxInteraction(new AbstractMapAction("B", "New box region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                        // Window.alert("New box region created.");
-                    }
-                }),
-                MapAction.SEPARATOR,
-                new LocateRegionsAction(),
-                new RenameRegionAction(),
-                new DeleteRegionsAction(),
-                new ShowRegionInfoAction()
-        };
-    }
-
-    public static List<Region> decodeRegions(GsRegion[] encodedRegions) {
-        ArrayList<Region> regionList = new ArrayList<Region>();
-        for (GsRegion encodedRegion : encodedRegions) {
-            String geometryWkt = encodedRegion.getGeometryWkt();
-            Overlay overlay = WKTParser.parse(geometryWkt);
-            if (overlay instanceof Polygon) {
-                Polygon polygon = (Polygon) overlay;
-                polygon.setVisible(true);
-                regionList.add(new Region(encodedRegion.getName(), polygon));
-            }
-        }
-        return regionList;
+        width = "100%";
+        height = "600px";
     }
 
     @Override
@@ -139,6 +104,11 @@ public class RegionMapWidget implements IsWidget, RegionMap {
             initUi();
         }
         return widget;
+    }
+
+    public void setSize(String width, String height) {
+        this.width = width;
+        this.height = height;
     }
 
     private void initUi() {
@@ -169,7 +139,7 @@ public class RegionMapWidget implements IsWidget, RegionMap {
         regionCellList.setVisibleRange(0, 256);
         regionCellList.setKeyboardPagingPolicy(HasKeyboardPagingPolicy.KeyboardPagingPolicy.INCREASE_RANGE);
         regionCellList.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.ENABLED);
-        regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
+        regionMapModel.getRegionList().addDataDisplay(regionCellList);
 
         // Add a selection model so we can select cells.
         final MultiSelectionModel<Region> regionListSelectionModel = new MultiSelectionModel<Region>(regionKey);
@@ -239,17 +209,17 @@ public class RegionMapWidget implements IsWidget, RegionMap {
 
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
-        regionPanel.addNorth(new HTML("<b>Defined regions:</b>"), 1.5);
+        regionPanel.addNorth(new HTML("<b>Defined regions</b>"), 1.5);
         regionPanel.addSouth(regionMapToolbar, 3.5);
         regionPanel.add(regionScrollPanel);
 
         SplitLayoutPanel regionSplitLayoutPanel = new SplitLayoutPanel();
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
-        regionSplitLayoutPanel.setSize("100%", "600px");
+        regionSplitLayoutPanel.setSize(width, height);
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
 
-        List<Region> regionList = regionMapModel.getRegionProvider().getList();
+        List<Region> regionList = regionMapModel.getRegionList().getList();
         for (Region region : regionList) {
             Polygon polygon = region.getPolygon();
             polygon.setVisible(true);
@@ -262,7 +232,7 @@ public class RegionMapWidget implements IsWidget, RegionMap {
     }
 
     private void updatePolygonStyles() {
-        for (Region region : regionMapModel.getRegionProvider().getList()) {
+        for (Region region : regionMapModel.getRegionList().getList()) {
             boolean selected = regionMapSelectionModel.isSelected(region);
             region.getPolygon().setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
             region.getPolygon().setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
@@ -273,9 +243,53 @@ public class RegionMapWidget implements IsWidget, RegionMap {
     }
 
     private void updateRegionSelection(SelectionModel<Region> source, SelectionModel<Region> target) {
-        for (Region region : regionMapModel.getRegionProvider().getList()) {
+        for (Region region : regionMapModel.getRegionList().getList()) {
             target.setSelected(region, source.isSelected(region));
         }
+    }
+
+    private static MapAction[] createDefaultEditingActions() {
+        // todo: use the action constructor that takes an icon image (nf)
+        return new MapAction[]{
+                new SelectInteraction(new AbstractMapAction("S", "Select region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        // Window.alert("Selected.");
+                    }
+                }),
+                new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        // Window.alert("New polygon region created.");
+                    }
+                }),
+                new InsertBoxInteraction(new AbstractMapAction("B", "New box region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        // Window.alert("New box region created.");
+                    }
+                }),
+                MapAction.SEPARATOR,
+                new RenameRegionAction(),
+                new DeleteRegionsAction(),
+                new LocateRegionsAction(),
+                new ShowRegionInfoAction()
+        };
+    }
+
+    private static MapAction[] createDefaultNonEditingActions() {
+        // todo: use the action constructor that takes an icon image (nf)
+        return new MapAction[]{
+                new SelectInteraction(new AbstractMapAction("S", "Select region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        // Window.alert("Selected.");
+                    }
+                }),
+                MapAction.SEPARATOR,
+                new LocateRegionsAction(),
+                new ShowRegionInfoAction()
+        };
     }
 
 

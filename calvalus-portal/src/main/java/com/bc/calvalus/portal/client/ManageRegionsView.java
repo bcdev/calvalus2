@@ -18,7 +18,7 @@ public class ManageRegionsView extends PortalView {
 
     public ManageRegionsView(PortalContext portalContext) {
         super(portalContext);
-        widget = RegionMapWidget.createRegionMapWidget(portalContext.getRegions());
+        widget = RegionMapWidget.create(portalContext.getRegions(), true);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.bc.calvalus.portal.shared.GsProductSet;
 import com.bc.calvalus.portal.shared.GsProduction;
-import com.bc.calvalus.portal.shared.GsRegion;
 import com.google.gwt.view.client.ListDataProvider;
 
 /**
@@ -15,7 +15,7 @@ import com.google.gwt.view.client.ListDataProvider;
  * @author Norman
  */
 public interface PortalContext {
-    GsRegion[] getRegions();
+    ListDataProvider<Region> getRegions();
 
     // make this return ListDataProvider<GsProductSet>
     GsProductSet[] getProductSets();

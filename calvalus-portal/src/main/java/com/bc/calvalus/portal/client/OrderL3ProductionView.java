@@ -29,7 +29,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L3 Output", true);
         l2ProcessorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        l3ParametersForm = new L3ParametersForm();
+        l3ParametersForm = new L3ParametersForm(portalContext.getRegions());
 
         widget = new FlexTable();
         widget.ensureDebugId("widget");
