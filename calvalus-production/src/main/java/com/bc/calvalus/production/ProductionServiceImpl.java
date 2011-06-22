@@ -94,7 +94,7 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
-        ArrayList<ProcessorDescriptor> processorDescriptors = new ArrayList<ProcessorDescriptor>();
+        ArrayList<ProcessorDescriptor> descriptors = new ArrayList<ProcessorDescriptor>();
 
         try {
             String softwarePath = processingService.getSoftwarePath();
@@ -110,7 +110,7 @@ public class ProductionServiceImpl implements ProductionService {
                             String xmlContent = baos.toString();
                             ProcessorDescriptor pd = new ProcessorDescriptor();
                             BeamUtils.convertXmlToObject(xmlContent, pd);
-                            processorDescriptors.add(pd);
+                            descriptors.add(pd);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());
                         }
@@ -121,44 +121,7 @@ public class ProductionServiceImpl implements ProductionService {
             logger.warning(e.getMessage());
         }
 
-        return processorDescriptors.toArray(new ProcessorDescriptor[processorDescriptors.size()]);
-
-        // todo - load & update from persistent storage
-//        return new ProcessorDescriptor[]{
-//                new ProcessorDescriptor("CoastColour.L2W", "MERIS CoastColour",
-//                                        "<parameters>\n" +
-//                                                "  <useIdepix>false</useIdepix>\n" +
-//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-//                                                "  <outputReflec>false</outputReflec>\n" +
-//                                                "</parameters>",
-//                                        "beam-lkn",
-//                                        new String[]{"1.0-SNAPSHOT"}),
-//        };
-//        return new ProcessorDescriptor[]{
-//                new ProcessorDescriptor("CoastColour.L2W",
-//                                        "MERIS CoastColour",
-//                                        "<parameters>\n" +
-//                                                "  <useIdepix>false</useIdepix>\n" +
-//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-//                                                "  <outputReflec>false</outputReflec>\n" +
-//                                                "</parameters>",
-//                                        "coastcolour-processing",
-//                                        "0.5-SNAPSHOT"),
-//                new ProcessorDescriptor("CoastColour.L2W",
-//                                        "MERIS CoastColour",
-//                                        "<parameters>\n" +
-//                                                "  <doCalibration>true</doCalibration>\n" +
-//                                                "  <doSmile>true</doSmile>\n" +
-//                                                "  <doEqualization>true</doEqualization>\n" +
-//                                                "  <useIdepix>false</useIdepix>\n" +
-//                                                "  <algorithm>CoastColour</algorithm>\n" +
-//                                                "  <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
-//                                                "  <cloudIceExpression>l1_flags.LAND_OCEAN</cloudIceExpression>\n" +
-//                                                "  <outputReflec>true</outputReflec>\n" +
-//                                                "</parameters>",
-//                                        "coastcolour-processing",
-//                                        "1.0-SNAPSHOT")
-//        };
+        return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
     }
 
     @Override
