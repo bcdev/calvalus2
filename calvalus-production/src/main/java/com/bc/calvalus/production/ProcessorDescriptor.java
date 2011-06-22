@@ -3,8 +3,6 @@ package com.bc.calvalus.production;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
-import java.util.Arrays;
-
 public class ProcessorDescriptor {
 
     public static class Variable {
