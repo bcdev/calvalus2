@@ -147,7 +147,7 @@ public class LcRequest {
 
 
 //        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
-        formatL3FormattingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
+//        formatL3FormattingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
 //
 //        formatL3FormattingTemplate("Africa", "2009-01-01", "2009-12-31", 15);
@@ -177,7 +177,8 @@ public class LcRequest {
 //        formatCCL2Template("lakeseriestclair", "2006");
 //        formatCCL2Template("lenadelta", "2006");
 //        formatCCL2Template("mediterranean_blacksea", "2006");
-//        formatCCL2Template("morocco", "2006");
+//        formatCCL2Template("morocco", "2005");
+//        formatCCL2Template("morocco", "2007");
 //        formatCCL2Template("namibianwaters", "2006");
 //        formatCCL2Template("northsea", "2006");
 //        formatCCL2Template("oregon_washington", "2006");
@@ -187,21 +188,57 @@ public class LcRequest {
 //        formatCCL2Template("southerncalifornia", "2006");
 //        formatCCL2Template("southindia", "2006");
 //        formatCCL2Template("tasmania", "2006");
+
+//        formatCCFormattingTemplate("l1p", "acadia", "2007");
+//        formatCCFormattingTemplate("l1p", "amazondelta", "2007");
+//        formatCCFormattingTemplate("l1p", "antaresubatuba", "2007");
+//        formatCCFormattingTemplate("l1p", "balticsea", "2007");
+//        formatCCFormattingTemplate("l1p", "beibubay", "2007");
+//        formatCCFormattingTemplate("l1p", "benguela", "2007");
+//        formatCCFormattingTemplate("l1p", "capeverde", "2007");
+//        formatCCFormattingTemplate("l1p", "centralcalifornia", "2007");
+//        formatCCFormattingTemplate("l1p", "chesapeakebay", "2007");
+//        formatCCFormattingTemplate("l1p", "chinakoreajapan", "2007");
+//        formatCCFormattingTemplate("l1p", "greatbarrierreef", "2007");
+//        formatCCFormattingTemplate("l1p", "gulfofmexico", "2007");
+//        formatCCFormattingTemplate("l1p", "indonesianwaters", "2007");
+//        formatCCFormattingTemplate("l1p", "karasea", "2007");
+//        formatCCFormattingTemplate("l1p", "lakeseriestclair", "2007");
+//        formatCCFormattingTemplate("l1p", "lenadelta", "2007");
+//        formatCCFormattingTemplate("l1p", "mediterranean_blacksea", "2007");
+//        formatCCFormattingTemplate("l1p", "morocco", "2007");
+//        formatCCFormattingTemplate("l1p", "namibianwaters", "2007");
+//        formatCCFormattingTemplate("l1p", "northsea", "2007");
+//        formatCCFormattingTemplate("l1p", "oregon_washington", "2007");
+//        formatCCFormattingTemplate("l1p", "puertorico", "2007");
+//        formatCCFormattingTemplate("l1p", "redsea", "2007");
+//        formatCCFormattingTemplate("l1p", "riolaplata", "2007");
+//        formatCCFormattingTemplate("l1p", "southerncalifornia", "2007");
+//        formatCCFormattingTemplate("l1p", "southindia", "2007");
+//        formatCCFormattingTemplate("l1p", "tasmania", "2007");
+
     }
 
     private static void formatLCL2Template(String region, String... years) throws IOException {
         Assert.argument(LC_GEOMETRIES.containsKey(region), "valid region");
         String geometry = LC_GEOMETRIES.get(region);
-        formatL2("lc-l2-template.xml", region, geometry, years);
+        formatL2("lc-l2-template.xml", null, region, geometry, years);
     }
 
     private static void formatCCL2Template(String region, String... years) throws IOException {
         Assert.argument(CC_GEOMETRIES.containsKey(region), "valid region");
         String geometry = CC_GEOMETRIES.get(region);
-        formatL2("cc-l2-template.xml", region, geometry, years);
+        formatL2("cc-l2-template.xml", null, region, geometry, years);
     }
 
-    private static void formatL2(String templateName, String region, String geometry, String... years) throws IOException {
+    private static void formatCCFormattingTemplate(String code, String region, String... years) throws IOException {
+        Assert.argument(CC_GEOMETRIES.containsKey(region), "valid region");
+        String geometry = CC_GEOMETRIES.get(region);
+        formatL2("cc-nc-template.xml", code, region, geometry, years);
+    }
+
+    private static void formatL2(String templateName, String code, String region, String geometry,
+                                 String... years) throws IOException {
         Assert.notNull(templateName, "templateName");
         Assert.notNull(region, "region");
         Assert.argument(years.length > 0, "years.length > 0");
@@ -209,6 +246,7 @@ public class LcRequest {
         String template = readTemplate(templateName);
         for (String year : years) {
             String request = template.
+                    replaceAll("\\$CODE", code).
                     replaceAll("\\$YEAR", year).
                     replaceAll("\\$REGION", region).
                     replaceAll("\\$GEOMETRY", geometry);
@@ -218,14 +256,18 @@ public class LcRequest {
         }
     }
 
-    private static void formatL3ProcessingTemplate(String region, String startDate, String endDate, int periodLength) throws Exception {
+    private static void formatL3ProcessingTemplate(String region, String startDate, String endDate,
+                                                   int periodLength) throws Exception {
         formatL3Processing("lc-l3-processing-template.xml", region, startDate, endDate, periodLength);
     }
 
-    private static void formatL3FormattingTemplate(String region, String startDate, String endDate, int periodLength) throws Exception {
+    private static void formatL3FormattingTemplate(String region, String startDate, String endDate,
+                                                   int periodLength) throws Exception {
         formatL3Formatting("lc-l3-format-template.xml", region, startDate, endDate, periodLength);
     }
-    private static void formatL3Processing(String templateName, String region, String startDate, String endDate, int periodLength) throws Exception {
+
+    private static void formatL3Processing(String templateName, String region, String startDate, String endDate,
+                                           int periodLength) throws Exception {
         String template = readTemplate(templateName);
         List<InputFiles> inputFilesList = getInputs(region, startDate, endDate, periodLength);
         String year = startDate.substring(0, 4);
@@ -244,7 +286,8 @@ public class LcRequest {
         }
     }
 
-    private static void formatL3Formatting(String templateName, String region, String startDate, String endDate, int periodLength) throws Exception {
+    private static void formatL3Formatting(String templateName, String region, String startDate, String endDate,
+                                           int periodLength) throws Exception {
         String template = readTemplate(templateName);
         List<InputFiles> inputFilesList = getInputs(region, startDate, endDate, periodLength);
         String year = startDate.substring(0, 4);
@@ -300,7 +343,8 @@ public class LcRequest {
         return FileUtils.readText(reader);
     }
 
-    private static List<InputFiles> getInputs(String region, String startDate, String endDate, int periodLength) throws Exception {
+    private static List<InputFiles> getInputs(String region, String startDate, String endDate, int periodLength) throws
+                                                                                                                 Exception {
         Date minDate = DATE_FORMAT.parse(startDate);
         Date maxDate = DATE_FORMAT.parse(endDate);
 
@@ -340,6 +384,7 @@ public class LcRequest {
     }
 
     private static class InputFiles {
+
         final String perioID;
         final String[] inputFiles;
         final String startDate;
@@ -361,8 +406,9 @@ public class LcRequest {
                 String pathName = path.getName();
                 for (String day : dayList) {
                     String regex = "L2_of_MER_FSG_1[A-Z]{5}" + day + ".+";
-                    if (pathName.matches(regex))
+                    if (pathName.matches(regex)) {
                         return true;
+                    }
                 }
                 return false;
             }
@@ -374,7 +420,8 @@ public class LcRequest {
         }
     }
 
-    public static String[] listFilePaths(FileSystem fileSystem, String dirPath, PathFilter pathfilter) throws IOException {
+    public static String[] listFilePaths(FileSystem fileSystem, String dirPath, PathFilter pathfilter) throws
+                                                                                                       IOException {
         FileStatus[] fileStatuses = fileSystem.listStatus(new Path(dirPath), pathfilter);
         String[] paths = new String[fileStatuses.length];
         for (int i = 0; i < fileStatuses.length; i++) {
