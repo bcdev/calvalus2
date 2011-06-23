@@ -36,14 +36,14 @@ public class SeqToNcConverter implements FormatConverter {
         try {
             final int returnCode;
             if (outputDir.startsWith("hdfs:")) {
-                returnCode = copyProcess.run("/bin/bash", "-c", "gzip " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
-                System.out.println("cmdline input : " + "gzip " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath());
+                returnCode = copyProcess.run("/bin/bash", "-c", "gzip -n " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
+                System.out.println("cmdline input : " + "gzip -n " + outputFilename + "; hadoop fs -D dfs.replication=1 -copyFromLocal " + outputFilename + ".gz " + outputDir + "/" + outputFilename + ".gz; rm -rf " + tmpDir.getPath());
             } else {
                 final String outputPath = (outputDir.startsWith("file:"))
                         ? new Path(outputDir).toUri().getPath()
                         : outputDir;
-                returnCode = copyProcess.run("/bin/bash", "-c", "date; gzip *.nc; mkdir -p " + outputPath + "; cp -r * " + outputPath + "/; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
-                System.out.println("cmdline input : " + "gzip *.nc; mkdir -p " + outputPath + "; cp -r * " + outputPath + "/; rm -rf " + tmpDir.getPath());
+                returnCode = copyProcess.run("/bin/bash", "-c", "date; gzip -n *.nc; mkdir -p " + outputPath + "; cp -r * " + outputPath + "/; rm -rf " + tmpDir.getPath() + "; echo \"" + outputFilename + " copied to " + outputDir + "\"");
+                System.out.println("cmdline input : " + "gzip -n *.nc; mkdir -p " + outputPath + "; cp -r * " + outputPath + "/; rm -rf " + tmpDir.getPath());
             }
             System.out.println("|" + copyProcess.getOutputString() + "|");
             if (returnCode != 0) {
