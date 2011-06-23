@@ -31,6 +31,7 @@ public class GeneralProcessorForm implements IsWidget {
     private DecoratorPanel widget;
     private FormPanel uploadForm;
     private GsProcessorDescriptor[] processors;
+    private HTML processorDescription;
 
     public GeneralProcessorForm(GsProcessorDescriptor[] processors, String title) {
         this.processors = processors;
@@ -94,13 +95,16 @@ public class GeneralProcessorForm implements IsWidget {
         advancedDisclosure.setAnimationEnabled(true);
         advancedDisclosure.setContent(processorParamsPanel);
 
+        processorDescription = new HTML();
+
         FlexTable layout = new FlexTable();
         layout.setWidth("100%");
         layout.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         layout.setCellSpacing(4);
         layout.setWidget(0, 0, new HTML("<b>" + title + "</b>"));
         layout.setWidget(1, 0, processorPanel);
-        layout.setWidget(2, 0, advancedDisclosure);
+        layout.setWidget(2, 0, processorDescription);
+        layout.setWidget(3, 0, advancedDisclosure);
 
         // Wrap the contents in a DecoratorPanel
         widget = new DecoratorPanel();
@@ -129,7 +133,9 @@ public class GeneralProcessorForm implements IsWidget {
     private void updateParametersWidget() {
         int selectedIndex = processorName.getSelectedIndex();
         if (selectedIndex >= 0) {
-            processorParameters.setValue(getSelectedProcessor().getDefaultParameter());
+            GsProcessorDescriptor selectedProcessor = getSelectedProcessor();
+            processorParameters.setValue(selectedProcessor.getDefaultParameter());
+            processorDescription.setHTML(selectedProcessor.getDescriptionHtml());
         }
     }
 

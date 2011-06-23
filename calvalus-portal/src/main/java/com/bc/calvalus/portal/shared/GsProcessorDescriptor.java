@@ -13,6 +13,7 @@ public class GsProcessorDescriptor implements IsSerializable {
     private String defaultParameter;
     private String bundleName;
     private String bundleVersion;
+    private String descriptionHtml;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -24,12 +25,14 @@ public class GsProcessorDescriptor implements IsSerializable {
                                  String processorName,
                                  String defaultParameter,
                                  String bundleName,
-                                 String bundleVersion) {
+                                 String bundleVersion,
+                                 String descriptionHtml) {
         this.executableName = executableName;
         this.processorName = processorName;
         this.defaultParameter = defaultParameter;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
+        this.descriptionHtml = descriptionHtml;
     }
 
     public String getExecutableName() {
@@ -50,5 +53,9 @@ public class GsProcessorDescriptor implements IsSerializable {
 
     public String getBundleVersion() {
         return bundleVersion;
+    }
+
+    public String getDescriptionHtml() {
+        return descriptionHtml;
     }
 }
