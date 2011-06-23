@@ -160,34 +160,33 @@ public class LcRequest {
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
 //
 
-//        formatCCL2Template("acadia", "2006");
-//        formatCCL2Template("amazondelta", "2006");
-//        formatCCL2Template("antaresubatuba", "2006");
-//        formatCCL2Template("balticsea", "2006");
-//        formatCCL2Template("beibubay", "2006");
-//        formatCCL2Template("benguela", "2006");
-//        formatCCL2Template("capeverde", "2006");
-//        formatCCL2Template("centralcalifornia", "2006");
-//        formatCCL2Template("chesapeakebay", "2006");
-//        formatCCL2Template("chinakoreajapan", "2006");
-//        formatCCL2Template("greatbarrierreef", "2006");
-//        formatCCL2Template("gulfofmexico", "2006");
-//        formatCCL2Template("indonesianwaters", "2006");
-//        formatCCL2Template("karasea", "2006");
-//        formatCCL2Template("lakeseriestclair", "2006");
-//        formatCCL2Template("lenadelta", "2006");
-//        formatCCL2Template("mediterranean_blacksea", "2006");
-//        formatCCL2Template("morocco", "2005");
-//        formatCCL2Template("morocco", "2007");
-//        formatCCL2Template("namibianwaters", "2006");
-//        formatCCL2Template("northsea", "2006");
-//        formatCCL2Template("oregon_washington", "2006");
-//        formatCCL2Template("puertorico", "2006");
-//        formatCCL2Template("redsea", "2006");
-//        formatCCL2Template("riolaplata", "2006");
-//        formatCCL2Template("southerncalifornia", "2006");
-//        formatCCL2Template("southindia", "2006");
-//        formatCCL2Template("tasmania", "2006");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "acadia", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "amazondelta", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "antaresubatuba", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "balticsea", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "beibubay", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "benguela", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "capeverde", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "centralcalifornia", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "chesapeakebay", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "chinakoreajapan", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "greatbarrierreef", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "gulfofmexico", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "indonesianwaters", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "karasea", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "lakeseriestclair", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "lenadelta", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "mediterranean_blacksea", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "morocco", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "namibianwaters", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "northsea", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "oregon_washington", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "puertorico", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "redsea", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "riolaplata", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "southerncalifornia", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "southindia", "2008");
+        formatCCProcessingTemplate("cc-l1p-template.xml", "tasmania", "2008");
 
 //        formatCCFormattingTemplate("l1p", "acadia", "2007");
 //        formatCCFormattingTemplate("l1p", "amazondelta", "2007");
@@ -225,10 +224,11 @@ public class LcRequest {
         formatL2("lc-l2-template.xml", null, region, geometry, years);
     }
 
-    private static void formatCCL2Template(String region, String... years) throws IOException {
+    private static void formatCCProcessingTemplate(String templateName, String region, String... years) throws
+                                                                                                        IOException {
         Assert.argument(CC_GEOMETRIES.containsKey(region), "valid region");
         String geometry = CC_GEOMETRIES.get(region);
-        formatL2("cc-l2-template.xml", null, region, geometry, years);
+        formatL2(templateName, null, region, geometry, years);
     }
 
     private static void formatCCFormattingTemplate(String code, String region, String... years) throws IOException {
