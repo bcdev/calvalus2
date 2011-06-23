@@ -65,6 +65,7 @@ public class InputOutputForm implements IsWidget {
         // Wrap the contents in a DecoratorPanel
         widget = new DecoratorPanel();
         widget.setTitle(title);
+        widget.setWidth("100%");
         widget.setWidget(layout);
     }
 

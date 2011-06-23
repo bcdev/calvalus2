@@ -7,6 +7,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -17,7 +18,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     public static final String ID = OrderL2ProductionView.class.getName();
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm processingForm;
-    private L2ProductFilterForm productFilterForm;
+    private ProductFilterForm productFilterForm;
     private FlexTable widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
@@ -25,7 +26,16 @@ public class OrderL2ProductionView extends OrderProductionView {
 
         inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L2 Output", true);
         processingForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        productFilterForm = new L2ProductFilterForm();
+        productFilterForm = new ProductFilterForm(portalContext.getRegions(), new ProductFilterForm.ChangeHandler() {
+            @Override
+            public void dateChanged(Map<String, String> data) {
+
+            }
+
+            @Override
+            public void regionChanged(Map<String, String> data) {
+            }
+        });
 
         widget = new FlexTable();
         widget.ensureDebugId("widget");
@@ -37,6 +47,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         widget.getFlexCellFormatter().setRowSpan(0, 1, 0);
         widget.setCellSpacing(2);
         widget.setCellPadding(2);
+        widget.setWidth("100%");
         widget.setWidget(0, 0, inputOutputForm.asWidget());
         widget.setWidget(0, 1, processingForm.asWidget());
         widget.setWidget(1, 0, productFilterForm.asWidget());
@@ -65,7 +76,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     protected boolean validateForm() {
         try {
-            productFilterForm.validateForm(3);
+            productFilterForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();

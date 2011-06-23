@@ -21,7 +21,9 @@ import java.util.Map;
  * Demo view that lets users submit a new L2 production.
  *
  * @author Norman
+ * @deprecated use ProductFilterForm
  */
+@Deprecated
 public class L2ProductFilterForm implements IsWidget {
     public static final int MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
