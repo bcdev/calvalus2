@@ -8,6 +8,7 @@ import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.GsProcessState;
 import com.bc.calvalus.portal.shared.GsProcessStatus;
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.GsProcessorVariable;
 import com.bc.calvalus.portal.shared.GsProductSet;
 import com.bc.calvalus.portal.shared.GsProduction;
 import com.bc.calvalus.portal.shared.GsProductionRequest;
@@ -211,7 +212,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private GsProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
         return new GsProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
                                          processorDescriptor.getDefaultParameter(), processorDescriptor.getBundleName(),
-                                         processorDescriptor.getBundleVersion(), processorDescriptor.getDescriptionHtml());
+                                         processorDescriptor.getBundleVersion(), processorDescriptor.getDescriptionHtml(),
+                                         convert(processorDescriptor.getOutputVariables()));
+    }
+
+    private GsProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
+        GsProcessorVariable[] processorVariables = new GsProcessorVariable[outputVariables.length];
+        for (int i = 0; i < outputVariables.length; i++) {
+            ProcessorDescriptor.Variable outputVariable = outputVariables[i];
+            GsProcessorVariable gsProcessorVariable = new GsProcessorVariable(outputVariable.getName(),
+                                                                              outputVariable.getDefaultAggregator(),
+                                                                              outputVariable.getDefaultValidMask(),
+                                                                              outputVariable.getDefaultWeightCoeff());
+            processorVariables[i] = gsProcessorVariable;
+        }
+        return processorVariables;
     }
 
     private GsProduction convert(Production production) {
