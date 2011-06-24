@@ -9,7 +9,8 @@
         <table width="100%" cellspacing="2">
             <tr>
                 <td align="center">
-                    <b>Time Filter</b>
+                    <h3>Time Filter</h3>
+                    <br/>
                 </td>
             </tr>
             <tr>
@@ -53,7 +54,8 @@
             </tr>
             <tr>
                 <td align="center">
-                    <b>Region Filter</b>
+                    <h3>Region Filter</h3>
+                    <hr/>
                 </td>
             </tr>
             <tr>
