@@ -28,8 +28,16 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L3 Output", true);
-        l2ProcessorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
+        GsProcessorDescriptor[] processors = getPortal().getProcessors();
+        l2ProcessorForm = new GeneralProcessorForm(processors, "L2 Processor");
         l3ParametersForm = new L3ParametersForm(portalContext.getRegions());
+        l2ProcessorForm.addProcessorChangedHandler(new GeneralProcessorForm.ProcessorChangedHandler() {
+            @Override
+            public void onProcessorChanged(GsProcessorDescriptor gsProcessorDescriptor) {
+                l3ParametersForm.setSelectedProcessor(gsProcessorDescriptor);
+            }
+        });
+        l3ParametersForm.setSelectedProcessor(processors[0]);
 
         widget = new FlexTable();
         widget.ensureDebugId("widget");

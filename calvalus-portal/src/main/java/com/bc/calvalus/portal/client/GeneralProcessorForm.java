@@ -116,6 +116,15 @@ public class GeneralProcessorForm implements IsWidget {
         }
     }
 
+    public void addProcessorChangedHandler(final ProcessorChangedHandler changedHandler) {
+        processorName.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                changedHandler.onProcessorChanged(getSelectedProcessor());
+            }
+        });
+    }
+
     public GsProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorName.getSelectedIndex();
         return processors[selectedIndex];
@@ -156,4 +165,9 @@ public class GeneralProcessorForm implements IsWidget {
             }
         }
     }
+
+    public static interface ProcessorChangedHandler {
+        void onProcessorChanged(GsProcessorDescriptor gsProcessorDescriptor);
+    }
+
 }

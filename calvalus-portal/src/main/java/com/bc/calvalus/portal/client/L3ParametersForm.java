@@ -2,6 +2,8 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.GsProcessorVariable;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -376,5 +378,26 @@ public class L3ParametersForm implements IsWidget {
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
         return parameters;
+    }
+
+    public void setSelectedProcessor(GsProcessorDescriptor selectedProcessor) {
+        int selectedIndex = inputVariables.getSelectedIndex();
+        String selectedItem = null;
+        if (selectedIndex != -1) {
+            selectedItem = inputVariables.getItemText(selectedIndex);
+        }
+        inputVariables.clear();
+        GsProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
+        int newSelectedIndex = 0;
+        int index = 0;
+        for (GsProcessorVariable processorVariable : processorVariables) {
+            String processorVariableName = processorVariable.getName();
+            inputVariables.addItem(processorVariableName);
+            if (selectedIndex != -1 && processorVariableName.equals(selectedItem)) {
+                newSelectedIndex = index;
+            }
+            index++;
+        }
+        inputVariables.setSelectedIndex(newSelectedIndex);
     }
 }
