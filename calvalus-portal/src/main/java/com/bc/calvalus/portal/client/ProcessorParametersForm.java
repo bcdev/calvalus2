@@ -22,14 +22,16 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Norman
  */
 public class ProcessorParametersForm extends Composite {
+    public static final String HIDE_HELP_TEXT = "Hide help";
+    public static final String SHOW_HELP_TEXT = "Show help";
+    public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
+
     private GsProcessorDescriptor processorDescriptor;
 
     interface TheUiBinder extends UiBinder<Widget, ProcessorParametersForm> {
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
-
-    public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
     @UiField
     HTML title;
@@ -52,10 +54,8 @@ public class ProcessorParametersForm extends Composite {
 
         this.title.setHTML(title);
 
-        fileUpload.setName("fileUpload");
         fileUpload.addChangeHandler(new FileUploadChangeHandler());
 
-        uploadForm.setWidget(UIUtils.createLabeledWidgetH("From file:", fileUpload));
         uploadForm.addSubmitHandler(new FormPanel.SubmitHandler() {
             public void onSubmit(FormPanel.SubmitEvent event) {
                 // todo - check inputs
@@ -68,7 +68,7 @@ public class ProcessorParametersForm extends Composite {
             }
         });
 
-        showHelpAnchor.setText("Hide help");
+        showHelpAnchor.setText(HIDE_HELP_TEXT);
         helpVisible = true;
 
         showHelpAnchor.addClickHandler(new ClickHandler() {
@@ -76,11 +76,11 @@ public class ProcessorParametersForm extends Composite {
             public void onClick(ClickEvent event) {
                 helpVisible = !helpVisible;
                 if (helpVisible) {
-                    showHelpAnchor.setText("Hide help");
+                    showHelpAnchor.setText(HIDE_HELP_TEXT);
                     processorDescriptionHTML.setHTML(processorDescriptor.getDescriptionHtml());
                     processorParametersArea.setCharacterWidth(60);
                 } else {
-                    showHelpAnchor.setText("Show help");
+                    showHelpAnchor.setText(SHOW_HELP_TEXT);
                     processorDescriptionHTML.setHTML("");
                     processorParametersArea.setCharacterWidth(100);
                 }
