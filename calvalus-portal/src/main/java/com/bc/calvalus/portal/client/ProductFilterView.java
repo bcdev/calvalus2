@@ -131,6 +131,9 @@ public class ProductFilterView extends Composite {
 //        changeHandler.dateChanged(getValueMap());
 //    }
 
+    public void validateForm() throws ValidationException {
+    }
+
     public Map<String, String> getValueMap() {
 
         Map<String, String> parameters = new HashMap<String, String>();

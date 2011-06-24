@@ -28,7 +28,9 @@ import java.util.Map;
  * Demo view that lets users submit a new L2 production.
  *
  * @author Norman
+ * @deprecated use ProductFilterView
  */
+@Deprecated
 public class ProductFilterForm implements IsWidget {
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 

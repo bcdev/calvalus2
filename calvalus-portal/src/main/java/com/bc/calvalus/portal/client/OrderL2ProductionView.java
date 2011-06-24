@@ -18,7 +18,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     public static final String ID = OrderL2ProductionView.class.getName();
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm processingForm;
-    private ProductFilterForm productFilterForm;
+    private ProductFilterView productFilterForm;
     private FlexTable widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
@@ -26,7 +26,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
         inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L2 Output", true);
         processingForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        productFilterForm = new ProductFilterForm(portalContext.getRegions(), new ProductFilterForm.ChangeHandler() {
+        productFilterForm = new ProductFilterView(portalContext.getRegions(), new ProductFilterView.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
 
