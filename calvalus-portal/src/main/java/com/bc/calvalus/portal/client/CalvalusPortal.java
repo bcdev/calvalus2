@@ -139,8 +139,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         mainPanel = new DecoratedTabPanel();
         mainPanel.ensureDebugId("mainPanel");
-        mainPanel.setWidth("100%");
-        mainPanel.setHeight("100%");
+//        mainPanel.setWidth("100%");
+//        mainPanel.setHeight("100%");
         for (PortalView view : views) {
             mainPanel.add(view, view.getTitle());
         }

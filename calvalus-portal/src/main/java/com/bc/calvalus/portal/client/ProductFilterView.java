@@ -27,7 +27,6 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.TextArea;
@@ -120,8 +119,8 @@ public class ProductFilterView extends Composite {
     }
 
     @UiFactory
-    RegionMapWidget makeRegionMapWidget() { // method name is insignificant
-      return RegionMapWidget.create(regions, false);
+    RegionMapWidget createRegionMapWidget() { // method name is insignificant
+        return RegionMapWidget.create(regions, false);
     }
 
 
@@ -155,6 +154,13 @@ public class ProductFilterView extends Composite {
             parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
             parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");
             parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
+        } else {
+            parameters.put("regionName", "World");
+            parameters.put("regionWKT", "POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))");
+            parameters.put("minLon", "-180");
+            parameters.put("minLat", "-90");
+            parameters.put("maxLon", "180");
+            parameters.put("maxLat", "90");
         }
 
         return parameters;

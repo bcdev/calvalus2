@@ -18,12 +18,10 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.HasKeyboardPagingPolicy;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
+import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
-import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
@@ -37,17 +35,12 @@ import java.util.List;
  *
  * @author Norman Fomferra
  */
-public class RegionMapWidget implements IsWidget, RegionMap {
+public class RegionMapWidget extends Composite implements RegionMap {
 
     private final RegionMapModel regionMapModel;
     private final RegionMapSelectionModel regionMapSelectionModel;
-    private final boolean editable;
-    private Widget widget;
     private MapWidget mapWidget;
     private boolean adjustingRegionSelection;
-    private boolean updatingRegionListSelection;
-    private String width;
-    private String height;
 
     private PolyStyleOptions normalPolyStrokeStyle;
     private PolyStyleOptions normalPolyFillStyle;
@@ -61,23 +54,21 @@ public class RegionMapWidget implements IsWidget, RegionMap {
         } else {
             model = new RegionMapModelImpl(regionList, createDefaultNonEditingActions());
         }
-        return new RegionMapWidget(model, editable);
+        return new RegionMapWidget(model);
     }
 
-    public RegionMapWidget(RegionMapModel regionMapModel, boolean editable) {
-        this(regionMapModel, new RegionMapSelectionModelImpl(), editable);
+    public RegionMapWidget(RegionMapModel regionMapModel) {
+        this(regionMapModel, new RegionMapSelectionModelImpl());
     }
 
-    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel, boolean editable) {
+    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel) {
         this.regionMapModel = regionMapModel;
         this.regionMapSelectionModel = regionMapSelectionModel;
-        this.editable = editable;
         this.normalPolyStrokeStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.8);
         this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
         this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
         this.selectedPolyFillStyle = normalPolyFillStyle;
-        width = "100%";
-        height = "600px";
+        initUi();
     }
 
     @Override
@@ -92,29 +83,12 @@ public class RegionMapWidget implements IsWidget, RegionMap {
 
     @Override
     public MapWidget getMapWidget() {
-        if (mapWidget == null) {
-            initUi();
-        }
         return mapWidget;
-    }
-
-    @Override
-    public Widget asWidget() {
-        if (widget == null) {
-            initUi();
-        }
-        return widget;
-    }
-
-    public void setSize(String width, String height) {
-        this.width = width;
-        this.height = height;
     }
 
     private void initUi() {
 
         mapWidget = new MapWidget();
-        mapWidget.setSize("100%", "100%");
         mapWidget.setDoubleClickZoom(true);
         mapWidget.setScrollWheelZoomEnabled(true);
         mapWidget.addControl(new MapTypeControl());
@@ -175,47 +149,15 @@ public class RegionMapWidget implements IsWidget, RegionMap {
 
         ScrollPanel regionScrollPanel = new ScrollPanel(regionCellList);
 
-//        FlexTable editPanel = new FlexTable();
-//        editPanel.ensureDebugId("editPanel");
-//        editPanel.setCellSpacing(2);
-//        editPanel.setCellPadding(2);
-//        int row = 0;
-//        editPanel.setWidget(row, 0, new RadioButton("x", "Select region"));
-//        editPanel.getFlexCellFormatter().setColSpan(row, 0, 2);
-//        row++;
-//        editPanel.setWidget(row, 0, new RadioButton("x", "Draw polgon"));
-//        editPanel.getFlexCellFormatter().setColSpan(row, 0, 2);
-//        row++;
-//        editPanel.setWidget(row, 0, new RadioButton("x", "Draw box"));
-//        editPanel.getFlexCellFormatter().setColSpan(row, 0, 2);
-//        row++;
-//        editPanel.setWidget(row, 0, new RadioButton("x", "Enter box"));
-//        editPanel.getFlexCellFormatter().setColSpan(row, 0, 2);
-//        row++;
-//        editPanel.setWidget(row, 0, new Label("North:"));
-//        editPanel.setWidget(row, 1, new DoubleBox());
-//        row++;
-//        editPanel.setWidget(row, 0, new Label("South:"));
-//        editPanel.setWidget(row, 1, new DoubleBox());
-//        row++;
-//        editPanel.setWidget(row, 0, new Label("West:"));
-//        editPanel.setWidget(row, 1, new DoubleBox());
-//        row++;
-//        editPanel.setWidget(row, 0, new Label("East:"));
-//        editPanel.setWidget(row, 1, new DoubleBox());
-//        row++;
-
         RegionMapToolbar regionMapToolbar = new RegionMapToolbar(this);
 
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
-        regionPanel.addNorth(new HTML("<b>Defined regions</b>"), 1.5);
         regionPanel.addSouth(regionMapToolbar, 3.5);
         regionPanel.add(regionScrollPanel);
 
         SplitLayoutPanel regionSplitLayoutPanel = new SplitLayoutPanel();
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
-        regionSplitLayoutPanel.setSize(width, height);
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
 
@@ -228,7 +170,8 @@ public class RegionMapWidget implements IsWidget, RegionMap {
             mapWidget.addOverlay(polygon);
         }
 
-        this.widget = regionSplitLayoutPanel;
+        initWidget(regionSplitLayoutPanel);
+        setSize("720px", "360px");
     }
 
     private void updatePolygonStyles() {

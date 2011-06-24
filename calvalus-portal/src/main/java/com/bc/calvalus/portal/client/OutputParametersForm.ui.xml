@@ -1,0 +1,27 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+        >
+
+    <g:HTMLPanel>
+        <table width="100%" cellspacing="2">
+            <tr>
+                <td align="center">
+                    <b>Output</b>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <g:HorizontalPanel>
+                        <g:Label text="File Format:"/>
+                        <g:ListBox ui:field="outputFormat" visibleItemCount="1" width="20em"/>
+                        <g:HTML>&nbsp;&nbsp;</g:HTML>
+                        <g:CheckBox ui:field="autoStaging" text="Perform staging step after successful production"
+                                    checked="true"/>
+                    </g:HorizontalPanel>
+                </td>
+            </tr>
+        </table>
+    </g:HTMLPanel>
+
+</ui:UiBinder>

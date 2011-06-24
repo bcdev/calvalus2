@@ -16,17 +16,17 @@ import java.util.Map;
  */
 public class OrderL2ProductionView extends OrderProductionView {
     public static final String ID = OrderL2ProductionView.class.getName();
-    private InputOutputForm inputOutputForm;
-    private GeneralProcessorForm processingForm;
-    private ProductFilterView productFilterForm;
-    private FlexTable widget;
+    private ProductSetSelectionForm productSetSelectionForm;
+    private OutputParametersForm outputParametersForm;
+    private GeneralProcessorForm processorForm;
+    private ProductFilterView productSetFilterForm;
+    private Widget widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input / L2 Output", true);
-        processingForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        productFilterForm = new ProductFilterView(portalContext.getRegions(), new ProductFilterView.ChangeHandler() {
+        productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
+        productSetFilterForm = new ProductFilterView(portalContext.getRegions(), new ProductFilterView.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
 
@@ -36,26 +36,26 @@ public class OrderL2ProductionView extends OrderProductionView {
             public void regionChanged(Map<String, String> data) {
             }
         });
+        outputParametersForm = new OutputParametersForm();
+        processorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
 
-        widget = new FlexTable();
-        widget.ensureDebugId("widget");
-        widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setVerticalAlignment(1, 0, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT);
-        widget.getFlexCellFormatter().setColSpan(2, 0, 2);
-        widget.getFlexCellFormatter().setRowSpan(0, 1, 0);
-        widget.setCellSpacing(2);
-        widget.setCellPadding(2);
-        widget.setWidth("100%");
-        widget.setWidget(0, 0, inputOutputForm.asWidget());
-        widget.setWidget(0, 1, processingForm.asWidget());
-        widget.setWidget(1, 0, productFilterForm.asWidget());
-        widget.setWidget(2, 0, new Button("Order Production", new ClickHandler() {
+        HorizontalPanel hpanel = new HorizontalPanel();
+        hpanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
+        hpanel.add(new Button("Order Production", new ClickHandler() {
             public void onClick(ClickEvent event) {
                 orderProduction();
             }
         }));
+
+        VerticalPanel panel = new VerticalPanel();
+        panel.setWidth("100%");
+        panel.add(productSetSelectionForm);
+        panel.add(productSetFilterForm);
+        panel.add(processorForm);
+        panel.add(outputParametersForm);
+        panel.add(hpanel);
+
+        this.widget = panel;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     protected boolean validateForm() {
         try {
-            productFilterForm.validateForm();
+            productSetFilterForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -90,16 +90,16 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     private HashMap<String, String> getProductionParameters() {
-        GsProcessorDescriptor selectedProcessor = processingForm.getSelectedProcessor();
+        GsProcessorDescriptor selectedProcessor = processorForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
-        parameters.put("outputFormat", inputOutputForm.getOutputFormat());
-        parameters.put("autoStaging", inputOutputForm.isAutoStaging() + "");
+        parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
+        parameters.put("outputFormat", outputParametersForm.getOutputFormat());
+        parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", processingForm.getProcessorParameters());
-        parameters.putAll(productFilterForm.getValueMap());
+        parameters.put("processorParameters", processorForm.getProcessorParameters());
+        parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }
 }
