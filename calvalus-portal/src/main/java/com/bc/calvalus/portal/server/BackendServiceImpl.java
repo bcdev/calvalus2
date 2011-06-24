@@ -217,8 +217,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private GsProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
-        GsProcessorVariable[] processorVariables = new GsProcessorVariable[outputVariables.length];
-        for (int i = 0; i < outputVariables.length; i++) {
+        int numElems = outputVariables != null ? outputVariables.length : 0;
+        GsProcessorVariable[] processorVariables = new GsProcessorVariable[numElems];
+        for (int i = 0; i < numElems; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             GsProcessorVariable gsProcessorVariable = new GsProcessorVariable(outputVariable.getName(),
                                                                               outputVariable.getDefaultAggregator(),
