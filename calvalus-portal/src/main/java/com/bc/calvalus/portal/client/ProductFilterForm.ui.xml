@@ -1,0 +1,73 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns:map='urn:import:com.bc.calvalus.portal.client.map'
+             xmlns:date='urn:import:com.google.gwt.user.datepicker.client'
+        >
+
+    <g:HorizontalPanel spacing="10">
+        <g:HTMLPanel >
+            <table cellspacing="2">
+                <tr>
+                    <td colspan="3" align="center">
+                        <h3>Time Filter</h3>
+                        <br/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <g:RadioButton ui:field='dateSelDateRange' name="dateSel" text="Date range"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;</td>
+                    <td>Start time:</td>
+                    <td align="left">
+                        <date:DateBox ui:field='minDate' width="6em"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;</td>
+                    <td>End time:</td>
+                    <td align="left">
+                        <date:DateBox ui:field='maxDate' width="6em"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;</td>
+                    <td>Day count:</td>
+                    <td align="left">
+                        <g:TextBox ui:field='numDays' visibleLength="4" enabled="false"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <g:RadioButton ui:field='dateSelDateList' name="dateSel" text="Date list"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;</td>
+                    <td colspan="2">
+                        <g:TextArea ui:field='dateList' width="100%" visibleLines="4"/>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+        <g:HTMLPanel>
+            <table cellspacing="2">
+                <tr>
+                    <td align="center">
+                        <h3>Region Filter</h3>
+                        <br/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <map:RegionMapWidget ui:field='predefinedRegions'/>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

@@ -1,17 +1,33 @@
+/*
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.maps.client.geom.LatLngBounds;
 import com.google.gwt.maps.client.overlay.Polygon;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiFactory;
+import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
@@ -28,39 +44,49 @@ import java.util.Map;
  * Demo view that lets users submit a new L2 production.
  *
  * @author Norman
- * @deprecated use ProductFilterView
  */
-@Deprecated
-public class ProductFilterForm implements IsWidget {
+public class ProductFilterForm extends Composite {
+
+    interface ProductFilterUiBinder extends UiBinder<Widget, ProductFilterForm> {
+    }
+
+    private static ProductFilterUiBinder uiBinder = GWT.create(ProductFilterUiBinder.class);
+
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
-    private Widget widget;
+    @UiField
+    RadioButton dateSelDateList;
+    @UiField
+    RadioButton dateSelDateRange;
 
-    private RadioButton dateSelDateList;
-    private RadioButton dateSelDateRange;
+    @UiField
+    DateBox minDate;
+    @UiField
+    DateBox maxDate;
+    @UiField
+    TextBox numDays;
 
-    private DateBox minDate;
-    private DateBox maxDate;
-    private TextBox numDays;
+    @UiField
+    TextArea dateList;
 
-    private TextArea dateList;
-
-    private RegionMapWidget predefinedRegions;
+    @UiField
+    RegionMapWidget predefinedRegions;
 
     private final ChangeHandler changeHandler;
-
+    private final ListDataProvider<Region> regions;
 
     public ProductFilterForm(ListDataProvider<Region> regions, ChangeHandler changeHandler) {
+        this.regions = regions;
         this.changeHandler = changeHandler;
 
-        dateSelDateRange = new RadioButton("dateSel", "Date range");
+        initWidget(uiBinder.createAndBindUi(this));
+
+
         dateSelDateRange.setValue(true);
         dateSelDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
 
-        minDate = new DateBox();
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
-        minDate.setWidth("6em");
         minDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
@@ -68,10 +94,8 @@ public class ProductFilterForm implements IsWidget {
             }
         });
 
-        maxDate = new DateBox();
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
-        maxDate.setWidth("6em");
         maxDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
@@ -79,21 +103,12 @@ public class ProductFilterForm implements IsWidget {
             }
         });
 
-        numDays = new TextBox();
-        numDays.setVisibleLength(4);
-        numDays.setEnabled(false);
-
-        dateSelDateList = new RadioButton("dateSel", "Date list");
         dateSelDateList.setValue(false);
         dateSelDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
 
-        dateList = new TextArea();
-        dateList.setWidth("100%");
-        dateList.setVisibleLines(4);
         dateList.setEnabled(false);
 
-        predefinedRegions = RegionMapWidget.create(regions, false);
-        predefinedRegions.setSize("100%", "240px");
+//        predefinedRegions.setSize("100%", "240px");
         predefinedRegions.getRegionSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override
             public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
@@ -101,76 +116,11 @@ public class ProductFilterForm implements IsWidget {
             }
         });
 
-        widget = createContentPanel();
-        widget.setWidth("100%");
     }
 
-    private FlexTable createContentPanel() {
-
-        FlexTable table = new FlexTable();
-        FlexTable.FlexCellFormatter formatter = table.getFlexCellFormatter();
-
-        table.setWidth("100%");
-        table.setCellSpacing(2);
-
-        int row = 0;
-
-        table.setWidget(row, 0, new HTML("<b>Time Filter</b>"));
-        formatter.setHorizontalAlignment(row, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        formatter.setColSpan(row, 0, 2);
-
-        row++;
-        table.setWidget(row, 0, createDateTable());
-
-        row++;
-        table.setWidget(row, 0, new HTML("<b>Region Filter</b>"));
-        formatter.setHorizontalAlignment(row, 0, HasHorizontalAlignment.ALIGN_CENTER);
-
-        row++;
-        table.setWidget(row, 0, predefinedRegions);
-        formatter.setColSpan(row, 0, 2);
-        return table;
-    }
-
-    private FlexTable createDateTable() {
-        FlexTable table = new FlexTable();
-        FlexTable.FlexCellFormatter formatter = table.getFlexCellFormatter();
-
-        table.setWidth("100%");
-        table.setCellSpacing(2);
-
-        int row = 0;
-
-        table.setWidget(row, 0, dateSelDateRange);
-        formatter.setColSpan(row, 0, 3);
-        table.setWidget(row, 1, dateSelDateList);
-        formatter.setColSpan(row, 1, 2);
-
-        row++;
-        table.setWidget(row, 0, new HTML("&nbsp;&nbsp;"));
-        table.setWidget(row, 1, new Label("Start time:"));
-        table.setWidget(row, 2, minDate);
-        table.setWidget(row, 3, new HTML("&nbsp;&nbsp;"));
-        formatter.setRowSpan(row, 3, 3);
-        table.setWidget(row, 4, dateList);
-        formatter.setRowSpan(row, 4, 3);
-
-        row++;
-        table.setWidget(row, 0, new HTML("&nbsp;&nbsp;"));
-        table.setWidget(row, 1, new Label("End time:"));
-        table.setWidget(row, 2, maxDate);
-
-        row++;
-        table.setWidget(row, 0, new HTML("&nbsp;&nbsp;"));
-        table.setWidget(row, 1, new Label("Day count:"));
-        table.setWidget(row, 2, numDays);
-
-        return table;
-    }
-
-    @Override
-    public Widget asWidget() {
-        return widget;
+    @UiFactory
+    RegionMapWidget createRegionMapWidget() { // method name is insignificant
+        return RegionMapWidget.create(regions, false);
     }
 
     public void validateForm() throws ValidationException {
@@ -197,6 +147,13 @@ public class ProductFilterForm implements IsWidget {
             parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
             parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");
             parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
+        } else {
+            parameters.put("regionName", "World");
+            parameters.put("regionWKT", "POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))");
+            parameters.put("minLon", "-180");
+            parameters.put("minLat", "-90");
+            parameters.put("maxLon", "180");
+            parameters.put("maxLat", "90");
         }
 
         return parameters;

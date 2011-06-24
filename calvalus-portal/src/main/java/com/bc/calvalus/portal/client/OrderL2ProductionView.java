@@ -19,14 +19,14 @@ public class OrderL2ProductionView extends OrderProductionView {
     private ProductSetSelectionForm productSetSelectionForm;
     private OutputParametersForm outputParametersForm;
     private GeneralProcessorForm processorForm;
-    private ProductFilterView productSetFilterForm;
+    private ProductFilterForm productSetFilterForm;
     private Widget widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetFilterForm = new ProductFilterView(portalContext.getRegions(), new ProductFilterView.ChangeHandler() {
+        productSetFilterForm = new ProductFilterForm(portalContext.getRegions(), new ProductFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
 

@@ -21,7 +21,7 @@ import java.util.Map;
  * Demo view that lets users submit a new L2 production.
  *
  * @author Norman
- * @deprecated use ProductFilterForm
+ * @deprecated use ProductFilterView
  */
 @Deprecated
 public class L2ProductFilterForm implements IsWidget {

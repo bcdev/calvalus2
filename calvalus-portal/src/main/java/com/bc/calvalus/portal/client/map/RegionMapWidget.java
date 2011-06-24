@@ -160,6 +160,7 @@ public class RegionMapWidget extends Composite implements RegionMap {
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
+        regionSplitLayoutPanel.setSize("900px", "360px");
 
         List<Region> regionList = regionMapModel.getRegionList().getList();
         for (Region region : regionList) {
@@ -171,7 +172,7 @@ public class RegionMapWidget extends Composite implements RegionMap {
         }
 
         initWidget(regionSplitLayoutPanel);
-        setSize("720px", "360px");
+//        setSize("720px", "360px");
     }
 
     private void updatePolygonStyles() {
