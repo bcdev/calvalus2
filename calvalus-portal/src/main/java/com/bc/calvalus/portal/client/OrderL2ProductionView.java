@@ -67,6 +67,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         }));
 
         HorizontalPanel panel1 = new HorizontalPanel();
+        panel1.setSpacing(16);
         panel1.add(productSetSelectionForm);
         panel1.add(processorSelectionForm);
 

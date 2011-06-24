@@ -6,7 +6,7 @@
 
     <g:HTMLPanel>
 
-        <table width="100%" cellspacing="2">
+        <table width="100%">
             <tr>
                 <td align="center">
                     <h3>
@@ -17,21 +17,24 @@
             </tr>
             <tr>
                 <td>
-                    <g:HorizontalSplitPanel splitPosition="100%">
-                        <g:VerticalPanel spacing="2">
-                            <g:TextArea ui:field="processorParametersArea"
-                                        characterWidth="80"
-                                        visibleLines="10"
-                                    width="100%"/>
-                            <g:FormPanel ui:field="uploadForm" method="POST" width="100%">
-                                <g:FileUpload ui:field="fileUpload" title="From file:" width="100%"/>
-                            </g:FormPanel>
-                        </g:VerticalPanel>
-                        <g:VerticalPanel spacing="2">
-                            <g:HTML>Description</g:HTML>
-                            <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
-                        </g:VerticalPanel>
-                    </g:HorizontalSplitPanel>
+                    <table width="100%" cellspacing="2">
+                        <tr>
+                            <td>
+                                <g:VerticalPanel>
+                                    <g:Anchor ui:field="showHelpAnchor"/>
+                                    <g:TextArea ui:field="processorParametersArea"
+                                                characterWidth="60"
+                                                visibleLines="16"/>
+                                    <g:FormPanel ui:field="uploadForm" method="POST" >
+                                        <g:FileUpload ui:field="fileUpload" title="From file:" />
+                                    </g:FormPanel>
+                                </g:VerticalPanel>
+                            </td>
+                            <td>
+                                <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>

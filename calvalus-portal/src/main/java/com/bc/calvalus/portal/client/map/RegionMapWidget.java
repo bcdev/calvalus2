@@ -18,8 +18,8 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.HasKeyboardPagingPolicy;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.ResizeComposite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.view.client.ListDataProvider;
@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @author Norman Fomferra
  */
-public class RegionMapWidget extends Composite implements RegionMap {
+public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
     private final RegionMapModel regionMapModel;
     private final RegionMapSelectionModel regionMapSelectionModel;
@@ -160,7 +160,6 @@ public class RegionMapWidget extends Composite implements RegionMap {
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
-        regionSplitLayoutPanel.setSize("900px", "360px");
 
         List<Region> regionList = regionMapModel.getRegionList().getList();
         for (Region region : regionList) {
@@ -172,7 +171,7 @@ public class RegionMapWidget extends Composite implements RegionMap {
         }
 
         initWidget(regionSplitLayoutPanel);
-//        setSize("720px", "360px");
+        setSize("720px", "360px");
     }
 
     private void updatePolygonStyles() {

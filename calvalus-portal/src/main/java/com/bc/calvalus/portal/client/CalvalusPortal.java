@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class CalvalusPortal implements EntryPoint, PortalContext {
 
-    private static final int UPDATE_PERIOD_MILLIS = 1000;
+    private static final int UPDATE_PERIOD_MILLIS = 2000;
     public static final String NO_FILTER = "";
 
     private final BackendServiceAsync backendService;

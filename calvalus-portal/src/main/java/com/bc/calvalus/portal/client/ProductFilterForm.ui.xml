@@ -5,13 +5,13 @@
              xmlns:date='urn:import:com.google.gwt.user.datepicker.client'
         >
 
-    <g:HorizontalPanel spacing="10">
+    <g:HorizontalPanel spacing="16">
         <g:HTMLPanel >
             <table cellspacing="2">
                 <tr>
                     <td colspan="3" align="center">
                         <h3>Time Filter</h3>
-                        <br/>
+                        <hr/>
                     </td>
                 </tr>
                 <tr>
@@ -58,12 +58,12 @@
                 <tr>
                     <td align="center">
                         <h3>Region Filter</h3>
-                        <br/>
+                        <hr/>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <map:RegionMapWidget ui:field='predefinedRegions'/>
+                        <map:RegionMapWidget ui:field='predefinedRegions' width="480px" height="240px"/>
                     </td>
                 </tr>
             </table>
