@@ -7,13 +7,16 @@
         <table width="100%" cellspacing="2">
             <tr>
                 <td align="center">
-                    <g:Label ui:field="label"/>
+                    <h3>
+                        <g:HTML ui:field="title"/>
+                    </h3>
                     <hr/>
                 </td>
             </tr>
             <tr>
                 <td>
-                    Select a predefined processor:<br/>
+                    Select a predefined processor:
+                    <br/>
                     <g:ListBox ui:field="processorList" width="100%" visibleItemCount="6"/>
                 </td>
             </tr>

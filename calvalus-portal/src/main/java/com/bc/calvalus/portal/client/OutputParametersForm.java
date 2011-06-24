@@ -53,6 +53,6 @@ public class OutputParametersForm extends Composite {
         return autoStaging.getValue();
     }
 
-    public void validateForm() {
+    public void validateForm() throws ValidationException {
     }
 }

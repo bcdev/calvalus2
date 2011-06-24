@@ -2,10 +2,12 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -17,23 +19,25 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class ProcessorSelectionForm extends Composite {
 
-    private GsProcessorDescriptor[] processorDescriptors;
 
     interface TheUiBinder extends UiBinder<Widget, ProcessorSelectionForm> {
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
+    private GsProcessorDescriptor[] processorDescriptors;
+
     @UiField
-    Label label;
+    HTML title;
     @UiField
     ListBox processorList;
 
     public ProcessorSelectionForm(GsProcessorDescriptor[] processorDescriptors, String title) {
-        this.processorDescriptors = processorDescriptors;
         initWidget(uiBinder.createAndBindUi(this));
 
-        label.setText(title);
+        this.processorDescriptors = processorDescriptors;
+
+        this.title.setHTML(title);
         for (GsProcessorDescriptor processor : processorDescriptors) {
             String label = processor.getBundleName() + "-" + processor.getBundleVersion();
             this.processorList.addItem(label);
@@ -43,9 +47,26 @@ public class ProcessorSelectionForm extends Composite {
         }
     }
 
+    public void addProcessorChangedHandler(final ProcessorChangedHandler changedHandler) {
+        processorList.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                changedHandler.onProcessorChanged(getSelectedProcessor());
+            }
+        });
+    }
+
     public GsProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorList.getSelectedIndex();
         return processorDescriptors[selectedIndex];
+    }
+
+
+    public void validateForm() throws ValidationException {
+    }
+
+    public static interface ProcessorChangedHandler {
+        void onProcessorChanged(GsProcessorDescriptor gsProcessorDescriptor);
     }
 
 }

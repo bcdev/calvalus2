@@ -1,0 +1,41 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns="http://www.w3.org/1999/html"
+        >
+
+    <g:HTMLPanel>
+
+        <table width="100%" cellspacing="2">
+            <tr>
+                <td align="center">
+                    <h3>
+                        <g:HTML ui:field="title"/>
+                    </h3>
+                    <hr/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <g:HorizontalSplitPanel splitPosition="100%">
+                        <g:VerticalPanel spacing="2">
+                            <g:TextArea ui:field="processorParametersArea"
+                                        characterWidth="80"
+                                        visibleLines="10"
+                                    width="100%"/>
+                            <g:FormPanel ui:field="uploadForm" method="POST" width="100%">
+                                <g:FileUpload ui:field="fileUpload" title="From file:" width="100%"/>
+                            </g:FormPanel>
+                        </g:VerticalPanel>
+                        <g:VerticalPanel spacing="2">
+                            <g:HTML>Description</g:HTML>
+                            <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
+                        </g:VerticalPanel>
+                    </g:HorizontalSplitPanel>
+                </td>
+            </tr>
+        </table>
+
+    </g:HTMLPanel>
+
+</ui:UiBinder>

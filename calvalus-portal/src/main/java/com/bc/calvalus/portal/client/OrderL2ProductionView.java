@@ -4,7 +4,12 @@ import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
 import com.bc.calvalus.portal.shared.GsProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,11 +20,14 @@ import java.util.Map;
  * @author Norman
  */
 public class OrderL2ProductionView extends OrderProductionView {
+
     public static final String ID = OrderL2ProductionView.class.getName();
+
     private ProductSetSelectionForm productSetSelectionForm;
-    private OutputParametersForm outputParametersForm;
-    private GeneralProcessorForm processorForm;
+    private ProcessorSelectionForm processorSelectionForm;
     private ProductFilterForm productSetFilterForm;
+    private OutputParametersForm outputParametersForm;
+    private ProcessorParametersForm processorParametersForm;
     private Widget widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
@@ -36,24 +44,40 @@ public class OrderL2ProductionView extends OrderProductionView {
             public void regionChanged(Map<String, String> data) {
             }
         });
-        outputParametersForm = new OutputParametersForm();
-        processorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
+        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
+        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
 
-        HorizontalPanel hpanel = new HorizontalPanel();
-        hpanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-        hpanel.add(new Button("Order Production", new ClickHandler() {
+        processorSelectionForm.addProcessorChangedHandler(new ProcessorSelectionForm.ProcessorChangedHandler() {
+            @Override
+            public void onProcessorChanged(GsProcessorDescriptor processorDescriptor) {
+                processorParametersForm.setProcessorDescriptor(processorDescriptor);
+            }
+        });
+        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
+
+        outputParametersForm = new OutputParametersForm();
+
+        HorizontalPanel orderPanel = new HorizontalPanel();
+        orderPanel.setWidth("100%");
+        orderPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
+        orderPanel.add(new Button("Order Production", new ClickHandler() {
             public void onClick(ClickEvent event) {
                 orderProduction();
             }
         }));
 
+        HorizontalPanel panel1 = new HorizontalPanel();
+        panel1.add(productSetSelectionForm);
+        panel1.add(processorSelectionForm);
+
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
-        panel.add(productSetSelectionForm);
+        panel.add(panel1);
         panel.add(productSetFilterForm);
-        panel.add(processorForm);
+        panel.add(processorParametersForm);
         panel.add(outputParametersForm);
-        panel.add(hpanel);
+        panel.add(new HTML("<br/>"));
+        panel.add(orderPanel);
 
         this.widget = panel;
     }
@@ -77,6 +101,10 @@ public class OrderL2ProductionView extends OrderProductionView {
     protected boolean validateForm() {
         try {
             productSetFilterForm.validateForm();
+            processorSelectionForm.validateForm();
+            productSetFilterForm.validateForm();
+            processorParametersForm.validateForm();
+            outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -90,7 +118,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     private HashMap<String, String> getProductionParameters() {
-        GsProcessorDescriptor selectedProcessor = processorForm.getSelectedProcessor();
+        GsProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
         parameters.put("outputFormat", outputParametersForm.getOutputFormat());
@@ -98,7 +126,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", processorForm.getProcessorParameters());
+        parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
         parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }
