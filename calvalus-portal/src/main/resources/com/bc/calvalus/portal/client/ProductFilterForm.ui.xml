@@ -5,69 +5,72 @@
              xmlns:date='urn:import:com.google.gwt.user.datepicker.client'
         >
 
+
+
     <g:HorizontalPanel spacing="16">
-        <g:HTMLPanel >
-            <table cellspacing="2">
-                <tr>
-                    <td colspan="3" align="center">
-                        <h3>Time Filter</h3>
-                        <hr/>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3">
-                        <g:RadioButton ui:field='dateSelDateRange' name="dateSel" text="Date range"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>&nbsp;&nbsp;</td>
-                    <td>Start time:</td>
-                    <td align="left">
-                        <date:DateBox ui:field='minDate' width="6em"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>&nbsp;&nbsp;</td>
-                    <td>End time:</td>
-                    <td align="left">
-                        <date:DateBox ui:field='maxDate' width="6em"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>&nbsp;&nbsp;</td>
-                    <td>Day count:</td>
-                    <td align="left">
-                        <g:TextBox ui:field='numDays' visibleLength="4" enabled="false"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3">
-                        <g:RadioButton ui:field='dateSelDateList' name="dateSel" text="Date list"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>&nbsp;&nbsp;</td>
-                    <td colspan="2">
-                        <g:TextArea ui:field='dateList' width="100%" visibleLines="4"/>
-                    </td>
-                </tr>
-            </table>
-        </g:HTMLPanel>
-        <g:HTMLPanel>
-            <table cellspacing="2">
-                <tr>
-                    <td align="center">
-                        <h3>Region Filter</h3>
-                        <hr/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <map:RegionMapWidget ui:field='predefinedRegions' width="480px" height="240px"/>
-                    </td>
-                </tr>
-            </table>
-        </g:HTMLPanel>
+
+        <g:VerticalPanel spacing="2">
+            <g:HTMLPanel width="100%">
+                <td colspan="3" align="center">
+                    <h3>Temporal Range</h3>
+                    <hr/>
+                </td>
+            </g:HTMLPanel>
+            <g:HTMLPanel>
+                <table cellspacing="2">
+                    <tr>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <g:RadioButton ui:field='dateSelDateRange' name="dateSel" text="Date range"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;</td>
+                        <td>Start time:</td>
+                        <td align="left">
+                            <date:DateBox ui:field='minDate' width="6em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;</td>
+                        <td>End time:</td>
+                        <td align="left">
+                            <date:DateBox ui:field='maxDate' width="6em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;</td>
+                        <td>Day count:</td>
+                        <td align="left">
+                            <g:TextBox ui:field='numDays' visibleLength="4" enabled="false"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <g:RadioButton ui:field='dateSelDateList' name="dateSel" text="Date list"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;</td>
+                        <td colspan="2">
+                            <g:TextArea ui:field='dateList' width="100%" visibleLines="4"/>
+                        </td>
+                    </tr>
+                </table>
+            </g:HTMLPanel>
+        </g:VerticalPanel>
+
+        <g:VerticalPanel spacing="2">
+            <g:HTMLPanel width="100%">
+                <td colspan="3" align="center">
+                    <h3>Spatial Range</h3>
+                    <hr/>
+                </td>
+            </g:HTMLPanel>
+            <map:RegionMapWidget ui:field='predefinedRegions' width="480px" height="240px"/>
+        </g:VerticalPanel>
+
     </g:HorizontalPanel>
 
 </ui:UiBinder>

@@ -3,27 +3,19 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
         >
 
-    <g:HTMLPanel>
-        <table width="100%" cellspacing="2">
-            <tr>
-                <td align="center">
-                    <h3>Output</h3>
-                    <hr/>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <g:HorizontalPanel>
-                        <g:HTML>File Format:&nbsp;</g:HTML>
-                        <g:ListBox ui:field="outputFormat" visibleItemCount="1" width="20em"/>
-                        <g:HTML>&nbsp;&nbsp;&nbsp;</g:HTML>
-                        <g:CheckBox ui:field="autoStaging"
-                                    text="Perform staging step after successful production"
-                                    checked="true"/>
-                    </g:HorizontalPanel>
-                </td>
-            </tr>
-        </table>
-    </g:HTMLPanel>
+    <g:VerticalPanel>
+        <g:HTMLPanel width="100%">
+            <h3>Output</h3>
+            <hr/>
+        </g:HTMLPanel>
+        <g:HorizontalPanel>
+            <g:HTML>File Format:&nbsp;</g:HTML>
+            <g:ListBox ui:field="outputFormat" visibleItemCount="1" width="20em"/>
+            <g:HTML>&nbsp;&nbsp;&nbsp;</g:HTML>
+            <g:CheckBox ui:field="autoStaging"
+                        text="Perform staging step after successful production"
+                        checked="true"/>
+        </g:HorizontalPanel>
+    </g:VerticalPanel>
 
 </ui:UiBinder>

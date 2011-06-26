@@ -3,21 +3,16 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
         >
 
-    <g:HTMLPanel>
-        <table width="100%" cellspacing="2">
-            <tr>
-                <td align="center">
-                    <h3>Input</h3>
-                    <hr/>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Select a predefined product file set:<br/>
-                    <g:ListBox ui:field="inputProductSet" width="100%" visibleItemCount="6"/>
-                </td>
-            </tr>
-        </table>
-    </g:HTMLPanel>
+    <g:VerticalPanel spacing="2">
+
+        <g:HTMLPanel width="100%">
+            <h3>Input</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:Label>Select a predefined product file set:</g:Label>
+        <g:ListBox ui:field="inputProductSet" width="100%" visibleItemCount="6"/>
+
+    </g:VerticalPanel>
 
 </ui:UiBinder>
