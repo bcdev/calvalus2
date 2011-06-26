@@ -13,10 +13,10 @@ public class BinningParametersFormTest extends GWTTestCase {
         BinningParametersForm l3ParametersPanel = new BinningParametersForm();
         Map<String, String> valueMap = l3ParametersPanel.getValueMap();
         assertNotNull(valueMap);
-        assertEquals(15, valueMap.size());
+        assertEquals(9, valueMap.size());
 
         assertEquals("chl_conc", valueMap.get("inputVariables"));
-        assertEquals("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN AND !l1p_flags.F_CLOUD", valueMap.get("maskExpr"));
+        assertEquals("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN", valueMap.get("maskExpr"));
         assertEquals("NaN", valueMap.get("fillValue"));
         assertEquals("AVG_ML", valueMap.get("aggregator"));
         assertEquals("0.5", valueMap.get("weightCoeff"));

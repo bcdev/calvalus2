@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProductionRequest;
-import com.bc.calvalus.portal.shared.GsProductionResponse;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
+import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -23,7 +23,7 @@ public abstract class OrderProductionView extends PortalView {
      *
      * @return The production request.
      */
-    protected abstract GsProductionRequest getProductionRequest();
+    protected abstract DtoProductionRequest getProductionRequest();
 
     /**
      * Called by {@link #orderProduction}.
@@ -56,9 +56,9 @@ public abstract class OrderProductionView extends PortalView {
      */
     protected void orderProduction() {
         if (validateForm()) {
-            GsProductionRequest request = getProductionRequest();
-            getPortal().getBackendService().orderProduction(request, new AsyncCallback<GsProductionResponse>() {
-                public void onSuccess(final GsProductionResponse response) {
+            DtoProductionRequest request = getProductionRequest();
+            getPortal().getBackendService().orderProduction(request, new AsyncCallback<DtoProductionResponse>() {
+                public void onSuccess(final DtoProductionResponse response) {
                     onOrderProductionSuccess();
                 }
 

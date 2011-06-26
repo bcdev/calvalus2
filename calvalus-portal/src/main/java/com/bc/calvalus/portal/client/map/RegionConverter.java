@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.bc.calvalus.portal.shared.GsRegion;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.maps.client.overlay.Overlay;
 import com.google.gwt.maps.client.overlay.Polygon;
 
@@ -18,9 +18,9 @@ public class RegionConverter {
      * @param encodedRegions The encoded regions.
      * @return A modifiable list of decoded regions.
      */
-    public static List<Region> decodeRegions(GsRegion[] encodedRegions) {
+    public static List<Region> decodeRegions(DtoRegion[] encodedRegions) {
         ArrayList<Region> regionList = new ArrayList<Region>();
-        for (GsRegion encodedRegion : encodedRegions) {
+        for (DtoRegion encodedRegion : encodedRegions) {
             String geometryWkt = encodedRegion.getGeometryWkt();
             Overlay overlay = WKTParser.parse(geometryWkt);
             if (overlay instanceof Polygon) {

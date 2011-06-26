@@ -2,10 +2,10 @@ package com.bc.calvalus.portal.shared;
 
 import junit.framework.TestCase;
 
-public class GsProductSetTest extends TestCase {
+public class DtoProductSetTest extends TestCase {
 
     public void testDefaultConstructorForGWTSerialisation() {
-        GsProductSet productSet = new GsProductSet();
+        DtoProductSet productSet = new DtoProductSet();
         assertEquals(null, productSet.getPath());
         assertEquals("", productSet.getName());
         assertEquals("", productSet.getType());

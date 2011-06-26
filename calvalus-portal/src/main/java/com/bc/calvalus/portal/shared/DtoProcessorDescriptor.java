@@ -7,28 +7,28 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsProcessorDescriptor implements IsSerializable {
+public class DtoProcessorDescriptor implements IsSerializable {
     private String executableName;
     private String processorName;
     private String defaultParameter;
     private String bundleName;
     private String bundleVersion;
     private String descriptionHtml;
-    private GsProcessorVariable[] processorVariables;
+    private DtoProcessorVariable[] processorVariables;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProcessorDescriptor() {
+    public DtoProcessorDescriptor() {
     }
 
-    public GsProcessorDescriptor(String executableName,
-                                 String processorName,
-                                 String defaultParameter,
-                                 String bundleName,
-                                 String bundleVersion,
-                                 String descriptionHtml,
-                                 GsProcessorVariable[] processorVariables) {
+    public DtoProcessorDescriptor(String executableName,
+                                  String processorName,
+                                  String defaultParameter,
+                                  String bundleName,
+                                  String bundleVersion,
+                                  String descriptionHtml,
+                                  DtoProcessorVariable[] processorVariables) {
         this.executableName = executableName;
         this.processorName = processorName;
         this.defaultParameter = defaultParameter;
@@ -62,7 +62,7 @@ public class GsProcessorDescriptor implements IsSerializable {
         return descriptionHtml;
     }
 
-    public GsProcessorVariable[] getProcessorVariables() {
+    public DtoProcessorVariable[] getProcessorVariables() {
         return processorVariables;
     }
 }

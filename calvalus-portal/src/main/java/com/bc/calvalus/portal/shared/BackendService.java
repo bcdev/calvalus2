@@ -16,7 +16,7 @@ public interface BackendService extends RemoteService {
      * @return The array of regions.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsRegion[] getRegions(String filter) throws BackendServiceException;
+    DtoRegion[] getRegions(String filter) throws BackendServiceException;
 
     /**
      * Gets all known product sets.
@@ -25,7 +25,7 @@ public interface BackendService extends RemoteService {
      * @return The product sets.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsProductSet[] getProductSets(String filter) throws BackendServiceException;
+    DtoProductSet[] getProductSets(String filter) throws BackendServiceException;
 
     /**
      * Gets all known processors.
@@ -34,7 +34,7 @@ public interface BackendService extends RemoteService {
      * @return The processors.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException;
+    DtoProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException;
 
     /**
      * Gets all known productions.
@@ -43,7 +43,7 @@ public interface BackendService extends RemoteService {
      * @return The productions.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsProduction[] getProductions(String filter) throws BackendServiceException;
+    DtoProduction[] getProductions(String filter) throws BackendServiceException;
 
     /**
      * Orders a new productions.
@@ -52,7 +52,7 @@ public interface BackendService extends RemoteService {
      * @return The response.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsProductionResponse orderProduction(GsProductionRequest request) throws BackendServiceException;
+    DtoProductionResponse orderProduction(DtoProductionRequest request) throws BackendServiceException;
 
     /**
      * Gets the production request for the given production ID.
@@ -61,7 +61,7 @@ public interface BackendService extends RemoteService {
      * @return The production request, or {@code null} if none with the given ID was found.
      * @throws BackendServiceException If a server error occurred.
      */
-    GsProductionRequest getProductionRequest(String productionId) throws BackendServiceException;
+    DtoProductionRequest getProductionRequest(String productionId) throws BackendServiceException;
 
     void cancelProductions(String[] productionIds) throws BackendServiceException;
 

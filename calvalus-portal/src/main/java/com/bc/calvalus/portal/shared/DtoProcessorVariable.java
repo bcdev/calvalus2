@@ -23,7 +23,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author MarcoZ
  */
-public class GsProcessorVariable implements IsSerializable {
+public class DtoProcessorVariable implements IsSerializable {
     private String name;
     private String defaultAggregator;
     private String defaultValidMask;
@@ -32,10 +32,10 @@ public class GsProcessorVariable implements IsSerializable {
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProcessorVariable() {
+    public DtoProcessorVariable() {
     }
 
-    public GsProcessorVariable(String name, String defaultAggregator, String defaultValidMask, String defaultWeightCoeff) {
+    public DtoProcessorVariable(String name, String defaultAggregator, String defaultValidMask, String defaultWeightCoeff) {
         this.name = name;
         this.defaultAggregator = defaultAggregator;
         this.defaultValidMask = defaultValidMask;

@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
-import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -49,7 +49,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
         processorSelectionForm.addProcessorChangedHandler(new ProcessorSelectionForm.ProcessorChangedHandler() {
             @Override
-            public void onProcessorChanged(GsProcessorDescriptor processorDescriptor) {
+            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
             }
         });
@@ -114,12 +114,12 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     @Override
-    protected GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("L2", getProductionParameters());
+    protected DtoProductionRequest getProductionRequest() {
+        return new DtoProductionRequest("L2", getProductionParameters());
     }
 
     private HashMap<String, String> getProductionParameters() {
-        GsProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
+        DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
         parameters.put("outputFormat", outputParametersForm.getOutputFormat());

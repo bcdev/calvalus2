@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
-import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -82,12 +82,12 @@ public class OrderTAProductionView extends OrderProductionView {
     }
 
     @Override
-    protected GsProductionRequest getProductionRequest() {
-        return new GsProductionRequest("TA", getProductionParameters());
+    protected DtoProductionRequest getProductionRequest() {
+        return new DtoProductionRequest("TA", getProductionParameters());
     }
 
     private HashMap<String, String> getProductionParameters() {
-        GsProcessorDescriptor selectedProcessor = l2ProcessorForm.getSelectedProcessor();
+        DtoProcessorDescriptor selectedProcessor = l2ProcessorForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
         parameters.put("outputFormat", inputOutputForm.getOutputFormat());

@@ -8,17 +8,17 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendServiceAsync {
-    void getRegions(String filter, AsyncCallback<GsRegion[]> callback);
+    void getRegions(String filter, AsyncCallback<DtoRegion[]> callback);
 
-    void getProductSets(String filter, AsyncCallback<GsProductSet[]> callback);
+    void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
-    void getProcessors(String filter, AsyncCallback<GsProcessorDescriptor[]> callback);
+    void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
 
-    void getProductionRequest(String productionId, AsyncCallback<GsProductionRequest> callback);
+    void getProductionRequest(String productionId, AsyncCallback<DtoProductionRequest> callback);
 
-    void getProductions(String filter, AsyncCallback<GsProduction[]> callback);
+    void getProductions(String filter, AsyncCallback<DtoProduction[]> callback);
 
-    void orderProduction(GsProductionRequest request, AsyncCallback<GsProductionResponse> callback);
+    void orderProduction(DtoProductionRequest request, AsyncCallback<DtoProductionResponse> callback);
 
     void cancelProductions(String[] productionIds, AsyncCallback<Void> callback);
 

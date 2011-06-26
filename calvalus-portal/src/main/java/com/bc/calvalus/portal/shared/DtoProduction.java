@@ -7,28 +7,28 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsProduction implements IsSerializable {
+public class DtoProduction implements IsSerializable {
     String id;
     String name;
     String user;
     String downloadPath;
     boolean autoStaging;
-    GsProcessStatus processingStatus;
-    GsProcessStatus stagingStatus;
+    DtoProcessStatus processingStatus;
+    DtoProcessStatus stagingStatus;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProduction() {
+    public DtoProduction() {
     }
 
-    public GsProduction(String id,
-                        String name,
-                        String user,
-                        String downloadPath,
-                        boolean autoStaging,
-                        GsProcessStatus processingStatus,
-                        GsProcessStatus stagingStatus) {
+    public DtoProduction(String id,
+                         String name,
+                         String user,
+                         String downloadPath,
+                         boolean autoStaging,
+                         DtoProcessStatus processingStatus,
+                         DtoProcessStatus stagingStatus) {
         if (id == null) {
             throw new NullPointerException("id");
         }
@@ -73,19 +73,19 @@ public class GsProduction implements IsSerializable {
         return autoStaging;
     }
 
-    public GsProcessStatus getProcessingStatus() {
+    public DtoProcessStatus getProcessingStatus() {
         return processingStatus;
     }
 
-    public void setProcessingStatus(GsProcessStatus processingStatus) {
+    public void setProcessingStatus(DtoProcessStatus processingStatus) {
         this.processingStatus = processingStatus;
     }
 
-    public GsProcessStatus getStagingStatus() {
+    public DtoProcessStatus getStagingStatus() {
         return stagingStatus;
     }
 
-    public void setStagingStatus(GsProcessStatus stagingStatus) {
+    public void setStagingStatus(DtoProcessStatus stagingStatus) {
         this.stagingStatus = stagingStatus;
     }
 

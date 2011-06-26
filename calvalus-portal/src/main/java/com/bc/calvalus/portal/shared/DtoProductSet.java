@@ -7,7 +7,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsProductSet implements IsSerializable {
+public class DtoProductSet implements IsSerializable {
     private String path;
     private String type;
     private String name;
@@ -15,11 +15,11 @@ public class GsProductSet implements IsSerializable {
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProductSet() {
+    public DtoProductSet() {
         this(null, "", "");
     }
 
-    public GsProductSet(String id, String type, String name) {
+    public DtoProductSet(String id, String type, String name) {
         this.path = id;
         this.type = type;
         this.name = name;

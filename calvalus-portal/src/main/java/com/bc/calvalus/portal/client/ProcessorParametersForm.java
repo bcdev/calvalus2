@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -26,7 +26,7 @@ public class ProcessorParametersForm extends Composite {
     public static final String SHOW_HELP_TEXT = "Show description";
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
-    private GsProcessorDescriptor processorDescriptor;
+    private DtoProcessorDescriptor processorDescriptor;
 
     interface TheUiBinder extends UiBinder<Widget, ProcessorParametersForm> {
     }
@@ -92,7 +92,7 @@ public class ProcessorParametersForm extends Composite {
         return processorParametersArea.getValue();
     }
 
-    public void setProcessorDescriptor(GsProcessorDescriptor processorDescriptor) {
+    public void setProcessorDescriptor(DtoProcessorDescriptor processorDescriptor) {
         this.processorDescriptor = processorDescriptor;
         if (processorDescriptor != null) {
             processorParametersArea.setValue(processorDescriptor.getDefaultParameter());

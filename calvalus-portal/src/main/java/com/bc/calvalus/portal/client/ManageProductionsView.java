@@ -1,9 +1,9 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessState;
-import com.bc.calvalus.portal.shared.GsProcessStatus;
-import com.bc.calvalus.portal.shared.GsProduction;
-import com.bc.calvalus.portal.shared.GsProductionRequest;
+import com.bc.calvalus.portal.shared.DtoProcessState;
+import com.bc.calvalus.portal.shared.DtoProcessStatus;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
@@ -56,52 +56,52 @@ public class ManageProductionsView extends PortalView {
             "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
 
     private FlexTable widget;
-    private SelectionModel<GsProduction> selectionModel;
+    private SelectionModel<DtoProduction> selectionModel;
 
     public ManageProductionsView(PortalContext portalContext) {
         super(portalContext);
 
-        ProvidesKey<GsProduction> keyProvider = new ProvidesKey<GsProduction>() {
-            public Object getKey(GsProduction production) {
+        ProvidesKey<DtoProduction> keyProvider = new ProvidesKey<DtoProduction>() {
+            public Object getKey(DtoProduction production) {
                 return production == null ? null : production.getId();
             }
         };
 
-        selectionModel = new MultiSelectionModel<GsProduction>(keyProvider);
+        selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
 
-        CellTable<GsProduction> productionTable = new CellTable<GsProduction>(keyProvider);
+        CellTable<DtoProduction> productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
         productionTable.setSelectionModel(selectionModel);
 
-        Column<GsProduction, Boolean> checkColumn = new Column<GsProduction, Boolean>(new CheckboxCell(true, true)) {
+        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
-            public Boolean getValue(GsProduction production) {
+            public Boolean getValue(DtoProduction production) {
                 return selectionModel.isSelected(production);
             }
         };
-        checkColumn.setFieldUpdater(new FieldUpdater<GsProduction, Boolean>() {
+        checkColumn.setFieldUpdater(new FieldUpdater<DtoProduction, Boolean>() {
             @Override
-            public void update(int index, GsProduction object, Boolean value) {
+            public void update(int index, DtoProduction object, Boolean value) {
                 selectionModel.setSelected(object, value);
             }
         });
 
-        Column<GsProduction, String> idColumn = new Column<GsProduction, String>(new ClickableTextCell()) {
+        Column<DtoProduction, String> idColumn = new Column<DtoProduction, String>(new ClickableTextCell()) {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return production.getId();
             }
 
         };
-        idColumn.setFieldUpdater(new FieldUpdater<GsProduction, String>() {
-            public void update(final int index, final GsProduction production, final String value) {
-                AsyncCallback<GsProductionRequest> callback = new AsyncCallback<GsProductionRequest>() {
+        idColumn.setFieldUpdater(new FieldUpdater<DtoProduction, String>() {
+            public void update(final int index, final DtoProduction production, final String value) {
+                AsyncCallback<DtoProductionRequest> callback = new AsyncCallback<DtoProductionRequest>() {
                     @Override
                     public void onFailure(Throwable caught) {
                     }
 
                     @Override
-                    public void onSuccess(GsProductionRequest result) {
+                    public void onSuccess(DtoProductionRequest result) {
                         FlexTable flexTable = new FlexTable();
                         FlexTable.FlexCellFormatter flexCellFormatter = flexTable.getFlexCellFormatter();
                         flexCellFormatter.setColSpan(0, 0, 2);
@@ -130,49 +130,49 @@ public class ManageProductionsView extends PortalView {
         });
         idColumn.setSortable(false);
 
-        TextColumn<GsProduction> nameColumn = new TextColumn<GsProduction>() {
+        TextColumn<DtoProduction> nameColumn = new TextColumn<DtoProduction>() {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return production.getName();
             }
         };
         nameColumn.setSortable(true);
 
-        TextColumn<GsProduction> userColumn = new TextColumn<GsProduction>() {
+        TextColumn<DtoProduction> userColumn = new TextColumn<DtoProduction>() {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return production.getUser();
             }
         };
         userColumn.setSortable(true);
 
-        TextColumn<GsProduction> productionStatusColumn = new TextColumn<GsProduction>() {
+        TextColumn<DtoProduction> productionStatusColumn = new TextColumn<DtoProduction>() {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return getStatusText(production.getProcessingStatus());
             }
         };
         productionStatusColumn.setSortable(true);
 
-        TextColumn<GsProduction> productionTimeColumn = new TextColumn<GsProduction>() {
+        TextColumn<DtoProduction> productionTimeColumn = new TextColumn<DtoProduction>() {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return getTimeText(production.getProcessingStatus().getProcessingSeconds());
             }
         };
         productionTimeColumn.setSortable(true);
 
-        TextColumn<GsProduction> stagingStatusColumn = new TextColumn<GsProduction>() {
+        TextColumn<DtoProduction> stagingStatusColumn = new TextColumn<DtoProduction>() {
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return getStatusText(production.getStagingStatus());
             }
         };
         stagingStatusColumn.setSortable(true);
 
-        Column<GsProduction, String> actionColumn = new Column<GsProduction, String>(new ButtonCell()) {
+        Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
-            public void render(Cell.Context context, GsProduction production, SafeHtmlBuilder sb) {
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
                 String action = getAction(production);
                 if (action != null) {
                     super.render(context, production, sb);
@@ -182,15 +182,15 @@ public class ManageProductionsView extends PortalView {
             }
 
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return getAction(production);
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
 
-        Column<GsProduction, String> resultColumn = new Column<GsProduction, String>(new ButtonCell()) {
+        Column<DtoProduction, String> resultColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
-            public void render(Cell.Context context, GsProduction production, SafeHtmlBuilder sb) {
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
                 String result = getResult(production);
                 if (result != null) {
                     if (result.startsWith("#")) {
@@ -204,7 +204,7 @@ public class ManageProductionsView extends PortalView {
             }
 
             @Override
-            public String getValue(GsProduction production) {
+            public String getValue(DtoProduction production) {
                 return getResult(production);
             }
         };
@@ -240,23 +240,23 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(3, 0, new HTML(BEAM_HTML));
     }
 
-    static String getResult(GsProduction production) {
+    static String getResult(DtoProduction production) {
         if (production.getDownloadPath() == null) {
             return null;
         }
 
-        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
-                && production.getStagingStatus().getState() == GsProcessState.UNKNOWN
+        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
+                && production.getStagingStatus().getState() == DtoProcessState.UNKNOWN
                 && production.isAutoStaging()) {
             return "#Auto-staging";
         }
 
-        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
-                && production.getStagingStatus().getState() == GsProcessState.COMPLETED) {
+        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
+                && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
-        if (production.getProcessingStatus().getState() == GsProcessState.COMPLETED
+        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
                 && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return STAGE;
         }
@@ -264,7 +264,7 @@ public class ManageProductionsView extends PortalView {
         return null;
     }
 
-    static String getAction(GsProduction production) {
+    static String getAction(DtoProduction production) {
         if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
             return null;
         }
@@ -299,19 +299,19 @@ public class ManageProductionsView extends PortalView {
     public void handlePortalStartedUp() {
     }
 
-    private void restartProduction(GsProduction production) {
+    private void restartProduction(DtoProduction production) {
         // todo - implement
         Window.alert("Not implemented yet:\n" +
                              "Restart " + production);
     }
 
-    private void showProductionInfo(GsProduction production) {
+    private void showProductionInfo(DtoProduction production) {
         // todo - implement
         Window.alert("Not implemented yet:\n" +
                              "Show info on " + production);
     }
 
-    private void downloadProduction(GsProduction production) {
+    private void downloadProduction(DtoProduction production) {
 /*
         Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
                     "_blank", "");
@@ -319,7 +319,7 @@ public class ManageProductionsView extends PortalView {
         Window.open(production.getDownloadPath(), "_blank", "");
     }
 
-    private void stageProduction(GsProduction production) {
+    private void stageProduction(DtoProduction production) {
         getPortal().getBackendService().stageProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
             @Override
             public void onSuccess(Void ignored) {
@@ -333,7 +333,7 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private void cancelProduction(GsProduction production) {
+    private void cancelProduction(DtoProduction production) {
         boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
                                                  "This operation cannot be undone.\n" +
                                                  "\n" +
@@ -355,7 +355,7 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private void deleteProductions(final List<GsProduction> toDeleteList) {
+    private void deleteProductions(final List<DtoProduction> toDeleteList) {
         if (toDeleteList.isEmpty()) {
             Window.alert("Nothing selected.");
             return;
@@ -387,20 +387,20 @@ public class ManageProductionsView extends PortalView {
         });
     }
 
-    private static String getStatusText(GsProcessStatus status) {
-        GsProcessState state = status.getState();
+    private static String getStatusText(DtoProcessStatus status) {
+        DtoProcessState state = status.getState();
         String message = status.getMessage();
-        if (state == GsProcessState.UNKNOWN) {
+        if (state == DtoProcessState.UNKNOWN) {
             return "";
-        } else if (state == GsProcessState.SCHEDULED) {
+        } else if (state == DtoProcessState.SCHEDULED) {
             return "Scheduled" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.RUNNING) {
+        } else if (state == DtoProcessState.RUNNING) {
             return "Running (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.COMPLETED) {
+        } else if (state == DtoProcessState.COMPLETED) {
             return "Completed" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.CANCELLED) {
+        } else if (state == DtoProcessState.CANCELLED) {
             return "Cancelled" + (message.isEmpty() ? "" : (": " + message));
-        } else if (state == GsProcessState.ERROR) {
+        } else if (state == DtoProcessState.ERROR) {
             return "Error" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
@@ -425,9 +425,9 @@ public class ManageProductionsView extends PortalView {
         }
     }
 
-    private class ProductionActionUpdater implements FieldUpdater<GsProduction, String> {
+    private class ProductionActionUpdater implements FieldUpdater<DtoProduction, String> {
         @Override
-        public void update(int index, GsProduction production, String value) {
+        public void update(int index, DtoProduction production, String value) {
             if (RESTART.equals(value)) {
                 restartProduction(production);
             } else if (CANCEL.equals(value)) {
@@ -446,9 +446,9 @@ public class ManageProductionsView extends PortalView {
     private class DeleteProductionsAction implements ClickHandler {
         @Override
         public void onClick(ClickEvent event) {
-            final List<GsProduction> availableList = getPortal().getProductions().getList();
-            final List<GsProduction> toDeleteList = new ArrayList<GsProduction>();
-            for (GsProduction production : availableList) {
+            final List<DtoProduction> availableList = getPortal().getProductions().getList();
+            final List<DtoProduction> toDeleteList = new ArrayList<DtoProduction>();
+            for (DtoProduction production : availableList) {
                 // todo - check, this doesn't work?!?
                 if (selectionModel.isSelected(production)) {
                     toDeleteList.add(production);

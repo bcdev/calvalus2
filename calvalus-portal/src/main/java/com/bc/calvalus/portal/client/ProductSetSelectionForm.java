@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProductSet;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -23,11 +23,11 @@ public class ProductSetSelectionForm extends Composite {
     @UiField
     ListBox inputProductSet;
 
-    public ProductSetSelectionForm(GsProductSet[] productSets) {
+    public ProductSetSelectionForm(DtoProductSet[] productSets) {
         initWidget(uiBinder.createAndBindUi(this));
 
         inputProductSet.setName("inputProductSet");
-        for (GsProductSet productSet : productSets) {
+        for (DtoProductSet productSet : productSets) {
             inputProductSet.addItem(productSet.getName(), productSet.getPath());
         }
         inputProductSet.setVisibleItemCount(6);

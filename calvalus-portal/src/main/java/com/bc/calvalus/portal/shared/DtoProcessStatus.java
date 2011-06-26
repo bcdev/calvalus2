@@ -7,9 +7,9 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsProcessStatus implements IsSerializable {
+public class DtoProcessStatus implements IsSerializable {
     private static final float EPS = 1.0E-04f;
-    private GsProcessState state;
+    private DtoProcessState state;
     private String message;
     private float progress;
     private int processingSeconds;
@@ -17,19 +17,19 @@ public class GsProcessStatus implements IsSerializable {
     /**
      * No-arg constructor as required by {@link IsSerializable}.
      */
-    public GsProcessStatus() {
-        this(GsProcessState.UNKNOWN);
+    public DtoProcessStatus() {
+        this(DtoProcessState.UNKNOWN);
     }
 
-    public GsProcessStatus(GsProcessState state) {
+    public DtoProcessStatus(DtoProcessState state) {
         this(state, "", 0.0f);
     }
 
-    public GsProcessStatus(GsProcessState state, String message, float progress) {
+    public DtoProcessStatus(DtoProcessState state, String message, float progress) {
         this(state, message, progress, 0);
     }
 
-    public GsProcessStatus(GsProcessState state, String message, float progress, int processingSeconds) {
+    public DtoProcessStatus(DtoProcessState state, String message, float progress, int processingSeconds) {
         if (state == null) {
             throw new NullPointerException("state");
         }
@@ -42,7 +42,7 @@ public class GsProcessStatus implements IsSerializable {
         this.processingSeconds = processingSeconds;
     }
 
-    public GsProcessState getState() {
+    public DtoProcessState getState() {
         return state;
     }
 
@@ -51,7 +51,7 @@ public class GsProcessStatus implements IsSerializable {
     }
 
     public boolean isUnknown() {
-        return state == GsProcessState.UNKNOWN;
+        return state == DtoProcessState.UNKNOWN;
     }
 
     public String getMessage() {
@@ -75,7 +75,7 @@ public class GsProcessStatus implements IsSerializable {
             return false;
         }
 
-        GsProcessStatus that = (GsProcessStatus) o;
+        DtoProcessStatus that = (DtoProcessStatus) o;
 
         float delta = that.progress - progress;
         if (delta < 0) {

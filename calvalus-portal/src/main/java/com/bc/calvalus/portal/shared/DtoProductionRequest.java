@@ -12,18 +12,18 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class GsProductionRequest implements IsSerializable {
+public class DtoProductionRequest implements IsSerializable {
     private String productionType;
     private Map<String, String> productionParameters;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProductionRequest() {
+    public DtoProductionRequest() {
     }
 
-    public GsProductionRequest(String productionType,
-                               Map<String, String> productionParameters) {
+    public DtoProductionRequest(String productionType,
+                                Map<String, String> productionParameters) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
         }

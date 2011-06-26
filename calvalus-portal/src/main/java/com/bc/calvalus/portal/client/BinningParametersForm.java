@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
-import com.bc.calvalus.portal.shared.GsProcessorVariable;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -165,17 +165,17 @@ public class BinningParametersForm extends Composite {
         return parameters;
     }
 
-    public void setSelectedProcessor(GsProcessorDescriptor selectedProcessor) {
+    public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
         int selectedIndex = inputVariables.getSelectedIndex();
         String selectedItem = null;
         if (selectedIndex != -1) {
             selectedItem = inputVariables.getItemText(selectedIndex);
         }
         inputVariables.clear();
-        GsProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
+        DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
         int newSelectedIndex = 0;
         int index = 0;
-        for (GsProcessorVariable processorVariable : processorVariables) {
+        for (DtoProcessorVariable processorVariable : processorVariables) {
             String processorVariableName = processorVariable.getName();
             inputVariables.addItem(processorVariableName);
             if (selectedIndex != -1 && processorVariableName.equals(selectedItem)) {

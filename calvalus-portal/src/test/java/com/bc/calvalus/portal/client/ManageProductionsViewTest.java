@@ -1,11 +1,11 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessState;
-import com.bc.calvalus.portal.shared.GsProcessStatus;
-import com.bc.calvalus.portal.shared.GsProduction;
+import com.bc.calvalus.portal.shared.DtoProcessState;
+import com.bc.calvalus.portal.shared.DtoProcessStatus;
+import com.bc.calvalus.portal.shared.DtoProduction;
 import junit.framework.TestCase;
 
-import static com.bc.calvalus.portal.shared.GsProcessState.*;
+import static com.bc.calvalus.portal.shared.DtoProcessState.*;
 
 public class ManageProductionsViewTest  extends TestCase {
 
@@ -60,21 +60,21 @@ public class ManageProductionsViewTest  extends TestCase {
         assertEquals("100:00:00", ManageProductionsView.getTimeText(360000));
     }
 
-    private String getAction(GsProcessState productionState, GsProcessState stagingState) {
+    private String getAction(DtoProcessState productionState, DtoProcessState stagingState) {
         return ManageProductionsView.getAction(createProduction(productionState, stagingState, false));
     }
 
-    private String getResult(GsProcessState productionState, GsProcessState stagingState) {
+    private String getResult(DtoProcessState productionState, DtoProcessState stagingState) {
         return ManageProductionsView.getResult(createProduction(productionState, stagingState, false));
     }
 
-    private String getResultAutoStaging(GsProcessState productionState, GsProcessState stagingState) {
+    private String getResultAutoStaging(DtoProcessState productionState, DtoProcessState stagingState) {
         return ManageProductionsView.getResult(createProduction(productionState, stagingState, true));
     }
 
-    private GsProduction createProduction(GsProcessState productionState, GsProcessState stagingState, boolean autoStaging) {
-        return new GsProduction("id", "name", "user", "outputUrl", autoStaging,
-                                new GsProcessStatus(productionState),
-                                new GsProcessStatus(stagingState));
+    private DtoProduction createProduction(DtoProcessState productionState, DtoProcessState stagingState, boolean autoStaging) {
+        return new DtoProduction("id", "name", "user", "outputUrl", autoStaging,
+                                new DtoProcessStatus(productionState),
+                                new DtoProcessStatus(stagingState));
     }
 }

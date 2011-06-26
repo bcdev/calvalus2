@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -30,16 +30,16 @@ public class GeneralProcessorForm implements IsWidget {
     private FileUpload fileUpload;
     private DecoratorPanel widget;
     private FormPanel uploadForm;
-    private GsProcessorDescriptor[] processors;
+    private DtoProcessorDescriptor[] processors;
     private HTML processorDescription;
 
-    public GeneralProcessorForm(GsProcessorDescriptor[] processors, String title) {
+    public GeneralProcessorForm(DtoProcessorDescriptor[] processors, String title) {
         this.processors = processors;
 
         processorName = new ListBox();
         processorName.setName("processorName");
         processorName.setWidth("30em");
-        for (GsProcessorDescriptor processor : processors) {
+        for (DtoProcessorDescriptor processor : processors) {
             String label = processor.getProcessorName() + " (from " + processor.getBundleName() + "-" + processor.getBundleVersion() + ")";
             this.processorName.addItem(label, processor.getExecutableName());
         }
@@ -125,7 +125,7 @@ public class GeneralProcessorForm implements IsWidget {
         });
     }
 
-    public GsProcessorDescriptor getSelectedProcessor() {
+    public DtoProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorName.getSelectedIndex();
         return processors[selectedIndex];
     }
@@ -142,7 +142,7 @@ public class GeneralProcessorForm implements IsWidget {
     private void updateParametersWidget() {
         int selectedIndex = processorName.getSelectedIndex();
         if (selectedIndex >= 0) {
-            GsProcessorDescriptor selectedProcessor = getSelectedProcessor();
+            DtoProcessorDescriptor selectedProcessor = getSelectedProcessor();
             processorParameters.setValue(selectedProcessor.getDefaultParameter());
             processorDescription.setHTML(selectedProcessor.getDescriptionHtml());
         }
@@ -167,7 +167,7 @@ public class GeneralProcessorForm implements IsWidget {
     }
 
     public static interface ProcessorChangedHandler {
-        void onProcessorChanged(GsProcessorDescriptor gsProcessorDescriptor);
+        void onProcessorChanged(DtoProcessorDescriptor processorDescriptor);
     }
 
 }

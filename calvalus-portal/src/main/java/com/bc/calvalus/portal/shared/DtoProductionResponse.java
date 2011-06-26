@@ -8,20 +8,20 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsProductionResponse implements IsSerializable {
-    private GsProduction production;
+public class DtoProductionResponse implements IsSerializable {
+    private DtoProduction production;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public GsProductionResponse() {
+    public DtoProductionResponse() {
     }
 
-    public GsProductionResponse(GsProduction production) {
+    public DtoProductionResponse(DtoProduction production) {
         this.production = production;
     }
 
-    public GsProduction getProduction() {
+    public DtoProduction getProduction() {
         return production;
     }
 }

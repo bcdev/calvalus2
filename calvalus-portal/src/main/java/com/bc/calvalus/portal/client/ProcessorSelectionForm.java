@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -25,20 +25,20 @@ public class ProcessorSelectionForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    private GsProcessorDescriptor[] processorDescriptors;
+    private DtoProcessorDescriptor[] processorDescriptors;
 
     @UiField
     HTML title;
     @UiField
     ListBox processorList;
 
-    public ProcessorSelectionForm(GsProcessorDescriptor[] processorDescriptors, String title) {
+    public ProcessorSelectionForm(DtoProcessorDescriptor[] processorDescriptors, String title) {
         initWidget(uiBinder.createAndBindUi(this));
 
         this.processorDescriptors = processorDescriptors;
 
         this.title.setHTML(title);
-        for (GsProcessorDescriptor processor : processorDescriptors) {
+        for (DtoProcessorDescriptor processor : processorDescriptors) {
             String label = processor.getBundleName() + "-" + processor.getBundleVersion();
             this.processorList.addItem(label);
         }
@@ -56,7 +56,7 @@ public class ProcessorSelectionForm extends Composite {
         });
     }
 
-    public GsProcessorDescriptor getSelectedProcessor() {
+    public DtoProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorList.getSelectedIndex();
         return processorDescriptors[selectedIndex];
     }
@@ -66,7 +66,7 @@ public class ProcessorSelectionForm extends Composite {
     }
 
     public static interface ProcessorChangedHandler {
-        void onProcessorChanged(GsProcessorDescriptor gsProcessorDescriptor);
+        void onProcessorChanged(DtoProcessorDescriptor processorDescriptor);
     }
 
 }

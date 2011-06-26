@@ -2,9 +2,8 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.GsProcessState;
-import com.bc.calvalus.portal.shared.GsProductionRequest;
-import com.bc.calvalus.portal.shared.GsProductionResponse;
+import com.bc.calvalus.portal.shared.DtoProcessState;
+import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -51,15 +50,15 @@ public class BackendServiceTest extends GWTTestCase {
     }
 
 
-    private class PortalProductionResponseAsyncCallback implements AsyncCallback<GsProductionResponse> {
-        public void onSuccess(GsProductionResponse response) {
+    private class PortalProductionResponseAsyncCallback implements AsyncCallback<DtoProductionResponse> {
+        public void onSuccess(DtoProductionResponse response) {
             // Verify that the response is correct.
             assertNotNull(response);
             assertNotNull(response.getProduction());
             assertNotNull(response.getProduction().getId());
             assertNotNull(response.getProduction().getName());
             assertNotNull(response.getProduction().getProcessingStatus());
-            assertEquals(GsProcessState.SCHEDULED, response.getProduction().getProcessingStatus().getState());
+            assertEquals(DtoProcessState.SCHEDULED, response.getProduction().getProcessingStatus().getState());
 
             // Now that we have received a response, we need to tell the test runner
             // that the test is complete. You must call finishTest() after an

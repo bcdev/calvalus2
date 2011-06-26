@@ -7,14 +7,14 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  * @author Norman
  */
-public class GsRegion implements IsSerializable {
+public class DtoRegion implements IsSerializable {
     private String name;
     private String geometryWkt;
 
-    public GsRegion() {
+    public DtoRegion() {
     }
 
-    public GsRegion(String name, String geometryWkt) {
+    public DtoRegion(String name, String geometryWkt) {
         this.name = name;
         this.geometryWkt = geometryWkt;
     }

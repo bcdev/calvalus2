@@ -4,10 +4,10 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.GsProcessorDescriptor;
-import com.bc.calvalus.portal.shared.GsProductSet;
-import com.bc.calvalus.portal.shared.GsProduction;
-import com.bc.calvalus.portal.shared.GsRegion;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.maps.client.Maps;
@@ -44,10 +44,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     // Data provided by various external services
     private ListDataProvider<Region> regions;
-    private GsProductSet[] productSets;
-    private GsProcessorDescriptor[] processors;
-    private ListDataProvider<GsProduction> productions;
-    private Map<String, GsProduction> productionsMap;
+    private DtoProductSet[] productSets;
+    private DtoProcessorDescriptor[] processors;
+    private ListDataProvider<DtoProduction> productions;
+    private Map<String, DtoProduction> productionsMap;
     private PortalView[] views;
     private Map<String, Integer> viewTabIndices;
     private DecoratedTabPanel mainPanel;
@@ -88,17 +88,17 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
-    public GsProductSet[] getProductSets() {
+    public DtoProductSet[] getProductSets() {
         return productSets;
     }
 
     @Override
-    public GsProcessorDescriptor[] getProcessors() {
+    public DtoProcessorDescriptor[] getProcessors() {
         return processors;
     }
 
     @Override
-    public ListDataProvider<GsProduction> getProductions() {
+    public ListDataProvider<DtoProduction> getProductions() {
         return productions;
     }
 
@@ -179,17 +179,17 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 && productions != null;
     }
 
-    private synchronized void updateProductions(GsProduction[] unknownProductions) {
+    private synchronized void updateProductions(DtoProduction[] unknownProductions) {
         if (productions == null) {
-            productions = new ListDataProvider<GsProduction>();
-            productionsMap = new HashMap<String, GsProduction>();
+            productions = new ListDataProvider<DtoProduction>();
+            productionsMap = new HashMap<String, DtoProduction>();
         }
         boolean listChange = false;
         boolean propertyChange = false;
-        ArrayList<GsProduction> deletedProductions = new ArrayList<GsProduction>(productions.getList());
+        ArrayList<DtoProduction> deletedProductions = new ArrayList<DtoProduction>(productions.getList());
         for (int i = 0; i < unknownProductions.length; i++) {
-            GsProduction unknownProduction = unknownProductions[i];
-            GsProduction knownProduction = productionsMap.get(unknownProduction.getId());
+            DtoProduction unknownProduction = unknownProductions[i];
+            DtoProduction knownProduction = productionsMap.get(unknownProduction.getId());
             if (knownProduction != null) {
                 if (!unknownProduction.getProcessingStatus().equals(knownProduction.getProcessingStatus())) {
                     knownProduction.setProcessingStatus(unknownProduction.getProcessingStatus());
@@ -206,7 +206,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 listChange = true;
             }
         }
-        for (GsProduction deletedProduction : deletedProductions) {
+        for (DtoProduction deletedProduction : deletedProductions) {
             productions.getList().remove(deletedProduction);
             productionsMap.remove(deletedProduction.getId());
             listChange = true;
@@ -244,9 +244,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return mainMenu;
     }
 
-    private class InitRegionsCallback implements AsyncCallback<GsRegion[]> {
+    private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {
         @Override
-        public void onSuccess(GsRegion[] regions) {
+        public void onSuccess(DtoRegion[] regions) {
             List<Region> regionList = RegionConverter.decodeRegions(regions);
             CalvalusPortal.this.regions = new ListDataProvider<Region>(regionList);
             maybeInitFrontend();
@@ -260,9 +260,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
     }
 
-    private class InitProductSetsCallback implements AsyncCallback<GsProductSet[]> {
+    private class InitProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
         @Override
-        public void onSuccess(GsProductSet[] productSets) {
+        public void onSuccess(DtoProductSet[] productSets) {
             CalvalusPortal.this.productSets = productSets;
             maybeInitFrontend();
         }
@@ -271,13 +271,13 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.productSets = new GsProductSet[0];
+            CalvalusPortal.this.productSets = new DtoProductSet[0];
         }
     }
 
-    private class InitProcessorsCallback implements AsyncCallback<GsProcessorDescriptor[]> {
+    private class InitProcessorsCallback implements AsyncCallback<DtoProcessorDescriptor[]> {
         @Override
-        public void onSuccess(GsProcessorDescriptor[] processors) {
+        public void onSuccess(DtoProcessorDescriptor[] processors) {
             CalvalusPortal.this.processors = processors;
             maybeInitFrontend();
         }
@@ -286,13 +286,13 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.processors = new GsProcessorDescriptor[0];
+            CalvalusPortal.this.processors = new DtoProcessorDescriptor[0];
         }
     }
 
-    private class InitProductionsCallback implements AsyncCallback<GsProduction[]> {
+    private class InitProductionsCallback implements AsyncCallback<DtoProduction[]> {
         @Override
-        public void onSuccess(GsProduction[] productions) {
+        public void onSuccess(DtoProduction[] productions) {
             updateProductions(productions);
             maybeInitFrontend();
         }
@@ -301,13 +301,13 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Window.alert("Error!\n" + caught.getMessage());
-            CalvalusPortal.this.productions = new ListDataProvider<GsProduction>();
+            CalvalusPortal.this.productions = new ListDataProvider<DtoProduction>();
         }
     }
 
-    private class UpdateProductionsCallback implements AsyncCallback<GsProduction[]> {
+    private class UpdateProductionsCallback implements AsyncCallback<DtoProduction[]> {
         @Override
-        public void onSuccess(GsProduction[] unknownProductions) {
+        public void onSuccess(DtoProduction[] unknownProductions) {
             updateProductions(unknownProductions);
         }
 

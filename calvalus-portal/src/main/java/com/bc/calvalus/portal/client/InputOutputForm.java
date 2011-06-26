@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.GsProductSet;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -22,11 +22,11 @@ public class InputOutputForm implements IsWidget {
     private final DecoratorPanel widget;
     private final CheckBox autoStaging;
 
-    public InputOutputForm(GsProductSet[] productSets, String title, boolean hasOutput) {
+    public InputOutputForm(DtoProductSet[] productSets, String title, boolean hasOutput) {
 
         inputProductSet = new ListBox();
         inputProductSet.setName("inputProductSet");
-        for (GsProductSet productSet : productSets) {
+        for (DtoProductSet productSet : productSets) {
             inputProductSet.addItem(productSet.getName(), productSet.getPath());
         }
         inputProductSet.setWidth("20em");

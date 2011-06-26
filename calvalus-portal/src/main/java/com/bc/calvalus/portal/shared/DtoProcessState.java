@@ -5,7 +5,7 @@ package com.bc.calvalus.portal.shared;
  *
  * @author Norman
  */
-public enum GsProcessState {
+public enum DtoProcessState {
     /**
      * Indicates an unknown state, e.g. could not be retrieved.
      */
@@ -33,7 +33,7 @@ public enum GsProcessState {
 
     private final boolean done;
 
-    GsProcessState(boolean done) {
+    DtoProcessState(boolean done) {
         this.done = done;
     }
 
