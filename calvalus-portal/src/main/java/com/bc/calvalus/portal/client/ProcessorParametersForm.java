@@ -22,8 +22,8 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Norman
  */
 public class ProcessorParametersForm extends Composite {
-    public static final String HIDE_HELP_TEXT = "Hide help";
-    public static final String SHOW_HELP_TEXT = "Show help";
+    public static final String HIDE_HELP_TEXT = "Hide description";
+    public static final String SHOW_HELP_TEXT = "Show description";
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
     private GsProcessorDescriptor processorDescriptor;

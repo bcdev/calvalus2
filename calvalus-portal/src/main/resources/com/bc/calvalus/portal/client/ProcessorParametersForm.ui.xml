@@ -24,7 +24,7 @@
                                     <g:Anchor ui:field="showHelpAnchor"/>
                                     <g:TextArea ui:field="processorParametersArea"
                                                 characterWidth="60"
-                                                visibleLines="16"/>
+                                                visibleLines="10"/>
                                     <g:FormPanel ui:field="uploadForm" method="POST" >
                                         <g:FileUpload ui:field="fileUpload" title="From file:" />
                                     </g:FormPanel>

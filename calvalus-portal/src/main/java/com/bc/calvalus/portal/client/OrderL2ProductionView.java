@@ -26,8 +26,8 @@ public class OrderL2ProductionView extends OrderProductionView {
     private ProductSetSelectionForm productSetSelectionForm;
     private ProcessorSelectionForm processorSelectionForm;
     private ProductFilterForm productSetFilterForm;
-    private OutputParametersForm outputParametersForm;
     private ProcessorParametersForm processorParametersForm;
+    private OutputParametersForm outputParametersForm;
     private Widget widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {

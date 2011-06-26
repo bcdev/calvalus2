@@ -28,6 +28,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
@@ -121,6 +122,14 @@ public class ProductFilterForm extends Composite {
     @UiFactory
     RegionMapWidget createRegionMapWidget() { // method name is insignificant
         return RegionMapWidget.create(regions, false);
+    }
+
+    public HasValue<Date> getMinDate() {
+        return minDate;
+    }
+
+    public HasValue<Date> getMaxDate() {
+        return maxDate;
     }
 
     public void validateForm() throws ValidationException {

@@ -22,14 +22,14 @@ public class OrderTAProductionView extends OrderProductionView {
     private FlexTable widget;
     private InputOutputForm inputOutputForm;
     private GeneralProcessorForm l2ProcessorForm;
-    private L3ParametersForm l3ParametersForm;
+    private BinningParametersForm l3ParametersForm;
 
     public OrderTAProductionView(PortalContext portalContext) {
         super(portalContext);
 
         inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input", false);
         l2ProcessorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        l3ParametersForm = new L3ParametersForm(portalContext.getRegions());
+        l3ParametersForm = new BinningParametersForm();
 
         widget = new FlexTable();
         widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);

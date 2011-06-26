@@ -41,4 +41,8 @@ public class ProductSetSelectionForm extends Composite {
             return null;
         }
     }
+
+    public void validateForm() {
+    }
+
 }
