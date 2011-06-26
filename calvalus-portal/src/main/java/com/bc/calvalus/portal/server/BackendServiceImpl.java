@@ -28,7 +28,9 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
@@ -289,6 +291,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private void initBackendConfig(ServletContext servletContext) throws ServletException {
         backendConfig = new BackendConfig(servletContext);
+        logConfig();
+    }
+
+    private void logConfig() {
+        log("Calvalus configuration loaded:");
+        log("  local context dir          = " + backendConfig.getLocalContextDir());
+        log("  local staging dir          = " + backendConfig.getLocalStagingDir());
+        log("  local upload dir           = " + backendConfig.getLocalUploadDir());
+        log("  staging path               = " + backendConfig.getStagingPath());
+        log("  upload path                = " + backendConfig.getUploadPath());
+        log("  production service factory = " + backendConfig.getProductionServiceFactoryClassName());
+        log("  configurartion:");
+        Map<String,String> configMap = backendConfig.getConfigMap();
+        Set<Map.Entry<String, String>> entries = configMap.entrySet();
+        for (Map.Entry<String, String> entry    : entries){
+            log("    " + entry.getKey() + " = " + entry.getValue());
+        }
     }
 
     private void initProductionService() throws ServletException {
