@@ -51,19 +51,6 @@ public class BackendConfig {
         return configMap;
     }
 
-    public String getProperty(String name) throws ServletException {
-        String property = configMap.get(name);
-        if (property == null) {
-            throw new ServletException(String.format("Missing configuration parameter '%s'", name));
-        }
-        return property;
-    }
-
-    public String getProperty(String name, String defaultValue) {
-        String value = configMap.get(name);
-        return value != null ? value : defaultValue;
-    }
-
     public String getProductionServiceFactoryClassName() {
         return productionServiceFactoryClassName;
     }
@@ -104,6 +91,14 @@ public class BackendConfig {
             servletContext.log("I/O problem while reading Calvalus configuration file " + configFile, e);
         }
         return calvalusConfig;
+    }
+
+    private String getProperty(String name) throws ServletException {
+        String property = configMap.get(name);
+        if (property == null) {
+            throw new ServletException(String.format("Missing configuration parameter '%s'", name));
+        }
+        return property;
     }
 
     static File getConfigFile(ServletContext servletContext) {
