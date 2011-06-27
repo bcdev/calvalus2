@@ -56,15 +56,14 @@ public class Dialog {
         new Dialog(title, message, ButtonType.CLOSE).show();
     }
 
-    public ButtonType show() {
+    public void show() {
         if (dialogBox == null) {
             this.dialogBox = createDialogBox();
             dialogBox.setWidget(createMainPanel());
         }
         dialogBox.center();
-        onShow();
         dialogBox.show();
-        return selectedButtonType;
+        onShow();
     }
 
     public void hide() {
