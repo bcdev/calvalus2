@@ -4,6 +4,7 @@ import com.bc.calvalus.portal.client.map.actions.*;
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
@@ -141,6 +142,12 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         mapWidget.addControl(new MapTypeControl());
         // mapWidget.addControl(new SmallMapControl());
         // mapWidget.addControl(new OverviewMapControl());
+        mapWidget.addAttachHandler(new AttachEvent.Handler() {
+            @Override
+            public void onAttachOrDetach(AttachEvent event) {
+                System.out.println("mapWidget.onAttachOrDetach(" + event + ")");
+            }
+        });
 
         Cell<Region> regionCell = new AbstractCell<Region>() {
             @Override
@@ -189,7 +196,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                     try {
                         adjustingRegionSelection = true;
                         updateRegionSelection(regionMapSelectionModel, regionListSelectionModel);
-                        updatePolygonStyles();
+                        updatePolygons();
                     } finally {
                         adjustingRegionSelection = false;
                     }
@@ -211,27 +218,25 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
 
-        List<Region> regionList = regionMapModel.getRegionProvider().getList();
-        for (Region region : regionList) {
-            Polygon polygon = region.createPolygon();
-            polygon.setVisible(true);
-            polygon.setStrokeStyle(normalPolyStrokeStyle);
-            polygon.setFillStyle(normalPolyFillStyle);
-            mapWidget.addOverlay(polygon);
-            regionMap.put(polygon, region);
-            polygonMap.put(region, polygon);
-        }
-
+        updatePolygons();
         initWidget(regionSplitLayoutPanel);
         setSize("720px", "360px");
     }
 
-    private void updatePolygonStyles() {
-        for (Region region : regionMapModel.getRegionProvider().getList()) {
+    private void updatePolygons() {
+        List<Region> regionList = regionMapModel.getRegionProvider().getList();
+        for (Region region : regionList) {
             boolean selected = regionMapSelectionModel.isSelected(region);
             Polygon polygon = polygonMap.get(region);
+            if (polygon == null) {
+                polygon = region.createPolygon();
+                mapWidget.addOverlay(polygon);
+                regionMap.put(polygon, region);
+                polygonMap.put(region, polygon);
+            }
             polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
             polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
+            polygon.setVisible(true);
             if (region.isUserRegion()) {
                 polygon.setEditingEnabled(selected);
             }
@@ -269,20 +274,4 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 new ShowRegionInfoAction()
         };
     }
-
-    private static MapAction[] createDefaultNonEditingActions() {
-        // todo: use the action constructor that takes an icon image (nf)
-        return new MapAction[]{
-                new SelectInteraction(new AbstractMapAction("S", "Select region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                    }
-                }),
-                MapAction.SEPARATOR,
-                new LocateRegionsAction(),
-                new ShowRegionInfoAction()
-        };
-    }
-
-
 }
