@@ -21,12 +21,9 @@ public class RegionConverter {
     public static List<Region> decodeRegions(DtoRegion[] encodedRegions) {
         ArrayList<Region> regionList = new ArrayList<Region>();
         for (DtoRegion encodedRegion : encodedRegions) {
-            String geometryWkt = encodedRegion.getGeometryWkt();
-            Overlay overlay = WKTParser.parse(geometryWkt);
-            if (overlay instanceof Polygon) {
-                Polygon polygon = (Polygon) overlay;
-                regionList.add(new Region(encodedRegion.getName(), geometryWkt, Region.getPolygonVertices(polygon)));
-            }
+            regionList.add(new Region(encodedRegion.getName(),
+                                      encodedRegion.getCategory(),
+                                      encodedRegion.getGeometryWkt()));
         }
         return regionList;
     }
@@ -39,7 +36,9 @@ public class RegionConverter {
         DtoRegion[] encodedRegions = new DtoRegion[regions.size()];
         for (int i = 0; i < encodedRegions.length; i++) {
             Region region = regions.get(i);
-            encodedRegions[i] = new DtoRegion(region.getName(), region.getPolygonWkt());
+            encodedRegions[i] = new DtoRegion(region.getName(),
+                                              region.getCategory(),
+                                              region.getGeometryWkt());
         }
         return encodedRegions;
     }

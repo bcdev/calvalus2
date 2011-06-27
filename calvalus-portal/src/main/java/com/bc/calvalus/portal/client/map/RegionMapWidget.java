@@ -94,10 +94,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     @Override
-    public Region getRegion(String name) {
-        List<Region> list = getRegionModel().getRegionProvider().getList();
-        for (Region region : list) {
-            if (region.getName().equalsIgnoreCase(name)) {
+    public Region getRegion(String qualifiedName) {
+        List<Region> regionList = getRegionModel().getRegionProvider().getList();
+        for (Region region : regionList) {
+            if (region.getQualifiedName().equalsIgnoreCase(qualifiedName)) {
                 return region;
             }
         }
@@ -169,7 +169,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         ProvidesKey<Region> regionKey = new ProvidesKey<Region>() {
             @Override
             public Object getKey(Region item) {
-                return item.getName();
+                return item.getQualifiedName();
             }
         };
 

@@ -9,18 +9,24 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class DtoRegion implements IsSerializable {
     private String name;
+    private String category;
     private String geometryWkt;
 
     public DtoRegion() {
     }
 
-    public DtoRegion(String name, String geometryWkt) {
+    public DtoRegion(String name, String category, String geometryWkt) {
         this.name = name;
+        this.category = category;
         this.geometryWkt = geometryWkt;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getGeometryWkt() {

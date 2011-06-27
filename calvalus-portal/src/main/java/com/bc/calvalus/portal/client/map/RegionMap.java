@@ -26,12 +26,12 @@ public interface RegionMap {
     RegionMapSelectionModel getRegionSelectionModel();
 
     /**
-     * Gets the region with the given name.
+     * Gets the region with the given qualified name.
      *
-     * @param name The region name.
+     * @param qualifiedName The qualified region name.
      * @return The region, or {@code null} if no such region exists.
      */
-    Region getRegion(String name);
+    Region getRegion(String qualifiedName);
 
     /**
      * Gets the region that is graphically represented in the map by the given polygon.

@@ -151,7 +151,7 @@ public class ProductFilterForm extends Composite {
             Polygon polygon = region.createPolygon();
             LatLngBounds bounds = polygon.getBounds();
             parameters.put("regionName", region.getName());
-            parameters.put("regionWKT", region.getPolygonWkt());
+            parameters.put("regionWKT", region.getGeometryWkt());
             parameters.put("minLon", bounds.getNorthEast().getLongitude() + "");
             parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
             parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");

@@ -16,12 +16,13 @@ public class RegionTest extends GWTTestCase {
         assertMapsApiLoaded();
     }
 
-    public void testFromWKT() {
-        Region region = Region.fromWKT("Reinbek", "polygon((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
-        assertNotNull(region);
-        assertEquals("Reinbek", region.getName());
+    public void testGetVerticesParsesGeometryWkt() {
+        Region region = new Region("world", "user", "polygon ((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
+        assertEquals("world", region.getName());
+        assertEquals("user", region.getCategory());
+        assertEquals("user.world", region.getQualifiedName());
 
-        LatLng[] polygon = region.getPolygonVertices();
+        LatLng[] polygon = region.getVertices();
         assertNotNull(polygon);
         assertEquals(5, polygon.length);
         assertEquals(LatLng.newInstance(-90, -180), polygon[0]);
@@ -29,6 +30,21 @@ public class RegionTest extends GWTTestCase {
         assertEquals(LatLng.newInstance(90, 180), polygon[2]);
         assertEquals(LatLng.newInstance(90, -180), polygon[3]);
         assertEquals(LatLng.newInstance(-90, -180), polygon[4]);
+    }
+
+    public void testGetGeometryWktFormatsVertices() {
+        Region region = new Region("world", "user", new LatLng[] {
+                LatLng.newInstance(-90, -180),
+                LatLng.newInstance(-90, 180),
+                LatLng.newInstance(90, 180),
+                LatLng.newInstance(90, -180),
+                LatLng.newInstance(-90, -180)
+        });
+        assertEquals("world", region.getName());
+        assertEquals("user", region.getCategory());
+        assertEquals("user.world", region.getQualifiedName());
+        assertEquals("POLYGON((-180.0 -90.0,180.0 -90.0,180.0 90.0,-180.0 90.0,-180.0 -90.0))",
+                     region.getGeometryWkt());
     }
 
     private static void assertEquals(LatLng expected, LatLng vertex) {

@@ -31,11 +31,9 @@ public class RenameRegionAction extends AbstractMapAction {
             return;
         }
 
-        String name = Region.getRelUserRegionName(selectedRegion.getName());
-
         final TextBox nameBox = new TextBox();
         nameBox.setVisibleLength(32);
-        nameBox.setValue(name);
+        nameBox.setValue(selectedRegion.getName());
 
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setSpacing(2);
@@ -50,12 +48,11 @@ public class RenameRegionAction extends AbstractMapAction {
                     Dialog.showMessage("Rename Region", "Please provide a name.");
                     return;
                 }
-                String userRegionName = Region.getAbsUserRegionName(value);
-                if (regionMap.getRegion(userRegionName) != null) {
+                if (regionMap.getRegion("user." + value) != null) {
                     Dialog.showMessage("Rename Region", "A user region with this name already exists.");
                     return;
                 }
-                selectedRegion.setName(userRegionName);
+                selectedRegion.setName(value);
                 regionMap.getRegionModel().getRegionProvider().refresh();
                 super.onOk();
             }
