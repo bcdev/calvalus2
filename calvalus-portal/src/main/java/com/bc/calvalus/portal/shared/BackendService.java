@@ -16,7 +16,15 @@ public interface BackendService extends RemoteService {
      * @return The array of regions.
      * @throws BackendServiceException If a server error occurred.
      */
-    DtoRegion[] getRegions(String filter) throws BackendServiceException;
+    DtoRegion[] loadRegions(String filter) throws BackendServiceException;
+
+    /**
+     * Persists the provided regions.
+     *
+     * @param regions The regions to persist.
+     * @throws BackendServiceException If a server error occurred.
+     */
+    void storeRegions(DtoRegion[] regions) throws BackendServiceException;
 
     /**
      * Gets all known product sets.

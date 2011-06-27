@@ -3,37 +3,14 @@ package com.bc.calvalus.portal.server;
 import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceException;
-import com.bc.calvalus.portal.shared.DtoProcessState;
-import com.bc.calvalus.portal.shared.DtoProcessStatus;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProcessorVariable;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoProductionRequest;
-import com.bc.calvalus.portal.shared.DtoProductionResponse;
-import com.bc.calvalus.portal.shared.DtoRegion;
-import com.bc.calvalus.production.ProcessorDescriptor;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionResponse;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.production.*;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.*;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -84,34 +61,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public DtoRegion[] getRegions(String filter) throws BackendServiceException {
-        Properties properties;
+    public DtoRegion[] loadRegions(String filter) throws BackendServiceException {
+        RegionPersistence regionPersistence = new RegionPersistence(getUserName());
         try {
-            properties = loadRegions();
+            return regionPersistence.loadRegions();
         } catch (IOException e) {
-            throw new BackendServiceException("Failed to load regions.", e);
+            throw new BackendServiceException("Failed to load regions: " + e.getMessage(), e);
         }
-        ArrayList<DtoRegion> regions = new ArrayList<DtoRegion>();
-        Set<String> regionNames = properties.stringPropertyNames();
-        for (String regionName : regionNames) {
-            String regionWKT = properties.getProperty(regionName);
-            DtoRegion region = new DtoRegion(regionName, regionWKT);
-            regions.add(region);
-        }
-        return regions.toArray(new DtoRegion[regions.size()]);
     }
 
-    private Properties loadRegions() throws IOException {
-        Properties properties = new Properties();
-        InputStream stream = getClass().getResourceAsStream("regions.properties");
+    @Override
+    public void storeRegions(DtoRegion[] regions) throws BackendServiceException {
+        RegionPersistence regionPersistence = new RegionPersistence(getUserName());
         try {
-            properties.load(stream);
-        } finally {
-            stream.close();
+            regionPersistence.storeRegions(regions);
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to store regions: " + e.getMessage(), e);
         }
-        return properties;
     }
-
 
     @Override
     public DtoProductSet[] getProductSets(String filter) throws BackendServiceException {
@@ -161,11 +128,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             Production production = productionService.getProduction(productionId);
             if (production != null) {
                 return convert(production.getProductionRequest());
-            }else {
+            } else {
                 return null;
             }
         } catch (ProductionException e) {
-           throw convert(e);
+            throw convert(e);
         }
     }
 
@@ -212,9 +179,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private DtoProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
-                                         processorDescriptor.getDefaultParameter(), processorDescriptor.getBundleName(),
-                                         processorDescriptor.getBundleVersion(), processorDescriptor.getDescriptionHtml(),
-                                         convert(processorDescriptor.getOutputVariables()));
+                                          processorDescriptor.getDefaultParameter(), processorDescriptor.getBundleName(),
+                                          processorDescriptor.getBundleVersion(), processorDescriptor.getDescriptionHtml(),
+                                          convert(processorDescriptor.getOutputVariables()));
     }
 
     private DtoProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
@@ -223,9 +190,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         for (int i = 0; i < numElems; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             DtoProcessorVariable dtoProcessorVariable = new DtoProcessorVariable(outputVariable.getName(),
-                                                                              outputVariable.getDefaultAggregator(),
-                                                                              outputVariable.getDefaultValidMask(),
-                                                                              outputVariable.getDefaultWeightCoeff());
+                                                                                 outputVariable.getDefaultAggregator(),
+                                                                                 outputVariable.getDefaultValidMask(),
+                                                                                 outputVariable.getDefaultWeightCoeff());
             processorVariables[i] = dtoProcessorVariable;
         }
         return processorVariables;
@@ -233,17 +200,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private DtoProduction convert(Production production) {
         return new DtoProduction(production.getId(),
-                                production.getName(),
-                                production.getProductionRequest().getUserName(),
-                                backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
-                                production.isAutoStaging(),
-                                convert(production.getProcessingStatus(), production.getWorkflow()),
-                                convert(production.getStagingStatus()));
+                                 production.getName(),
+                                 production.getProductionRequest().getUserName(),
+                                 backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
+                                 production.isAutoStaging(),
+                                 convert(production.getProcessingStatus(), production.getWorkflow()),
+                                 convert(production.getStagingStatus()));
     }
 
     private DtoProductionRequest convert(ProductionRequest productionRequest) {
         return new DtoProductionRequest(productionRequest.getProductionType(),
-                                       productionRequest.getParameters());
+                                        productionRequest.getParameters());
     }
 
     private DtoProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {
@@ -257,15 +224,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             processingSeconds = (int) ((stopTime.getTime() - startTime.getTime()) / 1000);
         }
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                   status.getMessage(),
-                                   status.getProgress(),
-                                   processingSeconds);
+                                    status.getMessage(),
+                                    status.getProgress(),
+                                    processingSeconds);
     }
 
     private DtoProcessStatus convert(ProcessStatus status) {
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                   status.getMessage(),
-                                   status.getProgress());
+                                    status.getMessage(),
+                                    status.getProgress());
     }
 
     private DtoProductionResponse convert(ProductionResponse productionResponse) {
@@ -302,9 +269,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         log("  upload path                = " + backendConfig.getUploadPath());
         log("  production service factory = " + backendConfig.getProductionServiceFactoryClassName());
         log("  configurartion:");
-        Map<String,String> configMap = backendConfig.getConfigMap();
+        Map<String, String> configMap = backendConfig.getConfigMap();
         Set<Map.Entry<String, String>> entries = configMap.entrySet();
-        for (Map.Entry<String, String> entry    : entries){
+        for (Map.Entry<String, String> entry : entries) {
             log("    " + entry.getKey() + " = " + entry.getValue());
         }
     }
@@ -324,11 +291,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void startObservingProductionService() {
         statusObserver = new Timer("StatusObserver", true);
         statusObserver.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                updateProductionStatuses();
-            }
-        }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
+                                               @Override
+                                               public void run() {
+                                                   updateProductionStatuses();
+                                               }
+                                           }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
     }
 
     private void updateProductionStatuses() {
@@ -340,4 +307,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    private String getUserName() {
+        return getThreadLocalRequest().getUserPrincipal().getName();
+    }
 }

@@ -8,7 +8,9 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendServiceAsync {
-    void getRegions(String filter, AsyncCallback<DtoRegion[]> callback);
+    void loadRegions(String filter, AsyncCallback<DtoRegion[]> callback);
+
+    void storeRegions(DtoRegion[] regions, AsyncCallback<Void> callback);
 
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 

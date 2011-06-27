@@ -31,4 +31,16 @@ public class RegionConverter {
         return regionList;
     }
 
+    /**
+     * @param regions The regions to encode.
+     * @return The array of encoded regions.
+     */
+    public static DtoRegion[] encodeRegions(List<Region> regions) {
+        DtoRegion[] encodedRegions = new DtoRegion[regions.size()];
+        for (int i = 0; i < encodedRegions.length; i++) {
+            Region region = regions.get(i);
+            encodedRegions[i] = new DtoRegion(region.getName(), region.getPolygonWkt());
+        }
+        return encodedRegions;
+    }
 }

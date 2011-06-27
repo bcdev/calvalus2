@@ -74,7 +74,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
          */
         Maps.loadMapsApi("ABQIAAAAoao5tcl7_u-gWl5HesZlmxSaer1-qP4ShOWPxJ58G8ekwdxdChSvOI8heCGc9YiMEXrF-nwn0BHQ_A", "2", false, new Runnable() {
             public void run() {
-                backendService.getRegions(NO_FILTER, new InitRegionsCallback());
+                backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
                 backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
                 backendService.getProductions(NO_FILTER, new InitProductionsCallback());

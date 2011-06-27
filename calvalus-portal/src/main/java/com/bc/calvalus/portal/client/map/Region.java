@@ -84,8 +84,18 @@ public class Region {
     }
 
     public static String toWkt(LatLng[] polygonVertices) {
-        // todo - test and impl. (nf)
-        return "";
+        StringBuilder stringBuilder = new StringBuilder("POLYGON((");
+        for (int i = 0; i < polygonVertices.length; i++) {
+            LatLng point = polygonVertices[i];
+            if (i > 0) {
+                stringBuilder.append(',');
+            }
+            stringBuilder.append(point.getLongitude());
+            stringBuilder.append(' ');
+            stringBuilder.append(point.getLatitude());
+        }
+        stringBuilder.append("))");
+        return stringBuilder.toString();
     }
 
     public Polygon createPolygon() {
