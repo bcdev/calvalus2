@@ -64,5 +64,7 @@ public interface RegionMap {
      */
     void removeRegion(Region region);
 
+    MapInteraction getCurrentInteraction();
 
+    void setCurrentInteraction(MapInteraction mapInteraction);
 }

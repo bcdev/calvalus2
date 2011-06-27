@@ -4,7 +4,6 @@ import com.bc.calvalus.portal.client.map.actions.*;
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
@@ -34,6 +33,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private final RegionMapSelectionModel regionMapSelectionModel;
     private MapWidget mapWidget;
     private boolean adjustingRegionSelection;
+    private MapInteraction currentInteraction;
 
     private boolean editable;
     private Map<Region, Polygon> polygonMap;
@@ -134,6 +134,22 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         polygonMap.remove(region);
     }
 
+    @Override
+    public MapInteraction getCurrentInteraction() {
+        return currentInteraction;
+    }
+
+    @Override
+    public void setCurrentInteraction(MapInteraction mapInteraction) {
+        if (currentInteraction != null) {
+            currentInteraction.detachFrom(this);
+        }
+        currentInteraction = mapInteraction;
+        if (currentInteraction != null) {
+            currentInteraction.attachTo(this);
+        }
+    }
+
     private void initUi() {
 
         mapWidget = new MapWidget();
@@ -142,12 +158,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         mapWidget.addControl(new MapTypeControl());
         // mapWidget.addControl(new SmallMapControl());
         // mapWidget.addControl(new OverviewMapControl());
-        mapWidget.addAttachHandler(new AttachEvent.Handler() {
-            @Override
-            public void onAttachOrDetach(AttachEvent event) {
-                System.out.println("mapWidget.onAttachOrDetach(" + event + ")");
-            }
-        });
 
         Cell<Region> regionCell = new AbstractCell<Region>() {
             @Override
@@ -206,17 +216,24 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         ScrollPanel regionScrollPanel = new ScrollPanel(regionCellList);
 
-        RegionMapToolbar regionMapToolbar = new RegionMapToolbar(this);
 
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
-        regionPanel.addSouth(regionMapToolbar, 3.5);
+
+        if (getRegionModel().getActions().length > 0) {
+            RegionMapToolbar regionMapToolbar = new RegionMapToolbar(this);
+            regionPanel.addSouth(regionMapToolbar, 3.5);
+        }
         regionPanel.add(regionScrollPanel);
 
         SplitLayoutPanel regionSplitLayoutPanel = new SplitLayoutPanel();
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
+
+        if (getCurrentInteraction() == null) {
+            setCurrentInteraction(createSelectInteraction());
+        }
 
         updatePolygons();
         initWidget(regionSplitLayoutPanel);
@@ -252,11 +269,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private static MapAction[] createDefaultEditingActions() {
         // todo: use the action constructor that takes an icon image (nf)
         return new MapAction[]{
-                new SelectInteraction(new AbstractMapAction("S", "Select region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                    }
-                }),
+                createSelectInteraction(),
                 new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
                     @Override
                     public void run(RegionMap regionMap) {
@@ -273,5 +286,13 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 new LocateRegionsAction(),
                 new ShowRegionInfoAction()
         };
+    }
+
+    private static SelectInteraction createSelectInteraction() {
+        return new SelectInteraction(new AbstractMapAction("S", "Select region") {
+            @Override
+            public void run(RegionMap regionMap) {
+            }
+        });
     }
 }

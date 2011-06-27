@@ -2,12 +2,7 @@ package com.bc.calvalus.portal.client.map;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.PushButton;
-import com.google.gwt.user.client.ui.ToggleButton;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +16,6 @@ public class RegionMapToolbar implements IsWidget {
 
     private Map<ToggleButton, MapInteraction> interactions;
     private Map<MapInteraction, ToggleButton> interactionButtons;
-    private MapInteraction currentInteraction;
     private Widget widget;
 
     public RegionMapToolbar(RegionMap regionMap) {
@@ -46,7 +40,7 @@ public class RegionMapToolbar implements IsWidget {
             public void onClick(ClickEvent clickEvent) {
                 ToggleButton selectedToggleButton = (ToggleButton) clickEvent.getSource();
                 MapInteraction interaction = interactions.get(selectedToggleButton);
-                setCurrentInteraction(interaction);
+                regionMap.setCurrentInteraction(interaction);
 
                 for (ToggleButton interactorButton : interactions.keySet()) {
                     if (selectedToggleButton != interactorButton && interactorButton.isDown()) {
@@ -69,9 +63,8 @@ public class RegionMapToolbar implements IsWidget {
                 toggleButton.setTitle(interaction.getDescription());
                 interactions.put(toggleButton, interaction);
                 interactionButtons.put(interaction, toggleButton);
-                if (currentInteraction == null) {
-                    currentInteraction = interaction;
-                    currentInteraction.attachTo(regionMap);
+                if (regionMap.getCurrentInteraction() == null) {
+                    regionMap.setCurrentInteraction(interaction);
                     toggleButton.setDown(true);
                 }
                 buttonPanel.add(toggleButton);
@@ -87,20 +80,7 @@ public class RegionMapToolbar implements IsWidget {
                 buttonPanel.add(pushButton);
             }
         }
+
         this.widget = buttonPanel;
-    }
-
-    public MapInteraction getCurrentInteraction() {
-        return currentInteraction;
-    }
-
-    public void setCurrentInteraction(MapInteraction mapInteraction) {
-        if (currentInteraction != null) {
-            currentInteraction.detachFrom(regionMap);
-        }
-        currentInteraction = mapInteraction;
-        if (currentInteraction != null) {
-            currentInteraction.attachTo(regionMap);
-        }
     }
 }
