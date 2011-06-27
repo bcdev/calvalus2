@@ -15,13 +15,13 @@ public class RegionMapModelImpl implements RegionMapModel {
     private final MapAction[] mapActions;
 
     public RegionMapModelImpl(List<Region> regionProvider, MapAction... mapActions) {
-        this.mapActions = mapActions;
         this.regionProvider = new ListDataProvider<Region>(regionProvider);
+        this.mapActions = mapActions;
     }
 
     public RegionMapModelImpl(ListDataProvider<Region> regionProvider, MapAction... mapActions) {
-        this.mapActions = mapActions;
         this.regionProvider = regionProvider;
+        this.mapActions = mapActions;
     }
 
     @Override
