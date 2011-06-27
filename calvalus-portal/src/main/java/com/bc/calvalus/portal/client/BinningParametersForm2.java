@@ -118,6 +118,7 @@ public class BinningParametersForm2 extends Composite {
         addVariableButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
+                // todo - initialise with variable default values from processor (nf)
                 variableProvider.getList().add(new Variable());
                 variableProvider.refresh();
             }
@@ -181,6 +182,7 @@ public class BinningParametersForm2 extends Composite {
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
+        // todo - update variable list from processor (nf)
         /*
         int selectedIndex = inputVariables.getSelectedIndex();
         String selectedItem = null;
@@ -202,7 +204,6 @@ public class BinningParametersForm2 extends Composite {
         inputVariables.setSelectedIndex(newSelectedIndex);
         */
     }
-
 
     private void updatePeriodCount() {
         long millisPerDay = 24L * 60L * 60L * 1000L;
@@ -241,6 +242,8 @@ public class BinningParametersForm2 extends Composite {
         if (!superSamplingValid) {
             throw new ValidationException(superSampling, "Super-sampling must be >= 1 and <= 9");
         }
+
+        // todo - validate variable list (nf)
     }
 
     public Map<String, String> getValueMap() {
@@ -251,11 +254,23 @@ public class BinningParametersForm2 extends Composite {
         parameters.put("fillValue", fillValue.getText());
         parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
         parameters.put("weightCoeff", weightCoeff.getText());
+        */
+        List<Variable> variables = variableProvider.getList();
+        int variablesLength = variables.size();
+        parameters.put("variables.length", variables.size() + "");
+        for (int i = 0; i < variablesLength; i++) {
+            Variable variable = variables.get(i);
+            String prefix = "variables." + i;
+            parameters.put(prefix + ".name", variable.name);
+            parameters.put(prefix + ".aggregator", variable.aggregator);
+            parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
+            parameters.put(prefix + ".fillValue", variable.fillValue + "");
+            parameters.put(prefix + ".maskExpr", variable.maskExpr);
+        }
         parameters.put("periodLength", steppingPeriodLength.getText());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
-        */
         return parameters;
     }
 
@@ -270,16 +285,16 @@ public class BinningParametersForm2 extends Composite {
         variableTable.setColumnWidth(aggregatorColumn, 10, Style.Unit.EM);
 
         Column<Variable, String> weightCoeffColumn = createWeightCoeffColumn();
-        variableTable.addColumn(weightCoeffColumn, "Weight coeff.");
+        variableTable.addColumn(weightCoeffColumn, "Weight");
         variableTable.setColumnWidth(weightCoeffColumn, 8, Style.Unit.EM);
 
         Column<Variable, String> fillValueColumn = createFillValueColumn();
-        variableTable.addColumn(fillValueColumn, "Fill value");
+        variableTable.addColumn(fillValueColumn, "Fill");
         variableTable.setColumnWidth(fillValueColumn, 8, Style.Unit.EM);
 
-        Column<Variable, String> validMaskColumn = createValidMaskColumn();
-        variableTable.addColumn(validMaskColumn, "Valid-mask expression");
-        variableTable.setColumnWidth(validMaskColumn, 24, Style.Unit.EM);
+        Column<Variable, String> maskExprColumn = createValidMaskColumn();
+        variableTable.addColumn(maskExprColumn, "Mask expression");
+        variableTable.setColumnWidth(maskExprColumn, 24, Style.Unit.EM);
     }
 
     private Column<Variable, String> createNameColumn() {
