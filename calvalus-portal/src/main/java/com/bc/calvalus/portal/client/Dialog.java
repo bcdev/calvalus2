@@ -62,8 +62,14 @@ public class Dialog {
             dialogBox.setWidget(createMainPanel());
         }
         dialogBox.center();
+        onShow();
         dialogBox.show();
         return selectedButtonType;
+    }
+
+    public void hide() {
+        onHide();
+        dialogBox.hide();
     }
 
     public int getSelectedButtonIndex() {
@@ -74,38 +80,40 @@ public class Dialog {
         return selectedButtonType;
     }
 
-    private void close(ButtonType buttonType, int buttonIndex) {
+    private void onButtonClicked(ButtonType buttonType, int buttonIndex) {
         selectedButtonType = buttonType;
         selectedButtonIndex = buttonIndex;
         if (buttonType == ButtonType.OK) {
-            onOK();
-            onClose();
+            onOk();
         } else if (buttonType == ButtonType.CANCEL) {
             onCancel();
-            onClose();
         } else if (buttonType == ButtonType.YES) {
             onYes();
-            onClose();
         } else if (buttonType == ButtonType.NO) {
             onNo();
-            onClose();
         }
-        dialogBox.hide();
     }
 
-    protected void onOK() {
+    protected void onOk() {
+        hide();
     }
 
     protected void onCancel() {
+        hide();
     }
 
     protected void onYes() {
+        hide();
     }
 
     protected void onNo() {
+        hide();
     }
 
-    protected void onClose() {
+    protected void onShow() {
+    }
+
+    protected void onHide() {
     }
 
     protected DialogBox createDialogBox() {
@@ -132,15 +140,16 @@ public class Dialog {
 
     private HorizontalPanel createButtonRow() {
         final HorizontalPanel buttonRow = new HorizontalPanel();
+        buttonRow.setSpacing(2);
         for (int i = 0; i < buttonTypes.length; i++) {
             final ButtonType buttonType = buttonTypes[i];
             final int buttonIndex = i;
             final Button button = new Button(buttonType.getLabel(),
-                                             new ClickHandler() {
-                                                 public void onClick(ClickEvent event) {
-                                                     close(buttonType, buttonIndex);
-                                                 }
-                                             });
+                    new ClickHandler() {
+                        public void onClick(ClickEvent event) {
+                            onButtonClicked(buttonType, buttonIndex);
+                        }
+                    });
             buttonRow.add(button);
             buttonRow.setCellHorizontalAlignment(button, HasHorizontalAlignment.ALIGN_RIGHT);
         }
