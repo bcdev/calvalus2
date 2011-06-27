@@ -3,6 +3,7 @@ package com.bc.calvalus.portal.client.map;
 import com.bc.calvalus.portal.client.map.actions.*;
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
@@ -258,6 +259,19 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         }
     }
 
+    public void applyVertexChanges() {
+        GWT.log("Applying vertex changes in user regions...");
+        List<Region> regionList = regionMapModel.getRegionProvider().getList();
+        for (Region region : regionList) {
+            if (region.isUserRegion()) {
+                Polygon polygon = polygonMap.get(region);
+                if (polygon != null) {
+                    region.setVertices(Region.getVertices(polygon));
+                }
+            }
+        }
+    }
+
     private void updateRegionSelection(SelectionModel<Region> source, SelectionModel<Region> target) {
         for (Region region : regionMapModel.getRegionProvider().getList()) {
             target.setSelected(region, source.isSelected(region));
@@ -293,4 +307,5 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             }
         });
     }
+
 }

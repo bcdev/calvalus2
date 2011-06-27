@@ -79,10 +79,15 @@ public class Region {
         return vertices;
     }
 
-    public static String toWkt(LatLng[] polygonVertices) {
+    public void setVertices(LatLng[] vertices) {
+        this.vertices = vertices;
+        this.geometryWkt = null;
+    }
+
+    public static String toWkt(LatLng[] vertices) {
         StringBuilder stringBuilder = new StringBuilder("POLYGON((");
-        for (int i = 0; i < polygonVertices.length; i++) {
-            LatLng point = polygonVertices[i];
+        for (int i = 0; i < vertices.length; i++) {
+            LatLng point = vertices[i];
             if (i > 0) {
                 stringBuilder.append(',');
             }

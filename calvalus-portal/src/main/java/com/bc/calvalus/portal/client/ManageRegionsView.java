@@ -22,10 +22,11 @@ public class ManageRegionsView extends PortalView {
     public static final String ID = ManageRegionsView.class.getName();
 
     private final Widget widget;
+    private RegionMapWidget regionMapWidget;
 
     public ManageRegionsView(final PortalContext portalContext) {
         super(portalContext);
-        RegionMapWidget regionMapWidget = RegionMapWidget.create(portalContext.getRegions(), true);
+        regionMapWidget = RegionMapWidget.create(portalContext.getRegions(), true);
         regionMapWidget.setSize("800px", "480px");
 
         Button submitButton = new Button();
@@ -33,6 +34,7 @@ public class ManageRegionsView extends PortalView {
         submitButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
+                regionMapWidget.applyVertexChanges();
                 DtoRegion[] dtoRegions = RegionConverter.encodeRegions(getPortal().getRegions().getList());
                 getPortal().getBackendService().storeRegions(dtoRegions, new AsyncCallback<Void>() {
 
@@ -70,5 +72,10 @@ public class ManageRegionsView extends PortalView {
     @Override
     public String getTitle() {
         return "Manage Regions";
+    }
+
+    @Override
+    public void onHidden() {
+        regionMapWidget.applyVertexChanges();
     }
 }
