@@ -26,7 +26,7 @@ public class ManageRegionsView extends PortalView {
     public ManageRegionsView(final PortalContext portalContext) {
         super(portalContext);
         RegionMapWidget regionMapWidget = RegionMapWidget.create(portalContext.getRegions(), true);
-        regionMapWidget.setSize("100%", "600px");
+        regionMapWidget.setSize("800px", "480px");
 
         Button submitButton = new Button();
         submitButton.setText("Save Changes");
@@ -51,7 +51,6 @@ public class ManageRegionsView extends PortalView {
 
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setSpacing(2);
-        verticalPanel.setWidth("100%");
         verticalPanel.add(regionMapWidget);
         verticalPanel.add(submitButton);
 

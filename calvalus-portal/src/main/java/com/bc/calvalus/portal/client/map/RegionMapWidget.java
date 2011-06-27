@@ -216,7 +216,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         ScrollPanel regionScrollPanel = new ScrollPanel(regionCellList);
 
-
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
 
@@ -237,7 +236,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         updatePolygons();
         initWidget(regionSplitLayoutPanel);
-        setSize("720px", "360px");
     }
 
     private void updatePolygons() {
