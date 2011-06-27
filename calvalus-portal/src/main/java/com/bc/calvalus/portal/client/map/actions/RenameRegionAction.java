@@ -15,6 +15,9 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * @author Norman Fomferra
  */
 public class RenameRegionAction extends AbstractMapAction {
+
+    private static final String TITLE = "Rename Region";
+
     public RenameRegionAction() {
         super("R", "Rename selected region");
     }
@@ -23,11 +26,11 @@ public class RenameRegionAction extends AbstractMapAction {
     public void run(final RegionMap regionMap) {
         final Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
-            Window.alert("No user region selected.");
+            Dialog.showMessage(TITLE, "No user region selected.");
             return;
         }
         if (!selectedRegion.isUserRegion()) {
-            Window.alert("You can only rename your own regions.");
+            Dialog.showMessage(TITLE, "You can only rename your own regions.");
             return;
         }
 
@@ -40,16 +43,16 @@ public class RenameRegionAction extends AbstractMapAction {
         verticalPanel.add(new Label("New region name:"));
         verticalPanel.add(nameBox);
 
-        Dialog dialog = new Dialog("Rename Region", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+        Dialog dialog = new Dialog(TITLE, verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
             @Override
             protected void onOk() {
                 String value = nameBox.getValue();
                 if (value.isEmpty()) {
-                    Dialog.showMessage("Rename Region", "Please provide a name.");
+                    Dialog.showMessage(TITLE, "Please provide a name.");
                     return;
                 }
                 if (regionMap.getRegion("user." + value) != null) {
-                    Dialog.showMessage("Rename Region", "A user region with this name already exists.");
+                    Dialog.showMessage(TITLE, "A user region with this name already exists.");
                     return;
                 }
                 selectedRegion.setName(value);

@@ -12,6 +12,9 @@ import com.google.gwt.user.client.ui.Label;
  * @author Norman Fomferra
  */
 public class DeleteRegionsAction extends AbstractMapAction {
+
+    private static final String TITLE = "Delete Regions";
+
     public DeleteRegionsAction() {
         super("D", "Delete selected region(s)");
     }
@@ -20,14 +23,14 @@ public class DeleteRegionsAction extends AbstractMapAction {
     public void run(final RegionMap regionMap) {
         final Region[] selectedRegions = regionMap.getRegionSelectionModel().getSelectedRegions();
         if (selectedRegions.length == 0) {
-            Dialog.showMessage("Delete Regions", "No regions selected.");
+            Dialog.showMessage(TITLE, "No regions selected.");
         } else if (selectedRegions.length == 1) {
             final Region selectedRegion = selectedRegions[0];
             if (!selectedRegion.isUserRegion()) {
-                Dialog.showMessage("Delete Regions", "You can only delete your own regions.");
+                Dialog.showMessage(TITLE, "You can only delete your own regions.");
                 return;
             }
-            Dialog dialog = new Dialog("Delete Regions",
+            Dialog dialog = new Dialog(TITLE,
                                        new Label("Really delete region '" + selectedRegion.getName() + "'?"),
                                        Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
@@ -38,7 +41,7 @@ public class DeleteRegionsAction extends AbstractMapAction {
             };
             dialog.show();
         } else {
-            Dialog dialog = new Dialog("Delete Regions",
+            Dialog dialog = new Dialog(TITLE,
                                        new Label("Really delete " + selectedRegions.length + " regions?"),
                                        Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
@@ -52,9 +55,9 @@ public class DeleteRegionsAction extends AbstractMapAction {
                     }
                     super.onOk();
                     if (n == 0) {
-                        Dialog.showMessage("Delete Regions", "The selected regions could not be deleted.");
+                        Dialog.showMessage(TITLE, "The selected regions could not be deleted.");
                     } else if (n < selectedRegions.length) {
-                        Dialog.showMessage("Delete Regions", "Some of the selected regions could not be deleted.");
+                        Dialog.showMessage(TITLE, "Some of the selected regions could not be deleted.");
                     }
                 }
             };
