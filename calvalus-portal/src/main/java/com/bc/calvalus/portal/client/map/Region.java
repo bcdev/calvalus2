@@ -10,6 +10,8 @@ import com.google.gwt.maps.client.overlay.Polygon;
  * @author Norman Fomferra
  */
 public class Region {
+
+    public static final String USER_PREFIX = "user.";
     private static int counter;
 
     private String name;
@@ -17,7 +19,18 @@ public class Region {
     private LatLng[] polygonVertices;
 
     public static Region createUserRegion(LatLng[] polygonVertices) {
-        return new Region("user.polygon_" + (++counter), polygonVertices);
+        return new Region(getAbsUserRegionName("region_" + (++counter)), polygonVertices);
+    }
+
+    public static String getAbsUserRegionName(String name) {
+        return USER_PREFIX + name;
+    }
+
+    public static String getRelUserRegionName(String fullName) {
+        if (fullName.startsWith(USER_PREFIX)) {
+            return fullName.substring(USER_PREFIX.length());
+        }
+        return fullName;
     }
 
     public Region(String name, LatLng[] polygonVertices) {
@@ -51,7 +64,7 @@ public class Region {
     }
 
     public boolean isUserRegion() {
-        return getName().startsWith("user.");
+        return getName().startsWith(USER_PREFIX);
     }
 
     public LatLng[] getPolygonVertices() {
