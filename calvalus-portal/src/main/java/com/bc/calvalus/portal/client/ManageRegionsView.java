@@ -1,6 +1,10 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -14,12 +18,30 @@ public class ManageRegionsView extends PortalView {
 
     public static final String ID = ManageRegionsView.class.getName();
 
-    private final RegionMapWidget widget;
+    private final Widget widget;
 
     public ManageRegionsView(PortalContext portalContext) {
         super(portalContext);
-        widget = RegionMapWidget.create(portalContext.getRegions(), true);
-        widget.setSize("100%", "600px");
+        RegionMapWidget regionMapWidget = RegionMapWidget.create(portalContext.getRegions(), true);
+        regionMapWidget.setSize("100%", "600px");
+
+        Button submitButton = new Button();
+        submitButton.setText("Save Changes");
+        submitButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                // todo: store new user regions in database.
+                Dialog.showMessage("Manage Regions", "Not implemented yet.");
+            }
+        });
+
+        VerticalPanel verticalPanel = new VerticalPanel();
+        verticalPanel.setSpacing(2);
+        verticalPanel.setWidth("100%");
+        verticalPanel.add(regionMapWidget);
+        verticalPanel.add(submitButton);
+
+        widget = verticalPanel;
     }
 
     @Override
