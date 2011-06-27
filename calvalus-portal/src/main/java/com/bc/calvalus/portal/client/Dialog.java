@@ -87,6 +87,8 @@ public class Dialog {
             onOk();
         } else if (buttonType == ButtonType.CANCEL) {
             onCancel();
+        } else if (buttonType == ButtonType.CLOSE) {
+            onClose();
         } else if (buttonType == ButtonType.YES) {
             onYes();
         } else if (buttonType == ButtonType.NO) {
@@ -95,6 +97,10 @@ public class Dialog {
     }
 
     protected void onOk() {
+        hide();
+    }
+
+    protected void onClose() {
         hide();
     }
 
