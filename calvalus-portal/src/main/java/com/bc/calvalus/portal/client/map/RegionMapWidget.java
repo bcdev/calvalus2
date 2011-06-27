@@ -245,14 +245,14 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             Polygon polygon = polygonMap.get(region);
             if (polygon == null) {
                 polygon = region.createPolygon();
+                polygon.setVisible(true);
                 mapWidget.addOverlay(polygon);
                 regionMap.put(polygon, region);
                 polygonMap.put(region, polygon);
             }
             polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
             polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
-            polygon.setVisible(true);
-            if (region.isUserRegion()) {
+            if (editable && region.isUserRegion()) {
                 polygon.setEditingEnabled(selected);
             }
         }
