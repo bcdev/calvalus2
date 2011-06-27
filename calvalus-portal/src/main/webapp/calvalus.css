@@ -62,21 +62,5 @@
 }
 
 
-/** Most GWT widgets already have a style name defined */
-
-.gwt-DialogBox {
-    width: 400px;
-}
-
-.gwt-Button {
-    display: block;
-    font-size: 32pt;
-}
-
-.cw-FlexTable td {
-    border: 0px;
-}
-
-
 
 
