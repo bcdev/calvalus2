@@ -26,7 +26,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     private ProcessorSelectionForm processorSelectionForm;
     private ProductFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
-    private BinningParametersForm binningParametersForm;
+    private BinningParametersForm2 binningParametersForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
 
@@ -58,7 +58,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         });
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
 
-        binningParametersForm = new BinningParametersForm();
+        binningParametersForm = new BinningParametersForm2();
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
 
         outputParametersForm = new OutputParametersForm();
