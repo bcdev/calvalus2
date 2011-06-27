@@ -128,8 +128,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 new OrderTAProductionView(this),
                 new ManageProductionsView(this),
                 new ManageRegionsView(this),
-                new FrameView(this, "FS", "File System", "http://cvmaster00:50070/dfshealth.jsp"),
-                new FrameView(this, "JT", "Job Tracker", "http://cvmaster00:50030/jobtracker.jsp"),
         };
 
         viewTabIndices = new HashMap<String, Integer>();
@@ -139,8 +137,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         mainPanel = new DecoratedTabPanel();
         mainPanel.ensureDebugId("mainPanel");
-//        mainPanel.setWidth("100%");
-//        mainPanel.setHeight("100%");
         for (PortalView view : views) {
             mainPanel.add(view, view.getTitle());
         }
