@@ -3,19 +3,22 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
         >
 
-    <g:VerticalPanel>
+    <g:VerticalPanel spacing="2">
+
         <g:HTMLPanel width="100%">
             <h3>Output</h3>
             <hr/>
         </g:HTMLPanel>
+
         <g:HorizontalPanel>
-            <g:HTML>File Format:&nbsp;</g:HTML>
+            <g:Label>File Format:</g:Label>
             <g:ListBox ui:field="outputFormat" visibleItemCount="1" width="20em"/>
             <g:HTML>&nbsp;&nbsp;&nbsp;</g:HTML>
             <g:CheckBox ui:field="autoStaging"
                         text="Perform staging step after successful production"
                         checked="true"/>
         </g:HorizontalPanel>
+
     </g:VerticalPanel>
 
 </ui:UiBinder>

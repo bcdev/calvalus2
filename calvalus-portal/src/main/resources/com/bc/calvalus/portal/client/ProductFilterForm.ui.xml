@@ -10,12 +10,14 @@
     <g:HorizontalPanel spacing="16">
 
         <g:VerticalPanel spacing="2">
+
             <g:HTMLPanel width="100%">
                 <td colspan="3" align="center">
                     <h3>Temporal Range</h3>
                     <hr/>
                 </td>
             </g:HTMLPanel>
+
             <g:HTMLPanel>
                 <table cellspacing="2">
                     <tr>
@@ -62,13 +64,16 @@
         </g:VerticalPanel>
 
         <g:VerticalPanel spacing="2">
+
             <g:HTMLPanel width="100%">
                 <td colspan="3" align="center">
                     <h3>Spatial Range</h3>
                     <hr/>
                 </td>
             </g:HTMLPanel>
+
             <map:RegionMapWidget ui:field='predefinedRegions' width="480px" height="240px"/>
+
         </g:VerticalPanel>
 
     </g:HorizontalPanel>

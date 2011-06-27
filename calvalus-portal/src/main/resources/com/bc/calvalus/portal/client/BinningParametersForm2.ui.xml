@@ -5,6 +5,7 @@
         >
 
     <g:VerticalPanel spacing="2">
+
         <g:HTMLPanel width="100%">
             <h3>Binning Parameters</h3>
             <hr/>
@@ -19,7 +20,6 @@
         </g:HorizontalPanel>
 
         <g:HorizontalPanel spacing="16">
-
             <g:HTMLPanel>
                 <table>
                     <tr>

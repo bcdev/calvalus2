@@ -4,7 +4,7 @@
              xmlns="http://www.w3.org/1999/html"
         >
 
-    <g:VerticalPanel>
+    <g:VerticalPanel spacing="2">
 
         <g:HTMLPanel width="100%">
             <h3>
