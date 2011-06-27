@@ -5,17 +5,13 @@
              xmlns:date='urn:import:com.google.gwt.user.datepicker.client'
         >
 
-
-
     <g:HorizontalPanel spacing="16">
 
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <td colspan="3" align="center">
-                    <h3>Temporal Range</h3>
-                    <hr/>
-                </td>
+                <h3>Temporal Range</h3>
+                <hr/>
             </g:HTMLPanel>
 
             <g:HTMLPanel>
@@ -66,13 +62,15 @@
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <td colspan="3" align="center">
-                    <h3>Spatial Range</h3>
-                    <hr/>
-                </td>
+                <h3>Spatial Range</h3>
+                <hr/>
             </g:HTMLPanel>
 
             <map:RegionMapWidget ui:field='predefinedRegions' width="480px" height="240px"/>
+            <g:HTML>Click on the
+                <i>Manage Regions</i>
+                tab to create new regions.
+            </g:HTML>
 
         </g:VerticalPanel>
 

@@ -3,7 +3,6 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
         >
 
-
     <g:VerticalPanel spacing="2">
 
         <g:HTMLPanel width="100%">

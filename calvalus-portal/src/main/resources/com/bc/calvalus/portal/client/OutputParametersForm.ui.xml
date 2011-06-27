@@ -10,14 +10,15 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:HorizontalPanel>
-            <g:Label>File Format:</g:Label>
-            <g:ListBox ui:field="outputFormat" visibleItemCount="1" width="20em"/>
-            <g:HTML>&nbsp;&nbsp;&nbsp;</g:HTML>
-            <g:CheckBox ui:field="autoStaging"
-                        text="Perform staging step after successful production"
-                        checked="true"/>
+        <g:HorizontalPanel spacing="2">
+            <g:Label>File format:</g:Label>
+            <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
+            <g:Label>Note that the available file formats may depend on the selected processor.</g:Label>
         </g:HorizontalPanel>
+
+        <g:CheckBox ui:field="autoStaging"
+                    text="Automatically perform staging step after successful production"
+                    checked="true"/>
 
     </g:VerticalPanel>
 
