@@ -25,9 +25,7 @@ public class DeleteRegionsAction extends AbstractMapAction {
         int n = 0;
         for (Region selectedRegion : selectedRegions) {
             if (selectedRegion.isUserRegion()) {
-                regionMap.getRegionSelectionModel().setSelected(selectedRegion, false);
-                regionMap.getRegionModel().getRegionList().getList().remove(selectedRegion);
-                regionMap.getMapWidget().removeOverlay(selectedRegion.getPolygon());
+                regionMap.removeRegion(selectedRegion);
                 n++;
             }
         }

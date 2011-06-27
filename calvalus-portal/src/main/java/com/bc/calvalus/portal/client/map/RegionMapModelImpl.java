@@ -11,17 +11,17 @@ import java.util.List;
  */
 public class RegionMapModelImpl implements RegionMapModel {
 
-    private final ListDataProvider<Region> regionList;
+    private final ListDataProvider<Region> regionProvider;
     private final MapAction[] mapActions;
 
-    public RegionMapModelImpl(List<Region> regionList, MapAction... mapActions) {
+    public RegionMapModelImpl(List<Region> regionProvider, MapAction... mapActions) {
         this.mapActions = mapActions;
-        this.regionList = new ListDataProvider<Region>(regionList);
+        this.regionProvider = new ListDataProvider<Region>(regionProvider);
     }
 
-    public RegionMapModelImpl(ListDataProvider<Region> regionList, MapAction... mapActions) {
+    public RegionMapModelImpl(ListDataProvider<Region> regionProvider, MapAction... mapActions) {
         this.mapActions = mapActions;
-        this.regionList = regionList;
+        this.regionProvider = regionProvider;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class RegionMapModelImpl implements RegionMapModel {
     }
 
     @Override
-    public ListDataProvider<Region> getRegionList() {
-        return regionList;
+    public ListDataProvider<Region> getRegionProvider() {
+        return regionProvider;
     }
 }

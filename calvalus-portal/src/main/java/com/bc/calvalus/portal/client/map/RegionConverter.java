@@ -25,8 +25,7 @@ public class RegionConverter {
             Overlay overlay = WKTParser.parse(geometryWkt);
             if (overlay instanceof Polygon) {
                 Polygon polygon = (Polygon) overlay;
-                polygon.setVisible(true);
-                regionList.add(new Region(encodedRegion.getName(), geometryWkt, polygon));
+                regionList.add(new Region(encodedRegion.getName(), geometryWkt, Region.getPolygonVertices(polygon)));
             }
         }
         return regionList;

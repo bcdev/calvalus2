@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.google.gwt.maps.client.MapWidget;
+import com.google.gwt.maps.client.overlay.Polygon;
 
 /**
  * A Google map that has regions.
@@ -23,4 +24,36 @@ public interface RegionMap {
      * @return The region selection model.
      */
     RegionMapSelectionModel getRegionSelectionModel();
+
+    /**
+     * Gets the polygon used to graphically represent the given region in the map.
+     *
+     * @param region The region.
+     * @return The polygon, or {@code null} if no such polygon exists.
+     */
+    Polygon getRegionPolygon(Region region);
+
+    /**
+     * Gets the region that is graphically represented in the map by the given polygon.
+     *
+     * @param polygon The polygon.
+     * @return The region, or {@code null} if no such region exists.
+     */
+    Region getPolygonRegion(Polygon polygon);
+
+    /**
+     * Adds a new region.
+     *
+     * @param region The region.
+     */
+    void addRegion(Region region);
+
+    /**
+     * Removes the given region.
+     *
+     * @param region The region.
+     */
+    void removeRegion(Region region);
+
+
 }

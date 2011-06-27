@@ -8,7 +8,6 @@ import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MapMouseMoveHandler;
 import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 
 /**
@@ -55,20 +54,17 @@ public class InsertBoxInteraction extends MapInteraction implements MapClickHand
             });
             mapWidget.addOverlay(polyline);
         } else {
-            Polygon polygon = new Polygon(new LatLng[]{
+            LatLng[] polygonVertices = {
                     polyline.getVertex(0),
                     polyline.getVertex(1),
                     polyline.getVertex(2),
                     polyline.getVertex(3),
                     polyline.getVertex(4),
-            });
-            mapWidget.addOverlay(polygon);
+            };
             mapWidget.removeOverlay(polyline);
             polyline = null;
-            Region region = Region.createUserRegion(polygon);
-            regionMap.getRegionModel().getRegionList().getList().add(0, region);
-            regionMap.getRegionSelectionModel().clearSelection();
-            regionMap.getRegionSelectionModel().setSelected(region, true);
+            regionMap.addRegion(Region.createUserRegion(polygonVertices));
+            // Interaction complete, invoke the actual action.
             run(regionMap);
         }
     }

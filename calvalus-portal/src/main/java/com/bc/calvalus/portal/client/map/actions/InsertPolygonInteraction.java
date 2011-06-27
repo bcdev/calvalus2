@@ -9,7 +9,6 @@ import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MapMouseMoveHandler;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
-import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 
 /**
@@ -59,14 +58,10 @@ public class InsertPolygonInteraction extends MapInteraction implements MapClick
             int dy = point2.getY() - point1.getY();
             double pixelDistance = Math.sqrt(dx * dx + dy * dy);
             if (pixelDistance < 8.0) {
-                Polygon polygon = convertToPolygon(polyline);
-                mapWidget.addOverlay(polygon);
+                LatLng[] polygonVertices = getPolygonVertices(polyline);
                 mapWidget.removeOverlay(polyline);
                 polyline = null;
-                Region region = Region.createUserRegion(polygon);
-                regionMap.getRegionModel().getRegionList().getList().add(0, region);
-                regionMap.getRegionSelectionModel().clearSelection();
-                regionMap.getRegionSelectionModel().setSelected(region, true);
+                regionMap.addRegion(Region.createUserRegion(polygonVertices));
                 // Interaction complete, invoke the actual action.
                 run(regionMap);
                 // System.out.println("polygon added with " + polygon.getVertexCount() + " vertices");
@@ -85,14 +80,14 @@ public class InsertPolygonInteraction extends MapInteraction implements MapClick
         }
     }
 
-    static Polygon convertToPolygon(Polyline polyline) {
+    static LatLng[] getPolygonVertices(Polyline polyline) {
         int n = polyline.getVertexCount();
         LatLng[] points = new LatLng[n];
         for (int i = 0; i < n - 1; i++) {
             points[i] = polyline.getVertex(i);
         }
         points[n - 1] = polyline.getVertex(0);
-        return new Polygon(points);
+        return points;
     }
 
 }

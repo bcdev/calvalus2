@@ -28,7 +28,9 @@ import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An implementation of a Google map that has regions.
@@ -42,6 +44,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private MapWidget mapWidget;
     private boolean adjustingRegionSelection;
 
+    private boolean editable;
+    private Map<Region, Polygon> polygonMap;
+    private Map<Polygon, Region> regionMap;
+
     private PolyStyleOptions normalPolyStrokeStyle;
     private PolyStyleOptions normalPolyFillStyle;
     private PolyStyleOptions selectedPolyStrokeStyle;
@@ -54,20 +60,25 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         } else {
             model = new RegionMapModelImpl(regionList, createDefaultNonEditingActions());
         }
-        return new RegionMapWidget(model);
+        return new RegionMapWidget(model, editable);
     }
 
-    public RegionMapWidget(RegionMapModel regionMapModel) {
-        this(regionMapModel, new RegionMapSelectionModelImpl());
+    public RegionMapWidget(RegionMapModel regionMapModel, boolean editable) {
+        this(regionMapModel, new RegionMapSelectionModelImpl(), editable);
     }
 
-    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel) {
+    public RegionMapWidget(RegionMapModel regionMapModel, RegionMapSelectionModel regionMapSelectionModel, boolean editable) {
         this.regionMapModel = regionMapModel;
         this.regionMapSelectionModel = regionMapSelectionModel;
+        this.editable = editable;
         this.normalPolyStrokeStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.8);
         this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
         this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
         this.selectedPolyFillStyle = normalPolyFillStyle;
+
+        polygonMap = new HashMap<Region, Polygon>();
+        regionMap = new HashMap<Polygon, Region>();
+
         initUi();
     }
 
@@ -84,6 +95,41 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     @Override
     public MapWidget getMapWidget() {
         return mapWidget;
+    }
+
+    @Override
+    public Polygon getRegionPolygon(Region region) {
+        return polygonMap.get(region);
+    }
+
+    @Override
+    public Region getPolygonRegion(Polygon polygon) {
+        return regionMap.get(polygon);
+    }
+
+    @Override
+    public void addRegion(Region region) {
+
+        Polygon polygon = region.createPolygon();
+        mapWidget.addOverlay(polygon);
+        regionMap.put(polygon, region);
+        polygonMap.put(region, polygon);
+
+        getRegionModel().getRegionProvider().getList().add(0, region);
+        getRegionSelectionModel().clearSelection();
+        getRegionSelectionModel().setSelected(region, true);
+    }
+
+    @Override
+    public void removeRegion(Region region) {
+
+        getRegionSelectionModel().setSelected(region, false);
+        getRegionModel().getRegionProvider().getList().remove(region);
+
+        Polygon polygon = polygonMap.get(region);
+        mapWidget.removeOverlay(polygon);
+        regionMap.remove(polygon);
+        polygonMap.remove(region);
     }
 
     private void initUi() {
@@ -113,7 +159,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         regionCellList.setVisibleRange(0, 256);
         regionCellList.setKeyboardPagingPolicy(HasKeyboardPagingPolicy.KeyboardPagingPolicy.INCREASE_RANGE);
         regionCellList.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.ENABLED);
-        regionMapModel.getRegionList().addDataDisplay(regionCellList);
+        regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
 
         // Add a selection model so we can select cells.
         final MultiSelectionModel<Region> regionListSelectionModel = new MultiSelectionModel<Region>(regionKey);
@@ -161,13 +207,15 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         regionSplitLayoutPanel.addWest(regionPanel, 180);
         regionSplitLayoutPanel.add(mapWidget);
 
-        List<Region> regionList = regionMapModel.getRegionList().getList();
+        List<Region> regionList = regionMapModel.getRegionProvider().getList();
         for (Region region : regionList) {
-            Polygon polygon = region.getPolygon();
+            Polygon polygon = region.createPolygon();
             polygon.setVisible(true);
             polygon.setStrokeStyle(normalPolyStrokeStyle);
             polygon.setFillStyle(normalPolyFillStyle);
             mapWidget.addOverlay(polygon);
+            regionMap.put(polygon, region);
+            polygonMap.put(region, polygon);
         }
 
         initWidget(regionSplitLayoutPanel);
@@ -175,18 +223,19 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     private void updatePolygonStyles() {
-        for (Region region : regionMapModel.getRegionList().getList()) {
+        for (Region region : regionMapModel.getRegionProvider().getList()) {
             boolean selected = regionMapSelectionModel.isSelected(region);
-            region.getPolygon().setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
-            region.getPolygon().setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
+            Polygon polygon = polygonMap.get(region);
+            polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
+            polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
             if (region.isUserRegion()) {
-                region.getPolygon().setEditingEnabled(selected);
+                polygon.setEditingEnabled(selected);
             }
         }
     }
 
     private void updateRegionSelection(SelectionModel<Region> source, SelectionModel<Region> target) {
-        for (Region region : regionMapModel.getRegionList().getList()) {
+        for (Region region : regionMapModel.getRegionProvider().getList()) {
             target.setSelected(region, source.isSelected(region));
         }
     }

@@ -13,22 +13,22 @@ public class Region {
     private static int counter;
 
     private String name;
-    private String wkt;
-    private Polygon polygon;
+    private String polygonWkt;
+    private LatLng[] polygonVertices;
 
-    public static Region createUserRegion(Polygon polygon) {
-        return new Region("user.polygon_" + (++counter), polygon);
+    public static Region createUserRegion(LatLng[] polygonVertices) {
+        return new Region("user.polygon_" + (++counter), polygonVertices);
     }
 
-    public Region(String name, Polygon polygon) {
+    public Region(String name, LatLng[] polygonVertices) {
         this.name = name;
-        this.polygon = polygon;
+        this.polygonVertices = polygonVertices;
     }
 
-    public Region(String name, String wkt, Polygon polygon) {
+    public Region(String name, String polygonWkt, LatLng[] polygonVertices) {
         this.name = name;
-        this.wkt = wkt;
-        this.polygon = polygon;
+        this.polygonWkt = polygonWkt;
+        this.polygonVertices = polygonVertices;
     }
 
     public String getName() {
@@ -39,45 +39,53 @@ public class Region {
         this.name = name;
     }
 
-    public String getWkt() {
-        if (this.wkt == null) {
-           this.wkt = toWkt(polygon);
+    public String getPolygonWkt() {
+        if (this.polygonWkt == null) {
+           this.polygonWkt = toWkt(polygonVertices);
         }
-        return wkt;
+        return polygonWkt;
     }
 
-    public void setWkt(String wkt) {
-        this.wkt = wkt;
+    public void setPolygonWkt(String polygonWkt) {
+        this.polygonWkt = polygonWkt;
     }
 
     public boolean isUserRegion() {
         return getName().startsWith("user.");
     }
 
-    public Polygon getPolygon() {
-        return polygon;
+    public LatLng[] getPolygonVertices() {
+        return polygonVertices;
     }
 
-    public void setPolygon(Polygon polygon) {
-        this.polygon = polygon;
+    public void setPolygonVertices(LatLng[] polygonVertices) {
+        this.polygonVertices = polygonVertices;
     }
 
     public static Region fromWKT(String regionName, String regionWkt) {
         Overlay overlay = WKTParser.parse(regionWkt);
         if (overlay instanceof Polygon) {
-            return new Region(regionName, regionWkt, (Polygon) overlay);
+            return new Region(regionName, regionWkt, getPolygonVertices((Polygon) overlay));
         }
         return null;
     }
 
-    public static String toWkt(Polygon polygon) {
-        int vertexCount = polygon.getVertexCount();
-        for (int i = 0; i < vertexCount; i++) {
-            LatLng vertex = polygon.getVertex(i);
-
-        }
+    public static String toWkt(LatLng[] polygonVertices) {
         // todo - test and impl. (nf)
         return "";
     }
+
+    public Polygon createPolygon() {
+        return new Polygon(polygonVertices);
+    }
+
+    public static LatLng[] getPolygonVertices(Polygon polygon) {
+        LatLng[] points = new LatLng[polygon.getVertexCount()];
+        for (int i = 0; i < points.length; i++) {
+            points[i] = polygon.getVertex(i);
+        }
+        return points;
+    }
+
 
 }

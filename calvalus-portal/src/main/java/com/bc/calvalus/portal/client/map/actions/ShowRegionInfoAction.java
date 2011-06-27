@@ -9,7 +9,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FlexTable;
 
 /**
- * todo - add api doc
+ * An action that displays a Google Maps info window for a selected region.
  *
  * @author Norman Fomferra
  */
@@ -26,7 +26,7 @@ public class ShowRegionInfoAction extends AbstractMapAction {
             return;
         }
 
-        Polygon polygon = selectedRegion.getPolygon();
+        Polygon polygon = selectedRegion.createPolygon();
 
         FlexTable flexTable = new FlexTable();
         int row = 0;

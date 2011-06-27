@@ -3,7 +3,6 @@ package com.bc.calvalus.portal.client.map;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.maps.client.Maps;
 import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Polygon;
 
 public class RegionTest extends GWTTestCase {
 
@@ -22,14 +21,14 @@ public class RegionTest extends GWTTestCase {
         assertNotNull(region);
         assertEquals("Reinbek", region.getName());
 
-        Polygon polygon = region.getPolygon();
+        LatLng[] polygon = region.getPolygonVertices();
         assertNotNull(polygon);
-        assertEquals(5, polygon.getVertexCount());
-        assertEquals(LatLng.newInstance(-90, -180), polygon.getVertex(0));
-        assertEquals(LatLng.newInstance(-90, 180), polygon.getVertex(1));
-        assertEquals(LatLng.newInstance(90, 180), polygon.getVertex(2));
-        assertEquals(LatLng.newInstance(90, -180), polygon.getVertex(3));
-        assertEquals(LatLng.newInstance(-90, -180), polygon.getVertex(4));
+        assertEquals(5, polygon.length);
+        assertEquals(LatLng.newInstance(-90, -180), polygon[0]);
+        assertEquals(LatLng.newInstance(-90, 180), polygon[1]);
+        assertEquals(LatLng.newInstance(90, 180), polygon[2]);
+        assertEquals(LatLng.newInstance(90, -180), polygon[3]);
+        assertEquals(LatLng.newInstance(-90, -180), polygon[4]);
     }
 
     private static void assertEquals(LatLng expected, LatLng vertex) {

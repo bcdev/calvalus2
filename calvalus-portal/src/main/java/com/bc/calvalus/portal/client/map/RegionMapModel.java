@@ -10,5 +10,5 @@ import com.google.gwt.view.client.ListDataProvider;
 public interface RegionMapModel {
     MapAction[] getActions();
 
-    ListDataProvider<Region> getRegionList();
+    ListDataProvider<Region> getRegionProvider();
 }

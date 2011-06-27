@@ -6,7 +6,7 @@ import com.bc.calvalus.portal.client.map.RegionMap;
 import com.google.gwt.user.client.Window;
 
 /**
- * todo - add api doc
+ * An action that lets a user rename a region.
  *
  * @author Norman Fomferra
  */
