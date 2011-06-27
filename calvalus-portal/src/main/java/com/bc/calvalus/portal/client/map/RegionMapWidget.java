@@ -98,12 +98,23 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     @Override
-    public Polygon getRegionPolygon(Region region) {
+    public Polygon getPolygon(Region region) {
         return polygonMap.get(region);
     }
 
     @Override
-    public Region getPolygonRegion(Polygon polygon) {
+    public Region getRegion(String name) {
+        List<Region> list = getRegionModel().getRegionProvider().getList();
+        for (Region region : list) {
+            if (region.getName().equalsIgnoreCase(name)) {
+                return region;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Region getRegion(Polygon polygon) {
         return regionMap.get(polygon);
     }
 

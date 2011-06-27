@@ -31,7 +31,7 @@ public class LocateRegionsAction extends AbstractMapAction {
         Region[] regions = regionMap.getRegionSelectionModel().getSelectedRegions();
         LatLngBounds totalBounds = LatLngBounds.newInstance();
         for (Region region : regions) {
-            Polygon regionPolygon = regionMap.getRegionPolygon(region);
+            Polygon regionPolygon = regionMap.getPolygon(region);
             if (regionPolygon != null) {
                 LatLngBounds regionBounds = regionPolygon.getBounds();
                 totalBounds.extend(regionBounds.getNorthEast());

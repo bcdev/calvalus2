@@ -26,12 +26,12 @@ public interface RegionMap {
     RegionMapSelectionModel getRegionSelectionModel();
 
     /**
-     * Gets the polygon used to graphically represent the given region in the map.
+     * Gets the region with the given name.
      *
-     * @param region The region.
-     * @return The polygon, or {@code null} if no such polygon exists.
+     * @param name The region name.
+     * @return The region, or {@code null} if no such region exists.
      */
-    Polygon getRegionPolygon(Region region);
+    Region getRegion(String name);
 
     /**
      * Gets the region that is graphically represented in the map by the given polygon.
@@ -39,7 +39,16 @@ public interface RegionMap {
      * @param polygon The polygon.
      * @return The region, or {@code null} if no such region exists.
      */
-    Region getPolygonRegion(Polygon polygon);
+    Region getRegion(Polygon polygon);
+
+    /**
+     * Gets the polygon used to graphically represent the given region in the map.
+     *
+     * @param region The region.
+     * @return The polygon, or {@code null} if no such polygon exists.
+     */
+    Polygon getPolygon(Region region);
+
 
     /**
      * Adds a new region.

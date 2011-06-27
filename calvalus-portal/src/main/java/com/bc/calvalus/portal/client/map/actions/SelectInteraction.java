@@ -41,7 +41,7 @@ public class SelectInteraction extends MapInteraction implements MapClickHandler
             Polygon polygon = (Polygon) overlay;
             List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
             for (Region region : list) {
-                Polygon regionPolygon = regionMap.getRegionPolygon(region);
+                Polygon regionPolygon = regionMap.getPolygon(region);
                 if (regionPolygon == polygon) {
                     regionMap.getRegionSelectionModel().clearSelection();
                     regionMap.getRegionSelectionModel().setSelected(region, true);
