@@ -1,12 +1,6 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.bc.calvalus.portal.client.map.actions.DeleteRegionsAction;
-import com.bc.calvalus.portal.client.map.actions.InsertBoxInteraction;
-import com.bc.calvalus.portal.client.map.actions.InsertPolygonInteraction;
-import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
-import com.bc.calvalus.portal.client.map.actions.RenameRegionAction;
-import com.bc.calvalus.portal.client.map.actions.SelectInteraction;
-import com.bc.calvalus.portal.client.map.actions.ShowRegionInfoAction;
+import com.bc.calvalus.portal.client.map.actions.*;
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.dom.client.Style;
@@ -22,11 +16,7 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.ResizeComposite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
-import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.MultiSelectionModel;
-import com.google.gwt.view.client.ProvidesKey;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SelectionModel;
+import com.google.gwt.view.client.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +48,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         if (editable) {
             model = new RegionMapModelImpl(regionList, createDefaultEditingActions());
         } else {
-            model = new RegionMapModelImpl(regionList, createDefaultNonEditingActions());
+            model = new RegionMapModelImpl(regionList);
         }
         return new RegionMapWidget(model, editable);
     }
@@ -182,6 +172,9 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                     try {
                         adjustingRegionSelection = true;
                         updateRegionSelection(regionListSelectionModel, regionMapSelectionModel);
+                        if (!editable) {
+                            new LocateRegionsAction().run(RegionMapWidget.this);
+                        }
                     } finally {
                         adjustingRegionSelection = false;
                     }
@@ -257,19 +250,16 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 new SelectInteraction(new AbstractMapAction("S", "Select region") {
                     @Override
                     public void run(RegionMap regionMap) {
-                        // Window.alert("Selected.");
                     }
                 }),
                 new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
                     @Override
                     public void run(RegionMap regionMap) {
-                        // Window.alert("New polygon region created.");
                     }
                 }),
                 new InsertBoxInteraction(new AbstractMapAction("B", "New box region") {
                     @Override
                     public void run(RegionMap regionMap) {
-                        // Window.alert("New box region created.");
                     }
                 }),
                 MapAction.SEPARATOR,
@@ -286,7 +276,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 new SelectInteraction(new AbstractMapAction("S", "Select region") {
                     @Override
                     public void run(RegionMap regionMap) {
-                        // Window.alert("Selected.");
                     }
                 }),
                 MapAction.SEPARATOR,
