@@ -44,6 +44,8 @@
             <% } else { %>
             Not logged in.
             <% } %>
+            <br/>
+            <a href="about.jsp" target="_blank">About Calvalus</a>
         </td>
     </tr>
 </table>
@@ -56,7 +58,7 @@
     <img src="images/progress-bar.gif"/>
 </div>
 
-<p>Calvalus - Version 0.2, &#169; 2011 Brockmann Consult GmbH</p>
+<p>Calvalus - Version 0.2, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="impressum.jsp" target="_blank">Impressum</a></p>
 
 </body>
 </html>
