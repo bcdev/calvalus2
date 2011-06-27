@@ -10,6 +10,10 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
+import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.maps.client.Maps;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
@@ -36,7 +40,6 @@ import java.util.Map;
  */
 public class CalvalusPortal implements EntryPoint, PortalContext {
 
-    private static final int UPDATE_PERIOD_MILLIS = 2000;
     public static final String NO_FILTER = "";
 
     private final BackendServiceAsync backendService;
@@ -51,6 +54,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private PortalView[] views;
     private Map<String, Integer> viewTabIndices;
     private DecoratedTabPanel mainPanel;
+    // A timer that periodically retrieves production statuses from server
+    private Timer productionsUpdateTimer;
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
@@ -109,8 +114,13 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     @Override
     public void showView(String id) {
-        Integer integer = viewTabIndices.get(id);
-        mainPanel.selectTab(integer);
+        Integer newViewIndex = viewTabIndices.get(id);
+        mainPanel.selectTab(newViewIndex);
+    }
+
+    @Override
+    public Timer getProductionsUpdateTimer() {
+        return productionsUpdateTimer;
     }
 
     private void maybeInitFrontend() {
@@ -141,22 +151,36 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             mainPanel.add(view, view.getTitle());
         }
 
+        mainPanel.addSelectionHandler(new SelectionHandler<Integer>() {
+            @Override
+            public void onSelection(SelectionEvent<Integer> integerSelectionEvent) {
+                Integer tabIndex = integerSelectionEvent.getSelectedItem();
+                GWT.log("onSelection: " + tabIndex);
+                views[tabIndex].onShown();
+            }
+        });
+        mainPanel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
+            @Override
+            public void onBeforeSelection(BeforeSelectionEvent<Integer> integerBeforeSelectionEvent) {
+                GWT.log("onBeforeSelection: " + integerBeforeSelectionEvent.getItem());
+                int oldViewIndex = mainPanel.getTabBar().getSelectedTab();
+                if (oldViewIndex >= 0) {
+                    views[oldViewIndex].onHidden();
+                }
+            }
+        });
+
         removeSplashScreen();
+
         showView(OrderL2ProductionView.ID);
         showMainPanel(mainPanel);
 
-        for (PortalView view : views) {
-            view.handlePortalStartedUp();
-        }
-
-        // Start a timer that periodically retrieves production statuses from server
-        Timer timer = new Timer() {
+        productionsUpdateTimer = new Timer() {
             @Override
             public void run() {
                 backendService.getProductions(NO_FILTER, new UpdateProductionsCallback());
             }
         };
-        timer.scheduleRepeating(UPDATE_PERIOD_MILLIS);
     }
 
     private void showMainPanel(Widget mainPanel) {

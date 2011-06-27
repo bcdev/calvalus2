@@ -44,6 +44,8 @@ import java.util.Map;
 public class ManageProductionsView extends PortalView {
     public static final String ID = ManageProductionsView.class.getName();
 
+    private static final int UPDATE_PERIOD_MILLIS = 2000;
+
     private static final String RESTART = "Restart";
     private static final String CANCEL = "Cancel";
     private static final String STAGE = "Stage";
@@ -292,11 +294,16 @@ public class ManageProductionsView extends PortalView {
         return "Manage Productions";
     }
 
-    /**
-     * Starts observing any ongoing productions:.
-     */
     @Override
-    public void handlePortalStartedUp() {
+    public void onShown() {
+        super.onShown();
+        getPortal().getProductionsUpdateTimer().scheduleRepeating(UPDATE_PERIOD_MILLIS);
+    }
+
+    @Override
+    public void onHidden() {
+        super.onHidden();
+        getPortal().getProductionsUpdateTimer().cancel();
     }
 
     private void restartProduction(DtoProduction production) {

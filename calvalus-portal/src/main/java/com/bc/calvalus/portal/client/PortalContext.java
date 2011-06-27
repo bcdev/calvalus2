@@ -5,6 +5,7 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.view.client.ListDataProvider;
 
 /**
@@ -28,4 +29,6 @@ public interface PortalContext {
     BackendServiceAsync getBackendService();
 
     void showView(String id);
+
+    Timer getProductionsUpdateTimer();
 }
