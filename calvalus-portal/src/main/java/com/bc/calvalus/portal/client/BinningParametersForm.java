@@ -185,17 +185,22 @@ public class BinningParametersForm extends Composite {
             DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
             if (processorVariables.length != 0) {
                 variable.name = processorVariables[0].getName();
-                variable.aggregator = processorVariables[0].getDefaultAggregator();
+                String defaultAggregator = processorVariables[0].getDefaultAggregator();
+                if (defaultAggregator != null) {
+                    variable.aggregator = defaultAggregator;
+                }
                 try {
                     String defaultWeightCoeff = processorVariables[0].getDefaultWeightCoeff();
                     if (defaultWeightCoeff != null) {
-                        double wCoeff = Double.parseDouble(defaultWeightCoeff);
-                        variable.weightCoeff = wCoeff;
+                        variable.weightCoeff = Double.parseDouble(defaultWeightCoeff);
                     }
                 } catch (NumberFormatException e) {
                     // the given coeff is neither given or not a number
                 }
-                variable.maskExpr = processorVariables[0].getDefaultValidMask();
+                String defaultValidMask = processorVariables[0].getDefaultValidMask();
+                if (defaultValidMask != null) {
+                    variable.maskExpr = defaultValidMask;
+                }
             }
         }
         return variable;
