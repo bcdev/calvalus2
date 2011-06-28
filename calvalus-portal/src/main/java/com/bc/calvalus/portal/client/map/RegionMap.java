@@ -64,6 +64,11 @@ public interface RegionMap {
     void removeRegion(Region region);
 
     /**
+     * @return The actions (tools) this map regions has.
+     */
+    MapAction[] getActions();
+
+    /**
      * @return The current interaction.
      */
     MapInteraction getCurrentInteraction();

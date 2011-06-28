@@ -24,7 +24,8 @@ public class ManageRegionsView extends PortalView {
 
     public ManageRegionsView(final PortalContext portalContext) {
         super(portalContext);
-        regionMapWidget = RegionMapWidget.create(portalContext.getRegions(), true);
+        regionMapWidget = new RegionMapWidget(portalContext.getRegionMapModel(), true,
+                                              RegionMapWidget.createDefaultEditingActions());
         regionMapWidget.setSize("800px", "480px");
 
         Button submitButton = new Button();
@@ -32,7 +33,6 @@ public class ManageRegionsView extends PortalView {
         submitButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                regionMapWidget.applyVertexChanges();
                 DtoRegion[] dtoRegions = RegionConverter.encodeRegions(getPortal().getRegions().getList());
                 getPortal().getBackendService().storeRegions(dtoRegions, new AsyncCallback<Void>() {
 
@@ -81,10 +81,5 @@ public class ManageRegionsView extends PortalView {
     public void onShowing() {
         // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
         regionMapWidget.getMapWidget().checkResizeAndCenter();
-    }
-
-    @Override
-    public void onHidden() {
-        regionMapWidget.applyVertexChanges();
     }
 }

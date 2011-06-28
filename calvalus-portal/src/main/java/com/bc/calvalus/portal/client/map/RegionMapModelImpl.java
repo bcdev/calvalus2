@@ -12,18 +12,11 @@ import java.util.ArrayList;
 public class RegionMapModelImpl implements RegionMapModel {
 
     private final ListDataProvider<Region> regionProvider;
-    private final MapAction[] mapActions;
     private final ArrayList<ChangeListener> changeListeners;
 
-    public RegionMapModelImpl(ListDataProvider<Region> regionProvider, MapAction... mapActions) {
+    public RegionMapModelImpl(ListDataProvider<Region> regionProvider) {
         this.regionProvider = regionProvider;
-        this.mapActions = mapActions;
         this.changeListeners = new ArrayList<ChangeListener>();
-    }
-
-    @Override
-    public MapAction[] getActions() {
-        return mapActions;
     }
 
     @Override

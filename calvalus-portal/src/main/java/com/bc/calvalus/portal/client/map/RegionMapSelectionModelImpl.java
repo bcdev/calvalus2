@@ -14,15 +14,8 @@ public class RegionMapSelectionModelImpl
 
     private Region selectedRegion;
 
-    private static final ProvidesKey<Region> KEY_PROVIDER = new ProvidesKey<Region>() {
-        @Override
-        public Object getKey(Region item) {
-            return item.getQualifiedName();
-        }
-    };
-
     public RegionMapSelectionModelImpl() {
-        super(KEY_PROVIDER);
+        super(Region.KEY_PROVIDER);
     }
 
     @Override
@@ -35,12 +28,12 @@ public class RegionMapSelectionModelImpl
         if (selected) {
             if (selectedRegion != region) {
                 selectedRegion = region;
-                fireSelectionChangeEvent();
+                scheduleSelectionChangeEvent();
             }
         } else {
             if (selectedRegion == region) {
                 selectedRegion = null;
-                fireSelectionChangeEvent();
+                scheduleSelectionChangeEvent();
             }
         }
     }

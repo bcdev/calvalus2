@@ -8,7 +8,6 @@ import com.google.gwt.view.client.ListDataProvider;
  * @author Norman Fomferra
  */
 public interface RegionMapModel {
-    MapAction[] getActions();
 
     ListDataProvider<Region> getRegionProvider();
 

@@ -2,6 +2,9 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
+import com.bc.calvalus.portal.client.map.RegionMapModel;
+import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
+import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.bc.calvalus.portal.shared.*;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -51,6 +54,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DecoratedTabPanel mainPanel;
     // A timer that periodically retrieves production statuses from server
     private Timer productionsUpdateTimer;
+    private RegionMapModel regionMapModel;
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
@@ -80,6 +84,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(NO_FILTER, new InitProductionsCallback());
             }
         });
+    }
+
+    @Override
+    public RegionMapModel getRegionMapModel() {
+        return regionMapModel;
     }
 
     @Override
@@ -126,6 +135,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private void initFrontend() {
+
+        regionMapModel = new RegionMapModelImpl(getRegions());
 
         views = new PortalView[]{
                 new OrderL2ProductionView(this),

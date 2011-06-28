@@ -67,7 +67,7 @@ public class RegionMapToolbar implements IsWidget {
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(2);
 
-        for (final MapAction action : regionMap.getRegionModel().getActions()) {
+        for (final MapAction action : regionMap.getActions()) {
             if (action instanceof MapAction.Separator) {
                 buttonPanel.add(new HTML("&nbsp;"));
             } else if (action instanceof MapInteraction) {

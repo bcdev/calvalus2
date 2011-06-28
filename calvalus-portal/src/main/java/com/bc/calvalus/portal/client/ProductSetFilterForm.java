@@ -46,6 +46,8 @@ import java.util.Map;
  */
 public class ProductSetFilterForm extends Composite {
 
+    private final PortalContext portal;
+
     interface TheUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
     }
 
@@ -77,12 +79,10 @@ public class ProductSetFilterForm extends Composite {
     @UiField
     RegionMapWidget regionMap;
 
-    private final ListDataProvider<Region> regions;
-
     static int radioGroupId;
 
     public ProductSetFilterForm(final PortalContext portal) {
-        this.regions = portal.getRegions();
+        this.portal = portal;
 
         initWidget(uiBinder.createAndBindUi(this));
 
@@ -148,8 +148,8 @@ public class ProductSetFilterForm extends Composite {
     }
 
     @UiFactory
-    RegionMapWidget createRegionMapWidget() { // method name is insignificant
-        return RegionMapWidget.create(regions, false);
+    public RegionMapWidget createRegionMap() { // method name is insignificant
+        return new RegionMapWidget(portal.getRegionMapModel(), false);
     }
 
     public HasValue<Date> getMinDate() {

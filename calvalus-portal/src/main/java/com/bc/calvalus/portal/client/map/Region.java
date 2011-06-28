@@ -5,6 +5,7 @@ import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.Overlay;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.view.client.ProvidesKey;
 
 /**
  * Basically, a named polygon.
@@ -12,6 +13,14 @@ import com.google.gwt.maps.client.overlay.Polyline;
  * @author Norman Fomferra
  */
 public class Region {
+
+    public static final ProvidesKey<Region> KEY_PROVIDER = new ProvidesKey<Region>() {
+        @Override
+        public Object getKey(Region region) {
+            return region.getQualifiedName();
+        }
+    };
+
 
     private static int counter;
 
