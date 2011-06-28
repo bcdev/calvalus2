@@ -34,7 +34,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetSetFilterForm = new ProductSetFilterForm(portalContext.getRegions(), new ProductSetFilterForm.ChangeHandler() {
+        productSetSetFilterForm = new ProductSetFilterForm(portalContext, new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
                 binningParametersForm.setTimeRange(productSetSetFilterForm.getMinDate(),
