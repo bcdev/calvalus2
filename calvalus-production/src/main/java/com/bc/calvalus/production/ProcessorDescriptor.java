@@ -15,6 +15,12 @@ public class ProcessorDescriptor {
         public Variable() {
         }
 
+        public Variable(String name, String defaultAggregator, String defaultWeightCoeff) {
+            this.name = name;
+            this.defaultAggregator = defaultAggregator;
+            this.defaultWeightCoeff = defaultWeightCoeff;
+        }
+
         public String getName() {
             return name;
         }
@@ -48,11 +54,9 @@ public class ProcessorDescriptor {
     @Parameter
     private String validMaskExpression;
 
-    // List of output variables
     @Parameter(itemAlias = "outputVariable")
     private Variable[] outputVariables;
 
-    // List of output variables
     @Parameter
     private String[] inputProductTypes;
 
@@ -64,7 +68,8 @@ public class ProcessorDescriptor {
                                String processorName,
                                String defaultParameter,
                                String bundleName,
-                               String bundleVersion) {
+                               String bundleVersion,
+                               Variable ... outputVariables) {
 
         Assert.notNull(executableName, "executableName");
         Assert.notNull(processorName, "processorName");
@@ -76,6 +81,7 @@ public class ProcessorDescriptor {
         this.defaultParameter = defaultParameter;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
+        this.outputVariables = outputVariables;
     }
 
     public String getExecutableName() {
