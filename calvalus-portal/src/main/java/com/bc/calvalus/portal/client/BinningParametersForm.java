@@ -53,7 +53,6 @@ public class BinningParametersForm extends Composite {
         String aggregator = "AVG";
         Double fillValue = Double.NaN;
         Double weightCoeff = 1.0;
-//        String maskExpr = "";
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -133,23 +132,6 @@ public class BinningParametersForm extends Composite {
                 }
             }
         });
-
-        /*
-        inputVariables.addItem("chl_conc");
-        inputVariables.addItem("tsm");
-        inputVariables.addItem("Z90_max");
-        inputVariables.addItem("chiSquare");
-        inputVariables.addItem("turbidity_index");
-        inputVariables.setSelectedIndex(0);
-        maskExpr.setText("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN");
-        fillValue.setValue(Double.NaN);
-        aggregator.addItem("Average", "AVG");
-        aggregator.addItem("Max. Likelihood Average", "AVG_ML");
-        aggregator.addItem("Minimum + Maximum", "MIN_MAX");
-        aggregator.addItem("P90 Percentile", "PERCENTILE");
-        aggregator.setSelectedIndex(1);
-        weightCoeff.setValue(0.5);
-        */
 
         steppingPeriodLength.setValue(10);
         steppingPeriodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
@@ -315,13 +297,6 @@ public class BinningParametersForm extends Composite {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        /*
-        parameters.put("inputVariables", inputVariables.getValue(inputVariables.getSelectedIndex()));
-        parameters.put("maskExpr", maskExpr.getText());
-        parameters.put("fillValue", fillValue.getText());
-        parameters.put("aggregator", aggregator.getValue(aggregator.getSelectedIndex()));
-        parameters.put("weightCoeff", weightCoeff.getText());
-        */
         List<Variable> variables = variableProvider.getList();
         int variablesLength = variables.size();
         parameters.put("variables.count", variables.size() + "");
