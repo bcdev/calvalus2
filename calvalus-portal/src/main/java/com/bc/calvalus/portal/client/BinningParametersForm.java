@@ -7,6 +7,8 @@ import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -35,6 +37,7 @@ public class BinningParametersForm extends Composite {
 
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
+    private LatLngBounds regionBounds;
 
     interface TheUiBinder extends UiBinder<Widget, BinningParametersForm> {
     }
@@ -156,6 +159,13 @@ public class BinningParametersForm extends Composite {
             }
         });
 
+        resolution.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                updateTargetSize();
+            }
+        });
+
         compositingPeriodLength.setValue(10);
 
         periodCount.setValue(0);
@@ -164,11 +174,10 @@ public class BinningParametersForm extends Composite {
         superSampling.setValue(1);
         resolution.setValue(9.28);
 
-        targetWidth.setValue(0);
         targetWidth.setEnabled(false);
-
-        targetHeight.setValue(0);
         targetHeight.setEnabled(false);
+
+        updateSpatialParameters(null);
     }
 
     public void updateTemporalParameters(HasValue<Date> minDate, HasValue<Date> maxDate) {
@@ -178,18 +187,26 @@ public class BinningParametersForm extends Composite {
     }
 
     public void updateSpatialParameters(Region[] selectedRegions) {
-        LatLngBounds bounds = LatLngBounds.newInstance();
-        for (Region selectedRegion : selectedRegions) {
-            LatLng[] vertices = selectedRegion.getVertices();
-            for (LatLng point : vertices) {
-                bounds.extend(point);
+        regionBounds = LatLngBounds.newInstance();
+        if (selectedRegions != null && selectedRegions.length > 0) {
+            for (Region selectedRegion : selectedRegions) {
+                LatLng[] vertices = selectedRegion.getVertices();
+                for (LatLng point : vertices) {
+                    regionBounds.extend(point);
+                }
             }
+        } else {
+            regionBounds.extend(LatLng.newInstance(-90, -180));
+            regionBounds.extend(LatLng.newInstance(90, 180));
         }
+        updateTargetSize();
+    }
 
+    private void updateTargetSize() {
         // see: SeaWiFS Technical Report Series Vol. 32;
         final double RE = 6378.145;
-        double dx = bounds.getNorthEast().getLongitude() - bounds.getSouthWest().getLongitude();
-        double dy = bounds.getNorthEast().getLatitude() - bounds.getSouthWest().getLatitude();
+        double dx = regionBounds.getNorthEast().getLongitude() - regionBounds.getSouthWest().getLongitude();
+        double dy = regionBounds.getNorthEast().getLatitude() - regionBounds.getSouthWest().getLatitude();
         double res = resolution.getValue();
         int width = 1 + (int) Math.floor((RE * PI * dx / 180.0) / res);
         int height = 1 + (int) Math.floor((RE * PI * dy / 180.0) / res);
@@ -289,6 +306,10 @@ public class BinningParametersForm extends Composite {
         parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
+        parameters.put("lonMin", regionBounds.getSouthWest().getLongitude() + "");
+        parameters.put("latMin", regionBounds.getSouthWest().getLatitude() + "");
+        parameters.put("lonMax", regionBounds.getNorthEast().getLongitude() + "");
+        parameters.put("latMax", regionBounds.getNorthEast().getLatitude() + "");
         return parameters;
     }
 
