@@ -19,6 +19,8 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -27,12 +29,7 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HasValue;
-import com.google.gwt.user.client.ui.RadioButton;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
@@ -72,12 +69,14 @@ public class ProductSetFilterForm extends Composite {
 
     @UiField
     RegionMapWidget predefinedRegions;
+    @UiField
+    Anchor manageRegionsAnchor;
 
     private final ChangeHandler changeHandler;
     private final ListDataProvider<Region> regions;
 
-    public ProductSetFilterForm(ListDataProvider<Region> regions, ChangeHandler changeHandler) {
-        this.regions = regions;
+    public ProductSetFilterForm(final PortalContext portal, ChangeHandler changeHandler) {
+        this.regions = portal.getRegions();
         this.changeHandler = changeHandler;
 
         initWidget(uiBinder.createAndBindUi(this));
@@ -116,6 +115,12 @@ public class ProductSetFilterForm extends Composite {
             }
         });
 
+        manageRegionsAnchor.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+               portal.showView(ManageRegionsView.ID);
+            }
+        });
     }
 
     @UiFactory
