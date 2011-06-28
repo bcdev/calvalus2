@@ -23,7 +23,7 @@ public class ValidationException extends Exception {
     }
 
     public void handle() {
-        Window.alert(getMessage());
+        Dialog.showMessage("Calvalus", getMessage());
         if (getWidget() instanceof Focusable) {
             ((Focusable) getWidget()).setFocus(true);
         } else if (getWidget() instanceof DateBox) {
