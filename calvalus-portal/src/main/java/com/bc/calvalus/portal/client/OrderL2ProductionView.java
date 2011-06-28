@@ -25,7 +25,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProcessorSelectionForm processorSelectionForm;
-    private ProductFilterForm productSetFilterForm;
+    private ProductSetFilterForm productSetSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
@@ -34,7 +34,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetFilterForm = new ProductFilterForm(portalContext.getRegions(), new ProductFilterForm.ChangeHandler() {
+        productSetSetFilterForm = new ProductSetFilterForm(portalContext.getRegions(), new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
 
@@ -74,7 +74,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(panel1);
-        panel.add(productSetFilterForm);
+        panel.add(productSetSetFilterForm);
         panel.add(processorParametersForm);
         panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
@@ -101,9 +101,9 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     protected boolean validateForm() {
         try {
-            productSetFilterForm.validateForm();
+            productSetSetFilterForm.validateForm();
             processorSelectionForm.validateForm();
-            productSetFilterForm.validateForm();
+            productSetSetFilterForm.validateForm();
             processorParametersForm.validateForm();
             outputParametersForm.validateForm();
             return true;
@@ -128,7 +128,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
-        parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSetSetFilterForm.getValueMap());
         return parameters;
     }
 }

@@ -46,9 +46,9 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class ProductFilterForm extends Composite {
+public class ProductSetFilterForm extends Composite {
 
-    interface ProductFilterUiBinder extends UiBinder<Widget, ProductFilterForm> {
+    interface ProductFilterUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
     }
 
     private static ProductFilterUiBinder uiBinder = GWT.create(ProductFilterUiBinder.class);
@@ -76,12 +76,11 @@ public class ProductFilterForm extends Composite {
     private final ChangeHandler changeHandler;
     private final ListDataProvider<Region> regions;
 
-    public ProductFilterForm(ListDataProvider<Region> regions, ChangeHandler changeHandler) {
+    public ProductSetFilterForm(ListDataProvider<Region> regions, ChangeHandler changeHandler) {
         this.regions = regions;
         this.changeHandler = changeHandler;
 
         initWidget(uiBinder.createAndBindUi(this));
-
 
         dateSelDateRange.setValue(true);
         dateSelDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
@@ -91,7 +90,7 @@ public class ProductFilterForm extends Composite {
         minDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
-                ProductFilterForm.this.changeHandler.dateChanged(getValueMap());
+                ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
             }
         });
 
@@ -100,7 +99,7 @@ public class ProductFilterForm extends Composite {
         maxDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
-                ProductFilterForm.this.changeHandler.dateChanged(getValueMap());
+                ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
             }
         });
 
@@ -113,7 +112,7 @@ public class ProductFilterForm extends Composite {
         predefinedRegions.getRegionSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override
             public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
-                ProductFilterForm.this.changeHandler.regionChanged(getValueMap());
+                ProductSetFilterForm.this.changeHandler.regionChanged(getValueMap());
             }
         });
 
@@ -180,7 +179,7 @@ public class ProductFilterForm extends Composite {
             minDate.setEnabled(dateSelDateRange.getValue());
             maxDate.setEnabled(dateSelDateRange.getValue());
             dateList.setEnabled(dateSelDateList.getValue());
-            ProductFilterForm.this.changeHandler.dateChanged(getValueMap());
+            ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
         }
     }
 }

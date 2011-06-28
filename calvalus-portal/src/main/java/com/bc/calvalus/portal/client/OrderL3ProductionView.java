@@ -24,7 +24,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProcessorSelectionForm processorSelectionForm;
-    private ProductFilterForm productSetFilterForm;
+    private ProductSetFilterForm productSetSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
     private BinningParametersForm2 binningParametersForm;
     private OutputParametersForm outputParametersForm;
@@ -34,11 +34,11 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetFilterForm = new ProductFilterForm(portalContext.getRegions(), new ProductFilterForm.ChangeHandler() {
+        productSetSetFilterForm = new ProductSetFilterForm(portalContext.getRegions(), new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
-                binningParametersForm.setTimeRange(productSetFilterForm.getMinDate(),
-                                              productSetFilterForm.getMaxDate());
+                binningParametersForm.setTimeRange(productSetSetFilterForm.getMinDate(),
+                                              productSetSetFilterForm.getMaxDate());
             }
 
             @Override
@@ -80,7 +80,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(panel1);
-        panel.add(productSetFilterForm);
+        panel.add(productSetSetFilterForm);
         panel.add(processorParametersForm);
         panel.add(binningParametersForm);
         panel.add(outputParametersForm);
@@ -136,7 +136,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
         parameters.putAll(binningParametersForm.getValueMap());
-        parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSetSetFilterForm.getValueMap());
         return parameters;
     }
 }
