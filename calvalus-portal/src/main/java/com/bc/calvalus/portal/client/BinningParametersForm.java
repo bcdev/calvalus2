@@ -100,7 +100,6 @@ public class BinningParametersForm extends Composite {
             }
         };
         variableTable = new CellTable<Variable>(keyProvider);
-        variableTable.setVisibleRange(0, 3);
 
         // Add a selection model so we can select cells.
         variableSelectionModel = new SingleSelectionModel<Variable>(keyProvider);
