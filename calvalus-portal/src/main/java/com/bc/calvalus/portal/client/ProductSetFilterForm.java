@@ -46,10 +46,10 @@ import java.util.Map;
  */
 public class ProductSetFilterForm extends Composite {
 
-    interface ProductFilterUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
+    interface TheUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
     }
 
-    private static ProductFilterUiBinder uiBinder = GWT.create(ProductFilterUiBinder.class);
+    private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
@@ -69,16 +69,27 @@ public class ProductSetFilterForm extends Composite {
     TextArea dateList;
 
     @UiField
-    RegionMapWidget regionMap;
+    RadioButton regionSelGlobal;
+    @UiField
+    RadioButton regionSelPredefined;
     @UiField
     Anchor manageRegionsAnchor;
+    @UiField
+    RegionMapWidget regionMap;
 
     private final ListDataProvider<Region> regions;
+
+    static int radioGroupId;
 
     public ProductSetFilterForm(final PortalContext portal) {
         this.regions = portal.getRegions();
 
         initWidget(uiBinder.createAndBindUi(this));
+
+        radioGroupId++;
+
+        dateSelDateRange.setName("dateSel" + radioGroupId);
+        dateSelDateList.setName("dateSel" + radioGroupId);
 
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
@@ -92,6 +103,10 @@ public class ProductSetFilterForm extends Composite {
         dateSelDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
 
         dateList.setEnabled(false);
+
+        regionSelGlobal.setName("regionSel" + radioGroupId);
+        regionSelPredefined.setName("regionSel" + radioGroupId);
+        regionSelPredefined.setValue(true);
 
         manageRegionsAnchor.addClickHandler(new ClickHandler() {
             @Override
@@ -179,7 +194,7 @@ public class ProductSetFilterForm extends Composite {
             parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
         } else {
             parameters.put("regionName", "World");
-            parameters.put("regionWKT", "POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))");
+            parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
             parameters.put("minLon", "-180");
             parameters.put("minLat", "-90");
             parameters.put("maxLon", "180");

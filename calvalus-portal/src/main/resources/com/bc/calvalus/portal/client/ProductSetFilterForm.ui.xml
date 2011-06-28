@@ -66,8 +66,15 @@
                 <hr/>
             </g:HTMLPanel>
 
+            <g:HorizontalPanel spacing="2"  width="100%">
+                <g:RadioButton ui:field='regionSelGlobal' name="regionSel" text="Global"/>
+                <g:RadioButton ui:field='regionSelPredefined' name="regionSel" text="Selected region"/>
+                <g:HTML>&nbsp;&nbsp;</g:HTML>
+                <g:Anchor ui:field="manageRegionsAnchor">Create new region</g:Anchor>
+            </g:HorizontalPanel>
+
             <map:RegionMapWidget ui:field='regionMap' width="480px" height="240px"/>
-            <g:Anchor ui:field="manageRegionsAnchor">Create new region</g:Anchor>
+
 
         </g:VerticalPanel>
 
