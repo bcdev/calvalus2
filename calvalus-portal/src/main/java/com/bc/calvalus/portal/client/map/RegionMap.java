@@ -22,7 +22,7 @@ public interface RegionMap {
     /**
      * @return The region selection model.
      */
-    RegionMapSelectionModel getRegionSelectionModel();
+    RegionMapSelectionModel getRegionMapSelectionModel();
 
     /**
      * Gets the region with the given qualified name.

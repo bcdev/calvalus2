@@ -23,7 +23,6 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.ResizeComposite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
-import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 import com.google.gwt.view.client.SingleSelectionModel;
@@ -85,7 +84,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     @Override
-    public RegionMapSelectionModel getRegionSelectionModel() {
+    public RegionMapSelectionModel getRegionMapSelectionModel() {
         return regionMapSelectionModel;
     }
 
@@ -119,8 +118,8 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     public void addRegion(Region region) {
         if (!getRegionModel().getRegionProvider().getList().contains(region)) {
             getRegionModel().getRegionProvider().getList().add(0, region);
-            getRegionSelectionModel().clearSelection();
-            getRegionSelectionModel().setSelected(region, true);
+            getRegionMapSelectionModel().clearSelection();
+            getRegionMapSelectionModel().setSelected(region, true);
             getRegionModel().fireRegionAdded(this, region);
         }
     }
@@ -128,7 +127,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     @Override
     public void removeRegion(Region region) {
         if (getRegionModel().getRegionProvider().getList().remove(region)) {
-            getRegionSelectionModel().setSelected(region, false);
+            getRegionMapSelectionModel().setSelected(region, false);
             getRegionModel().fireRegionRemoved(this, region);
         }
     }
@@ -179,60 +178,21 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             }
         };
 
+        final SingleSelectionModel<Region> regionListSelectionModel = new SingleSelectionModel<Region>(Region.KEY_PROVIDER);
         final CellList<Region> regionCellList = new CellList<Region>(regionCell, Region.KEY_PROVIDER);
         regionCellList.setVisibleRange(0, 256);
         regionCellList.setKeyboardPagingPolicy(HasKeyboardPagingPolicy.KeyboardPagingPolicy.INCREASE_RANGE);
         regionCellList.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.ENABLED);
-        regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
-
-        final ScrollPanel regionScrollPanel = new ScrollPanel(regionCellList);
-
-        // Add a selection model so we can select cells.
-        final SingleSelectionModel<Region> regionListSelectionModel = new SingleSelectionModel<Region>(Region.KEY_PROVIDER);
         regionCellList.setSelectionModel(regionListSelectionModel);
-        regionListSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent event) {
-                if (!adjustingRegionSelection) {
-                    try {
-                        adjustingRegionSelection = true;
-                        updateRegionSelection(regionListSelectionModel, regionMapSelectionModel);
-                        updatePolygonStyles();
-                        if (!editable) {
-                            new LocateRegionsAction().run(RegionMapWidget.this);
-                        }
-                    } finally {
-                        adjustingRegionSelection = false;
-                    }
-                }
-            }
-        });
-
-        regionMapSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent event) {
-                if (!adjustingRegionSelection) {
-                    try {
-                        adjustingRegionSelection = true;
-                        updateRegionSelection(regionMapSelectionModel, regionListSelectionModel);
-                        updatePolygonStyles();
-                        // todo - scroll to selected region in regionCellList (nf)
-                    } finally {
-                        adjustingRegionSelection = false;
-                    }
-                }
-            }
-        });
-
+        regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
 
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
-
         if (actions.length > 0) {
             regionMapToolbar = new RegionMapToolbar(this);
             regionPanel.addSouth(regionMapToolbar, 3.5);
         }
-        regionPanel.add(regionScrollPanel);
+        regionPanel.add(new ScrollPanel(regionCellList));
 
         SplitLayoutPanel regionSplitLayoutPanel = new SplitLayoutPanel();
         regionSplitLayoutPanel.ensureDebugId("regionSplitLayoutPanel");
@@ -245,7 +205,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         updatePolygonStyles();
         initWidget(regionSplitLayoutPanel);
+        bind(regionListSelectionModel);
+    }
 
+    private void bind(final SingleSelectionModel<Region> regionListSelectionModel) {
         getRegionModel().addChangeListener(new RegionMapModel.ChangeListener() {
 
             @Override
@@ -263,6 +226,39 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 if (event.getRegionMap() != RegionMapWidget.this) {
                     ensurePolygonAbsent(event.getRegion());
                     ensurePolygonPresent(event.getRegion());
+                }
+            }
+        });
+        regionListSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                if (!adjustingRegionSelection) {
+                    try {
+                        adjustingRegionSelection = true;
+                        updateRegionSelection(regionListSelectionModel, getRegionMapSelectionModel());
+                        updatePolygonStyles();
+                        if (!editable) {
+                            new LocateRegionsAction().run(RegionMapWidget.this);
+                        }
+                    } finally {
+                        adjustingRegionSelection = false;
+                    }
+                }
+            }
+        });
+
+        getRegionMapSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                if (!adjustingRegionSelection) {
+                    try {
+                        adjustingRegionSelection = true;
+                        updateRegionSelection(getRegionMapSelectionModel(), regionListSelectionModel);
+                        updatePolygonStyles();
+                        // todo - scroll to selected region in regionCellList (nf)
+                    } finally {
+                        adjustingRegionSelection = false;
+                    }
                 }
             }
         });
@@ -354,7 +350,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private class MyPolygonLineUpdatedHandler implements PolygonLineUpdatedHandler {
         @Override
         public void onUpdate(PolygonLineUpdatedEvent event) {
-            System.out.println("PolygonLineUpdatedEvent: onUpdate: event = " + event);
             Polygon polygon = event.getSender();
             Region region = regionMap.get(polygon);
             if (region != null) {

@@ -32,7 +32,6 @@ import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
-import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.Date;
@@ -139,7 +138,7 @@ public class ProductSetFilterForm extends Composite {
                  changeHandler.dateChanged(getValueMap());
             }
         });
-        regionMap.getRegionSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+        regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override
             public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
                 changeHandler.regionChanged(getValueMap());
@@ -161,7 +160,7 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public Region getSelectedRegion() {
-        return regionSelPredefined.getValue() ? regionMap.getRegionSelectionModel().getSelectedRegion() : null;
+        return regionSelPredefined.getValue() ? regionMap.getRegionMapSelectionModel().getSelectedRegion() : null;
     }
 
     public RegionMap getRegionMap() {

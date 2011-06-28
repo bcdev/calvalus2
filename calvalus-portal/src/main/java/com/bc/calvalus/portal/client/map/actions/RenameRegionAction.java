@@ -4,7 +4,6 @@ import com.bc.calvalus.portal.client.Dialog;
 import com.bc.calvalus.portal.client.map.AbstractMapAction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -24,7 +23,7 @@ public class RenameRegionAction extends AbstractMapAction {
 
     @Override
     public void run(final RegionMap regionMap) {
-        final Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
+        final Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
             Dialog.showMessage(TITLE, "No user region selected.");
             return;

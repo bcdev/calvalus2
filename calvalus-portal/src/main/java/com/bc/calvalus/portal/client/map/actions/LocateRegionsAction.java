@@ -19,7 +19,7 @@ public class LocateRegionsAction extends AbstractMapAction {
 
     @Override
     public void run(RegionMap regionMap) {
-        Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
+        Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
             Window.alert("No region selected.");
             return;
@@ -28,7 +28,7 @@ public class LocateRegionsAction extends AbstractMapAction {
     }
 
     private void locateSelection(RegionMap regionMap) {
-        Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
+        Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion != null) {
             Polygon regionPolygon = regionMap.getPolygon(selectedRegion);
             if (regionPolygon != null) {

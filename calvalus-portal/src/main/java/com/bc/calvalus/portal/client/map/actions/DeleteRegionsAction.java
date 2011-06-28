@@ -21,7 +21,7 @@ public class DeleteRegionsAction extends AbstractMapAction {
 
     @Override
     public void run(final RegionMap regionMap) {
-        final Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
+        final Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
             Dialog.showMessage(TITLE, "No region selected.");
             return;

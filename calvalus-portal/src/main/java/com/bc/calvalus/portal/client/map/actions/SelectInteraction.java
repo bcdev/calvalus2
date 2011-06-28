@@ -43,14 +43,14 @@ public class SelectInteraction extends MapInteraction implements MapClickHandler
             for (Region region : list) {
                 Polygon regionPolygon = regionMap.getPolygon(region);
                 if (regionPolygon == polygon) {
-                    regionMap.getRegionSelectionModel().clearSelection();
-                    regionMap.getRegionSelectionModel().setSelected(region, true);
+                    regionMap.getRegionMapSelectionModel().clearSelection();
+                    regionMap.getRegionMapSelectionModel().setSelected(region, true);
                     run(regionMap);
                     return;
                 }
             }
         }
 
-        regionMap.getRegionSelectionModel().clearSelection();
+        regionMap.getRegionMapSelectionModel().clearSelection();
     }
 }
