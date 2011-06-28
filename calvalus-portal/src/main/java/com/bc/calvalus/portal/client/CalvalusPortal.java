@@ -146,6 +146,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
 
         mainPanel = new DecoratedTabPanel();
+        mainPanel.setAnimationEnabled(true);
         mainPanel.ensureDebugId("mainPanel");
         for (PortalView view : views) {
             mainPanel.add(view, view.getTitle());
@@ -155,14 +156,12 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             @Override
             public void onSelection(SelectionEvent<Integer> integerSelectionEvent) {
                 Integer tabIndex = integerSelectionEvent.getSelectedItem();
-                GWT.log("onSelection: " + tabIndex);
                 views[tabIndex].onShown();
             }
         });
         mainPanel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
             @Override
             public void onBeforeSelection(BeforeSelectionEvent<Integer> integerBeforeSelectionEvent) {
-                GWT.log("onBeforeSelection: " + integerBeforeSelectionEvent.getItem());
                 int oldViewIndex = mainPanel.getTabBar().getSelectedTab();
                 if (oldViewIndex >= 0) {
                     views[oldViewIndex].onHidden();
