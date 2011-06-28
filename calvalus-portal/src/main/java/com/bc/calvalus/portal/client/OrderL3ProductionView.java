@@ -58,7 +58,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
             @Override
             public void regionChanged(Map<String, String> data) {
-                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegions());
+                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
 

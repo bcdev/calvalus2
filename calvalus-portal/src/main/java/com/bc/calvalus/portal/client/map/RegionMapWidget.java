@@ -182,7 +182,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
 
         // Add a selection model so we can select cells.
-        final MultiSelectionModel<Region> regionListSelectionModel = new MultiSelectionModel<Region>(regionKey);
+        final SingleSelectionModel<Region> regionListSelectionModel = new SingleSelectionModel<Region>(regionKey);
         regionCellList.setSelectionModel(regionListSelectionModel);
         regionCellList.getSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override

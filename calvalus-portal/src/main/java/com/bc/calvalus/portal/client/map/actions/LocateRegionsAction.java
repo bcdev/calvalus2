@@ -28,19 +28,14 @@ public class LocateRegionsAction extends AbstractMapAction {
     }
 
     private void locateSelection(RegionMap regionMap) {
-        Region[] regions = regionMap.getRegionSelectionModel().getSelectedRegions();
-        LatLngBounds totalBounds = LatLngBounds.newInstance();
-        for (Region region : regions) {
-            Polygon regionPolygon = regionMap.getPolygon(region);
-            if (regionPolygon != null) {
-                LatLngBounds regionBounds = regionPolygon.getBounds();
-                totalBounds.extend(regionBounds.getNorthEast());
-                totalBounds.extend(regionBounds.getSouthWest());
-            }
+        Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
+        if (selectedRegion != null) {
+            Polygon regionPolygon = regionMap.getPolygon(selectedRegion);
+            LatLngBounds bounds = regionPolygon.getBounds();
+            int zoomLevel = regionMap.getMapWidget().getBoundsZoomLevel(bounds);
+            regionMap.getMapWidget().setZoomLevel(zoomLevel);
+            regionMap.getMapWidget().panTo(bounds.getCenter());
         }
-        int zoomLevel = regionMap.getMapWidget().getBoundsZoomLevel(totalBounds);
-        regionMap.getMapWidget().setZoomLevel(zoomLevel);
-        regionMap.getMapWidget().panTo(totalBounds.getCenter());
     }
 
 }

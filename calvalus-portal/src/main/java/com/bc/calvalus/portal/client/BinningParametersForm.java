@@ -210,16 +210,11 @@ public class BinningParametersForm extends Composite {
         updatePeriodCount();
     }
 
-    public void updateSpatialParameters(Region[] selectedRegions) {
-        regionBounds = LatLngBounds.newInstance();
-        if (selectedRegions != null && selectedRegions.length > 0) {
-            for (Region selectedRegion : selectedRegions) {
-                LatLng[] vertices = selectedRegion.getVertices();
-                for (LatLng point : vertices) {
-                    regionBounds.extend(point);
-                }
-            }
+    public void updateSpatialParameters(Region selectedRegion) {
+        if (selectedRegion != null) {
+            regionBounds = selectedRegion.createPolygon().getBounds();
         } else {
+            regionBounds = LatLngBounds.newInstance();
             regionBounds.extend(LatLng.newInstance(-90, -180));
             regionBounds.extend(LatLng.newInstance(90, 180));
         }

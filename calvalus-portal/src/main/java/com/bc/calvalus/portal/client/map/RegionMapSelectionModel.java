@@ -9,7 +9,5 @@ public interface RegionMapSelectionModel extends SelectionModel<Region> {
 
     Region getSelectedRegion();
 
-    Region[] getSelectedRegions();
-
     void clearSelection();
 }
