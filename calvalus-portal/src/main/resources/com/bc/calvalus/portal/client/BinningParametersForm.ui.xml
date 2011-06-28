@@ -11,103 +11,104 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:ScrollPanel  width="100%" >
-            <cell:CellTable ui:field='variableTable'  width="100%" />
+        <g:ScrollPanel width="100%">
+            <cell:CellTable ui:field='variableTable' width="100%"/>
         </g:ScrollPanel>
+
         <g:HorizontalPanel spacing="2">
             <g:Button ui:field='addVariableButton' text="Add"/>
             <g:Button ui:field='removeVariableButton' text="Remove"/>
         </g:HorizontalPanel>
 
-        <g:HorizontalPanel spacing="16">
-            <g:HTMLPanel>
-                <table>
-                    <tr>
-                        <td>
-                            <g:Label>Stepping period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>days</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Compositing period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>days</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Number of period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>days</g:Label>
-                        </td>
-                    </tr>
-                </table>
-            </g:HTMLPanel>
-
-            <g:HTMLPanel>
-                <table>
-                    <tr>
-                        <td>
-                            <g:Label>Spatial resolution:</g:Label>
-                        </td>
-                        <td>
-                            <g:DoubleBox ui:field='resolution' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>km/pixel</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Supersampling:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='superSampling' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>pixels</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Target width:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='targetWidth' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>pixels</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Target height:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='targetHeight' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>pixels</g:Label>
-                        </td>
-                    </tr>
-                </table>
-            </g:HTMLPanel>
-
-        </g:HorizontalPanel>
+        <g:HTMLPanel>
+            <table cellspacing="2">
+                <tr>
+                    <td>
+                        <g:Label>Mask expression</g:Label>
+                    </td>
+                    <td colspan="6">
+                        <g:TextBox ui:field="maskExpr" visibleLength="50"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <g:Label>Stepping period:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>days</g:Label>
+                    </td>
+                    <td>&nbsp;</td>
+                    <td>
+                        <g:Label>Spatial resolution:</g:Label>
+                    </td>
+                    <td>
+                        <g:DoubleBox ui:field='resolution' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>km/pixel</g:Label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <g:Label>Compositing period:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>days</g:Label>
+                    </td>
+                    <td>&nbsp;</td>
+                    <td>
+                        <g:Label>Supersampling:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='superSampling' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>pixels</g:Label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <g:Label>Number of period:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>days</g:Label>
+                    </td>
+                    <td>&nbsp;</td>
+                    <td>
+                        <g:Label>Target width:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='targetWidth' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>pixels</g:Label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>
+                        <g:Label>Target height:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field='targetHeight' visibleLength="8"/>
+                    </td>
+                    <td>
+                        <g:Label>pixels</g:Label>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
     </g:VerticalPanel>
-
 </ui:UiBinder>

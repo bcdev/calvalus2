@@ -178,9 +178,13 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private DtoProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
-        return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(), processorDescriptor.getProcessorName(),
-                                          processorDescriptor.getDefaultParameter(), processorDescriptor.getBundleName(),
-                                          processorDescriptor.getBundleVersion(), processorDescriptor.getDescriptionHtml(),
+        return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
+                                          processorDescriptor.getProcessorName(),
+                                          processorDescriptor.getDefaultParameter(),
+                                          processorDescriptor.getBundleName(),
+                                          processorDescriptor.getBundleVersion(),
+                                          processorDescriptor.getDescriptionHtml(),
+                                          processorDescriptor.getValidMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()));
     }
 
@@ -191,7 +195,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             DtoProcessorVariable dtoProcessorVariable = new DtoProcessorVariable(outputVariable.getName(),
                                                                                  outputVariable.getDefaultAggregator(),
-                                                                                 outputVariable.getDefaultValidMask(),
                                                                                  outputVariable.getDefaultWeightCoeff());
             processorVariables[i] = dtoProcessorVariable;
         }

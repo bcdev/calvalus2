@@ -26,7 +26,6 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class DtoProcessorVariable implements IsSerializable {
     private String name;
     private String defaultAggregator;
-    private String defaultValidMask;
     private String defaultWeightCoeff;
 
     /**
@@ -35,10 +34,9 @@ public class DtoProcessorVariable implements IsSerializable {
     public DtoProcessorVariable() {
     }
 
-    public DtoProcessorVariable(String name, String defaultAggregator, String defaultValidMask, String defaultWeightCoeff) {
+    public DtoProcessorVariable(String name, String defaultAggregator, String defaultWeightCoeff) {
         this.name = name;
         this.defaultAggregator = defaultAggregator;
-        this.defaultValidMask = defaultValidMask;
         this.defaultWeightCoeff = defaultWeightCoeff;
     }
 
@@ -48,10 +46,6 @@ public class DtoProcessorVariable implements IsSerializable {
 
     public String getDefaultAggregator() {
         return defaultAggregator;
-    }
-
-    public String getDefaultValidMask() {
-        return defaultValidMask;
     }
 
     public String getDefaultWeightCoeff() {

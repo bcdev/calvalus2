@@ -53,11 +53,13 @@ public class BinningParametersForm extends Composite {
         String aggregator = "AVG";
         Double fillValue = Double.NaN;
         Double weightCoeff = 1.0;
-        String maskExpr = "";
+//        String maskExpr = "";
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
+    @UiField
+    TextBox maskExpr;
     @UiField
     IntegerBox steppingPeriodLength;
     @UiField
@@ -197,10 +199,6 @@ public class BinningParametersForm extends Composite {
                 } catch (NumberFormatException e) {
                     // the given coeff is neither given or not a number
                 }
-                String defaultValidMask = processorVariables[0].getDefaultValidMask();
-                if (defaultValidMask != null) {
-                    variable.maskExpr = defaultValidMask;
-                }
             }
         }
         return variable;
@@ -264,6 +262,14 @@ public class BinningParametersForm extends Composite {
             variableList.add(createDefaultVariable());
         }
         variableProvider.refresh();
+
+        String defaultValidMask = selectedProcessor.getDefaultValidMask();
+        if (defaultValidMask != null) {
+            maskExpr.setValue(defaultValidMask);
+        } else {
+            maskExpr.setValue("");
+        }
+
     }
 
     private void updatePeriodCount() {
@@ -332,8 +338,8 @@ public class BinningParametersForm extends Composite {
             parameters.put(prefix + ".aggregator", variable.aggregator);
             parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
             parameters.put(prefix + ".fillValue", variable.fillValue + "");
-            parameters.put(prefix + ".maskExpr", variable.maskExpr);
         }
+        parameters.put("maskExpr", maskExpr.getText());
         parameters.put("periodLength", steppingPeriodLength.getText());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
         parameters.put("resolution", resolution.getText());
@@ -362,10 +368,6 @@ public class BinningParametersForm extends Composite {
         Column<Variable, String> fillValueColumn = createFillValueColumn();
         variableTable.addColumn(fillValueColumn, "Fill");
         variableTable.setColumnWidth(fillValueColumn, 8, Style.Unit.EM);
-
-        Column<Variable, String> maskExprColumn = createValidMaskColumn();
-        variableTable.addColumn(maskExprColumn, "Mask expression");
-        variableTable.setColumnWidth(maskExprColumn, 24, Style.Unit.EM);
     }
 
     private Column<Variable, String> createNameColumn() {
@@ -440,21 +442,5 @@ public class BinningParametersForm extends Composite {
             }
         });
         return fillValueColumn;
-    }
-
-    private Column<Variable, String> createValidMaskColumn() {
-        Column<Variable, String> validMaskColumn = new Column<Variable, String>(new EditTextCell()) {
-            @Override
-            public String getValue(Variable object) {
-                return object.maskExpr;
-            }
-        };
-        validMaskColumn.setFieldUpdater(new FieldUpdater<Variable, String>() {
-            public void update(int index, Variable object, String value) {
-                object.maskExpr = value;
-                variableProvider.refresh();
-            }
-        });
-        return validMaskColumn;
     }
 }

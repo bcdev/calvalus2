@@ -9,7 +9,6 @@ public class ProcessorDescriptor {
 
         String name;
         String defaultAggregator;
-        String defaultValidMask;
         String defaultWeightCoeff;
 
         // empty constructor for XML serialization
@@ -22,10 +21,6 @@ public class ProcessorDescriptor {
 
         public String getDefaultAggregator() {
             return defaultAggregator;
-        }
-
-        public String getDefaultValidMask() {
-            return defaultValidMask;
         }
 
         public String getDefaultWeightCoeff() {
@@ -49,6 +44,9 @@ public class ProcessorDescriptor {
     // Short description in XHTML
     @Parameter
     private String descriptionHtml;
+
+    @Parameter
+    private String validMaskExpression;
 
     // List of output variables
     @Parameter(itemAlias = "outputVariable")
@@ -106,6 +104,10 @@ public class ProcessorDescriptor {
 
     public String getDescriptionHtml() {
         return descriptionHtml;
+    }
+
+    public String getValidMaskExpression() {
+        return validMaskExpression;
     }
 
     public Variable[] getOutputVariables() {

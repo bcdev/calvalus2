@@ -65,6 +65,9 @@ public class ProcessorDescriptorTest {
                 "</p>";
         assertEquals(expectedDescription, descriptionHtml);
 
+        assertNotNull(processorDescriptor.getValidMaskExpression());
+        assertEquals("!l1_flags.INVALID", processorDescriptor.getValidMaskExpression());
+
         String[] inputProductTypes = processorDescriptor.getInputProductTypes();
         assertNotNull(inputProductTypes);
         assertEquals(3, inputProductTypes.length);
@@ -78,12 +81,11 @@ public class ProcessorDescriptorTest {
 
         assertEquals("l1_flags", outputVariables[0].getName());
         assertNull(outputVariables[0].getDefaultAggregator());
-        assertNull(outputVariables[0].getDefaultValidMask());
+
         assertNull(outputVariables[0].getDefaultWeightCoeff());
 
         assertEquals("chl_conc", outputVariables[1].getName());
         assertEquals("AVG_ML", outputVariables[1].getDefaultAggregator());
-        assertEquals("!l1_flags.INVALID", outputVariables[1].getDefaultValidMask());
         assertEquals("0.5", outputVariables[1].getDefaultWeightCoeff());
     }
 
