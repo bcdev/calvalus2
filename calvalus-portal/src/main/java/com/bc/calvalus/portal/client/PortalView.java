@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.IsWidget;
 
 // todo - lets this class be a 'LazyPanel'
@@ -40,6 +39,5 @@ public abstract class PortalView implements IsWidget {
      * The default implementation does nothing.
      */
     public void onHidden() {
-        GWT.log("Now hidden: " + getTitle());
     }
 }
