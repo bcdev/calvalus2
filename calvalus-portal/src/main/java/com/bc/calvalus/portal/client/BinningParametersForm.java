@@ -39,8 +39,8 @@ public class BinningParametersForm extends Composite {
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
     private DynamicSelectionCell variableNameCell;
-    private DtoProcessorDescriptor selectedProcessor;
     private LatLngBounds regionBounds;
+    private final Map<String, DtoProcessorVariable> processorVariableDefaults;
 
     interface TheUiBinder extends UiBinder<Widget, BinningParametersForm> {
     }
@@ -87,7 +87,7 @@ public class BinningParametersForm extends Composite {
     Button removeVariableButton;
 
     public BinningParametersForm() {
-
+        processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
         variableProvider = new ListDataProvider<Variable>();
 
         // Set a key provider that provides a unique key for each contact. If key is
@@ -163,25 +163,28 @@ public class BinningParametersForm extends Composite {
 
     private Variable createDefaultVariable() {
         Variable variable = new Variable();
-        if (selectedProcessor != null) {
-            DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
-            if (processorVariables.length != 0) {
-                variable.name = processorVariables[0].getName();
-                String defaultAggregator = processorVariables[0].getDefaultAggregator();
-                if (defaultAggregator != null) {
-                    variable.aggregator = defaultAggregator;
-                }
-                try {
-                    String defaultWeightCoeff = processorVariables[0].getDefaultWeightCoeff();
-                    if (defaultWeightCoeff != null) {
-                        variable.weightCoeff = Double.parseDouble(defaultWeightCoeff);
-                    }
-                } catch (NumberFormatException e) {
-                    // the given coeff is neither given or not a number
-                }
-            }
+        Collection<DtoProcessorVariable> values = processorVariableDefaults.values();
+        if (!values.isEmpty()) {
+            DtoProcessorVariable dtoProcessorVariable = values.iterator().next();
+            variable.name = dtoProcessorVariable.getName();
+            applyDefaultToVariable(dtoProcessorVariable, variable);
         }
         return variable;
+    }
+
+    private void applyDefaultToVariable(DtoProcessorVariable processorVariable, Variable variable) {
+        String defaultAggregator = processorVariable.getDefaultAggregator();
+        if (defaultAggregator != null) {
+            variable.aggregator = defaultAggregator;
+        }
+        try {
+            String defaultWeightCoeff = processorVariable.getDefaultWeightCoeff();
+            if (defaultWeightCoeff != null) {
+                variable.weightCoeff = Double.parseDouble(defaultWeightCoeff);
+            }
+        } catch (NumberFormatException e) {
+            // the given coeff is neither given or not a number
+        }
     }
 
     public void updateTemporalParameters(HasValue<Date> minDate, HasValue<Date> maxDate) {
@@ -215,13 +218,12 @@ public class BinningParametersForm extends Composite {
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
-        this.selectedProcessor = selectedProcessor;
-
+        processorVariableDefaults.clear();
         DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
-        List<String> variableNames = new ArrayList<String>();
         for (DtoProcessorVariable processorVariable : processorVariables) {
-            variableNames.add(processorVariable.getName());
+            processorVariableDefaults.put(processorVariable.getName(), processorVariable);
         }
+        Set<String> variableNames = processorVariableDefaults.keySet();
         List<Variable> variableList = variableProvider.getList();
         Iterator<Variable> iterator = variableList.iterator();
         while (iterator.hasNext()) {
@@ -349,6 +351,10 @@ public class BinningParametersForm extends Composite {
         nameColumn.setFieldUpdater(new FieldUpdater<Variable, String>() {
             public void update(int index, Variable variable, String value) {
                 variable.name = value;
+                DtoProcessorVariable dtoProcessorVariable = processorVariableDefaults.get(value);
+                if (dtoProcessorVariable != null) {
+                    applyDefaultToVariable(dtoProcessorVariable, variable);
+                }
                 variableProvider.refresh();
             }
         });
