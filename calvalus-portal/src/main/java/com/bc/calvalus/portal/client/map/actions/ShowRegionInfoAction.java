@@ -39,16 +39,16 @@ public class ShowRegionInfoAction extends AbstractMapAction {
         flexTable.setHTML(row, 1, polygon.getArea() + "");
         flexTable.setHTML(row, 2, "m^2");
         row++;
-        flexTable.setHTML(row, 0, "<b>Bounds south-west:</b>");
+        flexTable.setHTML(row, 0, "<b>South-West:</b>");
         flexTable.setHTML(row, 1, polygon.getBounds().getSouthWest() + "");
         flexTable.setHTML(row, 2, "degree");
         row++;
-        flexTable.setHTML(row, 0, "<b>Bounds north-east:</b>");
+        flexTable.setHTML(row, 0, "<b>North-East:</b>");
         flexTable.setHTML(row, 1, polygon.getBounds().getNorthEast() + "");
         flexTable.setHTML(row, 2, "degree");
 
         VerticalPanel verticalPanel = new VerticalPanel();
-        verticalPanel.add(new HTML("<h2>Region '"+selectedRegion.getQualifiedName()+"':</h2>"));
+        verticalPanel.add(new HTML("<h3>"+selectedRegion.getQualifiedName()+"</h3>"));
         verticalPanel.add(flexTable);
 
         regionMap.getMapWidget().getInfoWindow().open(polygon.getBounds().getCenter(),
