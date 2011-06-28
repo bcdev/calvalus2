@@ -6,9 +6,7 @@ import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 /**
  * Demo view that currently shows the input product sets.
@@ -51,10 +49,15 @@ public class ManageRegionsView extends PortalView {
             }
         });
 
+        HorizontalPanel buttonPanel = new HorizontalPanel();
+        buttonPanel.setWidth("100%");
+        buttonPanel.add(submitButton);
+        buttonPanel.setCellHorizontalAlignment(submitButton, HasHorizontalAlignment.ALIGN_RIGHT);
+
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setSpacing(2);
         verticalPanel.add(regionMapWidget);
-        verticalPanel.add(submitButton);
+        verticalPanel.add(buttonPanel);
 
         widget = verticalPanel;
     }

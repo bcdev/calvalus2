@@ -29,12 +29,25 @@ public class OrderTAProductionView extends OrderProductionView {
     public OrderTAProductionView(PortalContext portalContext) {
         super(portalContext);
 
+        Button orderButton = new Button("Order Production");
+        Button checkButton = new Button("Check Request");
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         binningParametersForm = new BinningParametersForm();
         outputParametersForm = new OutputParametersForm();
+
+        orderButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        });
+        checkButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                checkRequest();
+            }
+        });
 
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
@@ -59,14 +72,15 @@ public class OrderTAProductionView extends OrderProductionView {
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
 
+        HorizontalPanel buttonPanel = new HorizontalPanel();
+        buttonPanel.setSpacing(2);
+        buttonPanel.add(checkButton);
+        buttonPanel.add(orderButton);
+
         HorizontalPanel orderPanel = new HorizontalPanel();
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
         orderPanel.setWidth("100%");
-        orderPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-        orderPanel.add(new Button("Order Production", new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                orderProduction();
-            }
-        }));
+        orderPanel.add(buttonPanel);
 
         HorizontalPanel panel1 = new HorizontalPanel();
         panel1.setSpacing(16);

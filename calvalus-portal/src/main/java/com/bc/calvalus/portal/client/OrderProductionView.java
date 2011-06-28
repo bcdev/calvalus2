@@ -68,4 +68,13 @@ public abstract class OrderProductionView extends PortalView {
             });
         }
     }
+
+    /**
+     * Validates and displays the request created by {@link #getProductionRequest()}.
+     */
+    protected void checkRequest() {
+        if (validateForm()) {
+            ShowProductionRequestAction.run(getTitle(), getProductionRequest());
+        }
+    }
 }

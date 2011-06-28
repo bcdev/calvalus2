@@ -27,12 +27,25 @@ public class OrderL2ProductionView extends OrderProductionView {
     public OrderL2ProductionView(PortalContext portalContext) {
         super(portalContext);
 
+        Button orderButton = new Button("Order Production");
+        Button checkButton = new Button("Check Request");
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
         outputParametersForm = new OutputParametersForm();
+
+        orderButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        });
+        checkButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                checkRequest();
+            }
+        });
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
@@ -41,16 +54,15 @@ public class OrderL2ProductionView extends OrderProductionView {
             }
         });
 
-        Button orderButton = new Button("Order Production", new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                orderProduction();
-            }
-        });
+        HorizontalPanel buttonPanel = new HorizontalPanel();
+        buttonPanel.setSpacing(2);
+        buttonPanel.add(checkButton);
+        buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();
         orderPanel.setWidth("100%");
-        orderPanel.setCellHorizontalAlignment(orderButton, HasHorizontalAlignment.ALIGN_RIGHT);
-        orderPanel.add(orderButton);
+        orderPanel.add(buttonPanel);
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
 
         HorizontalPanel panel1 = new HorizontalPanel();
         panel1.setSpacing(16);
