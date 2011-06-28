@@ -47,11 +47,11 @@ public class ProcessorSelectionForm extends Composite {
         }
     }
 
-    public void addProcessorChangedHandler(final ProcessorChangedHandler changedHandler) {
+    public void addProcessorChangeHandler(final ProcessorChangeHandler changeHandler) {
         processorList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                changedHandler.onProcessorChanged(getSelectedProcessor());
+                changeHandler.onProcessorChanged(getSelectedProcessor());
             }
         });
     }
@@ -65,7 +65,7 @@ public class ProcessorSelectionForm extends Composite {
     public void validateForm() throws ValidationException {
     }
 
-    public static interface ProcessorChangedHandler {
+    public static interface ProcessorChangeHandler {
         void onProcessorChanged(DtoProcessorDescriptor processorDescriptor);
     }
 

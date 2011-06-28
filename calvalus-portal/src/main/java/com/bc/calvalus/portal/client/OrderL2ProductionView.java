@@ -47,7 +47,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
 
-        processorSelectionForm.addProcessorChangedHandler(new ProcessorSelectionForm.ProcessorChangedHandler() {
+        processorSelectionForm.addProcessorChangeHandler(new ProcessorSelectionForm.ProcessorChangeHandler() {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
