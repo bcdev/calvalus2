@@ -68,57 +68,65 @@ public class ProductSetFilterForm extends Composite {
     TextArea dateList;
 
     @UiField
-    RegionMapWidget predefinedRegions;
+    RegionMapWidget regionMap;
     @UiField
     Anchor manageRegionsAnchor;
 
-    private final ChangeHandler changeHandler;
     private final ListDataProvider<Region> regions;
 
-    public ProductSetFilterForm(final PortalContext portal, ChangeHandler changeHandler) {
+    public ProductSetFilterForm(final PortalContext portal) {
         this.regions = portal.getRegions();
-        this.changeHandler = changeHandler;
 
         initWidget(uiBinder.createAndBindUi(this));
 
-        dateSelDateRange.setValue(true);
-        dateSelDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
-
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
-        minDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Date> event) {
-                ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
-            }
-        });
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
-        maxDate.addValueChangeHandler(new ValueChangeHandler<Date>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Date> event) {
-                ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
-            }
-        });
 
-        dateSelDateList.setValue(false);
+        dateSelDateRange.setValue(true);
+
+        dateSelDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
         dateSelDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
 
         dateList.setEnabled(false);
 
-//        predefinedRegions.setSize("100%", "240px");
-        predefinedRegions.getRegionSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
-                ProductSetFilterForm.this.changeHandler.regionChanged(getValueMap());
-            }
-        });
-
         manageRegionsAnchor.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-               portal.showView(ManageRegionsView.ID);
+                portal.showView(ManageRegionsView.ID);
+            }
+        });
+    }
+
+    public void addChangeHandler(final ChangeHandler changeHandler) {
+        ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Date> event) {
+                changeHandler.dateChanged(getValueMap());
+            }
+        };
+        minDate.addValueChangeHandler(dateValueChangeHandler);
+        maxDate.addValueChangeHandler(dateValueChangeHandler);
+        ValueChangeHandler<Boolean> booleanValueChangeHandler = new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                changeHandler.dateChanged(getValueMap());
+            }
+        };
+        dateSelDateRange.addValueChangeHandler(booleanValueChangeHandler);
+        dateSelDateList.addValueChangeHandler(booleanValueChangeHandler);
+        dateList.addValueChangeHandler(new ValueChangeHandler<String>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<String> stringValueChangeEvent) {
+                 changeHandler.dateChanged(getValueMap());
+            }
+        });
+        regionMap.getRegionSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
+                changeHandler.regionChanged(getValueMap());
             }
         });
     }
@@ -136,6 +144,10 @@ public class ProductSetFilterForm extends Composite {
         return maxDate;
     }
 
+    public Region[] getSelectedRegions() {
+        return regionMap.getRegionSelectionModel().getSelectedRegions();
+    }
+
     public void validateForm() throws ValidationException {
     }
 
@@ -150,7 +162,7 @@ public class ProductSetFilterForm extends Composite {
             parameters.put("dateList", dateList.getValue());
         }
 
-        Region region = predefinedRegions.getRegionSelectionModel().getSelectedRegion();
+        Region region = regionMap.getRegionSelectionModel().getSelectedRegion();
         if (region != null) {
             Polygon polygon = region.createPolygon();
             LatLngBounds bounds = polygon.getBounds();
@@ -184,7 +196,6 @@ public class ProductSetFilterForm extends Composite {
             minDate.setEnabled(dateSelDateRange.getValue());
             maxDate.setEnabled(dateSelDateRange.getValue());
             dateList.setEnabled(dateSelDateList.getValue());
-            ProductSetFilterForm.this.changeHandler.dateChanged(getValueMap());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
@@ -10,25 +11,20 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.geom.LatLngBounds;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.HasValue;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static java.lang.Math.PI;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -175,10 +171,31 @@ public class BinningParametersForm2 extends Composite {
         targetHeight.setEnabled(false);
     }
 
-    public void setTimeRange(HasValue<Date> minDate, HasValue<Date> maxDate) {
+    public void updateTemporalParameters(HasValue<Date> minDate, HasValue<Date> maxDate) {
         this.minDate = minDate;
         this.maxDate = maxDate;
         updatePeriodCount();
+    }
+
+    public void updateSpatialParameters(Region[] selectedRegions) {
+        LatLngBounds bounds = LatLngBounds.newInstance();
+        for (Region selectedRegion : selectedRegions) {
+            LatLng[] vertices = selectedRegion.getVertices();
+            for (LatLng point : vertices) {
+                bounds.extend(point);
+            }
+        }
+
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        double dx = bounds.getNorthEast().getLongitude() - bounds.getSouthWest().getLongitude();
+        double dy = bounds.getNorthEast().getLatitude() - bounds.getSouthWest().getLatitude();
+        double res = resolution.getValue();
+        int width = 1 + (int) Math.floor((RE * PI * dx / 180.0) / res);
+        int height = 1 + (int) Math.floor((RE * PI * dy / 180.0) / res);
+
+        targetWidth.setValue(width);
+        targetHeight.setValue(height);
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {

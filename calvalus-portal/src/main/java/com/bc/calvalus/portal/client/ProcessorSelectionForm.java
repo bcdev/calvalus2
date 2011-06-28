@@ -3,7 +3,6 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
@@ -47,8 +46,8 @@ public class ProcessorSelectionForm extends Composite {
         }
     }
 
-    public void addProcessorChangeHandler(final ProcessorChangeHandler changeHandler) {
-        processorList.addChangeHandler(new ChangeHandler() {
+    public void addChangeHandler(final ChangeHandler changeHandler) {
+        processorList.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
                 changeHandler.onProcessorChanged(getSelectedProcessor());
@@ -65,7 +64,7 @@ public class ProcessorSelectionForm extends Composite {
     public void validateForm() throws ValidationException {
     }
 
-    public static interface ProcessorChangeHandler {
+    public static interface ChangeHandler {
         void onProcessorChanged(DtoProcessorDescriptor processorDescriptor);
     }
 

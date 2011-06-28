@@ -24,7 +24,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProcessorSelectionForm processorSelectionForm;
-    private ProductSetFilterForm productSetSetFilterForm;
+    private ProductSetFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
     private BinningParametersForm2 binningParametersForm;
     private OutputParametersForm outputParametersForm;
@@ -34,22 +34,23 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetSetFilterForm = new ProductSetFilterForm(portalContext, new ProductSetFilterForm.ChangeHandler() {
+        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
-                binningParametersForm.setTimeRange(productSetSetFilterForm.getMinDate(),
-                                              productSetSetFilterForm.getMaxDate());
+                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                               productSetFilterForm.getMaxDate());
             }
 
             @Override
             public void regionChanged(Map<String, String> data) {
-                // todo: l3ParametersForm.setRegion()
+                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegions());
             }
         });
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
 
-        processorSelectionForm.addProcessorChangeHandler(new ProcessorSelectionForm.ProcessorChangeHandler() {
+        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
@@ -80,7 +81,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(panel1);
-        panel.add(productSetSetFilterForm);
+        panel.add(productSetFilterForm);
         panel.add(processorParametersForm);
         panel.add(binningParametersForm);
         panel.add(outputParametersForm);
@@ -136,7 +137,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
         parameters.putAll(binningParametersForm.getValueMap());
-        parameters.putAll(productSetSetFilterForm.getValueMap());
+        parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }
 }
