@@ -4,13 +4,10 @@ import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new production of a trend-analysis report.
@@ -19,38 +16,74 @@ import java.util.HashMap;
  */
 public class OrderTAProductionView extends OrderProductionView {
     public static final String ID = OrderTAProductionView.class.getName();
-    private FlexTable widget;
-    private InputOutputForm inputOutputForm;
-    private GeneralProcessorForm l2ProcessorForm;
-    private BinningParametersForm l3ParametersForm;
+
+    private ProductSetSelectionForm productSetSelectionForm;
+    private ProcessorSelectionForm processorSelectionForm;
+    private ProductSetFilterForm productSetFilterForm;
+    private ProcessorParametersForm processorParametersForm;
+    private BinningParametersForm binningParametersForm;
+    private OutputParametersForm outputParametersForm;
+
+    private Widget widget;
 
     public OrderTAProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        inputOutputForm = new InputOutputForm(getPortal().getProductSets(), "L1 Input", false);
-        l2ProcessorForm = new GeneralProcessorForm(getPortal().getProcessors(), "L2 Processor");
-        l3ParametersForm = new BinningParametersForm();
+        productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
+        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
+        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
+        binningParametersForm = new BinningParametersForm();
+        outputParametersForm = new OutputParametersForm();
 
-        widget = new FlexTable();
-        widget.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setVerticalAlignment(1, 0, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setVerticalAlignment(1, 1, HasVerticalAlignment.ALIGN_TOP);
-        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT);
-        widget.getFlexCellFormatter().setColSpan(2, 0, 2);
-        widget.getFlexCellFormatter().setRowSpan(0, 1, 2);
-        widget.ensureDebugId("widget");
-        widget.setWidth("32em");
-        widget.setCellSpacing(2);
-        widget.setCellPadding(2);
-        widget.setWidget(0, 0, inputOutputForm.asWidget());
-        widget.setWidget(1, 0, l2ProcessorForm.asWidget());
-        widget.setWidget(0, 1, l3ParametersForm.asWidget());
-        widget.setWidget(2, 0, new Button("Order Production", new ClickHandler() {
+        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
+            @Override
+            public void dateChanged(Map<String, String> data) {
+                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                               productSetFilterForm.getMaxDate());
+            }
+
+            @Override
+            public void regionChanged(Map<String, String> data) {
+                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegions());
+            }
+        });
+
+        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
+            @Override
+            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
+                processorParametersForm.setProcessorDescriptor(processorDescriptor);
+                binningParametersForm.setSelectedProcessor(processorDescriptor);
+            }
+        });
+        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
+        binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+
+        HorizontalPanel orderPanel = new HorizontalPanel();
+        orderPanel.setWidth("100%");
+        orderPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
+        orderPanel.add(new Button("Order Production", new ClickHandler() {
             public void onClick(ClickEvent event) {
                 orderProduction();
             }
         }));
+
+        HorizontalPanel panel1 = new HorizontalPanel();
+        panel1.setSpacing(16);
+        panel1.add(productSetSelectionForm);
+        panel1.add(processorSelectionForm);
+
+        VerticalPanel panel = new VerticalPanel();
+        panel.setWidth("100%");
+        panel.add(panel1);
+        panel.add(productSetFilterForm);
+        panel.add(processorParametersForm);
+        panel.add(binningParametersForm);
+        // panel.add(outputParametersForm);
+        panel.add(new HTML("<br/>"));
+        panel.add(orderPanel);
+
+        this.widget = panel;
     }
 
     @Override
@@ -65,15 +98,17 @@ public class OrderTAProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "L3 Trend Analysis";
+        return "Trend Analysis";
     }
 
     @Override
     protected boolean validateForm() {
         try {
-            inputOutputForm.validateForm();
-            l2ProcessorForm.validateForm();
-            l3ParametersForm.validateForm();
+            productSetSelectionForm.validateForm();
+            productSetFilterForm.validateForm();
+            processorSelectionForm.validateForm();
+            binningParametersForm.validateForm();
+            outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -86,17 +121,19 @@ public class OrderTAProductionView extends OrderProductionView {
         return new DtoProductionRequest("TA", getProductionParameters());
     }
 
-    private HashMap<String, String> getProductionParameters() {
-        DtoProcessorDescriptor selectedProcessor = l2ProcessorForm.getSelectedProcessor();
+    // todo - Provide JUnit test for this method
+    public HashMap<String, String> getProductionParameters() {
+        DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", inputOutputForm.getInputProductSetId());
-        parameters.put("outputFormat", inputOutputForm.getOutputFormat());
-        parameters.put("autoStaging", inputOutputForm.isAutoStaging() + "");
+        parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
+        parameters.put("outputFormat", outputParametersForm.getOutputFormat());
+        parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", l2ProcessorForm.getProcessorParameters());
-        parameters.putAll(l3ParametersForm.getValueMap());
+        parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
+        parameters.putAll(binningParametersForm.getValueMap());
+        parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }
 }

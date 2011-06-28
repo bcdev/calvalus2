@@ -1,6 +1,7 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns:cell='urn:import:com.google.gwt.user.cellview.client'
         >
 
     <g:VerticalPanel spacing="2">
@@ -10,52 +11,15 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:HorizontalPanel spacing="16">
-            <g:HTMLPanel>
-                <table>
-                    <tr>
-                        <td>
-                            <g:Label>Variable:</g:Label>
-                        </td>
-                        <td>
-                            <g:ListBox ui:field='inputVariables' visibleItemCount="1"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Mask expr.:</g:Label>
-                        </td>
-                        <td colspan="2">
-                            <g:TextBox ui:field='maskExpr' visibleLength="36"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Aggregator:</g:Label>
-                        </td>
-                        <td>
-                            <g:ListBox ui:field='aggregator' visibleItemCount="1"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Fill value:</g:Label>
-                        </td>
-                        <td>
-                            <g:DoubleBox ui:field='fillValue' visibleLength="8"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Weight coeff.:</g:Label>
-                        </td>
-                        <td>
-                            <g:DoubleBox ui:field='weightCoeff' visibleLength="8"/>
-                        </td>
-                    </tr>
-                </table>
-            </g:HTMLPanel>
+        <g:ScrollPanel  width="100%" >
+            <cell:CellTable ui:field='variableTable'  width="100%" />
+        </g:ScrollPanel>
+        <g:HorizontalPanel spacing="2">
+            <g:Button ui:field='addVariableButton' text="Add"/>
+            <g:Button ui:field='removeVariableButton' text="Remove"/>
+        </g:HorizontalPanel>
 
+        <g:HorizontalPanel spacing="16">
             <g:HTMLPanel>
                 <table>
                     <tr>
@@ -91,11 +55,11 @@
                             <g:Label>days</g:Label>
                         </td>
                     </tr>
-                    <tr>
-                        <td colspan="3">
-                            <hr/>
-                        </td>
-                    </tr>
+                </table>
+            </g:HTMLPanel>
+
+            <g:HTMLPanel>
+                <table>
                     <tr>
                         <td>
                             <g:Label>Spatial resolution:</g:Label>

@@ -4,12 +4,7 @@ import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,8 +21,9 @@ public class OrderL3ProductionView extends OrderProductionView {
     private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
-    private BinningParametersForm2 binningParametersForm;
+    private BinningParametersForm binningParametersForm;
     private OutputParametersForm outputParametersForm;
+
     private Widget widget;
 
     public OrderL3ProductionView(PortalContext portalContext) {
@@ -35,6 +31,11 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
         productSetFilterForm = new ProductSetFilterForm(portalContext);
+        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
+        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
+        binningParametersForm = new BinningParametersForm();
+        outputParametersForm = new OutputParametersForm();
+
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
@@ -47,8 +48,6 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegions());
             }
         });
-        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
-        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
@@ -58,11 +57,7 @@ public class OrderL3ProductionView extends OrderProductionView {
             }
         });
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
-
-        binningParametersForm = new BinningParametersForm2();
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
-
-        outputParametersForm = new OutputParametersForm();
 
         HorizontalPanel orderPanel = new HorizontalPanel();
         orderPanel.setWidth("100%");
@@ -110,6 +105,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     protected boolean validateForm() {
         try {
             productSetSelectionForm.validateForm();
+            productSetFilterForm.validateForm();
             processorSelectionForm.validateForm();
             binningParametersForm.validateForm();
             outputParametersForm.validateForm();

@@ -67,10 +67,7 @@
             </g:HTMLPanel>
 
             <map:RegionMapWidget ui:field='regionMap' width="480px" height="240px"/>
-            <g:HTML>Note: Use
-                <g:Anchor ui:field="manageRegionsAnchor">Manage Regions</g:Anchor>
-                to create new regions.
-            </g:HTML>
+            <g:Anchor ui:field="manageRegionsAnchor">Create new region</g:Anchor>
 
         </g:VerticalPanel>
 
