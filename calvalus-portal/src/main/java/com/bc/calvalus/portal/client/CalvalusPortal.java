@@ -2,12 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.*;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -136,8 +131,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 new OrderL2ProductionView(this),
                 new OrderL3ProductionView(this),
                 new OrderTAProductionView(this),
-                new ManageProductionsView(this),
                 new ManageRegionsView(this),
+                new ManageProductionsView(this),
         };
 
         viewTabIndices = new HashMap<String, Integer>();
@@ -156,15 +151,21 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             @Override
             public void onSelection(SelectionEvent<Integer> integerSelectionEvent) {
                 Integer tabIndex = integerSelectionEvent.getSelectedItem();
-                views[tabIndex].onShown();
+                if (tabIndex != null && tabIndex >= 0 && tabIndex < views.length) {
+                    PortalView view = views[tabIndex];
+                    GWT.log("Now showing: " + view.getTitle());
+                    view.onShowing();
+                }
             }
         });
         mainPanel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
             @Override
             public void onBeforeSelection(BeforeSelectionEvent<Integer> integerBeforeSelectionEvent) {
-                int oldViewIndex = mainPanel.getTabBar().getSelectedTab();
-                if (oldViewIndex >= 0) {
-                    views[oldViewIndex].onHidden();
+                int tabIndex = mainPanel.getTabBar().getSelectedTab();
+                if (tabIndex >= 0 && tabIndex < views.length) {
+                    PortalView view = views[tabIndex];
+                    GWT.log("Now hidden: " + view.getTitle());
+                    view.onHidden();
                 }
             }
         });

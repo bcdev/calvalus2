@@ -17,6 +17,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
+import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -146,6 +147,10 @@ public class ProductSetFilterForm extends Composite {
 
     public Region[] getSelectedRegions() {
         return regionMap.getRegionSelectionModel().getSelectedRegions();
+    }
+
+    public RegionMap getRegionMap() {
+        return regionMap;
     }
 
     public void validateForm() throws ValidationException {

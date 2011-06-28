@@ -157,6 +157,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         mapWidget.setDoubleClickZoom(true);
         mapWidget.setScrollWheelZoomEnabled(true);
         mapWidget.addControl(new MapTypeControl());
+        // Other possible MapWidget Controls are:
         // mapWidget.addControl(new SmallMapControl());
         // mapWidget.addControl(new OverviewMapControl());
 

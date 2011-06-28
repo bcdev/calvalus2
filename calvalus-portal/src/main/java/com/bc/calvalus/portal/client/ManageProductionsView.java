@@ -295,14 +295,12 @@ public class ManageProductionsView extends PortalView {
     }
 
     @Override
-    public void onShown() {
-        super.onShown();
+    public void onShowing() {
         getPortal().getProductionsUpdateTimer().scheduleRepeating(UPDATE_PERIOD_MILLIS);
     }
 
     @Override
     public void onHidden() {
-        super.onHidden();
         getPortal().getProductionsUpdateTimer().cancel();
     }
 

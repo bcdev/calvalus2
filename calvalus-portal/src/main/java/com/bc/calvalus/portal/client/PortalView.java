@@ -32,8 +32,7 @@ public abstract class PortalView implements IsWidget {
      * Informs the view that it is now shown.
      * The default implementation does nothing.
      */
-    public void onShown() {
-        GWT.log("Now shown: " + getTitle());
+    public void onShowing() {
     }
 
     /**

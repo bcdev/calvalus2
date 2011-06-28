@@ -75,6 +75,12 @@ public class ManageRegionsView extends PortalView {
     }
 
     @Override
+    public void onShowing() {
+        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+        regionMapWidget.getMapWidget().checkResizeAndCenter();
+    }
+
+    @Override
     public void onHidden() {
         regionMapWidget.applyVertexChanges();
     }
