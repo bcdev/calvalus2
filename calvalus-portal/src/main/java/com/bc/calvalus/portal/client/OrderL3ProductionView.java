@@ -52,8 +52,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void dateChanged(Map<String, String> data) {
-                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                               productSetFilterForm.getMaxDate());
+                updateTemporalParameters();
             }
 
             @Override
@@ -61,6 +60,7 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
+        updateTemporalParameters();
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
@@ -98,6 +98,11 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(orderPanel);
 
         this.widget = panel;
+    }
+
+    private void updateTemporalParameters() {
+        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                       productSetFilterForm.getMaxDate());
     }
 
     @Override
