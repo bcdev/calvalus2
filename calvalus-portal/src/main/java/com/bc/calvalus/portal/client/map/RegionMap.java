@@ -19,7 +19,6 @@ public interface RegionMap {
      */
     RegionMapModel getRegionModel();
 
-
     /**
      * @return The region selection model.
      */
@@ -64,7 +63,13 @@ public interface RegionMap {
      */
     void removeRegion(Region region);
 
+    /**
+     * @return The current interaction.
+     */
     MapInteraction getCurrentInteraction();
 
+    /**
+     * @param mapInteraction The current interaction.
+     */
     void setCurrentInteraction(MapInteraction mapInteraction);
 }

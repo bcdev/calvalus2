@@ -30,6 +30,20 @@ public class RegionMapToolbar implements IsWidget {
         return widget;
     }
 
+    public void select(MapInteraction interaction) {
+        ToggleButton button = interactionButtons.get(interaction);
+        if (button != null && !button.isDown()) {
+            button.setDown(true);
+        }
+    }
+
+    public void deselect(MapInteraction interaction) {
+        ToggleButton button = interactionButtons.get(interaction);
+        if (button != null && button.isDown()) {
+            button.setDown(false);
+        }
+    }
+
     private void initWidget() {
 
         interactions = new HashMap<ToggleButton, MapInteraction>();

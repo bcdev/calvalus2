@@ -64,10 +64,8 @@ public class InsertPolygonInteraction extends MapInteraction implements MapClick
                 regionMap.addRegion(Region.createUserRegion(polygonVertices));
                 // Interaction complete, invoke the actual action.
                 run(regionMap);
-                // System.out.println("polygon added with " + polygon.getVertexCount() + " vertices");
             } else {
                 polyline.insertVertex(polyline.getVertexCount(), latLng);
-                // System.out.println("vertex added to polyline which now has " + polyline.getVertexCount() + " vertices");
             }
         }
     }

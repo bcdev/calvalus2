@@ -7,6 +7,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.MapTypeControl;
+import com.google.gwt.maps.client.event.PolygonLineUpdatedHandler;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -44,6 +45,8 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private PolyStyleOptions normalPolyFillStyle;
     private PolyStyleOptions selectedPolyStrokeStyle;
     private PolyStyleOptions selectedPolyFillStyle;
+    private RegionMapToolbar regionMapToolbar;
+    private MyPolygonLineUpdatedHandler polygonLineUpdatedHandler;
 
     public static RegionMapWidget create(ListDataProvider<Region> regionList, boolean editable) {
         final RegionMapModelImpl model;
@@ -67,10 +70,9 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
         this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
         this.selectedPolyFillStyle = normalPolyFillStyle;
-
+        polygonLineUpdatedHandler = new MyPolygonLineUpdatedHandler();
         polygonMap = new HashMap<Region, Polygon>();
         regionMap = new HashMap<Polygon, Region>();
-
         initUi();
     }
 
@@ -112,27 +114,20 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
     @Override
     public void addRegion(Region region) {
-
-        Polygon polygon = region.createPolygon();
-        mapWidget.addOverlay(polygon);
-        regionMap.put(polygon, region);
-        polygonMap.put(region, polygon);
-
-        getRegionModel().getRegionProvider().getList().add(0, region);
-        getRegionSelectionModel().clearSelection();
-        getRegionSelectionModel().setSelected(region, true);
+        if (!getRegionModel().getRegionProvider().getList().contains(region)) {
+            getRegionModel().getRegionProvider().getList().add(0, region);
+            getRegionSelectionModel().clearSelection();
+            getRegionSelectionModel().setSelected(region, true);
+            getRegionModel().fireRegionAdded(this, region);
+        }
     }
 
     @Override
     public void removeRegion(Region region) {
-
-        getRegionSelectionModel().setSelected(region, false);
-        getRegionModel().getRegionProvider().getList().remove(region);
-
-        Polygon polygon = polygonMap.get(region);
-        mapWidget.removeOverlay(polygon);
-        regionMap.remove(polygon);
-        polygonMap.remove(region);
+        if (getRegionModel().getRegionProvider().getList().remove(region)) {
+            getRegionSelectionModel().setSelected(region, false);
+            getRegionModel().fireRegionRemoved(this, region);
+        }
     }
 
     @Override
@@ -141,13 +136,21 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     @Override
-    public void setCurrentInteraction(MapInteraction mapInteraction) {
-        if (currentInteraction != null) {
-            currentInteraction.detachFrom(this);
-        }
-        currentInteraction = mapInteraction;
-        if (currentInteraction != null) {
-            currentInteraction.attachTo(this);
+    public void setCurrentInteraction(MapInteraction interaction) {
+        if (currentInteraction != interaction) {
+            if (currentInteraction != null) {
+                currentInteraction.detachFrom(this);
+                if (regionMapToolbar != null) {
+                    regionMapToolbar.deselect(currentInteraction);
+                }
+            }
+            currentInteraction = interaction;
+            if (currentInteraction != null) {
+                currentInteraction.attachTo(this);
+                if (regionMapToolbar != null) {
+                    regionMapToolbar.select(currentInteraction);
+                }
+            }
         }
     }
 
@@ -208,7 +211,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                     try {
                         adjustingRegionSelection = true;
                         updateRegionSelection(regionMapSelectionModel, regionListSelectionModel);
-                        updatePolygons();
+                        updatePolygonStyles();
                     } finally {
                         adjustingRegionSelection = false;
                     }
@@ -222,7 +225,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         regionPanel.ensureDebugId("regionPanel");
 
         if (getRegionModel().getActions().length > 0) {
-            RegionMapToolbar regionMapToolbar = new RegionMapToolbar(this);
+            regionMapToolbar = new RegionMapToolbar(this);
             regionPanel.addSouth(regionMapToolbar, 3.5);
         }
         regionPanel.add(regionScrollPanel);
@@ -236,26 +239,71 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             setCurrentInteraction(createSelectInteraction());
         }
 
-        updatePolygons();
+        updatePolygonStyles();
         initWidget(regionSplitLayoutPanel);
+
+        getRegionModel().addChangeListener(new RegionMapModel.ChangeListener() {
+
+            @Override
+            public void onRegionAdded(RegionMapModel.ChangeEvent event) {
+                ensurePolygonPresent(event.getRegion());
+            }
+
+            @Override
+            public void onRegionRemoved(RegionMapModel.ChangeEvent event) {
+                ensurePolygonAbsent(event.getRegion());
+            }
+
+            @Override
+            public void onRegionChanged(RegionMapModel.ChangeEvent event) {
+                if (event.getRegionMap() != RegionMapWidget.this) {
+                    ensurePolygonAbsent(event.getRegion());
+                    ensurePolygonPresent(event.getRegion());
+                }
+            }
+        });
     }
 
-    private void updatePolygons() {
+    private Polygon ensurePolygonPresent(Region region) {
+        Polygon polygon = polygonMap.get(region);
+        if (polygon == null) {
+            polygon = region.createPolygon();
+            polygon.setVisible(true);
+            regionMap.put(polygon, region);
+            polygonMap.put(region, polygon);
+            mapWidget.addOverlay(polygon);
+            updatePolygonStyle(region, polygon);
+        }
+        return polygon;
+    }
+
+    private Polygon ensurePolygonAbsent(Region region) {
+        Polygon polygon = polygonMap.get(region);
+        if (polygon != null) {
+            mapWidget.removeOverlay(polygon);
+            regionMap.remove(polygon);
+            polygonMap.remove(region);
+        }
+        return polygon;
+    }
+
+    private void updatePolygonStyles() {
         List<Region> regionList = regionMapModel.getRegionProvider().getList();
         for (Region region : regionList) {
-            boolean selected = regionMapSelectionModel.isSelected(region);
-            Polygon polygon = polygonMap.get(region);
-            if (polygon == null) {
-                polygon = region.createPolygon();
-                polygon.setVisible(true);
-                mapWidget.addOverlay(polygon);
-                regionMap.put(polygon, region);
-                polygonMap.put(region, polygon);
-            }
-            polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
-            polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
-            if (editable && region.isUserRegion()) {
-                polygon.setEditingEnabled(selected);
+            updatePolygonStyle(region, ensurePolygonPresent(region));
+        }
+    }
+
+    private void updatePolygonStyle(Region region, Polygon polygon) {
+        boolean selected = regionMapSelectionModel.isSelected(region);
+        polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
+        polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
+        if (editable && region.isUserRegion()) {
+            polygon.setEditingEnabled(selected);
+            if (selected) {
+                polygon.addPolygonLineUpdatedHandler(polygonLineUpdatedHandler);
+            } else {
+                polygon.removePolygonLineUpdatedHandler(polygonLineUpdatedHandler);
             }
         }
     }
@@ -281,16 +329,19 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
     private static MapAction[] createDefaultEditingActions() {
         // todo: use the action constructor that takes an icon image (nf)
+        final SelectInteraction selectInteraction = createSelectInteraction();
         return new MapAction[]{
-                createSelectInteraction(),
+                selectInteraction,
                 new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
                     @Override
                     public void run(RegionMap regionMap) {
+                        regionMap.setCurrentInteraction(selectInteraction);
                     }
                 }),
                 new InsertBoxInteraction(new AbstractMapAction("B", "New box region") {
                     @Override
                     public void run(RegionMap regionMap) {
+                        regionMap.setCurrentInteraction(selectInteraction);
                     }
                 }),
                 MapAction.SEPARATOR,
@@ -309,4 +360,15 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         });
     }
 
+    private class MyPolygonLineUpdatedHandler implements PolygonLineUpdatedHandler {
+        @Override
+        public void onUpdate(PolygonLineUpdatedEvent event) {
+            System.out.println("PolygonLineUpdatedEvent: onUpdate: event = " + event);
+            Polygon polygon = event.getSender();
+            Region region = regionMap.get(polygon);
+            if (region != null) {
+                getRegionModel().fireRegionChanged(RegionMapWidget.this, region);
+            }
+        }
+    }
 }

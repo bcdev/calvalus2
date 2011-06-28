@@ -31,10 +31,12 @@ public class LocateRegionsAction extends AbstractMapAction {
         Region selectedRegion = regionMap.getRegionSelectionModel().getSelectedRegion();
         if (selectedRegion != null) {
             Polygon regionPolygon = regionMap.getPolygon(selectedRegion);
-            LatLngBounds bounds = regionPolygon.getBounds();
-            int zoomLevel = regionMap.getMapWidget().getBoundsZoomLevel(bounds);
-            regionMap.getMapWidget().setZoomLevel(zoomLevel);
-            regionMap.getMapWidget().panTo(bounds.getCenter());
+            if (regionPolygon != null) {
+                LatLngBounds bounds = regionPolygon.getBounds();
+                int zoomLevel = regionMap.getMapWidget().getBoundsZoomLevel(bounds);
+                regionMap.getMapWidget().setZoomLevel(zoomLevel);
+                regionMap.getMapWidget().panTo(bounds.getCenter());
+            }
         }
     }
 
