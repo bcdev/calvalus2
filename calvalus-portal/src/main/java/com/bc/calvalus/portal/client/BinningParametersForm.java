@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SelectionCell;
@@ -37,6 +38,8 @@ public class BinningParametersForm extends Composite {
 
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
+    private DynamicSelectionCell variableNameCell;
+    private DtoProcessorDescriptor selectedProcessor;
     private LatLngBounds regionBounds;
 
     interface TheUiBinder extends UiBinder<Widget, BinningParametersForm> {
@@ -82,12 +85,9 @@ public class BinningParametersForm extends Composite {
     @UiField
     Button removeVariableButton;
 
-    private DtoProcessorDescriptor processorDescriptor;
-
     public BinningParametersForm() {
 
         variableProvider = new ListDataProvider<Variable>();
-        variableProvider.getList().add(new Variable());
 
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
@@ -117,8 +117,7 @@ public class BinningParametersForm extends Composite {
         addVariableButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                // todo - initialise with variable default values from processor (nf)
-                variableProvider.getList().add(new Variable());
+                variableProvider.getList().add(createDefaultVariable());
                 variableProvider.refresh();
             }
         });
@@ -180,6 +179,28 @@ public class BinningParametersForm extends Composite {
         updateSpatialParameters(null);
     }
 
+    private Variable createDefaultVariable() {
+        Variable variable = new Variable();
+        if (selectedProcessor != null) {
+            DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
+            if (processorVariables.length != 0) {
+                variable.name = processorVariables[0].getName();
+                variable.aggregator = processorVariables[0].getDefaultAggregator();
+                try {
+                    String defaultWeightCoeff = processorVariables[0].getDefaultWeightCoeff();
+                    if (defaultWeightCoeff != null) {
+                        double wCoeff = Double.parseDouble(defaultWeightCoeff);
+                        variable.weightCoeff = wCoeff;
+                    }
+                } catch (NumberFormatException e) {
+                    // the given coeff is neither given or not a number
+                }
+                variable.maskExpr = processorVariables[0].getDefaultValidMask();
+            }
+        }
+        return variable;
+    }
+
     public void updateTemporalParameters(HasValue<Date> minDate, HasValue<Date> maxDate) {
         this.minDate = minDate;
         this.maxDate = maxDate;
@@ -216,28 +237,28 @@ public class BinningParametersForm extends Composite {
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
-        // todo - update variable list from processor (nf)
-        this.processorDescriptor = processorDescriptor;
-        /*
-        int selectedIndex = inputVariables.getSelectedIndex();
-        String selectedItem = null;
-        if (selectedIndex != -1) {
-            selectedItem = inputVariables.getItemText(selectedIndex);
-        }
-        inputVariables.clear();
+        this.selectedProcessor = selectedProcessor;
+
         DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
-        int newSelectedIndex = 0;
-        int index = 0;
+        List<String> variableNames = new ArrayList<String>();
         for (DtoProcessorVariable processorVariable : processorVariables) {
-            String processorVariableName = processorVariable.getName();
-            inputVariables.addItem(processorVariableName);
-            if (selectedIndex != -1 && processorVariableName.equals(selectedItem)) {
-                newSelectedIndex = index;
-            }
-            index++;
+            variableNames.add(processorVariable.getName());
         }
-        inputVariables.setSelectedIndex(newSelectedIndex);
-        */
+        List<Variable> variableList = variableProvider.getList();
+        Iterator<Variable> iterator = variableList.iterator();
+        while (iterator.hasNext()) {
+            Variable variable = iterator.next();
+            String name = variable.name;
+            if (!variableNames.contains(name)) {
+                iterator.remove();
+            }
+        }
+        variableNameCell.removeAllOptions();
+        variableNameCell.addOptions(variableNames);
+        if (variableList.size() == 0) {
+            variableList.add(createDefaultVariable());
+        }
+        variableProvider.refresh();
     }
 
     private void updatePeriodCount() {
@@ -262,12 +283,7 @@ public class BinningParametersForm extends Composite {
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength, "Compositing period length must be >= 1 and less or equal to than period");
         }
-/*
-        boolean weightCoeffValid = weightCoeff.getValue() >= 0.0 && weightCoeff.getValue() <= 1.0;
-        if (!weightCoeffValid) {
-            throw new ValidationException(weightCoeff, "Weight coefficient must be >= 0 and <= 1");
-        }
-*/
+
         boolean resolutionValid = resolution.getValue() > 0.0;
         if (!resolutionValid) {
             throw new ValidationException(resolution, "Resolution must greater than zero");
@@ -278,7 +294,18 @@ public class BinningParametersForm extends Composite {
             throw new ValidationException(superSampling, "Super-sampling must be >= 1 and <= 9");
         }
 
-        // todo - validate variable list (nf)
+        List<Variable> variableList = variableProvider.getList();
+        if(variableList.size() == 0) {
+            throw new ValidationException(variableTable, "At least one binning variable must be defined.");
+        }
+
+        for (Variable variable : variableList) {
+            boolean weightCoeffValid = variable.weightCoeff >= 0.0 && variable.weightCoeff <= 1.0;
+            if (!weightCoeffValid) {
+                String message = "Weight coefficient for '" + variable.name + "' must be >= 0 and <= 1";
+                throw new ValidationException(variableTable, message);
+            }
+        }
     }
 
     public Map<String, String> getValueMap() {
@@ -337,15 +364,7 @@ public class BinningParametersForm extends Composite {
     }
 
     private Column<Variable, String> createNameColumn() {
-        List<String> nameList = Arrays.asList(
-                "chl_conc",
-                "tsm",
-                "Z90_max",
-                "chiSquare",
-                "turbidity_index"
-        );
-
-        SelectionCell variableNameCell = new SelectionCell(nameList);
+        variableNameCell = new DynamicSelectionCell(new ArrayList<String>());
         Column<Variable, String> nameColumn = new Column<Variable, String>(variableNameCell) {
             @Override
             public String getValue(Variable variable) {
