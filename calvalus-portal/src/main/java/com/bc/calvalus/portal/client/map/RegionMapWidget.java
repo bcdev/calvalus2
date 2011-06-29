@@ -55,6 +55,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private PolyStyleOptions selectedPolyFillStyle;
     private RegionMapToolbar regionMapToolbar;
     private PolygonLineUpdatedHandler polygonLineUpdatedHandler;
+    private CellList<Region> regionCellList;
 
     public RegionMapWidget(RegionMapModel regionMapModel, boolean editable, MapAction... actions) {
         this(regionMapModel, new RegionMapSelectionModelImpl(), editable, actions);
@@ -179,13 +180,12 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         };
 
         final SingleSelectionModel<Region> regionListSelectionModel = new SingleSelectionModel<Region>(Region.KEY_PROVIDER);
-        final CellList<Region> regionCellList = new CellList<Region>(regionCell, Region.KEY_PROVIDER);
+        regionCellList = new CellList<Region>(regionCell, Region.KEY_PROVIDER);
         regionCellList.setVisibleRange(0, 256);
         regionCellList.setKeyboardPagingPolicy(HasKeyboardPagingPolicy.KeyboardPagingPolicy.INCREASE_RANGE);
         regionCellList.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.ENABLED);
         regionCellList.setSelectionModel(regionListSelectionModel);
         regionMapModel.getRegionProvider().addDataDisplay(regionCellList);
-
         DockLayoutPanel regionPanel = new DockLayoutPanel(Style.Unit.EM);
         regionPanel.ensureDebugId("regionPanel");
         if (actions.length > 0) {
@@ -345,6 +345,17 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             public void run(RegionMap regionMap) {
             }
         });
+    }
+
+    // todo - how can we enable / disable stuff? (nf)
+
+    public boolean isEnabled() {
+        return true;
+    }
+
+    public void setEnabled(boolean value) {
+        mapWidget.setVisible(value);
+        regionCellList.setVisible(value);
     }
 
     private class MyPolygonLineUpdatedHandler implements PolygonLineUpdatedHandler {

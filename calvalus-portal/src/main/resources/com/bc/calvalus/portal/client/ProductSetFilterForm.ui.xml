@@ -10,7 +10,7 @@
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <h3>Temporal Range</h3>
+                <h3>Temporal Filter</h3>
                 <hr/>
             </g:HTMLPanel>
 
@@ -20,39 +20,45 @@
                     </tr>
                     <tr>
                         <td colspan="3">
-                            <g:RadioButton ui:field='dateSelDateRange' name="dateSel" text="Date range"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>Start time:</td>
-                        <td align="left">
-                            <date:DateBox ui:field='minDate' width="6em"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>End time:</td>
-                        <td align="left">
-                            <date:DateBox ui:field='maxDate' width="6em"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>Day count:</td>
-                        <td align="left">
-                            <g:TextBox ui:field='numDays' visibleLength="4" enabled="false"/>
+                            <g:RadioButton ui:field='temporalFilterOff' name="temporalFilter" text="No filter"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="3">
-                            <g:RadioButton ui:field='dateSelDateList' name="dateSel" text="Date list"/>
+                            <g:RadioButton ui:field='temporalFilterByDateRange' name="temporalFilter"
+                                           text="By date range"/>
                         </td>
                     </tr>
                     <tr>
-                        <td>&nbsp;&nbsp;</td>
+                        <td>&nbsp;&nbsp;&nbsp;</td>
+                        <td>Start date:</td>
+                        <td align="right">
+                            <date:DateBox ui:field='minDate' width="6em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;&nbsp;</td>
+                        <td>End date:</td>
+                        <td align="right">
+                            <date:DateBox ui:field='maxDate' width="6em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <g:RadioButton ui:field='temporalFilterByDateList' name="temporalFilter"
+                                           text="By date list"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;&nbsp;</td>
                         <td colspan="2">
                             <g:TextArea ui:field='dateList' width="100%" visibleLines="4"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"/>
+                        <td align="right">
+                            <g:TextBox ui:field='numDays' enabled="false" width="4em"/>&nbsp;days
                         </td>
                     </tr>
                 </table>
@@ -62,19 +68,20 @@
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <h3>Spatial Range</h3>
+                <h3>Spatial Filter</h3>
                 <hr/>
             </g:HTMLPanel>
 
-            <g:HorizontalPanel spacing="2"  width="100%">
-                <g:RadioButton ui:field='regionSelGlobal' name="regionSel" text="Global"/>
-                <g:RadioButton ui:field='regionSelPredefined' name="regionSel" text="Selected region"/>
-                <g:HTML>&nbsp;&nbsp;</g:HTML>
-                <g:Anchor ui:field="manageRegionsAnchor">Create new region</g:Anchor>
+
+            <g:HorizontalPanel width="100%">
+                <g:HorizontalPanel spacing="2">
+                    <g:RadioButton ui:field='spatialFilterOff' name="spatialFilter" text="No filter (global)"/>
+                    <g:RadioButton ui:field='spatialFilterByRegion' name="spatialFilter" text="By region"/>
+                </g:HorizontalPanel>
+                <g:Anchor ui:field="manageRegionsAnchor">Manage regions</g:Anchor>
             </g:HorizontalPanel>
 
             <map:RegionMapWidget ui:field='regionMap' width="480px" height="240px"/>
-
 
         </g:VerticalPanel>
 

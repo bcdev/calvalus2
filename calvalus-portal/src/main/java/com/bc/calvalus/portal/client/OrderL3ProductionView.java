@@ -51,12 +51,12 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
-            public void dateChanged(Map<String, String> data) {
+            public void temporalFilterChanged(Map<String, String> data) {
                 updateTemporalParameters();
             }
 
             @Override
-            public void regionChanged(Map<String, String> data) {
+            public void spatialFilterChanged(Map<String, String> data) {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });

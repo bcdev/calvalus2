@@ -34,9 +34,7 @@ import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -55,9 +53,11 @@ public class ProductSetFilterForm extends Composite {
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     @UiField
-    RadioButton dateSelDateList;
+    RadioButton temporalFilterOff;
     @UiField
-    RadioButton dateSelDateRange;
+    RadioButton temporalFilterByDateList;
+    @UiField
+    RadioButton temporalFilterByDateRange;
 
     @UiField
     DateBox minDate;
@@ -70,9 +70,9 @@ public class ProductSetFilterForm extends Composite {
     TextArea dateList;
 
     @UiField
-    RadioButton regionSelGlobal;
+    RadioButton spatialFilterOff;
     @UiField
-    RadioButton regionSelPredefined;
+    RadioButton spatialFilterByRegion;
     @UiField
     Anchor manageRegionsAnchor;
     @UiField
@@ -87,25 +87,27 @@ public class ProductSetFilterForm extends Composite {
 
         radioGroupId++;
 
-        dateSelDateRange.setName("dateSel" + radioGroupId);
-        dateSelDateList.setName("dateSel" + radioGroupId);
-
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
 
-        dateSelDateRange.setValue(true);
-
-        dateSelDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
-        dateSelDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
-
         dateList.setEnabled(false);
+        dateList.setValue("2008-06-01\n" +
+                                  "2008-06-02\n" +
+                                  "2008-06-03");
 
-        regionSelGlobal.setName("regionSel" + radioGroupId);
-        regionSelPredefined.setName("regionSel" + radioGroupId);
-        regionSelPredefined.setValue(true);
+        temporalFilterOff.setName("temporalFilter" + radioGroupId);
+        temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
+        temporalFilterByDateList.setName("temporalFilter" + radioGroupId);
+        temporalFilterByDateRange.setValue(true);
+        temporalFilterByDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
+        temporalFilterByDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
+
+        spatialFilterOff.setName("spatialFilter" + radioGroupId);
+        spatialFilterByRegion.setName("spatialFilter" + radioGroupId);
+        spatialFilterByRegion.setValue(true);
 
         manageRegionsAnchor.addClickHandler(new ClickHandler() {
             @Override
@@ -113,13 +115,41 @@ public class ProductSetFilterForm extends Composite {
                 portal.showView(ManageRegionsView.ID);
             }
         });
+
+        addChangeHandler(new ChangeHandler() {
+            @Override
+            public void temporalFilterChanged(Map<String, String> data) {
+                updateNumDays();
+            }
+
+            @Override
+            public void spatialFilterChanged(Map<String, String> data) {
+            }
+        });
+
+        updateNumDays();
+    }
+
+    private void updateNumDays() {
+        if (temporalFilterByDateRange.getValue()) {
+            long millisPerDay = 24L * 60L * 60L * 1000L;
+            Date min = minDate.getValue();
+            Date max = maxDate.getValue();
+            numDays.setValue("" +((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
+        } else if (temporalFilterByDateList.getValue()) {
+            String[] splits = dateList.getValue().split("\\s");
+            HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            numDays.setValue("" + set.size());
+        } else {
+            numDays.setValue("?");
+        }
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
         ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
             @Override
             public void onValueChange(ValueChangeEvent<Date> event) {
-                changeHandler.dateChanged(getValueMap());
+                changeHandler.temporalFilterChanged(getValueMap());
             }
         };
         minDate.addValueChangeHandler(dateValueChangeHandler);
@@ -127,21 +157,31 @@ public class ProductSetFilterForm extends Composite {
         ValueChangeHandler<Boolean> booleanValueChangeHandler = new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                changeHandler.dateChanged(getValueMap());
+                changeHandler.temporalFilterChanged(getValueMap());
             }
         };
-        dateSelDateRange.addValueChangeHandler(booleanValueChangeHandler);
-        dateSelDateList.addValueChangeHandler(booleanValueChangeHandler);
+        temporalFilterOff.addValueChangeHandler(booleanValueChangeHandler);
+        temporalFilterByDateRange.addValueChangeHandler(booleanValueChangeHandler);
+        temporalFilterByDateList.addValueChangeHandler(booleanValueChangeHandler);
         dateList.addValueChangeHandler(new ValueChangeHandler<String>() {
             @Override
             public void onValueChange(ValueChangeEvent<String> stringValueChangeEvent) {
-                 changeHandler.dateChanged(getValueMap());
+                changeHandler.temporalFilterChanged(getValueMap());
             }
         });
+
+        ValueChangeHandler<Boolean> spatialFilterChangeHandler = new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                changeHandler.spatialFilterChanged(getValueMap());
+            }
+        };
+        spatialFilterOff.addValueChangeHandler(spatialFilterChangeHandler);
+        spatialFilterByRegion.addValueChangeHandler(spatialFilterChangeHandler);
         regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override
             public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
-                changeHandler.regionChanged(getValueMap());
+                changeHandler.spatialFilterChanged(getValueMap());
             }
         });
     }
@@ -160,7 +200,7 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public Region getSelectedRegion() {
-        return regionSelPredefined.getValue() ? regionMap.getRegionMapSelectionModel().getSelectedRegion() : null;
+        return spatialFilterByRegion.getValue() ? regionMap.getRegionMapSelectionModel().getSelectedRegion() : null;
     }
 
     public RegionMap getRegionMap() {
@@ -168,53 +208,79 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
+
+        if (temporalFilterByDateRange.getValue()) {
+            Date min = minDate.getValue();
+            Date max = maxDate.getValue();
+            if (min.before(max)) {
+                throw new ValidationException(dateList, "Start date must be before end date.");
+            }
+        } else if (temporalFilterByDateList.getValue()) {
+            String value = dateList.getValue().trim();
+            if (value.isEmpty()) {
+                throw new ValidationException(dateList, "Date list must not be empty.");
+            }
+        }
+
+        if (spatialFilterByRegion.getValue()) {
+            Region region = getSelectedRegion();
+            if (region == null) {
+                throw new ValidationException(regionMap, "Please select a region.");
+            }
+        }
     }
 
     public Map<String, String> getValueMap() {
 
         Map<String, String> parameters = new HashMap<String, String>();
 
-        if (dateSelDateRange.getValue()) {
+        if (temporalFilterOff.getValue()) {
+            // ok
+        } else if (temporalFilterByDateRange.getValue()) {
             parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
             parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
-        } else {
+        } else if (temporalFilterByDateList.getValue()) {
             parameters.put("dateList", dateList.getValue());
         }
 
-        Region region = getSelectedRegion();
-        if (region != null) {
-            Polygon polygon = region.createPolygon();
-            LatLngBounds bounds = polygon.getBounds();
-            parameters.put("regionName", region.getQualifiedName());
-            parameters.put("regionWKT", region.getGeometryWkt());
-            parameters.put("minLon", bounds.getNorthEast().getLongitude() + "");
-            parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
-            parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");
-            parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
-        } else {
+        if (spatialFilterOff.getValue()) {
             parameters.put("regionName", "global.World");
             parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
             parameters.put("minLon", "-180");
             parameters.put("minLat", "-90");
             parameters.put("maxLon", "180");
             parameters.put("maxLat", "90");
+        } else if (spatialFilterByRegion.getValue()) {
+            Region region = getSelectedRegion();
+            if (region != null) {
+                Polygon polygon = region.createPolygon();
+                LatLngBounds bounds = polygon.getBounds();
+                parameters.put("regionName", region.getQualifiedName());
+                parameters.put("regionWKT", region.getGeometryWkt());
+                parameters.put("minLon", bounds.getNorthEast().getLongitude() + "");
+                parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
+                parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");
+                parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
+            }
         }
 
         return parameters;
     }
 
     public interface ChangeHandler {
-        void dateChanged(Map<String, String> data);
+        void temporalFilterChanged(Map<String, String> data);
 
-        void regionChanged(Map<String, String> data);
+        void spatialFilterChanged(Map<String, String> data);
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {
         @Override
         public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-            minDate.setEnabled(dateSelDateRange.getValue());
-            maxDate.setEnabled(dateSelDateRange.getValue());
-            dateList.setEnabled(dateSelDateList.getValue());
+            minDate.setEnabled(temporalFilterByDateRange.getValue());
+            maxDate.setEnabled(temporalFilterByDateRange.getValue());
+            dateList.setEnabled(temporalFilterByDateList.getValue());
+
+            regionMap.setEnabled(spatialFilterByRegion.getValue());
         }
     }
 }
