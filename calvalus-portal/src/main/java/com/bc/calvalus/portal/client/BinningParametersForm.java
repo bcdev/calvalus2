@@ -220,10 +220,12 @@ public class BinningParametersForm extends Composite {
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
         processorVariableDefaults.clear();
         DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
+        List<String> variableNames = new ArrayList<String>(processorVariables.length);
         for (DtoProcessorVariable processorVariable : processorVariables) {
-            processorVariableDefaults.put(processorVariable.getName(), processorVariable);
+            String processorVariableName = processorVariable.getName();
+            processorVariableDefaults.put(processorVariableName, processorVariable);
+            variableNames.add(processorVariableName);
         }
-        Set<String> variableNames = processorVariableDefaults.keySet();
         List<Variable> variableList = variableProvider.getList();
         Iterator<Variable> iterator = variableList.iterator();
         while (iterator.hasNext()) {

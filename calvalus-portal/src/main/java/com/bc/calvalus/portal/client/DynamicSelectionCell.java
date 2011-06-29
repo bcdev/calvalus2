@@ -28,7 +28,6 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * A {@link com.google.gwt.cell.client.Cell} used to render a drop-down list.
@@ -66,7 +65,7 @@ public class DynamicSelectionCell extends AbstractInputCell<String, String> {
         }
     }
 
-    public void addOptions(Set<String> variableNames) {
+    public void addOptions(List<String> variableNames) {
         for (String variableName : variableNames) {
             options.add(new String(variableName));
         }
