@@ -105,7 +105,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     protected boolean validateForm() {
         try {
-            productSetFilterForm.validateForm();
+            productSetSelectionForm.validateForm();
             processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
             processorParametersForm.validateForm();

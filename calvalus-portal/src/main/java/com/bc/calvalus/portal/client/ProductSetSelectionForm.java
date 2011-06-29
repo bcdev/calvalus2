@@ -42,7 +42,12 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    public void validateForm() {
+    public void validateForm() throws ValidationException {
+        String inputProductSetId = getInputProductSetId();
+        boolean inputProductSetIdValid = inputProductSetId != null;
+        if (!inputProductSetIdValid) {
+            throw new ValidationException(inputProductSet, "An input product set must be selected.");
+        }
     }
 
 }
