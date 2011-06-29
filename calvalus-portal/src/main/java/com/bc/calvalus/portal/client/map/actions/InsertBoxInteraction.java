@@ -75,12 +75,12 @@ public class InsertBoxInteraction extends MapInteraction implements MapClickHand
             LatLng latLng1 = polyline.getVertex(0);
             LatLng latLng2 = event.getLatLng();
             polyline.deleteVertex(1);
-            polyline.deleteVertex(2);
-            polyline.deleteVertex(3);
-            polyline.deleteVertex(4);
             polyline.insertVertex(1, LatLng.newInstance(latLng1.getLatitude(), latLng2.getLongitude()));
+            polyline.deleteVertex(2);
             polyline.insertVertex(2, LatLng.newInstance(latLng2.getLatitude(), latLng2.getLongitude()));
+            polyline.deleteVertex(3);
             polyline.insertVertex(3, LatLng.newInstance(latLng2.getLatitude(), latLng1.getLongitude()));
+            polyline.deleteVertex(4);
             polyline.insertVertex(4, LatLng.newInstance(latLng1.getLatitude(), latLng1.getLongitude()));
         }
     }
