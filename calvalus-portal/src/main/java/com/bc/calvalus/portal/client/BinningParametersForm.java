@@ -41,6 +41,7 @@ public class BinningParametersForm extends Composite {
     private DynamicSelectionCell variableNameCell;
     private LatLngBounds regionBounds;
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
+    private final List<String> variableNames;
 
     interface TheUiBinder extends UiBinder<Widget, BinningParametersForm> {
     }
@@ -88,6 +89,7 @@ public class BinningParametersForm extends Composite {
 
     public BinningParametersForm() {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
+        variableNames = new ArrayList<String>();
         variableProvider = new ListDataProvider<Variable>();
 
         // Set a key provider that provides a unique key for each contact. If key is
@@ -163,10 +165,9 @@ public class BinningParametersForm extends Composite {
 
     private Variable createDefaultVariable() {
         Variable variable = new Variable();
-        Collection<DtoProcessorVariable> values = processorVariableDefaults.values();
-        if (!values.isEmpty()) {
-            DtoProcessorVariable dtoProcessorVariable = values.iterator().next();
-            variable.name = dtoProcessorVariable.getName();
+        if (!variableNames.isEmpty()) {
+            variable.name = variableNames.get(0);
+            DtoProcessorVariable dtoProcessorVariable = processorVariableDefaults.get(variable.name);
             applyDefaultToVariable(dtoProcessorVariable, variable);
         }
         return variable;
@@ -219,8 +220,8 @@ public class BinningParametersForm extends Composite {
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
         processorVariableDefaults.clear();
+        variableNames.clear();
         DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
-        List<String> variableNames = new ArrayList<String>(processorVariables.length);
         for (DtoProcessorVariable processorVariable : processorVariables) {
             String processorVariableName = processorVariable.getName();
             processorVariableDefaults.put(processorVariableName, processorVariable);
