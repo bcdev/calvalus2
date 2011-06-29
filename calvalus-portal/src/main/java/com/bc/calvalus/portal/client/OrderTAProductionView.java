@@ -78,9 +78,9 @@ public class OrderTAProductionView extends OrderProductionView {
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();
-        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
         orderPanel.setWidth("100%");
         orderPanel.add(buttonPanel);
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
 
         HorizontalPanel panel1 = new HorizontalPanel();
         panel1.setSpacing(16);
