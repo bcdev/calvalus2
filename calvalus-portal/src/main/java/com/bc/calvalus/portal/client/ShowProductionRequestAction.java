@@ -29,7 +29,8 @@ public class ShowProductionRequestAction {
         int i = 2;
         for (String name : names) {
             flexTable.setHTML(i, 0, name + ":");
-            flexTable.setHTML(i, 1, "<pre>" + productionParameters.get(name) + "</pre>");
+            String value = productionParameters.get(name).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            flexTable.setHTML(i, 1, "<pre>" + value + "</pre>");
             i++;
         }
         ScrollPanel scrollPanel = new ScrollPanel(flexTable);
