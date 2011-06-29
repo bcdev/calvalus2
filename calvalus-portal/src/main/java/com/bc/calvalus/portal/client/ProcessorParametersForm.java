@@ -4,11 +4,8 @@ import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -22,11 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Norman
  */
 public class ProcessorParametersForm extends Composite {
-    public static final String HIDE_HELP_TEXT = "Hide description";
-    public static final String SHOW_HELP_TEXT = "Show description";
     public static final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
-
-    private DtoProcessorDescriptor processorDescriptor;
 
     interface TheUiBinder extends UiBinder<Widget, ProcessorParametersForm> {
     }
@@ -43,10 +36,6 @@ public class ProcessorParametersForm extends Composite {
     FileUpload fileUpload;
     @UiField
     FormPanel uploadForm;
-    @UiField
-    Anchor showHelpAnchor;
-
-    boolean helpVisible;
 
 
     public ProcessorParametersForm(String title) {
@@ -67,25 +56,6 @@ public class ProcessorParametersForm extends Composite {
                 processorParametersArea.setText(results != null ? results : "");
             }
         });
-
-        showHelpAnchor.setText(HIDE_HELP_TEXT);
-        helpVisible = true;
-
-        showHelpAnchor.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                helpVisible = !helpVisible;
-                if (helpVisible) {
-                    showHelpAnchor.setText(HIDE_HELP_TEXT);
-                    processorDescriptionHTML.setHTML(processorDescriptor.getDescriptionHtml());
-                    processorParametersArea.setCharacterWidth(60);
-                } else {
-                    showHelpAnchor.setText(SHOW_HELP_TEXT);
-                    processorDescriptionHTML.setHTML("");
-                    processorParametersArea.setCharacterWidth(100);
-                }
-            }
-        });
     }
 
     public String getProcessorParameters() {
@@ -93,7 +63,6 @@ public class ProcessorParametersForm extends Composite {
     }
 
     public void setProcessorDescriptor(DtoProcessorDescriptor processorDescriptor) {
-        this.processorDescriptor = processorDescriptor;
         if (processorDescriptor != null) {
             processorParametersArea.setValue(processorDescriptor.getDefaultParameter());
             processorDescriptionHTML.setHTML(processorDescriptor.getDescriptionHtml());

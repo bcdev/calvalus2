@@ -13,27 +13,17 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:HTMLPanel>
-            <table width="100%" cellspacing="2">
-                <tr>
-                    <td>
-                        <g:VerticalPanel>
-                            <g:Anchor ui:field="showHelpAnchor"/>
-                            <g:TextArea ui:field="processorParametersArea"
-                                        characterWidth="60"
-                                        visibleLines="10"/>
-                            <g:FormPanel ui:field="uploadForm" method="POST">
-                                <g:FileUpload ui:field="fileUpload" title="From file:"/>
-                            </g:FormPanel>
-                        </g:VerticalPanel>
-                    </td>
-                    <td>
-                        <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
-                    </td>
-                </tr>
-            </table>
-        </g:HTMLPanel>
 
+        <g:TextArea ui:field="processorParametersArea"
+                    characterWidth="60"
+                    visibleLines="10"/>
+        <g:FormPanel ui:field="uploadForm" method="POST">
+            <g:FileUpload ui:field="fileUpload" title="From file:"/>
+        </g:FormPanel>
+        <g:DisclosurePanel>
+            <g:header>Description</g:header>
+            <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
+        </g:DisclosurePanel>
     </g:VerticalPanel>
 
 </ui:UiBinder>
