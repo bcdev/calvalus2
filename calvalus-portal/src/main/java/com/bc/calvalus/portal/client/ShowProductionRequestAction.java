@@ -28,13 +28,13 @@ public class ShowProductionRequestAction {
         Collections.sort(names);
         int i = 2;
         for (String name : names) {
-            flexTable.setHTML(i, 0, "<code>" + name + " = </code>");
-            flexTable.setHTML(i, 1, "<code>" + productionParameters.get(name) + "</code>");
+            flexTable.setHTML(i, 0, name + ":");
+            flexTable.setHTML(i, 1, "<pre>" + productionParameters.get(name) + "</pre>");
             i++;
         }
         ScrollPanel scrollPanel = new ScrollPanel(flexTable);
-        scrollPanel.setWidth("360px");
-        scrollPanel.setHeight("360px");
+        scrollPanel.setWidth("640px");
+        scrollPanel.setHeight("480px");
         Dialog.showMessage(title, scrollPanel);
     }
 }
