@@ -52,6 +52,10 @@ public class ProcessorDescriptor {
     private String descriptionHtml;
 
     @Parameter
+    private String outputVariableDefaultMaskExpr;
+
+    @Deprecated
+    @Parameter
     private String validMaskExpression;
 
     @Parameter(itemAlias = "outputVariable")
@@ -112,8 +116,8 @@ public class ProcessorDescriptor {
         return descriptionHtml;
     }
 
-    public String getValidMaskExpression() {
-        return validMaskExpression;
+    public String getMaskExpression() {
+        return outputVariableDefaultMaskExpr != null ? outputVariableDefaultMaskExpr : validMaskExpression;
     }
 
     public Variable[] getOutputVariables() {

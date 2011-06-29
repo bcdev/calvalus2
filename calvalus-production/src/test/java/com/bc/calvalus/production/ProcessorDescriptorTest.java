@@ -30,7 +30,7 @@ public class ProcessorDescriptorTest {
 
     @Test
     public void testConstructFromXML() throws Exception {
-        String xml = getResourceAsString("test1-ProcessorDescriptor.xml");
+        String xml = getResourceAsString("test1-processor-descriptor.xml");
         ProcessorDescriptor processorDescriptor = new ProcessorDescriptor();
 
         assertNull(processorDescriptor.getExecutableName());
@@ -65,8 +65,8 @@ public class ProcessorDescriptorTest {
                 "</p>";
         assertEquals(expectedDescription, descriptionHtml);
 
-        assertNotNull(processorDescriptor.getValidMaskExpression());
-        assertEquals("!l1_flags.INVALID", processorDescriptor.getValidMaskExpression());
+        assertNotNull(processorDescriptor.getMaskExpression());
+        assertEquals("!l1_flags.INVALID", processorDescriptor.getMaskExpression());
 
         String[] inputProductTypes = processorDescriptor.getInputProductTypes();
         assertNotNull(inputProductTypes);

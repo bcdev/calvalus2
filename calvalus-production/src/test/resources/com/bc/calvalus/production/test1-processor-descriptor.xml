@@ -21,8 +21,8 @@ done by the cool folks at Brockmann-Consult.
 </p>
       ]]>
     </descriptionHtml>
-    <validMaskExpression>!l1_flags.INVALID</validMaskExpression>
     <inputProductTypes>MER_RR__1P,MER_FR__1P,MER_FSG_1P</inputProductTypes>
+    <outputVariableDefaultMaskExpr>!l1_flags.INVALID</outputVariableDefaultMaskExpr>
     <outputVariables>
         <outputVariable>
             <name>l1_flags</name>

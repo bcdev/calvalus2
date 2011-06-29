@@ -14,7 +14,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String bundleName;
     private String bundleVersion;
     private String descriptionHtml;
-    private String maskExpression;
+    private String defaultMaskExpression;
     private DtoProcessorVariable[] processorVariables;
 
     /**
@@ -29,7 +29,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String bundleName,
                                   String bundleVersion,
                                   String descriptionHtml,
-                                  String maskExpression,
+                                  String defaultMaskExpression,
                                   DtoProcessorVariable[] processorVariables) {
         this.executableName = executableName;
         this.processorName = processorName;
@@ -37,7 +37,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
         this.descriptionHtml = descriptionHtml;
-        this.maskExpression = maskExpression;
+        this.defaultMaskExpression = defaultMaskExpression;
         this.processorVariables = processorVariables;
     }
 
@@ -69,7 +69,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         return processorVariables;
     }
 
-    public String getDefaultValidMask() {
-        return maskExpression;
+    public String getDefaultMaskExpr() {
+        return defaultMaskExpression;
     }
 }

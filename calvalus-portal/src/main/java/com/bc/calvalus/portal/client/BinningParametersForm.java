@@ -240,7 +240,7 @@ public class BinningParametersForm extends Composite {
         }
         variableProvider.refresh();
 
-        String defaultValidMask = selectedProcessor.getDefaultValidMask();
+        String defaultValidMask = selectedProcessor.getDefaultMaskExpr();
         if (defaultValidMask != null) {
             maskExpr.setValue(defaultValidMask);
         } else {
