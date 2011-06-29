@@ -102,7 +102,8 @@ public class ProductionServiceImpl implements ProductionService {
             for (String path : paths) {
                 String[] subPaths = processingService.listFilePaths(path);
                 for (String subPath : subPaths) {
-                    if (subPath.endsWith("ProcessorDescriptor.xml")) {
+                    if (subPath.endsWith("ProcessorDescriptor.xml") || // for legacy files only --> TODO remove
+                            subPath.endsWith("processor-descriptor.xml")) {
                         try {
                             InputStream is = processingService.open(subPath);
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
