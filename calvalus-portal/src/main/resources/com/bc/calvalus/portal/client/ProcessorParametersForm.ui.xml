@@ -14,7 +14,7 @@
         </g:HTMLPanel>
 
         <g:TextArea ui:field="processorParametersArea"
-                    characterWidth="60"
+                    characterWidth="100"
                     visibleLines="10"/>
         <g:FormPanel ui:field="uploadForm" method="POST">
             <g:FileUpload ui:field="fileUpload" title="From file:"/>
