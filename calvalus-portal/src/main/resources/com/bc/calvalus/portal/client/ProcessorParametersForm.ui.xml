@@ -13,7 +13,6 @@
             <hr/>
         </g:HTMLPanel>
 
-
         <g:TextArea ui:field="processorParametersArea"
                     characterWidth="60"
                     visibleLines="10"/>
@@ -21,7 +20,7 @@
             <g:FileUpload ui:field="fileUpload" title="From file:"/>
         </g:FormPanel>
         <g:DisclosurePanel>
-            <g:header>Description</g:header>
+            <g:header>Processor description:</g:header>
             <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
         </g:DisclosurePanel>
     </g:VerticalPanel>
