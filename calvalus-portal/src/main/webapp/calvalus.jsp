@@ -58,7 +58,7 @@
     <img src="images/progress-bar.gif"/>
 </div>
 
-<p>Calvalus - Version 0.2, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="impressum.jsp" target="_blank">Impressum</a></p>
+<p class="copyright">Calvalus - Version 0.3, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
 </body>
 </html>

@@ -43,6 +43,14 @@
     vertical-align: top;
 }
 
+.copyright {
+    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-size: 9pt;
+    color: #AAA;
+    text-align: center;
+    vertical-align: bottom;
+}
+
 .loginPanel {
     font-family: Calibri,Verdana,Arial,sans-serif;
     font-size: 12pt;
