@@ -5,8 +5,8 @@ fileList = []
 rootdir = sys.argv[1]
 for root, subFolders, files in os.walk(rootdir):
     for file in files:
-        if file.endswith('.N1'):
-            fileList.append(file)
+        if file.endswith('.gz'):
+            fileList.append(rootdir + ' ' + file)
 
 fileList.sort()
 
