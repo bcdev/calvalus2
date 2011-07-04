@@ -62,7 +62,6 @@ public class Dialog {
             dialogBox.setWidget(createMainPanel());
         }
         dialogBox.center();
-        dialogBox.show();
         onShow();
     }
 

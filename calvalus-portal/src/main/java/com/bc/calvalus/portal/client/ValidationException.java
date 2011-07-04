@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Focusable;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 
@@ -23,11 +24,17 @@ public class ValidationException extends Exception {
     }
 
     public void handle() {
-        Dialog.showMessage("Calvalus", getMessage());
-        if (getWidget() instanceof Focusable) {
-            ((Focusable) getWidget()).setFocus(true);
-        } else if (getWidget() instanceof DateBox) {
-            ((DateBox) getWidget()).setFocus(true);
-        }
+        Dialog dialog = new Dialog("Calvalus", new HTML(getMessage()), Dialog.ButtonType.CLOSE){
+            @Override
+            protected void onHide() {
+                super.onHide();
+                if (getWidget() instanceof Focusable) {
+                    ((Focusable) getWidget()).setFocus(true);
+                } else if (getWidget() instanceof DateBox) {
+                    ((DateBox) getWidget()).setFocus(true);
+                }
+            }
+        };
+        dialog.show();
     }
 }
