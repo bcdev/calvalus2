@@ -198,9 +198,10 @@ public class BinningParametersForm extends Composite {
         if (selectedRegion != null) {
             regionBounds = selectedRegion.createPolygon().getBounds();
         } else {
-            regionBounds = LatLngBounds.newInstance();
-            regionBounds.extend(LatLng.newInstance(-90, -180));
-            regionBounds.extend(LatLng.newInstance(90, 180));
+            regionBounds = LatLngBounds.newInstance(
+                    LatLng.newInstance(-90, -180),
+                    LatLng.newInstance(90, 180)
+            );
         }
         updateTargetSize();
     }
