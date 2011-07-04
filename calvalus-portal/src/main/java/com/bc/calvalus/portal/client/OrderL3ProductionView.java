@@ -23,7 +23,6 @@ public class OrderL3ProductionView extends OrderProductionView {
     private ProcessorParametersForm processorParametersForm;
     private BinningParametersForm binningParametersForm;
     private OutputParametersForm outputParametersForm;
-
     private Widget widget;
 
     public OrderL3ProductionView(PortalContext portalContext) {
@@ -35,6 +34,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
+        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
         binningParametersForm = new BinningParametersForm();
         outputParametersForm = new OutputParametersForm();
 
@@ -52,7 +52,8 @@ public class OrderL3ProductionView extends OrderProductionView {
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void temporalFilterChanged(Map<String, String> data) {
-                updateTemporalParameters();
+                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                               productSetFilterForm.getMaxDate());
             }
 
             @Override
@@ -60,7 +61,8 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
-        updateTemporalParameters();
+        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                       productSetFilterForm.getMaxDate());
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
@@ -69,7 +71,6 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.setSelectedProcessor(processorDescriptor);
             }
         });
-        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
 
         HorizontalPanel buttonPanel = new HorizontalPanel();
@@ -100,11 +101,6 @@ public class OrderL3ProductionView extends OrderProductionView {
         this.widget = panel;
     }
 
-    private void updateTemporalParameters() {
-        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                       productSetFilterForm.getMaxDate());
-    }
-
     @Override
     public Widget asWidget() {
         return widget;
@@ -130,8 +126,9 @@ public class OrderL3ProductionView extends OrderProductionView {
     protected boolean validateForm() {
         try {
             productSetSelectionForm.validateForm();
-            productSetFilterForm.validateForm();
             processorSelectionForm.validateForm();
+            productSetFilterForm.validateForm();
+            processorParametersForm.validateForm();
             binningParametersForm.validateForm();
             outputParametersForm.validateForm();
             return true;

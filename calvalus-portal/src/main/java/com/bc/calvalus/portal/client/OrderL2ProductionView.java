@@ -14,7 +14,6 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderL2ProductionView extends OrderProductionView {
-
     public static final String ID = OrderL2ProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
