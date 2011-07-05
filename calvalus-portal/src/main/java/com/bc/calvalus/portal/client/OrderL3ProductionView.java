@@ -6,7 +6,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -52,8 +54,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void temporalFilterChanged(Map<String, String> data) {
-                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                               productSetFilterForm.getMaxDate());
+                updateTemporalParameters(data);
             }
 
             @Override
@@ -61,8 +62,7 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
-        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                       productSetFilterForm.getMaxDate());
+        updateTemporalParameters(productSetFilterForm.getValueMap());
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
@@ -99,6 +99,28 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(orderPanel);
 
         this.widget = panel;
+    }
+
+    private void updateTemporalParameters(Map<String, String> data) {
+        boolean dateList = data.containsKey("dateList");
+        if (dateList) {
+            String[] splits =  data.get("dateList").split("\\s");
+            HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            int numDays = set.size();
+            binningParametersForm.periodCount.setValue(numDays);
+
+            binningParametersForm.steppingPeriodLength.setEnabled(false);
+            binningParametersForm.steppingPeriodLength.setValue(1);
+
+            binningParametersForm.compositingPeriodLength.setEnabled(false);
+            binningParametersForm.compositingPeriodLength.setValue(1);
+        } else {
+            binningParametersForm.steppingPeriodLength.setEnabled(true);
+            binningParametersForm.compositingPeriodLength.setEnabled(true);
+
+            binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+                                                                   productSetFilterForm.getMaxDate());
+        }
     }
 
     @Override
