@@ -62,6 +62,7 @@ public class OrderL3ProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
+        productSetFilterForm.temporalFilterOff.setEnabled(false);
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
