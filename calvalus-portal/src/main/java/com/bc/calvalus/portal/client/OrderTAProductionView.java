@@ -80,6 +80,8 @@ public class OrderTAProductionView extends OrderProductionView {
             }
         });
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        binningParametersForm.resolution.setEnabled(false);
+        binningParametersForm.superSampling.setEnabled(false);
 
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(2);
