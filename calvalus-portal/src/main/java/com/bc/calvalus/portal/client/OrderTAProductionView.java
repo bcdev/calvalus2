@@ -53,8 +53,9 @@ public class OrderTAProductionView extends OrderProductionView {
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void temporalFilterChanged(Map<String, String> data) {
-                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                               productSetFilterForm.getMaxDate());
+                //TODO - currently there is no min/max date - get from productSet
+//                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+//                                                               productSetFilterForm.getMaxDate());
             }
 
             @Override
@@ -62,8 +63,14 @@ public class OrderTAProductionView extends OrderProductionView {
                 binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
-        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-                                                       productSetFilterForm.getMaxDate());
+        productSetFilterForm.temporalFilterByDateRange.setValue(false);
+        productSetFilterForm.temporalFilterOff.setValue(true, true);
+        productSetFilterForm.temporalFilterByDateRange.setEnabled(false);
+        productSetFilterForm.temporalFilterByDateList.setEnabled(false);
+
+//TODO - currently there is no min/max date - get from productSet
+//        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
+//                                                       productSetFilterForm.getMaxDate());
 
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
