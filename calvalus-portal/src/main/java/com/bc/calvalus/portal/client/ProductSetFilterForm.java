@@ -102,12 +102,18 @@ public class ProductSetFilterForm extends Composite {
         temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateList.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateRange.setValue(true);
-        temporalFilterByDateRange.addValueChangeHandler(new TimeSelValueChangeHandler());
-        temporalFilterByDateList.addValueChangeHandler(new TimeSelValueChangeHandler());
+
+        ValueChangeHandler<Boolean> valueChangeHandler = new TimeSelValueChangeHandler();
+        temporalFilterOff.addValueChangeHandler(valueChangeHandler);
+        temporalFilterByDateRange.addValueChangeHandler(valueChangeHandler);
+        temporalFilterByDateList.addValueChangeHandler(valueChangeHandler);
 
         spatialFilterOff.setName("spatialFilter" + radioGroupId);
         spatialFilterByRegion.setName("spatialFilter" + radioGroupId);
         spatialFilterByRegion.setValue(true);
+        //TODO - how to enable /disable
+//        spatialFilterOff.addValueChangeHandler(valueChangeHandler);
+//        spatialFilterByRegion.addValueChangeHandler(valueChangeHandler);
 
         manageRegionsAnchor.addClickHandler(new ClickHandler() {
             @Override
@@ -280,7 +286,8 @@ public class ProductSetFilterForm extends Composite {
             maxDate.setEnabled(temporalFilterByDateRange.getValue());
             dateList.setEnabled(temporalFilterByDateList.getValue());
 
-            regionMap.setEnabled(spatialFilterByRegion.getValue());
+//TODO - how to enable /disable
+//            regionMap.setEnabled(spatialFilterByRegion.getValue());
         }
     }
 }
