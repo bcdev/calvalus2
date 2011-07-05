@@ -194,6 +194,13 @@ public class BinningParametersForm extends Composite {
         updatePeriodCount();
     }
 
+    private void updatePeriodCount() {
+        long millisPerDay = 24L * 60L * 60L * 1000L;
+        long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
+        int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
+        periodCount.setValue(deltaDays / steppingPeriodLength.getValue());
+    }
+
     public void updateSpatialParameters(Region selectedRegion) {
         if (selectedRegion != null) {
             regionBounds = selectedRegion.createPolygon().getBounds();
@@ -251,13 +258,6 @@ public class BinningParametersForm extends Composite {
             maskExpr.setValue("");
         }
 
-    }
-
-    private void updatePeriodCount() {
-        long millisPerDay = 24L * 60L * 60L * 1000L;
-        long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
-        int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
-        periodCount.setValue(deltaDays / steppingPeriodLength.getValue());
     }
 
     public void validateForm() throws ValidationException {
