@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.bc.calvalus.portal.client.map.actions.DeleteRegionsAction;
+import com.bc.calvalus.portal.client.map.actions.EditVerticesAction;
 import com.bc.calvalus.portal.client.map.actions.InsertBoxInteraction;
 import com.bc.calvalus.portal.client.map.actions.InsertPolygonInteraction;
 import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
@@ -332,6 +333,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                     }
                 }),
                 MapAction.SEPARATOR,
+                new EditVerticesAction(),
                 new RenameRegionAction(),
                 new DeleteRegionsAction(),
                 new LocateRegionsAction(),
