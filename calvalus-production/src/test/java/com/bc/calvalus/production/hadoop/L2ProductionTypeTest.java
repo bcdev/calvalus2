@@ -25,25 +25,65 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestStagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class L2ProductionTypeTest {
+
+    private List<CallArguments> callArgumentsList;
+
+    private static class CallArguments {
+        String inputProductSetId;
+        Date minDate;
+        Date maxDate;
+
+        private CallArguments(String inputProductSetId, Date minDate, Date maxDate) {
+            this.inputProductSetId = inputProductSetId;
+            this.minDate = minDate;
+            this.maxDate = maxDate;
+        }
+    }
 
     private L2ProductionType productionType;
 
     @Before
     public void setUp() throws Exception {
-        productionType = new L2ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService());
+        callArgumentsList = new ArrayList<CallArguments>();
+        productionType = new L2ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
+            @Override
+            public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
+                callArgumentsList.add(new CallArguments(inputProductSetId, minDate, maxDate));
+                return new String[0];
+            }
+        };
     }
 
     @Test
-    public void testCreateProduction() throws ProductionException, IOException {
-        ProductionRequest productionRequest = createValidL2ProductionRequest();
+    public void testCreateProductionWithoutDates() throws ProductionException, IOException {
+        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+//                                                                  "inputProductSetId", "MER_RR__1P/r03/2010",
+                                                                    "inputProductSetId", "MER_RR__1P/r03",
+                                                                    "outputFormat", "NetCDF",
+                                                                    "autoStaging", "true",
+                                                                    "processorBundleName", "beam",
+                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
+                                                                    "processorName", "BandMaths",
+                                                                    "processorParameters", "<!-- no params -->",
+                                                                    "minLon", "5",
+                                                                    "maxLon", "25",
+                                                                    "minLat", "50",
+                                                                    "maxLat", "60"
+        );
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
@@ -55,30 +95,103 @@ public class L2ProductionTypeTest {
         WorkflowItem[] workflowItems = workflow.getItems();
         assertNotNull(workflowItems);
         assertEquals(0, workflowItems.length);
-
-
         assertTrue(workflow instanceof L2WorkflowItem);
-
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
         assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+
+        assertEquals(1, callArgumentsList.size());
+        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", null, null);
     }
 
-    static ProductionRequest createValidL2ProductionRequest() {
-        return new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                     // GeneralLevel 2 parameters
-//                                     "inputProductSetId", "MER_RR__1P/r03/2010",
-                                     "inputProductSetId", "MER_RR__1P/r03",
-                                     "outputFormat", "NetCDF",
-                                     "autoStaging", "true",
-                                     "processorBundleName", "beam",
-                                     "processorBundleVersion", "4.9-SNAPSHOT",
-                                     "processorName", "BandMaths",
-                                     "processorParameters", "<!-- no params -->",
-                                     "minLon", "5",
-                                     "maxLon", "25",
-                                     "minLat", "50",
-                                     "maxLat", "60"
+    @Test
+    public void testCreateProductionWithMinMaxDates() throws ProductionException, IOException {
+        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+                                                                    "inputProductSetId", "MER_RR__1P/r03",
+                                                                    "minDate", "2005-01-01",
+                                                                    "maxDate", "2005-01-31",
+                                                                    "outputFormat", "NetCDF",
+                                                                    "autoStaging", "true",
+                                                                    "processorBundleName", "beam",
+                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
+                                                                    "processorName", "BandMaths",
+                                                                    "processorParameters", "<!-- no params -->",
+                                                                    "minLon", "5",
+                                                                    "maxLon", "25",
+                                                                    "minLat", "50",
+                                                                    "maxLat", "60"
         );
+
+        Production production = productionType.createProduction(productionRequest);
+        assertNotNull(production);
+        assertEquals("Level 2 production using product set 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals(true, production.getStagingPath().startsWith("ewa/"));
+        assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
+        WorkflowItem workflow = production.getWorkflow();
+        assertNotNull(workflow);
+        WorkflowItem[] workflowItems = workflow.getItems();
+        assertNotNull(workflowItems);
+        assertEquals(0, workflowItems.length);
+        assertTrue(workflow instanceof L2WorkflowItem);
+        L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
+        assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+
+        assertEquals(1, callArgumentsList.size());
+        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-01", "2005-01-31");
     }
 
+    @Test
+    public void testCreateProductionWithDatelist() throws ProductionException, IOException {
+        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+                                                                    "inputProductSetId", "MER_RR__1P/r03",
+                                                                    "dateList", "2005-01-01 2005-01-15 2005-01-31",
+                                                                    "outputFormat", "NetCDF",
+                                                                    "autoStaging", "true",
+                                                                    "processorBundleName", "beam",
+                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
+                                                                    "processorName", "BandMaths",
+                                                                    "processorParameters", "<!-- no params -->",
+                                                                    "minLon", "5",
+                                                                    "maxLon", "25",
+                                                                    "minLat", "50",
+                                                                    "maxLat", "60"
+        );
+
+        Production production = productionType.createProduction(productionRequest);
+        assertNotNull(production);
+        assertEquals("Level 2 production using product set 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals(true, production.getStagingPath().startsWith("ewa/"));
+        assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
+        WorkflowItem workflow = production.getWorkflow();
+        assertNotNull(workflow);
+        WorkflowItem[] workflowItems = workflow.getItems();
+        assertNotNull(workflowItems);
+        assertEquals(0, workflowItems.length);
+        assertTrue(workflow instanceof L2WorkflowItem);
+        L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
+        assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+
+        assertEquals(3, callArgumentsList.size());
+        // the order is wired, because the dates are stored in a set
+        assertCallArguments(callArgumentsList.get(2), "MER_RR__1P/r03", "2005-01-01", "2005-01-01");
+        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-15", "2005-01-15");
+        assertCallArguments(callArgumentsList.get(1), "MER_RR__1P/r03", "2005-01-31", "2005-01-31");
+    }
+
+    private void assertCallArguments(CallArguments callArguments, String productSetId, String minDate, String maxDate) {
+        assertNotNull(callArguments);
+        assertEquals(productSetId, callArguments.inputProductSetId);
+        DateFormat dateFormat = ProductionRequest.getDateFormat();
+        assertDate("minDate", minDate, callArguments.minDate);
+        assertDate("maxDate", maxDate, callArguments.maxDate);
+
+    }
+
+    private void assertDate(String message, String expectedDate, Date date) {
+        if (expectedDate == null) {
+            assertNull(message, date);
+        } else {
+            String actual = ProductionRequest.getDateFormat().format(date);
+            assertEquals(message, expectedDate, actual);
+        }
+    }
 }
