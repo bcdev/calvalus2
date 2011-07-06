@@ -22,7 +22,7 @@
         <module>calvalus-exchange</module>
         <module>calvalus-inventory</module>
         <module>calvalus-production</module>
-        <module>calvalus-mc</module>
+        <!--<module>calvalus-mc</module>-->
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
 
@@ -191,6 +191,26 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
                 <version>1.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-netcdf</artifactId>
+                <version>1.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-geotiff</artifactId>
+                <version>1.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--  JUnit -->
