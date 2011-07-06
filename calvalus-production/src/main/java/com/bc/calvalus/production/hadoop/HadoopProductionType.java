@@ -73,23 +73,6 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected abstract Staging createUnsubmittedStaging(Production production);
 
-    public static List<String> getDayPathList(Date start, Date stop, String prefix) {
-        Calendar startCal = ProductData.UTC.createCalendar();
-        Calendar stopCal = ProductData.UTC.createCalendar();
-        startCal.setTime(start);
-        stopCal.setTime(stop);
-        List<String> list = new ArrayList<String>();
-        do {
-            String dateString = String.format("MER_RR__1P/r03/%1$tY/%1$tm/%1$td", startCal);
-            if (dateString.startsWith(prefix)) {
-                list.add(dateString);
-            }
-            startCal.add(Calendar.DAY_OF_WEEK, 1);
-        } while (!startCal.after(stopCal));
-
-        return list;
-    }
-
     public HadoopProcessingService getProcessingService() {
         return processingService;
     }
@@ -99,17 +82,40 @@ public abstract class HadoopProductionType implements ProductionType {
     }
 
     public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
-        String eoDataPath = processingService.getDataInputPath();
-        List<String> dayPathList = getDayPathList(minDate, maxDate, inputProductSetId);
+        List<String> globs = getPathGlobs(inputProductSetId, minDate, maxDate);
+        String dataInputPath = processingService.getDataInputPath();
         try {
             List<String> inputFileList = new ArrayList<String>();
-            for (String dayPath : dayPathList) {
-                String[] strings = processingService.listFilePaths(eoDataPath + "/" + dayPath);
-                inputFileList.addAll(Arrays.asList(strings));
+            for (String glob : globs) {
+                String[] files = processingService.globFilePaths(dataInputPath + "/" + glob);
+                inputFileList.addAll(Arrays.asList(files));
             }
             return inputFileList.toArray(new String[inputFileList.size()]);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }
+    }
+
+    static List<String> getPathGlobs(String productSetId, Date minDate, Date maxDate) {
+        if (productSetId.endsWith("/")) {
+            productSetId = productSetId.substring(0, productSetId.length() - 1);
+        }
+        if (!productSetId.contains("/")) {
+            productSetId = productSetId + "/*";
+        }
+        List<String> globs = new ArrayList<String>();
+        if (minDate != null && maxDate != null) {
+            Calendar startCal = ProductData.UTC.createCalendar();
+            Calendar stopCal = ProductData.UTC.createCalendar();
+            startCal.setTime(minDate);
+            stopCal.setTime(maxDate);
+            do {
+                globs.add(String.format("%1$s/%2$tY/%2$tm/%2$td/*.N1", productSetId, startCal));
+                startCal.add(Calendar.DAY_OF_WEEK, 1);
+            } while (!startCal.after(stopCal));
+        } else {
+            globs.add(String.format("%1$s/*/*/*/*.N1", productSetId));
+        }
+        return globs;
     }
 }

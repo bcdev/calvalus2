@@ -103,6 +103,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return paths;
     }
 
+    public String[] globFilePaths(String dirPathGlob) throws IOException {
+        FileStatus[] fileStatuses = fileSystem.globStatus(new Path(dirPathGlob));
+        String[] paths = new String[fileStatuses.length];
+        for (int i = 0; i < fileStatuses.length; i++) {
+            paths[i] = fileStatuses[i].getPath().toString();
+        }
+        return paths;
+    }
+
     @Override
     public InputStream open(String path) throws IOException {
         return fileSystem.open(new Path(path));
