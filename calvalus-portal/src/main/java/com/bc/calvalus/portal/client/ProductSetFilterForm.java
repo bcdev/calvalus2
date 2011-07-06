@@ -85,6 +85,7 @@ public class ProductSetFilterForm extends Composite {
     RegionMapWidget regionMap;
 
     static int radioGroupId;
+
     private DtoProductSet productSet;
 
     public ProductSetFilterForm(final PortalContext portal) {
@@ -220,14 +221,6 @@ public class ProductSetFilterForm extends Composite {
         return new RegionMapWidget(portal.getRegionMapModel(), false);
     }
 
-    public HasValue<Date> getMinDate() {
-        return minDate;
-    }
-
-    public HasValue<Date> getMaxDate() {
-        return maxDate;
-    }
-
     public Region getSelectedRegion() {
         return spatialFilterByRegion.getValue() ? regionMap.getRegionMapSelectionModel().getSelectedRegion() : null;
     }
@@ -272,11 +265,9 @@ public class ProductSetFilterForm extends Composite {
 
         Map<String, String> parameters = new HashMap<String, String>();
 
-        if (temporalFilterOff.getValue()) {
-            if (productSet != null) {
-                parameters.put("minDate", DATE_FORMAT.format(productSet.getMinDate()));
-                parameters.put("maxDate", DATE_FORMAT.format(productSet.getMaxDate()));
-            }
+        if (temporalFilterOff.getValue() && productSet != null) {
+            parameters.put("minDate", DATE_FORMAT.format(productSet.getMinDate()));
+            parameters.put("maxDate", DATE_FORMAT.format(productSet.getMaxDate()));
         } else if (temporalFilterByDateRange.getValue()) {
             parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
             parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
