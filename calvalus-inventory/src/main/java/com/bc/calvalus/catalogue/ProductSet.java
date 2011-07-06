@@ -1,6 +1,8 @@
 package com.bc.calvalus.catalogue;
 
 
+import java.util.Date;
+
 /**
  * A product set.
  *
@@ -10,6 +12,8 @@ public class ProductSet {
     private String path;
     private String type;
     private String name;
+    private Date minDate;
+    private Date maxDate;
 
     public ProductSet(String path, String type, String name) {
         this.path = path;
@@ -27,5 +31,21 @@ public class ProductSet {
 
     public String getName() {
         return name;
+    }
+
+    public Date getMinDate() {
+        return minDate;
+    }
+
+    public void setMinDate(Date minDate) {
+        this.minDate = minDate;
+    }
+
+    public Date getMaxDate() {
+        return maxDate;
+    }
+
+    public void setMaxDate(Date maxDate) {
+        this.maxDate = maxDate;
     }
 }

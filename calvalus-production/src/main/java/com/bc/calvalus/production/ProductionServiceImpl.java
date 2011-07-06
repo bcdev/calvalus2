@@ -10,11 +10,15 @@ import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.io.IOUtils;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -67,7 +71,12 @@ public class ProductionServiceImpl implements ProductionService {
         try {
             String inputPath = processingService.getDataInputPath();
             String[] paths = processingService.listFilePaths(inputPath);
-            for (String path : paths) {
+            // TODO make this more generic
+            String[] reversedPathes = new String[paths.length];
+            for (int i = 0; i < reversedPathes.length; i++) {
+                reversedPathes[i] = paths[paths.length -i - 1];
+            }
+            for (String path : reversedPathes) {
                 String relPath = path.substring(inputPath.length() + 1);
                 String type = relPath.indexOf('/') > 0 ? relPath.substring(0, relPath.indexOf('/')) : relPath;
                 String name = relPath;
@@ -77,7 +86,6 @@ public class ProductionServiceImpl implements ProductionService {
                 if (subPaths.length > 1) {
                     productSets.add(new ProductSet(relPath, type, name));
                 }
-
                 for (String subPath : subPaths) {
                     String subRelPath = subPath.substring(inputPath.length() + 1);
                     String subName = subRelPath;
@@ -88,8 +96,29 @@ public class ProductionServiceImpl implements ProductionService {
         } catch (IOException e) {
             logger.warning(e.getMessage());
         }
-
+        postProcessProductSets(productSets);
         return productSets.toArray(new ProductSet[productSets.size()]);
+    }
+
+    // TODO make this more generic
+    private ArrayList<ProductSet> postProcessProductSets(ArrayList<ProductSet> productSets) {
+        Calendar calendar = ProductData.UTC.createCalendar();
+        ArrayList<ProductSet> result = new ArrayList<ProductSet>();
+        for (ProductSet productSet : productSets) {
+            if (productSet.getName().contains("_RR_")) {
+                calendar.set(2004, 00, 01);
+                productSet.setMinDate(calendar.getTime());
+                calendar.set(2008, 11, 31);
+                productSet.setMaxDate(calendar.getTime());
+            } else if (productSet.getName().contains("_FSG_")) {
+                calendar.set(2005, 00, 01);
+                productSet.setMinDate(calendar.getTime());
+                calendar.set(2009, 11, 31);
+                productSet.setMaxDate(calendar.getTime());
+            }
+        }
+
+        return result;
     }
 
     @Override

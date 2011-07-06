@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -26,30 +27,41 @@ public class OrderL2ProductionView extends OrderProductionView {
     public OrderL2ProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        Button orderButton = new Button("Order Production");
-        Button checkButton = new Button("Check Request");
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+            @Override
+            public void onProductSetChanged(DtoProductSet productSet) {
+                productSetFilterForm.setProductSet(productSet);
+            }
+        });
+
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
+        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
+            @Override
+            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
+                processorParametersForm.setProcessorDescriptor(processorDescriptor);
+            }
+        });
+
+        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
+
         outputParametersForm = new OutputParametersForm();
 
+        Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
                 orderProduction();
             }
         });
+
+        Button checkButton = new Button("Check Request");
         checkButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
                 checkRequest();
-            }
-        });
-
-        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
-            @Override
-            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
-                processorParametersForm.setProcessorDescriptor(processorDescriptor);
             }
         });
 
@@ -124,7 +136,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     private HashMap<String, String> getProductionParameters() {
         DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
+        parameters.put("inputProductSetId", productSetSelectionForm.getSelectedProductSet().getPath());
         parameters.put("outputFormat", outputParametersForm.getOutputFormat());
         parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());

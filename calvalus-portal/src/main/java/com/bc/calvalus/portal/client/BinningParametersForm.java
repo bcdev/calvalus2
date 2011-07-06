@@ -77,15 +77,15 @@ public class BinningParametersForm extends Composite {
     @UiField
     IntegerBox targetHeight;
 
-    HasValue<Date> minDate;
-    HasValue<Date> maxDate;
-
     @UiField(provided = true)
     CellTable<Variable> variableTable;
     @UiField
     Button addVariableButton;
     @UiField
     Button removeVariableButton;
+
+    private Date minDate;
+    private Date maxDate;
 
     public BinningParametersForm() {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
@@ -188,17 +188,21 @@ public class BinningParametersForm extends Composite {
         }
     }
 
-    public void updateTemporalParameters(HasValue<Date> minDate, HasValue<Date> maxDate) {
+    public void updateTemporalParameters(Date minDate, Date maxDate) {
         this.minDate = minDate;
         this.maxDate = maxDate;
         updatePeriodCount();
     }
 
     private void updatePeriodCount() {
-        long millisPerDay = 24L * 60L * 60L * 1000L;
-        long deltaMillis = maxDate.getValue().getTime() - minDate.getValue().getTime();
-        int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
-        periodCount.setValue(deltaDays / steppingPeriodLength.getValue());
+        if (minDate != null && maxDate != null) {
+            long millisPerDay = 24L * 60L * 60L * 1000L;
+            long deltaMillis = maxDate.getTime() - minDate.getTime();
+            int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
+            periodCount.setValue(deltaDays / steppingPeriodLength.getValue());
+        } else {
+            periodCount.setValue(0);
+        }
     }
 
     public void updateSpatialParameters(Region selectedRegion) {

@@ -1,11 +1,13 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,49 +31,15 @@ public class OrderTAProductionView extends OrderProductionView {
     public OrderTAProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        Button orderButton = new Button("Order Production");
-        Button checkButton = new Button("Check Request");
         productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
-        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+            @Override
+            public void onProductSetChanged(DtoProductSet productSet) {
+                productSetFilterForm.setProductSet(productSet);
+            }
+        });
+
         processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
-        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
-        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
-        binningParametersForm = new BinningParametersForm();
-        outputParametersForm = new OutputParametersForm();
-
-        orderButton.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                orderProduction();
-            }
-        });
-        checkButton.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                checkRequest();
-            }
-        });
-
-        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
-            @Override
-            public void temporalFilterChanged(Map<String, String> data) {
-                //TODO - currently there is no min/max date - get from productSet
-//                binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-//                                                               productSetFilterForm.getMaxDate());
-            }
-
-            @Override
-            public void spatialFilterChanged(Map<String, String> data) {
-                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
-            }
-        });
-        productSetFilterForm.temporalFilterByDateRange.setValue(false);
-        productSetFilterForm.temporalFilterOff.setValue(true, true);
-        productSetFilterForm.temporalFilterByDateRange.setEnabled(false);
-        productSetFilterForm.temporalFilterByDateList.setEnabled(false);
-
-//TODO - currently there is no min/max date - get from productSet
-//        binningParametersForm.updateTemporalParameters(productSetFilterForm.getMinDate(),
-//                                                       productSetFilterForm.getMaxDate());
-
         processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
@@ -79,9 +47,49 @@ public class OrderTAProductionView extends OrderProductionView {
                 binningParametersForm.setSelectedProcessor(processorDescriptor);
             }
         });
+
+        productSetFilterForm = new ProductSetFilterForm(portalContext);
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        productSetFilterForm.temporalFilterByDateRange.setValue(false);
+        productSetFilterForm.temporalFilterOff.setValue(true, true);
+        productSetFilterForm.temporalFilterByDateList.setEnabled(false);
+        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
+            @Override
+            public void temporalFilterChanged(Map<String, String> data) {
+                updateTemporalParameters(data);
+            }
+
+            @Override
+            public void spatialFilterChanged(Map<String, String> data) {
+                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
+            }
+        });
+
+        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
+        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
+
+        binningParametersForm = new BinningParametersForm();
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
         binningParametersForm.resolution.setEnabled(false);
         binningParametersForm.superSampling.setEnabled(false);
+
+        updateTemporalParameters(productSetFilterForm.getValueMap());
+
+        outputParametersForm = new OutputParametersForm();
+
+        Button orderButton = new Button("Order Production");
+        orderButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        });
+
+        Button checkButton = new Button("Check Request");
+        checkButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                checkRequest();
+            }
+        });
 
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(2);
@@ -109,6 +117,18 @@ public class OrderTAProductionView extends OrderProductionView {
         panel.add(orderPanel);
 
         this.widget = panel;
+    }
+
+    private void updateTemporalParameters(Map<String, String> data) {
+        String minDateString = data.get("minDate");
+        String maxDateString = data.get("maxDate");
+        Date minDate = null;
+        Date maxDate = null;
+        if (minDateString != null && maxDateString != null) {
+            minDate = ProductSetFilterForm.DATE_FORMAT.parse(minDateString);
+            maxDate = ProductSetFilterForm.DATE_FORMAT.parse(maxDateString);
+        }
+        binningParametersForm.updateTemporalParameters(minDate, maxDate);
     }
 
     @Override
@@ -157,7 +177,7 @@ public class OrderTAProductionView extends OrderProductionView {
     public HashMap<String, String> getProductionParameters() {
         DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", productSetSelectionForm.getInputProductSetId());
+        parameters.put("inputProductSetId", productSetSelectionForm.getSelectedProductSet().getPath());
         parameters.put("outputFormat", outputParametersForm.getOutputFormat());
         parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());

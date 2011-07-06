@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -57,11 +58,20 @@ public class ProcessorSelectionForm extends Composite {
 
     public DtoProcessorDescriptor getSelectedProcessor() {
         int selectedIndex = processorList.getSelectedIndex();
-        return processorDescriptors[selectedIndex];
+        if (selectedIndex >= 0) {
+            return processorDescriptors[selectedIndex];
+        } else {
+            return null;
+        }
     }
 
 
     public void validateForm() throws ValidationException {
+        DtoProcessorDescriptor selectedProcessorDescriptor = getSelectedProcessor();
+        boolean inputProductSetIdValid = selectedProcessorDescriptor != null;
+        if (!inputProductSetIdValid) {
+            throw new ValidationException(processorList, "An processor must be selected.");
+        }
     }
 
     public static interface ChangeHandler {

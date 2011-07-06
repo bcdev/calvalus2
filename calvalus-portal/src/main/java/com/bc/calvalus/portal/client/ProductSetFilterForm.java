@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -50,7 +51,7 @@ public class ProductSetFilterForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
+    static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     @UiField
     RadioButton temporalFilterOff;
@@ -58,6 +59,11 @@ public class ProductSetFilterForm extends Composite {
     RadioButton temporalFilterByDateList;
     @UiField
     RadioButton temporalFilterByDateRange;
+
+    @UiField
+    DateBox minDateProductSet;
+    @UiField
+    DateBox maxDateProductSet;
 
     @UiField
     DateBox minDate;
@@ -79,10 +85,10 @@ public class ProductSetFilterForm extends Composite {
     RegionMapWidget regionMap;
 
     static int radioGroupId;
+    private DtoProductSet productSet;
 
     public ProductSetFilterForm(final PortalContext portal) {
         this.portal = portal;
-
         initWidget(uiBinder.createAndBindUi(this));
 
         radioGroupId++;
@@ -92,6 +98,9 @@ public class ProductSetFilterForm extends Composite {
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
+
+        minDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
+        maxDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
 
         dateList.setEnabled(false);
         dateList.setValue("2008-06-01\n" +
@@ -137,8 +146,8 @@ public class ProductSetFilterForm extends Composite {
     }
 
     private void updateNumDays() {
+        long millisPerDay = 24L * 60L * 60L * 1000L;
         if (temporalFilterByDateRange.getValue()) {
-            long millisPerDay = 24L * 60L * 60L * 1000L;
             Date min = minDate.getValue();
             Date max = maxDate.getValue();
             numDays.setValue("" +((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
@@ -146,10 +155,24 @@ public class ProductSetFilterForm extends Composite {
             String[] splits = dateList.getValue().split("\\s");
             HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
             numDays.setValue("" + set.size());
-        } else {
-            numDays.setValue("?");
+        } else if (productSet != null){
+            Date min = productSet.getMinDate();
+            Date max = productSet.getMaxDate();
+            numDays.setValue("" +((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
         }
     }
+
+    public void setProductSet(DtoProductSet productSet) {
+        this.productSet = productSet;
+        if (productSet != null) {
+            minDateProductSet.setValue(productSet.getMinDate());
+            maxDateProductSet.setValue(productSet.getMaxDate());
+        } else {
+            minDateProductSet.setValue(null);
+            maxDateProductSet.setValue(null);
+        }
+    }
+
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
         ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
@@ -218,14 +241,23 @@ public class ProductSetFilterForm extends Composite {
         if (temporalFilterByDateRange.getValue()) {
             Date min = minDate.getValue();
             Date max = maxDate.getValue();
-            if (min.after(max)) {
-                throw new ValidationException(dateList, "Start date must be before end date.");
+            if (!min.before(max)) {
+                throw new ValidationException(minDate, "Start date must be before end date.");
+            }
+            if (productSet != null) {
+                if (!min.after(productSet.getMinDate())) {
+                    throw new ValidationException(minDate, "Start date must be after start date of product set.");
+                }
+                if (!max.before(productSet.getMaxDate())) {
+                    throw new ValidationException(minDate, "Stop date must be before end date of product set.");
+                }
             }
         } else if (temporalFilterByDateList.getValue()) {
             String value = dateList.getValue().trim();
             if (value.isEmpty()) {
                 throw new ValidationException(dateList, "Date list must not be empty.");
             }
+            //TODO validate datelist against productSet.min/max
         }
 
         if (spatialFilterByRegion.getValue()) {
@@ -241,7 +273,10 @@ public class ProductSetFilterForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
 
         if (temporalFilterOff.getValue()) {
-            // ok
+            if (productSet != null) {
+                parameters.put("minDate", DATE_FORMAT.format(productSet.getMinDate()));
+                parameters.put("maxDate", DATE_FORMAT.format(productSet.getMaxDate()));
+            }
         } else if (temporalFilterByDateRange.getValue()) {
             parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
             parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));
