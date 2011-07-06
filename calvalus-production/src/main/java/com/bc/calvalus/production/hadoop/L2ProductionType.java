@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -10,7 +9,12 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -20,8 +24,10 @@ import java.util.Date;
  */
 public class L2ProductionType extends HadoopProductionType {
 
+    static final String NAME = "L2";
+
     public L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super("L2", processingService, stagingService);
+        super(NAME, processingService, stagingService);
     }
 
     @Override
@@ -60,12 +66,30 @@ public class L2ProductionType extends HadoopProductionType {
                                       ProductionRequest productionRequest) throws ProductionException {
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
-
         Geometry regionGeometry = productionRequest.getRegionGeometry();
+
+        Date minDate = productionRequest.getDate("minDate", null);
+        Date maxDate = productionRequest.getDate("maxDate", null);
+        String dateList = productionRequest.getParameter("dateList", null);
+        String[] inputFiles;
+        if (dateList != null) {
+            String[] splits =  dateList.trim().split("\\s");
+            HashSet<String> dateSet = new HashSet<String>(Arrays.asList(splits));
+            List<String> inputFileAccumulator = new ArrayList<String>();
+            for (String dateAsString : dateSet) {
+                try {
+                    Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
+                    inputFileAccumulator.addAll(Arrays.asList(getInputFiles(inputProductSetId, date, date)));
+                } catch (ParseException e) {
+                    throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
+                }
+            }
+            inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
+        } else {
+            inputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
+        }
+
         // todo - use regionGeometry to filter input files
-        String[] inputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
         String outputDir = getOutputDir(productionId, productionRequest);
 
         String processorName = productionRequest.getParameter("processorName");

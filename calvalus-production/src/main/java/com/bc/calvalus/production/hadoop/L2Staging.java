@@ -112,6 +112,7 @@ class L2Staging extends Staging {
             production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
             // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
         } catch (Exception e) {
+            e.printStackTrace();
             production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
