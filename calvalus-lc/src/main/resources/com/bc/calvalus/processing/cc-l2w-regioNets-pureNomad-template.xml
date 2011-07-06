@@ -8,14 +8,14 @@
              xssing:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xesi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
 
-    <ows:Identifier>CC-l2r-regioNets-HiTsm-$REGION-$YEAR</ows:Identifier>
+    <ows:Identifier>CC-l2w-regioNets-pureNomad-$REGION-$YEAR</ows:Identifier>
 
     <wps:DataInputs>
 
         <wps:Input>
             <ows:Identifier>calvalus.priority</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>HIGH</wps:LiteralData>
+                <wps:LiteralData>NORMAL</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -39,14 +39,7 @@
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>output directory</ows:Title>
             <wps:Data>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l2r/$REGION/$YEAR/hi-tsm"/>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>L2_of.*</wps:LiteralData>
+                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l2w/$REGION/$YEAR/pure-nomad"/>
             </wps:Data>
         </wps:Input>
 
@@ -54,6 +47,13 @@
             <ows:Identifier>calvalus.input</ows:Identifier>
             <ows:Title>CoastColour L1P input</ows:Title>
             <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l1p/$REGION/$YEAR"/>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>L2_of.*</wps:LiteralData>
+            </wps:Data>
         </wps:Input>
 
         <wps:Input>
@@ -76,7 +76,7 @@
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
             <ows:Title>the name of the GPF operator</ows:Title>
             <wps:Data>
-                <wps:LiteralData>CoastColour.L2R</wps:LiteralData>
+                <wps:LiteralData>CoastColour.L2W</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -91,14 +91,20 @@
                         <doEqualization>true</doEqualization>
                         <useIdepix>true</useIdepix>
                         <algorithm>CoastColour</algorithm>
-                        <averageSalinity>35.0</averageSalinity>
-                        <averageTemperature>15.0</averageTemperature>
-                        <atmoNetMerisFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_hi_tsm/atmo_correct/23x25x45_37237.9.net</atmoNetMerisFile>
-                        <autoassociativeNetFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_hi_tsm/aann_tosa/12x5x12_134.1.net</autoassociativeNetFile>
-                        <landExpression>l1p_flags.CC_LAND</landExpression>
-                        <cloudIceExpression>l1p_flags.CC_CLOUD || l1p_flags.CC_SNOW_ICE</cloudIceExpression>
                         <brightTestThreshold>0.03</brightTestThreshold>
                         <brightTestWavelength>865</brightTestWavelength>
+                        <averageSalinity>35.0</averageSalinity>
+                        <averageTemperature>15.0</averageTemperature>
+                        <atmoNetMerisFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/atmo_correct/23x25x45_208970.5.net</atmoNetMerisFile>
+                        <autoassociativeNetFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/aann_tosa/12x5x12_210.4.net</autoassociativeNetFile>
+                        <inverseWaterNnFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/water_invers/46x24x18_4584.9.net</inverseWaterNnFile>
+                        <forwardWaterNnFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/water_forward/23x7x16_511.3.net</forwardWaterNnFile>
+                        <landExpression>l1p_flags.CC_LAND</landExpression>
+                        <cloudIceExpression>l1p_flags.CC_CLOUD || l1p_flags.CC_SNOW_ICE</cloudIceExpression>
+                        <invalidPixelExpression>l2r_flags.INVALID</invalidPixelExpression>
+                        <outputReflec>false</outputReflec>
+                        <outputAPoc>false</outputAPoc>
+                        <outputKdSpectrum>true</outputKdSpectrum>
                     </parameters>
                 </wps:ComplexData>
             </wps:Data>

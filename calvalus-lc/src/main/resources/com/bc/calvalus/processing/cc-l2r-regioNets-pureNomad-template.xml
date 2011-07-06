@@ -5,17 +5,17 @@
              xmlns:wps="http://www.opengis.net/wps/1.0.0"
              xmlns:ows="http://www.opengis.net/ows/1.1"
              xmlns:xlink="http://www.w3.org/1999/xlink"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
+             xssing:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xesi:schemaLocation="http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd">
 
-    <ows:Identifier>cc-l1p-$REGION-$YEAR</ows:Identifier>
+    <ows:Identifier>CC-l2r-regioNets-pureNomad-$REGION-$YEAR</ows:Identifier>
 
     <wps:DataInputs>
 
         <wps:Input>
             <ows:Identifier>calvalus.priority</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>LOW</wps:LiteralData>
+                <wps:LiteralData>NORMAL</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -31,7 +31,7 @@
             <ows:Identifier>calvalus.processor.version</ows:Identifier>
             <ows:Title>software installation package version</ows:Title>
             <wps:Data>
-                <wps:LiteralData>1.2-SNAPSHOT</wps:LiteralData>
+                <wps:LiteralData>1.3-SNAPSHOT</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -39,15 +39,30 @@
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>output directory</ows:Title>
             <wps:Data>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l1p/$REGION/$YEAR"/>
+                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l2r/$REGION/$YEAR/pure-nomad"/>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>L2_of.*</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>calvalus.input</ows:Identifier>
-            <ows:Title>MERIS L1B input</ows:Title>
-            <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_FSG_1P/$REGION/$YEAR"/>
+            <ows:Title>CoastColour L1P input</ows:Title>
+            <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/cc-l1p/$REGION/$YEAR"/>
         </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.input.format</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>HADOOP-STREAMING</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
 
         <wps:Input>
             <ows:Identifier>calvalus.geometry</ows:Identifier>
@@ -61,26 +76,37 @@
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
             <ows:Title>the name of the GPF operator</ows:Title>
             <wps:Data>
-                <wps:LiteralData>CoastColour.L1P</wps:LiteralData>
+                <wps:LiteralData>CoastColour.L2R</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
-        <!--<wps:Input>-->
-        <!--<ows:Identifier>calvalus.l2.parameters</ows:Identifier>-->
-        <!--<ows:Title></ows:Title>-->
-        <!--<wps:Data>-->
-        <!--<wps:ComplexData>-->
-        <!--<parameters>-->
-
-        <!--</parameters>-->
-        <!--</wps:ComplexData>-->
-        <!--</wps:Data>-->
-        <!--</wps:Input>-->
+        <wps:Input>
+            <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
+            <ows:Title>HI-TSM Parameter</ows:Title>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <doCalibration>true</doCalibration>
+                        <doSmile>true</doSmile>
+                        <doEqualization>true</doEqualization>
+                        <useIdepix>true</useIdepix>
+                        <algorithm>CoastColour</algorithm>
+                        <averageSalinity>35.0</averageSalinity>
+                        <averageTemperature>15.0</averageTemperature>
+                        <atmoNetMerisFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/atmo_correct/23x25x45_208970.5.net</atmoNetMerisFile>
+                        <autoassociativeNetFile>/home/hadoop/.beam/coastcolour/auxdata/nomad_noextension/aann_tosa/12x5x12_210.4.net</autoassociativeNetFile>
+                        <landExpression>l1p_flags.CC_LAND</landExpression>
+                        <cloudIceExpression>l1p_flags.CC_CLOUD || l1p_flags.CC_SNOW_ICE</cloudIceExpression>
+                        <brightTestThreshold>0.03</brightTestThreshold>
+                        <brightTestWavelength>865</brightTestWavelength>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
 
         <wps:Input>
             <ows:Identifier>calvalus.system.properties</ows:Identifier>
             <wps:Data>
-                <!--<wps:LiteralData>beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true</wps:LiteralData>-->
                 <wps:LiteralData>
                     beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true,beam.pixelGeoCoding.fractionAccuracy=true
                 </wps:LiteralData>
