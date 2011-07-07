@@ -60,6 +60,9 @@ class TAStaging extends Staging {
         }
 
         float progress = 0f;
+        int index = 0;
+        production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
+
         TAResult taResult = new TAResult();
 
         WorkflowItem workflow = production.getWorkflow();
@@ -100,6 +103,10 @@ class TAStaging extends Staging {
             }
 
             clearInputDir(hadoopConfiguration, inputDir);
+
+            index++;
+            progress = (index + 1) / parallelItems.length;
+            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
         }
 
         Set<String> regionNames = taResult.getRegionNames();
