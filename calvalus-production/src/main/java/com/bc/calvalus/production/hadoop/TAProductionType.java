@@ -19,10 +19,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import static com.bc.calvalus.production.hadoop.L3ProductionType.*;
 
 /**
  * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
@@ -65,8 +64,7 @@ public class TAProductionType extends HadoopProductionType {
         final String productionName = createTAProductionName(productionRequest);
 
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
+        List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 32);
 
         String processorName = productionRequest.getParameter("processorName");
         String processorParameters = productionRequest.getParameter("processorParameters");
@@ -76,29 +74,14 @@ public class TAProductionType extends HadoopProductionType {
 
         Geometry roiGeometry = productionRequest.getRegionGeometry();
 
-        L3Config l3Config = createL3Config(productionRequest);
+        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
         TAConfig taConfig = createTAConfig(productionRequest);
 
-        int periodLength = productionRequest.getInteger("periodLength", 32); // unit=days
-        int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength", periodLength); // unit=days
-
-        final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
-        final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
-
-        long time = minDate.getTime();
         Workflow.Parallel parallel = new Workflow.Parallel();
-        for (int i = 0; ; i++) {
-
-            // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
-            Date date1 = new Date(time);
-            Date date2 = new Date(time + compositingPeriodLengthMillis - 1L);
-
-            String date1Str = ProductionRequest.getDateFormat().format(date1);
-            String date2Str = ProductionRequest.getDateFormat().format(date2);
-
-            if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
-                break;
-            }
+        for (int i = 0; i < datePairList.size(); i++) {
+            L3ProductionType.DatePair datePair = datePairList.get(i);
+            String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
+            String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
 
             Workflow.Sequential sequential = new Workflow.Sequential();
 
@@ -106,7 +89,7 @@ public class TAProductionType extends HadoopProductionType {
             String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputFiles(inputProductSetId, date1, date2);
+            String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
             String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
             String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
 
@@ -135,7 +118,6 @@ public class TAProductionType extends HadoopProductionType {
             sequential.add(taWorkflowItem);
 
             parallel.add(sequential);
-            time += periodLengthMillis;
         }
 
         String stagingDir = String.format("%s/%s", productionRequest.getUserName(), productionId);

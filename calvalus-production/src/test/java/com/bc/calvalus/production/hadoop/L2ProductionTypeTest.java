@@ -171,19 +171,16 @@ public class L2ProductionTypeTest {
         assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
 
         assertEquals(3, callArgumentsList.size());
-        // the order is wired, because the dates are stored in a set
-        assertCallArguments(callArgumentsList.get(2), "MER_RR__1P/r03", "2005-01-01", "2005-01-01");
-        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-15", "2005-01-15");
-        assertCallArguments(callArgumentsList.get(1), "MER_RR__1P/r03", "2005-01-31", "2005-01-31");
+        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-01", "2005-01-01");
+        assertCallArguments(callArgumentsList.get(1), "MER_RR__1P/r03", "2005-01-15", "2005-01-15");
+        assertCallArguments(callArgumentsList.get(2), "MER_RR__1P/r03", "2005-01-31", "2005-01-31");
     }
 
     private void assertCallArguments(CallArguments callArguments, String productSetId, String minDate, String maxDate) {
         assertNotNull(callArguments);
         assertEquals(productSetId, callArguments.inputProductSetId);
-        DateFormat dateFormat = ProductionRequest.getDateFormat();
         assertDate("minDate", minDate, callArguments.minDate);
         assertDate("maxDate", maxDate, callArguments.maxDate);
-
     }
 
     private void assertDate(String message, String expectedDate, Date date) {

@@ -13,8 +13,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -68,13 +69,11 @@ public class L2ProductionType extends HadoopProductionType {
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
-        Date minDate = productionRequest.getDate("minDate", null);
-        Date maxDate = productionRequest.getDate("maxDate", null);
         String dateList = productionRequest.getParameter("dateList", null);
         String[] inputFiles;
         if (dateList != null) {
             String[] splits =  dateList.trim().split("\\s");
-            HashSet<String> dateSet = new HashSet<String>(Arrays.asList(splits));
+            Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
             List<String> inputFileAccumulator = new ArrayList<String>();
             for (String dateAsString : dateSet) {
                 try {
@@ -86,6 +85,8 @@ public class L2ProductionType extends HadoopProductionType {
             }
             inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
         } else {
+            Date minDate = productionRequest.getDate("minDate", null);
+            Date maxDate = productionRequest.getDate("maxDate", null);
             inputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
         }
 

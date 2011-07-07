@@ -16,6 +16,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -97,6 +100,48 @@ public class L3ProductionTypeTest {
         assertEquals(2160 * 2, L3ProductionType.computeBinningGridRowCount(9.28 / 2));
         assertEquals(2160 / 2, L3ProductionType.computeBinningGridRowCount(9.28 * 2));
         assertEquals(66792, L3ProductionType.computeBinningGridRowCount(0.3)); //MERIS FR equivalent
+    }
+
+    @Test
+    public void testGetDatePairList_MinMax() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest(L3ProductionType.NAME, "ewa",
+                                                                    "minDate", "2010-06-15",
+                                                                    "maxDate", "2010-08-15",
+                                                                    "periodLength", "20",
+                                                                    "compositingPeriodLength", "5");
+
+        List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 10);
+        assertEquals(3, datePairList.size());
+        assertEquals("2010-06-15", asString(datePairList.get(0).date1));
+        assertEquals("2010-06-19", asString(datePairList.get(0).date2));
+
+        assertEquals("2010-07-05", asString(datePairList.get(1).date1));
+        assertEquals("2010-07-09", asString(datePairList.get(1).date2));
+
+        assertEquals("2010-07-25", asString(datePairList.get(2).date1));
+        assertEquals("2010-07-29", asString(datePairList.get(2).date2));
+    }
+
+    @Test
+    public void testGetDatePairList_DateList() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest(L3ProductionType.NAME, "ewa",
+                                                                    "dateList", "2010-06-15 2010-07-01 2010-07-19 ");
+
+        List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 10);
+        assertEquals(3, datePairList.size());
+        assertEquals("2010-06-15", asString(datePairList.get(0).date1));
+        assertEquals("2010-06-15", asString(datePairList.get(0).date2));
+
+        assertEquals("2010-07-01", asString(datePairList.get(1).date1));
+        assertEquals("2010-07-01", asString(datePairList.get(1).date2));
+
+        assertEquals("2010-07-19", asString(datePairList.get(2).date1));
+        assertEquals("2010-07-19", asString(datePairList.get(2).date2));
+
+    }
+
+    private static String asString(Date date) {
+        return ProductionRequest.getDateFormat().format(date);
     }
 
     static ProductionRequest createValidL3ProductionRequest() {

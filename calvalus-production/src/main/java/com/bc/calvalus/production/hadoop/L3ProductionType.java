@@ -11,7 +11,13 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static java.lang.Math.*;
 
@@ -38,10 +44,8 @@ public class L3ProductionType extends HadoopProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-
         String inputProductSetId = productionRequest.getParameter("inputProductSetId");
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
+        List<DatePair> datePairList = getDatePairList(productionRequest, 10);
 
         String processorName = productionRequest.getParameter("processorName");
         String processorParameters = productionRequest.getParameter("processorParameters");
@@ -53,29 +57,13 @@ public class L3ProductionType extends HadoopProductionType {
 
         L3Config l3Config = createL3Config(productionRequest);
 
-        int periodLength = productionRequest.getInteger("periodLength", 10); // unit=days
-        int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength", periodLength); // unit=days
-
-        final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
-        final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
-
-        long time = minDate.getTime();
         Workflow.Parallel workflow = new Workflow.Parallel();
-        for (int i = 0; ; i++) {
-
-            // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
-            Date date1 = new Date(time);
-            Date date2 = new Date(time + compositingPeriodLengthMillis - 1L);
-
-            String date1Str = ProductionRequest.getDateFormat().format(date1);
-            String date2Str = ProductionRequest.getDateFormat().format(date2);
-
-            if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
-                break;
-            }
-
+        for (int i = 0; i < datePairList.size(); i++) {
+            DatePair datePair = datePairList.get(i);
+            String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
+            String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] inputFiles = getInputFiles(inputProductSetId, date1, date2);
+            String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
             String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
 
             L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
@@ -84,13 +72,12 @@ public class L3ProductionType extends HadoopProductionType {
                                                                processorName,
                                                                processorParameters,
                                                                roiGeometry,
-                                                               inputFiles,
+                                                               l1InputFiles,
                                                                outputDir,
                                                                l3Config,
                                                                date1Str,
                                                                date2Str);
             workflow.add(l3WorkflowItem);
-            time += periodLengthMillis;
         }
 
         String stagingDir = userName + "/" + productionId;
@@ -127,6 +114,48 @@ public class L3ProductionType extends HadoopProductionType {
                              productionRequest.getParameter("inputProductSetId"),
                              productionRequest.getParameter("processorName"));
 
+    }
+
+    static List<DatePair> getDatePairList(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+        List<DatePair> datePairList = new ArrayList<DatePair>();
+        String dateList = productionRequest.getParameter("dateList", null);
+
+        if (dateList != null) {
+            String[] splits =  dateList.trim().split("\\s");
+            Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
+            for (String dateAsString : dateSet) {
+                try {
+                    Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
+                    datePairList.add(new DatePair(date, date));
+                } catch (ParseException e) {
+                    throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
+                }
+            }
+        } else {
+            Date minDate = productionRequest.getDate("minDate");
+            Date maxDate = productionRequest.getDate("maxDate");
+            int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
+            int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength", periodLength); // unit=days
+
+            final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
+            final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
+
+            long time = minDate.getTime();
+            for (int i = 0; ; i++) {
+
+                // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
+                Date date1 = new Date(time);
+                Date date2 = new Date(time + compositingPeriodLengthMillis - 1L);
+
+                if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
+                    break;
+                }
+                datePairList.add(new DatePair(date1, date2));
+                time += periodLengthMillis;
+            }
+        }
+
+        return datePairList;
     }
 
     static L3Config createL3Config(ProductionRequest productionRequest) throws ProductionException {
@@ -179,6 +208,16 @@ public class L3ProductionType extends HadoopProductionType {
             return numRows;
         } else {
             return numRows + 1;
+        }
+    }
+
+    static class DatePair {
+        final Date date1;
+        final Date date2;
+
+        DatePair(Date date1, Date date2) {
+            this.date1 = date1;
+            this.date2 = date2;
         }
     }
 }
