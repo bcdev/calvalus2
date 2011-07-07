@@ -1,7 +1,6 @@
 package com.bc.calvalus.binning;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -12,7 +11,7 @@ import java.util.ServiceLoader;
  * @author Norman
  */
 public class AggregatorDescriptorRegistry {
-    private final HashMap<String, AggregatorDescriptor> map;
+    private final Map<String, AggregatorDescriptor> map;
 
     private AggregatorDescriptorRegistry() {
         map = new HashMap<String, AggregatorDescriptor>();
