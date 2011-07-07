@@ -114,10 +114,24 @@ public class TAProductionTypeTest {
                                      "processorName", "BandMaths",
                                      "processorParameters", "<!-- no params -->",
                                      // Special Level 3 parameters
-                                     "inputVariables", "a, b, c",
+                                     "variables.count", "3",
+
+                                     "variables.0.name", "a",
+                                     "variables.0.aggregator", "MIN_MAX",
+                                     "variables.0.weightCoeff", "1.0",
+                                     "variables.0.fillValue", "-999.9",
+
+                                     "variables.1.name", "b",
+                                     "variables.1.aggregator", "MIN_MAX",
+                                     "variables.1.weightCoeff", "1.0",
+                                     "variables.1.fillValue", "-999.9",
+
+                                     "variables.2.name", "c",
+                                     "variables.2.aggregator", "MIN_MAX",
+                                     "variables.2.weightCoeff", "1.0",
+                                     "variables.2.fillValue", "-999.9",
+
                                      "maskExpr", "NOT INVALID",
-                                     "aggregator", "MIN_MAX",
-                                     "weightCoeff", "1.0",
                                      "minDate", "2010-06-01",
                                      "maxDate", "2010-06-15",
                                      "periodLength", "3",
@@ -126,7 +140,6 @@ public class TAProductionTypeTest {
                                      "minLat", "50",
                                      "maxLat", "60",
                                      "resolution", "4.64",
-                                     "fillValue", "-999.9",
                                      "superSampling", "1"
         );
     }

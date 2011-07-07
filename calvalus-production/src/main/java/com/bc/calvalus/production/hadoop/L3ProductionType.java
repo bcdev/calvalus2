@@ -169,19 +169,18 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
-        String inputVariablesStr = request.getParameter("inputVariables");
-        String aggregatorName = request.getParameter("aggregator");
-        Integer percentage = request.getInteger("percentage", null);
-        Double weightCoeff = request.getDouble("weightCoeff", null);
-        Float fillValue = request.getFloat("fillValue", null);
-        String[] inputVariables = inputVariablesStr.split(",");
-        for (int i = 0; i < inputVariables.length; i++) {
-            inputVariables[i] = inputVariables[i].trim();
-        }
-        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[inputVariables.length];
-        for (int i = 0; i < inputVariables.length; i++) {
+        int variableCount = request.getInteger("variables.count");
+        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[variableCount];
+        for (int i = 0; i < variableCount; i++) {
+            String prefix = "variables." + i;
+            String variableName = request.getParameter(prefix + ".name");
+            String aggregatorName = request.getParameter(prefix + ".aggregator");
+            Double weightCoeff = request.getDouble(prefix + ".weightCoeff", null);
+            Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
+            Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
+
             L3Config.AggregatorConfiguration aggregatorConfiguration = new L3Config.AggregatorConfiguration(aggregatorName);
-            aggregatorConfiguration.setVarName(inputVariables[i]);
+            aggregatorConfiguration.setVarName(variableName);
             aggregatorConfiguration.setPercentage(percentage);
             aggregatorConfiguration.setWeightCoeff(weightCoeff);
             aggregatorConfiguration.setFillValue(fillValue);
