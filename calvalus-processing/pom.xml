@@ -31,10 +31,10 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-binning</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-lc</artifactId>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.bc.calvalus</groupId>-->
+            <!--<artifactId>calvalus-lc</artifactId>-->
+        <!--</dependency>-->
 
         <!--  BEAM -->
 
