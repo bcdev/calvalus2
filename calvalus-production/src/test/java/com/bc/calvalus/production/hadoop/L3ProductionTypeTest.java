@@ -5,7 +5,6 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;

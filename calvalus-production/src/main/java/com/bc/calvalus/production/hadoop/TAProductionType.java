@@ -18,7 +18,6 @@ import com.vividsolutions.jts.io.WKTReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -33,7 +32,6 @@ import java.util.Set;
 public class TAProductionType extends HadoopProductionType {
     public static final String NAME = "TA";
     private static final String TA_REGIONS_PROPERTIES = "ta-regions.properties";
-    static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
     /*
      public static void main(String[] args) throws IOException {

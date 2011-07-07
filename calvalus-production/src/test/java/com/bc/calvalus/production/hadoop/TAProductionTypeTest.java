@@ -11,7 +11,6 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestStagingService;
-import com.bc.calvalus.staging.SimpleStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
