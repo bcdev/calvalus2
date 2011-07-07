@@ -322,10 +322,6 @@ public class BinningParametersForm extends Composite {
         parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
         parameters.put("resolution", resolution.getText());
         parameters.put("superSampling", superSampling.getText());
-        parameters.put("lonMin", regionBounds.getSouthWest().getLongitude() + "");
-        parameters.put("latMin", regionBounds.getSouthWest().getLatitude() + "");
-        parameters.put("lonMax", regionBounds.getNorthEast().getLongitude() + "");
-        parameters.put("latMax", regionBounds.getNorthEast().getLatitude() + "");
         return parameters;
     }
 
