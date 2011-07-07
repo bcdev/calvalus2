@@ -149,12 +149,15 @@ public class TAProductionType extends HadoopProductionType {
 
     }
 
-    static TAConfig createTAConfig(ProductionRequest productionRequest) {
-        Properties regions = loadRegions(TA_REGIONS_PROPERTIES);
-        ArrayList<TAConfig.RegionConfiguration> regionList = createRegionList(regions);
-        return new TAConfig(regionList.toArray(new TAConfig.RegionConfiguration[regionList.size()]));
+    static TAConfig createTAConfig(ProductionRequest productionRequest) throws ProductionException {
+        String regionName = productionRequest.getParameter("regionName");
+        Geometry geometry = productionRequest.getRegionGeometry();
+        TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, geometry);
+        return new TAConfig(regionConfiguration);
     }
 
+
+    //unused
     private static ArrayList<TAConfig.RegionConfiguration> createRegionList(Properties properties) {
         WKTReader wktReader = new WKTReader();
         Set<String> regionNames = properties.stringPropertyNames();
@@ -172,6 +175,7 @@ public class TAProductionType extends HadoopProductionType {
         return regionList;
     }
 
+    //unused
     private static Properties loadRegions(String resource) {
         Properties properties = new Properties();
         InputStream inputStream = TAProductionType.class.getResourceAsStream(resource);

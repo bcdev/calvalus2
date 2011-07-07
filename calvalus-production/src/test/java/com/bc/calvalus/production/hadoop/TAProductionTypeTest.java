@@ -65,42 +65,17 @@ public class TAProductionTypeTest {
 
     @Test
     public void testCreateTAConfig() throws ProductionException {
-        TAConfig taConfig = TAProductionType.createTAConfig(new ProductionRequest("TA", "ewa"));
+        ProductionRequest productionRequest = createValidTAProductionRequest();
+        TAConfig taConfig = TAProductionType.createTAConfig(productionRequest);
         assertNotNull(taConfig);
-        assertNotNull(taConfig.getRegions());
-        assertEquals(29, taConfig.getRegions().length);
+        TAConfig.RegionConfiguration[] taConfigRegions = taConfig.getRegions();
+        assertNotNull(taConfigRegions);
+        assertEquals(1, taConfigRegions.length);
+        TAConfig.RegionConfiguration taConfigRegion = taConfigRegions[0];
+        assertNotNull(taConfigRegion);
+        assertEquals("wonderland", taConfigRegion.getName());
+        assertEquals("POLYGON ((-100 -50, 100 -50, 100 50, -100 50, -100 -50))", taConfigRegion.getGeometry().toString());
     }
-
-    @Test
-    public void testCreateBinningConfig() throws ProductionException {
-        ProductionRequest productionRequest = createValidTAProductionRequest();
-        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
-        assertNotNull(l3Config);
-        assertEquals(4320, l3Config.getBinningContext().getBinningGrid().getNumRows());
-        assertEquals("NOT INVALID", l3Config.getVariableContext().getMaskExpr());
-        float[] superSamplingSteps = l3Config.getSuperSamplingSteps();
-        assertEquals(1, superSamplingSteps.length);
-        assertEquals(0.5f, superSamplingSteps[0], 1e-5);
-        assertEquals(3, l3Config.getVariableContext().getVariableCount());
-        assertEquals("a", l3Config.getVariableContext().getVariableName(0));
-        assertEquals("b", l3Config.getVariableContext().getVariableName(1));
-        assertEquals("c", l3Config.getVariableContext().getVariableName(2));
-        BinManager binManager = l3Config.getBinningContext().getBinManager();
-        assertEquals(3, binManager.getAggregatorCount());
-        assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
-        assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);
-        assertEquals(-999.9F, binManager.getAggregator(0).getOutputFillValue(), 1E-5F);
-    }
-
-    @Test
-    public void testGeoRegion() throws ProductionException {
-        ProductionRequest productionRequest = createValidTAProductionRequest();
-        Geometry regionOfInterest = productionRequest.getRegionGeometry();
-        assertNotNull(regionOfInterest);
-        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
-    }
-
-
 
     static ProductionRequest createValidTAProductionRequest() {
         return new ProductionRequest(TAProductionType.NAME, "ewa",
@@ -134,7 +109,8 @@ public class TAProductionTypeTest {
                                      "minDate", "2010-06-01",
                                      "maxDate", "2010-06-15",
                                      "periodLength", "3",
-                                     "minLon", "5",
+                                     "regionName", "wonderland",
+                                     "regionWKT", "POLYGON((-100 -50, 100 -50, 100 50, -100 50, -100 -50))",
                                      "maxLon", "25",
                                      "minLat", "50",
                                      "maxLat", "60",
