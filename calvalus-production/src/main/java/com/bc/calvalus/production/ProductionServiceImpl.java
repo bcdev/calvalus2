@@ -165,6 +165,16 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
+        logger.info("orderProduction:");
+        logger.info("user: " + productionRequest.getUserName());
+        logger.info("type: " + productionRequest.getProductionType());
+        for (Map.Entry<String, String> entry : productionRequest.getParameters().entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            logger.info(key + "=" + value);
+        }
+        logger.info("type: " + productionRequest.getParameters());
+
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
             Production production = productionType.createProduction(productionRequest);
