@@ -15,9 +15,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -168,12 +166,7 @@ public class ProductionServiceImpl implements ProductionService {
         logger.info("orderProduction:");
         logger.info("user: " + productionRequest.getUserName());
         logger.info("type: " + productionRequest.getProductionType());
-        for (Map.Entry<String, String> entry : productionRequest.getParameters().entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            logger.info(key + "=" + value);
-        }
-        logger.info("type: " + productionRequest.getParameters());
+        logger.info("parameters: " + productionRequest.getParameters());
 
         ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
