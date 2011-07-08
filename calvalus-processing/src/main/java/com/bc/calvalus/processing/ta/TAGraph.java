@@ -32,17 +32,20 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class TAGraph {
 
@@ -55,17 +58,26 @@ public class TAGraph {
         this.taResult = taResult;
     }
 
-    public JFreeChart createGRaph(String regionName) {
-        XYDataset dataset = createDataset(regionName);
-        return createChart(dataset, regionName);
+    public JFreeChart createGRaph(String regionName, int aggregatorIndex, int varIndex, int vectorIndex) {
+        XYDataset dataset = createDataset(regionName, vectorIndex);
+        String columnName = taResult.getOutputFeatureNames(aggregatorIndex)[varIndex];
+        return createChart(dataset, regionName, columnName);
     }
 
-    private JFreeChart createChart(XYDataset dataset, String regionName) {
+    public static void writeChart(JFreeChart chart, OutputStream outputStream) {
+        BufferedImage bufferedImage = chart.createBufferedImage(800, 400);
+        try {
+            ImageIO.write(bufferedImage, "PNG", outputStream);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
 
-        String columnName = taResult.getHeader().get(2);
+    private JFreeChart createChart(XYDataset dataset, String regionName, String columnName) {
+
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 "TimeSeries for " + regionName,  // title
-                "Month of Year",        // x-axis label
+                "Time",        // x-axis label
                 columnName,    // y-axis label
                 dataset,       // data
                 true,          // create legend?
@@ -88,7 +100,7 @@ public class TAGraph {
         return chart;
     }
 
-    private XYDataset createDataset(String regionName) {
+    private XYDataset createDataset(String regionName, int vectorIndex) {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         Map<Integer, TimeSeries> yearlyTimeSeries = new HashMap<Integer, TimeSeries>();
 
@@ -100,7 +112,7 @@ public class TAGraph {
                 calendar.setTime(date);
                 int year = calendar.get(Calendar.YEAR);
                 TimeSeries ts = getTimeSeries(yearlyTimeSeries, year);
-                double sample = record.outputVector.get(0); //mean
+                double sample = record.outputVector.get(vectorIndex); //mean
 
                 calendar.set(Calendar.YEAR, 2000);
                 ts.add(new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH), sample);
@@ -131,9 +143,9 @@ public class TAGraph {
     }
 
 
-    public static void main(String[] args) {
-        TAResult taResult = new TAResult();
-        taResult.setOutputFeatureNames("chl_conc_mean", "chl_conc_stdev");
+    public static void main(String[] args) throws IOException {
+        TAResult taResult = new TAResult(1);
+        taResult.setOutputFeatureNames(0, new String[]{"chl_conc_mean", "chl_conc_stdev"});
         taResult.addRecord("balticsea", "2008-06-04", "2008-06-06", new VectorImpl(new float[]{0.3F, 0.1F}));
         taResult.addRecord("northsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[]{0.8F, 0.2F}));
         taResult.addRecord("balticsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[]{0.1F, 0.2F}));
@@ -157,18 +169,23 @@ public class TAGraph {
         taResult.addRecord("northsea", "2007-06-10", "2007-06-12", new VectorImpl(new float[]{0.3F, 0.1F}));
 
         TAGraph taGraph = new TAGraph(taResult);
-        writeChart(taGraph, "balticsea");
-        writeChart(taGraph, "northsea");
+        TAReport taReport = new TAReport(taResult);
+        Set<String> regionNames = taResult.getRegionNames();
 
-    }
+        for (String regionName : regionNames) {
+            int vectorIndex = 0;
+            for (int aggregatorIndex = 0; aggregatorIndex < taResult.getAggregatorCount(); aggregatorIndex++) {
+                String[] outputFeatureNames = taResult.getOutputFeatureNames(aggregatorIndex);
+                for (int i = 0; i < outputFeatureNames.length; i++) {
+                    File pngFile = new File("/tmp/" + regionName + "_" + outputFeatureNames[i] + ".png");
+                    JFreeChart chart = taGraph.createGRaph(regionName, aggregatorIndex, i, vectorIndex);
+                    TAGraph.writeChart(chart, new FileOutputStream(pngFile));
 
-    private static void writeChart(TAGraph taGraph, String regionName) {
-        JFreeChart chart = taGraph.createGRaph(regionName);
-        BufferedImage bufferedImage = chart.createBufferedImage(800, 400);
-        try {
-            ImageIO.write(bufferedImage, "PNG", new File("/tmp/" + regionName + ".png"));
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    vectorIndex++;
+                }
+            }
+            File csvFile = new File("/tmp/" + regionName + ".csv");
+            taReport.writeRegionCsvReport(new FileWriter(csvFile), regionName);
         }
     }
 }

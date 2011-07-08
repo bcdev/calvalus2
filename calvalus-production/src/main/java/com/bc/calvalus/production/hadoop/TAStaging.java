@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.binning.Aggregator;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.WritableVector;
 import com.bc.calvalus.commons.ProcessState;
@@ -8,7 +9,9 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
+import com.bc.calvalus.processing.ta.TAGraph;
 import com.bc.calvalus.processing.ta.TAPoint;
+import com.bc.calvalus.processing.ta.TAReport;
 import com.bc.calvalus.processing.ta.TAResult;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -19,12 +22,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.esa.beam.util.io.FileUtils;
+import org.jfree.chart.JFreeChart;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +67,7 @@ class TAStaging extends Staging {
         int index = 0;
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
 
-        TAResult taResult = new TAResult();
+        TAResult taResult = null;
 
         WorkflowItem workflow = production.getWorkflow();
         WorkflowItem[] parallelItems = workflow.getItems();
@@ -79,9 +83,18 @@ class TAStaging extends Staging {
 
             String inputDir = taWorkflowItem.getOutputDir();
 
+
             L3Config l3Config = l3WorkflowItem.getL3Config();
             BinManager binManager = l3Config.getBinningContext().getBinManager();
-            taResult.setOutputFeatureNames(binManager.getAggregator(0).getOutputFeatureNames());
+            if (taResult == null) {
+                int aggregatorCount = binManager.getAggregatorCount();
+                taResult = new TAResult(aggregatorCount);
+                for (int i = 0; i < aggregatorCount; i++) {
+                    Aggregator aggregator = binManager.getAggregator(i);
+                    String[] outputFeatureNames = aggregator.getOutputFeatureNames();
+                    taResult.setOutputFeatureNames(i, outputFeatureNames);
+                }
+            }
 
             try {
                 SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(inputDir, "part-r-00000"), hadoopConfiguration);
@@ -108,15 +121,37 @@ class TAStaging extends Staging {
             progress = (index + 1) / parallelItems.length;
             production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
         }
-
+        TAReport taReport = new TAReport(taResult);
+        TAGraph taGraph = new TAGraph(taResult);
         Set<String> regionNames = taResult.getRegionNames();
         for (String regionName : regionNames) {
+            File regionFile = getCsvFile(regionName);
             try {
-                writeRegionFile(taResult, regionName);
+                Writer writer = new OutputStreamWriter(new FileOutputStream(regionFile));
+                taReport.writeRegionCsvReport(writer, regionName);
             } catch (IOException e) {
                 // todo - or fail? (nf)
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
-                LOGGER.log(Level.SEVERE, "Failed to write TA region file " + getRegionFile(regionName), e);
+                LOGGER.log(Level.SEVERE, "Failed to write TA csv file " + regionFile, e);
+            }
+
+            File pngFile = null;
+            try {
+                int vectorIndex = 0;
+                for (int aggregatorIndex = 0; aggregatorIndex < taResult.getAggregatorCount(); aggregatorIndex++) {
+                    String[] outputFeatureNames = taResult.getOutputFeatureNames(aggregatorIndex);
+                    for (int i = 0; i < outputFeatureNames.length; i++) {
+                        pngFile = getGraphFile(regionName, outputFeatureNames[i]);
+                        JFreeChart chart = taGraph.createGRaph(regionName, aggregatorIndex, i, vectorIndex);
+                        TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+
+                        vectorIndex++;
+                    }
+                }
+            } catch (IOException e) {
+                // todo - or fail? (nf)
+                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
+                LOGGER.log(Level.SEVERE, "Failed to write TA graph file " + (pngFile != null ? pngFile : ""), e);
             }
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
@@ -131,42 +166,12 @@ class TAStaging extends Staging {
         production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
     }
 
-    private void writeRegionFile(TAResult taResult, String regionName) throws IOException {
-        File path = getRegionFile(regionName);
-        Writer writer = new FileWriter(path);
-        try {
-            writeHeader(writer, taResult);
-            List<TAResult.Record> records = taResult.getRecords(regionName);
-            for (TAResult.Record record : records) {
-                writeRecord(writer, record);
-            }
-        } finally {
-            writer.close();
-        }
-    }
-
-    private File getRegionFile(String regionName) {
+    private File getCsvFile(String regionName) {
         return new File(stagingDir, regionName + ".csv");
     }
 
-    private void writeRecord(Writer writer, TAResult.Record record) throws IOException {
-        writer.write(record.startDate);
-        writer.write("\t");
-        writer.write(record.stopDate);
-        for (int i = 0; i < record.outputVector.size(); i++) {
-            writer.write("\t");
-            writer.write(record.outputVector.get(i) + "");
-        }
-        writer.write("\n");
-    }
-
-    private void writeHeader(Writer writer, TAResult taResult) throws IOException {
-        List<String> header = taResult.getHeader();
-        for (String s : header) {
-            writer.write(s);
-            writer.write("\t");
-        }
-        writer.write("\n");
+    private File getGraphFile(String regionName, String columnName) {
+        return new File(stagingDir, regionName + "_" + columnName + ".png");
     }
 
     private void clearInputDir(Configuration configuration, String inputDir) {

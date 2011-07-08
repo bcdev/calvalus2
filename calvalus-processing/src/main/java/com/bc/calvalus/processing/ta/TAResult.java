@@ -19,7 +19,6 @@ package com.bc.calvalus.processing.ta;
 import com.bc.calvalus.binning.Vector;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,18 +32,25 @@ import java.util.Set;
  */
 public class TAResult {
 
-    private List<String> header = new ArrayList<String>();
     private HashMap<String, ArrayList<Record>> tables = new HashMap<String, ArrayList<Record>>();
+    private final String[][] outputFeatureNames;
+    private final int aggregatorCount;
 
-    public void setOutputFeatureNames(String... outputFeatureNames) {
-        header.clear();
-        header.add("start_date");
-        header.add("stop_date");
-        header.addAll(Arrays.asList(outputFeatureNames));
+    public TAResult(int aggregatorCount) {
+        this.aggregatorCount = aggregatorCount;
+        this.outputFeatureNames = new String[aggregatorCount][0];
     }
 
-    public List<String> getHeader() {
-        return Collections.unmodifiableList(header);
+    public int getAggregatorCount() {
+        return aggregatorCount;
+    }
+
+    public void setOutputFeatureNames(int i, String[] outputFeatureNames) {
+        this.outputFeatureNames[i] = outputFeatureNames;
+    }
+
+    public String[] getOutputFeatureNames(int index) {
+        return outputFeatureNames[index];
     }
 
     public Set<String> getRegionNames() {
