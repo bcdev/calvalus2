@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,9 +82,9 @@ public class ProductionServiceImpl implements ProductionService {
 
                 String[] subPaths = processingService.listFilePaths(path);
 
-                if (subPaths.length > 1) {
-                    productSets.add(new ProductSet(relPath, type, name));
-                }
+//                if (subPaths.length > 1) {
+//                    productSets.add(new ProductSet(relPath, type, name));
+//                }
                 for (String subPath : subPaths) {
                     String subRelPath = subPath.substring(inputPath.length() + 1);
                     String subName = subRelPath;
@@ -95,20 +96,27 @@ public class ProductionServiceImpl implements ProductionService {
             logger.warning(e.getMessage());
         }
         postProcessProductSets(productSets);
-        return productSets.toArray(new ProductSet[productSets.size()]);
+        ProductSet[] productSetArray = productSets.toArray(new ProductSet[productSets.size()]);
+        return productSetArray;
     }
 
     // TODO make this more generic
     private ArrayList<ProductSet> postProcessProductSets(ArrayList<ProductSet> productSets) {
         Calendar calendar = ProductData.UTC.createCalendar();
         ArrayList<ProductSet> result = new ArrayList<ProductSet>();
-        for (ProductSet productSet : productSets) {
-            if (productSet.getName().contains("_RR_")) {
+        Iterator<ProductSet> iterator = productSets.iterator();
+        while (iterator.hasNext()) {
+            ProductSet productSet =  iterator.next();
+            String name = productSet.getName();
+            if (name.contains("NA") || name.contains("SPG")) {
+                iterator.remove();
+            }
+            if (name.contains("_RR_")) {
                 calendar.set(2004, 00, 01);
                 productSet.setMinDate(calendar.getTime());
                 calendar.set(2008, 11, 31);
                 productSet.setMaxDate(calendar.getTime());
-            } else if (productSet.getName().contains("_FSG_")) {
+            } else if (name.contains("_FSG_")) {
                 calendar.set(2005, 00, 01);
                 productSet.setMinDate(calendar.getTime());
                 calendar.set(2009, 11, 31);
