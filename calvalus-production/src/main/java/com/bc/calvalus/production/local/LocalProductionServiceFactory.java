@@ -12,6 +12,8 @@ import com.bc.calvalus.staging.SimpleStagingService;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -34,13 +36,13 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
             public ProductSet[] getProductSets(String filter) throws ProductionException {
                 // Return some dummy product sets
                 return new ProductSet[]{
-                        new ProductSet("MER_RR__1P/r03", "MERIS-L1B", "MERIS RR 2004-2009"),
-                        new ProductSet("MER_RR__1P/r03/2004", "MERIS-L1B", "MERIS RR 2004"),
-                        new ProductSet("MER_RR__1P/r03/2005", "MERIS-L1B", "MERIS RR 2005"),
-                        new ProductSet("MER_RR__1P/r03/2006", "MERIS-L1B", "MERIS RR 2006"),
-                        new ProductSet("MER_RR__1P/r03/2007", "MERIS-L1B", "MERIS RR 2007"),
-                        new ProductSet("MER_RR__1P/r03/2008", "MERIS-L1B", "MERIS RR 2008"),
-                        new ProductSet("MER_RR__1P/r03/2009", "MERIS-L1B", "MERIS RR 2009"),
+                        new ProductSet("MER_RR__1P/r03", asDate("2004-01-01"), asDate("2009-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2004", asDate("2004-01-01"), asDate("2004-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2005", asDate("2005-01-01"), asDate("2005-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2006", asDate("2006-01-01"), asDate("2006-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2007", asDate("2007-01-01"), asDate("2007-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2008", asDate("2008-01-01"), asDate("2008-12-31")),
+                        new ProductSet("MER_RR__1P/r03/2009", asDate("2009-01-01"), asDate("2009-12-31")),
                 };
             }
 
@@ -114,6 +116,14 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
 
         return productionService;
 
+    }
+
+    private static Date asDate(String dateString) {
+        try {
+            return ProductionRequest.getDateFormat().parse(dateString);
+        } catch (ParseException ignore) {
+            return null;
+        }
     }
 
 }

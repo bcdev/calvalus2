@@ -10,15 +10,18 @@ import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.io.IOUtils;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.io.CsvReader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,62 +72,25 @@ public class ProductionServiceImpl implements ProductionService {
 
         try {
             String inputPath = processingService.getDataInputPath();
-            String[] paths = processingService.listFilePaths(inputPath);
-            // TODO make this more generic
-            String[] reversedPathes = new String[paths.length];
-            for (int i = 0; i < reversedPathes.length; i++) {
-                reversedPathes[i] = paths[paths.length -i - 1];
-            }
-            for (String path : reversedPathes) {
-                String relPath = path.substring(inputPath.length() + 1);
-                String type = relPath.indexOf('/') > 0 ? relPath.substring(0, relPath.indexOf('/')) : relPath;
-                String name = relPath;
-
-                String[] subPaths = processingService.listFilePaths(path);
-
-//                if (subPaths.length > 1) {
-//                    productSets.add(new ProductSet(relPath, type, name));
-//                }
-                for (String subPath : subPaths) {
-                    String subRelPath = subPath.substring(inputPath.length() + 1);
-                    String subName = subRelPath;
-                    productSets.add(new ProductSet(subRelPath, type, subName));
+            InputStream is = processingService.open(inputPath + "/product-sets.csv");
+            InputStreamReader reader = new InputStreamReader(is);
+            CsvReader csvReader = new CsvReader(reader, new char[]{','});
+            DateFormat dateFormat = ProductionRequest.getDateFormat();
+            List<String[]> stringRecords = csvReader.readStringRecords();
+            for (String[] record : stringRecords) {
+                if (record.length == 3) {
+                    String path = record[0];
+                    Date date1 = dateFormat.parse(record[1]);
+                    Date date2 = dateFormat.parse(record[2]);
+                    productSets.add(new ProductSet(path, date1, date2));
                 }
-
             }
+        } catch (ParseException e) {
+            logger.warning(e.getMessage());
         } catch (IOException e) {
             logger.warning(e.getMessage());
         }
-        postProcessProductSets(productSets);
-        ProductSet[] productSetArray = productSets.toArray(new ProductSet[productSets.size()]);
-        return productSetArray;
-    }
-
-    // TODO make this more generic
-    private ArrayList<ProductSet> postProcessProductSets(ArrayList<ProductSet> productSets) {
-        Calendar calendar = ProductData.UTC.createCalendar();
-        ArrayList<ProductSet> result = new ArrayList<ProductSet>();
-        Iterator<ProductSet> iterator = productSets.iterator();
-        while (iterator.hasNext()) {
-            ProductSet productSet =  iterator.next();
-            String name = productSet.getName();
-            if (name.contains("NA") || name.contains("SPG")) {
-                iterator.remove();
-            }
-            if (name.contains("_RR_")) {
-                calendar.set(2004, 00, 01);
-                productSet.setMinDate(calendar.getTime());
-                calendar.set(2008, 11, 31);
-                productSet.setMaxDate(calendar.getTime());
-            } else if (name.contains("_FSG_")) {
-                calendar.set(2005, 00, 01);
-                productSet.setMinDate(calendar.getTime());
-                calendar.set(2009, 11, 31);
-                productSet.setMaxDate(calendar.getTime());
-            }
-        }
-
-        return result;
+        return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
     @Override

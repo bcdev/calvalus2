@@ -7,8 +7,8 @@ public class DtoProductSetTest extends TestCase {
     public void testDefaultConstructorForGWTSerialisation() {
         DtoProductSet productSet = new DtoProductSet();
         assertEquals(null, productSet.getPath());
-        assertEquals("", productSet.getName());
-        assertEquals("", productSet.getType());
+        assertEquals(null, productSet.getMinDate());
+        assertEquals(null, productSet.getMaxDate());
     }
 
 }

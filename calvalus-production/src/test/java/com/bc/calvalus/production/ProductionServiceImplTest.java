@@ -35,19 +35,9 @@ public class ProductionServiceImplTest {
     public void testGetProductSets() throws ProductionException {
         ProductSet[] productSets = productionServiceUnderTest.getProductSets(null);
         assertNotNull(productSets);
-        assertEquals(3 + 3 * 3, productSets.length);
-        assertEquals("entry3", productSets[0].getPath());
-        assertEquals("entry3/entry1", productSets[1].getPath());
-        assertEquals("entry3/entry2", productSets[2].getPath());
-        assertEquals("entry3/entry3", productSets[3].getPath());
-        assertEquals("entry2", productSets[4].getPath());
-        assertEquals("entry2/entry1", productSets[5].getPath());
-        assertEquals("entry2/entry2", productSets[6].getPath());
-        assertEquals("entry2/entry3", productSets[7].getPath());
-        assertEquals("entry1", productSets[8].getPath());
-        assertEquals("entry1/entry1", productSets[9].getPath());
-        assertEquals("entry1/entry2", productSets[10].getPath());
-        assertEquals("entry1/entry3", productSets[11].getPath());
+        assertEquals(2, productSets.length);
+        assertEquals("ps0", productSets[0].getPath());
+        assertEquals("ps1", productSets[1].getPath());
     }
 
     @Test

@@ -52,7 +52,11 @@ public class TestProcessingService implements ProcessingService<String> {
 
     @Override
     public InputStream open(String path) throws IOException {
-        return new ByteArrayInputStream("dummy".getBytes());
+        String content = "dummy";
+        if ((getDataInputPath() + "/product-sets.csv").equals(path)) {
+            content="ps0,2111-01-01,2222-02-02\nps1,2000-01-01,2000-12-31";
+        }
+        return new ByteArrayInputStream(content.getBytes());
     }
 
     @Override

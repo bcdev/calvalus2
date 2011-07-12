@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -33,7 +32,7 @@ public class ProductSetSelectionForm extends Composite {
 
         inputProductSet.setName("inputProductSet");
         for (DtoProductSet productSet : productSets) {
-            inputProductSet.addItem(productSet.getName());
+            inputProductSet.addItem(productSet.getPath());
         }
         inputProductSet.setSelectedIndex(0);
     }

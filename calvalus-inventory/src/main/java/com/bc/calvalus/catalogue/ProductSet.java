@@ -9,43 +9,25 @@ import java.util.Date;
  * @author Norman
  */
 public class ProductSet {
-    private String path;
-    private String type;
-    private String name;
-    private Date minDate;
-    private Date maxDate;
+    private final String path;
+    private final Date minDate;
+    private final Date maxDate;
 
-    public ProductSet(String path, String type, String name) {
+    public ProductSet(String path, Date minDate, Date maxDate) {
         this.path = path;
-        this.type = type;
-        this.name = name;
+        this.minDate = minDate;
+        this.maxDate = maxDate;
     }
 
     public String getPath() {
         return path;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     public Date getMinDate() {
         return minDate;
     }
 
-    public void setMinDate(Date minDate) {
-        this.minDate = minDate;
-    }
-
     public Date getMaxDate() {
         return maxDate;
-    }
-
-    public void setMaxDate(Date maxDate) {
-        this.maxDate = maxDate;
     }
 }
