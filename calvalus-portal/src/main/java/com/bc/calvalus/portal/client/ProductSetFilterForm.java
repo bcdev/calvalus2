@@ -95,10 +95,10 @@ public class ProductSetFilterForm extends Composite {
         radioGroupId++;
 
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        minDate.setValue(DATE_FORMAT.parse("2008-06-01"));
+        minDate.setValue(DATE_FORMAT.parse("2008-05-01"));
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        maxDate.setValue(DATE_FORMAT.parse("2008-06-10"));
+        maxDate.setValue(DATE_FORMAT.parse("2008-07-31"));
 
         minDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));

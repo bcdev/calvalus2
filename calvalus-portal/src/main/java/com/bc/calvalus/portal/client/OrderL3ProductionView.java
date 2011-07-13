@@ -70,6 +70,8 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         binningParametersForm = new BinningParametersForm();
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        binningParametersForm.steppingPeriodLength.setValue(30);
+        binningParametersForm.compositingPeriodLength.setValue(30);
 
         outputParametersForm = new OutputParametersForm();
 

@@ -72,6 +72,8 @@ public class OrderTAProductionView extends OrderProductionView {
         binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
         binningParametersForm.resolution.setEnabled(false);
         binningParametersForm.superSampling.setEnabled(false);
+        binningParametersForm.steppingPeriodLength.setValue(32);
+        binningParametersForm.compositingPeriodLength.setValue(4);
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
