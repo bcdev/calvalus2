@@ -15,6 +15,7 @@ import com.bc.calvalus.processing.ta.TAReport;
 import com.bc.calvalus.processing.ta.TAResult;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionWriter;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -155,7 +156,7 @@ class TAStaging extends Staging {
             }
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
-
+        ProductionWriter.writeProductionAsXML(production, stagingDir);
         return null;
     }
 

@@ -9,6 +9,7 @@ import com.bc.calvalus.processing.l3.L3FormatterConfig;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionWriter;
 import com.bc.calvalus.staging.Staging;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -79,9 +80,7 @@ class L3Staging extends Staging {
                 } finally {
                   FileUtils.deleteTree(tmpDir);
                 }
-                progress = 1f;
-                // todo - if job has been cancelled, it must not change its state anymore
-                production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
+                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
             } catch (Exception e) {
                 // todo - if job has been cancelled, it must not change its state anymore
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
@@ -90,7 +89,8 @@ class L3Staging extends Staging {
             progress += (i + 1) / items.length;
         }
         progress = 1.0f;
-
+        production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
+        ProductionWriter.writeProductionAsXML(production, stagingDir);
         return null;
     }
 

@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionWriter;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -116,6 +117,7 @@ class L2Staging extends Staging {
             production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
+        ProductionWriter.writeProductionAsXML(production, stagingDir);
         return null;
     }
 }
