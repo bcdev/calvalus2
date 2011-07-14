@@ -88,35 +88,41 @@ public class TAProductionType extends HadoopProductionType {
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
-            String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
-            String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
+            if (l1InputFiles.length > 0) {
+                String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
+                String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
 
-            L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                               l3JobName,
-                                                               processorBundle,
-                                                               processorName,
-                                                               processorParameters,
-                                                               roiGeometry,
-                                                               l1InputFiles,
-                                                               l3OutputDir,
-                                                               l3Config,
-                                                               date1Str,
-                                                               date2Str);
+                L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
+                                                                   l3JobName,
+                                                                   processorBundle,
+                                                                   processorName,
+                                                                   processorParameters,
+                                                                   roiGeometry,
+                                                                   l1InputFiles,
+                                                                   l3OutputDir,
+                                                                   l3Config,
+                                                                   date1Str,
+                                                                   date2Str);
 
-            TAWorkflowItem taWorkflowItem = new TAWorkflowItem(getProcessingService(),
-                                                               taJobName,
-                                                               l3OutputDir,
-                                                               taOutputDir,
-                                                               l3Config,
-                                                               taConfig,
-                                                               date1Str,
-                                                               date2Str);
+                TAWorkflowItem taWorkflowItem = new TAWorkflowItem(getProcessingService(),
+                                                                   taJobName,
+                                                                   l3OutputDir,
+                                                                   taOutputDir,
+                                                                   l3Config,
+                                                                   taConfig,
+                                                                   date1Str,
+                                                                   date2Str);
 
-            sequential.add(l3WorkflowItem);
-            sequential.add(taWorkflowItem);
+                sequential.add(l3WorkflowItem);
+                sequential.add(taWorkflowItem);
 
-            parallel.add(sequential);
+                parallel.add(sequential);
+            }
         }
+        if (parallel.getItems().length == 0) {
+            throw new ProductionException("No input products found for given time range.");
+        }
+
 
         String stagingDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
         boolean autoStaging = productionRequest.isAutoStaging();

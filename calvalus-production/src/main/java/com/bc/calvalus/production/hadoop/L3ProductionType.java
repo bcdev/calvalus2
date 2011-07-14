@@ -64,20 +64,25 @@ public class L3ProductionType extends HadoopProductionType {
             String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
             // todo - use geoRegion to filter input files (nf,20.04.2011)
             String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
-            String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i+1);
+            if (l1InputFiles.length > 0) {
+                String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i + 1);
 
-            L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                               productionId + "_" + (i+1),
-                                                               processorBundle,
-                                                               processorName,
-                                                               processorParameters,
-                                                               roiGeometry,
-                                                               l1InputFiles,
-                                                               outputDir,
-                                                               l3Config,
-                                                               date1Str,
-                                                               date2Str);
-            workflow.add(l3WorkflowItem);
+                L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
+                                                                   productionId + "_" + (i + 1),
+                                                                   processorBundle,
+                                                                   processorName,
+                                                                   processorParameters,
+                                                                   roiGeometry,
+                                                                   l1InputFiles,
+                                                                   outputDir,
+                                                                   l3Config,
+                                                                   date1Str,
+                                                                   date2Str);
+                workflow.add(l3WorkflowItem);
+            }
+        }
+        if (workflow.getItems().length == 0) {
+            throw new ProductionException("No input products found for given time range.");
         }
 
         String stagingDir = userName + "/" + productionId;
@@ -91,7 +96,7 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     public static int computeDefaultPeriodLength(Date minDate, Date maxDate, int periodCount) {
-        return (int)((maxDate.getTime() - minDate.getTime() + MILLIS_PER_DAY - 1) / (MILLIS_PER_DAY * periodCount));
+        return (int) ((maxDate.getTime() - minDate.getTime() + MILLIS_PER_DAY - 1) / (MILLIS_PER_DAY * periodCount));
     }
 
     @Override
@@ -121,7 +126,7 @@ public class L3ProductionType extends HadoopProductionType {
         String dateList = productionRequest.getParameter("dateList", null);
 
         if (dateList != null) {
-            String[] splits =  dateList.trim().split("\\s");
+            String[] splits = dateList.trim().split("\\s");
             Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
             for (String dateAsString : dateSet) {
                 try {
