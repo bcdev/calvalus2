@@ -371,7 +371,7 @@ public class BinningParametersForm extends Composite {
                 "AVG",
                 "AVG_ML",
                 "MIN_MAX",
-                "P90"
+                "PERCENTILE"
         );
 
         SelectionCell aggregatorCell = new SelectionCell(valueList);
