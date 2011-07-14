@@ -1,0 +1,81 @@
+<html>
+<head>
+    <title>Calvalus Production</title>
+    <link type="text/css" rel="stylesheet" href="/calvalus/calvalus.css"/>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <style>
+        body {
+            font-family: Calibri, Verdana, Arial, sans-serif;
+            color: black;
+            background-color: white;
+        }
+
+        b {
+            color: white;
+            background-color: #0086b2;
+        }
+
+        a {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<table class="headerPanel">
+    <tr>
+        <td>
+            <img src="/calvalus/images/esa-logo.jpg" alt="ESA logo"/>
+        </td>
+        <td>
+            <h1 class="title">Calvalus</h1>
+
+            <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+        </td>
+    </tr>
+</table>
+<hr/>
+#foreach( $url in $urls)
+    <img src="$url" alt="">
+    <hr/>
+#end
+
+<h3>Calvalus production</h3>
+<table cellspacing="0" cellpadding="5">
+    <tr>
+        <th align="left">Name</th>
+        <th align="left">Value</th>
+    </tr>
+    <tr>
+        <th align="left">id</th>
+        <td align="left">${production.id}</td>
+    </tr>
+    <tr>
+        <th align="left">name</th>
+        <td align="left">${production.name}</td>
+    </tr>
+    <tr>
+        <th align="left" valign="top">request</th>
+        <td align="left">
+            <table cellspacing="0" cellpadding="5">
+                <tr>
+                    <th align="left">productionType</th>
+                    <td align="left">${production.productionRequest.productionType}</td>
+                </tr>
+                <tr>
+                    <th align="left">userName</th>
+                    <td align="left">${production.productionRequest.userName}</td>
+                </tr>
+                #foreach( $key in $production.productionRequest.parameters.keySet())
+                    <tr>
+                        <th align="left">$key</th>
+                        <td align="left">$production.productionRequest.parameters.get($key)</td>
+                    </tr>
+                #end
+            </table>
+        </td>
+    </tr>
+</table>
+<hr/>
+<p class="copyright">Calvalus - Version 0.3, &#169; 2011 Brockmann Consult GmbH</p>
+</body>
+</html>

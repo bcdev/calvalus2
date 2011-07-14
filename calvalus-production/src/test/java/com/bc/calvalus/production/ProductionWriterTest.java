@@ -25,13 +25,13 @@ public class ProductionWriterTest {
     @Test
     public void testXml() throws Exception {
         Production production = new Production("9A3F", "Toasting", null,
-                                               false, new ProductionRequest("test", "ewa"),
+                                               false, new ProductionRequest("test", "ewa", "a", "a1", "b", "b2"),
                                                new TestWorkflowItem(null));
 
         String xml = ProductionWriter.asXML(production);
 
         assertNotNull(xml);
-        assertEquals(207, xml.length());
+        assertEquals(235, xml.length());
         assertTrue(xml.contains("<id>9A3F</id>"));
         assertTrue(xml.contains("<name>Toasting</name>"));
     }

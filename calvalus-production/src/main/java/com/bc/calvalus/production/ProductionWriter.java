@@ -16,23 +16,30 @@
 
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.binding.dom.Xpp3DomElement;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Write a production as XML or HTML for later reference.
  */
 public class ProductionWriter {
-
+    private static final String HTML_TEMPLATE= "com/bc/calvalus/production/request.html.vm";
     private static final DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void writeProductionAsXML(Production production, File stagingDir) throws IOException {
@@ -41,6 +48,43 @@ public class ProductionWriter {
             fileWriter.write(ProductionWriter.asXML(production));
         } finally {
             fileWriter.close();
+        }
+    }
+
+    public static void writeProductionAsHTML(Production production, File stagingDir) throws IOException, ProductionException {
+        writeProductionAsHTML(production, new String[0],stagingDir);
+    }
+
+    public static void writeProductionAsHTML(Production production, String[] imgUrls, File stagingDir) throws IOException, ProductionException {
+        FileWriter fileWriter = new FileWriter(new File(stagingDir, "request.html"));
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("production", production);
+        map.put("urls", imgUrls);
+        try {
+            fileWriter.write(ProductionWriter.asHTML(map));
+        } finally {
+            fileWriter.close();
+        }
+    }
+
+    public static String asHTML(Map<String, Object> templateMap) throws ProductionException {
+        VelocityEngine velocityEngine = new VelocityEngine();
+        Properties properties = new Properties();
+        properties.setProperty("resource.loader", "class");
+        properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        try {
+            velocityEngine.init(properties);
+        } catch (Exception e) {
+            throw new ProductionException(String.format("Failed to initialise Velocity engine: %s", e.getMessage()), e);
+        }
+        VelocityContext context = new VelocityContext(templateMap);
+        try {
+            Template htmlTemplate = velocityEngine.getTemplate(HTML_TEMPLATE);
+            StringWriter writer = new StringWriter();
+            htmlTemplate.merge(context, writer);
+            return writer.toString();
+        } catch (Exception e) {
+            throw new ProductionException("Failed to generate HTML page", e);
         }
     }
 

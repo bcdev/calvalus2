@@ -118,6 +118,7 @@ class L2Staging extends Staging {
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
         ProductionWriter.writeProductionAsXML(production, stagingDir);
+        ProductionWriter.writeProductionAsHTML(production, stagingDir);
         return null;
     }
 }

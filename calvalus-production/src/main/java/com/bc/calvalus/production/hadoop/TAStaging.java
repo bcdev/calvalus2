@@ -30,6 +30,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,6 +127,7 @@ class TAStaging extends Staging {
         TAReport taReport = new TAReport(taResult);
         TAGraph taGraph = new TAGraph(taResult);
         Set<String> regionNames = taResult.getRegionNames();
+        List<String> imgUrls = new ArrayList<String>();
         for (String regionName : regionNames) {
             File regionFile = getCsvFile(regionName);
             try {
@@ -145,7 +148,7 @@ class TAStaging extends Staging {
                         pngFile = getGraphFile(regionName, outputFeatureNames[i]);
                         JFreeChart chart = taGraph.createGRaph(regionName, aggregatorIndex, i, vectorIndex);
                         TAGraph.writeChart(chart, new FileOutputStream(pngFile));
-
+                        imgUrls.add(pngFile.getName());
                         vectorIndex++;
                     }
                 }
@@ -157,6 +160,7 @@ class TAStaging extends Staging {
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
         ProductionWriter.writeProductionAsXML(production, stagingDir);
+        ProductionWriter.writeProductionAsHTML(production, imgUrls.toArray(new String[imgUrls.size()]), stagingDir);
         return null;
     }
 
