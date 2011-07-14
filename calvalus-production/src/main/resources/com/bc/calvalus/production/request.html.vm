@@ -65,10 +65,10 @@
                     <th align="left">userName</th>
                     <td align="left">${production.productionRequest.userName}</td>
                 </tr>
-                #foreach( $key in $production.productionRequest.parameters.keySet())
+                #foreach( $key in $parameters.keySet() )
                     <tr>
-                        <th align="left">$key</th>
-                        <td align="left">$production.productionRequest.parameters.get($key)</td>
+                        <th align="left" valign="top">$key</th>
+                        <td align="left"><pre>$parameters.get($key)</pre></td>
                     </tr>
                 #end
             </table>

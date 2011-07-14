@@ -30,16 +30,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 /**
  * Write a production as XML or HTML for later reference.
  */
 public class ProductionWriter {
-    private static final String HTML_TEMPLATE= "com/bc/calvalus/production/request.html.vm";
+    private static final String HTML_TEMPLATE = "com/bc/calvalus/production/request.html.vm";
     private static final DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void writeProductionAsXML(Production production, File stagingDir) throws IOException {
@@ -52,19 +55,37 @@ public class ProductionWriter {
     }
 
     public static void writeProductionAsHTML(Production production, File stagingDir) throws IOException, ProductionException {
-        writeProductionAsHTML(production, new String[0],stagingDir);
+        writeProductionAsHTML(production, new String[0], stagingDir);
     }
 
     public static void writeProductionAsHTML(Production production, String[] imgUrls, File stagingDir) throws IOException, ProductionException {
         FileWriter fileWriter = new FileWriter(new File(stagingDir, "request.html"));
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("production", production);
-        map.put("urls", imgUrls);
+        Map<String, Object> map = createTemplateMap(production, imgUrls);
         try {
             fileWriter.write(ProductionWriter.asHTML(map));
         } finally {
             fileWriter.close();
         }
+    }
+
+    private static Map<String, Object> createTemplateMap(Production production, String[] imgUrls) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("production", production);
+        Map<String, String> productionParameters = production.getProductionRequest().getParameters();
+        ArrayList<String> keys = new ArrayList<String>(productionParameters.keySet());
+        Collections.sort(keys);
+
+        Map<String, String> parameters = new TreeMap<String, String>();
+        for (String key : keys) {
+            String value = productionParameters.get(key);
+            if (value.startsWith("<")) {
+                value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            }
+            parameters.put(key, value);
+        }
+        map.put("parameters", parameters);
+        map.put("urls", imgUrls);
+        return map;
     }
 
     public static String asHTML(Map<String, Object> templateMap) throws ProductionException {
