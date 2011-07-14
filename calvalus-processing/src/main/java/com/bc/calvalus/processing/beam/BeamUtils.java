@@ -135,8 +135,14 @@ public class BeamUtils {
         if (roiGeometry == null || roiGeometry.isEmpty()) {
             return product;
         }
-
-        final Rectangle pixelRegion = SubsetOp.computePixelRegion(product, roiGeometry, 1);
+        final Rectangle pixelRegion;
+        try {
+            pixelRegion = SubsetOp.computePixelRegion(product, roiGeometry, 1);
+        } catch (Exception e) {
+            // computation of pixel region could fail, if the geocoding of the product is messed up
+            // in this case ignore this product
+            return null;
+        }
         if (pixelRegion.isEmpty()) {
             return null;
         }
