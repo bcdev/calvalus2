@@ -26,7 +26,12 @@ public class L3ProductionTypeTest {
     @Test
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3ProductionType type = new L3ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService());
+        L3ProductionType type = new L3ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
+            @Override
+            public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
+                return new String[]{"MER_RR_007.N1"};
+            }
+        };
         Production production = type.createProduction(productionRequest);
         assertNotNull(production);
         assertEquals("Level 3 production using product set 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());

@@ -25,18 +25,15 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestStagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class L2ProductionTypeTest {
 
@@ -63,7 +60,7 @@ public class L2ProductionTypeTest {
             @Override
             public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
                 callArgumentsList.add(new CallArguments(inputProductSetId, minDate, maxDate));
-                return new String[0];
+                return new String[]{"MER_RR_007.N1"};
             }
         };
     }

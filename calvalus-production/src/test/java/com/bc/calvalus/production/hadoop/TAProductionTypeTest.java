@@ -17,6 +17,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +26,12 @@ public class TAProductionTypeTest {
     @Test
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        TAProductionType type = new TAProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService());
+        TAProductionType type = new TAProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
+            @Override
+            public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
+                return new String[]{"MER_RR_007.N1"};
+            }
+        };
         Production production = type.createProduction(productionRequest);
         assertNotNull(production);
         assertEquals("Trend analysis using product set 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
