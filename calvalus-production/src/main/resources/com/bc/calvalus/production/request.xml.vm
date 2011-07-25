@@ -1,0 +1,14 @@
+<production>
+    <id>${production.id}</id>
+    <name>${production.name}</name>
+    <submitTime>${submitTime}</submitTime>
+    <startTime>${startTime}</startTime>
+    <stopTime>${stopTime}</stopTime>
+    <request>
+        <productionType>${production.productionRequest.productionType}</productionType>
+        <userName>${production.productionRequest.userName}</userName>
+        #foreach( $key in $parameters.keySet() )
+        <$key>$parameters.get($key)</$key>
+       #end
+    </request>
+</production>

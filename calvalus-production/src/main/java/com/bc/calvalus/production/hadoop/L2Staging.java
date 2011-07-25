@@ -117,8 +117,7 @@ class L2Staging extends Staging {
             production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
             throw new ProductionException("Error: " + e.getMessage(), e);
         }
-        ProductionWriter.writeProductionAsXML(production, stagingDir);
-        ProductionWriter.writeProductionAsHTML(production, stagingDir);
+        new ProductionWriter(production).write(stagingDir);
         return null;
     }
 }

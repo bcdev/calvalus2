@@ -16,23 +16,41 @@
 
 package com.bc.calvalus.production;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class ProductionWriterTest {
 
-    @Test
-    public void testXml() throws Exception {
+    private ProductionWriter productionWriter;
+
+    @Before
+    public void setUp() throws Exception {
         Production production = new Production("9A3F", "Toasting", null,
                                                false, new ProductionRequest("test", "ewa", "a", "a1", "b", "b2"),
                                                new TestWorkflowItem(null));
 
-        String xml = ProductionWriter.asXML(production);
+        productionWriter = new ProductionWriter(production);
+    }
+
+    @Test
+    public void testAsXml() throws Exception {
+        String xml = productionWriter.asXML();
 
         assertNotNull(xml);
-        assertEquals(235, xml.length());
+        assertEquals(320, xml.length());
         assertTrue(xml.contains("<id>9A3F</id>"));
         assertTrue(xml.contains("<name>Toasting</name>"));
     }
+
+    @Test
+    public void testAsHtml() throws Exception {
+        String html = productionWriter.asHTML();
+
+        assertNotNull(html);
+        assertEquals(2168, html.length());
+        assertTrue(html.contains("<td align=\"left\">9A3F</td>"));
+    }
+
 }

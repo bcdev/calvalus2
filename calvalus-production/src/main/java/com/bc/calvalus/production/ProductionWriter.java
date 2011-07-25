@@ -42,30 +42,50 @@ import java.util.TreeMap;
  * Write a production as XML or HTML for later reference.
  */
 public class ProductionWriter {
+
     private static final String HTML_TEMPLATE = "com/bc/calvalus/production/request.html.vm";
+    private static final String XML_TEMPLATE = "com/bc/calvalus/production/request.xml.vm";
     private static final DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public static void writeProductionAsXML(Production production, File stagingDir) throws IOException {
+    private final Map<String, Object> templateMap;
+
+    public ProductionWriter(Production production) {
+        this(production, new String[0]);
+    }
+
+    public ProductionWriter(Production production, String[] imgUrls) {
+        this.templateMap = createTemplateMap(production, imgUrls);
+    }
+
+    public void write(File stagingDir) throws IOException, ProductionException {
+        writeAsXML(stagingDir);
+        writeAsHTML(stagingDir);
+    }
+
+    public void writeAsXML(File stagingDir) throws IOException, ProductionException {
         FileWriter fileWriter = new FileWriter(new File(stagingDir, "request.xml"));
         try {
-            fileWriter.write(ProductionWriter.asXML(production));
+            fileWriter.write(asXML());
         } finally {
             fileWriter.close();
         }
     }
 
-    public static void writeProductionAsHTML(Production production, File stagingDir) throws IOException, ProductionException {
-        writeProductionAsHTML(production, new String[0], stagingDir);
-    }
-
-    public static void writeProductionAsHTML(Production production, String[] imgUrls, File stagingDir) throws IOException, ProductionException {
+    public void writeAsHTML(File stagingDir) throws IOException, ProductionException {
         FileWriter fileWriter = new FileWriter(new File(stagingDir, "request.html"));
-        Map<String, Object> map = createTemplateMap(production, imgUrls);
         try {
-            fileWriter.write(ProductionWriter.asHTML(map));
+            fileWriter.write(asHTML());
         } finally {
             fileWriter.close();
         }
+    }
+
+    String asHTML() throws ProductionException {
+        return mergeTemplate(HTML_TEMPLATE);
+    }
+
+    String asXML() throws ProductionException {
+        return mergeTemplate(XML_TEMPLATE);
     }
 
     private static Map<String, Object> createTemplateMap(Production production, String[] imgUrls) {
@@ -85,10 +105,16 @@ public class ProductionWriter {
         }
         map.put("parameters", parameters);
         map.put("urls", imgUrls);
+
+        WorkflowItem workflow = production.getWorkflow();
+        map.put("submitTime", asString(workflow.getSubmitTime()));
+        map.put("startTime", asString(workflow.getStartTime()));
+        map.put("stopTime", asString(workflow.getStopTime()));
+
         return map;
     }
 
-    public static String asHTML(Map<String, Object> templateMap) throws ProductionException {
+    private String mergeTemplate(String templateName) throws ProductionException {
         VelocityEngine velocityEngine = new VelocityEngine();
         Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
@@ -100,44 +126,13 @@ public class ProductionWriter {
         }
         VelocityContext context = new VelocityContext(templateMap);
         try {
-            Template htmlTemplate = velocityEngine.getTemplate(HTML_TEMPLATE);
+            Template htmlTemplate = velocityEngine.getTemplate(templateName);
             StringWriter writer = new StringWriter();
             htmlTemplate.merge(context, writer);
             return writer.toString();
         } catch (Exception e) {
-            throw new ProductionException("Failed to generate HTML page", e);
+            throw new ProductionException("Failed to generate page from template: " + templateName, e);
         }
-    }
-
-    public static String asXML(Production production) {
-        DomElement productionDom = new Xpp3DomElement("production");
-        addNode(productionDom, "id", production.getId());
-        addNode(productionDom, "name", production.getName());
-
-        WorkflowItem workflow = production.getWorkflow();
-        addNode(productionDom, "submitTime", workflow.getSubmitTime());
-        addNode(productionDom, "startTime", workflow.getStartTime());
-        addNode(productionDom, "stopTime", workflow.getStopTime());
-
-        DomElement requestDom = productionDom.createChild("request");
-        ProductionRequest productionRequest = production.getProductionRequest();
-        addNode(requestDom, "productionType", productionRequest.getProductionType());
-        addNode(requestDom, "userName", productionRequest.getUserName());
-
-        Map<String, String> parameters = productionRequest.getParameters();
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            addNode(requestDom, entry.getKey(), entry.getValue());
-        }
-        return productionDom.toXml();
-    }
-
-    private static void addNode(DomElement dom, String name, Date date) {
-        addNode(dom, name, asString(date));
-    }
-
-    private static void addNode(DomElement dom, String name, String value) {
-        DomElement domChild = dom.createChild(name);
-        domChild.setValue(value);
     }
 
     private static String asString(Date date) {

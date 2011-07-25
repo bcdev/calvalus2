@@ -159,8 +159,7 @@ class TAStaging extends Staging {
             }
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
-        ProductionWriter.writeProductionAsXML(production, stagingDir);
-        ProductionWriter.writeProductionAsHTML(production, imgUrls.toArray(new String[imgUrls.size()]), stagingDir);
+        new ProductionWriter(production, imgUrls.toArray(new String[imgUrls.size()])).write(stagingDir);
         return null;
     }
 

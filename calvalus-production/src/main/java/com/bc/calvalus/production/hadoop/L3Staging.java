@@ -90,8 +90,7 @@ class L3Staging extends Staging {
         }
         progress = 1.0f;
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
-        ProductionWriter.writeProductionAsXML(production, stagingDir);
-        ProductionWriter.writeProductionAsHTML(production, stagingDir);
+        new ProductionWriter(production).write(stagingDir);
         return null;
     }
 
