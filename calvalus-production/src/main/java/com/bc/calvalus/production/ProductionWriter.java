@@ -16,10 +16,7 @@
 
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.ceres.binding.dom.DomElement;
-import com.bc.ceres.binding.dom.Xpp3DomElement;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
