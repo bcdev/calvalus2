@@ -32,42 +32,35 @@ import java.util.Set;
  */
 public class TAResult {
 
-    private HashMap<String, ArrayList<Record>> tables = new HashMap<String, ArrayList<Record>>();
-    private final String[][] outputFeatureNames;
-    private final int aggregatorCount;
+    private HashMap<String, ArrayList<Record>> dateRecords = new HashMap<String, ArrayList<Record>>();
+    private String[] outputFeatureNames;
 
-    public TAResult(int aggregatorCount) {
-        this.aggregatorCount = aggregatorCount;
-        this.outputFeatureNames = new String[aggregatorCount][0];
+    public TAResult() {
     }
 
-    public int getAggregatorCount() {
-        return aggregatorCount;
+    public void setOutputFeatureNames(String... outputFeatureNames) {
+        this.outputFeatureNames = outputFeatureNames;
     }
 
-    public void setOutputFeatureNames(int i, String[] outputFeatureNames) {
-        this.outputFeatureNames[i] = outputFeatureNames;
-    }
-
-    public String[] getOutputFeatureNames(int index) {
-        return outputFeatureNames[index];
+    public String[] getOutputFeatureNames() {
+        return outputFeatureNames;
     }
 
     public Set<String> getRegionNames() {
-        return tables.keySet();
+        return dateRecords.keySet();
     }
 
     public void addRecord(String regionName, String startDate, String stopDate, Vector outputVector) {
-        ArrayList<Record> records = tables.get(regionName);
+        ArrayList<Record> records = dateRecords.get(regionName);
         if (records == null) {
             records = new ArrayList<Record>();
-            tables.put(regionName, records);
+            dateRecords.put(regionName, records);
         }
         records.add(new Record(startDate, stopDate, outputVector));
     }
 
     public List<Record> getRecords(String regionName) {
-        ArrayList<Record> records = tables.get(regionName);
+        ArrayList<Record> records = dateRecords.get(regionName);
         if (records == null) {
             return null;
         }

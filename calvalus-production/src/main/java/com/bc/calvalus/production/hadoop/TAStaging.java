@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -90,13 +91,14 @@ class TAStaging extends Staging {
             L3Config l3Config = l3WorkflowItem.getL3Config();
             BinManager binManager = l3Config.getBinningContext().getBinManager();
             if (taResult == null) {
+                taResult = new TAResult();
+                List<String> outputFeatureNames = new ArrayList<String>();
                 int aggregatorCount = binManager.getAggregatorCount();
-                taResult = new TAResult(aggregatorCount);
                 for (int i = 0; i < aggregatorCount; i++) {
                     Aggregator aggregator = binManager.getAggregator(i);
-                    String[] outputFeatureNames = aggregator.getOutputFeatureNames();
-                    taResult.setOutputFeatureNames(i, outputFeatureNames);
+                    outputFeatureNames.addAll(Arrays.asList(aggregator.getOutputFeatureNames()));
                 }
+                taResult.setOutputFeatureNames(outputFeatureNames.toArray(new String[outputFeatureNames.size()]));
             }
 
             try {
@@ -141,16 +143,17 @@ class TAStaging extends Staging {
 
             File pngFile = null;
             try {
-                int vectorIndex = 0;
-                for (int aggregatorIndex = 0; aggregatorIndex < taResult.getAggregatorCount(); aggregatorIndex++) {
-                    String[] outputFeatureNames = taResult.getOutputFeatureNames(aggregatorIndex);
-                    for (int i = 0; i < outputFeatureNames.length; i++) {
-                        pngFile = getGraphFile(regionName, outputFeatureNames[i]);
-                        JFreeChart chart = taGraph.createGRaph(regionName, aggregatorIndex, i, vectorIndex);
-                        TAGraph.writeChart(chart, new FileOutputStream(pngFile));
-                        imgUrls.add(pngFile.getName());
-                        vectorIndex++;
-                    }
+                String[] outputFeatureNames = taResult.getOutputFeatureNames();
+                for (int featureIndex = 0; featureIndex < outputFeatureNames.length; featureIndex++) {
+                    pngFile = new File(stagingDir, "Yearly_cycle-"+ regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    JFreeChart chart = taGraph.createYearlyCyclGaph(regionName, featureIndex);
+                    TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+                    imgUrls.add(pngFile.getName());
+
+                    pngFile = new File(stagingDir, "Timeseries-"+ regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    chart = taGraph.createTimeseriesGaph(regionName, featureIndex);
+                    TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+                    imgUrls.add(pngFile.getName());
                 }
             } catch (IOException e) {
                 // todo - or fail? (nf)
@@ -172,10 +175,6 @@ class TAStaging extends Staging {
 
     private File getCsvFile(String regionName) {
         return new File(stagingDir, regionName + ".csv");
-    }
-
-    private File getGraphFile(String regionName, String columnName) {
-        return new File(stagingDir, regionName + "_" + columnName + ".png");
     }
 
     private void clearInputDir(Configuration configuration, String inputDir) {

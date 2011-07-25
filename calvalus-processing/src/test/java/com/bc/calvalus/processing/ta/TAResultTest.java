@@ -29,8 +29,9 @@ public class TAResultTest {
     @Test
     public void testReportGeneration() throws Exception {
 
-        TAResult result = new TAResult(1);
-        result.setOutputFeatureNames(0, new String[]{"chl_conc_mean", "chl_conc_stdev"});
+        TAResult result = new TAResult();
+        result.setOutputFeatureNames("chl_conc_mean", "chl_conc_stdev");
+
         result.addRecord("balticsea", "2008-06-04", "2008-06-06", new VectorImpl(new float[] {0.3F, 0.1F}));
         result.addRecord("northsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[] {0.8F, 0.2F}));
         result.addRecord("balticsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[] {0.1F, 0.2F}));

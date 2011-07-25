@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.VectorImpl;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.io.CsvReader;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -33,12 +34,14 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,53 +61,68 @@ public class TAGraph {
         this.taResult = taResult;
     }
 
-    public JFreeChart createGRaph(String regionName, int aggregatorIndex, int varIndex, int vectorIndex) {
-        XYDataset dataset = createDataset(regionName, vectorIndex);
-        String columnName = taResult.getOutputFeatureNames(aggregatorIndex)[varIndex];
-        return createChart(dataset, regionName, columnName);
-    }
-
-    public static void writeChart(JFreeChart chart, OutputStream outputStream) {
-        BufferedImage bufferedImage = chart.createBufferedImage(800, 400);
-        try {
-            ImageIO.write(bufferedImage, "PNG", outputStream);
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-    }
-
-    private JFreeChart createChart(XYDataset dataset, String regionName, String columnName) {
-
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "TimeSeries for " + regionName,  // title
-                "Time",        // x-axis label
-                columnName,    // y-axis label
-                dataset,       // data
-                true,          // create legend?
-                true,          // generate tooltips?
-                false          // generate URLs?
-        );
-
-        chart.setBackgroundPaint(Color.white);
+    public JFreeChart createYearlyCyclGaph(String regionName, int featureIndex) {
+        List<TAResult.Record> records = taResult.getRecords(regionName);
+        XYDataset dataset = createYearlyCycleDataset(records, featureIndex);
+        String featureName = taResult.getOutputFeatureNames()[featureIndex];
+        JFreeChart chart = createChart("Yearly-Cycle for " + regionName, dataset, featureName, true);
 
         XYPlot plot = (XYPlot) chart.getPlot();
+        DateAxis axis = (DateAxis) plot.getDomainAxis();
+        axis.setDateFormatOverride(new SimpleDateFormat("MMM"));
+
+        return chart;
+    }
+
+    public JFreeChart createTimeseriesGaph(String regionName, int featureIndex) {
+        List<TAResult.Record> records = taResult.getRecords(regionName);
+        XYDataset dataset = createTimeseriesDataset(records, featureIndex);
+        String featureName = taResult.getOutputFeatureNames()[featureIndex];
+        JFreeChart chart = createChart("Timeseries for " + regionName, dataset, featureName, false);
+
+        XYPlot plot = (XYPlot) chart.getPlot();
+        DateAxis axis = (DateAxis) plot.getDomainAxis();
+        axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+
+        return chart;
+    }
+
+    public static void writeChart(JFreeChart chart, OutputStream outputStream) throws IOException {
+        BufferedImage bufferedImage = chart.createBufferedImage(800, 400);
+        ImageIO.write(bufferedImage, "PNG", outputStream);
+    }
+
+    private static JFreeChart createChart(String title, XYDataset dataset, String featureName, boolean legend) {
+
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                title,  // title
+                "Time",        // x-axis label
+                featureName,    // y-axis label
+                dataset,       // data
+                legend,          // create legend?
+                false,          // generate tooltips?
+                false          // generate URLs?
+        );
+        chart.setBackgroundPaint(Color.white);
+        XYPlot plot = (XYPlot) chart.getPlot();
+        configurePlot(plot);
+        return chart;
+    }
+
+    private static void configurePlot(XYPlot plot) {
         plot.setBackgroundPaint(Color.lightGray);
         plot.setDomainGridlinePaint(Color.white);
         plot.setRangeGridlinePaint(Color.white);
         plot.setAxisOffset(new RectangleInsets(5.0, 5.0, 5.0, 5.0));
         plot.setDomainCrosshairVisible(true);
         plot.setRangeCrosshairVisible(true);
-
-        DateAxis axis = (DateAxis) plot.getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("dd-MMM"));
-        return chart;
     }
 
-    private XYDataset createDataset(String regionName, int vectorIndex) {
+
+    private XYDataset createYearlyCycleDataset(List<TAResult.Record> records, int featureIndex) {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         Map<Integer, TimeSeries> yearlyTimeSeries = new HashMap<Integer, TimeSeries>();
 
-        List<TAResult.Record> records = taResult.getRecords(regionName);
         Calendar calendar = ProductData.UTC.createCalendar();
         for (TAResult.Record record : records) {
             try {
@@ -112,12 +130,12 @@ public class TAGraph {
                 calendar.setTime(date);
                 int year = calendar.get(Calendar.YEAR);
                 TimeSeries ts = getTimeSeries(yearlyTimeSeries, year);
-                double sample = record.outputVector.get(vectorIndex); //mean
-
                 calendar.set(Calendar.YEAR, 2000);
-                ts.add(new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH), sample);
+                Day day = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                double sample = record.outputVector.get(featureIndex);
+                ts.add(day, sample);
             } catch (ParseException e) {
-                e.printStackTrace();  //ignore ths record
+                e.printStackTrace();  //ignore this record
             }
         }
         for (TimeSeries timeSeries : yearlyTimeSeries.values()) {
@@ -126,7 +144,7 @@ public class TAGraph {
         return dataset;
     }
 
-    private TimeSeries getTimeSeries(Map<Integer, TimeSeries> yearlyTimeSeries, int year) {
+    private static TimeSeries getTimeSeries(Map<Integer, TimeSeries> yearlyTimeSeries, int year) {
         TimeSeries timeSeries = yearlyTimeSeries.get(year);
         if (timeSeries == null) {
             timeSeries = new TimeSeries(Integer.toString(year));
@@ -135,7 +153,26 @@ public class TAGraph {
         return timeSeries;
     }
 
-    private Date getCenterDate(TAResult.Record record) throws ParseException {
+    private XYDataset createTimeseriesDataset(List<TAResult.Record> records, int featureIndex) {
+         String featureName = taResult.getOutputFeatureNames()[featureIndex];
+        TimeSeries ts = new TimeSeries(featureName);
+
+        Calendar calendar = ProductData.UTC.createCalendar();
+        for (TAResult.Record record : records) {
+            try {
+                Date date = getCenterDate(record);
+                calendar.setTime(date);
+                Day day = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                double sample = record.outputVector.get(featureIndex);
+                ts.add(day, sample);
+            } catch (ParseException e) {
+                e.printStackTrace();  //ignore this record
+            }
+        }
+        return new TimeSeriesCollection(ts);
+    }
+
+    private static Date getCenterDate(TAResult.Record record) throws ParseException {
         Date date1 = DATE_FORMAT.parse(record.startDate);
         Date date2 = DATE_FORMAT.parse(record.stopDate);
         long t = (date2.getTime() - date1.getTime()) / 2;
@@ -144,48 +181,38 @@ public class TAGraph {
 
 
     public static void main(String[] args) throws IOException {
-        TAResult taResult = new TAResult(1);
-        taResult.setOutputFeatureNames(0, new String[]{"chl_conc_mean", "chl_conc_stdev"});
-        taResult.addRecord("balticsea", "2008-06-04", "2008-06-06", new VectorImpl(new float[]{0.3F, 0.1F}));
-        taResult.addRecord("northsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[]{0.8F, 0.2F}));
-        taResult.addRecord("balticsea", "2008-06-07", "2008-06-09", new VectorImpl(new float[]{0.1F, 0.2F}));
-        taResult.addRecord("northsea", "2008-06-04", "2008-06-06", new VectorImpl(new float[]{0.4F, 0.0F}));
-        taResult.addRecord("balticsea", "2008-06-01", "2008-06-03", new VectorImpl(new float[]{0.8F, 0.0F}));
-        taResult.addRecord("northsea", "2008-06-01", "2008-06-03", new VectorImpl(new float[]{0.3F, 0.1F}));
-        taResult.addRecord("northsea", "2008-06-13", "2008-06-15", new VectorImpl(new float[]{0.4F, 0.4F}));
-        taResult.addRecord("balticsea", "2008-06-10", "2008-06-12", new VectorImpl(new float[]{0.6F, 0.3F}));
-        taResult.addRecord("northsea", "2008-06-10", "2008-06-12", new VectorImpl(new float[]{0.2F, 0.1F}));
-
-        taResult.addRecord("northsea", "2009-06-07", "2009-06-09", new VectorImpl(new float[]{0.7F, 0.2F}));
-        taResult.addRecord("northsea", "2009-06-04", "2009-06-06", new VectorImpl(new float[]{0.5F, 0.0F}));
-        taResult.addRecord("northsea", "2009-06-01", "2009-06-03", new VectorImpl(new float[]{0.2F, 0.1F}));
-        taResult.addRecord("northsea", "2009-06-13", "2009-06-15", new VectorImpl(new float[]{0.4F, 0.4F}));
-        taResult.addRecord("northsea", "2009-06-10", "2009-06-12", new VectorImpl(new float[]{0.3F, 0.1F}));
-
-        taResult.addRecord("northsea", "2007-06-07", "2007-06-09", new VectorImpl(new float[]{0.9F, 0.2F}));
-        taResult.addRecord("northsea", "2007-06-04", "2007-06-06", new VectorImpl(new float[]{0.5F, 0.0F}));
-        taResult.addRecord("northsea", "2007-06-01", "2007-06-03", new VectorImpl(new float[]{0.3F, 0.1F}));
-        taResult.addRecord("northsea", "2007-06-13", "2007-06-15", new VectorImpl(new float[]{0.2F, 0.4F}));
-        taResult.addRecord("northsea", "2007-06-10", "2007-06-12", new VectorImpl(new float[]{0.3F, 0.1F}));
+        InputStream resourceAsStream = TAGraph.class.getResourceAsStream("oc_cci.South_Pacific_Gyre.csv");
+        InputStreamReader inputStreamReader = new InputStreamReader(resourceAsStream);
+        CsvReader csvReader = new CsvReader(inputStreamReader, new char[]{'\t'});
+        List<String[]> stringRecords = csvReader.readStringRecords();
+        TAResult taResult = new TAResult();
+        String[] header = stringRecords.get(0);
+        taResult.setOutputFeatureNames(Arrays.copyOfRange(header, 2, header.length));
+        for (int i = 1; i < stringRecords.size(); i++) {
+            String[] strings = stringRecords.get(i);
+            float[] elements = new float[strings.length-2];
+            for (int f = 0; f < elements.length; f++) {
+                elements[f] = Float.parseFloat(strings[f+2]);
+            }
+            VectorImpl outputVector = new VectorImpl(elements);
+            taResult.addRecord("oc_cci.South_Pacific_Gyre", strings[0], strings[1], outputVector);
+        }
 
         TAGraph taGraph = new TAGraph(taResult);
-        TAReport taReport = new TAReport(taResult);
         Set<String> regionNames = taResult.getRegionNames();
 
+        String[] outputFeatureNames = taResult.getOutputFeatureNames();
         for (String regionName : regionNames) {
-            int vectorIndex = 0;
-            for (int aggregatorIndex = 0; aggregatorIndex < taResult.getAggregatorCount(); aggregatorIndex++) {
-                String[] outputFeatureNames = taResult.getOutputFeatureNames(aggregatorIndex);
-                for (int i = 0; i < outputFeatureNames.length; i++) {
-                    File pngFile = new File("/tmp/" + regionName + "_" + outputFeatureNames[i] + ".png");
-                    JFreeChart chart = taGraph.createGRaph(regionName, aggregatorIndex, i, vectorIndex);
-                    TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+            for (int i = 0; i < outputFeatureNames.length; i++) {
+                File pngFile = new File("/tmp/Yearly_cycle-" + regionName + "-" + outputFeatureNames[i] + ".png");
+                JFreeChart chart = taGraph.createYearlyCyclGaph(regionName, i);
+                TAGraph.writeChart(chart, new FileOutputStream(pngFile));
 
-                    vectorIndex++;
-                }
+                pngFile = new File("/tmp/Timeseries-" + regionName + "-" + outputFeatureNames[i] + ".png");
+                chart = taGraph.createTimeseriesGaph(regionName, i);
+                TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+
             }
-            File csvFile = new File("/tmp/" + regionName + ".csv");
-            taReport.writeRegionCsvReport(new FileWriter(csvFile), regionName);
         }
     }
 }

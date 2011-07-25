@@ -16,14 +16,10 @@
 
 package com.bc.calvalus.processing.ta;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -73,11 +69,8 @@ public class TAReport {
         List<String> header = new ArrayList<String>();
         header.add("start_date");
         header.add("stop_date");
-        int aggregatorCount = taResult.getAggregatorCount();
-        for (int i = 0; i < aggregatorCount; i++) {
-            String[] outputFeatureNames = taResult.getOutputFeatureNames(i);
-            header.addAll(Arrays.asList(outputFeatureNames));
-        }
+        String[] outputFeatureNames = taResult.getOutputFeatureNames();
+        header.addAll(Arrays.asList(outputFeatureNames));
         return header;
     }
 
