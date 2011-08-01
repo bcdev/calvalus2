@@ -19,6 +19,8 @@ package com.bc.calvalus.binning;
 import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 
+import java.util.HashSet;
+
 /**
  * An aggregator to compute surface reflectance and errors in multiple wavelengths
  * from data containing multiple days.
@@ -36,13 +38,15 @@ public class AggregatorSR extends AbstractAggregator {
     private static final int STATUS_INVALID = 6;
     private static final String[] COUNTER_NAMES = {"land", "water", "snow", "cloud", "cloud_shadow"};
 
-    private static final int SBIN_SDR_OFFSET = COUNTER_NAMES.length;
+    private static final int SBIN_SDR_OFFSET = COUNTER_NAMES.length * 2;
 
-    private static final int TBIN_STATUS_INDEX = COUNTER_NAMES.length;
-    private static final int TBIN_W_SUM_INDEX = COUNTER_NAMES.length + 1;
-    private static final int TBIN_SDR_OFFSET = COUNTER_NAMES.length + 2;
+    private static final int TBIN_STATUS_INDEX = COUNTER_NAMES.length * 2;
+    private static final int TBIN_W_SUM_INDEX = COUNTER_NAMES.length * 2 + 1;
+    private static final int TBIN_SDR_OFFSET = COUNTER_NAMES.length * 2 + 2;
 
-    private static final int OBIN_SDR_OFFSET = COUNTER_NAMES.length + 1;
+    private static final int OBIN_STATUS_INDEX = COUNTER_NAMES.length * 2;
+    private static final int OBIN_SDR_OFFSET = COUNTER_NAMES.length * 2 + 1;
+    private static final String PIXEL_COUNTER_NAME = "pixelCounter";
 
     private final int[] varIndexes;
     private final int numSdrBands;
@@ -62,9 +66,11 @@ public class AggregatorSR extends AbstractAggregator {
 
 
     private static int[] createVariableIndexes(VariableContext varCtx, int numBands) {
-        int[] varIndexes = new int[1 + numBands + 1 + numBands];
+        int[] varIndexes = new int[3 + numBands + 1 + numBands];
         int j = 0;
         varIndexes[j++] = getVariableIndex(varCtx, SDR_FLAGS_NAME);
+        varIndexes[j++] = getVariableIndex(varCtx, "x");
+        varIndexes[j++] = getVariableIndex(varCtx, "y");
         for (int i = 0; i < numBands; i++) {
             varIndexes[j++] = getVariableIndex(varCtx, "sdr_" + (i + 1));
         }
@@ -84,10 +90,13 @@ public class AggregatorSR extends AbstractAggregator {
     }
 
     private static String[] createSpatialFeatureNames(int numBands) {
-        String[] featureNames = new String[COUNTER_NAMES.length + (numBands * 2) + 1];
+        String[] featureNames = new String[(COUNTER_NAMES.length * 2) + (numBands * 2) + 1];
         int j = 0;
         for (String counter : COUNTER_NAMES) {
-            featureNames[j++] = counter + "_count";
+            featureNames[j++] = counter + "_area"; //subPixel
+        }
+        for (String counter : COUNTER_NAMES) {
+            featureNames[j++] = counter + "_count"; //macroPixel
         }
         for (int i = 0; i < numBands; i++) {
             featureNames[j++] = "sdr_" + (i + 1) + "_sum_x";
@@ -100,8 +109,11 @@ public class AggregatorSR extends AbstractAggregator {
     }
 
     private static String[] createTemporalFeatureNames(int numBands) {
-        String[] featureNames = new String[COUNTER_NAMES.length + 3 + (numBands * 2)];
+        String[] featureNames = new String[(COUNTER_NAMES.length * 2) + 3 + (numBands * 2)];
         int j = 0;
+        for (String counter : COUNTER_NAMES) {
+            featureNames[j++] = counter + "_area";
+        }
         for (String counter : COUNTER_NAMES) {
             featureNames[j++] = counter + "_count";
         }
@@ -118,8 +130,11 @@ public class AggregatorSR extends AbstractAggregator {
     }
 
     private static String[] createOutputFeatureNames(int numBands) {
-        String[] featureNames = new String[COUNTER_NAMES.length + 2 + (numBands * 2)];
+        String[] featureNames = new String[(COUNTER_NAMES.length * 2) + 2 + (numBands * 2)];
         int j = 0;
+        for (String counter : COUNTER_NAMES) {
+            featureNames[j++] = counter + "_area";
+        }
         for (String counter : COUNTER_NAMES) {
             featureNames[j++] = counter + "_count";
         }
@@ -140,6 +155,7 @@ public class AggregatorSR extends AbstractAggregator {
         for (int i = 0; i < numBands; i++) {
             vector.set(i, 0.0f);
         }
+        ctx.put(PIXEL_COUNTER_NAME, new PixelCounter(COUNTER_NAMES.length));
     }
 
     @Override
@@ -168,23 +184,34 @@ public class AggregatorSR extends AbstractAggregator {
         } else if (status == STATUS_CLOUD_SHADOW) {
             spatialVector.set(4, spatialVector.get(4) + 1);
         }
+        if (status >= 1 && status <= 5) {
+            PixelCounter pixelCounter = ctx.get(PIXEL_COUNTER_NAME);
+            final int x = (int) observationVector.get(varIndexes[1]);
+            final int y = (int) observationVector.get(varIndexes[2]);
+            pixelCounter.addPoint((status - 1), x, y);
+        }
     }
 
     private void addSpatialSdrs(Vector observationVector, WritableVector spatialVector) {
+        final int sdrObservationOffset = 3; // status, x, y
         int sdrOffset = SBIN_SDR_OFFSET;
         for (int i = 0; i < numSdrBands + 1; i++) { // sdr + ndvi
-            float sdrMeasurement = observationVector.get(varIndexes[1 + i]);
+            float sdrMeasurement = observationVector.get(varIndexes[sdrObservationOffset + i]);
             spatialVector.set(sdrOffset + i, spatialVector.get(sdrOffset + i) + sdrMeasurement);
         }
         sdrOffset += numSdrBands + 1;
-        for (int i = 0; i < numSdrBands; i++) {
-            float sdrErrorMeasurement = observationVector.get(varIndexes[1 + numSdrBands + 1 + i]);
+        for (int i = 0; i < numSdrBands; i++) {  // sdr_error
+            float sdrErrorMeasurement = observationVector.get(varIndexes[sdrObservationOffset + numSdrBands + 1 + i]);
             spatialVector.set(sdrOffset + i, spatialVector.get(sdrOffset + i) + (sdrErrorMeasurement * sdrErrorMeasurement));
         }
     }
 
     @Override
     public void completeSpatial(BinContext ctx, int numSpatialObs, WritableVector spatialVector) {
+        PixelCounter pixelCounter = ctx.get(PIXEL_COUNTER_NAME);
+        for (int i = 0; i < COUNTER_NAMES.length; i++) {
+            spatialVector.set(COUNTER_NAMES.length + i, pixelCounter.getDifferentPoints(i));
+        }
     }
 
     @Override
@@ -199,14 +226,18 @@ public class AggregatorSR extends AbstractAggregator {
     public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
 
         for (int i = 0; i < COUNTER_NAMES.length; i++) {
-            temporalVector.set(i, temporalVector.get(i) + spatialVector.get(i));
+            temporalVector.set(i, temporalVector.get(i) + (spatialVector.get(i) / numSpatialObs));
+        }
+        for (int i = 0; i < COUNTER_NAMES.length; i++) {
+            int index = COUNTER_NAMES.length + i;
+            temporalVector.set(index, temporalVector.get(index) + spatialVector.get(index));
         }
 
-        int landCount = (int) spatialVector.get(0);
-        int snowCount = (int) spatialVector.get(2);
+        int landAreaCount = (int) spatialVector.get(0);
+        int snowAreaCount = (int) spatialVector.get(2);
         int status = (int) temporalVector.get(TBIN_STATUS_INDEX);
 
-        if (landCount > 0) {
+        if (landAreaCount > 0) {
             if (status == STATUS_SNOW) {
                 //delete previous snow sums
                 for (int i = 0; i < numSdrBands + numSdrBands + 1; i++) {
@@ -217,10 +248,10 @@ public class AggregatorSR extends AbstractAggregator {
             if (status != STATUS_LAND) {
                 temporalVector.set(TBIN_STATUS_INDEX, STATUS_LAND);
             }
-            addTemporalSdrs(spatialVector, temporalVector, landCount);
-        } else if (snowCount > 0 && status != STATUS_LAND) {
+            addTemporalSdrs(spatialVector, temporalVector, landAreaCount);
+        } else if (snowAreaCount > 0 && status != STATUS_LAND) {
             temporalVector.set(TBIN_STATUS_INDEX, STATUS_SNOW);
-            addTemporalSdrs(spatialVector, temporalVector, snowCount);
+            addTemporalSdrs(spatialVector, temporalVector, snowAreaCount);
         }
     }
 
@@ -239,14 +270,14 @@ public class AggregatorSR extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        for (int i = 0; i < COUNTER_NAMES.length; i++) {
+        for (int i = 0; i < (COUNTER_NAMES.length * 2); i++) {
             outputVector.set(i, temporalVector.get(i));
         }
-        outputVector.set(COUNTER_NAMES.length, calculateStatus((int)temporalVector.get(0),
-                                                               (int)temporalVector.get(1),
-                                                               (int)temporalVector.get(2),
-                                                               (int)temporalVector.get(3),
-                                                               (int)temporalVector.get(4)));
+        outputVector.set(OBIN_STATUS_INDEX, calculateStatus(temporalVector.get(0),
+                                                            temporalVector.get(1),
+                                                            temporalVector.get(2),
+                                                            temporalVector.get(3),
+                                                            temporalVector.get(4)));
 
         float wSum = temporalVector.get(TBIN_W_SUM_INDEX);
         for (int i = 0; i < numSdrBands + numSdrBands + 1; i++) {  // sdr + ndvi + sdr_error
@@ -255,7 +286,7 @@ public class AggregatorSR extends AbstractAggregator {
         }
     }
 
-    static int calculateStatus(int land, int water, int snow, int cloud, int cloudShadow) {
+    static int calculateStatus(float land, float water, float snow, float cloud, float cloudShadow) {
         if (land > 0) {
             return STATUS_LAND;
         } else if (water > 0 || snow > 0) {
@@ -299,6 +330,28 @@ public class AggregatorSR extends AbstractAggregator {
                                     15, //propertySet.<Integer>getValue("numSdrBands"),
                                     propertySet.<Float>getValue("fillValue")
             );
+        }
+    }
+
+    static class PixelCounter {
+        final HashSet<Long>[] counters;
+
+        PixelCounter(int size) {
+            counters = new HashSet[size];
+            for (int i = 0; i < size; i++) {
+                counters[i] = new HashSet<Long>();
+            }
+        }
+
+        void addPoint(int index, int x, int y) {
+            long xl = x;
+            long yl = y;
+            long pointRepresentation = xl + (yl <<32);
+            counters[index].add(pointRepresentation);
+        }
+
+        int getDifferentPoints(int index) {
+            return counters[index].size();
         }
     }
 }
