@@ -149,7 +149,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             final RasterDataNode node = getRasterDataNode(product, nodeName);
             final MultiLevelImage varImage = node.getGeophysicalImage();
             checkImageTileSize(MessageFormat.format("Geophysical image for node ''{0}''", node.getName()),
-                               maskImage, sliceWidth, sliceHeight);
+                               varImage, sliceWidth, sliceHeight);
             varImages[i] = varImage;
         }
 
@@ -162,7 +162,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             observationSlice = createObservationSlice(geoCoding,
                                                       maskImage, varImages,
                                                       tileIndex,
-                                                      sliceWidth, sliceHeight,
                                                       superSamplingSteps);
             spatialBinner.processObservationSlice(observationSlice);
             numObsTotal += observationSlice.getSize();
@@ -176,8 +175,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                            RenderedImage maskImage,
                                                            RenderedImage[] varImages,
                                                            Point tileIndex,
-                                                           int sliceWidth,
-                                                           int sliceHeight,
                                                            float[] superSamplingSteps) {
         final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
         final Raster[] varTiles = new Raster[varImages.length];
@@ -185,11 +182,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             varTiles[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
         }
 
-        final ObservationSlice observationSlice = new ObservationSlice(varTiles, sliceWidth * sliceHeight);
+        final ObservationSlice observationSlice = new ObservationSlice(varTiles, maskTile.getWidth() * maskTile.getHeight());
         final int y1 = maskTile.getMinY();
         final int y2 = y1 + maskTile.getHeight();
         final int x1 = maskTile.getMinX();
-        final int x2 = x1 + sliceWidth;
+        final int x2 = x1 + maskTile.getWidth();
         final PixelPos pixelPos = new PixelPos();
         final GeoPos geoPos = new GeoPos();
         for (int y = y1; y < y2; y++) {
