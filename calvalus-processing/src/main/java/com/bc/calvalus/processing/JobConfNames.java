@@ -29,6 +29,7 @@ public interface JobConfNames {
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
+    String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
     String CALVALUS_SYSTEM_PROPERTIES = "calvalus.system.properties";
