@@ -9,7 +9,9 @@ import org.esa.beam.framework.datamodel.GeoPos;
  */
 public interface Record {
 
-    Object getId();
+    Header getHeader();
 
-    GeoPos getGeoPos();
+    GeoPos getCoordinate();
+
+    Object[] getValues();
 }

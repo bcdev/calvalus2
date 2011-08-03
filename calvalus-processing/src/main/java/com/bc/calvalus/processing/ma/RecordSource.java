@@ -6,5 +6,5 @@ package com.bc.calvalus.processing.ma;
  * @author Norman
  */
 public interface RecordSource {
-    Iterable<Record> getRecords();
+    Iterable<Record> getRecords() throws Exception;
 }

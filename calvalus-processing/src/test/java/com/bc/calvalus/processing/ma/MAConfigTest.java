@@ -26,12 +26,15 @@ import java.util.Iterator;
 import static org.junit.Assert.*;
 
 /**
+ * The configuration for the match-up processing.
+ *
+ * @author MarcoZ
  * @author Norman
  */
 public class MAConfigTest {
 
     @Test
-    public void testGetRecordSource() {
+    public void testGetRecordSource() throws Exception {
         MAConfig maConfig = new MAConfig(TestRecordSourceSpi.class.getName());
         RecordSource recordSource = maConfig.createRecordSource();
         assertNotNull(recordSource);
@@ -42,7 +45,7 @@ public class MAConfigTest {
         assertNotNull(record);
     }
 
-    public static class TestRecordSourceSpi implements RecordSourceSpi {
+    public static class TestRecordSourceSpi extends RecordSourceSpi {
         @Override
         public RecordSource createRecordSource(MAConfig maConfig) {
             return new TestRecordSource();
@@ -55,13 +58,18 @@ public class MAConfigTest {
         public Iterable<Record> getRecords() {
             Record record = new Record() {
                 @Override
-                public Object getId() {
-                    return "A";
+                public Header getHeader() {
+                    return null;
                 }
 
                 @Override
-                public GeoPos getGeoPos() {
-                    return new GeoPos();
+                public GeoPos getCoordinate() {
+                    return null;
+                }
+
+                @Override
+                public Object[] getValues() {
+                    return new Object[0];
                 }
             };
             return Arrays.asList(record);

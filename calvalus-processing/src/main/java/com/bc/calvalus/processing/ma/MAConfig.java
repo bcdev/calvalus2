@@ -20,8 +20,6 @@ package com.bc.calvalus.processing.ma;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
-import java.util.ServiceLoader;
-
 /**
  * The configuration for the match-up analysis.
  *
@@ -29,7 +27,7 @@ import java.util.ServiceLoader;
  */
 public class MAConfig {
 
-    @Parameter
+    @Parameter (defaultValue = "")
     private String recordSourceSpiClassName;
 
     public static MAConfig fromXml(String xml) {
@@ -46,13 +44,7 @@ public class MAConfig {
     }
 
     public RecordSource createRecordSource() {
-        ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
-        loader.reload();
-        for (RecordSourceSpi spi : loader) {
-            if (spi.getClass().getName().equals(recordSourceSpiClassName)) {
-                return spi.createRecordSource(this);
-            }
-        }
-        return null;
+        RecordSourceSpi service = RecordSourceSpi.get(recordSourceSpiClassName);
+        return service != null ? service.createRecordSource(this) : null;
     }
 }

@@ -16,18 +16,16 @@
 
 package com.bc.calvalus.processing.ma;
 
-import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -39,7 +37,7 @@ import java.util.logging.Logger;
  *
  * @author Norman Fomferra
  */
-public class MAMapper extends Mapper<NullWritable, NullWritable, LongWritable, SpatialBin> {
+public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWritable> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
@@ -63,8 +61,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         System.setProperty("beam.reader.tileWidth", TILE_SIZE + "");
         System.setProperty("beam.reader.tileHeight", TILE_SIZE + "");
 
-        // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
         final Product product = BeamUtils.readProduct(inputPath, configuration);
+
         final Band[] bands = product.getBands();
         final float[] value = new float[1];
 
@@ -72,19 +70,29 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
         int numMatchUps = 0;
 
-        final Iterable<Record> records = recordSource.getRecords();
-        final PixelPos pixelPos = new PixelPos();
+        final Iterable<Record> records;
+        try {
+            records = recordSource.getRecords();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+
+        Extractor extractor = new Extractor(product);
+        long recordIndex = 0L;
         for (Record record : records) {
-            product.getGeoCoding().getPixelPos(record.getGeoPos(), pixelPos);
-            if (pixelPos.isValid()) {
-                for (Band band : bands) {
-                    band.readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, value);
-                }
+            Record extract = extractor.extract(record);
+            if (extract != null) {
+                context.write(new Text(product.getName() + "_" + recordIndex), new RecordWritable(record, extract));
+//            emit(record, extract)
                 numMatchUps++;
             }
+            recordIndex++;
         }
 
         if (numMatchUps > 0) {
+            Header header = extractor.getHeader();
+            // emit header ???
+
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numMatchUps);
