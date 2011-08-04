@@ -73,7 +73,7 @@ public class PlacemarkRecordSource implements RecordSource {
         }
 
         @Override
-        public Object[] getValues() {
+        public Object[] getAttributeValues() {
             return new Object[]{
                     placemark.getName(),
                     placemark.getGeoPos().lat,

@@ -83,7 +83,7 @@ public class ExtractorTest {
         assertEquals(1, coordinate.lat, 0.0001f);
         assertEquals(0, coordinate.lon, 0.0001f);
 
-        Object[] values = extract.getValues();
+        Object[] values = extract.getAttributeValues();
         assertNotNull(values);
         assertEquals(extract.getHeader().getAttributeNames().length, values.length);
         int index = 0;
@@ -142,7 +142,7 @@ public class ExtractorTest {
 
 
         @Override
-        public Object[] getValues() {
+        public Object[] getAttributeValues() {
             return new Object[]{
                     coordinate.lat,
                     coordinate.lon,

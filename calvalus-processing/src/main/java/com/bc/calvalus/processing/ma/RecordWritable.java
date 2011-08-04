@@ -24,7 +24,7 @@ public class RecordWritable implements Writable {
     public RecordWritable(Record... records) {
         List<String> strings = new ArrayList<String>();
         for (Record record : records) {
-            Object[] values = record.getValues();
+            Object[] values = record.getAttributeValues();
             for (Object value : values) {
                 strings.add(value.toString());
             }

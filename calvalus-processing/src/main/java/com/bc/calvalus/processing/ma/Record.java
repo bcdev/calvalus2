@@ -21,5 +21,5 @@ public interface Record {
     /**
      * @return The attribute values according to {@link Header#getAttributeNames()}.
      */
-    Object[] getValues();
+    Object[] getAttributeValues();
 }

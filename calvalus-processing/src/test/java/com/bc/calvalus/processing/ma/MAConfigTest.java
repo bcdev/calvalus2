@@ -73,7 +73,7 @@ public class MAConfigTest {
                 }
 
                 @Override
-                public Object[] getValues() {
+                public Object[] getAttributeValues() {
                     return new Object[0];
                 }
             };

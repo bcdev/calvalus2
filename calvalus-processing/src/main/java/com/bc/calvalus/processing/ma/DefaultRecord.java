@@ -30,7 +30,7 @@ public class DefaultRecord implements Record {
     }
 
     @Override
-    public Object[] getValues() {
+    public Object[] getAttributeValues() {
         return values;
     }
 }
