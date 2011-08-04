@@ -25,7 +25,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -63,35 +62,26 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Product product = BeamUtils.readProduct(inputPath, configuration);
 
-        final Band[] bands = product.getBands();
-        final float[] value = new float[1];
-
         final RecordSource recordSource = maConfig.createRecordSource();
 
-        int numMatchUps = 0;
-
-        final Iterable<Record> records;
+        Extractor extractor = new Extractor(product);
+        extractor.setInput(recordSource);
+        Iterable<Record> extractedRecords;
         try {
-            records = recordSource.getRecords();
+            extractedRecords = extractor.getRecords();
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
 
-        Extractor extractor = new Extractor(product);
-        long recordIndex = 0L;
-        for (Record record : records) {
-            Record extract = extractor.extract(record);
-            if (extract != null) {
-                context.write(new Text(product.getName() + "_" + recordIndex), new RecordWritable(record, extract));
-//            emit(record, extract)
-                numMatchUps++;
-            }
-            recordIndex++;
+        int numMatchUps = 0;
+        for (Record extractedRecord : extractedRecords) {
+            context.write(new Text(product.getName() + "_" + numMatchUps), new RecordWritable(extractedRecord));
+            numMatchUps++;
         }
 
         if (numMatchUps > 0) {
             Header header = extractor.getHeader();
-            // emit header ???
+            // todo - we must somehow emit header as well
 
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);

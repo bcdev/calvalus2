@@ -20,10 +20,10 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * The configuration for the match-up processing.
@@ -48,36 +48,11 @@ public class MAConfigTest {
     public static class TestRecordSourceSpi extends RecordSourceSpi {
         @Override
         public RecordSource createRecordSource(MAConfig config) {
-            return new TestRecordSource();
+            DefaultHeader header = new DefaultHeader("lat", "lon");
+            DefaultRecordSource recordSource = new DefaultRecordSource(header);
+            recordSource.addRecord(new GeoPos(0, 0));
+            return recordSource;
         }
     }
 
-    public static class TestRecordSource implements RecordSource {
-
-        @Override
-        public Header getHeader() {
-            return null;
-        }
-
-        @Override
-        public Iterable<Record> getRecords() {
-            Record record = new Record() {
-                @Override
-                public Header getHeader() {
-                    return null;
-                }
-
-                @Override
-                public GeoPos getCoordinate() {
-                    return null;
-                }
-
-                @Override
-                public Object[] getAttributeValues() {
-                    return new Object[0];
-                }
-            };
-            return Arrays.asList(record);
-        }
-    }
 }

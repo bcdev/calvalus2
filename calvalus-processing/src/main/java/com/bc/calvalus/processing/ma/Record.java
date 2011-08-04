@@ -8,13 +8,9 @@ import org.esa.beam.framework.datamodel.GeoPos;
  * @author Norman
  */
 public interface Record {
-    /**
-     * @return The header of the record source from which this record originates.
-     */
-    Header getHeader();
 
     /**
-     * @return The coordinate.
+     * @return The coordinate which is usually internally represented in form of one or more attribute values.
      */
     GeoPos getCoordinate();
 

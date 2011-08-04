@@ -23,8 +23,7 @@ public class ExtractorTest {
 
     @Test
     public void testThatRecordsAreGeneratedForContainedCoordinates() throws Exception {
-        Product product = createProduct();
-        Extractor extractor = new Extractor(product);
+        Extractor extractor = createExtractor();
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 0))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 1))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 0))));
@@ -33,8 +32,7 @@ public class ExtractorTest {
 
     @Test
     public void testThatRecordsAreNotGeneratedForOutlyingCoordinates() throws Exception {
-        Product product = createProduct();
-        Extractor extractor = new Extractor(product);
+        Extractor extractor = createExtractor();
         assertNull(extractor.extract(new TestRecord(new GeoPos(-1, -1))));
         assertNull(extractor.extract(new TestRecord(new GeoPos(-1, 2))));
         assertNull(extractor.extract(new TestRecord(new GeoPos(-3, -1))));
@@ -42,8 +40,7 @@ public class ExtractorTest {
 
     @Test
     public void testThatHeaderIsCorrect() throws Exception {
-        Product product = createProduct();
-        Extractor extractor = new Extractor(product);
+        Extractor extractor = createExtractor();
         Header header = extractor.getHeader();
         assertNotNull(header);
         String[] attributeNames = header.getAttributeNames();
@@ -69,15 +66,41 @@ public class ExtractorTest {
         assertEquals(10, index);
     }
 
+    @Test
+    public void testGetRecords() throws Exception {
+        Extractor extractor = createExtractor();
+
+        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader("lat", "lon"));
+        input.addRecord(new GeoPos(1, 0));  // ok
+        input.addRecord(new GeoPos(1, 1));  // ok
+        input.addRecord(new GeoPos(0, 0));  // ok
+        input.addRecord(new GeoPos(0, 1));  // ok
+
+        extractor.setInput(input);
+
+        Iterable<Record> records = extractor.getRecords();
+        assertNotNull(records);
+        int n = 0;
+        for (Record record : records) {
+            n++;
+        }
+        assertEquals(4, n);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testThatGetRecordsRequiresInput() throws Exception {
+        Extractor extractor = createExtractor();
+        extractor.getRecords();
+    }
 
     @Test
-    public void testThatExtractIsCorrect() throws Exception {
-        Product product = createProduct();
-        Extractor extractor = new Extractor(product);
+    public void testExtract() throws Exception {
+        Extractor extractor = createExtractor();
         Record extract = extractor.extract(new TestRecord(new GeoPos(1, 0)));
         assertNotNull(extract);
 
-        assertSame(extract.getHeader(), extract.getHeader());
+        assertNotNull(extractor.getHeader());
+        assertNotNull(extractor.getHeader().getAttributeNames());
 
         GeoPos coordinate = extract.getCoordinate();
         assertEquals(1, coordinate.lat, 0.0001f);
@@ -85,18 +108,23 @@ public class ExtractorTest {
 
         Object[] values = extract.getAttributeValues();
         assertNotNull(values);
-        assertEquals(extract.getHeader().getAttributeNames().length, values.length);
+        assertEquals(extractor.getHeader().getAttributeNames().length, values.length);
         int index = 0;
         assertEquals("A", values[index++]); // product_name
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_x
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_y
         assertEquals("time", values[index++]); // pixel_time
-        assertEquals(0.5f, (Float)values[index++], 1e-5f);   // b1 = X
-        assertEquals(0.5f, (Float)values[index++], 1e-5f);   // b2 = Y
-        assertEquals(1.0f, (Float)values[index++], 1e-5f);   // b3 = X+Y
+        assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b1 = X
+        assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b2 = Y
+        assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y
         assertEquals(1, values[index++]);    // f.valid = true
         assertEquals(1f, values[index++]);  // latitude
         assertEquals(0f, values[index++]);   // longitude
+    }
+
+    private Extractor createExtractor() {
+        Product product = createProduct();
+        return new Extractor(product);
     }
 
     private Product createProduct() {
@@ -128,20 +156,6 @@ public class ExtractorTest {
         }
 
         @Override
-        public Header getHeader() {
-            return new Header() {
-                @Override
-                public String[] getAttributeNames() {
-                    return new String[]{
-                            "lat",
-                            "lon"
-                    };
-                }
-            };
-        }
-
-
-        @Override
         public Object[] getAttributeValues() {
             return new Object[]{
                     coordinate.lat,
@@ -154,4 +168,5 @@ public class ExtractorTest {
             return coordinate;
         }
     }
+
 }
