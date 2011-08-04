@@ -10,14 +10,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A record source that creates records from BEAM placemark XML.
+ *
  * @author MarcoZ
  * @author Norman
  */
 public class PlacemarkRecordSource implements RecordSource {
-    private Reader reader;
+    public static final String[] ATTRIBUTE_NAMES = new String[]{"name", "latitude", "longitude"};
+    private final Header header;
+    private final Reader reader;
 
+    /**
+     * Constructor.
+     *
+     * @param reader The reader for the placemark XML.
+     */
     public PlacemarkRecordSource(Reader reader) {
+        this.header = new Header() {
+            @Override
+            public String[] getAttributeNames() {
+                return ATTRIBUTE_NAMES;
+            }
+        };
         this.reader = reader;
+
+    }
+
+    @Override
+    public Header getHeader() {
+        return header;
     }
 
     @Override
@@ -30,16 +51,15 @@ public class PlacemarkRecordSource implements RecordSource {
         return records;
     }
 
-    public static class Spi extends  RecordSourceSpi {
+    public static class Spi extends RecordSourceSpi {
 
         @Override
-        public RecordSource createRecordSource(MAConfig maConfig) {
+        public RecordSource createRecordSource(MAConfig config) {
             return null;
         }
     }
 
-    private static class PlacemarkRecord implements Record {
-
+    private class PlacemarkRecord implements Record {
 
         private final Placemark placemark;
 
@@ -49,17 +69,12 @@ public class PlacemarkRecordSource implements RecordSource {
 
         @Override
         public Header getHeader() {
-            return new Header() {
-                @Override
-                public String[] getAttributeNames() {
-                    return new String[] {"name", "latitude", "longitude"};
-                }
-            };
+            return header;
         }
 
         @Override
         public Object[] getValues() {
-            return new Object[] {
+            return new Object[]{
                     placemark.getName(),
                     placemark.getGeoPos().lat,
                     placemark.getGeoPos().lon,

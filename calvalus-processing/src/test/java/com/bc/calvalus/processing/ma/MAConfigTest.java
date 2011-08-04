@@ -47,12 +47,17 @@ public class MAConfigTest {
 
     public static class TestRecordSourceSpi extends RecordSourceSpi {
         @Override
-        public RecordSource createRecordSource(MAConfig maConfig) {
+        public RecordSource createRecordSource(MAConfig config) {
             return new TestRecordSource();
         }
     }
 
     public static class TestRecordSource implements RecordSource {
+
+        @Override
+        public Header getHeader() {
+            return null;
+        }
 
         @Override
         public Iterable<Record> getRecords() {

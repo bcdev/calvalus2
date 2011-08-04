@@ -8,6 +8,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A Hadoop writable for {@link Record}s.
+ *
+ * @author MarcoZ
+ * @author Norman
+ */
 public class RecordWritable implements Writable {
 
     private String[] values;

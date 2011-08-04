@@ -3,16 +3,17 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.GeoPos;
 
 /**
- * A match-up record.
+ * A default implementation of a {@link Record}.
  *
+ * @author MarcoZ
  * @author Norman
  */
-public class DefaultRecord implements Record{
+public class DefaultRecord implements Record {
     private final Header header;
     private final GeoPos coordinate;
     private final Object[] values;
 
-    public DefaultRecord(Header header, GeoPos coordinate, Object ... values) {
+    public DefaultRecord(Header header, GeoPos coordinate, Object... values) {
         this.header = header;
         this.coordinate = coordinate;
         this.values = values;
