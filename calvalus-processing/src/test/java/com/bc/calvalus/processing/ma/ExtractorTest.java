@@ -3,6 +3,9 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.*;
 import org.junit.Test;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import static org.junit.Assert.*;
 
 /**
@@ -71,20 +74,45 @@ public class ExtractorTest {
         Extractor extractor = createExtractor();
 
         DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader("lat", "lon"));
-        input.addRecord(new GeoPos(1, 0));  // ok
-        input.addRecord(new GeoPos(1, 1));  // ok
-        input.addRecord(new GeoPos(0, 0));  // ok
-        input.addRecord(new GeoPos(0, 1));  // ok
+        input.addRecord(new GeoPos(1, 0));  // ok 1
+        input.addRecord(new GeoPos(1, 1));  // ok 2
+        input.addRecord(new GeoPos(-2, 1)); // reject
+        input.addRecord(new GeoPos(0, 0));  // ok 3
+        input.addRecord(new GeoPos(0, 1));  // ok 4
+        input.addRecord(new GeoPos(0, -1)); // reject
+        input.addRecord(new GeoPos(5, 0));  // reject
 
         extractor.setInput(input);
 
         Iterable<Record> records = extractor.getRecords();
         assertNotNull(records);
-        int n = 0;
-        for (Record record : records) {
-            n++;
+
+        Iterator<Record> iterator = records.iterator();
+        // 1
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
+        // 2
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
+        // 3
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
+        // 4
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
+        // end
+        assertFalse(iterator.hasNext());
+        // Check that it is still false
+        assertFalse(iterator.hasNext());
+        assertFalse(iterator.hasNext());
+
+        try {
+            iterator.next();
+            fail("NSEE expected");
+        } catch (NoSuchElementException e) {
+            // ok
         }
-        assertEquals(4, n);
+
     }
 
     @Test(expected = IllegalStateException.class)

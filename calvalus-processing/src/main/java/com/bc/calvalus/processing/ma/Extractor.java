@@ -3,10 +3,7 @@ package com.bc.calvalus.processing.ma;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Extracts an output record.
@@ -139,6 +136,8 @@ public class Extractor implements RecordSource {
 
     private class RecordIterator implements Iterator<Record> {
         private final Iterator<Record> inputIterator;
+        private Record next;
+        private boolean nextValid;
 
         public RecordIterator(Iterator<Record> inputIterator) {
             this.inputIterator = inputIterator;
@@ -146,19 +145,41 @@ public class Extractor implements RecordSource {
 
         @Override
         public boolean hasNext() {
-            return inputIterator.hasNext();
+            if (!nextValid) {
+                next = next0();
+                nextValid = true;
+            }
+            return next != null;
         }
 
         @Override
         public Record next() {
-            Record record = inputIterator.next();
-            try {
-                return extract(record);
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception t) {
-                throw new RuntimeException(t);
+            if (!nextValid) {
+                next = next0();
+                nextValid = true;
             }
+            if (next == null) {
+                throw new NoSuchElementException();
+            }
+            nextValid = false;
+            return next;
+        }
+
+        private Record next0() {
+            while (inputIterator.hasNext()) {
+                Record record = inputIterator.next();
+                try {
+                    Record next = extract(record);
+                    if (next != null) {
+                        return next;
+                    }
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception t) {
+                    throw new RuntimeException(t);
+                }
+            }
+            return null;
         }
 
         @Override
