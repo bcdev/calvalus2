@@ -27,6 +27,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.*;
 /**
  * @author MarcoZ
@@ -35,7 +37,7 @@ public class MAWorkflowItemTest {
     @Test
     public void testCreateJob() throws Exception {
         HadoopProcessingService hadoopProcessingService = new HadoopProcessingService(new JobClient(new JobConf()));
-        MAConfig maConfig1 = new MAConfig("TestRecordSourceSpi");
+        MAConfig maConfig1 = new MAConfig("TestRecordSourceSpi", new HashMap<String, String>());
 
         String jobName = "MaTestJob";
         String[] inputFiles = new String[]{"file1", "file2"};

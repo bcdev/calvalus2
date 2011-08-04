@@ -20,6 +20,8 @@ package com.bc.calvalus.processing.ma;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
+import java.util.Map;
+
 /**
  * The configuration for the match-up analysis.
  *
@@ -27,8 +29,11 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
  */
 public class MAConfig {
 
-    @Parameter (defaultValue = "")
+    @Parameter (defaultValue = "com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi")
     private String recordSourceSpiClassName;
+
+    @Parameter
+    private Map<String, String> recordSourceConfig;
 
     public static MAConfig fromXml(String xml) {
         MAConfig config = new MAConfig();
@@ -39,12 +44,14 @@ public class MAConfig {
     public MAConfig() {
     }
 
-    public MAConfig(String recordSourceSpiClassName) {
+    public MAConfig(String recordSourceSpiClassName,
+                    Map<String, String> recordSourceConfig) {
         this.recordSourceSpiClassName = recordSourceSpiClassName;
+        this.recordSourceConfig = recordSourceConfig;
     }
 
-    public RecordSource createRecordSource() {
+    public RecordSource createRecordSource() throws Exception {
         RecordSourceSpi service = RecordSourceSpi.get(recordSourceSpiClassName);
-        return service != null ? service.createRecordSource(this) : null;
+        return service != null ? service.createRecordSource(recordSourceConfig) : null;
     }
 }
