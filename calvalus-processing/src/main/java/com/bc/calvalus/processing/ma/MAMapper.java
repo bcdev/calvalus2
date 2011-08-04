@@ -73,6 +73,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
 
+
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {
             context.write(new Text(product.getName() + "_" + numMatchUps), new RecordWritable(extractedRecord));
@@ -80,9 +81,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         }
 
         if (numMatchUps > 0) {
-            Header header = extractor.getHeader();
-            // todo - we must somehow emit header as well
-
+            context.write(new Text(product.getName() + "_header"), new RecordWritable(extractor.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numMatchUps);

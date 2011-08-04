@@ -21,6 +21,10 @@ public class RecordWritable implements Writable {
     public RecordWritable() {
     }
 
+    public RecordWritable(String[] values) {
+        this.values = values;
+    }
+
     public RecordWritable(Record... records) {
         List<String> strings = new ArrayList<String>();
         for (Record record : records) {
