@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.ma;
 
-import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -13,10 +12,10 @@ public abstract class RecordSourceSpi {
     /**
      * Creates a new record source using the given configuration.
      *
-     * @param config The configuration
+     * @param recordSourceUrl The URL of the record source.
      * @return The record source, or {@code null} if it could not be created.
      */
-    public abstract RecordSource createRecordSource(Map<String, String> config) throws Exception;
+    public abstract RecordSource createRecordSource(String recordSourceUrl) throws Exception;
 
     /**
      * Gets a SPI instance for the given SPI class name.

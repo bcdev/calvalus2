@@ -8,10 +8,9 @@ import org.esa.beam.framework.datamodel.Placemark;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A record source that creates records from BEAM placemark XML.
@@ -20,7 +19,7 @@ import java.util.Map;
  * @author Norman
  */
 public class PlacemarkRecordSource implements RecordSource {
-    public static final String CALVALUS_PLACEMARK_RECORD_SOURCE_URI = "calvalus.placemarkRecordSource.uri";
+    public static final String URL_PARAM_NAME = "url";
     public static final String[] ATTRIBUTE_NAMES = new String[]{"name", "latitude", "longitude"};
 
     private final Header header;
@@ -55,13 +54,10 @@ public class PlacemarkRecordSource implements RecordSource {
     public static class Spi extends RecordSourceSpi {
 
         @Override
-        public RecordSource createRecordSource(Map<String, String> config) throws Exception {
-            String uriString = config.get(CALVALUS_PLACEMARK_RECORD_SOURCE_URI);
-            URI uri = new URI(uriString);
-            InputStream inputStream = uri.toURL().openStream();
+        public RecordSource createRecordSource(String url) throws Exception {
+            InputStream inputStream = new URL(url).openStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            PlacemarkRecordSource placemarkRecordSource = new PlacemarkRecordSource(inputStreamReader);
-            return placemarkRecordSource;
+            return new PlacemarkRecordSource(inputStreamReader);
         }
     }
 

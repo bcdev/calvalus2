@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.WpsConfig;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Test;
 import org.xml.sax.SAXException;
@@ -25,7 +24,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test for {@link com.bc.calvalus.processing.WpsConfig}.

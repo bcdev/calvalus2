@@ -20,9 +20,7 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -37,7 +35,7 @@ public class MAConfigTest {
 
     @Test
     public void testGetRecordSource() throws Exception {
-        MAConfig maConfig = new MAConfig(TestRecordSourceSpi.class.getName(), new HashMap<String, String>());
+        MAConfig maConfig = new MAConfig(TestRecordSourceSpi.class.getName(), "");
         RecordSource recordSource = maConfig.createRecordSource();
         assertNotNull(recordSource);
         assertNotNull(recordSource.getRecords());
@@ -49,7 +47,7 @@ public class MAConfigTest {
 
     public static class TestRecordSourceSpi extends RecordSourceSpi {
         @Override
-        public RecordSource createRecordSource(Map<String, String> config) {
+        public RecordSource createRecordSource(String url) {
             DefaultHeader header = new DefaultHeader("lat", "lon");
             DefaultRecordSource recordSource = new DefaultRecordSource(header);
             recordSource.addRecord(new GeoPos(0, 0));

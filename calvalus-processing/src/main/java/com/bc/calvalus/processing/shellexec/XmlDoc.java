@@ -125,4 +125,8 @@ public class XmlDoc {
     public Node getNode(String path) throws XPathExpressionException {
         return (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
     }
+
+     public Node getNode(String path, Node node) throws XPathExpressionException {
+        return (Node) xpath.evaluate(path, node, XPathConstants.NODE);
+    }
 }
