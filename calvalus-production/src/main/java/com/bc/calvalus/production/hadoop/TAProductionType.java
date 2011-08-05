@@ -31,25 +31,6 @@ import java.util.Set;
  */
 public class TAProductionType extends HadoopProductionType {
     public static final String NAME = "TA";
-    private static final String TA_REGIONS_PROPERTIES = "ta-regions.properties";
-
-    /*
-     public static void main(String[] args) throws IOException {
-         File[] files = new File("C:\\Users\\Norman\\Downloads\\cc_sites").listFiles();
-         for (File file : files) {
-             Properties properties = new Properties();
-             FileReader reader = new FileReader(file);
-             try {
-                 properties.load(reader);
-                 String geometry = properties.getProperty("geometry[0]");
-                 String s1 = file.getName() + " = " + geometry;
-                 System.out.println(s1);
-             } finally {
-                 reader.close();
-             }
-         }
-     }
-    */
 
     public TAProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, processingService, stagingService);
