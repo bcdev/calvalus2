@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.WpsConfig;
+import com.bc.calvalus.processing.beam.BeamOperatorTool;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.io.IOUtils;
 import com.vividsolutions.jts.geom.Geometry;
@@ -118,7 +119,7 @@ public class L3FormatterTool extends Configured implements Tool {
     private String loadProcessingWpsXml(String hadoopJobOutputDir) throws IOException {
         Path l3OutputDir = new Path(hadoopJobOutputDir);
         FileSystem fs = l3OutputDir.getFileSystem(getConf());
-        InputStream is = fs.open(new Path(l3OutputDir, L3Config.L3_REQUEST_FILENAME));
+        InputStream is = fs.open(new Path(l3OutputDir, BeamOperatorTool.L3_REQUEST_FILENAME));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         IOUtils.copyBytes(is, baos);
         return baos.toString();

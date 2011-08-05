@@ -57,6 +57,7 @@ public class BeamOperatorTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static Options options = new Options();
+    public static final String L3_REQUEST_FILENAME = "wps-request.xml";
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new BeamOperatorTool(), args));
@@ -108,7 +109,7 @@ public class BeamOperatorTool extends Configured implements Tool {
             if (success) {
                 Path outputPath = FileOutputFormat.getOutputPath(job);
                 FileSystem outputPathFileSystem = outputPath.getFileSystem(job.getConfiguration());
-                FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, L3Config.L3_REQUEST_FILENAME));
+                FSDataOutputStream os = outputPathFileSystem.create(new Path(outputPath, L3_REQUEST_FILENAME));
                 os.writeBytes(requestContent);
                 os.close();
 

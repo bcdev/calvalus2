@@ -34,7 +34,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class L3Config {
-    public static final String L3_REQUEST_FILENAME = "wps-request.xml";
 
     public static class VariableConfiguration {
         String name;
