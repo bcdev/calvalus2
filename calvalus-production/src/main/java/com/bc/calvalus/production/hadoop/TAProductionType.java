@@ -12,15 +12,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import java.util.Set;
 
 /**
  * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
@@ -142,44 +135,4 @@ public class TAProductionType extends HadoopProductionType {
         TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, geometry);
         return new TAConfig(regionConfiguration);
     }
-
-
-    //unused
-    private static ArrayList<TAConfig.RegionConfiguration> createRegionList(Properties properties) {
-        WKTReader wktReader = new WKTReader();
-        Set<String> regionNames = properties.stringPropertyNames();
-        ArrayList<TAConfig.RegionConfiguration> regionList = new ArrayList<TAConfig.RegionConfiguration>();
-        for (String regionName : regionNames) {
-            String wkt = properties.getProperty(regionName);
-            Geometry geometry;
-            try {
-                geometry = wktReader.read(wkt);
-            } catch (ParseException e) {
-                throw new IllegalStateException(regionName + " = " + wkt, e);
-            }
-            regionList.add(new TAConfig.RegionConfiguration(regionName, geometry));
-        }
-        return regionList;
-    }
-
-    //unused
-    private static Properties loadRegions(String resource) {
-        Properties properties = new Properties();
-        InputStream inputStream = TAProductionType.class.getResourceAsStream(resource);
-        if (inputStream == null) {
-            throw new IllegalStateException("Resource not found: " + resource);
-        }
-        try {
-            try {
-                properties.load(inputStream);
-            } finally {
-                inputStream.close();
-            }
-            return properties;
-        } catch (IOException e) {
-            throw new IllegalStateException("Error reading resource: " + resource, e);
-        }
-    }
-
-
 }
