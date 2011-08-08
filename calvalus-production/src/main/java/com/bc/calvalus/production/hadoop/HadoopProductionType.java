@@ -118,4 +118,32 @@ public abstract class HadoopProductionType implements ProductionType {
         }
         return globs;
     }
+
+    static List<String> getPathPatterns(String pattern, String region, Date minDate, Date maxDate) {
+        if (region != null) {
+            pattern = pattern.replaceAll("\\$\\{REGION\\}", region);
+        }
+        List<String> patternList = new ArrayList<String>();
+        boolean hasDates = minDate != null && maxDate != null;
+
+        if (hasDates) {
+            Calendar calendar = ProductData.UTC.createCalendar();
+            calendar.setTime(minDate);
+            Calendar stopCal = ProductData.UTC.createCalendar();
+            stopCal.setTime(maxDate);
+            do {
+                String p = pattern.replaceAll("\\$\\{YYYY\\}", String.format("%tY", calendar));
+                p = p.replaceAll("\\$\\{MM\\}", String.format("%tm", calendar));
+                p = p.replaceAll("\\$\\{DD\\}", String.format("%td", calendar));
+                if (!patternList.contains(p)) {
+                    patternList.add(p);
+                }
+                calendar.add(Calendar.DAY_OF_WEEK, 1);
+            } while (!calendar.after(stopCal));
+        } else {
+            patternList.add(pattern);
+        }
+        return patternList;
+    }
+
 }
