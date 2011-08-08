@@ -58,8 +58,8 @@ public class L2ProductionTypeTest {
         callArgumentsList = new ArrayList<CallArguments>();
         productionType = new L2ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
             @Override
-            public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
-                callArgumentsList.add(new CallArguments(inputProductSetId, minDate, maxDate));
+            public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+                callArgumentsList.add(new CallArguments(inputPathPattern, minDate, maxDate));
                 return new String[]{"MER_RR_007.N1"};
             }
         };

@@ -28,7 +28,7 @@ public class L3ProductionTypeTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3ProductionType type = new L3ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
             @Override
-            public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
+            public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
                 return new String[]{"MER_RR_007.N1"};
             }
         };

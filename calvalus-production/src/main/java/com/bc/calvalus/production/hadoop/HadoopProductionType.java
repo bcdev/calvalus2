@@ -26,11 +26,7 @@ import com.bc.calvalus.staging.StagingService;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
@@ -81,8 +77,8 @@ public abstract class HadoopProductionType implements ProductionType {
         return stagingService;
     }
 
-    public String[] getInputFiles(String inputProductSetId, Date minDate, Date maxDate) throws ProductionException {
-        List<String> globs = getPathGlobs(inputProductSetId, minDate, maxDate);
+    public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+        List<String> globs = getPathGlobs(inputPathPattern, minDate, maxDate);
         String dataInputPath = processingService.getDataInputPath();
         try {
             List<String> inputFileList = new ArrayList<String>();
@@ -96,12 +92,12 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    static List<String> getPathGlobs(String productSetId, Date minDate, Date maxDate) {
-        if (productSetId.endsWith("/")) {
-            productSetId = productSetId.substring(0, productSetId.length() - 1);
+    static List<String> getPathGlobs(String inputPathPattern, Date minDate, Date maxDate) {
+        if (inputPathPattern.endsWith("/")) {
+            inputPathPattern = inputPathPattern.substring(0, inputPathPattern.length() - 1);
         }
-        if (!productSetId.contains("/")) {
-            productSetId = productSetId + "/*";
+        if (!inputPathPattern.contains("/")) {
+            inputPathPattern = inputPathPattern + "/*";
         }
         List<String> globs = new ArrayList<String>();
         if (minDate != null && maxDate != null) {
@@ -110,40 +106,41 @@ public abstract class HadoopProductionType implements ProductionType {
             startCal.setTime(minDate);
             stopCal.setTime(maxDate);
             do {
-                globs.add(String.format("%1$s/%2$tY/%2$tm/%2$td/*.N1", productSetId, startCal));
+                globs.add(String.format("%1$s/%2$tY/%2$tm/%2$td/*.N1", inputPathPattern, startCal));
                 startCal.add(Calendar.DAY_OF_WEEK, 1);
             } while (!startCal.after(stopCal));
         } else {
-            globs.add(String.format("%1$s/*/*/*/*.N1", productSetId));
+            globs.add(String.format("%1$s/*/*/*/*.N1", inputPathPattern));
         }
         return globs;
     }
 
-    static List<String> getPathPatterns(String pattern, String region, Date minDate, Date maxDate) {
+    static List<String> getInputPathGlobs(String inputPathPattern, String region, Date minDate, Date maxDate) {
         if (region != null) {
-            pattern = pattern.replaceAll("\\$\\{REGION\\}", region);
+            inputPathPattern = inputPathPattern.replace("${region}", region);
         }
-        List<String> patternList = new ArrayList<String>();
-        boolean hasDates = minDate != null && maxDate != null;
+        List<String> globList = new ArrayList<String>(128);
 
-        if (hasDates) {
+        if (minDate != null && maxDate != null) {
+            Set<String> globSet = new HashSet<String>(517);
             Calendar calendar = ProductData.UTC.createCalendar();
             calendar.setTime(minDate);
             Calendar stopCal = ProductData.UTC.createCalendar();
             stopCal.setTime(maxDate);
             do {
-                String p = pattern.replaceAll("\\$\\{YYYY\\}", String.format("%tY", calendar));
-                p = p.replaceAll("\\$\\{MM\\}", String.format("%tm", calendar));
-                p = p.replaceAll("\\$\\{DD\\}", String.format("%td", calendar));
-                if (!patternList.contains(p)) {
-                    patternList.add(p);
+                String glob = inputPathPattern.replace("${yyyy}", String.format("%tY", calendar));
+                glob = glob.replace("${MM}", String.format("%tm", calendar));
+                glob = glob.replace("${dd}", String.format("%td", calendar));
+                if (!globSet.contains(glob)) {
+                    globSet.add(glob);
+                    globList.add(glob);
                 }
                 calendar.add(Calendar.DAY_OF_WEEK, 1);
             } while (!calendar.after(stopCal));
         } else {
-            patternList.add(pattern);
+            globList.add(inputPathPattern);
         }
-        return patternList;
+        return globList;
     }
 
 }

@@ -29,27 +29,27 @@ public class HadoopProductionTypeTest {
 
     @Test
     public void testGetPathPatterns() throws Exception {
-        List<String> pathGlobs = HadoopProductionType.getPathPatterns("foo", null, null, null);
+        List<String> pathGlobs = HadoopProductionType.getInputPathGlobs("foo", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("foo", pathGlobs.get(0));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/", null, null, null);
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/", pathGlobs.get(0));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/${REGION}/*.N1", "northsea", null, null);
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/${region}/*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/northsea/*.N1", pathGlobs.get(0));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/${REGION}/bar/${REGION}/*.N1", "northsea", null, null);
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/${region}/bar/${region}/*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/northsea/bar/northsea/*.N1", pathGlobs.get(0));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/${YYYY}/${MM}/${DD}/*.N1", null, date("2005-01-01"), date("2005-01-10"));
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, date("2005-01-01"), date("2005-01-10"));
         assertNotNull(pathGlobs);
         assertEquals(10, pathGlobs.size());
         assertEquals("/foo/2005/01/01/*.N1", pathGlobs.get(0));
@@ -63,7 +63,7 @@ public class HadoopProductionTypeTest {
         assertEquals("/foo/2005/01/09/*.N1", pathGlobs.get(8));
         assertEquals("/foo/2005/01/10/*.N1", pathGlobs.get(9));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/${YYYY}/${MM}/${DD}/*.N1", null, date("2005-12-30"), date("2006-01-02"));
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, date("2005-12-30"), date("2006-01-02"));
         assertNotNull(pathGlobs);
         assertEquals(4, pathGlobs.size());
         assertEquals("/foo/2005/12/30/*.N1", pathGlobs.get(0));
@@ -71,14 +71,21 @@ public class HadoopProductionTypeTest {
         assertEquals("/foo/2006/01/01/*.N1", pathGlobs.get(2));
         assertEquals("/foo/2006/01/02/*.N1", pathGlobs.get(3));
 
-        pathGlobs = HadoopProductionType.getPathPatterns("/foo/${YYYY}/${MM}/*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/${yyyy}/${MM}/*.N1", null, date("2005-01-01"), date("2005-01-03"));
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/2005/01/*.N1", pathGlobs.get(0));
+
+        pathGlobs = HadoopProductionType.getInputPathGlobs("/foo/MER_RR__1P*${yyyy}${MM}${dd}*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        assertNotNull(pathGlobs);
+        assertEquals(3, pathGlobs.size());
+        assertEquals("/foo/MER_RR__1P*20050101*.N1", pathGlobs.get(0));
+        assertEquals("/foo/MER_RR__1P*20050102*.N1", pathGlobs.get(1));
+        assertEquals("/foo/MER_RR__1P*20050103*.N1", pathGlobs.get(2));
     }
 
     private Date date(String dateAsString) throws ParseException {
-        return ProductData.UTC.createDateFormat("yyy-MM-dd").parse(dateAsString);
+        return ProductData.UTC.createDateFormat("yyyy-MM-dd").parse(dateAsString);
     }
 
 }
