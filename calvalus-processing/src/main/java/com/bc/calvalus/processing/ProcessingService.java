@@ -14,14 +14,23 @@ public interface ProcessingService<JOBID> {
 
     JobIdFormat<JOBID> getJobIdFormat();
 
-    String getDataInputPath();
+    /**
+     * @param inputPath A relative or absolute data input path.
+     * @return A fully qualified URI comprising the filesystem and absolute data input path.
+     */
+    String getDataInputPath(String inputPath);
 
-    String getDataOutputPath();
+    /**
+     * @param outputPath A relative or absolute data output path.
+     * @return A fully qualified URI comprising the filesystem and absolute data output path.
+     */
+    String getDataOutputPath(String outputPath);
 
     String getSoftwarePath();
 
     String[] listFilePaths(String dirPath) throws IOException;
 
+    // todo - not needed, code that uses it should go into ProcessingService impl.
     InputStream open(String path) throws IOException;
 
     ProcessStatus getJobStatus(JOBID jobid);

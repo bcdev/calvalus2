@@ -35,12 +35,12 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public String getDataInputPath() {
+    public String getDataInputPath(String inputPath) {
         return new File(System.getProperty("user.home"), ".calvalus/test-input-data").getPath();
     }
 
     @Override
-    public String getDataOutputPath() {
+    public String getDataOutputPath(String outputPath) {
         return new File(System.getProperty("user.home"), ".calvalus/test-output-data").getPath();
     }
 

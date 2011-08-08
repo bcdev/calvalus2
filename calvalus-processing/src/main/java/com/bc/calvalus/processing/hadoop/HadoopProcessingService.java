@@ -118,14 +118,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public String getDataInputPath() {
-        return dataInputPath.toString();
+    public String getDataInputPath(String inputPath) {
+        return makeQualified(CALVALUS_EODATA_PATH, inputPath);
     }
 
     @Override
-    public String getDataOutputPath() {
-        return dataOutputPath.toString();
+    public String getDataOutputPath(String outputPath) {
+        return makeQualified(CALVALUS_OUTPUTS_PATH, outputPath);
     }
+
 
     @Override
     public String getSoftwarePath() {
@@ -152,7 +153,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-
     @Override
     public boolean killJob(JobID jobId) throws IOException {
         org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
@@ -163,6 +163,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
         return false;
     }
+
 
     @Override
     public void close() throws IOException {
@@ -190,6 +191,14 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         }
         return ProcessStatus.UNKNOWN;
+    }
+
+    private String makeQualified(String parent, String child) {
+        Path path = new Path(child);
+        if (!path.isAbsolute()) {
+            path = new Path(parent, path);
+        }
+        return fileSystem.makeQualified(path).toString();
     }
 
 }

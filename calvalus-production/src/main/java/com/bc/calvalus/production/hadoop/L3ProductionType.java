@@ -1,9 +1,9 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -12,14 +12,9 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -107,11 +102,7 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String userName, String productionId, int index) {
-        return String.format("%s/%s/%s_%d",
-                             getProcessingService().getDataOutputPath(),
-                             userName,
-                             productionId,
-                             index);
+        return getProcessingService().getDataOutputPath(String.format("%s/%s_%d", userName, productionId, index));
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {

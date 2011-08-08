@@ -114,9 +114,6 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String productionId, ProductionRequest productionRequest) {
-        return String.format("%s/%s/%s",
-                             getProcessingService().getDataOutputPath(),
-                             productionRequest.getUserName(),
-                             productionId);
+        return getProcessingService().getDataOutputPath(String.format("%s/%s", productionRequest.getUserName(), productionId));
     }
 }

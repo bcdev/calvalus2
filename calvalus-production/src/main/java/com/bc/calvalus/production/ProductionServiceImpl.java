@@ -71,8 +71,8 @@ public class ProductionServiceImpl implements ProductionService {
         ArrayList<ProductSet> productSets = new ArrayList<ProductSet>();
 
         try {
-            String inputPath = processingService.getDataInputPath();
-            InputStream is = processingService.open(inputPath + "/product-sets.csv");
+            String inputPath = processingService.getDataInputPath("product-sets.csv");
+            InputStream is = processingService.open(inputPath);
             InputStreamReader reader = new InputStreamReader(is);
             CsvReader csvReader = new CsvReader(reader, new char[]{','});
             DateFormat dateFormat = ProductionRequest.getDateFormat();

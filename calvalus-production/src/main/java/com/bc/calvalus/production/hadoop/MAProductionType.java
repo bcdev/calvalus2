@@ -73,10 +73,7 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String userName, String dirName) {
-        return String.format("%s/%s/%s",
-                             getProcessingService().getDataOutputPath(),
-                             userName,
-                             dirName);
+        return getProcessingService().getDataOutputPath(String.format("%s/%s", userName, dirName));
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {

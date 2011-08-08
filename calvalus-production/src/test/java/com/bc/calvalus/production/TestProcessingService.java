@@ -27,12 +27,12 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public String getDataInputPath() {
+    public String getDataInputPath(String inputPath) {
         return "hdfs://cvmaster00:9000/calvalus/eodata";
     }
 
     @Override
-    public String getDataOutputPath() {
+    public String getDataOutputPath(String outputPath) {
         return "hdfs://cvmaster00:9000/calvalus/output";
     }
 
@@ -53,7 +53,7 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public InputStream open(String path) throws IOException {
         String content = "dummy";
-        if ((getDataInputPath() + "/product-sets.csv").equals(path)) {
+        if (getDataInputPath("product-sets.csv").equals(path)) {
             content="ps0,2111-01-01,2222-02-02\nps1,2000-01-01,2000-12-31";
         }
         return new ByteArrayInputStream(content.getBytes());

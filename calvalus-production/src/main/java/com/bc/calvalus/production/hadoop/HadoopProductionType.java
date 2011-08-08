@@ -23,10 +23,12 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
@@ -78,41 +80,21 @@ public abstract class HadoopProductionType implements ProductionType {
     }
 
     public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
-        List<String> globs = getPathGlobs(inputPathPattern, minDate, maxDate);
-        String dataInputPath = processingService.getDataInputPath();
+        InputPathResolver inputPathResolver = new InputPathResolver();
+        inputPathResolver.setMinDate(minDate);
+        inputPathResolver.setMaxDate(maxDate);
+        List<String> globs = inputPathResolver.resolve(inputPathPattern);
         try {
             List<String> inputFileList = new ArrayList<String>();
             for (String glob : globs) {
-                String[] files = processingService.globFilePaths(dataInputPath + "/" + glob);
+                String absolutePath = processingService.getDataInputPath(glob);
+                String[] files = processingService.globFilePaths(absolutePath);
                 inputFileList.addAll(Arrays.asList(files));
             }
             return inputFileList.toArray(new String[inputFileList.size()]);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }
-    }
-
-    static List<String> getPathGlobs(String inputPathPattern, Date minDate, Date maxDate) {
-        if (inputPathPattern.endsWith("/")) {
-            inputPathPattern = inputPathPattern.substring(0, inputPathPattern.length() - 1);
-        }
-        if (!inputPathPattern.contains("/")) {
-            inputPathPattern = inputPathPattern + "/*";
-        }
-        List<String> globs = new ArrayList<String>();
-        if (minDate != null && maxDate != null) {
-            Calendar startCal = ProductData.UTC.createCalendar();
-            Calendar stopCal = ProductData.UTC.createCalendar();
-            startCal.setTime(minDate);
-            stopCal.setTime(maxDate);
-            do {
-                globs.add(String.format("%1$s/%2$tY/%2$tm/%2$td/*.N1", inputPathPattern, startCal));
-                startCal.add(Calendar.DAY_OF_WEEK, 1);
-            } while (!startCal.after(stopCal));
-        } else {
-            globs.add(String.format("%1$s/*/*/*/*.N1", inputPathPattern));
-        }
-        return globs;
     }
 
 }
