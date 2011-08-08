@@ -115,32 +115,4 @@ public abstract class HadoopProductionType implements ProductionType {
         return globs;
     }
 
-    static List<String> getInputPathGlobs(String inputPathPattern, String region, Date minDate, Date maxDate) {
-        if (region != null) {
-            inputPathPattern = inputPathPattern.replace("${region}", region);
-        }
-        List<String> globList = new ArrayList<String>(128);
-
-        if (minDate != null && maxDate != null) {
-            Set<String> globSet = new HashSet<String>(517);
-            Calendar calendar = ProductData.UTC.createCalendar();
-            calendar.setTime(minDate);
-            Calendar stopCal = ProductData.UTC.createCalendar();
-            stopCal.setTime(maxDate);
-            do {
-                String glob = inputPathPattern.replace("${yyyy}", String.format("%tY", calendar));
-                glob = glob.replace("${MM}", String.format("%tm", calendar));
-                glob = glob.replace("${dd}", String.format("%td", calendar));
-                if (!globSet.contains(glob)) {
-                    globSet.add(glob);
-                    globList.add(glob);
-                }
-                calendar.add(Calendar.DAY_OF_WEEK, 1);
-            } while (!calendar.after(stopCal));
-        } else {
-            globList.add(inputPathPattern);
-        }
-        return globList;
-    }
-
 }
