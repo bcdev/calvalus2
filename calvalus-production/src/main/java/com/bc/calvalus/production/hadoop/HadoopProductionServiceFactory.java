@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
@@ -36,6 +37,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = createJobConf(serviceConfiguration);
         try {
             JobClient jobClient = new JobClient(jobConf);
+            HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             ProductionStore productionStore = new SimpleProductionStore(processingService.getJobIdFormat(),
                                                                         new File(calvalusDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
@@ -43,7 +45,10 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l2ProductionType = new L2ProductionType(processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(processingService, stagingService);
-            return new ProductionServiceImpl(processingService, stagingService, productionStore,
+            return new ProductionServiceImpl(inventoryService,
+                                             processingService,
+                                             stagingService,
+                                             productionStore,
                                              l2ProductionType,
                                              l3ProductionType,
                                              taProductionType);

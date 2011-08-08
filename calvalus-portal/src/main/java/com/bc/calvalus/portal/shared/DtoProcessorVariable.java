@@ -19,7 +19,7 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * GWT-serializable version of the {@link com.bc.calvalus.production.ProcessorDescriptor.Variable} class.
+ * GWT-serializable version of the {@link com.bc.calvalus.processing.ProcessorDescriptor.Variable} class.
  *
  * @author MarcoZ
  */

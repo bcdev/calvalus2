@@ -79,6 +79,7 @@ public abstract class HadoopProductionType implements ProductionType {
         return stagingService;
     }
 
+    // todo - move to InventoryService (nf, mz)
     public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);

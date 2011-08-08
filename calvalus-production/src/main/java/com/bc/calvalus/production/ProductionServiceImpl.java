@@ -1,27 +1,18 @@
 package com.bc.calvalus.production;
 
 
-import com.bc.calvalus.catalogue.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.bc.io.IOUtils;
-import org.esa.beam.util.io.CsvReader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,6 +30,7 @@ public class ProductionServiceImpl implements ProductionService {
         RESTART,// todo - implement restart
     }
 
+    private final InventoryService inventoryService;
     private final ProcessingService processingService;
     private final StagingService stagingService;
     private final ProductionType[] productionTypes;
@@ -47,10 +39,12 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
 
-    public ProductionServiceImpl(ProcessingService processingService,
+    public ProductionServiceImpl(InventoryService inventoryService,
+                                 ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
                                  ProductionType... productionTypes) throws ProductionException {
+        this.inventoryService = inventoryService;
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
@@ -68,61 +62,20 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductSet[] getProductSets(String filter) throws ProductionException {
-        ArrayList<ProductSet> productSets = new ArrayList<ProductSet>();
-
         try {
-            String inputPath = processingService.getDataInputPath("product-sets.csv");
-            InputStream is = processingService.open(inputPath);
-            InputStreamReader reader = new InputStreamReader(is);
-            CsvReader csvReader = new CsvReader(reader, new char[]{','});
-            DateFormat dateFormat = ProductionRequest.getDateFormat();
-            List<String[]> stringRecords = csvReader.readStringRecords();
-            for (String[] record : stringRecords) {
-                if (record.length == 3) {
-                    String path = record[0];
-                    Date date1 = dateFormat.parse(record[1]);
-                    Date date2 = dateFormat.parse(record[2]);
-                    productSets.add(new ProductSet(path, date1, date2));
-                }
-            }
-        } catch (ParseException e) {
-            logger.warning(e.getMessage());
-        } catch (IOException e) {
-            logger.warning(e.getMessage());
+            return inventoryService.getProductSets(filter);
+        } catch (Exception e) {
+            throw new ProductionException(e);
         }
-        return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
-        ArrayList<ProcessorDescriptor> descriptors = new ArrayList<ProcessorDescriptor>();
-
         try {
-            String softwarePath = processingService.getSoftwarePath();
-            String[] paths = processingService.listFilePaths(softwarePath);
-            for (String path : paths) {
-                String[] subPaths = processingService.listFilePaths(path);
-                for (String subPath : subPaths) {
-                    if (subPath.endsWith("processor-descriptor.xml")) {
-                        try {
-                            InputStream is = processingService.open(subPath);
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            IOUtils.copyBytes(is, baos);
-                            String xmlContent = baos.toString();
-                            ProcessorDescriptor pd = new ProcessorDescriptor();
-                            BeamUtils.convertXmlToObject(xmlContent, pd);
-                            descriptors.add(pd);
-                        } catch (Exception e) {
-                            logger.warning(e.getMessage());
-                        }
-                    }
-                }
-            }
+            return processingService.getProcessors(filter);
         } catch (IOException e) {
-            logger.warning(e.getMessage());
+            throw new ProductionException("Failed to load list of processors.", e);
         }
-
-        return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
     }
 
     @Override

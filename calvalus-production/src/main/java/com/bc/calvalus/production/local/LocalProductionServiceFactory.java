@@ -1,13 +1,9 @@
 package com.bc.calvalus.production.local;
 
-import com.bc.calvalus.catalogue.ProductSet;
-import com.bc.calvalus.production.ProcessorDescriptor;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceFactory;
-import com.bc.calvalus.production.ProductionServiceImpl;
-import com.bc.calvalus.production.SimpleProductionStore;
+import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.production.*;
 import com.bc.calvalus.staging.SimpleStagingService;
 
 import java.io.File;
@@ -27,13 +23,9 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
 
         LocalProcessingService processingService = new LocalProcessingService();
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
-        ProductionServiceImpl productionService = new ProductionServiceImpl(processingService,
-                                                                            stagingService,
-                                                                            new SimpleProductionStore(processingService.getJobIdFormat(),
-                                                                                                      new File(localContextDir, "test-productions.csv")),
-                                                                            new DummyProductionType(processingService, stagingService)) {
+        InventoryService inventoryService = new InventoryService() {
             @Override
-            public ProductSet[] getProductSets(String filter) throws ProductionException {
+            public ProductSet[] getProductSets(String filter) throws Exception {
                 // Return some dummy product sets
                 return new ProductSet[]{
                         new ProductSet("MER_RR__1P/r03", asDate("2004-01-01"), asDate("2009-12-31")),
@@ -45,7 +37,13 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                         new ProductSet("MER_RR__1P/r03/2009", asDate("2009-01-01"), asDate("2009-12-31")),
                 };
             }
-
+        };
+        ProductionServiceImpl productionService = new ProductionServiceImpl(inventoryService,
+                                                                            processingService,
+                                                                            stagingService,
+                                                                            new SimpleProductionStore(processingService.getJobIdFormat(),
+                                                                                                      new File(localContextDir, "test-productions.csv")),
+                                                                            new DummyProductionType(processingService, stagingService)) {
             @Override
             public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
                 // Return some dummy processors
@@ -89,7 +87,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                 new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
                                                 new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
                         new ProcessorDescriptor("pc2", "MERIS IOP QAA",
-                                                "u = 1\nv = 2" ,
+                                                "u = 1\nv = 2",
                                                 "beam-meris-qaa",
                                                 "1.0.1",
                                                 new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),

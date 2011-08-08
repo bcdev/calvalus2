@@ -5,6 +5,9 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileStatus;
@@ -17,10 +20,13 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
@@ -32,20 +38,48 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     private final JobClient jobClient;
     private final FileSystem fileSystem;
-    private final Path dataInputPath;
-    private final Path dataOutputPath;
-    private final Path softwarePath;
     private final Map<JobID, ProcessStatus> jobStatusMap;
+    private final Logger logger;
 
     public HadoopProcessingService(JobClient jobClient) throws IOException {
         this.jobClient = jobClient;
         this.fileSystem = FileSystem.get(jobClient.getConf());
-        // String fsName = jobClient.getConf().get("fs.default.name");
-        this.dataInputPath = fileSystem.makeQualified(new Path(CALVALUS_EODATA_PATH));
-        this.dataOutputPath = fileSystem.makeQualified(new Path(CALVALUS_OUTPUTS_PATH));
-        this.softwarePath = fileSystem.makeQualified(new Path(CALVALUS_SOFTWARE_PATH));
-        jobStatusMap = new HashMap<JobID, ProcessStatus>();
+        this.jobStatusMap = new HashMap<JobID, ProcessStatus>();
+        this.logger = Logger.getLogger("com.bc.calvalus");
     }
+
+    @Override
+    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
+        ArrayList<ProcessorDescriptor> descriptors = new ArrayList<ProcessorDescriptor>();
+
+        try {
+            Path softwarePath = fileSystem.makeQualified(new Path(CALVALUS_SOFTWARE_PATH));
+            FileStatus[] paths = fileSystem.listStatus(softwarePath);
+            for (FileStatus path : paths) {
+                FileStatus[] subPaths = fileSystem.listStatus(path.getPath());
+                for (FileStatus subPath : subPaths) {
+                    if (subPath.getPath().toString().endsWith("processor-descriptor.xml")) {
+                        try {
+                            InputStream is = fileSystem.open(subPath.getPath());
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            IOUtils.copyBytes(is, baos);
+                            String xmlContent = baos.toString();
+                            ProcessorDescriptor pd = new ProcessorDescriptor();
+                            BeamUtils.convertXmlToObject(xmlContent, pd);
+                            descriptors.add(pd);
+                        } catch (Exception e) {
+                            logger.warning(e.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+        }
+
+        return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
+    }
+
 
     public static void addBundleToClassPath(String bundle, Configuration configuration) throws IOException {
         final FileSystem fileSystem = FileSystem.get(configuration);
@@ -93,16 +127,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return new HadoopJobIdFormat();
     }
 
-    @Override
-    public String[] listFilePaths(String dirPath) throws IOException {
-        FileStatus[] fileStatuses = fileSystem.listStatus(new Path(dirPath));
-        String[] paths = new String[fileStatuses.length];
-        for (int i = 0; i < fileStatuses.length; i++) {
-            paths[i] = fileStatuses[i].getPath().toString();
-        }
-        return paths;
-    }
-
     public String[] globFilePaths(String dirPathGlob) throws IOException {
         FileStatus[] fileStatuses = fileSystem.globStatus(new Path(dirPathGlob));
         String[] paths = new String[fileStatuses.length];
@@ -110,11 +134,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             paths[i] = fileStatuses[i].getPath().toString();
         }
         return paths;
-    }
-
-    @Override
-    public InputStream open(String path) throws IOException {
-        return fileSystem.open(new Path(path));
     }
 
     @Override
@@ -127,11 +146,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return makeQualified(CALVALUS_OUTPUTS_PATH, outputPath);
     }
 
-
-    @Override
-    public String getSoftwarePath() {
-        return softwarePath.toString();
-    }
 
     @Override
     public void updateStatuses() throws IOException {

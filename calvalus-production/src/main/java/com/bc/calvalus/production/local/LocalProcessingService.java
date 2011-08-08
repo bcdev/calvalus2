@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +31,11 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
+    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
+        return new ProcessorDescriptor[0];
+    }
+
+    @Override
     public JobIdFormat<String> getJobIdFormat() {
         return JobIdFormat.STRING;
     }
@@ -42,21 +48,6 @@ class LocalProcessingService implements ProcessingService<String> {
     @Override
     public String getDataOutputPath(String outputPath) {
         return new File(System.getProperty("user.home"), ".calvalus/test-output-data").getPath();
-    }
-
-    @Override
-    public String getSoftwarePath() {
-        return new File(System.getProperty("user.home"), ".calvalus/test-software").getPath();
-    }
-
-    @Override
-    public String[] listFilePaths(String dirPath) throws IOException {
-        return new File(dirPath).list();
-    }
-
-    @Override
-    public InputStream open(String path) throws IOException {
-        return new FileInputStream(path);
     }
 
     @Override

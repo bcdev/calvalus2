@@ -1,4 +1,4 @@
-package com.bc.calvalus.catalogue;
+package com.bc.calvalus.inventory;
 
 
 import java.util.Date;

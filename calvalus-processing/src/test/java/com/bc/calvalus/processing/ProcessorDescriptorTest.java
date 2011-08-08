@@ -14,9 +14,10 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.production;
+package com.bc.calvalus.processing;
 
 
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.beam.BeamUtils;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Test;

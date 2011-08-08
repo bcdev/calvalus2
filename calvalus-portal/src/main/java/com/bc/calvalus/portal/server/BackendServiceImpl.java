@@ -1,9 +1,10 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.catalogue.ProductSet;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.*;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 

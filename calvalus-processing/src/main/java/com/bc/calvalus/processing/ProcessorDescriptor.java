@@ -1,4 +1,4 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.processing;
 
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.gpf.annotations.Parameter;

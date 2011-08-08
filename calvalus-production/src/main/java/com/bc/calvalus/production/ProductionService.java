@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.catalogue.ProductSet;
+import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 
 import java.io.IOException;
 
@@ -13,7 +14,7 @@ public interface ProductionService {
 
     /**
      * Gets all known product sets.
-     * TODO - Check: move to CatalogueService?
+     * TODO - Check: move to InventoryService?
      *
      * @param filter A filter expression (not yet used).
      * @return The product sets.

@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import org.junit.Ignore;
 
 import java.io.ByteArrayInputStream;
@@ -27,6 +28,11 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
+    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
+        return new ProcessorDescriptor[0];
+    }
+
+    @Override
     public String getDataInputPath(String inputPath) {
         return "hdfs://cvmaster00:9000/calvalus/eodata";
     }
@@ -34,29 +40,6 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public String getDataOutputPath(String outputPath) {
         return "hdfs://cvmaster00:9000/calvalus/output";
-    }
-
-    @Override
-    public String getSoftwarePath() {
-        return "hdfs://cvmaster00:9000/calvalus/software/0.5";
-    }
-
-    @Override
-    public String[] listFilePaths(String dirPath) throws IOException {
-        return new String[]{
-                dirPath + "/entry1",
-                dirPath + "/entry2",
-                dirPath + "/entry3",
-        };
-    }
-
-    @Override
-    public InputStream open(String path) throws IOException {
-        String content = "dummy";
-        if (getDataInputPath("product-sets.csv").equals(path)) {
-            content="ps0,2111-01-01,2222-02-02\nps1,2000-01-01,2000-12-31";
-        }
-        return new ByteArrayInputStream(content.getBytes());
     }
 
     @Override

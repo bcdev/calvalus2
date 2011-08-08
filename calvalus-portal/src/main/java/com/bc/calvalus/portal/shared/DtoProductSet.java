@@ -5,7 +5,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 import java.util.Date;
 
 /**
- * GWT-serializable version of the {@link com.bc.calvalus.catalogue.ProductSet} class.
+ * GWT-serializable version of the {@link com.bc.calvalus.inventory.ProductSet} class.
  *
  * @author Norman
  */

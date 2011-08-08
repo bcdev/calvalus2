@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.catalogue.ProductSet;
+import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import org.junit.Before;
@@ -11,21 +12,31 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 public class ProductionServiceImplTest {
+    private InventoryService inventoryServiceMock;
     private TestProcessingService processingServiceMock;
     private ProductionServiceImpl productionServiceUnderTest;
     private TestProductionStore productionStoreMock;
     private TestStagingService stagingServiceMock;
     private TestProductionType productionTypeMock;
 
-
     @Before
     public void setUp() throws Exception {
+        inventoryServiceMock = new InventoryService() {
+            @Override
+            public ProductSet[] getProductSets(String filter) throws Exception {
+                return new ProductSet[] {
+                        new ProductSet("ps0", null, null),
+                        new ProductSet("ps1", null, null),
+                };
+            }
+        };
         processingServiceMock = new TestProcessingService();
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType(processingServiceMock,
                                                     stagingServiceMock);
         productionStoreMock = new TestProductionStore();
-        productionServiceUnderTest = new ProductionServiceImpl(processingServiceMock,
+        productionServiceUnderTest = new ProductionServiceImpl(inventoryServiceMock,
+                                                               processingServiceMock,
                                                                stagingServiceMock,
                                                                productionStoreMock,
                                                                productionTypeMock);
