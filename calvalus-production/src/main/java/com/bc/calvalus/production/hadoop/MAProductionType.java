@@ -34,11 +34,11 @@ public class MAProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createTAProductionName(productionRequest);
 
-        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
+        String inputPath = productionRequest.getParameter("inputPath");
         Date minDate = productionRequest.getDate("minDate", null);
         Date maxDate = productionRequest.getDate("maxDate", null);
         // todo - use geoRegion to filter input files (nf,20.04.2011)
-        String[] l1InputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
+        String[] l1InputFiles = getInputFiles(inputPath, minDate, maxDate);
         String jobName = String.format("%s_L3", productionId);
 
         WorkflowItem workflowItem;
@@ -80,8 +80,8 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Match-up extraction using product set '%s'",
-                             productionRequest.getParameter("inputProductSetId"));
+        return String.format("Match-up extraction using input path '%s'",
+                             productionRequest.getParameter("inputPath"));
 
     }
 }

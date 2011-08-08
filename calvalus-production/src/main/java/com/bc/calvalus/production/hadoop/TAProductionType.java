@@ -35,7 +35,7 @@ public class TAProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createTAProductionName(productionRequest);
 
-        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
+        String inputPath = productionRequest.getParameter("inputPath");
         List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 32);
 
         String processorName = productionRequest.getParameter("processorName");
@@ -61,7 +61,7 @@ public class TAProductionType extends HadoopProductionType {
             String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
+            String[] l1InputFiles = getInputFiles(inputPath, datePair.date1, datePair.date2);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
                 String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
@@ -123,8 +123,8 @@ public class TAProductionType extends HadoopProductionType {
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Trend analysis using product set '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputProductSetId"),
+        return String.format("Trend analysis using input path '%s' and L2 processor '%s'",
+                             productionRequest.getParameter("inputPath"),
                              productionRequest.getParameter("processorName"));
 
     }

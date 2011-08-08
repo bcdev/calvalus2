@@ -34,7 +34,7 @@ public class L3ProductionTypeTest {
         };
         Production production = type.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 3 production using product set 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 3 production using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L3ProductionType.NAME + "_"));
         assertNotNull(production.getWorkflow());
@@ -151,7 +151,7 @@ public class L3ProductionTypeTest {
     static ProductionRequest createValidL3ProductionRequest() {
         return new ProductionRequest(L3ProductionType.NAME, "ewa",
                                      // GeneralLevel 3 parameters
-                                     "inputProductSetId", "MER_RR__1P/r03/2010",
+                                     "inputPath", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
                                      "processorBundleName", "beam",

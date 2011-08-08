@@ -58,15 +58,15 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     static String createL2ProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Level 2 production using product set '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputProductSetId"),
+        return String.format("Level 2 production using input path '%s' and L2 processor '%s'",
+                             productionRequest.getParameter("inputPath"),
                              productionRequest.getParameter("processorName"));
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
+        String inputPath = productionRequest.getParameter("inputPath");
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
         String dateList = productionRequest.getParameter("dateList", null);
@@ -78,7 +78,7 @@ public class L2ProductionType extends HadoopProductionType {
             for (String dateAsString : dateSet) {
                 try {
                     Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
-                    inputFileAccumulator.addAll(Arrays.asList(getInputFiles(inputProductSetId, date, date)));
+                    inputFileAccumulator.addAll(Arrays.asList(getInputFiles(inputPath, date, date)));
                 } catch (ParseException e) {
                     throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
                 }
@@ -87,7 +87,7 @@ public class L2ProductionType extends HadoopProductionType {
         } else {
             Date minDate = productionRequest.getDate("minDate", null);
             Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputFiles(inputProductSetId, minDate, maxDate);
+            inputFiles = getInputFiles(inputPath, minDate, maxDate);
         }
         if (inputFiles.length == 0) {
             throw new ProductionException("No input products found for given time range.");

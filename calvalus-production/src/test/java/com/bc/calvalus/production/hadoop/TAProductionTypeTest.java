@@ -1,9 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
@@ -11,7 +9,6 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestStagingService;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
@@ -34,7 +31,7 @@ public class TAProductionTypeTest {
         };
         Production production = type.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Trend analysis using product set 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Trend analysis using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + TAProductionType.NAME + "_"));
         assertNotNull(production.getWorkflow());
@@ -86,7 +83,7 @@ public class TAProductionTypeTest {
     static ProductionRequest createValidTAProductionRequest() {
         return new ProductionRequest(TAProductionType.NAME, "ewa",
                                      // GeneralLevel 3 parameters
-                                     "inputProductSetId", "MER_RR__1P/r03/2010",
+                                     "inputPath", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
                                      "processorBundleName", "beam",

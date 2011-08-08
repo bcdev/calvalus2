@@ -19,7 +19,7 @@
         </wps:Input>
 
         <wps:Input>
-            <ows:Identifier>inputProductSetId</ows:Identifier>
+            <ows:Identifier>inputPath</ows:Identifier>
             <ows:Title>MERIS SDR</ows:Title>
             <wps:Data>
                 <wps:LiteralData>MER_RR__1P/r03/2008/12/14</wps:LiteralData>

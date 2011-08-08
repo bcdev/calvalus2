@@ -40,12 +40,12 @@ public class L2ProductionTypeTest {
     private List<CallArguments> callArgumentsList;
 
     private static class CallArguments {
-        String inputProductSetId;
+        String inputPath;
         Date minDate;
         Date maxDate;
 
-        private CallArguments(String inputProductSetId, Date minDate, Date maxDate) {
-            this.inputProductSetId = inputProductSetId;
+        private CallArguments(String inputPath, Date minDate, Date maxDate) {
+            this.inputPath = inputPath;
             this.minDate = minDate;
             this.maxDate = maxDate;
         }
@@ -68,8 +68,8 @@ public class L2ProductionTypeTest {
     @Test
     public void testCreateProductionWithoutDates() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-//                                                                  "inputProductSetId", "MER_RR__1P/r03/2010",
-                                                                    "inputProductSetId", "MER_RR__1P/r03",
+//                                                                  "inputPath", "MER_RR__1P/r03/2010",
+                                                                    "inputPath", "MER_RR__1P/r03",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
                                                                     "processorBundleName", "beam",
@@ -84,7 +84,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using product set 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -103,7 +103,7 @@ public class L2ProductionTypeTest {
     @Test
     public void testCreateProductionWithMinMaxDates() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                                                    "inputProductSetId", "MER_RR__1P/r03",
+                                                                    "inputPath", "MER_RR__1P/r03",
                                                                     "minDate", "2005-01-01",
                                                                     "maxDate", "2005-01-31",
                                                                     "outputFormat", "NetCDF",
@@ -120,7 +120,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using product set 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -139,7 +139,7 @@ public class L2ProductionTypeTest {
     @Test
     public void testCreateProductionWithDatelist() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                                                    "inputProductSetId", "MER_RR__1P/r03",
+                                                                    "inputPath", "MER_RR__1P/r03",
                                                                     "dateList", "2005-01-01 2005-01-15 2005-01-31",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
@@ -155,7 +155,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using product set 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -175,7 +175,7 @@ public class L2ProductionTypeTest {
 
     private void assertCallArguments(CallArguments callArguments, String productSetId, String minDate, String maxDate) {
         assertNotNull(callArguments);
-        assertEquals(productSetId, callArguments.inputProductSetId);
+        assertEquals(productSetId, callArguments.inputPath);
         assertDate("minDate", minDate, callArguments.minDate);
         assertDate("maxDate", maxDate, callArguments.maxDate);
     }

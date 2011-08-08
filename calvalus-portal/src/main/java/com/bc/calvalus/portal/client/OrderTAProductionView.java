@@ -179,7 +179,7 @@ public class OrderTAProductionView extends OrderProductionView {
     public HashMap<String, String> getProductionParameters() {
         DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputProductSetId", productSetSelectionForm.getSelectedProductSet().getPath());
+        parameters.put("inputPath", productSetSelectionForm.getSelectedProductSet().getPath());
         parameters.put("outputFormat", outputParametersForm.getOutputFormat());
         parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
         parameters.put("processorBundleName", selectedProcessor.getBundleName());

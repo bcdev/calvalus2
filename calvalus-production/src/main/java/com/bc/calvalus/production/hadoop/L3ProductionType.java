@@ -44,7 +44,7 @@ public class L3ProductionType extends HadoopProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        String inputProductSetId = productionRequest.getParameter("inputProductSetId");
+        String inputPath = productionRequest.getParameter("inputPath");
         List<DatePair> datePairList = getDatePairList(productionRequest, 10);
 
         String processorName = productionRequest.getParameter("processorName");
@@ -63,7 +63,7 @@ public class L3ProductionType extends HadoopProductionType {
             String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
             String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputFiles(inputProductSetId, datePair.date1, datePair.date2);
+            String[] l1InputFiles = getInputFiles(inputPath, datePair.date1, datePair.date2);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i + 1);
 
@@ -115,8 +115,8 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Level 3 production using product set '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputProductSetId"),
+        return String.format("Level 3 production using input path '%s' and L2 processor '%s'",
+                             productionRequest.getParameter("inputPath"),
                              productionRequest.getParameter("processorName"));
 
     }
