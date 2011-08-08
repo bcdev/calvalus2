@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
 
@@ -23,10 +24,18 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class InputPathResolverTest {
+    @Test
+    public void testPathIsAbsolute() {
+        assertTrue(new Path("/a").isAbsolute());
+        assertFalse(new Path("a").isAbsolute());
+        assertTrue(new Path("file:///a").isAbsolute());
+        assertFalse(new Path("file://a").isAbsolute());
+        assertTrue(new Path("hdfs:///a").isAbsolute());
+        assertFalse(new Path("hdfs://a").isAbsolute());
+    }
 
     @Test
     public void testThatInputIsOutputWithSimpleNameAndNoVars() throws ParseException {
@@ -46,8 +55,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatRegionStringIsReplaced() throws ParseException {
-        List<String>
-                pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/*.N1", "northsea", null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/northsea/*.N1", pathGlobs.get(0));
@@ -55,8 +63,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatRegionStringIsReplacedMultipleTimes() throws ParseException {
-        List<String>
-                pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/bar/${region}/*.N1", "northsea", null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/bar/${region}/*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/northsea/bar/northsea/*.N1", pathGlobs.get(0));
@@ -64,8 +71,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatDatePartsAreReplaced() throws ParseException {
-        List<String>
-                pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, date("2005-12-30"), date("2006-01-02"));
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, date("2005-12-30"), date("2006-01-02"));
         assertNotNull(pathGlobs);
         assertEquals(4, pathGlobs.size());
         assertEquals("/foo/2005/12/30/*.N1", pathGlobs.get(0));
@@ -76,8 +82,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatGlobsAreUnique() throws ParseException {
-        List<String>
-                pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/*.N1", null, date("2005-01-01"), date("2005-01-03"));
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/2005/01/*.N1", pathGlobs.get(0));
@@ -85,8 +90,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatDatePartsAreConcatenated() throws ParseException {
-        List<String>
-                pathGlobs = InputPathResolver.getInputPathGlobs("/foo/MER_RR__1P*${yyyy}${MM}${dd}*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/MER_RR__1P*${yyyy}${MM}${dd}*.N1", null, date("2005-01-01"), date("2005-01-03"));
         assertNotNull(pathGlobs);
         assertEquals(3, pathGlobs.size());
         assertEquals("/foo/MER_RR__1P*20050101*.N1", pathGlobs.get(0));
