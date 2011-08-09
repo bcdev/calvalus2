@@ -24,7 +24,7 @@ public class ProductionTool {
     private static final String TOOL_NAME = "cpt";
 
     private static final String BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
-    private static final String CALVALUS_BUNDLE = "calvalus-1.0";
+    private static final String CALVALUS_BUNDLE = "calvalus-0.3-201108";
 
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
     public static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
