@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -56,9 +57,13 @@ public class L2ProductionTypeTest {
     @Before
     public void setUp() throws Exception {
         callArgumentsList = new ArrayList<CallArguments>();
-        productionType = new L2ProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
+        JobClient jobClient = new JobClient(new JobConf());
+        // todo - don't override  getInputPaths(), instead use the TestInventoryService (mz,nf)
+        productionType = new L2ProductionType(new HadoopInventoryService(jobClient.getFs()),
+                                              new HadoopProcessingService(jobClient),
+                                              new TestStagingService()) {
             @Override
-            public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+            public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
                 callArgumentsList.add(new CallArguments(inputPathPattern, minDate, maxDate));
                 return new String[]{"MER_RR_007.N1"};
             }

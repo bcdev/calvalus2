@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
@@ -23,9 +24,13 @@ public class TAProductionTypeTest {
     @Test
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        TAProductionType type = new TAProductionType(new HadoopProcessingService(new JobClient(new JobConf())), new TestStagingService()) {
+        JobClient jobClient = new JobClient(new JobConf());
+        // todo - don't override  getInputPaths(), instead use the TestInventoryService (mz,nf)
+        TAProductionType type = new TAProductionType(new HadoopInventoryService(jobClient.getFs()),
+                                                     new HadoopProcessingService(jobClient),
+                                                     new TestStagingService()) {
             @Override
-            public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+            public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
                 return new String[]{"MER_RR_007.N1"};
             }
         };

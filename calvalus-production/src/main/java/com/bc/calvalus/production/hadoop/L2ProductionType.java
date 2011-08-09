@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -27,8 +28,8 @@ public class L2ProductionType extends HadoopProductionType {
 
     static final String NAME = "L2";
 
-    public L2ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super(NAME, processingService, stagingService);
+    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
@@ -78,7 +79,7 @@ public class L2ProductionType extends HadoopProductionType {
             for (String dateAsString : dateSet) {
                 try {
                     Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
-                    inputFileAccumulator.addAll(Arrays.asList(getInputFiles(inputPath, date, date)));
+                    inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date)));
                 } catch (ParseException e) {
                     throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
                 }
@@ -87,7 +88,7 @@ public class L2ProductionType extends HadoopProductionType {
         } else {
             Date minDate = productionRequest.getDate("minDate", null);
             Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputFiles(inputPath, minDate, maxDate);
+            inputFiles = getInputPaths(inputPath, minDate, maxDate);
         }
         if (inputFiles.length == 0) {
             throw new ProductionException("No input products found for given time range.");
@@ -114,6 +115,6 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String productionId, ProductionRequest productionRequest) {
-        return getProcessingService().getDataOutputPath(String.format("%s/%s", productionRequest.getUserName(), productionId));
+        return getInventoryService().getDataOutputPath(String.format("%s/%s", productionRequest.getUserName(), productionId));
     }
 }

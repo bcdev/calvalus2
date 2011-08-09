@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -25,8 +26,8 @@ import java.util.List;
 public class TAProductionType extends HadoopProductionType {
     public static final String NAME = "TA";
 
-    public TAProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super(NAME, processingService, stagingService);
+    public TAProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
@@ -61,7 +62,7 @@ public class TAProductionType extends HadoopProductionType {
             String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
 
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputFiles(inputPath, datePair.date1, datePair.date2);
+            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
                 String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
@@ -116,7 +117,7 @@ public class TAProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String userName, String dirName) {
-        return getProcessingService().getDataOutputPath(String.format("%s/%s", userName, dirName));
+        return getInventoryService().getDataOutputPath(String.format("%s/%s", userName, dirName));
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {

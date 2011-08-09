@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -28,8 +29,8 @@ public class L3ProductionType extends HadoopProductionType {
 
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
-    public L3ProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super(NAME, processingService, stagingService);
+    public L3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class L3ProductionType extends HadoopProductionType {
             String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
             String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
             // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputFiles(inputPath, datePair.date1, datePair.date2);
+            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i + 1);
 
@@ -102,7 +103,7 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String userName, String productionId, int index) {
-        return getProcessingService().getDataOutputPath(String.format("%s/%s_%d", userName, productionId, index));
+        return getInventoryService().getDataOutputPath(String.format("%s/%s_%d", userName, productionId, index));
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {

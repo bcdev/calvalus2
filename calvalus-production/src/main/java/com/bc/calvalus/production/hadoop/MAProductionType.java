@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.MAWorkflowItem;
@@ -24,8 +25,8 @@ public class MAProductionType extends HadoopProductionType {
 
     public static final String NAME = "MA";
 
-    public MAProductionType(HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
-        super(NAME, processingService, stagingService);
+    public MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+        super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
@@ -38,7 +39,7 @@ public class MAProductionType extends HadoopProductionType {
         Date minDate = productionRequest.getDate("minDate", null);
         Date maxDate = productionRequest.getDate("maxDate", null);
         // todo - use geoRegion to filter input files (nf,20.04.2011)
-        String[] l1InputFiles = getInputFiles(inputPath, minDate, maxDate);
+        String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
         String jobName = String.format("%s_L3", productionId);
 
         WorkflowItem workflowItem;
@@ -73,7 +74,7 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     String getOutputDir(String userName, String dirName) {
-        return getProcessingService().getDataOutputPath(String.format("%s/%s", userName, dirName));
+        return getInventoryService().getDataOutputPath(String.format("%s/%s", userName, dirName));
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {

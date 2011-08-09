@@ -7,9 +7,7 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import org.junit.Ignore;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 
 /**
@@ -30,16 +28,6 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
         return new ProcessorDescriptor[0];
-    }
-
-    @Override
-    public String getDataInputPath(String inputPath) {
-        return "hdfs://cvmaster00:9000/calvalus/eodata";
-    }
-
-    @Override
-    public String getDataOutputPath(String outputPath) {
-        return "hdfs://cvmaster00:9000/calvalus/output";
     }
 
     @Override

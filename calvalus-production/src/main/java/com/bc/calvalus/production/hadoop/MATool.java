@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -67,8 +68,15 @@ public class MATool {
             }
 
             say("Creating workflow...");
-            HadoopProcessingService processingService = createProcessingService();
-            MAProductionType productionType = new MAProductionType(processingService, createLocalStagingService());
+            JobConf jobConf = new JobConf();
+            //TODO make this configurable
+            jobConf.set("fs.default.name", "hdfs://cvmaster00:9000");
+            jobConf.set("mapred.job.tracker", "cvmaster00:9001");
+            JobClient jobClient = new JobClient(jobConf);
+            HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
+            HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
+
+            MAProductionType productionType = new MAProductionType(inventoryService, processingService, createLocalStagingService());
             Production production = productionType.createProduction(productionRequest);
             WorkflowItem workflow = production.getWorkflow();
             say("Workflow successfully created.");
@@ -154,15 +162,6 @@ public class MATool {
                                   .withDescription("Production request given as WPS-conforming XML file.")
                                   .create("r"));
         return options;
-    }
-
-    private static HadoopProcessingService createProcessingService() throws IOException {
-        JobConf jobConf = new JobConf();
-        //TODO make this configurable
-        jobConf.set("fs.default.name", "hdfs://cvmaster00:9000");
-        jobConf.set("mapred.job.tracker", "cvmaster00:9001");
-        JobClient jobClient = new JobClient(jobConf);
-        return new HadoopProcessingService(jobClient);
     }
 
     ProductionRequest loadProductionRequest(Reader reader) throws JDOMException, IOException {

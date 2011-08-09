@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -38,13 +39,30 @@ import java.util.List;
  */
 public abstract class HadoopProductionType implements ProductionType {
     private final String name;
+    private final InventoryService inventoryService;
     private final HadoopProcessingService processingService;
     private final StagingService stagingService;
 
-    protected HadoopProductionType(String name, HadoopProcessingService processingService, StagingService stagingService) {
+    protected HadoopProductionType(String name,
+                                   InventoryService inventoryService,
+                                   HadoopProcessingService processingService,
+                                   StagingService stagingService) {
         this.name = name;
+        this.inventoryService = inventoryService;
         this.processingService = processingService;
         this.stagingService = stagingService;
+    }
+
+    public InventoryService getInventoryService() {
+        return inventoryService;
+    }
+
+    public HadoopProcessingService getProcessingService() {
+        return processingService;
+    }
+
+    public StagingService getStagingService() {
+        return stagingService;
     }
 
     @Override
@@ -71,28 +89,18 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected abstract Staging createUnsubmittedStaging(Production production);
 
-    public HadoopProcessingService getProcessingService() {
-        return processingService;
-    }
 
-    public StagingService getStagingService() {
-        return stagingService;
-    }
-
-    // todo - move to InventoryService (nf, mz)
-    public String[] getInputFiles(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+    public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
-        List<String> globs = inputPathResolver.resolve(inputPathPattern);
+        List<String> inputGlobs = inputPathResolver.resolve(inputPathPattern);
         try {
-            List<String> inputFileList = new ArrayList<String>();
-            for (String glob : globs) {
-                String absolutePath = processingService.getDataInputPath(glob);
-                String[] files = processingService.globFilePaths(absolutePath);
-                inputFileList.addAll(Arrays.asList(files));
+            List<String> inputPaths = new ArrayList<String>();
+            for (String inputGlob : inputGlobs) {
+                inputPaths.addAll(Arrays.asList(inventoryService.getDataInputPaths(inputGlob)));
             }
-            return inputFileList.toArray(new String[inputFileList.size()]);
+            return inputPaths.toArray(new String[inputPaths.size()]);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }

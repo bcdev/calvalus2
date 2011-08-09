@@ -30,11 +30,11 @@ import java.util.logging.Logger;
 
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
-    public static final String CALVALUS_EODATA_PATH = "/calvalus/eodata";
-    public static final String CALVALUS_OUTPUTS_PATH = "/calvalus/outputs";
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/0.5";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-SNAPSHOT";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
+
+    private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
 
     private final JobClient jobClient;
     private final FileSystem fileSystem;
@@ -83,7 +83,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static void addBundleToClassPath(String bundle, Configuration configuration) throws IOException {
         final FileSystem fileSystem = FileSystem.get(configuration);
-        final Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH + "/" + bundle);
+        final Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH, bundle);
 
         final FileStatus[] beamJars = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
@@ -105,8 +105,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         configuration.set("hadoop.job.ugi", "hadoop,hadoop");
         configuration.set("mapred.map.tasks.speculative.execution", "false");
         configuration.set("mapred.reduce.tasks.speculative.execution", "false");
-        boolean debug = false;
-        if (debug) {
+        if (DEBUG) {
             // For debugging uncomment following line:
             configuration.set("mapred.child.java.opts",
                               "-Xmx2000m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
@@ -127,26 +126,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return new HadoopJobIdFormat();
     }
 
-    public String[] globFilePaths(String dirPathGlob) throws IOException {
-        FileStatus[] fileStatuses = fileSystem.globStatus(new Path(dirPathGlob));
-        String[] paths = new String[fileStatuses.length];
-        for (int i = 0; i < fileStatuses.length; i++) {
-            paths[i] = fileStatuses[i].getPath().toString();
-        }
-        return paths;
-    }
-
-    @Override
-    public String getDataInputPath(String inputPath) {
-        return makeQualified(CALVALUS_EODATA_PATH, inputPath);
-    }
-
-    @Override
-    public String getDataOutputPath(String outputPath) {
-        return makeQualified(CALVALUS_OUTPUTS_PATH, outputPath);
-    }
-
-
     @Override
     public void updateStatuses() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
@@ -161,9 +140,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public ProcessStatus getJobStatus(JobID jobID) {
+    public ProcessStatus getJobStatus(JobID jobId) {
         synchronized (jobStatusMap) {
-            return jobStatusMap.get(jobID);
+            return jobStatusMap.get(jobId);
         }
     }
 
@@ -188,6 +167,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      * Updates the status. This method is called periodically after a fixed delay period.
      *
      * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
+     * @return The process status.
      */
     static ProcessStatus convertStatus(JobStatus jobStatus) {
         if (jobStatus != null) {
@@ -206,13 +186,4 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
         return ProcessStatus.UNKNOWN;
     }
-
-    private String makeQualified(String parent, String child) {
-        Path path = new Path(child);
-        if (!path.isAbsolute()) {
-            path = new Path(parent, path);
-        }
-        return fileSystem.makeQualified(path).toString();
-    }
-
 }

@@ -1,6 +1,5 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
@@ -12,24 +11,18 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 public class ProductionServiceImplTest {
-    private InventoryService inventoryServiceMock;
-    private TestProcessingService processingServiceMock;
+
     private ProductionServiceImpl productionServiceUnderTest;
-    private TestProductionStore productionStoreMock;
+
+    private TestInventoryService inventoryServiceMock;
+    private TestProcessingService processingServiceMock;
     private TestStagingService stagingServiceMock;
+    private TestProductionStore productionStoreMock;
     private TestProductionType productionTypeMock;
 
     @Before
     public void setUp() throws Exception {
-        inventoryServiceMock = new InventoryService() {
-            @Override
-            public ProductSet[] getProductSets(String filter) throws Exception {
-                return new ProductSet[] {
-                        new ProductSet("ps0", null, null),
-                        new ProductSet("ps1", null, null),
-                };
-            }
-        };
+        inventoryServiceMock = new TestInventoryService();
         processingServiceMock = new TestProcessingService();
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType(processingServiceMock,
@@ -281,4 +274,5 @@ public class ProductionServiceImplTest {
         assertEquals(true, processingServiceMock.closed);
         assertEquals(true, productionStoreMock.closed);
     }
+
 }
