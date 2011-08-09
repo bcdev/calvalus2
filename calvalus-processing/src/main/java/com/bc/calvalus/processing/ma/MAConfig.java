@@ -28,7 +28,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
  */
 public class MAConfig {
 
-    @Parameter(defaultValue = "com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi")
+    @Parameter
     private String recordSourceSpiClassName;
 
     @Parameter
