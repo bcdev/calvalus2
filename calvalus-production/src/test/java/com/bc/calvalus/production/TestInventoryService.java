@@ -20,13 +20,13 @@ public class TestInventoryService implements InventoryService {
         if (!inputGlob.startsWith("/")) {
             inputGlob = "/calvalus/eodata/" + inputGlob;
         }
-        return new String[] {inputGlob};
+        return new String[] {"hdfs://cvmaster00:9000" + inputGlob};
     }
 
     @Override
     public String getDataOutputPath(String outputPath) {
         if (!outputPath.startsWith("/")) {
-            outputPath = "/calvalus/output/" + outputPath;
+            outputPath = "/calvalus/outputs/" + outputPath;
         }
         return "hdfs://cvmaster00:9000" + outputPath;
     }

@@ -65,6 +65,10 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         return outputDir;
     }
 
+    public String[] getInputFiles() {
+        return inputFiles;
+    }
+
     protected Job createJob() throws IOException {
         Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();

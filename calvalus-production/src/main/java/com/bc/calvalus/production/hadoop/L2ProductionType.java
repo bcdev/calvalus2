@@ -91,7 +91,7 @@ public class L2ProductionType extends HadoopProductionType {
             inputFiles = getInputPaths(inputPath, minDate, maxDate);
         }
         if (inputFiles.length == 0) {
-            throw new ProductionException("No input products found for given time range.");
+            throw new ProductionException("No input files found for given time range.");
         }
 
         // todo - use regionGeometry to filter input files

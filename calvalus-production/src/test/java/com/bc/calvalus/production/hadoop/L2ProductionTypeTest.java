@@ -17,63 +17,33 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.TestStagingService;
+import com.bc.calvalus.production.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 public class L2ProductionTypeTest {
 
-    private List<CallArguments> callArgumentsList;
-
-    private static class CallArguments {
-        String inputPath;
-        Date minDate;
-        Date maxDate;
-
-        private CallArguments(String inputPath, Date minDate, Date maxDate) {
-            this.inputPath = inputPath;
-            this.minDate = minDate;
-            this.maxDate = maxDate;
-        }
-    }
-
     private L2ProductionType productionType;
 
     @Before
     public void setUp() throws Exception {
-        callArgumentsList = new ArrayList<CallArguments>();
         JobClient jobClient = new JobClient(new JobConf());
-        // todo - don't override  getInputPaths(), instead use the TestInventoryService (mz,nf)
-        productionType = new L2ProductionType(new HadoopInventoryService(jobClient.getFs()),
+        productionType = new L2ProductionType(new TestInventoryService(),
                                               new HadoopProcessingService(jobClient),
-                                              new TestStagingService()) {
-            @Override
-            public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
-                callArgumentsList.add(new CallArguments(inputPathPattern, minDate, maxDate));
-                return new String[]{"MER_RR_007.N1"};
-            }
-        };
+                                              new TestStagingService());
     }
 
     @Test
     public void testCreateProductionWithoutDates() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-//                                                                  "inputPath", "MER_RR__1P/r03/2010",
                                                                     "inputPath", "MER_RR__1P/r03",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
@@ -98,17 +68,20 @@ public class L2ProductionTypeTest {
         assertNotNull(workflowItems);
         assertEquals(0, workflowItems.length);
         assertTrue(workflow instanceof L2WorkflowItem);
+
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
         assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
 
-        assertEquals(1, callArgumentsList.size());
-        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", null, null);
+        String[] inputFiles = l2WorkflowItem.getInputFiles();
+        assertNotNull(inputFiles);
+        assertEquals(1, inputFiles.length);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03", inputFiles[0]);
     }
 
     @Test
     public void testCreateProductionWithMinMaxDates() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                                                    "inputPath", "MER_RR__1P/r03",
+                                                                    "inputPath", "MER_RR__1P/r03/${yyyy}/${MM}/${dd}",
                                                                     "minDate", "2005-01-01",
                                                                     "maxDate", "2005-01-31",
                                                                     "outputFormat", "NetCDF",
@@ -125,7 +98,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -137,14 +110,18 @@ public class L2ProductionTypeTest {
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
         assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
 
-        assertEquals(1, callArgumentsList.size());
-        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-01", "2005-01-31");
+        String[] inputFiles = l2WorkflowItem.getInputFiles();
+        assertNotNull(inputFiles);
+        assertEquals(31, inputFiles.length);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01", inputFiles[0]);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02", inputFiles[1]);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31", inputFiles[30]);
     }
 
     @Test
     public void testCreateProductionWithDatelist() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                                                    "inputPath", "MER_RR__1P/r03",
+                                                                    "inputPath", "MER_RR__1P/r03/${yyyy}/${MM}/${dd}",
                                                                     "dateList", "2005-01-01 2005-01-15 2005-01-31",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
@@ -160,7 +137,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -172,25 +149,12 @@ public class L2ProductionTypeTest {
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
         assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
 
-        assertEquals(3, callArgumentsList.size());
-        assertCallArguments(callArgumentsList.get(0), "MER_RR__1P/r03", "2005-01-01", "2005-01-01");
-        assertCallArguments(callArgumentsList.get(1), "MER_RR__1P/r03", "2005-01-15", "2005-01-15");
-        assertCallArguments(callArgumentsList.get(2), "MER_RR__1P/r03", "2005-01-31", "2005-01-31");
+        String[] inputFiles = l2WorkflowItem.getInputFiles();
+        assertNotNull(inputFiles);
+        assertEquals(3, inputFiles.length);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01", inputFiles[0]);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15", inputFiles[1]);
+        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31", inputFiles[2]);
     }
 
-    private void assertCallArguments(CallArguments callArguments, String productSetId, String minDate, String maxDate) {
-        assertNotNull(callArguments);
-        assertEquals(productSetId, callArguments.inputPath);
-        assertDate("minDate", minDate, callArguments.minDate);
-        assertDate("maxDate", maxDate, callArguments.maxDate);
-    }
-
-    private void assertDate(String message, String expectedDate, Date date) {
-        if (expectedDate == null) {
-            assertNull(message, date);
-        } else {
-            String actual = ProductionRequest.getDateFormat().format(date);
-            assertEquals(message, expectedDate, actual);
-        }
-    }
 }

@@ -60,11 +60,13 @@ public class HadoopInventoryService implements InventoryService {
         Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, inputGlob);
 
         FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
+        if (fileStatuses == null) {
+            return new String[0];
+        }
         String[] resolvedPath = new String[fileStatuses.length];
         for (int i = 0; i < fileStatuses.length; i++) {
             resolvedPath[i] = fileStatuses[i].getPath().toString();
         }
-
         return resolvedPath;
     }
 
