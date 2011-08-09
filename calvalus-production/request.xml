@@ -45,8 +45,8 @@
             <wps:Data>
                 <wps:ComplexData>
                     <parameters>
-                        <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/auxiliary/LC_cci/CEOS_AERONET.placemark
-                        </recordSourceUrl>
+                        <recordSourceSpiClassName>com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi</recordSourceSpiClassName>
+                        <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/auxiliary/LC_cci/CEOS_AERONET.placemark</recordSourceUrl>
                     </parameters>
                 </wps:ComplexData>
             </wps:Data>
