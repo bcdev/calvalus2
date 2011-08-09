@@ -69,6 +69,8 @@ public class InputPathResolver {
     public List<String> resolve(String inputPathPattern) {
         if (region != null) {
             inputPathPattern = inputPathPattern.replace("${region}", region);
+        } else {
+            inputPathPattern = inputPathPattern.replace("${region}", "*");
         }
         List<String> globList = new ArrayList<String>(128);
 
@@ -89,7 +91,10 @@ public class InputPathResolver {
                 calendar.add(Calendar.DAY_OF_WEEK, 1);
             } while (!calendar.after(stopCal));
         } else {
-            globList.add(inputPathPattern);
+            String glob = inputPathPattern.replace("${yyyy}", "*");
+            glob = glob.replace("${MM}", "*");
+            glob = glob.replace("${dd}", "*");
+            globList.add(glob);
         }
         return globList;
     }

@@ -62,6 +62,14 @@ public class InputPathResolverTest {
     }
 
     @Test
+    public void testThatRegionStringIsReplacedWithStarWhenNotGiven() throws ParseException {
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/*.N1", null, null, null);
+        assertNotNull(pathGlobs);
+        assertEquals(1, pathGlobs.size());
+        assertEquals("/foo/*/*.N1", pathGlobs.get(0));
+    }
+
+    @Test
     public void testThatRegionStringIsReplacedMultipleTimes() throws ParseException {
         List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/bar/${region}/*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
@@ -78,6 +86,14 @@ public class InputPathResolverTest {
         assertEquals("/foo/2005/12/31/*.N1", pathGlobs.get(1));
         assertEquals("/foo/2006/01/01/*.N1", pathGlobs.get(2));
         assertEquals("/foo/2006/01/02/*.N1", pathGlobs.get(3));
+    }
+
+    @Test
+    public void testThatDatePartsAreReplacedWhenNotGiven() throws ParseException {
+        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, null, null);
+        assertNotNull(pathGlobs);
+        assertEquals(1, pathGlobs.size());
+        assertEquals("/foo/*/*/*/*.N1", pathGlobs.get(0));
     }
 
     @Test
