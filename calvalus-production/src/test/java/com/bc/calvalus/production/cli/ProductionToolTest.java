@@ -1,7 +1,6 @@
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.production.ProductionRequest;
-import org.apache.commons.cli.CommandLine;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -10,26 +9,13 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class MAToolTest {
-    @Test
-    public void testCommandLine() throws Exception {
-        CommandLine commandLine = new MATool().parseCommandLine("");
-        assertNull(commandLine.getOptionValue("request"));
-        assertEquals("request.xml", commandLine.getOptionValue("request", "request.xml"));
-    }
-
-    @Test
-    public void testCommandLineWithOptionR() throws Exception {
-        CommandLine commandLine = new MATool().parseCommandLine("-r", "foo.xml");
-        assertEquals("foo.xml", commandLine.getOptionValue("request"));
-        assertEquals("foo.xml", commandLine.getOptionValue("request", "request.xml"));
-    }
+public class ProductionToolTest {
 
     @Test
     public void testConversionToMap() throws Exception {
         InputStream resourceAsStream = getClass().getResourceAsStream("ma-request.xml");
         InputStreamReader inputStreamReader = new InputStreamReader(resourceAsStream);
-        ProductionRequest productionRequest = new MATool().loadProductionRequest(inputStreamReader);
+        ProductionRequest productionRequest = new ProductionTool().loadProductionRequest(inputStreamReader);
 
         assertNotNull(productionRequest);
         assertEquals("MA", productionRequest.getProductionType());

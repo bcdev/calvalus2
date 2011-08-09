@@ -274,7 +274,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         log("  staging path               = " + backendConfig.getStagingPath());
         log("  upload path                = " + backendConfig.getUploadPath());
         log("  production service factory = " + backendConfig.getProductionServiceFactoryClassName());
-        log("  configurartion:");
+        log("  configuration:");
         Map<String, String> configMap = backendConfig.getConfigMap();
         Set<Map.Entry<String, String>> entries = configMap.entrySet();
         for (Map.Entry<String, String> entry : entries) {
@@ -287,7 +287,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             Class<?> productionServiceFactoryClass = Class.forName(backendConfig.getProductionServiceFactoryClassName());
             ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
             productionService = productionServiceFactory.create(backendConfig.getConfigMap(),
-                                                                backendConfig.getLocalContextDir(),
+                                                                backendConfig.getLocalAppDataDir(),
                                                                 backendConfig.getLocalStagingDir());
         } catch (Exception e) {
             throw new ServletException(e);

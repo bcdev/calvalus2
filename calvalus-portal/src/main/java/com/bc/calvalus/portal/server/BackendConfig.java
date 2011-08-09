@@ -1,13 +1,13 @@
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.production.ProductionServiceConfig;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Configuration of the backend service of the portal.
@@ -36,7 +36,6 @@ public class BackendConfig {
 
     public BackendConfig(ServletContext servletContext) throws ServletException {
         Map<String, String> configMap = loadConfig(servletContext);
-        overwriteConfigWithSystemProperties(configMap);
 
         this.configMap = configMap;
         this.localContextDir = new File(servletContext.getRealPath("."));
@@ -75,22 +74,23 @@ public class BackendConfig {
         return localContextDir;
     }
 
+    public File getLocalAppDataDir() {
+        File userAppDataDir = ProductionServiceConfig.getUserAppDataDir();
+        if (userAppDataDir != null)  {
+             return userAppDataDir;
+        }
+        return getLocalContextDir();
+    }
+
     private static Map<String, String> loadConfig(ServletContext servletContext) {
         File configFile = getConfigFile(servletContext);
-        Map<String, String> calvalusConfig = new HashMap<String, String>();
         try {
-            FileReader reader = new FileReader(configFile);
-            Properties properties = new Properties();
-            try {
-                properties.load(reader);
-                overwriteConfigWithProperties(calvalusConfig, properties, null);
-            } finally {
-                reader.close();
-            }
+            return ProductionServiceConfig.loadConfig(configFile, null);
         } catch (IOException e) {
             servletContext.log("I/O problem while reading Calvalus configuration file " + configFile, e);
+            return Collections.emptyMap();
         }
-        return calvalusConfig;
+
     }
 
     private String getProperty(String name) throws ServletException {
@@ -117,20 +117,4 @@ public class BackendConfig {
         return configFile;
     }
 
-    static void overwriteConfigWithSystemProperties(Map<String, String> calvalusConfig) {
-        overwriteConfigWithProperties(calvalusConfig, System.getProperties(), "calvalus.");
-    }
-
-    static void overwriteConfigWithProperties(Map<String, String> calvalusConfig, Properties properties, String prefix) {
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            String name = entry.getKey().toString();
-            if (prefix != null) {
-                if (name.startsWith(prefix)) {
-                    calvalusConfig.put(name, properties.getProperty(name));
-                }
-            } else {
-                calvalusConfig.put(name, properties.getProperty(name));
-            }
-        }
-    }
 }
