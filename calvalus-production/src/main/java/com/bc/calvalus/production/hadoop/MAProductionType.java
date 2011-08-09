@@ -40,15 +40,14 @@ public class MAProductionType extends HadoopProductionType {
         Date maxDate = productionRequest.getDate("maxDate", null);
         // todo - use geoRegion to filter input files (nf,20.04.2011)
         String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
-        String jobName = String.format("%s_L3", productionId);
 
         WorkflowItem workflowItem;
         if (l1InputFiles.length > 0) {
-            String outputDir = getOutputDir(productionRequest.getUserName(), jobName);
+            String outputDir = getOutputDir(productionRequest.getUserName(), productionId);
 
             MAConfig maConfig = MAConfig.fromXml(productionRequest.getParameter("calvalus.ma.parameters"));
             workflowItem = new MAWorkflowItem(getProcessingService(),
-                                              jobName,
+                                              productionId,
                                               l1InputFiles,
                                               outputDir,
                                               maConfig);

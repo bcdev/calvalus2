@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
@@ -89,9 +90,14 @@ public class MATool {
                 Thread.sleep(1000);
                 processingService.updateStatuses();
                 workflow.updateStatus();
-                say("Workflow status: " + workflow.getStatus());
+                say(String.format("Workflow remote status: state=%s, progress=%s, message='%s'",
+                                  workflow.getStatus().getState(),
+                                  workflow.getStatus().getProgress(),
+                                  workflow.getStatus().getMessage()));
             }
-
+            if (workflow.getStatus().getState() != ProcessState.COMPLETED) {
+                exit("Error: workflow did not complete normally: " + workflow.getStatus().getMessage(), 10);
+            }
         } catch (JDOMException e) {
             exit("Error: Invalid WPS XML: %s", 2, e);
         } catch (ProductionException e) {
@@ -103,8 +109,6 @@ public class MATool {
         } catch (InterruptedException e) {
             exit("Warning: workflow monitoring cancelled! Job may be still alive!", 0);
         }
-
-        say("Workflow successfully completed.");
     }
 
     private void exit(String format, int exitCode, Throwable error) {

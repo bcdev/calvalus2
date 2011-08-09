@@ -20,11 +20,25 @@
 
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
-            <ows:Title>MERIS SDR</ows:Title>
             <wps:Data>
-                <wps:LiteralData>MER_RR__1P/r03/2008/12/14</wps:LiteralData>
+                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/*.N1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>minDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2008-12-14</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>maxDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2008-12-15</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
 
          <wps:Input>
             <ows:Identifier>calvalus.ma.parameters</ows:Identifier>
