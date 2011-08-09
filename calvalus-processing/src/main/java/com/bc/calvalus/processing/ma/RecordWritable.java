@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import org.apache.hadoop.io.Writable;
+import org.esa.beam.util.StringUtils;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -61,5 +62,10 @@ public class RecordWritable implements Writable {
         for (int i = 0; i < n; i++) {
             values[i] = in.readUTF();
         }
+    }
+
+    @Override
+    public String toString() {
+        return StringUtils.join(values, "\t");
     }
 }
