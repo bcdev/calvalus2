@@ -32,6 +32,16 @@ public class PlacemarkRecordSourceTest {
     }
 
     @Test
+    public void testThatPlacemarkSpiCanProduce78RecordsFromHDFS() throws Exception {
+        RecordSourceSpi spi = RecordSourceSpi.get("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
+        assertNotNull(spi);
+        String url = "hdfs://cvmaster00:9000/calvalus/auxiliary/LC_cci/CEOS_AERONET.placemark ";
+        RecordSource recordSource = spi.createRecordSource(url);
+        assertNotNull(recordSource);
+        assert78(recordSource);
+    }
+
+    @Test
     public void testThat78PlacemarksCanBeRead() throws Exception {
         InputStream resourceAsStream = getClass().getResourceAsStream("CEOS_AERONET.placemark");
         Reader reader = new InputStreamReader(resourceAsStream);
