@@ -84,7 +84,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         if (numMatchUps > 0) {
             // write header
-            context.write(new Text("_"),
+            context.write(new Text("#"),
                           new RecordWritable(extractor.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);

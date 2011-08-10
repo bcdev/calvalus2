@@ -25,7 +25,7 @@ import java.util.Iterator;
 /**
  * Reads the records emitted by the MAMapper.
  * It is expected that each true 'record' key will only have one unique value.
- * Only 'header' keys ("_") will have multiple values containing all the same the attribute names.
+ * Only 'header' keys ("#") will have multiple values containing all the same the attribute names.
  * This is why the reducer only writes the first value.
  *
  * @author Norman Fomferra
