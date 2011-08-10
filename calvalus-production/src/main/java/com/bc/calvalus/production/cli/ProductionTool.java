@@ -5,6 +5,9 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.*;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
 import org.apache.commons.cli.*;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -18,9 +21,8 @@ import java.util.Map;
 
 /**
  * The Calvalus production CLI tool "cpt".
-
+ * <p/>
  * <pre>
- *
  * usage: cpt [OPTION]... REQUEST
  *
  * The Calvalus production tool submits a production REQUEST to a Calvalus
@@ -35,6 +37,8 @@ import java.util.Map;
  *                        format). Defaults to 'null'.
  * -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
  *                        the production. Defaults to 'calvalus-0.3-201108'
+ * -d,--deploy &lt;JARS&gt;     The Calvalus JARs to be deployed to HDFS. Use the
+ *                        colon ':' to separate multiple JAR paths.
  * -e,--errors            Print full Java stack trace on exceptions.
  * -h,--help              Prints out usage help.
  * -q,--quite             Quite mode, only minimum console output.
@@ -48,11 +52,12 @@ public class ProductionTool {
 
     private static final String TOOL_NAME = "cpt";
 
-    private static final String BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
-    private static final String CALVALUS_BUNDLE = "calvalus-0.3-201108";
+    private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
+    private static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
+    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-201108";
 
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
-    public static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
+
     private boolean errors;
     private boolean quite;
 
@@ -61,7 +66,7 @@ public class ProductionTool {
     }
 
     private void run(String[] args) {
-        CommandLine commandLine;
+        final CommandLine commandLine;
         try {
             commandLine = parseCommandLine(args);
         } catch (ParseException e) {
@@ -73,24 +78,39 @@ public class ProductionTool {
         errors = commandLine.hasOption("errors");
         quite = commandLine.hasOption("quite");
 
-        String[] requestPaths = commandLine.getArgs();
-        if (commandLine.hasOption('h') || requestPaths.length != 1) {
+        if (commandLine.hasOption('h')) {
             printHelp();
             return;
         }
-        String requestPath = requestPaths[0];
+
+        List argList = commandLine.getArgList();
+        if (argList.size() == 0 && !commandLine.hasOption("deploy")) {
+            exit("Error: Missing argument REQUEST. Use option -h for usage.", -1);
+        }
+        if (argList.size() > 0) {
+            exit("Error: Too many arguments. Use option -h for usage.", -1);
+        }
+        String requestPath = argList.size() == 1 ? (String) argList.get(0) : null;
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://cvmaster00:9000");
         defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "cvmaster00:9001");
-        defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", CALVALUS_BUNDLE));
-        defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", BEAM_BUNDLE));
+        defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
+        defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", DEFAULT_BEAM_BUNDLE));
 
         try {
             String configFile = commandLine.getOptionValue("config", DEFAULT_CONFIG_PATH);
             say(String.format("Loading Calvalus configuration '%s'...", configFile));
             Map<String, String> config = ProductionServiceConfig.loadConfig(new File(configFile), defaultConfig);
             say("Configuration loaded.");
+
+            if (commandLine.hasOption("deploy")) {
+                deployCalvalusSoftware(commandLine.getOptionValue("deploy"), config);
+            }
+
+            if (requestPath == null) {
+                return;
+            }
 
             HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
             ProductionService productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(), new File("."));
@@ -123,19 +143,64 @@ public class ProductionTool {
                 exit("Error: production did not complete normally: " + production.getProcessingStatus().getMessage(), 10);
             }
         } catch (JDOMException e) {
-            exit("Error: Invalid WPS XML: %s", 2, e);
+            exit("Error: Invalid WPS XML", 2, e);
         } catch (ProductionException e) {
-            exit("Error: Production failed: %s", 3, e);
+            exit("Error: Production failed", 3, e);
         } catch (IOException e) {
-            exit("Error: I/O problem: %s", 4, e);
+            exit("Error", 4, e);
         } catch (InterruptedException e) {
             exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
         }
     }
 
-    private void exit(String format, int exitCode, Throwable error) {
-        String message = String.format(format, error.getMessage());
-        System.err.println(message);
+    private void deployCalvalusSoftware(String sourcePathsString, Map<String, String> config) {
+        Path bundlePath = new Path("/calvalus/software/0.5/" + config.get("calvalus.calvalus.bundle"));
+        deploy(sourcePathsString, bundlePath, config);
+    }
+
+    private void deploy(String sourcePathsString, Path bundlePath, Map<String, String> config) {
+
+        String[] parts = sourcePathsString.split(":");
+        Path[] sourcePaths = new Path[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            sourcePaths[i] = new Path(parts[i]);
+        }
+
+        // check all sources are there
+        for (Path path : sourcePaths) {
+            if (!new File(path.toString()).isFile()) {
+                exit("Error: Local file does not exist: " + path, 21);
+            }
+        }
+
+        try {
+            deploy(bundlePath, sourcePaths, config);
+        } catch (IOException e) {
+            exit("Error: Failed to deploy file to HDFS", 22, e);
+        }
+    }
+
+    private void deploy(Path bundlePath, Path[] sourcePaths, Map<String, String> config) throws IOException {
+        say("Deploying " + sourcePaths.length + " local file(s) to HDFS...");
+        Configuration hadoopConfig = new Configuration();
+        hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
+        FileSystem fs = FileSystem.get(hadoopConfig);
+        Path destinationPath = fs.makeQualified(bundlePath);
+        for (Path sourcePath : sourcePaths) {
+            say("Copying " + sourcePath + " --> " + destinationPath);
+        }
+        copyFromLocalFile(fs, sourcePaths, destinationPath);
+        say("Files deployed.");
+    }
+
+    private void copyFromLocalFile(FileSystem fs, Path[] sourcePaths, Path destinationPath) throws IOException {
+        boolean overwrite = true;
+        boolean delSrc = false;
+        fs.copyFromLocalFile(delSrc, overwrite, sourcePaths, destinationPath);
+    }
+
+    private void exit(String message, int exitCode, Throwable error) {
+        System.err.println(message + ": " + error.getClass().getSimpleName() + ": " + error.getMessage());
         if (errors) {
             error.printStackTrace(System.err);
         }
@@ -186,13 +251,13 @@ public class ProductionTool {
                                   .withLongOpt("calvalus")
                                   .hasArg()
                                   .withArgName("NAME")
-                                  .withDescription("The name of the Calvalus software bundle used for the production. Defaults to '" + CALVALUS_BUNDLE + "'")
+                                  .withDescription("The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'")
                                   .create("C"));
         options.addOption(OptionBuilder
                                   .withLongOpt("beam")
                                   .hasArg()
                                   .withArgName("NAME")
-                                  .withDescription("The name of the BEAM software bundle used for the production. Defaults to '" + BEAM_BUNDLE + "'.")
+                                  .withDescription("The name of the BEAM software bundle used for the production. Defaults to '" + DEFAULT_BEAM_BUNDLE + "'.")
                                   .create("B"));
         options.addOption(OptionBuilder
                                   .withLongOpt("conf")
@@ -200,6 +265,12 @@ public class ProductionTool {
                                   .withArgName("FILE")
                                   .withDescription("The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
                                   .create("c"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("deploy")
+                                  .hasArg()
+                                  .withArgName("JARS")
+                                  .withDescription("The Calvalus JARs to be deployed to HDFS. Use the colon ':' to separate multiple JAR paths.")
+                                  .create("d"));
         return options;
     }
 
