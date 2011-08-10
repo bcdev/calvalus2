@@ -76,12 +76,16 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {
-            context.write(new Text(product.getName() + "_" + numMatchUps), new RecordWritable(extractedRecord));
+            // write record
+            context.write(new Text(String.format("%s_%60d", product.getName(), numMatchUps + 1)),
+                          new RecordWritable(extractedRecord));
             numMatchUps++;
         }
 
         if (numMatchUps > 0) {
-            context.write(new Text(product.getName() + "_header"), new RecordWritable(extractor.getHeader().getAttributeNames()));
+            // write header
+            context.write(new Text("_"),
+                          new RecordWritable(extractor.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numMatchUps);

@@ -22,9 +22,7 @@ import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
@@ -88,16 +86,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-
-//        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
-//        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
-//        configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
-
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, BeamUtils.convertObjectToXml(maConfig));
-
-//        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
-//        configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
-//        configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 
         Properties properties = new Properties();
         properties.setProperty("beam.reader.tileHeight", "64");
@@ -113,15 +102,13 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(RecordWritable.class);
 
-//        job.setPartitionerClass(L3Partitioner.class);
-//        job.setNumReduceTasks(4);
-//        job.setReducerClass(L3Reducer.class);
-//        job.setOutputKeyClass(LongWritable.class);
-//        job.setOutputValueClass(TemporalBin.class);
+        job.setReducerClass(MAReducer.class);
+        job.setNumReduceTasks(1);
 
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-//        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
         return job;
     }
 
