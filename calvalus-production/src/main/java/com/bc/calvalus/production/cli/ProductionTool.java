@@ -156,7 +156,7 @@ public class ProductionTool {
                               processingStatus.getMessage()));
         }
         if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
-            say("Production completed.");
+            say("Production completed. Output directory is " + production.getStagingPath());
         } else {
             exit("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage(), 2);
         }
