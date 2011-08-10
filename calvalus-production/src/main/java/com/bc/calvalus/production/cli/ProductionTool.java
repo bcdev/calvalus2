@@ -87,7 +87,7 @@ public class ProductionTool {
         if (argList.size() == 0 && !commandLine.hasOption("deploy")) {
             exit("Error: Missing argument REQUEST. Use option -h for usage.", -1);
         }
-        if (argList.size() > 0) {
+        if (argList.size() > 1) {
             exit("Error: Too many arguments. Use option -h for usage.", -1);
         }
         String requestPath = argList.size() == 1 ? (String) argList.get(0) : null;
@@ -129,7 +129,6 @@ public class ProductionTool {
             ProductionResponse productionResponse = productionService.orderProduction(request);
             Production production = productionResponse.getProduction();
             say("Production successfully ordered.");
-
             while (!production.getProcessingStatus().getState().isDone()) {
                 Thread.sleep(1000);
                 productionService.updateStatuses();
@@ -139,7 +138,12 @@ public class ProductionTool {
                                   processingStatus.getProgress(),
                                   processingStatus.getMessage()));
             }
-            if (production.getProcessingStatus().getState() != ProcessState.COMPLETED) {
+            if (!production.isAutoStaging()) {
+                productionService.stageProductions(production.getId());
+            }
+            if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
+                say("Production completed.");
+            }else {
                 exit("Error: production did not complete normally: " + production.getProcessingStatus().getMessage(), 10);
             }
         } catch (JDOMException e) {
