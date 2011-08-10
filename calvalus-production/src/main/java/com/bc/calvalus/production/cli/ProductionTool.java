@@ -125,35 +125,60 @@ public class ProductionTool {
                 requestReader.close();
             }
 
-            say("Ordering production...");
-            ProductionResponse productionResponse = productionService.orderProduction(request);
-            Production production = productionResponse.getProduction();
-            say("Production successfully ordered.");
-            while (!production.getProcessingStatus().getState().isDone()) {
-                Thread.sleep(1000);
-                productionService.updateStatuses();
-                ProcessStatus processingStatus = production.getProcessingStatus();
-                say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
-                                  processingStatus.getState(),
-                                  processingStatus.getProgress(),
-                                  processingStatus.getMessage()));
-            }
+            Production production = orderProduction(productionService, request);
             if (!production.isAutoStaging()) {
-                productionService.stageProductions(production.getId());
+                stageProduction(productionService, production);
             }
-            if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
-                say("Production completed.");
-            }else {
-                exit("Error: production did not complete normally: " + production.getProcessingStatus().getMessage(), 10);
-            }
+
         } catch (JDOMException e) {
-            exit("Error: Invalid WPS XML", 2, e);
+            exit("Error: Invalid WPS XML", 3, e);
         } catch (ProductionException e) {
-            exit("Error: Production failed", 3, e);
+            exit("Error: Production failed", 4, e);
         } catch (IOException e) {
-            exit("Error", 4, e);
+            exit("Error", 5, e);
         } catch (InterruptedException e) {
             exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
+        }
+    }
+
+    private Production orderProduction(ProductionService productionService, ProductionRequest request) throws ProductionException, InterruptedException {
+        say("Ordering production...");
+        ProductionResponse productionResponse = productionService.orderProduction(request);
+        Production production = productionResponse.getProduction();
+        say("Production successfully ordered.");
+        while (!production.getProcessingStatus().getState().isDone()) {
+            Thread.sleep(1000);
+            productionService.updateStatuses();
+            ProcessStatus processingStatus = production.getProcessingStatus();
+            say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
+                              processingStatus.getState(),
+                              processingStatus.getProgress(),
+                              processingStatus.getMessage()));
+        }
+        if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
+            say("Production completed.");
+        } else {
+            exit("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage(), 2);
+        }
+        return production;
+    }
+
+    private void stageProduction(ProductionService productionService, Production production) throws ProductionException, InterruptedException {
+        say("Staging results...");
+        productionService.stageProductions(production.getId());
+        while (!production.getStagingStatus().isDone()) {
+            Thread.sleep(500);
+            productionService.updateStatuses();
+            ProcessStatus stagingStatus = production.getStagingStatus();
+            say(String.format("Staging status: state=%s, progress=%s, message='%s'",
+                              stagingStatus.getState(),
+                              stagingStatus.getProgress(),
+                              stagingStatus.getMessage()));
+        }
+        if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
+            say("Staging completed.");
+        } else {
+            exit("Error: Staging did not complete normally: " + production.getStagingStatus().getMessage(), 1);
         }
     }
 
