@@ -77,7 +77,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {
             // write record
-            context.write(new Text(String.format("%s_%60d", product.getName(), numMatchUps + 1)),
+            context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
                           new RecordWritable(extractedRecord));
             numMatchUps++;
         }
