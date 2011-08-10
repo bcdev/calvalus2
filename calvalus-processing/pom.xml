@@ -58,12 +58,15 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-netcdf</artifactId>
         </dependency>
+
         <!--  BEAM Processors -->
 
+        <!-- todo - remove dependency and use a BEAM in-build operator for testing (nf) -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
             <version>1.0</version>
+            <scope>test</scope>
             <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
@@ -75,6 +78,7 @@
                     </exclusion>
                 </exclusions>
         </dependency>
+
         <!--<dependency>-->
         <!--<groupId>org.esa.beam</groupId>-->
         <!--<artifactId>beam-meris-glint</artifactId>-->
