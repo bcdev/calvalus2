@@ -29,7 +29,6 @@ import java.util.HashSet;
  */
 public class AggregatorSR extends AbstractAggregator {
 
-    private static final String SDR_FLAGS_NAME = "status";
     private static final int STATUS_LAND = 1;
     private static final int STATUS_WATER = 2;
     private static final int STATUS_SNOW = 3;
@@ -68,7 +67,7 @@ public class AggregatorSR extends AbstractAggregator {
     private static int[] createVariableIndexes(VariableContext varCtx, int numBands) {
         int[] varIndexes = new int[3 + numBands + 1 + numBands];
         int j = 0;
-        varIndexes[j++] = getVariableIndex(varCtx, SDR_FLAGS_NAME);
+        varIndexes[j++] = getVariableIndex(varCtx, "status");
         varIndexes[j++] = getVariableIndex(varCtx, "x");
         varIndexes[j++] = getVariableIndex(varCtx, "y");
         for (int i = 0; i < numBands; i++) {
