@@ -18,6 +18,31 @@ import java.util.Map;
 
 /**
  * The Calvalus production CLI tool "cpt".
+
+ * <pre>
+ *
+ * usage: cpt [OPTION]... REQUEST
+ *
+ * The Calvalus production tool submits a production REQUEST to a Calvalus
+ * production system. REQUEST must be a plain text XML file conforming to the
+ * WPS Execute operation request (see
+ * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
+ * be one or more of the following:
+ *
+ * -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
+ *                        production. Defaults to 'beam-4.10-SNAPSHOT'.
+ * -c,--conf &lt;FILE&gt;       The Calvalus configuration file (Java properties
+ *                        format). Defaults to 'null'.
+ * -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
+ *                        the production. Defaults to 'calvalus-0.3-201108'
+ * -e,--errors            Print full Java stack trace on exceptions.
+ * -h,--help              Prints out usage help.
+ * -q,--quite             Quite mode, only minimum console output.
+ *
+ * </pre>
+ *
+ * @author Marco Zuehlke
+ * @author Norman Fomferra
  */
 public class ProductionTool {
 
@@ -100,11 +125,11 @@ public class ProductionTool {
         } catch (JDOMException e) {
             exit("Error: Invalid WPS XML: %s", 2, e);
         } catch (ProductionException e) {
-            exit("Error: production failed: %s", 3, e);
+            exit("Error: Production failed: %s", 3, e);
         } catch (IOException e) {
             exit("Error: I/O problem: %s", 4, e);
         } catch (InterruptedException e) {
-            exit("Warning: workflow monitoring cancelled! Job may be still alive!", 0);
+            exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
         }
     }
 
