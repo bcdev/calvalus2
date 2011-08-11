@@ -13,25 +13,28 @@ import java.util.*;
  */
 public class Extractor implements RecordSource {
     private final Product product;
-    private final Header header;
+    private Header header;
     private RecordSource input;
+    private boolean copyInput;
 
     public Extractor(Product product) {
         Assert.notNull(product, "product");
         this.product = product;
-        this.header = createHeader();
-    }
-
-    public RecordSource getInput() {
-        return input;
     }
 
     public void setInput(RecordSource input) {
         this.input = input;
     }
 
+    public void setCopyInput(boolean copyInput) {
+        this.copyInput = copyInput;
+    }
+
     @Override
     public Header getHeader() {
+        if (header == null) {
+            header = createHeader();
+        }
         return header;
     }
 
@@ -54,12 +57,17 @@ public class Extractor implements RecordSource {
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             float[] floatSample = new float[1];
             int[] intSample = new int[1];
-            Object[] values = new Object[header.getAttributeNames().length];
+            Object[] values = new Object[getHeader().getAttributeNames().length];
             int index = 0;
+            if (copyInput) {
+                Object[] inputValues = input.getAttributeValues();
+                System.arraycopy(inputValues, 0, values, 0, inputValues.length);
+                index = inputValues.length;
+            }
             values[index++] = product.getName();
             values[index++] = pixelPos.x;
             values[index++] = pixelPos.y;
-            values[index++] = "time"; // TODO
+            values[index++] = "n.a."; // TODO
             Band[] productBands = product.getBands();
             for (Band band : productBands) {
                 if (!band.isFlagBand()) {
@@ -83,6 +91,10 @@ public class Extractor implements RecordSource {
 
     private Header createHeader() {
         final List<String> attributeNames = new ArrayList<String>();
+
+        if (copyInput && input != null) {
+            Collections.addAll(attributeNames, input.getHeader().getAttributeNames());
+        }
 
         // 0. derived information
         attributeNames.add("product_name");

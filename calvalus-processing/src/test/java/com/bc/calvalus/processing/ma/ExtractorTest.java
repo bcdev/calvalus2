@@ -3,10 +3,12 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.*;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author MarcoZ
@@ -67,6 +69,58 @@ public class ExtractorTest {
         assertEquals("longitude", attributeNames[index++]);
 
         assertEquals(10, index);
+    }
+
+    @Test
+    public void testThatInputIsCopied() throws Exception {
+        Extractor extractor = createExtractor();
+        extractor.setInput(new RecordSource() {
+            @Override
+            public Header getHeader() {
+                return new DefaultHeader("u", "v", "w");
+            }
+
+            @Override
+            public Iterable<Record> getRecords() throws Exception {
+                return Arrays.asList((Record) new DefaultRecord(new GeoPos(0F, 1F), 0F, 1F, "?"));
+            }
+        });
+        extractor.setCopyInput(true);
+        Header header = extractor.getHeader();
+        assertNotNull(header);
+        String[] attributeNames = header.getAttributeNames();
+        assertNotNull(attributeNames);
+
+        int index = 0;
+
+        // 0. derived information
+        assertEquals("u", attributeNames[index++]);
+        assertEquals("v", attributeNames[index++]);
+        assertEquals("w", attributeNames[index++]);
+        assertEquals("product_name", attributeNames[index++]);
+        assertEquals("pixel_x", attributeNames[index++]);
+        assertEquals("pixel_y", attributeNames[index++]);
+        assertEquals("pixel_time", attributeNames[index++]);
+        // 1. bands
+        assertEquals("b1", attributeNames[index++]);
+        assertEquals("b2", attributeNames[index++]);
+        assertEquals("b3", attributeNames[index++]);
+        // 2. flags
+        assertEquals("f.valid", attributeNames[index++]);
+        // 3. tie-points
+        assertEquals("latitude", attributeNames[index++]);
+        assertEquals("longitude", attributeNames[index++]);
+        assertEquals(13, index);
+
+        Iterable<Record> records = extractor.getRecords();
+        Record next = records.iterator().next();
+        assertNotNull(next);
+        Object[] attributeValues = next.getAttributeValues();
+        assertNotNull(attributeValues);
+        assertEquals(13, attributeValues.length);
+        assertEquals(0F, (Float) attributeValues[0], 1E-10F);
+        assertEquals(1F, (Float) attributeValues[1], 1E-10F);
+        assertEquals("?", attributeValues[2]);
     }
 
     @Test
@@ -141,7 +195,7 @@ public class ExtractorTest {
         assertEquals("A", values[index++]); // product_name
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_x
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_y
-        assertEquals("time", values[index++]); // pixel_time
+        assertEquals("n.a.", values[index++]); // pixel_time
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b1 = X
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b2 = Y
         assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y
