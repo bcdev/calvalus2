@@ -37,10 +37,12 @@ import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
 
     private final HadoopProcessingService processingService;
+    private final String jobName;
     private JobID jobId;
 
-    public HadoopWorkflowItem(HadoopProcessingService processingService) {
+    public HadoopWorkflowItem(HadoopProcessingService processingService, String jobName) {
         this.processingService = processingService;
+        this.jobName = jobName;
     }
 
     public HadoopProcessingService getProcessingService() {
@@ -82,7 +84,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void submit() throws WorkflowException {
         try {
-            Job job = createJob();
+            Configuration configuration = getProcessingService().createJobConfiguration();
+            Job job = getProcessingService().createJob(configuration, jobName);
+            configureJob(job);
             JobID jobId = submitJob(job);
             setJobId(jobId);
         } catch (IOException e) {
@@ -90,7 +94,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         }
     }
 
-    protected abstract Job createJob() throws IOException;
+    protected abstract void configureJob(Job job) throws IOException;
 
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
@@ -110,6 +114,4 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         RunningJob runningJob = processingService.getJobClient().submitJob(jobConf);
         return runningJob.getID();
     }
-
-
 }

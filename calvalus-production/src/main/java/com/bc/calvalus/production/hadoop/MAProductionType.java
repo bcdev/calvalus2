@@ -48,9 +48,15 @@ public class MAProductionType extends HadoopProductionType {
             MAConfig maConfig = MAConfig.fromXml(productionRequest.getParameter("calvalus.ma.parameters"));
             workflowItem = new MAWorkflowItem(getProcessingService(),
                                               productionId,
+                                              "",
+                                              "",
+                                              "",
+                                              null,
                                               l1InputFiles,
                                               outputDir,
-                                              maConfig);
+                                              maConfig,
+                                              "",
+                                              "");
 
         } else {
             throw new ProductionException("No input products found for given time range.");

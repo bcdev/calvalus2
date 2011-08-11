@@ -24,6 +24,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -106,4 +107,11 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
+    protected Configuration createJobConfiguration(ProductionRequest productionRequest) {
+        Configuration jobConfiguration = getProcessingService().createJobConfiguration();
+        HadoopProductionServiceFactory.transferConfiguration(productionRequest.getParameters(), jobConfiguration);
+        jobConfiguration.set("calvalus.productionType", productionRequest.getProductionType());
+        jobConfiguration.set("calvalus.userName", productionRequest.getUserName());
+        return jobConfiguration;
+    }
 }

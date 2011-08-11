@@ -98,9 +98,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    public Job createJob(String jobName) throws IOException {
-        Job job = new Job(getJobClient().getConf(), jobName);
-        Configuration configuration = job.getConfiguration();
+    public Configuration createJobConfiguration() {
+        Configuration configuration = new Configuration(getJobClient().getConf());
         // Make user hadoop owns the outputs
         configuration.set("hadoop.job.ugi", "hadoop,hadoop");
         configuration.set("mapred.map.tasks.speculative.execution", "false");
@@ -114,7 +113,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             configuration.set("mapred.child.java.opts",
                               "-Xmx2000m");
         }
-        return job;
+        return configuration;
+    }
+
+    public Job createJob(Configuration configuration, String jobName) throws IOException {
+        return new Job(configuration, jobName);
     }
 
     public JobClient getJobClient() {

@@ -9,14 +9,10 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -102,6 +98,8 @@ public class L2ProductionType extends HadoopProductionType {
         String processorBundle = String.format("%s-%s",
                                                productionRequest.getParameter("processorBundleName"),
                                                productionRequest.getParameter("processorBundleVersion"));
+
+        Configuration jobConfiguration = createJobConfiguration(productionRequest);
 
         return new L2WorkflowItem(getProcessingService(),
                                   productionId,

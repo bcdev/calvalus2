@@ -16,12 +16,12 @@
 
 package com.bc.calvalus.processing.l2;
 
-import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.BeamOperatorMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
@@ -35,7 +35,6 @@ import java.util.Properties;
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
-    private final String jobName;
     private final Geometry regionGeometry;
     private final String[] inputFiles;
     private final String outputDir;
@@ -51,8 +50,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                           Geometry regionGeometry,
                           String[] inputFiles,
                           String outputDir) {
-        super(processingService);
-        this.jobName = jobName;
+        super(processingService, jobName);
         this.regionGeometry = regionGeometry;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
@@ -69,8 +67,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         return inputFiles;
     }
 
-    protected Job createJob() throws IOException {
-        Job job = getProcessingService().createJob(jobName);
+    protected void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(this.inputFiles, ","));
@@ -92,7 +89,8 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 
-        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
-        return job;
+        HadoopProcessingService.addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_L2_BUNDLE),
+                                                     configuration);
     }
+
 }

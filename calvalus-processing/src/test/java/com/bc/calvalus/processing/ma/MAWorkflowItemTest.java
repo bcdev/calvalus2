@@ -43,13 +43,19 @@ public class MAWorkflowItemTest {
 
         MAWorkflowItem maWorkflowItem = new MAWorkflowItem(hadoopProcessingService,
                                                            jobName,
+                                                           "",
+                                                           "",
+                                                           "",
+                                                           null,
                                                            inputFiles,
                                                            outputDir,
-                                                           maConfig1);
+                                                           maConfig1,
+                                                           "",
+                                                           "");
         assertNotNull(maWorkflowItem);
         assertEquals(outputDir, maWorkflowItem.getOutputDir());
-
-        Job job = maWorkflowItem.createJob();
+        Job job = new Job();
+        maWorkflowItem.configureJob(job);
         assertNotNull(job);
 
         assertSame(MAMapper.class, job.getMapperClass());

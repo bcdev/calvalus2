@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -39,49 +40,48 @@ import java.util.Properties;
  */
 public class MAWorkflowItem extends HadoopWorkflowItem {
 
-    private final String jobName;
-//    private final String processorBundle;
-//    private final String processorName;
-//    private final String processorParameters;
+    private final String processorBundle;
+    private final String processorName;
+    private final String processorParameters;
     private final String[] inputFiles;
     private final String outputDir;
     private final MAConfig maConfig;
-//    private final Geometry roiGeometry;
-//    private final String minDate;
-//    private final String maxDate;
+    private final Geometry roiGeometry;
+    private final String minDate;
+    private final String maxDate;
 
     public MAWorkflowItem(HadoopProcessingService processingService,
                           String jobName,
-//                          String processorBundle,
-//                          String processorName,
-//                          String processorParameters,
-//                          Geometry roiGeometry,
+                          String processorBundle,
+                          String processorName,
+                          String processorParameters,
+                          Geometry roiGeometry,
                           String[] inputFiles,
                           String outputDir,
-                          MAConfig maConfig
-//                          String minDate,
-//                          String maxDate
-    ) {
-        super(processingService);
-        this.jobName = jobName;
-//        this.processorBundle = processorBundle;
-//        this.processorName = processorName;
-//        this.processorParameters = processorParameters;
+                          MAConfig maConfig,
+                          String minDate,
+                          String maxDate) {
+        super(processingService, jobName);
+        this.processorBundle = processorBundle;
+        this.processorName = processorName;
+        this.processorParameters = processorParameters;
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.maConfig = maConfig;
-//        this.roiGeometry = roiGeometry;
-//        this.minDate = minDate;
-//        this.maxDate = maxDate;
+        this.roiGeometry = roiGeometry;
+        this.minDate = minDate;
+        this.maxDate = maxDate;
     }
 
     public String getOutputDir() {
         return outputDir;
     }
 
-    protected Job createJob() throws IOException {
+    protected void configureJob(Job job) throws IOException {
 
-        Job job = getProcessingService().createJob(jobName);
+        // todo - use minDate/maxDate and roiGeometry to filter input products
+        // todo - use processorBundle/processorName/processorParameters to generate actual product for MA
+
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
@@ -108,8 +108,6 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(TextOutputFormat.class);
-
-        return job;
     }
 
 }

@@ -39,7 +39,6 @@ import java.util.Properties;
  */
 public class L3WorkflowItem extends HadoopWorkflowItem {
 
-    private final String jobName;
     private final String processorBundle;
     private final String processorName;
     private final String processorParameters;
@@ -61,8 +60,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           L3Config l3Config,
                           String minDate,
                           String maxDate) {
-        super(processingService);
-        this.jobName = jobName;
+        super(processingService, jobName);
         this.processorBundle = processorBundle;
         this.processorName = processorName;
         this.processorParameters = processorParameters;
@@ -90,9 +88,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         return l3Config;
     }
 
-    protected Job createJob() throws IOException {
+    protected void configureJob(Job job) throws IOException {
 
-        Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
@@ -125,7 +122,6 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
-        return job;
     }
 
 }

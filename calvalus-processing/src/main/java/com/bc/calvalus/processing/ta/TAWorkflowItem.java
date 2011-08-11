@@ -32,7 +32,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
@@ -43,7 +42,6 @@ import java.io.IOException;
  */
 public class TAWorkflowItem extends HadoopWorkflowItem {
 
-    private final String jobName;
     private final String inputDir;
     private final String outputDir;
     private final L3Config l3Config;
@@ -59,8 +57,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
                           TAConfig taConfig,
                           String minDate,
                           String maxDate) {
-        super(processingService);
-        this.jobName = jobName;
+        super(processingService, jobName);
         this.inputDir = inputDir;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
@@ -85,13 +82,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         return outputDir;
     }
 
-    public L3Config getL3Config() {
-        return l3Config;
-    }
+    protected void configureJob(Job job) throws IOException {
 
-    protected Job createJob() throws IOException {
-
-        final Job job = getProcessingService().createJob(jobName);
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
@@ -119,8 +111,6 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
         // If this item is completed, clear L3 output dir, which is not used anymore
         addWorkflowStatusListener(new InputDirCleaner(job));
-
-        return job;
     }
 
     private class InputDirCleaner implements WorkflowStatusListener {

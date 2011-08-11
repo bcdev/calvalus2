@@ -83,8 +83,9 @@ public class ProductionTool {
             return;
         }
 
+        boolean hasOtherCommand = commandLine.hasOption("deploy") || commandLine.hasOption("copy");
         List argList = commandLine.getArgList();
-        if (argList.size() == 0 && !commandLine.hasOption("deploy")) {
+        if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. Use option -h for usage.", -1);
         }
         if (argList.size() > 1) {
@@ -106,6 +107,10 @@ public class ProductionTool {
 
             if (commandLine.hasOption("deploy")) {
                 deployCalvalusSoftware(commandLine.getOptionValue("deploy"), config);
+            }
+
+            if (commandLine.hasOption("copy")) {
+                copyFilesToHDFS(commandLine.getOptionValue("copy"), config);
             }
 
             if (requestPath == null) {
@@ -183,49 +188,67 @@ public class ProductionTool {
     }
 
     private void deployCalvalusSoftware(String sourcePathsString, Map<String, String> config) {
-        Path bundlePath = new Path("/calvalus/software/0.5/" + config.get("calvalus.calvalus.bundle"));
-        deploy(sourcePathsString, bundlePath, config);
+        final Path destinationPath = new Path(String.format("/calvalus/software/0.5/%s",
+                                                            config.get("calvalus.calvalus.bundle")));
+        Path[] sourcePaths = getSourcePaths(sourcePathsString);
+        try {
+            copyToHDFS(sourcePaths, destinationPath, config);
+        } catch (IOException e) {
+            exit("Error: Failed to deploy one or more files to Calvalus", 22, e);
+        }
     }
 
-    private void deploy(String sourcePathsString, Path bundlePath, Map<String, String> config) {
-
-        String[] parts = sourcePathsString.split(":");
-        Path[] sourcePaths = new Path[parts.length];
-        for (int i = 0; i < parts.length; i++) {
-            sourcePaths[i] = new Path(parts[i]);
+    private void copyFilesToHDFS(String sourcePathsString, Map<String, String> config) {
+        Path[] sourcePaths = getSourcePaths(sourcePathsString);
+        final Path destinationPath = new Path(String.format("/calvalus/home/%s", getUserName()));
+        try {
+            copyToHDFS(sourcePaths, destinationPath, config);
+        } catch (IOException e) {
+            exit("Error: Failed to copy one or more files to HDFS", 23, e);
         }
+    }
 
-        // check all sources are there
-        for (Path path : sourcePaths) {
+    private Path[] getSourcePaths(String sourcePathsString) {
+        Path[] sourcePaths = toPathArray(sourcePathsString);
+        ensureLocalPathsExist(sourcePaths);
+        return sourcePaths;
+    }
+
+    private Path[] toPathArray(String pathsSpec) {
+        String[] parts = pathsSpec.split(":");
+        Path[] paths = new Path[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            paths[i] = new Path(parts[i]);
+        }
+        return paths;
+    }
+
+    private void ensureLocalPathsExist(Path[] paths) {
+        for (Path path : paths) {
             if (!new File(path.toString()).isFile()) {
                 exit("Error: Local file does not exist: " + path, 21);
             }
         }
-
-        try {
-            deploy(bundlePath, sourcePaths, config);
-        } catch (IOException e) {
-            exit("Error: Failed to deploy file to HDFS", 22, e);
-        }
     }
 
-    private void deploy(Path bundlePath, Path[] sourcePaths, Map<String, String> config) throws IOException {
-        say("Deploying " + sourcePaths.length + " local file(s) to HDFS...");
+    private void copyToHDFS(Path[] sourcePaths, Path destinationPath, Map<String, String> config) throws IOException {
+        say("Copying " + sourcePaths.length + " local file(s) to HDFS...");
         Configuration hadoopConfig = new Configuration();
         hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
         FileSystem fs = FileSystem.get(hadoopConfig);
-        Path destinationPath = fs.makeQualified(bundlePath);
+        Path qualifiedDestinationPath = fs.makeQualified(destinationPath);
         for (Path sourcePath : sourcePaths) {
-            say("Copying " + sourcePath + " --> " + destinationPath);
+            say("*  " + sourcePath + " --> " + qualifiedDestinationPath);
         }
-        copyFromLocalFile(fs, sourcePaths, destinationPath);
-        say("Files deployed.");
+        copyFromLocalFile(fs, sourcePaths, qualifiedDestinationPath);
+        say("Files copied.");
     }
 
-    private void copyFromLocalFile(FileSystem fs, Path[] sourcePaths, Path destinationPath) throws IOException {
+    private void copyFromLocalFile(FileSystem fs, Path[] sourcePaths, Path destinationDir) throws IOException {
         boolean overwrite = true;
         boolean delSrc = false;
-        fs.copyFromLocalFile(delSrc, overwrite, sourcePaths, destinationPath);
+        fs.mkdirs(destinationDir);
+        fs.copyFromLocalFile(delSrc, overwrite, sourcePaths, destinationDir);
     }
 
     private void exit(String message, int exitCode, Throwable error) {
@@ -297,9 +320,18 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                                   .withLongOpt("deploy")
                                   .hasArg()
-                                  .withArgName("JARS")
-                                  .withDescription("The Calvalus JARs to be deployed to HDFS. Use the colon ':' to separate multiple JAR paths.")
+                                  .withArgName("FILES")
+                                  .withDescription("Deploys FILES to the Calvalus bundle before the request is executed. " +
+                                                           "The Calvalus bundle given by the 'calvalus' option. " +
+                                                           "Use the colon ':' to separate multiple paths in FILES.")
                                   .create("d"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("copy")
+                                  .hasArgs()
+                                  .withArgName("FILES")
+                                  .withDescription("Copies FILES to '/calvalus/home/<user>' before the request is executed." +
+                                                           "Use the colon ':' to separate paths in SOURCES.")
+                                  .create("y"));
         return options;
     }
 
@@ -347,8 +379,12 @@ public class ProductionTool {
         }
 
         return new ProductionRequest(processIdentifier,
-                                     System.getProperty("user.name", "anonymous"),
+                                     getUserName(),
                                      parameterMap);
+    }
+
+    private static String getUserName() {
+        return System.getProperty("user.name", "anonymous").toLowerCase();
     }
 
 
