@@ -22,7 +22,10 @@ import java.util.List;
  */
 public class PlacemarkRecordSource implements RecordSource {
     public static final String URL_PARAM_NAME = "url";
-    public static final String[] ATTRIBUTE_NAMES = new String[]{"name", "latitude", "longitude"};
+    public static final String[] ATTRIBUTE_NAMES = new String[]{
+            "placemark_name",
+            "placemark_latitude",
+            "placemark_longitude"};
 
     private final Header header;
     private final Reader reader;
