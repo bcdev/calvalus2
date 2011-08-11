@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.*;
 import com.bc.calvalus.staging.SimpleStagingService;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -26,7 +27,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
 
-        JobConf jobConf = createJobConf(serviceConfiguration);
+        JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClient jobClient = new JobClient(jobConf);
             HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
@@ -51,18 +52,22 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         }
     }
 
-    private static JobConf createJobConf(Map<String, String> serviceConfiguration) {
-        JobConf jobConf = new JobConf();
+    private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {
+        Configuration jobConfiguration = new Configuration();
+        transferConfiguration(serviceConfiguration, jobConfiguration);
+        return jobConfiguration;
+    }
+
+    public static void transferConfiguration(Map<String, String> serviceConfiguration, Configuration jobConfiguration) {
         for (Map.Entry<String, String> entry : serviceConfiguration.entrySet()) {
             String name = entry.getKey();
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
-                jobConf.set(hadoopName, entry.getValue());
+                jobConfiguration.set(hadoopName, entry.getValue());
             } else if (name.startsWith("calvalus.")) {
-                jobConf.set(name, entry.getValue());
+                jobConfiguration.set(name, entry.getValue());
             }
         }
-        return jobConf;
     }
 
 }
