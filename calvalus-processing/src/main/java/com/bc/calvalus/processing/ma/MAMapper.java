@@ -26,6 +26,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -56,12 +57,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long startTime = System.nanoTime();
 
         final Path inputPath = split.getPath();
+        String inputName = FileUtils.getFilenameWithoutExtension(inputPath.getName());
 
         System.setProperty("beam.reader.tileWidth", TILE_SIZE + "");
         System.setProperty("beam.reader.tileHeight", TILE_SIZE + "");
 
         final Product product = BeamUtils.readProduct(inputPath, configuration);
-
+        product.setName(inputName);
 
         Extractor extractor = new Extractor(product);
         Iterable<Record> extractedRecords;
