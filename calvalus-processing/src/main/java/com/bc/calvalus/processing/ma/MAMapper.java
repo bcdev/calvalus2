@@ -70,6 +70,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         try {
             final RecordSource recordSource = maConfig.createRecordSource();
             extractor.setInput(recordSource);
+            extractor.setCopyInput(true);
             extractedRecords = extractor.getRecords();
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
