@@ -41,6 +41,8 @@ public class MAProductionType extends HadoopProductionType {
         // todo - use geoRegion to filter input files (nf,20.04.2011)
         String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
 
+        String inputFormat = productionRequest.getParameter("calvalus.input.format", "N1");
+
         WorkflowItem workflowItem;
         if (l1InputFiles.length > 0) {
             String outputDir = getOutputDir(productionRequest.getUserName(), productionId);
@@ -53,6 +55,7 @@ public class MAProductionType extends HadoopProductionType {
                                               "",
                                               null,
                                               l1InputFiles,
+                                              inputFormat,
                                               outputDir,
                                               maConfig,
                                               "",

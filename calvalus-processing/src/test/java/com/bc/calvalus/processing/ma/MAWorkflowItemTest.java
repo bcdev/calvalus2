@@ -48,6 +48,7 @@ public class MAWorkflowItemTest {
                                                            "",
                                                            null,
                                                            inputFiles,
+                                                           "HADOOP-STREAMING",
                                                            outputDir,
                                                            maConfig1,
                                                            "",

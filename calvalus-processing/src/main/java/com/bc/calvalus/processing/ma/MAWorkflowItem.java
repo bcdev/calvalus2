@@ -44,6 +44,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
     private final String processorName;
     private final String processorParameters;
     private final String[] inputFiles;
+    private final String inputFormat;
     private final String outputDir;
     private final MAConfig maConfig;
     private final Geometry roiGeometry;
@@ -57,6 +58,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
                           String processorParameters,
                           Geometry roiGeometry,
                           String[] inputFiles,
+                          String inputFormat,
                           String outputDir,
                           MAConfig maConfig,
                           String minDate,
@@ -66,6 +68,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         this.processorName = processorName;
         this.processorParameters = processorParameters;
         this.inputFiles = inputFiles;
+        this.inputFormat = inputFormat;
         this.outputDir = outputDir;
         this.maConfig = maConfig;
         this.roiGeometry = roiGeometry;
@@ -85,6 +88,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        configuration.set(JobConfNames.CALVALUS_INPUT_FORMAT, inputFormat);
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, BeamUtils.convertObjectToXml(maConfig));
 
