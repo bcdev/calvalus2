@@ -99,6 +99,7 @@ public class ProductionTool {
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
         defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", DEFAULT_BEAM_BUNDLE));
 
+        ProductionService productionService = null;
         try {
             String configFile = commandLine.getOptionValue("config", DEFAULT_CONFIG_PATH);
             say(String.format("Loading Calvalus configuration '%s'...", configFile));
@@ -118,7 +119,7 @@ public class ProductionTool {
             }
 
             HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
-            ProductionService productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(), new File("."));
+            productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(), new File("."));
 
             FileReader requestReader = new FileReader(requestPath);
             ProductionRequest request;
@@ -143,6 +144,14 @@ public class ProductionTool {
             exit("Error", 5, e);
         } catch (InterruptedException e) {
             exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
+        } finally {
+            if (productionService != null) {
+                try {
+                    productionService.close();
+                } catch (IOException e) {
+                    exit("Warning: Failed to close production service! Job may be still alive!", 0);
+                }
+            }
         }
     }
 
