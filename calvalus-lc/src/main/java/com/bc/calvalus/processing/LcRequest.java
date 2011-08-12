@@ -101,37 +101,37 @@ public class LcRequest {
 //        formatLCL2Template("Australia", "2009");
 //        formatLCL2Template("CentralAsia", "2009");
 
-//        formatL3ProcessingTemplate("Africa", "2005-01-01", "2005-12-31", 10);
-//        formatL3ProcessingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
-//        formatL3ProcessingTemplate("NorthAmerica", "2005-01-01", "2005-12-31", 10);
+        formatL3ProcessingTemplate("Africa", "2005-01-01", "2005-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2005-01-01", "2005-12-31", 10);
+        formatL3ProcessingTemplate("NorthAmerica", "2005-01-01", "2005-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2005-01-01", "2005-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2005-01-01", "2005-12-31", 10);
 //        formatL3ProcessingTemplate("CentralAsia", "2005-01-01", "2005-12-31", 10);
 //
-//        formatL3ProcessingTemplate("Africa", "2006-01-01", "2006-12-31", 10);
-//        formatL3ProcessingTemplate("WesternEurope", "2006-01-01", "2006-12-31", 10);
-//        formatL3ProcessingTemplate("NorthAmerica", "2006-01-01", "2006-12-31", 10);
+        formatL3ProcessingTemplate("Africa", "2006-01-01", "2006-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2006-01-01", "2006-12-31", 10);
+        formatL3ProcessingTemplate("NorthAmerica", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2006-01-01", "2006-12-31", 10);
 //        formatL3ProcessingTemplate("CentralAsia", "2006-01-01", "2006-12-31", 10);
 //
-//        formatL3ProcessingTemplate("Africa", "2007-01-01", "2007-12-31", 10);
-//        formatL3ProcessingTemplate("WesternEurope", "2007-01-01", "2007-12-31", 10);
-//        formatL3ProcessingTemplate("NorthAmerica", "2007-01-01", "2007-12-31", 10);
+        formatL3ProcessingTemplate("Africa", "2007-01-01", "2007-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2007-01-01", "2007-12-31", 10);
+        formatL3ProcessingTemplate("NorthAmerica", "2007-01-01", "2007-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2007-01-01", "2007-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2007-01-01", "2007-12-31", 10);
 //        formatL3ProcessingTemplate("CentralAsia", "2007-01-01", "2007-12-31", 10);
 //
-//        formatL3ProcessingTemplate("Africa", "2008-01-01", "2008-12-31", 10);
-//        formatL3ProcessingTemplate("WesternEurope", "2008-01-01", "2008-12-31", 10);
-//        formatL3ProcessingTemplate("NorthAmerica", "2008-01-01", "2008-12-31", 10);
+        formatL3ProcessingTemplate("Africa", "2008-01-01", "2008-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2008-01-01", "2008-12-31", 10);
+        formatL3ProcessingTemplate("NorthAmerica", "2008-01-01", "2008-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2008-01-01", "2008-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2008-01-01", "2008-12-31", 10);
 //        formatL3ProcessingTemplate("CentralAsia", "2008-01-01", "2008-12-31", 10);
 //
-//        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
-//        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
-//        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
+        formatL3ProcessingTemplate("Africa", "2009-01-01", "2009-12-31", 10);
+        formatL3ProcessingTemplate("WesternEurope", "2009-01-01", "2009-12-31", 10);
+        formatL3ProcessingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("NorthwestAsia", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("Australia", "2009-01-01", "2009-12-31", 10);
 //        formatL3ProcessingTemplate("CentralAsia", "2009-01-01", "2009-12-31", 10);
@@ -160,33 +160,33 @@ public class LcRequest {
 //        formatL3FormattingTemplate("NorthAmerica", "2009-01-01", "2009-12-31", 30);
 //
 
-        formatCCProcessingTemplate("cc-l1p-template.xml", "acadia", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "amazondelta", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "antaresubatuba", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "balticsea", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "beibubay", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "benguela", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "capeverde", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "centralcalifornia", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "chesapeakebay", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "chinakoreajapan", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "greatbarrierreef", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "gulfofmexico", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "indonesianwaters", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "karasea", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "lakeseriestclair", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "lenadelta", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "mediterranean_blacksea", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "morocco", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "namibianwaters", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "northsea", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "oregon_washington", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "puertorico", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "redsea", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "riolaplata", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "southerncalifornia", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "southindia", "2008");
-        formatCCProcessingTemplate("cc-l1p-template.xml", "tasmania", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "acadia", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "amazondelta", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "antaresubatuba", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "balticsea", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "beibubay", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "benguela", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "capeverde", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "centralcalifornia", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "chesapeakebay", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "chinakoreajapan", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "greatbarrierreef", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "gulfofmexico", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "indonesianwaters", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "karasea", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "lakeseriestclair", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "lenadelta", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "mediterranean_blacksea", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "morocco", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "namibianwaters", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "northsea", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "oregon_washington", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "puertorico", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "redsea", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "riolaplata", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "southerncalifornia", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "southindia", "2008");
+//        formatCCProcessingTemplate("cc-l1p-template.xml", "tasmania", "2008");
 
 //        formatCCFormattingTemplate("l1p", "acadia", "2007");
 //        formatCCFormattingTemplate("l1p", "amazondelta", "2007");
@@ -258,7 +258,7 @@ public class LcRequest {
 
     private static void formatL3ProcessingTemplate(String region, String startDate, String endDate,
                                                    int periodLength) throws Exception {
-        formatL3Processing("lc-l3-processing-template.xml", region, startDate, endDate, periodLength);
+        formatL3Processing("lc-l3-processing-template-v2.xml", region, startDate, endDate, periodLength);
     }
 
     private static void formatL3FormattingTemplate(String region, String startDate, String endDate,
