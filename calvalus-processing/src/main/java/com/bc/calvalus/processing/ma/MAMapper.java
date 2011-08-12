@@ -71,11 +71,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             final RecordSource recordSource = maConfig.createRecordSource();
             extractor.setInput(recordSource);
             extractor.setCopyInput(true);
+            if (maConfig.getExportDateFormat() != null) {
+                extractor.setDateFormat(maConfig.getExportDateFormat());
+            }
             extractedRecords = extractor.getRecords();
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
-
 
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {

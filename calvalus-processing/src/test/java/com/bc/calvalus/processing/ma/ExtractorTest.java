@@ -196,7 +196,7 @@ public class ExtractorTest {
         assertEquals("A", values[index++]); // product_name
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_x
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_y
-        assertEquals("2010-05-07 10:25:14", values[index++]); // pixel_time
+        assertEquals("07-May-2010 10:25:14", values[index++]); // pixel_time
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b1 = X
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b2 = Y
         assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y

@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.ceres.core.Assert;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
 /**
@@ -33,6 +34,9 @@ public class MAConfig {
 
     @Parameter
     private String recordSourceUrl;
+
+    @Parameter
+    private String exportDateFormat;
 
     public static MAConfig fromXml(String xml) {
         MAConfig config = new MAConfig();
@@ -49,10 +53,23 @@ public class MAConfig {
         Assert.notNull(recordSourceUrl, "recordSourceUrl");
         this.recordSourceSpiClassName = recordSourceSpiClassName;
         this.recordSourceUrl = recordSourceUrl;
+        this.exportDateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
     }
 
     public RecordSource createRecordSource() throws Exception {
         RecordSourceSpi service = RecordSourceSpi.get(recordSourceSpiClassName);
         return service != null ? service.createRecordSource(recordSourceUrl) : null;
+    }
+
+    public String getRecordSourceSpiClassName() {
+        return recordSourceSpiClassName;
+    }
+
+    public String getRecordSourceUrl() {
+        return recordSourceUrl;
+    }
+
+    public String getExportDateFormat() {
+        return exportDateFormat;
     }
 }

@@ -17,10 +17,12 @@ public class Extractor implements RecordSource {
     private Header header;
     private RecordSource input;
     private boolean copyInput;
+    private String dateFormat;
 
     public Extractor(Product product) {
         Assert.notNull(product, "product");
         this.product = product;
+        this.dateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
     }
 
     public void setInput(RecordSource input) {
@@ -29,6 +31,10 @@ public class Extractor implements RecordSource {
 
     public void setCopyInput(boolean copyInput) {
         this.copyInput = copyInput;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
     }
 
     @Override
@@ -55,7 +61,7 @@ public class Extractor implements RecordSource {
         Assert.notNull(input, "input");
         final PixelPos pixelPos = product.getGeoCoding().getPixelPos(input.getCoordinate(), null);
 
-        final PixelTimeProvider pixelTimeProvider = PixelTimeProvider.create(product, "yyyy-MM-dd HH:mm:ss");
+        final PixelTimeProvider pixelTimeProvider = PixelTimeProvider.create(product, dateFormat);
 
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             float[] floatSample = new float[1];
@@ -90,10 +96,6 @@ public class Extractor implements RecordSource {
             return new DefaultRecord(input.getCoordinate(), values);
         }
         return null;
-    }
-
-    private String xxx(DateFormat dateFormat, double startMJD, double deltaMJD, PixelPos pixelPos) {
-        return dateFormat.format(new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMJD).getAsDate());
     }
 
     private Header createHeader() {
