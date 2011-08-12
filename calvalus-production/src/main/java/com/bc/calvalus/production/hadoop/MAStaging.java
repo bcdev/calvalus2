@@ -7,6 +7,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.io.FileUtils;
 
@@ -44,7 +45,7 @@ class MAStaging extends Staging {
         }
         try {
             FileSystem fileSystem = remoteFile.getFileSystem(hadoopConfiguration);
-            fileSystem.copyToLocalFile(remoteFile, new Path(stagingDir.getCanonicalPath(), "ma-result.csv"));
+            FileUtil.copy(fileSystem, remoteFile, new File(stagingDir.getCanonicalPath(), "ma-result.csv"), false, hadoopConfiguration);
             production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
         } catch (IOException e) {
             production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, 1.0f, e.getMessage()));
