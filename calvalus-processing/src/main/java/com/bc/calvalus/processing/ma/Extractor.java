@@ -13,6 +13,8 @@ import java.util.*;
  * @author Norman
  */
 public class Extractor implements RecordSource {
+    public static final Float FLOAT_NAN = new Float(Float.NaN);
+    public static final Integer INTEGER_NAN = new Integer(0);
     private final Product product;
     private Header header;
     private RecordSource input;
@@ -59,38 +61,53 @@ public class Extractor implements RecordSource {
 
     public Record extract(Record input) throws Exception {
         Assert.notNull(input, "input");
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(input.getCoordinate(), null);
 
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(input.getCoordinate(), null);
         final PixelTimeProvider pixelTimeProvider = PixelTimeProvider.create(product, dateFormat);
 
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
-            float[] floatSample = new float[1];
-            int[] intSample = new int[1];
-            Object[] values = new Object[getHeader().getAttributeNames().length];
+            final float[] floatSample = new float[1];
+            final int[] intSample = new int[1];
+
+            final Object[] values = new Object[getHeader().getAttributeNames().length];
+
             int index = 0;
             if (copyInput) {
                 Object[] inputValues = input.getAttributeValues();
                 System.arraycopy(inputValues, 0, values, 0, inputValues.length);
                 index = inputValues.length;
             }
+
             values[index++] = product.getName();
             values[index++] = pixelPos.x;
             values[index++] = pixelPos.y;
             values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : "";
-            Band[] productBands = product.getBands();
+
+            final int x = (int) pixelPos.x;
+            final int y = (int) pixelPos.y;
+
+            final Band[] productBands = product.getBands();
             for (Band band : productBands) {
                 if (!band.isFlagBand()) {
                     if (band.isFloatingPointType()) {
-                        band.readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, floatSample);
-                        values[index++] = floatSample[0];
+                        if (band.isPixelValid(x, y)) {
+                            band.readPixels(x, y, 1, 1, floatSample);
+                            values[index++] = floatSample[0];
+                        } else {
+                            values[index++] = FLOAT_NAN;
+                        }
                     } else {
-                        band.readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, intSample);
-                        values[index++] = intSample[0];
+                        if (band.isPixelValid(x, y)) {
+                            band.readPixels(x, y, 1, 1, intSample);
+                            values[index++] = intSample[0];
+                        } else {
+                            values[index++] = INTEGER_NAN;
+                        }
                     }
                 }
             }
             for (TiePointGrid tiePointGrid : product.getTiePointGrids()) {
-                tiePointGrid.readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, floatSample);
+                tiePointGrid.readPixels(x, y, 1, 1, floatSample);
                 values[index++] = floatSample[0];
             }
             return new DefaultRecord(input.getCoordinate(), values);
@@ -221,8 +238,8 @@ public class Extractor implements RecordSource {
             final int rasterHeight = product.getSceneRasterHeight();
             if (startTime != null && endTime != null && rasterHeight > 1) {
                 return new PixelTimeProvider(ProductData.UTC.createDateFormat(format),
-                                      startTime.getMJD(),
-                                      (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
+                                             startTime.getMJD(),
+                                             (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
             } else {
                 return null;
             }
