@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.*;
 import org.junit.Test;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -195,7 +196,7 @@ public class ExtractorTest {
         assertEquals("A", values[index++]); // product_name
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_x
         assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_y
-        assertEquals("n.a.", values[index++]); // pixel_time
+        assertEquals("2010-05-07 10:25:14", values[index++]); // pixel_time
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b1 = X
         assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b2 = Y
         assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y
@@ -214,11 +215,13 @@ public class ExtractorTest {
         product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{1, 1, 0, 0}));
         product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{0, 1, 0, 1}));
         product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
+        product.setStartTime(utc("07-MAY-2010 10:25:14"));
+        product.setEndTime(utc("07-MAY-2010 10:25:16"));
         product.addBand("b1", "X");
         product.addBand("b2", "Y");
         product.addBand("b3", "X+Y");
         FlagCoding flagCoding = new FlagCoding("f");
-        flagCoding.addFlag("valid", 1, "I feel soil under my feet");
+        flagCoding.addFlag("valid", 1, "Pixel is valid");
         Band f = product.addBand("f", ProductData.TYPE_UINT8);
         f.setSampleCoding(flagCoding);
         ProductData fData = f.createCompatibleRasterData();
@@ -228,6 +231,14 @@ public class ExtractorTest {
         fData.setElemBooleanAt(3, false);
         f.setRasterData(fData);
         return product;
+    }
+
+    private ProductData.UTC utc(String date)  {
+        try {
+            return ProductData.UTC.parse(date);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("date=" + date, e);
+        }
     }
 
     private static class TestRecord implements Record {

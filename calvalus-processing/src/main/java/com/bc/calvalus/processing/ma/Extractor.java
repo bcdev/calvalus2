@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.ma;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.*;
 
+import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -52,7 +53,9 @@ public class Extractor implements RecordSource {
 
     public Record extract(Record input) throws Exception {
         Assert.notNull(input, "input");
-        PixelPos pixelPos = product.getGeoCoding().getPixelPos(input.getCoordinate(), null);
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(input.getCoordinate(), null);
+
+        final PixelTimeProvider pixelTimeProvider = PixelTimeProvider.create(product, "yyyy-MM-dd HH:mm:ss");
 
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             float[] floatSample = new float[1];
@@ -67,7 +70,7 @@ public class Extractor implements RecordSource {
             values[index++] = product.getName();
             values[index++] = pixelPos.x;
             values[index++] = pixelPos.y;
-            values[index++] = "n.a."; // TODO
+            values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : "";
             Band[] productBands = product.getBands();
             for (Band band : productBands) {
                 if (!band.isFlagBand()) {
@@ -87,6 +90,10 @@ public class Extractor implements RecordSource {
             return new DefaultRecord(input.getCoordinate(), values);
         }
         return null;
+    }
+
+    private String xxx(DateFormat dateFormat, double startMJD, double deltaMJD, PixelPos pixelPos) {
+        return dateFormat.format(new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMJD).getAsDate());
     }
 
     private Header createHeader() {
@@ -197,6 +204,40 @@ public class Extractor implements RecordSource {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    private static class PixelTimeProvider {
+
+        private final DateFormat dateFormat;
+        private final double startMJD;
+        private final double deltaMJD;
+
+        static PixelTimeProvider create(Product product, String format) {
+            final ProductData.UTC startTime = product.getStartTime();
+            final ProductData.UTC endTime = product.getEndTime();
+            final int rasterHeight = product.getSceneRasterHeight();
+            if (startTime != null && endTime != null && rasterHeight > 1) {
+                return new PixelTimeProvider(ProductData.UTC.createDateFormat(format),
+                                      startTime.getMJD(),
+                                      (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
+            } else {
+                return null;
+            }
+        }
+
+        private PixelTimeProvider(DateFormat dateFormat, double startMJD, double deltaMJD) {
+            this.dateFormat = dateFormat;
+            this.startMJD = startMJD;
+            this.deltaMJD = deltaMJD;
+        }
+
+        public String getTime(PixelPos pixelPos) {
+            return dateFormat.format(getUTC(pixelPos).getAsDate());
+        }
+
+        private ProductData.UTC getUTC(PixelPos pixelPos) {
+            return new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMJD);
         }
     }
 }
