@@ -52,7 +52,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final FileSplit split = (FileSplit) context.getInputSplit();
 
         // write initial log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
+        LOG.info(String.format("%s starts processing of split %s",
+                               context.getTaskAttemptID(), split));
+
         final long startTime = System.nanoTime();
 
         final Path inputPath = split.getPath();
@@ -60,6 +62,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Product product = BeamUtils.readProduct(inputPath, configuration);
         product.setName(inputName);
+
+        LOG.info(String.format("%s opened product %s, took %s sec",
+                               context.getTaskAttemptID(), inputName, (System.nanoTime() - startTime) / 1E9));
 
         Extractor extractor = new Extractor(product);
         Iterable<Record> extractedRecords;
@@ -97,7 +102,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long stopTime = System.nanoTime();
 
         // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} match-ups found)",
+        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec, {3} match-up(s) found",
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numMatchUps));
     }
 }
