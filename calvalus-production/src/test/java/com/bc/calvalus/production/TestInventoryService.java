@@ -2,7 +2,14 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
+import org.junit.Ignore;
 
+/**
+ * Test implementation of InventoryService.
+ *
+ * @author Norman
+ */
+@Ignore
 public class TestInventoryService implements InventoryService {
     @Override
     public ProductSet[] getProductSets(String filter) throws Exception {
