@@ -30,20 +30,21 @@ import java.util.Map;
  * WPS Execute operation request (see
  * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
  * be one or more of the following:
- *
- * -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
- *                        production. Defaults to 'beam-4.10-SNAPSHOT'.
- * -c,--conf &lt;FILE&gt;       The Calvalus configuration file (Java properties
- *                        format). Defaults to 'null'.
- * -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                        the production. Defaults to 'calvalus-0.3-201108'
- * -d,--deploy &lt;JARS&gt;     The Calvalus JARs to be deployed to HDFS. Use the
- *                        colon ':' to separate multiple JAR paths.
- * -e,--errors            Print full Java stack trace on exceptions.
- * -h,--help              Prints out usage help.
- * -q,--quite             Quite mode, only minimum console output.
- *
- * </pre>
+ *  -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
+ *                         production. Defaults to 'beam-4.10-SNAPSHOT'.
+ *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
+ *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
+ *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
+ *                         the production. Defaults to 'calvalus-0.3-201108'
+ *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
+ *                         request is executed.Use the colon ':' to separate paths in SOURCES.
+ *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
+ *                         request is executed. The Calvalus bundle given by the 'calvalus' option.
+ *                         Use the colon ':' to separate multiple paths in FILES.
+ *  -e,--errors            Print full Java stack trace on exceptions.
+ *     --help              Prints out usage help.
+ *  -q,--quite             Quite mode, only minimum console output.
+ *  </pre>
  *
  * @author Marco Zuehlke
  * @author Norman Fomferra
@@ -70,28 +71,30 @@ public class ProductionTool {
         try {
             commandLine = parseCommandLine(args);
         } catch (ParseException e) {
-            exit("error: " + e.getMessage(), 1);
+            exit("Error: " + e.getMessage() + " (use option --help for usage help)", -1);
             printHelp();
             return;
         }
+
+        boolean hasOtherCommand = commandLine.hasOption("deploy")
+                || commandLine.hasOption("copy")
+                || commandLine.hasOption("help");
+        List argList = commandLine.getArgList();
+        if (argList.size() == 0 && !hasOtherCommand) {
+            exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
+        }
+        if (argList.size() > 1) {
+            exit("Error: Too many arguments. (use option --help for usage help)", -1);
+        }
+        String requestPath = argList.size() == 1 ? (String) argList.get(0) : null;
 
         errors = commandLine.hasOption("errors");
         quite = commandLine.hasOption("quite");
 
-        if (commandLine.hasOption('h')) {
+        if (commandLine.hasOption("help")) {
             printHelp();
             return;
         }
-
-        boolean hasOtherCommand = commandLine.hasOption("deploy") || commandLine.hasOption("copy");
-        List argList = commandLine.getArgList();
-        if (argList.size() == 0 && !hasOtherCommand) {
-            exit("Error: Missing argument REQUEST. Use option -h for usage.", -1);
-        }
-        if (argList.size() > 1) {
-            exit("Error: Too many arguments. Use option -h for usage.", -1);
-        }
-        String requestPath = argList.size() == 1 ? (String) argList.get(0) : null;
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://cvmaster00:9000");
@@ -307,7 +310,7 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                                   .withLongOpt("help")
                                   .withDescription("Prints out usage help.")
-                                  .create("h"));
+                                  .create()); // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("calvalus")
                                   .hasArg()
@@ -321,7 +324,7 @@ public class ProductionTool {
                                   .withDescription("The name of the BEAM software bundle used for the production. Defaults to '" + DEFAULT_BEAM_BUNDLE + "'.")
                                   .create("B"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("conf")
+                                  .withLongOpt("config")
                                   .hasArg()
                                   .withArgName("FILE")
                                   .withDescription("The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
@@ -333,14 +336,14 @@ public class ProductionTool {
                                   .withDescription("Deploys FILES to the Calvalus bundle before the request is executed. " +
                                                            "The Calvalus bundle given by the 'calvalus' option. " +
                                                            "Use the colon ':' to separate multiple paths in FILES.")
-                                  .create("d"));
+                                  .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("copy")
                                   .hasArgs()
                                   .withArgName("FILES")
                                   .withDescription("Copies FILES to '/calvalus/home/<user>' before the request is executed." +
                                                            "Use the colon ':' to separate paths in SOURCES.")
-                                  .create("y"));
+                                  .create());  // (sub) commands don't have short options
         return options;
     }
 
