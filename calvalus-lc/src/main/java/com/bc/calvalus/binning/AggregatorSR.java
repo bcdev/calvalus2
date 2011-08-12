@@ -268,20 +268,20 @@ public class AggregatorSR extends AbstractAggregator {
                 Vector spatialVector = temporalData.getVector(i);
                 int landAreaCount = (int) spatialVector.get(0);
                 if (landAreaCount > 0) {
-                    float w = (float) (1f / Math.sqrt(landAreaCount));
-                    sdr8s[i] = spatialVector.get(SBIN_SDR_OFFSET + 7) * w / landAreaCount;
-                    sdr8Sum += sdr8s[i];
-                    sdr8SqrSum += sdr8s[i] * sdr8s[i];
+                    float sdr = spatialVector.get(SBIN_SDR_OFFSET + 7) / landAreaCount;
+                    sdr8s[i] = sdr;
+                    sdr8Sum += sdr;
+                    sdr8SqrSum += sdr * sdr;
                     sdr8Count++;
                 }
             }
 
             if (sdr8Count >= 2) {
                 float sdr8Mean = sdr8Sum / sdr8Count;
-                float sdr8Sigma = sdr8SqrSum / sdr8Count;
+                float sdr8Sigma = (float) Math.sqrt(sdr8SqrSum / sdr8Count - sdr8Mean * sdr8Mean);
                 float cloudValue2 = sdr8Sigma / sdr8Mean;
-                if (cloudValue2 > 0.35f) {
-                    float sdr8CloudDetector = sdr8Mean * 1.4f;
+                if (cloudValue2 > 0.2f) {
+                    float sdr8CloudDetector = sdr8Mean * 1.35f;
                     for (int i = 0; i < numSpatialBins; i++) {
                         if (sdr8s[i] != 0 && sdr8s[i] > sdr8CloudDetector) {
                             // treat this as bin as cloud
@@ -300,7 +300,6 @@ public class AggregatorSR extends AbstractAggregator {
         temporalVector.set(TBIN_STATUS_INDEX, status);
         int statusCount = counters[COUNTER_NAMES.length + status - 1];
         temporalVector.set(TBIN_STATUS_COUNT_INDEX, statusCount);
-
     }
 
     @Override
