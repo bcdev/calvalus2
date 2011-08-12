@@ -38,9 +38,8 @@ import java.util.logging.Logger;
  */
 public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWritable> {
 
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
-    private static final String COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS = "Product Pixel Counts";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -91,9 +90,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             // write header
             context.write(new Text("#"),
                           new RecordWritable(extractor.getHeader().getAttributeNames()));
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numMatchUps);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numMatchUps);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups total").increment(numMatchUps);
+        } else {
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
         }
 
         product.dispose();
