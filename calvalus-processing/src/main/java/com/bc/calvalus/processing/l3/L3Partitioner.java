@@ -19,6 +19,9 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobUtils;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -35,12 +38,20 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
 
     private Configuration conf;
     private BinningGrid binningGrid;
+    private int minRowIndex;
+    private int numRowsCovered;
 
     @Override
     public int getPartition(LongWritable binIndex, SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
         int row = binningGrid.getRowIndex(idx);
-        return (row * numPartitions) / binningGrid.getNumRows();
+        int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
+        if (partition < 0) {
+            partition = 0;
+        } else if (partition >= numPartitions) {
+            partition = numPartitions - 1;
+        }
+        return partition;
     }
 
     @Override
@@ -48,11 +59,20 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
         this.conf = conf;
         String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETERS);
         L3Config l3Config = L3Config.fromXml(level3Parameters);
-        setL3Config(l3Config);
-    }
-
-    void setL3Config(L3Config l3Config) {
         this.binningGrid = l3Config.getBinningGrid();
+        String regionGeometry = conf.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
+        if (roiGeometry != null && !roiGeometry.isEmpty()) {
+            Envelope envelope = roiGeometry.getEnvelopeInternal();
+            double minY = envelope.getMinY();
+            double maxY = envelope.getMaxY();
+            int maxRowIndex = binningGrid.getRowIndex(binningGrid.getBinIndex(minY, 0));
+            minRowIndex = binningGrid.getRowIndex(binningGrid.getBinIndex(maxY, 0));
+            numRowsCovered = maxRowIndex - minRowIndex + 1;
+        } else {
+            numRowsCovered = binningGrid.getNumRows();
+            minRowIndex = 0;
+        }
     }
 
     @Override
