@@ -42,7 +42,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
     private static final String COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS = "Product Pixel Counts";
-    public static final int TILE_SIZE = 16;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -58,9 +57,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Path inputPath = split.getPath();
         String inputName = FileUtils.getFilenameWithoutExtension(inputPath.getName());
-
-        System.setProperty("beam.reader.tileWidth", TILE_SIZE + "");
-        System.setProperty("beam.reader.tileHeight", TILE_SIZE + "");
 
         final Product product = BeamUtils.readProduct(inputPath, configuration);
         product.setName(inputName);
