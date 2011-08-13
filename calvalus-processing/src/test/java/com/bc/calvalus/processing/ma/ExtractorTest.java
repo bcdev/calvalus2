@@ -1,6 +1,12 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TiePointGeoCoding;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -9,7 +15,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author MarcoZ
@@ -34,6 +39,20 @@ public class ExtractorTest {
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 1))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 0))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 1))));
+
+        // same test, but this time using the iterator
+        extractor = createExtractor();
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+                                                   new TestRecord(new GeoPos(1, 0)),
+                                                   new TestRecord(new GeoPos(1, 1)),
+                                                   new TestRecord(new GeoPos(0, 0)),
+                                                   new TestRecord(new GeoPos(0, 1))));
+        int n = 0;
+        for (Record r : extractor.getRecords()) {
+            assertNotNull(r);
+            n++;
+        }
+        assertEquals(4, n);
     }
 
     @Test
@@ -42,6 +61,38 @@ public class ExtractorTest {
         assertNull(extractor.extract(new TestRecord(new GeoPos(-1, -1))));
         assertNull(extractor.extract(new TestRecord(new GeoPos(-1, 2))));
         assertNull(extractor.extract(new TestRecord(new GeoPos(-3, -1))));
+
+        // same test, but this time using the iterator
+        extractor = createExtractor();
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+                                                   new TestRecord(new GeoPos(-1, -1)),
+                                                   new TestRecord(new GeoPos(-1, 2)),
+                                                   new TestRecord(new GeoPos(-3, -1))));
+        int n = 0;
+        for (Record r : extractor.getRecords()) {
+            assertNotNull(r);
+            n++;
+        }
+        assertEquals(0, n);
+    }
+
+    @Test
+    public void testTheIteratorForSourceRecordsThatAreInAndOutOfProductBoundaries() throws Exception {
+        Extractor extractor = createExtractor();
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+                                                   new TestRecord(new GeoPos(1, 0)),// in
+                                                   new TestRecord(new GeoPos(-1, 2)),   // out
+                                                   new TestRecord(new GeoPos(1, 1)), // in
+                                                   new TestRecord(new GeoPos(-1, -1)), // out
+                                                   new TestRecord(new GeoPos(0, 0)), // in
+                                                   new TestRecord(new GeoPos(0, 1)), // in
+                                                   new TestRecord(new GeoPos(-3, -1)))); // out
+        int n = 0;
+        for (Record r : extractor.getRecords()) {
+            assertNotNull(r);
+            n++;
+        }
+        assertEquals(4, n);
     }
 
     @Test
@@ -202,7 +253,7 @@ public class ExtractorTest {
         assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y
         assertEquals(1, values[index++]);    // f.valid = true
         assertEquals(1f, values[index++]);  // latitude
-        assertEquals(0f, values[index++]);   // longitude
+        assertEquals(0f, values[index]);   // longitude
     }
 
     private Extractor createExtractor() {
@@ -233,7 +284,7 @@ public class ExtractorTest {
         return product;
     }
 
-    private ProductData.UTC utc(String date)  {
+    private ProductData.UTC utc(String date) {
         try {
             return ProductData.UTC.parse(date);
         } catch (ParseException e) {
