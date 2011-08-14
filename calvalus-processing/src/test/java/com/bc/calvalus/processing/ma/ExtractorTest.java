@@ -10,9 +10,7 @@ import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -93,6 +91,51 @@ public class ExtractorTest {
             n++;
         }
         assertEquals(4, n);
+    }
+
+    @Test
+    public void testThatPixelYXSortingWorks() throws Exception {
+        DefaultRecordSource recordSource = new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+                                                                   new TestRecord(new GeoPos(0, 0)),
+                                                                   new TestRecord(new GeoPos(0, 1)),
+                                                                   new TestRecord(new GeoPos(1, 0)),
+                                                                   new TestRecord(new GeoPos(0.5F, 0.5F)),
+                                                                   new TestRecord(new GeoPos(1, 1)));
+
+        Extractor noSort = createExtractor();
+        noSort.setSortInputByPixelYX(false);
+        noSort.setCopyInput(false);
+        noSort.setInput(recordSource);
+        List<Record> unsorted = getRecords(noSort);
+        assertEquals(5, unsorted.size());
+        assertEquals(0.5F, (Float) unsorted.get(0).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.5F, (Float) unsorted.get(0).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) unsorted.get(1).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.5F, (Float) unsorted.get(1).getAttributeValues()[2], 1e-3F);
+        assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[1], 1e-3F);
+        assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.0F, (Float) unsorted.get(3).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.0F, (Float) unsorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) unsorted.get(4).getAttributeValues()[1], 1e-3F);
+        assertEquals(0.5F, (Float) unsorted.get(4).getAttributeValues()[2], 1e-3F);
+
+        Extractor sort = createExtractor();
+        sort.setSortInputByPixelYX(true);
+        sort.setCopyInput(false);
+        sort.setInput(recordSource);
+        List<Record> sorted = getRecords(sort);
+        assertEquals(5, sorted.size());
+        assertEquals(0.5F, (Float) sorted.get(0).getAttributeValues()[1], 1e-3F);
+        assertEquals(0.5F, (Float) sorted.get(0).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) sorted.get(1).getAttributeValues()[1], 1e-3F);
+        assertEquals(0.5F, (Float) sorted.get(1).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.0F, (Float) sorted.get(2).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.0F, (Float) sorted.get(2).getAttributeValues()[2], 1e-3F);
+        assertEquals(0.5F, (Float) sorted.get(3).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.5F, (Float) sorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) sorted.get(4).getAttributeValues()[1], 1e-3F);
+        assertEquals(1.5F, (Float) sorted.get(4).getAttributeValues()[2], 1e-3F);
+
     }
 
     @Test
@@ -290,6 +333,15 @@ public class ExtractorTest {
         } catch (ParseException e) {
             throw new IllegalArgumentException("date=" + date, e);
         }
+    }
+
+    private List<Record> getRecords(RecordSource source) throws Exception {
+        Iterable<Record> records = source.getRecords();
+        ArrayList<Record> list = new ArrayList<Record>();
+        for (Record record : records) {
+            list.add(record);
+        }
+        return list;
     }
 
     private static class TestRecord implements Record {
