@@ -30,7 +30,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for match-up extraction on n input products.
@@ -92,11 +91,13 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, BeamUtils.convertObjectToXml(maConfig));
 
+        /*
         Properties properties = new Properties();
         properties.setProperty("beam.reader.tileHeight", "64");
         properties.setProperty("beam.reader.tileWidth", "*");
         String propertiesString = JobUtils.convertProperties(properties);
         configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
+        */
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
 
