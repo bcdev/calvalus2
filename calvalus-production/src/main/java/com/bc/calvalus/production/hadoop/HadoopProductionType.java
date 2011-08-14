@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
@@ -99,7 +100,10 @@ public abstract class HadoopProductionType implements ProductionType {
         try {
             List<String> inputPaths = new ArrayList<String>();
             for (String inputGlob : inputGlobs) {
-                inputPaths.addAll(Arrays.asList(inventoryService.getDataInputPaths(inputGlob)));
+                CalvalusLogger.getLogger().fine("Resolving input file glob '" + inputGlob + "'...");
+                List<String> resolvedGlob = Arrays.asList(inventoryService.getDataInputPaths(inputGlob));
+                inputPaths.addAll(resolvedGlob);
+                CalvalusLogger.getLogger().fine("Input files resolved, " + resolvedGlob.size() + " found.");
             }
             return inputPaths.toArray(new String[inputPaths.size()]);
         } catch (IOException e) {
