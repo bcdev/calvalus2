@@ -86,6 +86,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             numMatchUps++;
         }
 
+        LOG.info(String.format("%s extracted %s match-ups, took %s sec so far",
+                               context.getTaskAttemptID(), numMatchUps, (System.nanoTime() - startTime) / 1E9));
+
         if (numMatchUps > 0) {
             // write header
             context.write(new Text("#"),
@@ -98,10 +101,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         product.dispose();
 
-        final long stopTime = System.nanoTime();
-
         // write final log entry for runtime measurements
-        LOG.info(String.format("%s stops processing of split %s after %s sec, %s match-up(s) found",
-                               context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numMatchUps));
+        LOG.info(String.format("%s stops processing of split %s after %s sec",
+                               context.getTaskAttemptID(), split, (System.nanoTime() - startTime) / 1E9));
     }
 }
