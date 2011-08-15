@@ -9,7 +9,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.hadoop.conf.Configuration;
 
 import java.text.ParseException;
 import java.util.*;
@@ -98,8 +97,6 @@ public class L2ProductionType extends HadoopProductionType {
         String processorBundle = String.format("%s-%s",
                                                productionRequest.getParameter("processorBundleName"),
                                                productionRequest.getParameter("processorBundleVersion"));
-
-        Configuration jobConfiguration = createJobConfiguration(productionRequest);
 
         return new L2WorkflowItem(getProcessingService(),
                                   productionId,
