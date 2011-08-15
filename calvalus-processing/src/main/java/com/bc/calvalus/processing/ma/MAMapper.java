@@ -40,6 +40,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
+    public static final int MiB = 1024 * 1024;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -50,8 +51,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final FileSplit split = (FileSplit) context.getInputSplit();
 
         // write initial log entry for runtime measurements
-        LOG.info(String.format("%s starts processing of split %s",
-                               context.getTaskAttemptID(), split));
+        LOG.info(String.format("%s starts processing of split %s (%s MiB)",
+                               context.getTaskAttemptID(), split, (MiB/2 + split.getLength()) / MiB));
 
         final long startTime = System.nanoTime();
 
@@ -70,6 +71,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             final RecordSource recordSource = maConfig.createRecordSource();
             extractor.setInput(recordSource);
             extractor.setCopyInput(true);
+            extractor.setSortInputByPixelYX(true);
             if (maConfig.getExportDateFormat() != null) {
                 extractor.setDateFormat(maConfig.getExportDateFormat());
             }
