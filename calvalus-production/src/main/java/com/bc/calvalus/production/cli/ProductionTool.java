@@ -8,11 +8,7 @@ import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.jdom.Document;
-import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.Namespace;
-import org.jdom.input.SAXBuilder;
 
 import java.io.*;
 import java.util.HashMap;
@@ -128,7 +124,7 @@ public class ProductionTool {
             ProductionRequest request;
             try {
                 say(String.format("Loading production request '%s'...", requestPath));
-                request = loadProductionRequest(requestReader);
+                request = new WpsProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
                 say(String.format("Production request loaded, type is '%s'.", request.getProductionType()));
             } finally {
                 requestReader.close();
@@ -345,54 +341,6 @@ public class ProductionTool {
                                                            "Use the colon ':' to separate paths in SOURCES.")
                                   .create());  // (sub) commands don't have short options
         return options;
-    }
-
-    ProductionRequest loadProductionRequest(Reader reader) throws JDOMException, IOException {
-
-        SAXBuilder saxBuilder = new SAXBuilder();
-        Document document = saxBuilder.build(reader);
-        Element executeElement = document.getRootElement();
-
-        Namespace wps = executeElement.getNamespace("wps");
-        Namespace ows = executeElement.getNamespace("ows");
-        Namespace xlink = executeElement.getNamespace("xlink");
-
-        String processIdentifier = executeElement.getChildText("Identifier", ows);
-
-        Element dataInputs = executeElement.getChild("DataInputs", wps);
-        @SuppressWarnings({"unchecked"})
-        List<Element> inputElements = (List<Element>) dataInputs.getChildren("Input", wps);
-
-        HashMap<String, String> parameterMap = new HashMap<String, String>();
-
-        for (Element inputElement : inputElements) {
-            String parameterName = inputElement.getChildText("Identifier", ows);
-
-            Element dataElement = inputElement.getChild("Data", wps);
-            String parameterValue = dataElement.getChildText("LiteralData", wps);
-            if (parameterValue == null) {
-                Element complexDataElement = dataElement.getChild("ComplexData", wps);
-                if (complexDataElement != null) {
-                    StringWriter out = new StringWriter();
-                    Element complexContent = (Element) complexDataElement.getChildren().get(0);
-                    new org.jdom.output.XMLOutputter().output(complexContent, out);
-                    parameterValue = out.toString();
-                } else {
-                    Element referenceElement = dataElement.getChild("Reference", wps);
-                    if (referenceElement != null) {
-                        parameterValue = referenceElement.getAttributeValue("href", xlink);
-                    }
-                }
-            }
-
-            if (parameterValue != null) {
-                parameterMap.put(parameterName, parameterValue);
-            }
-        }
-
-        return new ProductionRequest(processIdentifier,
-                                     getUserName(),
-                                     parameterMap);
     }
 
     private static String getUserName() {

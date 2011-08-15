@@ -9,17 +9,18 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class ProductionToolTest {
+public class WpsProductionRequestConverterTest {
 
     @Test
     public void testConversionToMap() throws Exception {
         InputStream resourceAsStream = getClass().getResourceAsStream("ma-request.xml");
         InputStreamReader inputStreamReader = new InputStreamReader(resourceAsStream);
-        ProductionRequest productionRequest = new ProductionTool().loadProductionRequest(inputStreamReader);
+        ProductionRequest productionRequest = new WpsProductionRequestConverter(inputStreamReader).loadProductionRequest("testuser");
 
         assertNotNull(productionRequest);
         assertEquals("MA", productionRequest.getProductionType());
         assertNotNull(productionRequest.getUserName());
+        assertEquals("testuser", productionRequest.getUserName());
         Map<String, String> parameters = productionRequest.getParameters();
         assertNotNull(parameters);
         assertEquals(8, parameters.size());
