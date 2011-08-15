@@ -80,6 +80,9 @@ class WpsProductionRequestConverter {
             }
 
             if (parameterValue != null) {
+                if (parameterMap.containsKey(parameterName)) {
+                    parameterValue = String.format("%s,%s", parameterMap.get(parameterName), parameterValue);
+                }
                 parameterMap.put(parameterName, parameterValue);
             }
         }

@@ -50,15 +50,14 @@
             </wps:Data>
         </wps:Input>
 
-        <!--TODO-->
-        <!--<wps:Input>-->
-            <!--<ows:Identifier>calvalus.input</ows:Identifier>-->
-            <!--<ows:Title>MERIS L1B input</ows:Title>-->
-            <!--<wps:Data>-->
-                <!--<wps:Reference-->
-                        <!--xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_021806_000026382028_00332_12410_0000.N1"/>-->
-            <!--</wps:Data>-->
-        <!--</wps:Input>-->
+        <wps:Input>
+            <ows:Identifier>calvalus.input</ows:Identifier>
+            <ows:Title>MERIS L1B input</ows:Title>
+            <wps:Data>
+                <wps:Reference
+                        xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_021806_000026382028_00332_12410_0000.N1"/>
+            </wps:Data>
+        </wps:Input>
 
         <wps:Input>
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
