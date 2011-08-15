@@ -66,19 +66,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                context.getTaskAttemptID(), inputName, (System.nanoTime() - startTime) / 1E9));
 
         Extractor extractor = new Extractor(product);
-        Iterable<Record> extractedRecords;
-        try {
-            final RecordSource recordSource = maConfig.createRecordSource();
-            extractor.setInput(recordSource);
-            extractor.setCopyInput(true);
-            extractor.setSortInputByPixelYX(true);
-            if (maConfig.getExportDateFormat() != null) {
-                extractor.setDateFormat(maConfig.getExportDateFormat());
-            }
-            extractedRecords = extractor.getRecords();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to retrieve input records.", e);
-        }
+        Iterable<Record> extractedRecords = getExtractedRecords(extractor, maConfig);
 
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {
@@ -106,5 +94,22 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         // write final log entry for runtime measurements
         LOG.info(String.format("%s stops processing of split %s after %s sec",
                                context.getTaskAttemptID(), split, (System.nanoTime() - startTime) / 1E9));
+    }
+
+    private static Iterable<Record> getExtractedRecords(Extractor extractor, MAConfig maConfig) {
+        Iterable<Record> extractedRecords;
+        try {
+            final RecordSource recordSource = maConfig.createRecordSource();
+            extractor.setInput(recordSource);
+            extractor.setCopyInput(true);
+            extractor.setSortInputByPixelYX(true);
+            if (maConfig.getExportDateFormat() != null) {
+                extractor.setDateFormat(maConfig.getExportDateFormat());
+            }
+            extractedRecords = extractor.getRecords();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+        return extractedRecords;
     }
 }
