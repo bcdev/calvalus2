@@ -84,16 +84,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static void addBundleToClassPath(String bundle, Configuration configuration) throws IOException {
         final FileSystem fileSystem = FileSystem.get(configuration);
         final Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH, bundle);
-
-        final FileStatus[] beamJars = fileSystem.listStatus(bundlePath, new PathFilter() {
+        final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().endsWith("jar");
+                return path.getName().endsWith(".jar");
             }
         });
-        for (FileStatus beamJar : beamJars) {
-            final Path path = beamJar.getPath();
-            final Path pathWithoutProtocol = new Path(path.toUri().getPath());  // for hadoops sake!
+        for (FileStatus fileStatus : fileStatuses) {
+            // For hadoops sake, skip protocol from path because it contains ':' and that is used
+            // as separator in the job configuration!
+            final Path path = fileStatus.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());
             DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration);
         }
     }
@@ -107,11 +108,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         if (DEBUG) {
             // For debugging uncomment following line:
             configuration.set("mapred.child.java.opts",
-                              "-Xmx2000m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+                              "-Xmx2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         } else {
             // Set VM maximum heap size
             configuration.set("mapred.child.java.opts",
-                              "-Xmx2000m");
+                              "-Xmx2G");
         }
         return configuration;
     }
@@ -176,7 +177,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         if (jobStatus != null) {
             float progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
             if (jobStatus.getRunState() == JobStatus.FAILED) {
-                return new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed");
+                return new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
             } else if (jobStatus.getRunState() == JobStatus.KILLED) {
                 return new ProcessStatus(ProcessState.CANCELLED, progress);
             } else if (jobStatus.getRunState() == JobStatus.PREP) {
