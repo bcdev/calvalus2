@@ -35,6 +35,15 @@ import java.util.List;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
+ * <p/>
+ * <i>Important TODOs</i>
+ * <ol>
+ * <li>todo - Rename HadoopWorkflowItem --> ProcessingStep (mz, nf, 2011.08.15)</li>
+ * <li>todo - Express in API that the HadoopProductionType is responsible for setting up the workflow comprising one or more ProcessingSteps (mz, nf, 2011.08.15)</li>
+ * <li>todo - Express in API that the HadoopProductionType is responsible for converting a ProductionRequest into processing parameters for each ProcessingStep (mz, nf, 2011.08.15)</li>
+ * <li>todo - Constructors of ProcessingStep shall use a job configuration to pass processing parameters (mz, nf, 2011.08.15)</li>
+ * <li>todo - Use {@link #serializeProductionRequest} method to serialize the productionRequest into the Hadoop job configuration (mz, nf, 2011.08.15)</li>
+ * </ol>
  *
  * @author MarcoZ
  * @author Norman
@@ -111,11 +120,10 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    protected Configuration createJobConfiguration(ProductionRequest productionRequest) {
-        Configuration jobConfiguration = getProcessingService().createJobConfiguration();
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected void serializeProductionRequest(ProductionRequest productionRequest, Configuration jobConfiguration) {
         HadoopProductionServiceFactory.transferConfiguration(productionRequest.getParameters(), jobConfiguration);
-        jobConfiguration.set("calvalus.productionType", productionRequest.getProductionType());
-        jobConfiguration.set("calvalus.userName", productionRequest.getUserName());
-        return jobConfiguration;
+        jobConfiguration.set("calvalus.productionRequest.productionType", productionRequest.getProductionType());
+        jobConfiguration.set("calvalus.productionRequest.userName", productionRequest.getUserName());
     }
 }
