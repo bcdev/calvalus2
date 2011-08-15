@@ -38,6 +38,8 @@ import java.awt.image.Raster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 
@@ -46,8 +48,12 @@ public class StreamingProductWriter {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     public static void writeProduct(Product product, Path outputPath, MapContext context, int tileHeight) throws IOException {
+        Map<String, Long> indexMap = new HashMap<String, Long>();
+
         SequenceFile.Writer writer = writeHeader(product, outputPath, context, tileHeight);
+        writeTiePointData(product, writer, indexMap);
         LOG.info(" written header");
+
         Band[] bands = product.getBands();
         int x = 0;
         int w = product.getSceneRasterWidth();
@@ -70,40 +76,43 @@ public class StreamingProductWriter {
                 }
 
                 String key = band.getName() + ":" + sliceIndex;
+                updateIndex(indexMap, key, writer.getLength());
                 writeProductData(writer, key, productData);
             }
             LOG.info(" written y=" + y + " h=" + h);
         }
         writer.close();
+
+        Path indexPath = StreamingProductIndex.getIndexPath(outputPath);
+        StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, context.getConfiguration());
+        streamingProductIndex.writeIndex(indexMap);
     }
 
-    public static SequenceFile.Writer writeHeader(Product product, Path outputPath, MapContext context, int tile_height) throws IOException {
+    private static SequenceFile.Writer writeHeader(Product product, Path outputPath, MapContext context, int tile_height) throws IOException {
         SequenceFile.Metadata metadata = createMetadata(product, tile_height);
         Configuration configuration = context.getConfiguration();
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
-        SequenceFile.Writer sequenceFileWriter = SequenceFile.createWriter(fileSystem,
-                                                                           configuration,
-                                                                           outputPath,
-                                                                           Text.class,
-                                                                           ByteArrayWritable.class,
-                                                                           1024 * 1024, //buffersize,
-                                                                           (short) 1, //replication,
-                                                                           fileSystem.getDefaultBlockSize(),
-                                                                           SequenceFile.CompressionType.NONE,
-                                                                           null, // new DefaultCodec(),
-                                                                           context,
-                                                                           metadata);
-
-        writeTiePointData(product, sequenceFileWriter);
-        return sequenceFileWriter;
+        return SequenceFile.createWriter(fileSystem,
+                                         configuration,
+                                         outputPath,
+                                         Text.class,
+                                         ByteArrayWritable.class,
+                                         1024 * 1024, //buffersize,
+                                         (short) 1, //replication,
+                                         fileSystem.getDefaultBlockSize(),
+                                         SequenceFile.CompressionType.NONE,
+                                         null, // new DefaultCodec(),
+                                         context,
+                                         metadata);
     }
 
-    private static void writeTiePointData(Product product, SequenceFile.Writer sequenceFileWriter) throws IOException {
+    private static void writeTiePointData(Product product, SequenceFile.Writer writer, Map<String, Long> indexMap) throws IOException {
         TiePointGrid[] tiePointGrids = product.getTiePointGrids();
         for (TiePointGrid tiePointGrid : tiePointGrids) {
             String key = "tiepoint:" + tiePointGrid.getName();
             ProductData productData = tiePointGrid.getData();
-            writeProductData(sequenceFileWriter, key, productData);
+            updateIndex(indexMap, key, writer.getLength());
+            writeProductData(writer, key, productData);
         }
     }
 
@@ -115,6 +124,10 @@ public class StreamingProductWriter {
         cacheImageOutputStream.flush();
         byte[] buf = byteArrayOutputStream.getInternalBuffer();
         writer.append(new Text(key), new ByteArrayWritable(buf));
+    }
+
+    private static void updateIndex(Map<String, Long> indexMap, String key, long position) {
+        indexMap.put(key, position);
     }
 
     private static SequenceFile.Metadata createMetadata(Product product, int tile_height) {

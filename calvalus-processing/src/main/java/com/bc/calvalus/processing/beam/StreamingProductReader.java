@@ -25,7 +25,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.esa.beam.dataio.dimap.DimapProductHelpers;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.PixelGeoCoding;
@@ -49,7 +48,6 @@ import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -57,7 +55,7 @@ public class StreamingProductReader extends AbstractProductReader {
 
     private final Path path;
     private final Configuration configuration;
-    private final Map<String, Long> keyIndex;
+    private Map<String, Long> keyIndex;
 
     private SequenceFile.Reader reader;
     private int sliceHeight;
@@ -66,7 +64,6 @@ public class StreamingProductReader extends AbstractProductReader {
         super(null);    // TODO  use a ProductReaderPluigin
         this.path = path;
         this.configuration = configuration;
-        this.keyIndex = new HashMap<String, Long>();
     }
 
     @Override
@@ -109,7 +106,9 @@ public class StreamingProductReader extends AbstractProductReader {
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
         initGeoCodings(dom, product);
-        buildKeyIndex();
+        Path indexPath = StreamingProductIndex.getIndexPath(path);
+        StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
+        keyIndex = streamingProductIndex.getIndex(reader);
         return product;
     }
 
@@ -150,16 +149,6 @@ public class StreamingProductReader extends AbstractProductReader {
             if (latBand != null && lonBand != null) {
                 product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 6));
             }
-        }
-    }
-
-
-    private void buildKeyIndex() throws IOException {
-        Text key = new Text();
-        long currentPos = reader.getPosition();
-        while (reader.next(key)) {
-            keyIndex.put(key.toString(), currentPos);
-            currentPos = reader.getPosition();
         }
     }
 
@@ -225,15 +214,4 @@ public class StreamingProductReader extends AbstractProductReader {
         }
 
     }
-
-    public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.out.println("Usage : StreamingProductFile DimapProductFile");
-        }
-        StreamingProductReader reader = new StreamingProductReader(new Path(args[0]), new Configuration());
-        Product product = reader.readProductNodes(null, null);
-
-        ProductIO.writeProduct(product, args[1], ProductIO.DEFAULT_FORMAT_NAME);
-    }
-
 }
