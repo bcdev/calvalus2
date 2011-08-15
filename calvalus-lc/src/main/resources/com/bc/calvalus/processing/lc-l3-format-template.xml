@@ -13,11 +13,28 @@
   <wps:DataInputs>
 
     <wps:Input>
-      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <ows:Identifier>calvalus.converter</ows:Identifier>
       <wps:Data>
-	<wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/$REGION/$YEAR/$PERIOD" />
+          <wps:LiteralData>com.bc.calvalus.processing.converter.LcL3Converter</wps:LiteralData>
       </wps:Data>
     </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.filenamepattern</ows:Identifier>
+      <wps:Data>
+          <wps:LiteralData>wps-request.xml</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.input</ows:Identifier>
+      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/$REGION/$YEAR/$PERIOD" />
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>calvalus.output.dir</ows:Identifier>
+      <wps:Data>
+        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr-nc/$REGION/$YEAR" />
+      </wps:Data>
+    </wps:Input>
+
 
       <wps:Input>
           <ows:Identifier>calvalus.formatter.parameters</ows:Identifier>
