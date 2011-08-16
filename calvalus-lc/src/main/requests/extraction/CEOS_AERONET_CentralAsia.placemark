@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Placemarks>
+    <Placemark name="Dunhuang">
+        <LABEL>Dunhuang</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>40.13</LATITUDE>
+        <LONGITUDE>94.34</LONGITUDE>
+        <PIXEL_X>98762.9</PIXEL_X>
+        <PIXEL_Y>17953.7</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_313">
+        <LABEL>pin_313</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>42.816673</LATITUDE>
+        <LONGITUDE>93.51667</LONGITUDE>
+        <PIXEL_X>98466.5</PIXEL_X>
+        <PIXEL_Y>16986.498</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+</Placemarks>
+

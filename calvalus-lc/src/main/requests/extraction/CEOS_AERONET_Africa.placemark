@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Placemarks>
+    <Placemark name="pin_078">
+        <LABEL>pin_078</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>16.882998</LATITUDE>
+        <LONGITUDE>18.55</LONGITUDE>
+        <PIXEL_X>71478.5</PIXEL_X>
+        <PIXEL_Y>26322.621</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_2">
+        <LABEL>land_test1</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>10.108334</LATITUDE>
+        <LONGITUDE>14.716666</LONGITUDE>
+        <PIXEL_X>70098.5</PIXEL_X>
+        <PIXEL_Y>28761.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="land_test2">
+        <LABEL>land_test2</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>6.3694444</LATITUDE>
+        <LONGITUDE>19.661112</LONGITUDE>
+        <PIXEL_X>71878.5</PIXEL_X>
+        <PIXEL_Y>30107.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_4">
+        <LABEL>land_test3</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>1.1861111</LATITUDE>
+        <LONGITUDE>15.802778</LONGITUDE>
+        <PIXEL_X>70489.5</PIXEL_X>
+        <PIXEL_Y>31973.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_5">
+        <LABEL>land_test4</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>-3.6388888</LATITUDE>
+        <LONGITUDE>20.505556</LONGITUDE>
+        <PIXEL_X>72182.5</PIXEL_X>
+        <PIXEL_Y>33710.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_6">
+        <LABEL>land_test5</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>-6.6527777</LATITUDE>
+        <LONGITUDE>17.127777</LONGITUDE>
+        <PIXEL_X>70966.5</PIXEL_X>
+        <PIXEL_Y>34795.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+</Placemarks>
+

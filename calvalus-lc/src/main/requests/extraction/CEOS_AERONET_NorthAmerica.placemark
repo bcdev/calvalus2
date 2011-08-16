@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Placemarks>
+    <Placemark name="Railroad_Valley_Playa">
+        <LABEL>Railroad_Valley_Playa</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>38.5</LATITUDE>
+        <LONGITUDE>-115.69</LONGITUDE>
+        <PIXEL_X>23152.1</PIXEL_X>
+        <PIXEL_Y>18540.5</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="Ivanpah_Playa">
+        <LABEL>Ivanpah_Playa</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>35.57</LATITUDE>
+        <LONGITUDE>-115.4</LONGITUDE>
+        <PIXEL_X>23256.5</PIXEL_X>
+        <PIXEL_Y>19595.3</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="Frenchman_Flat">
+        <LABEL>Frenchman_Flat</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>36.809998</LATITUDE>
+        <LONGITUDE>-115.93</LONGITUDE>
+        <PIXEL_X>23065.7</PIXEL_X>
+        <PIXEL_Y>19148.9</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_087">
+        <LABEL>pin_087</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>45.6622</LATITUDE>
+        <LONGITUDE>-111.04501</LONGITUDE>
+        <PIXEL_X>24824.295</PIXEL_X>
+        <PIXEL_Y>15962.107</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_198">
+        <LABEL>pin_198</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.417</LATITUDE>
+        <LONGITUDE>-110.283</LONGITUDE>
+        <PIXEL_X>25098.621</PIXEL_X>
+        <PIXEL_Y>12810.38</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_283">
+        <LABEL>pin_283</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>36.809284</LATITUDE>
+        <LONGITUDE>-115.93479</LONGITUDE>
+        <PIXEL_X>23063.975</PIXEL_X>
+        <PIXEL_Y>19149.158</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_296">
+        <LABEL>pin_296</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>35.23333</LATITUDE>
+        <LONGITUDE>-116.79167</LONGITUDE>
+        <PIXEL_X>22755.498</PIXEL_X>
+        <PIXEL_Y>19716.502</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_471">
+        <LABEL>pin_471</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>38.390076</LATITUDE>
+        <LONGITUDE>-115.98838</LONGITUDE>
+        <PIXEL_X>23044.684</PIXEL_X>
+        <PIXEL_Y>18580.072</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_507">
+        <LABEL>pin_507</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>46.91667</LATITUDE>
+        <LONGITUDE>-114.08334</LONGITUDE>
+        <PIXEL_X>23730.496</PIXEL_X>
+        <PIXEL_Y>15510.498</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_651">
+        <LABEL>pin_651</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>38.504005</LATITUDE>
+        <LONGITUDE>-115.962</LONGITUDE>
+        <PIXEL_X>23054.182</PIXEL_X>
+        <PIXEL_Y>18539.059</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_656">
+        <LABEL>pin_656</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>37.90833</LATITUDE>
+        <LONGITUDE>-107.725</LONGITUDE>
+        <PIXEL_X>26019.5</PIXEL_X>
+        <PIXEL_Y>18753.502</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_741">
+        <LABEL>pin_741</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>50.28155</LATITUDE>
+        <LONGITUDE>-111.13077</LONGITUDE>
+        <PIXEL_X>24793.424</PIXEL_X>
+        <PIXEL_Y>14299.142</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+    <Placemark name="pin_808">
+        <LABEL>pin_808</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>49.68167</LATITUDE>
+        <LONGITUDE>-112.86897</LONGITUDE>
+        <PIXEL_X>24167.67</PIXEL_X>
+        <PIXEL_Y>14515.099</PIXEL_Y>
+        <FillColor>
+            <COLOR red="128" green="128" blue="255" alpha="255" />
+        </FillColor>
+        <OutlineColor>
+            <COLOR red="0" green="0" blue="64" alpha="255" />
+        </OutlineColor>
+    </Placemark>
+</Placemarks>
+
