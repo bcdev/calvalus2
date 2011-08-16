@@ -92,7 +92,8 @@ public class StreamingProductIndex {
         Map<String, Long> indexMap = readIndex();
         if (indexMap.isEmpty()) {
             indexMap = buildIndex(reader);
-            writeIndex(indexMap);
+//            for now, don't write index while reading
+//            writeIndex(indexMap);
         }
         return indexMap;
     }
