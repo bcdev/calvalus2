@@ -20,7 +20,6 @@ import com.bc.calvalus.processing.beam.BeamUtils;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,58 +47,6 @@ public class JobUtilsTest {
     private String readFromResource(String name) throws IOException, SAXException, ParserConfigurationException {
         InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(name));
         return FileUtils.readText(inputStreamReader).trim();
-    }
-
-    @Test
-    public void convertSimpleRequestToParametersMap() throws Exception {
-        String level2OperatorName = "Meris.CorrectRadiometry";
-        String level2Parameters = readFromResource("radiometry.xml");
-
-        DomElement element = BeamUtils.createDomElement(level2Parameters);
-        assertNotNull(element);
-        assertEquals("parameters", element.getName());
-        assertEquals(4, element.getChildCount());
-
-        DomElement child1 = element.getChild(0);
-        assertEquals("doCalibration", child1.getName());
-        assertEquals("false", child1.getValue());
-
-        DomElement child2 = element.getChild(1);
-        assertEquals("doSmile", child2.getName());
-        assertEquals("true", child2.getValue());
-
-        DomElement child3 = element.getChild(2);
-        assertEquals("doEqualization", child3.getName());
-        assertEquals("false", child3.getValue());
-
-        DomElement child4 = element.getChild(3);
-        assertEquals("reproVersion", child4.getName());
-        assertEquals("REPROCESSING_2", child4.getValue());
-
-        Map<String,Object> operatorParameters = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
-        assertNotNull(operatorParameters);
-        assertEquals(4, operatorParameters.size());
-
-        Object obj = operatorParameters.get("doCalibration");
-        assertNotNull(obj);
-        assertSame(Boolean.class, obj.getClass());
-        assertEquals(false, obj);
-
-        obj = operatorParameters.get("doCalibration");
-        assertNotNull(obj);
-        assertSame(Boolean.class, obj.getClass());
-        assertEquals(false, obj);
-
-        obj = operatorParameters.get("doCalibration");
-        assertNotNull(obj);
-        assertSame(Boolean.class, obj.getClass());
-        assertEquals(false, obj);
-
-        obj = operatorParameters.get("reproVersion");
-        assertNotNull(obj);
-        assertSame(ReprocessingVersion.class, obj.getClass());
-        assertEquals(ReprocessingVersion.REPROCESSING_2, obj);
-
     }
 
     @Test
