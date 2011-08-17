@@ -28,15 +28,67 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
  * @author Norman
  */
 public class MAConfig {
+    /**
+     * Size of the macro pixel given as number {@code n} of 'normal' pixels. A window comprising
+     * {@code n x n} will be considered in the match-up process. Should be an odd integer,
+     * so that {@code n/2 - 1} pixels are considered around a given center pixel.
+     */
+    @Parameter(defaultValue = "1")
+    int macroPixelSize;
+
+    /**
+     *  If {@code extractMacroPixel = true}, all pixels comprising the macro pixel will be extracted.
+     *  If {@code extractMacroPixel = false}, macro pixel values will be averaged.
+     */
+    @Parameter(defaultValue = "false")
+    boolean extractMacroPixel;
+
+    /**
+     * Maximum time difference in hours between reference and EO pixel.
+     * If {@code maxTimeDifference <= 0}, the criterion will not be used and match-ups are found for all times.
+     */
+    @Parameter(defaultValue = "5")
+    int maxTimeDifference;
+
+    /**
+     * Threshold for the <i>NGP/NTP criterion</i>.
+     * If {@code minNgpToNtpRatio = 0.0}, the criterion will not be used.
+     */
+    @Parameter
+    double minNgpToNtpRatio;
+
+    /**
+     * Band name for <i>filtered mean criterion</i>.
+     * If not given, the criterion will not be used.
+     */
+    @Parameter
+    String filteredMeanBandName;
+
+    /**
+     * Coefficient for <i>filtered mean criterion</i>.
+     */
+    @Parameter
+    double filteredMeanCoefficient;
+
+    /**
+     * The band maths expression that identifies the "good" pixels in the macro pixel.
+     * If not given, the criterion will not be used, thus all pixels will be considered being "good".
+     */
+    @Parameter(defaultValue = "1")
+    String goodPixelExpression;
+
+    /**
+     * The date format used in the output.
+     * Default is {@code "dd-MMM-yyyy HH:mm:ss"} (as used by Envisat).
+     */
+    @Parameter
+    private String exportDateFormat;
 
     @Parameter
     private String recordSourceSpiClassName;
 
     @Parameter
     private String recordSourceUrl;
-
-    @Parameter
-    private String exportDateFormat;
 
     public static MAConfig fromXml(String xml) {
         MAConfig config = new MAConfig();
