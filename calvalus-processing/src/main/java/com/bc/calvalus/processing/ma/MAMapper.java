@@ -29,6 +29,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +45,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        final long mapperStartTime = now();
+
         final Configuration configuration = context.getConfiguration();
         BeamUtils.initGpf(configuration);
         final MAConfig maConfig = MAConfig.fromXml(configuration.get(JobConfNames.CALVALUS_MA_PARAMETERS));
@@ -52,32 +55,41 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
-                               context.getTaskAttemptID(), split, (MiB/2 + split.getLength()) / MiB));
+                               context.getTaskAttemptID(), split, (MiB / 2 + split.getLength()) / MiB));
 
-        final long startTime = System.nanoTime();
+        long t0;
 
         final Path inputPath = split.getPath();
         String inputName = FileUtils.getFilenameWithoutExtension(inputPath.getName());
 
+        t0 = now();
         final Product product = BeamUtils.readProduct(inputPath, configuration);
         product.setName(inputName);
-
+        context.progress();
+        long productOpenTime = (now() - t0);
         LOG.info(String.format("%s opened product %s, took %s sec",
-                               context.getTaskAttemptID(), inputName, (System.nanoTime() - startTime) / 1E9));
+                               context.getTaskAttemptID(), inputName, productOpenTime / 1E3));
 
+        t0 = now();
         Extractor extractor = new Extractor(product);
         Iterable<Record> extractedRecords = getExtractedRecords(extractor, maConfig);
+        context.progress();
+        long recordReadTime = (now() - t0);
+        LOG.info(String.format("%s read input records from %s, took %s sec",
+                               context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
+        t0 = now();
         int numMatchUps = 0;
         for (Record extractedRecord : extractedRecords) {
             // write record
             context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
                           new RecordWritable(extractedRecord));
+            context.progress();
             numMatchUps++;
         }
-
-        LOG.info(String.format("%s extracted %s match-ups, took %s sec so far",
-                               context.getTaskAttemptID(), numMatchUps, (System.nanoTime() - startTime) / 1E9));
+        long recordWriteTime = (now() - t0);
+        LOG.info(String.format("%s extracted %s match-ups, took %s sec",
+                               context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
 
         if (numMatchUps > 0) {
             // write header
@@ -89,11 +101,32 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
         }
 
+
+        t0 = now();
         product.dispose();
+        context.progress();
+        long productCloseTime = (now() - t0);
+        LOG.info(String.format("%s closed input product, took %s sec",
+                               context.getTaskAttemptID(), productCloseTime / 1E3));
 
         // write final log entry for runtime measurements
+        long mapperTotalTime = (now() - mapperStartTime);
         LOG.info(String.format("%s stops processing of split %s after %s sec",
-                               context.getTaskAttemptID(), split, (System.nanoTime() - startTime) / 1E9));
+                               context.getTaskAttemptID(), split, mapperTotalTime / 1E3));
+
+        // per-host counters
+        String hostGroupName = "MAMapper on " + InetAddress.getLocalHost().getHostName();
+        context.getCounter(hostGroupName, "MAMapper runs").increment(1);
+        context.getCounter(hostGroupName, "Product open time (ms)").increment(productOpenTime);
+        context.getCounter(hostGroupName, "Record read time (ms)").increment(recordReadTime);
+        context.getCounter(hostGroupName, "Record write time (ms)").increment(recordWriteTime);
+        context.getCounter(hostGroupName, "Product close time (ms)").increment(productCloseTime);
+        context.getCounter(hostGroupName, "MAMapper total time (ms)").increment(mapperTotalTime);
+
+    }
+
+    private static long now() {
+        return System.currentTimeMillis();
     }
 
     private static Iterable<Record> getExtractedRecords(Extractor extractor, MAConfig maConfig) {
