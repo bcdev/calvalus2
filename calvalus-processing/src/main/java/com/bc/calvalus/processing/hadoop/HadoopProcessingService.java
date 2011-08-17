@@ -108,11 +108,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         if (DEBUG) {
             // For debugging uncomment following line:
             configuration.set("mapred.child.java.opts",
-                              "-Xmx2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+                              "-Xmx1G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         } else {
             // Set VM maximum heap size
             configuration.set("mapred.child.java.opts",
-                              "-Xmx2G");
+                              "-Xmx1G");
         }
         return configuration;
     }
