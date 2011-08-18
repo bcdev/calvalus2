@@ -88,9 +88,9 @@ public class LcL3Converter implements FormatConverter {
         name = name.substring(0, pos+1) + name.substring(pos+1).replaceAll("-", "");
         String prefix = formattingWpsConfig.getXmlDoc().getString(PREFIX_XPATH, "CCI-LC-MERIS-SR-L3-300m");
         String suffix = formattingWpsConfig.getXmlDoc().getString(SUFFIX_XPATH, "nc");
-        final String version = "v1.0";
+        final String version = "v2.0";
         final String centre = "BC";
-        final String procTime = "201105";
+        final String procTime = "201108";
         return String.format("%s-%s-%s-%s-%s-%s.%s", prefix, name, version, region, centre, procTime, suffix);
     }
 
