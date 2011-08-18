@@ -97,19 +97,29 @@ public class StreamingProductReader extends AbstractProductReader {
 
     private Product readHeader() throws IOException {
         SequenceFile.Metadata metadata = reader.getMetadata();
-        Text dimText = metadata.get(new Text("dim"));
+        long startPos = reader.getPosition();
         Text sliceHeightText = metadata.get(new Text("slice.height"));
         sliceHeight = Integer.parseInt(sliceHeightText.toString());
 
-        final InputStream inputStream = new ByteArrayInputStream(dimText.getBytes());
-        Document dom = DimapProductHelpers.createDom(inputStream);
+        Document dom = createDOM(metadata.get(new Text("dim")));
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
         initGeoCodings(dom, product);
+
         Path indexPath = StreamingProductIndex.getIndexPath(path);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
-        keyIndex = streamingProductIndex.getIndex(reader);
+        keyIndex = streamingProductIndex.readIndex();
+        if (keyIndex.isEmpty()) {
+            reader.seek(startPos);
+            keyIndex = StreamingProductIndex.buildIndex(reader);
+            streamingProductIndex.writeIndex(keyIndex);
+        }
         return product;
+    }
+
+    private Document createDOM(Text dimText) {
+        final InputStream inputStream = new ByteArrayInputStream(dimText.getBytes());
+        return DimapProductHelpers.createDom(inputStream);
     }
 
     private void readTiepoints(Product product) throws IOException {

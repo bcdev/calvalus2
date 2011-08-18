@@ -88,33 +88,25 @@ public class StreamingProductIndex {
                                          metadata);
     }
 
-    public Map<String, Long> getIndex(SequenceFile.Reader reader) throws IOException {
-        Map<String, Long> indexMap = readIndex();
-        if (indexMap.isEmpty()) {
-            indexMap = buildIndex(reader);
-//            for now, don't write index while reading
-//            writeIndex(indexMap);
-        }
-        return indexMap;
-    }
-
-    public static Map<String, Long> buildIndex(SequenceFile.Reader reader) throws IOException {
+    public static Map<String, Long> buildIndex(SequenceFile.Reader productStreamReader) throws IOException {
         Map<String, Long> indexMap = new HashMap<String, Long>();
         Text key = new Text();
-        long currentPos = reader.getPosition();
-        while (reader.next(key)) {
+        long currentPos = productStreamReader.getPosition();
+        while (productStreamReader.next(key)) {
             indexMap.put(key.toString(), currentPos);
-            currentPos = reader.getPosition();
+            currentPos = productStreamReader.getPosition();
         }
         return indexMap;
     }
 
-    private Map<String, Long> readIndex() throws IOException {
+    public Map<String, Long> readIndex() throws IOException {
         FileSystem fs = FileSystem.get(configuration);
         if (fs.exists(indexPath)) {
-            SequenceFile.Reader indexReader = new SequenceFile.Reader(fs, indexPath, configuration);
+            SequenceFile.Reader indexReader = null;
             try {
-                Text numEntriesText = indexReader.getMetadata().get(new Text(NUM_ENTRIES));
+                indexReader = new SequenceFile.Reader(fs, indexPath, configuration);
+                SequenceFile.Metadata metadata = indexReader.getMetadata();
+                Text numEntriesText = metadata.get(new Text(NUM_ENTRIES));
                 if (numEntriesText != null) {
                     int numEntries = Integer.parseInt(numEntriesText.toString());
 
@@ -128,8 +120,13 @@ public class StreamingProductIndex {
                         return indexMap;
                     }
                 }
+            } catch (IOException ioe) {
+                // in case of an IO error,
+                // ignore the read index and return an empty map
             } finally {
-                indexReader.close();
+                if (indexReader != null) {
+                    indexReader.close();
+                }
             }
         }
         return Collections.emptyMap();

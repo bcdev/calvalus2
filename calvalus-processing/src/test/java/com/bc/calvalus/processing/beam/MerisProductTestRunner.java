@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.beam;
 
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -51,7 +51,7 @@ public class MerisProductTestRunner extends BlockJUnit4ClassRunner {
         }
     }
 
-    static File getTestProductFile() {
+    public static File getTestProductFile() {
         final URL resource = MerisProductTestRunner.class.getResource(TEST_DATA);
         if (resource == null) {
             throw new IllegalStateException("Resource not found: " + TEST_DATA);

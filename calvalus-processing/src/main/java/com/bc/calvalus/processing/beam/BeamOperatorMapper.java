@@ -88,7 +88,8 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 if (preferredTileSize != null) {
                     tileHeight = preferredTileSize.height;
                 }
-                StreamingProductWriter.writeProduct(targetProduct, outputProductPath, context, tileHeight);
+                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, context);
+                streamingProductWriter.writeProduct(targetProduct, outputProductPath, tileHeight);
 
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             }

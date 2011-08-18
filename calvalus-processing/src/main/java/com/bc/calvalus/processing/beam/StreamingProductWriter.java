@@ -23,7 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.util.Progressable;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -47,10 +47,18 @@ public class StreamingProductWriter {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public static void writeProduct(Product product, Path outputPath, MapContext context, int tileHeight) throws IOException {
+    private final Configuration configuration;
+    private final Progressable progressable;
+
+    public StreamingProductWriter(Configuration configuration, Progressable progressable) {
+        this.configuration = configuration;
+        this.progressable = progressable;
+    }
+
+    public void writeProduct(Product product, Path outputPath, int tileHeight) throws IOException {
         Map<String, Long> indexMap = new HashMap<String, Long>();
 
-        SequenceFile.Writer writer = writeHeader(product, outputPath, context, tileHeight);
+        SequenceFile.Writer writer = writeHeader(product, outputPath, tileHeight);
         writeTiePointData(product, writer, indexMap);
         LOG.info(" written header");
 
@@ -84,13 +92,12 @@ public class StreamingProductWriter {
         writer.close();
 
         Path indexPath = StreamingProductIndex.getIndexPath(outputPath);
-        StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, context.getConfiguration());
+        StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         streamingProductIndex.writeIndex(indexMap);
     }
 
-    private static SequenceFile.Writer writeHeader(Product product, Path outputPath, MapContext context, int tile_height) throws IOException {
+    private SequenceFile.Writer writeHeader(Product product, Path outputPath, int tile_height) throws IOException {
         SequenceFile.Metadata metadata = createMetadata(product, tile_height);
-        Configuration configuration = context.getConfiguration();
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         return SequenceFile.createWriter(fileSystem,
                                          configuration,
@@ -102,7 +109,7 @@ public class StreamingProductWriter {
                                          fileSystem.getDefaultBlockSize(),
                                          SequenceFile.CompressionType.NONE,
                                          null, // new DefaultCodec(),
-                                         context,
+                                         progressable,
                                          metadata);
     }
 

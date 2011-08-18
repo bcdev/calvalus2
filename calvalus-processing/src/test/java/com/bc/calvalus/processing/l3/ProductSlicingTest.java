@@ -16,8 +16,8 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.beam.MerisProductTestRunner;
 import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
