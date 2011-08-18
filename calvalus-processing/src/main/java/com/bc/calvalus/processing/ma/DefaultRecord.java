@@ -18,18 +18,19 @@ public class DefaultRecord implements Record {
     private final Object[] values;
 
     public static DefaultRecord create(Header header, Object... values) {
+
         final int latitudeIndex = header != null ? header.getLatitudeIndex() : -1;
         final int longitudeIndex = header != null ? header.getLongitudeIndex() : -1;
         final int timeIndex = header != null ? header.getTimeIndex() : -1;
         final DateFormat timeFormat = header != null ? header.getTimeFormat() : null;
-        final GeoPos coordinate;
-        final Date time;
+
+        GeoPos coordinate = null;
         if (latitudeIndex >= 0 && longitudeIndex >= 0) {
             coordinate = new GeoPos(((Number) values[latitudeIndex]).floatValue(),
                                     ((Number) values[longitudeIndex]).floatValue());
-        } else {
-            coordinate = null;
         }
+
+        Date time = null;
         if (timeIndex >= 0 && timeFormat != null) {
             final String timeStr = (String) values[timeIndex];
             if (timeStr != null) {
@@ -38,12 +39,9 @@ public class DefaultRecord implements Record {
                 } catch (ParseException e) {
                     throw new IllegalArgumentException("Illegal time value: " + timeStr + ", expected format " + timeFormat);
                 }
-            }       else {
-                time = null;
             }
-        } else {
-            time = null;
         }
+
         return new DefaultRecord(coordinate, time, values);
     }
 
