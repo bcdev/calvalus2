@@ -1,7 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
@@ -9,32 +8,33 @@ import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Date;
 
 import static org.junit.Assert.*;
 
 public class TAProductionTypeTest {
 
+    private TAProductionType productionType;
+
+    @Before
+    public void setUp() throws Exception {
+        JobClient jobClient = new JobClient(new JobConf());
+        productionType = new TAProductionType(new TestInventoryService(),
+                                              new HadoopProcessingService(jobClient),
+                                              new TestStagingService());
+    }
+
     @Test
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        JobClient jobClient = new JobClient(new JobConf());
-        // todo - don't override  getInputPaths(), instead use the TestInventoryService (mz,nf)
-        TAProductionType type = new TAProductionType(new HadoopInventoryService(jobClient.getFs()),
-                                                     new HadoopProcessingService(jobClient),
-                                                     new TestStagingService()) {
-            @Override
-            public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
-                return new String[]{"MER_RR_007.N1"};
-            }
-        };
-        Production production = type.createProduction(productionRequest);
+        Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
         assertEquals("Trend analysis using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));

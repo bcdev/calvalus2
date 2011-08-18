@@ -2,17 +2,18 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -24,20 +25,20 @@ import static org.junit.Assert.*;
 
 public class L3ProductionTypeTest {
 
+    private L3ProductionType productionType;
+
+    @Before
+    public void setUp() throws Exception {
+        JobClient jobClient = new JobClient(new JobConf());
+        productionType = new L3ProductionType(new TestInventoryService(),
+                                              new HadoopProcessingService(jobClient),
+                                              new TestStagingService());
+    }
+
     @Test
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        JobClient jobClient = new JobClient(new JobConf());
-        // todo - don't override  getInputPaths(), instead use the TestInventoryService (mz,nf)
-        L3ProductionType type = new L3ProductionType(new HadoopInventoryService(jobClient.getFs()),
-                                                     new HadoopProcessingService(jobClient),
-                                                     new TestStagingService()) {
-            @Override
-            public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
-                return new String[]{"MER_RR_007.N1"};
-            }
-        };
-        Production production = type.createProduction(productionRequest);
+        Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
         assertEquals("Level 3 production using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
