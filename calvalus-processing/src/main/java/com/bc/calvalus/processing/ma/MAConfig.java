@@ -29,6 +29,13 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
  */
 public class MAConfig {
     /**
+     * If {@code copyInput = true}, all fields of an input (reference) record will be
+     * copied into a corresponding output record.
+     */
+    @Parameter(defaultValue = "true")
+    boolean copyInput;
+
+    /**
      * Size of the macro pixel given as number {@code n} of 'normal' pixels. A window comprising
      * {@code n x n} will be considered in the match-up process. Should be an odd integer,
      * so that {@code n/2 - 1} pixels are considered around a given center pixel.
@@ -37,18 +44,18 @@ public class MAConfig {
     int macroPixelSize;
 
     /**
-     *  If {@code extractMacroPixel = true}, all pixels comprising the macro pixel will be extracted.
-     *  If {@code extractMacroPixel = false}, macro pixel values will be averaged.
+     * If {@code aggregateMacroPixel = true}, all 'good' macro pixel values will be aggregated (averaged).
+     * If {@code aggregateMacroPixel = false}, all pixels comprising the macro pixel will be extracted.
      */
-    @Parameter(defaultValue = "false")
-    boolean extractMacroPixel;
+    @Parameter(defaultValue = "true")
+    boolean aggregateMacroPixel;
 
     /**
      * Maximum time difference in hours between reference and EO pixel.
-     * If {@code maxTimeDifference <= 0}, the criterion will not be used and match-ups are found for all times.
+     * If {@code maxTimeDifference = null}, the criterion will not be used and match-ups are found for all times.
      */
-    @Parameter(defaultValue = "5")
-    int maxTimeDifference;
+    @Parameter
+    Double maxTimeDifference;
 
     /**
      * Threshold for the <i>NGP/NTP criterion</i>.
@@ -74,7 +81,7 @@ public class MAConfig {
      * The band maths expression that identifies the "good" pixels in the macro pixel.
      * If not given, the criterion will not be used, thus all pixels will be considered being "good".
      */
-    @Parameter(defaultValue = "1")
+    @Parameter
     String goodPixelExpression;
 
     /**
@@ -97,6 +104,7 @@ public class MAConfig {
     }
 
     public MAConfig() {
+        setDefaults();
     }
 
     public MAConfig(String recordSourceSpiClassName,
@@ -105,12 +113,20 @@ public class MAConfig {
         Assert.notNull(recordSourceUrl, "recordSourceUrl");
         this.recordSourceSpiClassName = recordSourceSpiClassName;
         this.recordSourceUrl = recordSourceUrl;
-        this.exportDateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
+        setDefaults();
     }
 
     public RecordSource createRecordSource() throws Exception {
         RecordSourceSpi service = RecordSourceSpi.get(recordSourceSpiClassName);
         return service != null ? service.createRecordSource(recordSourceUrl) : null;
+    }
+
+    private void setDefaults() {
+        exportDateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
+        maxTimeDifference = null;
+        macroPixelSize = 1;
+        aggregateMacroPixel = true;
+        copyInput = true;
     }
 
     public String getRecordSourceSpiClassName() {
@@ -123,5 +139,69 @@ public class MAConfig {
 
     public String getExportDateFormat() {
         return exportDateFormat;
+    }
+
+    public boolean isCopyInput() {
+        return copyInput;
+    }
+
+    public void setCopyInput(boolean copyInput) {
+        this.copyInput = copyInput;
+    }
+
+    public int getMacroPixelSize() {
+        return macroPixelSize;
+    }
+
+    public void setMacroPixelSize(int macroPixelSize) {
+        this.macroPixelSize = macroPixelSize;
+    }
+
+    public boolean isAggregateMacroPixel() {
+        return aggregateMacroPixel;
+    }
+
+    public void setAggregateMacroPixel(boolean aggregateMacroPixel) {
+        this.aggregateMacroPixel = aggregateMacroPixel;
+    }
+
+    public Double getMaxTimeDifference() {
+        return maxTimeDifference;
+    }
+
+    public void setMaxTimeDifference(Double maxTimeDifference) {
+        this.maxTimeDifference = maxTimeDifference;
+    }
+
+    public double getMinNgpToNtpRatio() {
+        return minNgpToNtpRatio;
+    }
+
+    public void setMinNgpToNtpRatio(double minNgpToNtpRatio) {
+        this.minNgpToNtpRatio = minNgpToNtpRatio;
+    }
+
+    public String getFilteredMeanBandName() {
+        return filteredMeanBandName;
+    }
+
+    public void setFilteredMeanBandName(String filteredMeanBandName) {
+        this.filteredMeanBandName = filteredMeanBandName;
+    }
+
+    public double getFilteredMeanCoefficient() {
+        return filteredMeanCoefficient;
+    }
+
+    public void setFilteredMeanCoefficient(double filteredMeanCoefficient) {
+        this.filteredMeanCoefficient = filteredMeanCoefficient;
+    }
+
+    public String getGoodPixelExpression() {
+        return goodPixelExpression;
+    }
+
+    public void setGoodPixelExpression(String goodPixelExpression) {
+        this.goodPixelExpression = goodPixelExpression;
     }
 }

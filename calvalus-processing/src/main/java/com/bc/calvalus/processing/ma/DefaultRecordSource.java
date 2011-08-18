@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.GeoPos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,8 +24,8 @@ public class DefaultRecordSource implements RecordSource {
         this.records = new ArrayList<Record>(Arrays.asList(records));
     }
 
-    public void addRecord(GeoPos geoPos, Object ... attributeValues) {
-        records.add(new DefaultRecord(geoPos, attributeValues));
+    public void addRecord(Record record) {
+        records.add(record);
     }
 
     @Override

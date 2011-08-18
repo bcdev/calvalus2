@@ -47,9 +47,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     public void run(Context context) throws IOException, InterruptedException {
         final long mapperStartTime = now();
 
-        final Configuration configuration = context.getConfiguration();
-        BeamUtils.initGpf(configuration);
-        final MAConfig maConfig = MAConfig.fromXml(configuration.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final Configuration jobConfig = context.getConfiguration();
+        BeamUtils.initGpf(jobConfig);
+        final MAConfig extractorConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -63,7 +63,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         String inputName = FileUtils.getFilenameWithoutExtension(inputPath.getName());
 
         t0 = now();
-        final Product product = BeamUtils.readProduct(inputPath, configuration);
+        final Product product = BeamUtils.readProduct(inputPath, jobConfig);
         product.setName(inputName);
         context.progress();
         long productOpenTime = (now() - t0);
@@ -71,12 +71,12 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                context.getTaskAttemptID(), inputName, productOpenTime / 1E3));
 
         t0 = now();
-        Extractor extractor = new Extractor(product);
-        Iterable<Record> extractedRecords = getExtractedRecords(extractor, maConfig);
+        Extractor extractor = new Extractor(product, extractorConfig);
+        Iterable<Record> extractedRecords = getExtractedRecords(extractor, extractorConfig);
         context.progress();
         long recordReadTime = (now() - t0);
         LOG.info(String.format("%s read input records from %s, took %s sec",
-                               context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+                               context.getTaskAttemptID(), extractorConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
         t0 = now();
         int numMatchUps = 0;
@@ -134,11 +134,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         try {
             final RecordSource recordSource = maConfig.createRecordSource();
             extractor.setInput(recordSource);
-            extractor.setCopyInput(true);
             extractor.setSortInputByPixelYX(true);
-            if (maConfig.getExportDateFormat() != null) {
-                extractor.setDateFormat(maConfig.getExportDateFormat());
-            }
             extractedRecords = extractor.getRecords();
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);

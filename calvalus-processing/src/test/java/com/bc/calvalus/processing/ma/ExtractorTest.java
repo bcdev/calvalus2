@@ -1,12 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -17,22 +11,43 @@ import static org.junit.Assert.*;
 /**
  * @author MarcoZ
  * @author Norman
+ * @see MatcherTest
  */
 public class ExtractorTest {
 
+    public static DefaultRecord merge(GeoPos coordinate, Date time, Object... values) {
+        if (coordinate != null || time != null) {
+            ArrayList<Object> list;
+            if (coordinate != null && time != null) {
+                // todo - use time format pattern from header
+                String timeStr = ProductData.UTC.create(time, 0L).format();
+                list = new ArrayList<Object>(Arrays.asList((Object) coordinate.lat, coordinate.lon, timeStr));
+            } else if (coordinate != null) {
+                list = new ArrayList<Object>(Arrays.asList((Object) coordinate.lat, coordinate.lon));
+            } else {
+                list = new ArrayList<Object>(Arrays.asList((Object) time));
+            }
+            list.addAll(Arrays.asList(values));
+            return new DefaultRecord(coordinate, time, list.toArray(new Object[list.size()]));
+        } else {
+            return new DefaultRecord(coordinate, time, values.clone());
+        }
+    }
+
     @Test(expected = NullPointerException.class)
     public void testExtractDoesNotAcceptNullProduct() throws Exception {
-        new Extractor(null);
+        new Extractor(null, new MAConfig());
     }
 
     @Test(expected = NullPointerException.class)
     public void testExtractDoesNotAcceptNullRecord() throws Exception {
-        new Extractor(new Product("A", "B", 2, 2)).extract(null);
+        new Extractor(new Product("A", "B", 2, 2), new MAConfig()).extract(null);
     }
 
     @Test
     public void testThatRecordsAreGeneratedForContainedCoordinates() throws Exception {
         Extractor extractor = createExtractor();
+        extractor.getConfig().setCopyInput(false);
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 0))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 1))));
         assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 0))));
@@ -103,8 +118,8 @@ public class ExtractorTest {
                                                                    new TestRecord(new GeoPos(1, 1)));
 
         Extractor noSort = createExtractor();
+        noSort.getConfig().setCopyInput(false);
         noSort.setSortInputByPixelYX(false);
-        noSort.setCopyInput(false);
         noSort.setInput(recordSource);
         List<Record> unsorted = getRecords(noSort);
         assertEquals(5, unsorted.size());
@@ -120,8 +135,8 @@ public class ExtractorTest {
         assertEquals(0.5F, (Float) unsorted.get(4).getAttributeValues()[2], 1e-3F);
 
         Extractor sort = createExtractor();
+        sort.getConfig().setCopyInput(false);
         sort.setSortInputByPixelYX(true);
-        sort.setCopyInput(false);
         sort.setInput(recordSource);
         List<Record> sorted = getRecords(sort);
         assertEquals(5, sorted.size());
@@ -141,6 +156,7 @@ public class ExtractorTest {
     @Test
     public void testThatHeaderIsCorrect() throws Exception {
         Extractor extractor = createExtractor();
+        extractor.getConfig().setCopyInput(false);
         Header header = extractor.getHeader();
         assertNotNull(header);
         String[] attributeNames = header.getAttributeNames();
@@ -152,6 +168,8 @@ public class ExtractorTest {
         assertEquals("product_name", attributeNames[index++]);
         assertEquals("pixel_x", attributeNames[index++]);
         assertEquals("pixel_y", attributeNames[index++]);
+        assertEquals("pixel_lat", attributeNames[index++]);
+        assertEquals("pixel_lon", attributeNames[index++]);
         assertEquals("pixel_time", attributeNames[index++]);
         // 1. bands
         assertEquals("b1", attributeNames[index++]);
@@ -163,12 +181,13 @@ public class ExtractorTest {
         assertEquals("latitude", attributeNames[index++]);
         assertEquals("longitude", attributeNames[index++]);
 
-        assertEquals(10, index);
+        assertEquals(12, index);
     }
 
     @Test
     public void testThatInputIsCopied() throws Exception {
         Extractor extractor = createExtractor();
+        extractor.getConfig().setCopyInput(true);
         extractor.setInput(new RecordSource() {
             @Override
             public Header getHeader() {
@@ -177,10 +196,9 @@ public class ExtractorTest {
 
             @Override
             public Iterable<Record> getRecords() throws Exception {
-                return Arrays.asList((Record) new DefaultRecord(new GeoPos(0F, 1F), 0F, 1F, "?"));
+                return Arrays.asList((Record) merge(new GeoPos(0F, 1F), null, "?"));
             }
         });
-        extractor.setCopyInput(true);
         Header header = extractor.getHeader();
         assertNotNull(header);
         String[] attributeNames = header.getAttributeNames();
@@ -195,6 +213,8 @@ public class ExtractorTest {
         assertEquals("product_name", attributeNames[index++]);
         assertEquals("pixel_x", attributeNames[index++]);
         assertEquals("pixel_y", attributeNames[index++]);
+        assertEquals("pixel_lat", attributeNames[index++]);
+        assertEquals("pixel_lon", attributeNames[index++]);
         assertEquals("pixel_time", attributeNames[index++]);
         // 1. bands
         assertEquals("b1", attributeNames[index++]);
@@ -205,16 +225,16 @@ public class ExtractorTest {
         // 3. tie-points
         assertEquals("latitude", attributeNames[index++]);
         assertEquals("longitude", attributeNames[index++]);
-        assertEquals(13, index);
+        assertEquals(15, index);
 
         Iterable<Record> records = extractor.getRecords();
         Record next = records.iterator().next();
         assertNotNull(next);
         Object[] attributeValues = next.getAttributeValues();
         assertNotNull(attributeValues);
-        assertEquals(13, attributeValues.length);
-        assertEquals(0F, (Float) attributeValues[0], 1E-10F);
-        assertEquals(1F, (Float) attributeValues[1], 1E-10F);
+        assertEquals(15, attributeValues.length);
+        assertEquals(0.0F, (Float) attributeValues[0], 1E-5F);
+        assertEquals(1.0F, (Float) attributeValues[1], 1E-5F);
         assertEquals("?", attributeValues[2]);
     }
 
@@ -223,13 +243,13 @@ public class ExtractorTest {
         Extractor extractor = createExtractor();
 
         DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader("lat", "lon"));
-        input.addRecord(new GeoPos(1, 0));  // ok 1
-        input.addRecord(new GeoPos(1, 1));  // ok 2
-        input.addRecord(new GeoPos(-2, 1)); // reject
-        input.addRecord(new GeoPos(0, 0));  // ok 3
-        input.addRecord(new GeoPos(0, 1));  // ok 4
-        input.addRecord(new GeoPos(0, -1)); // reject
-        input.addRecord(new GeoPos(5, 0));  // reject
+        addPointRecord(input, 1F, 0F);
+        addPointRecord(input, 1F, 1F);
+        addPointRecord(input, -2F, 1F);
+        addPointRecord(input, 0F, 0F);
+        addPointRecord(input, 0F, 1F);
+        addPointRecord(input, 0F, -1F);
+        addPointRecord(input, 5F, 0F);
 
         extractor.setInput(input);
 
@@ -273,6 +293,7 @@ public class ExtractorTest {
     @Test
     public void testExtract() throws Exception {
         Extractor extractor = createExtractor();
+        extractor.getConfig().setCopyInput(false);
         Record extract = extractor.extract(new TestRecord(new GeoPos(1, 0)));
         assertNotNull(extract);
 
@@ -280,32 +301,39 @@ public class ExtractorTest {
         assertNotNull(extractor.getHeader().getAttributeNames());
 
         GeoPos coordinate = extract.getCoordinate();
-        assertEquals(1, coordinate.lat, 0.0001f);
-        assertEquals(0, coordinate.lon, 0.0001f);
+        assertEquals(1.0F, coordinate.lat, 0.0001F);
+        assertEquals(0.0F, coordinate.lon, 0.0001F);
 
         Object[] values = extract.getAttributeValues();
         assertNotNull(values);
         assertEquals(extractor.getHeader().getAttributeNames().length, values.length);
         int index = 0;
-        assertEquals("A", values[index++]); // product_name
-        assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_x
-        assertEquals(0.5f, (Float) values[index++], 1e-5f);  // pixel_y
+        assertEquals("MER_RR__2P.N1", values[index++]); // product_name
+        assertEquals(0.5F, (Float) values[index++], 1e-5F);  // pixel_x
+        assertEquals(0.5F, (Float) values[index++], 1e-5F);  // pixel_y
+        assertEquals(1.0F, (Float) values[index++], 1e-5F);  // pixel_lat
+        assertEquals(0.0F, (Float) values[index++], 1e-5F);  // pixel_lon
         assertEquals("07-May-2010 10:25:14", values[index++]); // pixel_time
-        assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b1 = X
-        assertEquals(0.5f, (Float) values[index++], 1e-5f);   // b2 = Y
-        assertEquals(1.0f, (Float) values[index++], 1e-5f);   // b3 = X+Y
+        assertEquals(0.5F, (Float) values[index++], 1e-5F);   // b1 = X
+        assertEquals(0.5F, (Float) values[index++], 1e-5F);   // b2 = Y
+        assertEquals(1.0F, (Float) values[index++], 1e-5F);   // b3 = X+Y
         assertEquals(1, values[index++]);    // f.valid = true
-        assertEquals(1f, values[index++]);  // latitude
-        assertEquals(0f, values[index]);   // longitude
+        assertEquals(1.0F, (Float) values[index++], 1e-5F);  // latitude
+        assertEquals(0.0F, (Float) values[index], 1e-5F);   // longitude
     }
 
-    private Extractor createExtractor() {
+    protected Extractor createExtractor() {
         Product product = createProduct();
-        return new Extractor(product);
+        MAConfig config = new MAConfig(); // use defaults
+        return createExtractor(product, config);
     }
 
-    private Product createProduct() {
-        Product product = new Product("A", "B", 2, 2);
+    protected Extractor createExtractor(Product product, MAConfig config) {
+        return new Extractor(product, config);
+    }
+
+    protected Product createProduct() {
+        Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", 2, 2);
         product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{1, 1, 0, 0}));
         product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{0, 1, 0, 1}));
         product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
@@ -327,7 +355,7 @@ public class ExtractorTest {
         return product;
     }
 
-    private ProductData.UTC utc(String date) {
+    protected ProductData.UTC utc(String date) {
         try {
             return ProductData.UTC.parse(date);
         } catch (ParseException e) {
@@ -335,7 +363,11 @@ public class ExtractorTest {
         }
     }
 
-    private List<Record> getRecords(RecordSource source) throws Exception {
+    protected Date date(String date) {
+        return utc(date).getAsDate();
+    }
+
+    protected List<Record> getRecords(RecordSource source) throws Exception {
         Iterable<Record> records = source.getRecords();
         ArrayList<Record> list = new ArrayList<Record>();
         for (Record record : records) {
@@ -344,7 +376,11 @@ public class ExtractorTest {
         return list;
     }
 
-    private static class TestRecord implements Record {
+    public static void addPointRecord(DefaultRecordSource recordSource, float lat, float lon, Object... attributeValues) {
+        recordSource.addRecord(merge(new GeoPos(lat, lon), null, attributeValues));
+    }
+
+    protected static class TestRecord implements Record {
         GeoPos coordinate;
 
         private TestRecord(GeoPos coordinate) {
@@ -362,6 +398,11 @@ public class ExtractorTest {
         @Override
         public GeoPos getCoordinate() {
             return coordinate;
+        }
+
+        @Override
+        public Date getTime() {
+            return null;
         }
     }
 

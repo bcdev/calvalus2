@@ -4,7 +4,6 @@ import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.*;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -17,28 +16,26 @@ public class Extractor implements RecordSource {
     public static final Float FLOAT_NAN = Float.NaN;
     public static final Integer INTEGER_NAN = 0;
     private final Product product;
+    private final MAConfig config;
+    private final PixelTimeProvider pixelTimeProvider;
     private Header header;
     private RecordSource input;
-    private boolean copyInput;
-    private String dateFormat;
     private boolean sortInputByPixelYX;
 
-    public Extractor(Product product) {
+    public Extractor(Product product, MAConfig config) {
         Assert.notNull(product, "product");
+        Assert.notNull(config, "config");
         this.product = product;
-        this.dateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
+        this.config = config;
+        this.pixelTimeProvider = PixelTimeProvider.create(product);
+    }
+
+    public MAConfig getConfig() {
+        return config;
     }
 
     public void setInput(RecordSource input) {
         this.input = input;
-    }
-
-    public void setCopyInput(boolean copyInput) {
-        this.copyInput = copyInput;
-    }
-
-    public void setDateFormat(String dateFormat) {
-        this.dateFormat = dateFormat;
     }
 
     public void setSortInputByPixelYX(boolean sortInputByPixelYX) {
@@ -65,6 +62,12 @@ public class Extractor implements RecordSource {
         if (input == null) {
             throw new IllegalStateException("No input record source set.");
         }
+
+        // If the time criterion cannot be used, this data product cannot be used.
+        if (hasTimeCriterion() && !canApplyTimeCriterion()) {
+            return Collections.emptyList();
+        }
+
         final Iterable<Record> records = input.getRecords();
         return new Iterable<Record>() {
             @Override
@@ -76,6 +79,14 @@ public class Extractor implements RecordSource {
                 }
             }
         };
+    }
+
+    private boolean canApplyTimeCriterion() {
+        return pixelTimeProvider != null && getHeader().getTimeIndex() >= 0;
+    }
+
+    private boolean hasTimeCriterion() {
+        return config.getMaxTimeDifference() != null;
     }
 
     private Iterable<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
@@ -121,32 +132,67 @@ public class Extractor implements RecordSource {
         return null;
     }
 
-    private PixelPos getValidPixelPos(Record inputRecord) {
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(inputRecord.getCoordinate(), null);
+    protected PixelPos getValidPixelPos(Record referenceRecord) {
+
+        final boolean checkTime = hasTimeCriterion() && canApplyTimeCriterion();
+        if (checkTime) {
+            if (!isTimeCriterionFulfilled(referenceRecord, product.getStartTime().getAsDate())) {
+                return null;
+            }
+            if (!isTimeCriterionFulfilled(referenceRecord, product.getEndTime().getAsDate())) {
+                return null;
+            }
+        }
+
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getCoordinate(), null);
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
+
+            if (checkTime && !isTimeCriterionFulfilled(referenceRecord, pixelTimeProvider.getTime(pixelPos))) {
+                return null;
+            }
+
             return pixelPos;
         }
+
         return null;
     }
 
+    private boolean isTimeCriterionFulfilled(Record referenceRecord, Date date) {
+        long maxTimeDifferenceMillis = Math.round(config.getMaxTimeDifference() * 60 * 60 * 1000);
+        long referenceTime = referenceRecord.getTime().getTime();
+        long minAllowedTime = referenceTime - maxTimeDifferenceMillis;
+        long maxAllowedTime = referenceTime + maxTimeDifferenceMillis;
+        return minAllowedTime <= date.getTime() && maxAllowedTime >= date.getTime();
+    }
+
     private Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
-        final PixelTimeProvider pixelTimeProvider = PixelTimeProvider.create(product, dateFormat);
         final float[] floatSample = new float[1];
         final int[] intSample = new int[1];
 
         final Object[] values = new Object[getHeader().getAttributeNames().length];
 
         int index = 0;
-        if (copyInput) {
+        if (config.isCopyInput()) {
             Object[] inputValues = inputRecord.getAttributeValues();
             System.arraycopy(inputValues, 0, values, 0, inputValues.length);
             index = inputValues.length;
         }
 
+        GeoPos geoPos = product.getGeoCoding().canGetGeoPos() ? product.getGeoCoding().getGeoPos(pixelPos, null) : null;
+        Date time = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
+
+        // field "product_name"
         values[index++] = product.getName();
+        // field "pixel_x"
         values[index++] = pixelPos.x;
+        // field "pixel_y"
         values[index++] = pixelPos.y;
-        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : "";
+        // field "pixel_latitude"
+        values[index++] = geoPos != null ? geoPos.lat : Float.NaN;
+        // field "pixel_longitude"
+        values[index++] = geoPos != null ? geoPos.lon : Float.NaN;
+        // field "pixel_time"
+        values[index++] = time != null ? getHeader().getTimeFormat().format(time) : null;
 
         final int x = (int) pixelPos.x;
         final int y = (int) pixelPos.y;
@@ -171,17 +217,22 @@ public class Extractor implements RecordSource {
                 }
             }
         }
+
         for (TiePointGrid tiePointGrid : product.getTiePointGrids()) {
             tiePointGrid.readPixels(x, y, 1, 1, floatSample);
             values[index++] = floatSample[0];
         }
-        return new DefaultRecord(inputRecord.getCoordinate(), values);
+
+        return new DefaultRecord(geoPos, time, values);
     }
 
     private Header createHeader() {
         final List<String> attributeNames = new ArrayList<String>();
 
-        if (copyInput && input != null) {
+        if (config.isCopyInput()) {
+            if (input == null) {
+                throw new IllegalStateException("Still no input set, but config.copyInput=true.");
+            }
             Collections.addAll(attributeNames, input.getHeader().getAttributeNames());
         }
 
@@ -189,6 +240,8 @@ public class Extractor implements RecordSource {
         attributeNames.add("product_name");
         attributeNames.add("pixel_x");
         attributeNames.add("pixel_y");
+        attributeNames.add("pixel_lat");
+        attributeNames.add("pixel_lon");
         attributeNames.add("pixel_time");
 
         // 1. bands
@@ -215,7 +268,12 @@ public class Extractor implements RecordSource {
         // 3. tie-points
         attributeNames.addAll(Arrays.asList(product.getTiePointGridNames()));
 
-        return new DefaultHeader(attributeNames.toArray(new String[attributeNames.size()]));
+        DefaultHeader defaultHeader = new DefaultHeader(attributeNames.toArray(new String[attributeNames.size()]));
+        defaultHeader.setLatitudeIndex(attributeNames.indexOf("pixel_lat"));
+        defaultHeader.setLongitudeIndex(attributeNames.indexOf("pixel_lon"));
+        defaultHeader.setTimeIndex(attributeNames.indexOf("pixel_time"));
+        defaultHeader.setTimeFormat(ProductData.UTC.createDateFormat(config.getExportDateFormat()));
+        return defaultHeader;
     }
 
 
@@ -316,31 +374,28 @@ public class Extractor implements RecordSource {
 
     private static class PixelTimeProvider {
 
-        private final DateFormat dateFormat;
         private final double startMJD;
         private final double deltaMJD;
 
-        static PixelTimeProvider create(Product product, String format) {
+        static PixelTimeProvider create(Product product) {
             final ProductData.UTC startTime = product.getStartTime();
             final ProductData.UTC endTime = product.getEndTime();
             final int rasterHeight = product.getSceneRasterHeight();
             if (startTime != null && endTime != null && rasterHeight > 1) {
-                return new PixelTimeProvider(ProductData.UTC.createDateFormat(format),
-                                             startTime.getMJD(),
+                return new PixelTimeProvider(startTime.getMJD(),
                                              (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
             } else {
                 return null;
             }
         }
 
-        private PixelTimeProvider(DateFormat dateFormat, double startMJD, double deltaMJD) {
-            this.dateFormat = dateFormat;
+        private PixelTimeProvider(double startMJD, double deltaMJD) {
             this.startMJD = startMJD;
             this.deltaMJD = deltaMJD;
         }
 
-        public String getTime(PixelPos pixelPos) {
-            return dateFormat.format(getUTC(pixelPos).getAsDate());
+        public Date getTime(PixelPos pixelPos) {
+            return getUTC(pixelPos).getAsDate();
         }
 
         private ProductData.UTC getUTC(PixelPos pixelPos) {

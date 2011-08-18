@@ -12,8 +12,8 @@ import static org.junit.Assert.*;
 public class RecordWritableTest {
     @Test
     public void testConstructorDoesTheJob() throws Exception {
-        RecordWritable recordWritable = new RecordWritable(new DefaultRecord(null, "A", "B", "C"),
-                                                           new DefaultRecord(null, 1, 2, false));
+        RecordWritable recordWritable = new RecordWritable(DefaultRecord.create(null, "A", "B", "C"),
+                                                           DefaultRecord.create(null, 1, 2, false));
         String[] values = recordWritable.getValues();
         assertNotNull(values);
         assertEquals(6, values.length);
@@ -27,8 +27,8 @@ public class RecordWritableTest {
 
     @Test
     public void testWriteAndRead() throws Exception {
-        RecordWritable recordWritable = new RecordWritable(new DefaultRecord(null, "A", "B", "C"),
-                                                           new DefaultRecord(null, 1, 2, false));
+        RecordWritable recordWritable = new RecordWritable(DefaultRecord.create(null, "A", "B", "C"),
+                                                           DefaultRecord.create(null, 1, 2, false));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         recordWritable.write(new DataOutputStream(out));

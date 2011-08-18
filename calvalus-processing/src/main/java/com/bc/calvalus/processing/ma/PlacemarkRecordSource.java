@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -75,7 +76,7 @@ public class PlacemarkRecordSource implements RecordSource {
         }
     }
 
-    private class PlacemarkRecord implements Record {
+    private final class PlacemarkRecord implements Record {
 
         private final Placemark placemark;
 
@@ -95,6 +96,11 @@ public class PlacemarkRecordSource implements RecordSource {
         @Override
         public GeoPos getCoordinate() {
             return placemark.getGeoPos();
+        }
+
+        @Override
+        public Date getTime() {
+            return null;
         }
     }
 }

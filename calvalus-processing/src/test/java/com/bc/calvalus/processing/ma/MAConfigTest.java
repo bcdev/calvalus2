@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.ma;
 
 
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -50,7 +49,7 @@ public class MAConfigTest {
         public RecordSource createRecordSource(String url) {
             DefaultHeader header = new DefaultHeader("lat", "lon");
             DefaultRecordSource recordSource = new DefaultRecordSource(header);
-            recordSource.addRecord(new GeoPos(0, 0));
+            ExtractorTest.addPointRecord(recordSource, 0F, 0F);
             return recordSource;
         }
     }
