@@ -101,10 +101,12 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public Configuration createJobConfiguration() {
         Configuration configuration = new Configuration(getJobClient().getConf());
-        // Make user hadoop owns the outputs
+        // Make user hadoop owns the outputs, required by "fuse"
         configuration.set("hadoop.job.ugi", "hadoop,hadoop");
+
         configuration.set("mapred.map.tasks.speculative.execution", "false");
         configuration.set("mapred.reduce.tasks.speculative.execution", "false");
+
         if (DEBUG) {
             // For debugging uncomment following line:
             configuration.set("mapred.child.java.opts",
