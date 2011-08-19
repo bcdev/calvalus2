@@ -18,7 +18,7 @@ public class UnixTestRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        if (isMac() || isUnix()) {
+        if (isUnix()) {
             super.runChild(method, notifier);
         } else {
             System.err.println("Test requires a Unix system.");
@@ -26,13 +26,9 @@ public class UnixTestRunner extends BlockJUnit4ClassRunner {
         }
     }
 
-    public static boolean isMac() {
-        String os = System.getProperty("os.name").toLowerCase();
-        return (os.indexOf("mac") >= 0);
-    }
-
     public static boolean isUnix() {
         String os = System.getProperty("os.name").toLowerCase();
-        return (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0);
+        return os.contains("nix") || os.contains("nux") || os.contains("mac");
     }
+
 }
