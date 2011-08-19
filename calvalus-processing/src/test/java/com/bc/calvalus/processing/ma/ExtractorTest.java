@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class ExtractorTest {
 
-    public static DefaultRecord merge(GeoPos coordinate, Date time, Object... values) {
+    public static DefaultRecord newRecord(GeoPos coordinate, Date time, Object... values) {
         if (coordinate != null || time != null) {
             ArrayList<Object> list;
             if (coordinate != null && time != null) {
@@ -124,13 +124,13 @@ public class ExtractorTest {
         List<Record> unsorted = getRecords(noSort);
         assertEquals(5, unsorted.size());
         assertEquals(0.5F, (Float) unsorted.get(0).getAttributeValues()[1], 1e-3F);
-        assertEquals(3.5F, (Float) unsorted.get(0).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.5F, (Float) unsorted.get(0).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) unsorted.get(1).getAttributeValues()[1], 1e-3F);
-        assertEquals(3.5F, (Float) unsorted.get(1).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.5F, (Float) unsorted.get(1).getAttributeValues()[2], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[2], 1e-3F);
         assertEquals(1.0F, (Float) unsorted.get(3).getAttributeValues()[1], 1e-3F);
-        assertEquals(2.0F, (Float) unsorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) unsorted.get(3).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) unsorted.get(4).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(4).getAttributeValues()[2], 1e-3F);
 
@@ -145,11 +145,11 @@ public class ExtractorTest {
         assertEquals(1.5F, (Float) sorted.get(1).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) sorted.get(1).getAttributeValues()[2], 1e-3F);
         assertEquals(1.0F, (Float) sorted.get(2).getAttributeValues()[1], 1e-3F);
-        assertEquals(2.0F, (Float) sorted.get(2).getAttributeValues()[2], 1e-3F);
+        assertEquals(1.5F, (Float) sorted.get(2).getAttributeValues()[2], 1e-3F);
         assertEquals(0.5F, (Float) sorted.get(3).getAttributeValues()[1], 1e-3F);
-        assertEquals(3.5F, (Float) sorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.5F, (Float) sorted.get(3).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) sorted.get(4).getAttributeValues()[1], 1e-3F);
-        assertEquals(3.5F, (Float) sorted.get(4).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.5F, (Float) sorted.get(4).getAttributeValues()[2], 1e-3F);
 
     }
 
@@ -196,7 +196,7 @@ public class ExtractorTest {
 
             @Override
             public Iterable<Record> getRecords() throws Exception {
-                return Arrays.asList((Record) merge(new GeoPos(0F, 1F), null, "?"));
+                return Arrays.asList((Record) newRecord(new GeoPos(0F, 1F), null, "?"));
             }
         });
         Header header = extractor.getHeader();
@@ -333,9 +333,11 @@ public class ExtractorTest {
     }
 
     protected Product createProduct() {
-        Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", 2, 4);
-        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, 1, 3, new float[]{1, 1, 0, 0}));
-        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, 1, 3, new float[]{0, 1, 0, 1}));
+        int w = 2;
+        int h = 3;
+        Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", w, h);
+        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, w-1, h-1, new float[]{1, 1, 0, 0}));
+        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, w-1, h-1, new float[]{0, 1, 0, 1}));
         product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
         product.setStartTime(utc("07-MAY-2010 10:25:14"));
         product.setEndTime(utc("07-MAY-2010 11:24:46"));
@@ -377,7 +379,7 @@ public class ExtractorTest {
     }
 
     public static void addPointRecord(DefaultRecordSource recordSource, float lat, float lon, Object... attributeValues) {
-        recordSource.addRecord(merge(new GeoPos(lat, lon), null, attributeValues));
+        recordSource.addRecord(newRecord(new GeoPos(lat, lon), null, attributeValues));
     }
 
     protected static class TestRecord implements Record {

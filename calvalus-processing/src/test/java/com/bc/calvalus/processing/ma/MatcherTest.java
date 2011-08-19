@@ -32,25 +32,25 @@ public class MatcherTest extends ExtractorTest {
     public void testTimeCriterion() throws Exception {
 
         // Note: product starts at  "07-MAY-2010 10:25:14"
-        //               ends at    "07-MAY-2010 10:25:16"
+        //               ends at    "07-MAY-2010 11:24:46"
 
         Extractor extractor = createExtractor();
         extractor.getConfig().setMaxTimeDifference(null);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
-                                                   merge(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
-                                                   merge(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
-                                                   merge(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
-                                                   merge(new GeoPos(1, 1), date("07-MAY-2010 09:25:00")))); // still ok
+                                                   newRecord(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
+                                                   newRecord(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
+                                                   newRecord(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
+                                                   newRecord(new GeoPos(1, 1), date("07-MAY-2010 09:25:00")))); // still ok
         List<Record> records = getRecords(extractor);
         assertEquals(4, records.size());
 
         extractor = createExtractor();
-        extractor.getConfig().setMaxTimeDifference(1.0);
+        extractor.getConfig().setMaxTimeDifference(0.25);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
-                                                   merge(new GeoPos(0, 0), date("07-MAY-2010 11:26:00")), // rejected
-                                                   merge(new GeoPos(0, 1), date("09-JUN-2010 10:25:00")), // rejected
-                                                   merge(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
-                                                   merge(new GeoPos(1, 1), date("07-MAY-2010 08:10:00")))); // rejected
+                                                   newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
+                                                   newRecord(new GeoPos(0.5F, 0.5F), date("07-JUN-2010 13:25:00")), // rejected
+                                                   newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 10:59:00")), // ok
+                                                   newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 08:10:00")))); // rejected
         records = getRecords(extractor);
         assertEquals(1, records.size());
     }

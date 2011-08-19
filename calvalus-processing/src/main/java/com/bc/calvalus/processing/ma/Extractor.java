@@ -92,7 +92,7 @@ public class Extractor implements RecordSource {
     private Iterable<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
         ArrayList<PixelPosRecord> pixelPosList = new ArrayList<PixelPosRecord>(128);
         for (Record inputRecord : inputRecords) {
-            final PixelPos pixelPos = getValidPixelPos(inputRecord);
+            final PixelPos pixelPos = getTemporallyAndSpatiallyValidPixelPos(inputRecord);
             if (pixelPos != null) {
                 pixelPosList.add(new PixelPosRecord(pixelPos, inputRecord));
             }
@@ -125,44 +125,62 @@ public class Extractor implements RecordSource {
 
     public Record extract(Record inputRecord) throws Exception {
         Assert.notNull(inputRecord, "inputRecord");
-        final PixelPos pixelPos = getValidPixelPos(inputRecord);
+        final PixelPos pixelPos = getTemporallyAndSpatiallyValidPixelPos(inputRecord);
         if (pixelPos != null) {
             return extract(inputRecord, pixelPos);
         }
         return null;
     }
 
-    protected PixelPos getValidPixelPos(Record referenceRecord) {
+    private PixelPos getTemporallyAndSpatiallyValidPixelPos(Record referenceRecord) {
 
         final boolean checkTime = shallApplyTimeCriterion() && canApplyTimeCriterion();
         if (checkTime) {
-            if (!isTimeCriterionFulfilled(referenceRecord, product.getStartTime().getAsDate())) {
+
+            long minReferenceTime = getMinReferenceTime(referenceRecord);
+            if (minReferenceTime > product.getEndTime().getAsDate().getTime()) {
                 return null;
             }
-            if (!isTimeCriterionFulfilled(referenceRecord, product.getEndTime().getAsDate())) {
+
+            long maxReferenceTime = getMaxReferenceTime(referenceRecord);
+            if (maxReferenceTime < product.getStartTime().getAsDate().getTime()) {
                 return null;
+            }
+
+            PixelPos pixelPos = getSpatiallyValidPixelPos(referenceRecord);
+            if (pixelPos != null) {
+                long pixelTime = pixelTimeProvider.getTime(pixelPos).getTime();
+                if (pixelTime >= minReferenceTime && pixelTime <= maxReferenceTime) {
+                    return pixelPos;
+                }
+            }
+        } else {
+            PixelPos pixelPos = getSpatiallyValidPixelPos(referenceRecord);
+            if (pixelPos != null) {
+                return pixelPos;
             }
         }
-
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getCoordinate(), null);
-        if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
-
-            if (checkTime && !isTimeCriterionFulfilled(referenceRecord, pixelTimeProvider.getTime(pixelPos))) {
-                return null;
-            }
-
-            return pixelPos;
-        }
-
         return null;
     }
 
-    private boolean isTimeCriterionFulfilled(Record referenceRecord, Date date) {
-        long maxTimeDifferenceMillis = Math.round(config.getMaxTimeDifference() * 60 * 60 * 1000);
-        long referenceTime = referenceRecord.getTime().getTime();
-        long minAllowedTime = referenceTime - maxTimeDifferenceMillis;
-        long maxAllowedTime = referenceTime + maxTimeDifferenceMillis;
-        return minAllowedTime <= date.getTime() && maxAllowedTime >= date.getTime();
+    private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getCoordinate(), null);
+        if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
+            return pixelPos;
+        }
+        return null;
+    }
+
+    private long getMinReferenceTime(Record referenceRecord) {
+        return referenceRecord.getTime().getTime() - getMaxTimeDifferenceInMillis();
+    }
+
+    private long getMaxReferenceTime(Record referenceRecord) {
+        return referenceRecord.getTime().getTime() + getMaxTimeDifferenceInMillis();
+    }
+
+    private long getMaxTimeDifferenceInMillis() {
+        return Math.round(config.getMaxTimeDifference() * 60 * 60 * 1000);
     }
 
     private Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
