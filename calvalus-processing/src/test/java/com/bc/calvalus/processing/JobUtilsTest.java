@@ -89,7 +89,7 @@ public class JobUtilsTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String,Object> operatorParameters = BeamUtils.getLevel2ParameterMap(level2OperatorName, level2Parameters);
+        Map<String,Object> operatorParameters = BeamUtils.getOperatorParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 
