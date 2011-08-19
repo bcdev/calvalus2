@@ -2,8 +2,6 @@ package com.bc.calvalus.processing.ma;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
 
 /**
@@ -17,6 +15,8 @@ public class DefaultRecord implements Record {
     private final Date time;
     private final Object[] values;
 
+// Currently there is no use for the following block. Remove by end of September 2011   :-)   (nf)
+/*
     public static DefaultRecord create(Header header, Object... values) {
 
         final int latitudeIndex = header != null ? header.getLatitudeIndex() : -1;
@@ -44,6 +44,8 @@ public class DefaultRecord implements Record {
 
         return new DefaultRecord(coordinate, time, values);
     }
+*/
+
 
     DefaultRecord(GeoPos coordinate, Date time, Object[] values) {
         this.coordinate = coordinate;
@@ -51,12 +53,12 @@ public class DefaultRecord implements Record {
         this.values = values;
     }
 
-
     @Override
     public GeoPos getCoordinate() {
         return coordinate;
     }
 
+    @Override
     public Date getTime() {
         return time;
     }
