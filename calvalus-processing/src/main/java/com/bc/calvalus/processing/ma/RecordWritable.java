@@ -6,8 +6,8 @@ import org.esa.beam.util.StringUtils;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.DateFormat;
+import java.util.Date;
 
 /**
  * A Hadoop writable for {@link Record}s.
@@ -26,15 +26,23 @@ public class RecordWritable implements Writable {
         this.values = values;
     }
 
-    public RecordWritable(Record... records) {
-        List<String> strings = new ArrayList<String>();
-        for (Record record : records) {
-            Object[] values = record.getAttributeValues();
-            for (Object value : values) {
-                strings.add(value.toString());
+    public RecordWritable(Object[] values, DateFormat dateFormat) {
+        this(convertValuesToText(values, dateFormat));
+    }
+
+    private static String[] convertValuesToText(Object[] values, DateFormat dateFormat) {
+        String[] strings = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            if (value == null) {
+                strings[i] = "";
+            } else if (value instanceof Date) {
+                strings[i] =  dateFormat.format((Date) value);
+            } else {
+                strings[i] = value.toString();
             }
         }
-        values = strings.toArray(new String[strings.size()]);
+        return strings;
     }
 
     public String[] getValues() {
