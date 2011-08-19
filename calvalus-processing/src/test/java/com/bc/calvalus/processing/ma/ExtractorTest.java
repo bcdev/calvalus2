@@ -111,11 +111,11 @@ public class ExtractorTest {
     @Test
     public void testThatPixelYXSortingWorks() throws Exception {
         DefaultRecordSource recordSource = new DefaultRecordSource(new DefaultHeader("lat", "lon"),
-                                                                   new TestRecord(new GeoPos(0, 0)),
-                                                                   new TestRecord(new GeoPos(0, 1)),
-                                                                   new TestRecord(new GeoPos(1, 0)),
+                                                                   new TestRecord(new GeoPos(0.0F, 0.0F)),
+                                                                   new TestRecord(new GeoPos(0.0F, 1.0F)),
+                                                                   new TestRecord(new GeoPos(1.0F, 0.0F)),
                                                                    new TestRecord(new GeoPos(0.5F, 0.5F)),
-                                                                   new TestRecord(new GeoPos(1, 1)));
+                                                                   new TestRecord(new GeoPos(1.0F, 1.0F)));
 
         Extractor noSort = createExtractor();
         noSort.getConfig().setCopyInput(false);
@@ -124,13 +124,13 @@ public class ExtractorTest {
         List<Record> unsorted = getRecords(noSort);
         assertEquals(5, unsorted.size());
         assertEquals(0.5F, (Float) unsorted.get(0).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.5F, (Float) unsorted.get(0).getAttributeValues()[2], 1e-3F);
+        assertEquals(3.5F, (Float) unsorted.get(0).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) unsorted.get(1).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.5F, (Float) unsorted.get(1).getAttributeValues()[2], 1e-3F);
+        assertEquals(3.5F, (Float) unsorted.get(1).getAttributeValues()[2], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(2).getAttributeValues()[2], 1e-3F);
         assertEquals(1.0F, (Float) unsorted.get(3).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.0F, (Float) unsorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.0F, (Float) unsorted.get(3).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) unsorted.get(4).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) unsorted.get(4).getAttributeValues()[2], 1e-3F);
 
@@ -145,11 +145,11 @@ public class ExtractorTest {
         assertEquals(1.5F, (Float) sorted.get(1).getAttributeValues()[1], 1e-3F);
         assertEquals(0.5F, (Float) sorted.get(1).getAttributeValues()[2], 1e-3F);
         assertEquals(1.0F, (Float) sorted.get(2).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.0F, (Float) sorted.get(2).getAttributeValues()[2], 1e-3F);
+        assertEquals(2.0F, (Float) sorted.get(2).getAttributeValues()[2], 1e-3F);
         assertEquals(0.5F, (Float) sorted.get(3).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.5F, (Float) sorted.get(3).getAttributeValues()[2], 1e-3F);
+        assertEquals(3.5F, (Float) sorted.get(3).getAttributeValues()[2], 1e-3F);
         assertEquals(1.5F, (Float) sorted.get(4).getAttributeValues()[1], 1e-3F);
-        assertEquals(1.5F, (Float) sorted.get(4).getAttributeValues()[2], 1e-3F);
+        assertEquals(3.5F, (Float) sorted.get(4).getAttributeValues()[2], 1e-3F);
 
     }
 
@@ -333,12 +333,12 @@ public class ExtractorTest {
     }
 
     protected Product createProduct() {
-        Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", 2, 2);
-        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{1, 1, 0, 0}));
-        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, 1, 1, new float[]{0, 1, 0, 1}));
+        Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", 2, 4);
+        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, 1, 3, new float[]{1, 1, 0, 0}));
+        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, 1, 3, new float[]{0, 1, 0, 1}));
         product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
         product.setStartTime(utc("07-MAY-2010 10:25:14"));
-        product.setEndTime(utc("07-MAY-2010 10:25:16"));
+        product.setEndTime(utc("07-MAY-2010 11:24:46"));
         product.addBand("b1", "X");
         product.addBand("b2", "Y");
         product.addBand("b3", "X+Y");
