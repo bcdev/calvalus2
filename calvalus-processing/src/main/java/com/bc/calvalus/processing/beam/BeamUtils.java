@@ -175,6 +175,7 @@ public class BeamUtils {
         DomElement domElement = createDomElement(xml);
         ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
         PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
+        parameterSet.setDefaultValues();
         DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
 
         try {
