@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -48,8 +48,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
-        BeamUtils.initGpf(jobConfig);
         final MAConfig extractorConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -67,12 +67,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
         String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
         String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
-        Product product = BeamUtils.getTargetProduct(inputPath,
-                                                     inputFormat,
-                                                     regionGeometryWkt,
-                                                     level2OperatorName,
-                                                     level2Parameters,
-                                                     jobConfig);
+        Product product = productFactory.getProduct(inputPath,
+                                                    inputFormat,
+                                                    regionGeometryWkt,
+                                                    level2OperatorName,
+                                                    level2Parameters);
         // Actually wrong name for processed products, but we need the field "source_name" in the export data table
         product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 

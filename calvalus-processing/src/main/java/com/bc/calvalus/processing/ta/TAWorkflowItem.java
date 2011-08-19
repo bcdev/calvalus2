@@ -22,7 +22,7 @@ import com.bc.calvalus.commons.WorkflowStatusEvent;
 import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.l3.L3Config;
@@ -87,8 +87,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));
-        configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, BeamUtils.convertObjectToXml(taConfig));
+        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, ProductFactory.convertObjectToXml(l3Config));
+        configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, ProductFactory.convertObjectToXml(taConfig));
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 

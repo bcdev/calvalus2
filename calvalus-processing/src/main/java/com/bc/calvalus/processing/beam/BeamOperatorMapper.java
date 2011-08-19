@@ -44,7 +44,8 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
      */
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        BeamUtils.initGpf(context.getConfiguration());
+        Configuration jobConfig = context.getConfiguration();
+        ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -54,18 +55,17 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
         try {
             // parse request
-            Configuration configuration = context.getConfiguration();
+
             Path inputPath = split.getPath();
-            String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-            String regionGeometryWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
-            Product targetProduct = BeamUtils.getTargetProduct(inputPath,
-                                                               inputFormat,
-                                                               regionGeometryWkt,
-                                                               level2OperatorName,
-                                                               level2Parameters,
-                                                               configuration);
+            String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+            String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+            String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+            Product targetProduct = productFactory.getProduct(inputPath,
+                                                              inputFormat,
+                                                              regionGeometryWkt,
+                                                              level2OperatorName,
+                                                              level2Parameters);
             if (targetProduct == null) {
                 LOG.info("Product not used");
                 return;
@@ -84,7 +84,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 if (preferredTileSize != null) {
                     tileHeight = preferredTileSize.height;
                 }
-                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, context);
+                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
                 streamingProductWriter.writeProduct(targetProduct, outputProductPath, tileHeight);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             }

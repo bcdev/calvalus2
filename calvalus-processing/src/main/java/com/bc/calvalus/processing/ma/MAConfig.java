@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.ma;
 
 
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -99,7 +99,7 @@ public class MAConfig {
 
     public static MAConfig fromXml(String xml) {
         MAConfig config = new MAConfig();
-        BeamUtils.convertXmlToObject(xml, config);
+        ProductFactory.convertXmlToObject(xml, config);
         return config;
     }
 

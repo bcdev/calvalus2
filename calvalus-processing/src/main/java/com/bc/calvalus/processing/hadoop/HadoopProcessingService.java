@@ -6,7 +6,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -65,7 +65,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                             IOUtils.copyBytes(is, baos);
                             String xmlContent = baos.toString();
                             ProcessorDescriptor pd = new ProcessorDescriptor();
-                            BeamUtils.convertXmlToObject(xmlContent, pd);
+                            ProductFactory.convertXmlToObject(xmlContent, pd);
                             descriptors.add(pd);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());

@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.binning.*;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -53,9 +53,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final Configuration configuration = context.getConfiguration();
-        BeamUtils.initGpf(configuration);
-        L3Config l3Config = L3Config.fromXml(configuration.get(JobConfNames.CALVALUS_L3_PARAMETERS));
+        final Configuration jobConfig = context.getConfiguration();
+        final L3Config l3Config = L3Config.fromXml(jobConfig.get(JobConfNames.CALVALUS_L3_PARAMETERS));
+        final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final BinningContext ctx = l3Config.getBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
@@ -68,16 +68,15 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         Path inputPath = split.getPath();
-        String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        String regionGeometryWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-        String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
-        Product product = BeamUtils.getTargetProduct(inputPath,
-                                                     inputFormat,
-                                                     regionGeometryWkt,
-                                                     level2OperatorName,
-                                                     level2Parameters,
-                                                     configuration);
+        String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+        Product product = productFactory.getProduct(inputPath,
+                                                    inputFormat,
+                                                    regionGeometryWkt,
+                                                    level2OperatorName,
+                                                    level2Parameters);
         if (product != null) {
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());

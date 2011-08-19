@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
@@ -90,7 +90,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_INPUT_FORMAT, inputFormat);
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, BeamUtils.convertObjectToXml(maConfig));
+        configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, ProductFactory.convertObjectToXml(maConfig));
 
         Properties properties = new Properties();
 //        properties.setProperty("beam.reader.tileHeight", "64");

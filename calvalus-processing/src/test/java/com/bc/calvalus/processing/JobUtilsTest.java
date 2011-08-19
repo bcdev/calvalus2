@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
@@ -54,7 +54,7 @@ public class JobUtilsTest {
         String level2OperatorName = "BandMaths";
         String level2Parameters = readFromResource("bandmaths.xml");
 
-        DomElement element = BeamUtils.createDomElement(level2Parameters);
+        DomElement element = ProductFactory.createDomElement(level2Parameters);
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());
@@ -89,7 +89,7 @@ public class JobUtilsTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String,Object> operatorParameters = BeamUtils.getOperatorParameterMap(level2OperatorName, level2Parameters);
+        Map<String,Object> operatorParameters = ProductFactory.getOperatorParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 

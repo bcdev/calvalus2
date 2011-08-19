@@ -57,17 +57,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Diverse utilities.
+ * A factory for products.
  *
  * @author MarcoZ
  * @author Norman
  */
-public class BeamUtils {
+public class ProductFactory {
     private static final int M = 1024 * 1024;
     public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
 
-    public static void initGpf(Configuration configuration) {
-        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
+    private  final Configuration configuration;
+
+    /**
+     * Constructor.
+     * @param configuration       The Hadoop job configuration
+     */
+    public ProductFactory(Configuration configuration) {
+        this.configuration = configuration;
+        initGpf(configuration, this.getClass().getClassLoader());
+    }
+
+    public static void initGpf(Configuration configuration, ClassLoader classLoader) {
+        SystemUtils.init3rdPartyLibs(classLoader);
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -75,7 +86,6 @@ public class BeamUtils {
     }
 
     // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
-
     /**
      * Reads a source product and generates a target product using the given parameters.
      * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
@@ -86,16 +96,15 @@ public class BeamUtils {
      * @param processorParameters The text-encoded parameters for the processor.
      * @param inputPath           The input path
      * @param inputFormat         The input format
-     * @param configuration       The Hadoop job configuration
      * @return The target product.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public static Product getTargetProduct(Path inputPath,
-                                           String inputFormat,
-                                           String regionGeometryWkt,
-                                           String processorName,
-                                           String processorParameters,
-                                           Configuration configuration) throws IOException {
+    public Product getProduct(Path inputPath,
+                              String inputFormat,
+                              String regionGeometryWkt,
+                              String processorName,
+                              String processorParameters) throws IOException {
+
         Product sourceProduct = readProduct(inputPath, inputFormat, configuration);
         Product targetProduct;
         try {
@@ -210,11 +219,11 @@ public class BeamUtils {
                                                String regionGeometryWkt,
                                                String processorName,
                                                String processorParameters) {
-        Product subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, regionGeometryWkt);
+        Product subsetProduct = ProductFactory.createSubsetProduct(sourceProduct, regionGeometryWkt);
         if (subsetProduct == null) {
             return null;
         }
-        Product targetProduct = BeamUtils.getProcessedProduct(subsetProduct, processorName, processorParameters);
+        Product targetProduct = ProductFactory.getProcessedProduct(subsetProduct, processorName, processorParameters);
         if (targetProduct != null) {
             if (targetProduct.getStartTime() == null) {
                 targetProduct.setStartTime(subsetProduct.getStartTime());

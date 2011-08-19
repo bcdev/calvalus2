@@ -28,7 +28,7 @@ import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.binning.VariableContextImpl;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.binding.PropertyContainer;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
@@ -140,7 +140,7 @@ public class L3Config {
 
     public static L3Config fromXml(String level3ParametersXml) {
         L3Config l3Config = new L3Config();
-        BeamUtils.convertXmlToObject(level3ParametersXml, l3Config);
+        ProductFactory.convertXmlToObject(level3ParametersXml, l3Config);
         return l3Config;
     }
 

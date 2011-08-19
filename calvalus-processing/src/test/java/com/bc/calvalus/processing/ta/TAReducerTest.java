@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.JobConfNames;
-import com.bc.calvalus.processing.beam.BeamUtils;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
@@ -86,7 +86,7 @@ public class TAReducerTest {
     private Configuration createConfiguration() {
         Configuration configuration = new Configuration();
         L3Config l3Config = createL3Config();
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, BeamUtils.convertObjectToXml(l3Config));
+        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, ProductFactory.convertObjectToXml(l3Config));
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, "2010-01-01");
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, "2010-01-10");
         return configuration;

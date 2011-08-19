@@ -17,12 +17,8 @@
 package com.bc.calvalus.processing.ta;
 
 
-import com.bc.calvalus.processing.beam.BeamUtils;
-import com.vividsolutions.jts.geom.Coordinate;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 
@@ -98,12 +94,12 @@ public class TAConfig {
 
     public static TAConfig fromXml(String xml) {
         TAConfig config = new TAConfig();
-        BeamUtils.convertXmlToObject(xml, config);
+        ProductFactory.convertXmlToObject(xml, config);
         return config;
     }
 
     public String toXml() {
-        return BeamUtils.convertObjectToXml(this);
+        return ProductFactory.convertObjectToXml(this);
     }
 
     public TAConfig(RegionConfiguration... regions) {
