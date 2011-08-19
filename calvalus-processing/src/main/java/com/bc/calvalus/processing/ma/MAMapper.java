@@ -59,16 +59,27 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         long t0;
 
-        final Path inputPath = split.getPath();
-        String inputName = FileUtils.getFilenameWithoutExtension(inputPath.getName());
 
         t0 = now();
-        final Product product = BeamUtils.readProduct(inputPath, jobConfig);
-        product.setName(inputName);
+        final Path inputPath = split.getPath();
+
+        String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+        Product product = BeamUtils.getTargetProduct(inputPath,
+                                                     inputFormat,
+                                                     regionGeometryWkt,
+                                                     level2OperatorName,
+                                                     level2Parameters,
+                                                     jobConfig);
+        // Actually wrong name for processed products, but we need the field "source_name" in the export data table
+        product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
+
         context.progress();
         long productOpenTime = (now() - t0);
         LOG.info(String.format("%s opened product %s, took %s sec",
-                               context.getTaskAttemptID(), inputName, productOpenTime / 1E3));
+                               context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
 
         t0 = now();
         Extractor extractor = new Extractor(product, extractorConfig);
@@ -83,7 +94,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         for (Record extractedRecord : extractedRecords) {
             // write record
             context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
-                          new RecordWritable(extractedRecord));
+                          new RecordWritable(extractedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
             context.progress();
             numMatchUps++;
         }

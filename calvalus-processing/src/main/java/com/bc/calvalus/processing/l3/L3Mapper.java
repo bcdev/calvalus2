@@ -16,11 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.ObservationSlice;
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.SpatialBinProcessor;
-import com.bc.calvalus.binning.SpatialBinner;
+import com.bc.calvalus.binning.*;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.beam.BeamUtils;
@@ -31,16 +27,10 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.VirtualBand;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.jai.ImageManager;
 
-import java.awt.Point;
+import java.awt.*;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -77,16 +67,18 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
         final long startTime = System.nanoTime();
 
-        final Path inputPath = split.getPath();
-        // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
-        Product source = BeamUtils.readProduct(inputPath, configuration);
-
-        String regionGeometry = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-        source = BeamUtils.createSubsetProduct(source, regionGeometry);
-        if (source != null) {
-            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
-            final Product product = BeamUtils.getProcessedProduct(source, level2OperatorName, level2Parameters);
+        Path inputPath = split.getPath();
+        String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String regionGeometryWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+        Product product = BeamUtils.getTargetProduct(inputPath,
+                                                     inputFormat,
+                                                     regionGeometryWkt,
+                                                     level2OperatorName,
+                                                     level2Parameters,
+                                                     configuration);
+        if (product != null) {
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
                 if (numObs > 0L) {
@@ -97,7 +89,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             } finally {
                 product.dispose();
             }
-            source.dispose();
         } else {
             LOG.info("Product not used");
         }

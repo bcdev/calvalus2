@@ -48,7 +48,7 @@ import org.esa.beam.util.SystemUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.MessageFormat;
@@ -60,31 +60,68 @@ import java.util.Map;
  * Diverse utilities.
  *
  * @author MarcoZ
+ * @author Norman
  */
 public class BeamUtils {
-    //TODO make this a configurable option
-    private static final int TILE_CACHE_SIZE_M = 800;  // 512 MB
+    private static final int M = 1024 * 1024;
+    public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
 
     public static void initGpf(Configuration configuration) {
-        SystemUtils.init3rdPartyLibs(JobUtils.class.getClassLoader());
+        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
         JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(TILE_CACHE_SIZE_M * 1024 * 1024);
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
         JobUtils.initSystemProperties(configuration);
+    }
+
+    // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
+
+    /**
+     * Reads a source product and generates a target product using the given parameters.
+     * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
+     * Currently only GPG operator names are supported.
+     *
+     * @param regionGeometryWkt   The geometry of the region of interest given as WKT. May be {@code null} or empty.
+     * @param processorName       The name of a processor. May be {@code null} or empty.
+     * @param processorParameters The text-encoded parameters for the processor.
+     * @param inputPath           The input path
+     * @param inputFormat         The input format
+     * @param configuration       The Hadoop job configuration
+     * @return The target product.
+     * @throws java.io.IOException If an I/O error occurs
+     */
+    public static Product getTargetProduct(Path inputPath,
+                                           String inputFormat,
+                                           String regionGeometryWkt,
+                                           String processorName,
+                                           String processorParameters,
+                                           Configuration configuration) throws IOException {
+        Product sourceProduct = readProduct(inputPath, inputFormat, configuration);
+        Product targetProduct;
+        try {
+            targetProduct = getProcessedProduct(sourceProduct, regionGeometryWkt, processorName, processorParameters);
+            if (targetProduct == null) {
+                sourceProduct.dispose();
+            }
+        } catch (RuntimeException t) {
+            sourceProduct.dispose();
+            throw t;
+        }
+        return targetProduct;
     }
 
     /**
      * Reads a product from the distributed file system.
      *
-     * @param inputPath         The input path
+     * @param inputPath     The input path
+     * @param inputFormat   The input format
      * @param configuration the configuration
      * @return The product
      * @throws java.io.IOException If an I/O error occurs
      */
-    public static Product readProduct(Path inputPath, Configuration configuration) throws IOException {
+    private static Product readProduct(Path inputPath, String inputFormat, Configuration configuration) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
-        String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        Product product = null;
+        final Product product;
         if (inputFormat.equals("HADOOP-STREAMING")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
@@ -95,15 +132,20 @@ public class BeamUtils {
             ProductReader productReader = ProductIO.getProductReader(inputFormat);
             if (productReader != null) {
                 product = productReader.readProductNodes(imageInputStream, null);
+            } else {
+                product = null;
             }
         }
         if (product == null) {
-            throw new IllegalStateException(MessageFormat.format("No reader found for product {0} (inputFormat={1}", inputPath, inputFormat));
+            throw new IOException(MessageFormat.format("No reader found for product '{0}' using input format '{1}'", inputPath, inputFormat));
         }
         return product;
     }
 
-    public static Map<String, Object> getLevel2ParameterMap(String operatorName, String level2Parameters) {
+    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) {
+        if (level2Parameters == null) {
+            return Collections.emptyMap();
+        }
         try {
             Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
 
@@ -112,7 +154,6 @@ public class BeamUtils {
             PropertySet parameterSet = PropertyContainer.createMapBacked(parameterMap, operatorClass, parameterDescriptorFactory);
             parameterSet.setDefaultValues();
             DefaultDomConverter domConverter = new DefaultDomConverter(operatorClass, parameterDescriptorFactory);
-
             DomElement parametersElement = createDomElement(level2Parameters);
             domConverter.convertDomToValue(parametersElement, parameterSet);
             return parameterMap;
@@ -122,7 +163,7 @@ public class BeamUtils {
 
     }
 
-    public static Class<? extends Operator> getOperatorClass(String operatorName) throws ConversionException {
+    private static Class<? extends Operator> getOperatorClass(String operatorName) throws ConversionException {
         OperatorSpi operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
         if (operatorSpi == null) {
             throw new ConversionException(MessageFormat.format("Unknown operator ''{0}''", operatorName));
@@ -130,19 +171,20 @@ public class BeamUtils {
         return operatorSpi.getOperatorClass();
     }
 
-    public static Product createSubsetProduct(Product product, String roiWkt) {
-        final Geometry roiGeometry = JobUtils.createGeometry(roiWkt);
-        if (roiGeometry == null || roiGeometry.isEmpty()) {
+    private static Product createSubsetProduct(Product product, String regionGeometryWkt) {
+        final Geometry regionGeometry = JobUtils.createGeometry(regionGeometryWkt);
+        if (regionGeometry == null || regionGeometry.isEmpty()) {
             return product;
         }
         final Rectangle pixelRegion;
         try {
-            pixelRegion = SubsetOp.computePixelRegion(product, roiGeometry, 1);
+            pixelRegion = SubsetOp.computePixelRegion(product, regionGeometry, 1);
         } catch (Exception e) {
-            // computation of pixel region could fail, if the geocoding of the product is messed up
+            // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
             // in this case ignore this product
             return null;
         }
+        //  SubsetOp throws an OperatorException if pixelRegion.isEmpty(), we don't want this
         if (pixelRegion.isEmpty()) {
             return null;
         }
@@ -154,15 +196,36 @@ public class BeamUtils {
         return op.getTargetProduct();
     }
 
-    public static Product getProcessedProduct(Product source, String level2OperatorName, String level2Parameters) {
+    private static Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
         Product product = source;
-        if (level2OperatorName != null && !level2OperatorName.isEmpty()) {
+        if (operatorName != null && !operatorName.isEmpty()) {
             // transform request into parameter objects
-            Map<String, Object> level2ParameterMap = getLevel2ParameterMap(level2OperatorName, level2Parameters);
-            product = GPF.createProduct(level2OperatorName, level2ParameterMap, product);
+            Map<String, Object> parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+            product = GPF.createProduct(operatorName, parameterMap, product);
         }
         return product;
     }
+
+    private static Product getProcessedProduct(Product sourceProduct,
+                                               String regionGeometryWkt,
+                                               String processorName,
+                                               String processorParameters) {
+        Product subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, regionGeometryWkt);
+        if (subsetProduct == null) {
+            return null;
+        }
+        Product targetProduct = BeamUtils.getProcessedProduct(subsetProduct, processorName, processorParameters);
+        if (targetProduct != null) {
+            if (targetProduct.getStartTime() == null) {
+                targetProduct.setStartTime(subsetProduct.getStartTime());
+            }
+            if (targetProduct.getEndTime() == null) {
+                targetProduct.setEndTime(subsetProduct.getEndTime());
+            }
+        }
+        return targetProduct;
+    }
+
 
     public static DomElement createDomElement(String xml) {
         XppDomWriter domWriter = new XppDomWriter();
@@ -181,7 +244,7 @@ public class BeamUtils {
         try {
             domConverter.convertDomToValue(domElement, parameterSet);
         } catch (Exception e) {
-           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
+            throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
         }
     }
 
@@ -194,7 +257,8 @@ public class BeamUtils {
             domConverter.convertValueToDom(object, parametersDom);
             return parametersDom.toXml();
         } catch (Exception e) {
-           throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
+            throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
         }
     }
+
 }

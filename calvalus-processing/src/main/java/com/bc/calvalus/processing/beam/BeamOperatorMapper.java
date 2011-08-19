@@ -13,7 +13,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
-import java.awt.Dimension;
+import java.awt.*;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,27 +53,23 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
         final long startTime = System.nanoTime();
 
         try {
-            final Path inputPath = split.getPath();
-
             // parse request
             Configuration configuration = context.getConfiguration();
-
-            // set up input reader
-            Product sourceProduct = BeamUtils.readProduct(inputPath, configuration);
-
-            String roiWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-            Product subsetProduct = BeamUtils.createSubsetProduct(sourceProduct, roiWkt);
-            if (subsetProduct == null) {
-                sourceProduct.dispose();
+            Path inputPath = split.getPath();
+            String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+            String regionGeometryWkt = configuration.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+            Product targetProduct = BeamUtils.getTargetProduct(inputPath,
+                                                               inputFormat,
+                                                               regionGeometryWkt,
+                                                               level2OperatorName,
+                                                               level2Parameters,
+                                                               configuration);
+            if (targetProduct == null) {
                 LOG.info("Product not used");
                 return;
             }
-            sourceProduct = subsetProduct;
-
-            // set up operator and target product
-            String level2OperatorName = configuration.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = configuration.get(JobConfNames.CALVALUS_L2_PARAMETERS);
-            final Product targetProduct = BeamUtils.getProcessedProduct(sourceProduct, level2OperatorName, level2Parameters);
             LOG.info(context.getTaskAttemptID() + " target product created");
             if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
@@ -90,7 +86,6 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 }
                 StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, context);
                 streamingProductWriter.writeProduct(targetProduct, outputProductPath, tileHeight);
-
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             }
         } catch (Exception e) {
@@ -102,7 +97,6 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
         }
     }
-
 
 
 }
