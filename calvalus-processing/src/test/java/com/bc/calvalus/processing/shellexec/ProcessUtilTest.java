@@ -8,8 +8,6 @@ import org.junit.runner.RunWith;
 import java.io.File;
 
 /**
- * TODO add API doc
- *
  * @author Martin Boettcher
  */
 @RunWith(UnixTestRunner.class)
