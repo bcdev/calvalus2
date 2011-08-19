@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.ma;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.*;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.*;
 
@@ -68,6 +69,11 @@ public class Extractor implements RecordSource {
             return Collections.emptyList();
         }
 
+        if (shallApplyGoodPixelExpression()) {
+            addGoodPixelMaskToProduct();
+
+        }
+
         final Iterable<Record> records = input.getRecords();
         return new Iterable<Record>() {
             @Override
@@ -79,6 +85,24 @@ public class Extractor implements RecordSource {
                 }
             }
         };
+    }
+
+    private void addGoodPixelMaskToProduct() {
+        int width = product.getSceneRasterWidth();
+        int height = product.getSceneRasterHeight();
+
+        Mask goodPixelMask = Mask.BandMathsType.create("goodPixelMask",
+                                                       null,
+                                                       width,
+                                                       height,
+                                                       config.getGoodPixelExpression(),
+                                                       Color.RED,
+                                                       0.5);
+        product.getMaskGroup().add(goodPixelMask);
+    }
+
+    private boolean shallApplyGoodPixelExpression() {
+        return config.getGoodPixelExpression() != null && !config.getGoodPixelExpression().isEmpty();
     }
 
     private boolean shallApplyTimeCriterion() {
