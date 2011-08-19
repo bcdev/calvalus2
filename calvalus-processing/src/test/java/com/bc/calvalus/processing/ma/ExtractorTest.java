@@ -165,7 +165,7 @@ public class ExtractorTest {
         int index = 0;
 
         // 0. derived information
-        assertEquals("product_name", attributeNames[index++]);
+        assertEquals("source_name", attributeNames[index++]);
         assertEquals("pixel_x", attributeNames[index++]);
         assertEquals("pixel_y", attributeNames[index++]);
         assertEquals("pixel_lat", attributeNames[index++]);
@@ -210,7 +210,7 @@ public class ExtractorTest {
         assertEquals("u", attributeNames[index++]);
         assertEquals("v", attributeNames[index++]);
         assertEquals("w", attributeNames[index++]);
-        assertEquals("product_name", attributeNames[index++]);
+        assertEquals("source_name", attributeNames[index++]);
         assertEquals("pixel_x", attributeNames[index++]);
         assertEquals("pixel_y", attributeNames[index++]);
         assertEquals("pixel_lat", attributeNames[index++]);

@@ -64,7 +64,7 @@ public class Extractor implements RecordSource {
         }
 
         // If the time criterion cannot be used, this data product cannot be used.
-        if (hasTimeCriterion() && !canApplyTimeCriterion()) {
+        if (shallApplyTimeCriterion() && !canApplyTimeCriterion()) {
             return Collections.emptyList();
         }
 
@@ -81,12 +81,12 @@ public class Extractor implements RecordSource {
         };
     }
 
-    private boolean canApplyTimeCriterion() {
-        return pixelTimeProvider != null && getHeader().getTimeIndex() >= 0;
+    private boolean shallApplyTimeCriterion() {
+        return config.getMaxTimeDifference() != null;
     }
 
-    private boolean hasTimeCriterion() {
-        return config.getMaxTimeDifference() != null;
+    private boolean canApplyTimeCriterion() {
+        return pixelTimeProvider != null && getHeader().getTimeIndex() >= 0;
     }
 
     private Iterable<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
@@ -134,7 +134,7 @@ public class Extractor implements RecordSource {
 
     protected PixelPos getValidPixelPos(Record referenceRecord) {
 
-        final boolean checkTime = hasTimeCriterion() && canApplyTimeCriterion();
+        final boolean checkTime = shallApplyTimeCriterion() && canApplyTimeCriterion();
         if (checkTime) {
             if (!isTimeCriterionFulfilled(referenceRecord, product.getStartTime().getAsDate())) {
                 return null;
@@ -181,15 +181,15 @@ public class Extractor implements RecordSource {
         GeoPos geoPos = product.getGeoCoding().canGetGeoPos() ? product.getGeoCoding().getGeoPos(pixelPos, null) : null;
         Date time = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
 
-        // field "product_name"
+        // field "source_name"
         values[index++] = product.getName();
         // field "pixel_x"
         values[index++] = pixelPos.x;
         // field "pixel_y"
         values[index++] = pixelPos.y;
-        // field "pixel_latitude"
+        // field "pixel_lat"
         values[index++] = geoPos != null ? geoPos.lat : Float.NaN;
-        // field "pixel_longitude"
+        // field "pixel_lon"
         values[index++] = geoPos != null ? geoPos.lon : Float.NaN;
         // field "pixel_time"
         values[index++] = time != null ? getHeader().getTimeFormat().format(time) : null;
@@ -237,7 +237,7 @@ public class Extractor implements RecordSource {
         }
 
         // 0. derived information
-        attributeNames.add("product_name");
+        attributeNames.add("source_name");
         attributeNames.add("pixel_x");
         attributeNames.add("pixel_y");
         attributeNames.add("pixel_lat");
