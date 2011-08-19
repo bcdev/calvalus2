@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 
+import com.bc.calvalus.processing.UnixTestRunner;
 import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,16 +36,14 @@ import org.junit.runner.RunWith;
 import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
-
-@RunWith(MerisProductTestRunner.class)
+/**
+ * @author MarcoZ
+ */
+@RunWith(UnixTestRunner.class)
 public class StreamingFormatTest {
 
     private Configuration configuration;
@@ -54,17 +53,17 @@ public class StreamingFormatTest {
     public void setUp() throws Exception {
         configuration = new Configuration();
         fileSystem = FileSystem.getLocal(configuration);
-//        JAI.getDefaultInstance().setTileCache(JAI.createTileCache(1000l));
     }
 
     @Test
     public void testWriteReadCycle() throws Exception {
-        File testproductFile = MerisProductTestRunner.getTestProductFile();
+
+        File testProductFile = MerisProductTestRunner.getTestProductFile();
 
         System.setProperty("beam.reader.tileHeight", "64");
         System.setProperty("beam.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
-        Product sourceProduct = productReader.readProductNodes(testproductFile, null);
+        Product sourceProduct = productReader.readProductNodes(testProductFile, null);
         StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, null);
         Path outputDir = new Path("target/testdata/StreamingProductWriterTest");
         Path productPath = new Path(outputDir, "testWrite.seq");
