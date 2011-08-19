@@ -20,16 +20,7 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
-import com.bc.ceres.binding.ConversionException;
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.dom.DefaultDomConverter;
-import com.bc.ceres.binding.dom.DomElement;
-import com.bc.ceres.binding.dom.Xpp3DomElement;
-import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
-import com.thoughtworks.xstream.io.xml.XppDomWriter;
-import com.thoughtworks.xstream.io.xml.XppReader;
-import com.thoughtworks.xstream.io.xml.xppdom.Xpp3Dom;
+import com.bc.calvalus.processing.xml.XmlBinding;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -42,7 +33,6 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
-import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.SystemUtils;
 
@@ -50,10 +40,8 @@ import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
 import java.awt.*;
 import java.io.IOException;
-import java.io.StringReader;
 import java.text.MessageFormat;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -155,32 +143,19 @@ public class ProductFactory {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
-        try {
-            Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
-
-            Map<String, Object> parameterMap = new HashMap<String, Object>();
-            ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-            PropertySet parameterSet = PropertyContainer.createMapBacked(parameterMap, operatorClass, parameterDescriptorFactory);
-            parameterSet.setDefaultValues();
-            DefaultDomConverter domConverter = new DefaultDomConverter(operatorClass, parameterDescriptorFactory);
-            DomElement parametersElement = createDomElement(level2Parameters);
-            domConverter.convertDomToValue(parametersElement, parameterSet);
-            return parameterMap;
-        } catch (Exception e) {
-            return Collections.emptyMap();
-        }
-
+        Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
+        return new XmlBinding().convertXmlToMap(level2Parameters, operatorClass);
     }
 
-    private static Class<? extends Operator> getOperatorClass(String operatorName) throws ConversionException {
+    private static Class<? extends Operator> getOperatorClass(String operatorName) {
         OperatorSpi operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
         if (operatorSpi == null) {
-            throw new ConversionException(MessageFormat.format("Unknown operator ''{0}''", operatorName));
+            throw new IllegalStateException(String.format("Unknown operator '%s'", operatorName));
         }
         return operatorSpi.getOperatorClass();
     }
 
-    private static Product createSubsetProduct(Product product, String regionGeometryWkt) {
+    private static Product getSubsetProduct(Product product, String regionGeometryWkt) {
         final Geometry regionGeometry = JobUtils.createGeometry(regionGeometryWkt);
         if (regionGeometry == null || regionGeometry.isEmpty()) {
             return product;
@@ -219,7 +194,7 @@ public class ProductFactory {
                                                String regionGeometryWkt,
                                                String processorName,
                                                String processorParameters) {
-        Product subsetProduct = ProductFactory.createSubsetProduct(sourceProduct, regionGeometryWkt);
+        Product subsetProduct = ProductFactory.getSubsetProduct(sourceProduct, regionGeometryWkt);
         if (subsetProduct == null) {
             return null;
         }
@@ -235,39 +210,5 @@ public class ProductFactory {
         return targetProduct;
     }
 
-
-    public static DomElement createDomElement(String xml) {
-        XppDomWriter domWriter = new XppDomWriter();
-        new HierarchicalStreamCopier().copy(new XppReader(new StringReader(xml)), domWriter);
-        Xpp3Dom xpp3Dom = domWriter.getConfiguration();
-        return new Xpp3DomElement(xpp3Dom);
-    }
-
-    public static void convertXmlToObject(String xml, Object object) {
-        DomElement domElement = createDomElement(xml);
-        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        PropertySet parameterSet = PropertyContainer.createObjectBacked(object, parameterDescriptorFactory);
-        parameterSet.setDefaultValues();
-        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-
-        try {
-            domConverter.convertDomToValue(domElement, parameterSet);
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
-        }
-    }
-
-    public static String convertObjectToXml(Object object) {
-        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-
-        try {
-            DomElement parametersDom = new Xpp3DomElement("parameters");
-            domConverter.convertValueToDom(object, parametersDom);
-            return parametersDom.toXml();
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot convert DOM to Value : " + e.getMessage(), e);
-        }
-    }
 
 }

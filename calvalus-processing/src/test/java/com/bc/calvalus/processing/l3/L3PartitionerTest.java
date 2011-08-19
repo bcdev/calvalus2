@@ -18,12 +18,12 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.processing.JobConfNames;
-import com.bc.calvalus.processing.beam.ProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class L3PartitionerTest {
 
@@ -151,7 +151,7 @@ public class L3PartitionerTest {
 
         L3Config l3Config = new L3Config();
         l3Config.numRows = numRows;
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, ProductFactory.convertObjectToXml(l3Config));
+        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
 
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, wkt);
         l3Partitioner.setConf(configuration);

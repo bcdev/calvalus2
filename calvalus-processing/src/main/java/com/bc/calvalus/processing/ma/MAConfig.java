@@ -17,7 +17,8 @@
 package com.bc.calvalus.processing.ma;
 
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.xml.XmlBinding;
+import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -27,7 +28,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
  *
  * @author Norman
  */
-public class MAConfig {
+public class MAConfig implements XmlConvertible {
     /**
      * If {@code copyInput = true}, all fields of an input (reference) record will be
      * copied into a corresponding output record.
@@ -97,11 +98,6 @@ public class MAConfig {
     @Parameter
     private String recordSourceUrl;
 
-    public static MAConfig fromXml(String xml) {
-        MAConfig config = new MAConfig();
-        ProductFactory.convertXmlToObject(xml, config);
-        return config;
-    }
 
     public MAConfig() {
         setDefaults();
@@ -114,6 +110,15 @@ public class MAConfig {
         this.recordSourceSpiClassName = recordSourceSpiClassName;
         this.recordSourceUrl = recordSourceUrl;
         setDefaults();
+    }
+
+    public static MAConfig fromXml(String xml) {
+        return new XmlBinding().convertXmlToObject(xml, new MAConfig());
+    }
+
+    @Override
+    public String toXml()  {
+        return new XmlBinding().convertObjectToXml(this);
     }
 
     public RecordSource createRecordSource() throws Exception {

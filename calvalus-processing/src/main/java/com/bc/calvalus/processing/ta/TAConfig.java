@@ -17,7 +17,8 @@
 package com.bc.calvalus.processing.ta;
 
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.xml.XmlBinding;
+import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.util.converters.JtsGeometryConverter;
@@ -27,8 +28,29 @@ import org.esa.beam.util.converters.JtsGeometryConverter;
  *
  * @author Norman
  */
-public class TAConfig {
+public class TAConfig implements XmlConvertible {
 
+    @Parameter(itemAlias = "region")
+    RegionConfiguration[] regions;
+
+    public TAConfig(RegionConfiguration... regions) {
+        this.regions = regions;
+    }
+
+    public RegionConfiguration[] getRegions() {
+        return regions;
+    }
+
+    @Override
+    public String toXml() {
+        return new XmlBinding().convertObjectToXml(this);
+    }
+
+    public static TAConfig fromXml(String xml) {
+        TAConfig config = new TAConfig();
+        new XmlBinding().convertXmlToObject(xml, config);
+        return config;
+    }
 
     public static class RegionConfiguration {
 
@@ -89,24 +111,4 @@ public class TAConfig {
         }
     }
 
-    @Parameter(itemAlias = "region")
-    RegionConfiguration[] regions;
-
-    public static TAConfig fromXml(String xml) {
-        TAConfig config = new TAConfig();
-        ProductFactory.convertXmlToObject(xml, config);
-        return config;
-    }
-
-    public String toXml() {
-        return ProductFactory.convertObjectToXml(this);
-    }
-
-    public TAConfig(RegionConfiguration... regions) {
-        this.regions = regions;
-    }
-
-    public RegionConfiguration[] getRegions() {
-        return regions;
-    }
 }

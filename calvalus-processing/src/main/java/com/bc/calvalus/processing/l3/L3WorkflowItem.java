@@ -18,12 +18,11 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -97,7 +96,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, ProductFactory.convertObjectToXml(l3Config));
+        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);

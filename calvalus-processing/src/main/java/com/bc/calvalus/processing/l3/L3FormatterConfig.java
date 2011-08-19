@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.xml.XmlBinding;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
@@ -55,7 +55,7 @@ public class L3FormatterConfig {
      */
     public static L3FormatterConfig create(String xml) {
         L3FormatterConfig formatterConfig = new L3FormatterConfig();
-        ProductFactory.convertXmlToObject(xml, formatterConfig);
+        new XmlBinding().convertXmlToObject(xml, formatterConfig);
         return formatterConfig;
     }
 
