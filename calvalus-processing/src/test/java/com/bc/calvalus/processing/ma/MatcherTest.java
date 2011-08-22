@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author Norman
@@ -16,16 +16,74 @@ public class MatcherTest extends ExtractorTest {
 
     @Test
     public void testGoodPixelExpressionCriterion() throws Exception {
-        Extractor extractor = createExtractor();
+        Extractor extractor = createExtractor(2, 3);
         extractor.getConfig().setMaxTimeDifference(null);
-        extractor.getConfig().setGoodPixelExpression("X==1");
+        extractor.getConfig().setGoodPixelExpression("feq(X, 1.5)");
+        extractor.setSortInputByPixelYX(true);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
-                                                   newRecord(new GeoPos(0, 0), null), // not ok
-                                                   newRecord(new GeoPos(0, 1), null), // not ok
-                                                   newRecord(new GeoPos(1, 0), null), // ok
-                                                   newRecord(new GeoPos(1, 1), null))); // ok
+                                                   newRecord(new GeoPos(0.0F, 0.0F), null),  // --> X=0.5,Y=2.5 --> reject
+                                                   newRecord(new GeoPos(0.0F, 1.0F), null),  // --> X=1.5,Y=2.5 --> ok
+                                                   newRecord(new GeoPos(0.5F, 0.0F), null),  // --> X=0.5,Y=1.5 --> reject
+                                                   newRecord(new GeoPos(0.5F, 1.0F), null),  // --> X=1.5,Y=1.5 --> ok
+                                                   newRecord(new GeoPos(1.0F, 0.0F), null),  // --> X=0.5,Y=0.5 --> reject
+                                                   newRecord(new GeoPos(1.0F, 1.0F), null))  // --> X=0.5,Y=0.5 --> ok
+        ); // ok
         List<Record> records = getRecords(extractor);
-        assertEquals(2, records.size());
+        assertEquals(3, records.size());
+    }
+
+    @Test
+    public void testMacroPixelsAreExtracted() throws Exception {
+
+        int w = 2 * 3;
+        int h = 3 * 3;
+        Extractor extractor = createExtractor(w, h);
+        extractor.getConfig().setCopyInput(false);
+        extractor.getConfig().setMacroPixelSize(3);
+        extractor.getConfig().setAggregateMacroPixel(false);
+
+        float lon = 0.0F + 1.0F / (w - 1.0F);
+        float lat = 1.0F - 1.0F / (h - 1.0F);
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
+                                                   newRecord(new GeoPos(lat, lon), null)));  // --> center of first macro pixel
+        List<Record> records = getRecords(extractor);
+        assertEquals(1, records.size());
+
+        final int PIXEL_X = 1;
+        final int PIXEL_Y = 2;
+
+        //  "pixel_x" : int[9]
+        Object pixelXValue = records.get(0).getAttributeValues()[PIXEL_X];
+        assertEquals(int[].class, pixelXValue.getClass());
+        int[] actualX = (int[]) pixelXValue;
+        assertEquals(9, actualX.length);
+
+        //  "pixel_y" : int[9]
+        Object pixelYValue = records.get(0).getAttributeValues()[PIXEL_Y];
+        assertEquals(int[].class, pixelYValue.getClass());
+        int[] actualY = (int[]) pixelYValue;
+        assertEquals(9, actualY.length);
+
+        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
+        assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
+
+        List<Record> flattenedRecords = new RecordTransformer(-1).expand(records.get(0));
+        assertNotNull(flattenedRecords);
+        assertEquals(9, flattenedRecords.size());
+
+        actualX = new int[9];
+        actualY = new int[9];
+        for (int i = 0; i < 9; i++) {
+            pixelXValue = flattenedRecords.get(i).getAttributeValues()[PIXEL_X];
+            assertEquals(Integer.class, pixelXValue.getClass());
+            actualX[i] = (Integer) pixelXValue;
+
+            pixelYValue = flattenedRecords.get(i).getAttributeValues()[PIXEL_Y];
+            assertEquals(Integer.class, pixelYValue.getClass());
+            actualY[i] = (Integer) pixelYValue;
+        }
+        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
+        assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
     }
 
     @Test
@@ -34,7 +92,7 @@ public class MatcherTest extends ExtractorTest {
         // Note: product starts at  "07-MAY-2010 10:25:14"
         //               ends at    "07-MAY-2010 11:24:46"
 
-        Extractor extractor = createExtractor();
+        Extractor extractor = createExtractor(2, 3);
         extractor.getConfig().setMaxTimeDifference(null);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
                                                    newRecord(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
@@ -44,7 +102,7 @@ public class MatcherTest extends ExtractorTest {
         List<Record> records = getRecords(extractor);
         assertEquals(4, records.size());
 
-        extractor = createExtractor();
+        extractor = createExtractor(2, 3);
         extractor.getConfig().setMaxTimeDifference(0.25);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
                                                    newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
@@ -54,7 +112,6 @@ public class MatcherTest extends ExtractorTest {
         records = getRecords(extractor);
         assertEquals(1, records.size());
     }
-
 
 
     @Override

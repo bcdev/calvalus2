@@ -3,9 +3,10 @@ package com.bc.calvalus.processing.ma;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.*;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 /**
  * Extracts an output record.
@@ -15,7 +16,7 @@ import java.util.*;
  */
 public class Extractor implements RecordSource {
     public static final Float FLOAT_NAN = Float.NaN;
-    public static final Integer INTEGER_NAN = 0;
+    public static final String GOOD_PIXEL_MASK_NAME = "good_pixel";
     private final Product product;
     private final MAConfig config;
     private final PixelTimeProvider pixelTimeProvider;
@@ -71,7 +72,6 @@ public class Extractor implements RecordSource {
 
         if (shallApplyGoodPixelExpression()) {
             addGoodPixelMaskToProduct();
-
         }
 
         final Iterable<Record> records = input.getRecords();
@@ -79,19 +79,25 @@ public class Extractor implements RecordSource {
             @Override
             public Iterator<Record> iterator() {
                 if (sortInputByPixelYX) {
-                    return new RecordIterator2(getInputRecordsSortedByPixelYX(records).iterator());
+                    return new PixelPosRecordIterator(getInputRecordsSortedByPixelYX(records).iterator());
                 } else {
-                    return new RecordIterator1(records.iterator());
+                    return new RecordIterator(records.iterator());
                 }
             }
         };
     }
 
     private void addGoodPixelMaskToProduct() {
+        Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
+        if (mask != null) {
+            product.getMaskGroup().remove(mask);
+            mask.dispose();
+        }
+
         int width = product.getSceneRasterWidth();
         int height = product.getSceneRasterHeight();
 
-        Mask goodPixelMask = Mask.BandMathsType.create("goodPixelMask",
+        Mask goodPixelMask = Mask.BandMathsType.create(GOOD_PIXEL_MASK_NAME,
                                                        null,
                                                        width,
                                                        height,
@@ -147,7 +153,14 @@ public class Extractor implements RecordSource {
         return Arrays.asList(records);
     }
 
-    public Record extract(Record inputRecord) throws Exception {
+    /**
+     * Extracts an output record.
+     *
+     * @param inputRecord The input record.
+     * @return The output record or {@code null}, if a certain inclusion criterion is not met.
+     * @throws IOException If any I/O error occurs
+     */
+    public Record extract(Record inputRecord) throws IOException {
         Assert.notNull(inputRecord, "inputRecord");
         final PixelPos pixelPos = getTemporallyAndSpatiallyValidPixelPos(inputRecord);
         if (pixelPos != null) {
@@ -207,9 +220,46 @@ public class Extractor implements RecordSource {
         return Math.round(config.getMaxTimeDifference() * 60 * 60 * 1000);
     }
 
+    /**
+     * Extracts an output record.
+     *
+     * @param inputRecord The input record.
+     * @param pixelPos    The validated pixel pos.
+     * @return The output record or {@code null}, if a certain inclusion criterion is not met.
+     * @throws IOException If an I/O error occurs
+     */
     private Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
-        final float[] floatSample = new float[1];
-        final int[] intSample = new int[1];
+
+        final int macroPixelSize = getConfig().macroPixelSize;
+
+        final Rectangle macroPixelRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight()).intersection(
+                new Rectangle((int) pixelPos.x - macroPixelSize / 2,
+                              (int) pixelPos.y - macroPixelSize / 2,
+                              macroPixelSize, macroPixelSize));
+
+
+        int x0 = macroPixelRect.x;
+        int y0 = macroPixelRect.y;
+        int width = macroPixelRect.width;
+        int height = macroPixelRect.height;
+
+        final int[] maskSamples = new int[width * height];
+        final Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
+        if (mask != null) {
+            mask.readPixels(macroPixelRect.x, macroPixelRect.y, macroPixelRect.width, macroPixelRect.height, maskSamples);
+            boolean allBad = true;
+            for (int sample : maskSamples) {
+                if (sample != 0) {
+                    allBad = false;
+                    break;
+                }
+            }
+
+            if (allBad) {
+                return null;
+            }
+        }
+
 
         final Object[] values = new Object[getHeader().getAttributeNames().length];
 
@@ -220,52 +270,71 @@ public class Extractor implements RecordSource {
             index = inputValues.length;
         }
 
-        GeoPos geoPos = product.getGeoCoding().canGetGeoPos() ? product.getGeoCoding().getGeoPos(pixelPos, null) : null;
-        Date time = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
+        final int[] pixelXPositions = new int[width * height];
+        final int[] pixelYPositions = new int[width * height];
+        final float[] pixelLatitudes = new float[width * height];
+        final float[] pixelLongitudes = new float[width * height];
+
+        for (int i = 0, y = y0; y < y0 + height; y++) {
+            for (int x = x0; x < x0 + width; x++, i++) {
+                PixelPos pp = new PixelPos(x + 0.5F, y + 0.5F);
+                GeoPos gp =  product.getGeoCoding().getGeoPos(pp, null);
+                // todo - compute actual source pixel positions (need offsets here!)  (mz,nf)
+                pixelXPositions[i] = x;
+                pixelYPositions[i] = y;
+                pixelLatitudes[i] = gp.lat;
+                pixelLongitudes[i] = gp.lon;
+            }
+        }
 
         // field "source_name"
         values[index++] = product.getName();
         // field "pixel_x"
-        values[index++] = pixelPos.x;
+        values[index++] = pixelXPositions;
         // field "pixel_y"
-        values[index++] = pixelPos.y;
+        values[index++] = pixelYPositions;
         // field "pixel_lat"
-        values[index++] = geoPos != null ? geoPos.lat : Float.NaN;
+        values[index++] = pixelLatitudes;
         // field "pixel_lon"
-        values[index++] = geoPos != null ? geoPos.lon : Float.NaN;
+        values[index++] = pixelLongitudes;
         // field "pixel_time"
-        values[index++] = time != null ? getHeader().getTimeFormat().format(time) : null;
-
-        final int x = (int) pixelPos.x;
-        final int y = (int) pixelPos.y;
+        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
+        // field "pixel_mask"
+        values[index++] = maskSamples;
 
         final Band[] productBands = product.getBands();
         for (Band band : productBands) {
             if (!band.isFlagBand()) {
                 if (band.isFloatingPointType()) {
-                    if (band.isPixelValid(x, y)) {
-                        band.readPixels(x, y, 1, 1, floatSample);
-                        values[index++] = floatSample[0];
-                    } else {
-                        values[index++] = FLOAT_NAN;
-                    }
+                    final float[] floatSamples = new float[macroPixelRect.width * macroPixelRect.height];
+                    band.readPixels(x0, y0, width, height, floatSamples);
+                    values[index++] = floatSamples;
+                    maskNaN(band, x0, y0, width, height, floatSamples);
                 } else {
-                    if (band.isPixelValid(x, y)) {
-                        band.readPixels(x, y, 1, 1, intSample);
-                        values[index++] = intSample[0];
-                    } else {
-                        values[index++] = INTEGER_NAN;
-                    }
+                    final int[] intSamples = new int[macroPixelRect.width * macroPixelRect.height];
+                    band.readPixels(x0, y0, width, height, intSamples);
+                    values[index++] = intSamples;
                 }
             }
         }
 
         for (TiePointGrid tiePointGrid : product.getTiePointGrids()) {
-            tiePointGrid.readPixels(x, y, 1, 1, floatSample);
-            values[index++] = floatSample[0];
+            final float[] floatSamples = new float[macroPixelRect.width * macroPixelRect.height];
+            tiePointGrid.readPixels(x0, y0, width, height, floatSamples);
+            values[index++] = floatSamples;
         }
 
-        return new DefaultRecord(geoPos, time, values);
+        return new DefaultRecord(inputRecord.getCoordinate(), inputRecord.getTime(), values);
+    }
+
+    private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
+        for (int i = 0, y = y0; y < y0 + height; y++) {
+            for (int x = x0; x < x0 + width; x++, i++) {
+                if (!band.isPixelValid(x0, y0)) {
+                    samples[i] = FLOAT_NAN;
+                }
+            }
+        }
     }
 
     private Header createHeader() {
@@ -285,6 +354,7 @@ public class Extractor implements RecordSource {
         attributeNames.add("pixel_lat");
         attributeNames.add("pixel_lon");
         attributeNames.add("pixel_time");
+        attributeNames.add("pixel_mask");
 
         // 1. bands
         Band[] productBands = product.getBands();
@@ -319,30 +389,24 @@ public class Extractor implements RecordSource {
     }
 
 
-    private class RecordIterator1 implements Iterator<Record> {
-        private final Iterator<Record> inputIterator;
+    private abstract class OutputRecordGenerator<T> implements Iterator<Record> {
+        private final Iterator<T> inputIterator;
         private Record next;
         private boolean nextValid;
 
-        public RecordIterator1(Iterator<Record> inputIterator) {
+        public OutputRecordGenerator(Iterator<T> inputIterator) {
             this.inputIterator = inputIterator;
         }
 
         @Override
         public boolean hasNext() {
-            if (!nextValid) {
-                next = next0();
-                nextValid = true;
-            }
+            ensureValidNext();
             return next != null;
         }
 
         @Override
         public Record next() {
-            if (!nextValid) {
-                next = next0();
-                nextValid = true;
-            }
+            ensureValidNext();
             if (next == null) {
                 throw new NoSuchElementException();
             }
@@ -350,68 +414,76 @@ public class Extractor implements RecordSource {
             return next;
         }
 
-        private Record next0() {
+        private void ensureValidNext() {
+            if (!nextValid) {
+                next = getNextNonNullRecord();
+                nextValid = true;
+            }
+        }
+
+        private Record getNextNonNullRecord() {
             while (inputIterator.hasNext()) {
-                Record record = inputIterator.next();
+                T input = inputIterator.next();
                 try {
-                    Record next = extract(record);
+                    Record next = getRecord(input);
                     if (next != null) {
                         return next;
                     }
-                } catch (RuntimeException e) {
-                    throw e;
-                } catch (Exception t) {
-                    throw new RuntimeException(t);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to get output record for input " + input, e);
                 }
             }
             return null;
         }
 
+        protected abstract Record getRecord(T input) throws IOException;
+
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
     }
 
-    private class RecordIterator2 implements Iterator<Record> {
-        private final Iterator<PixelPosRecord> inputIterator;
+    private class RecordIterator extends OutputRecordGenerator<Record> {
 
-        public RecordIterator2(Iterator<PixelPosRecord> inputIterator) {
-            this.inputIterator = inputIterator;
+        public RecordIterator(Iterator<Record> inputIterator) {
+            super(inputIterator);
         }
 
         @Override
-        public boolean hasNext() {
-            return inputIterator.hasNext();
+        protected Record getRecord(Record input) throws IOException {
+            return extract(input);
+        }
+    }
+
+    private class PixelPosRecordIterator extends OutputRecordGenerator<PixelPosRecord> {
+
+        public PixelPosRecordIterator(Iterator<PixelPosRecord> inputIterator) {
+            super(inputIterator);
         }
 
         @Override
-        public Record next() {
-            final PixelPosRecord record = inputIterator.next();
-            try {
-                return extract(record.inputRecord, record.pixelPos);
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception t) {
-                throw new RuntimeException(t);
-            }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
+        protected Record getRecord(PixelPosRecord input) throws IOException {
+            return extract(input.record, input.pixelPos);
         }
     }
 
     private static class PixelPosRecord {
         private final PixelPos pixelPos;
-        private final Record inputRecord;
+        private final Record record;
 
-        private PixelPosRecord(PixelPos pixelPos, Record inputRecord) {
+        private PixelPosRecord(PixelPos pixelPos, Record record) {
             this.pixelPos = pixelPos;
-            this.inputRecord = inputRecord;
+            this.record = record;
         }
 
+        @Override
+        public String toString() {
+            return "PixelPosRecord{" +
+                    "pixelPos=" + pixelPos +
+                    ", record=" + record +
+                    '}';
+        }
     }
 
     private static class PixelTimeProvider {

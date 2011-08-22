@@ -48,7 +48,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
-        final MAConfig extractorConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final FileSplit split = (FileSplit) context.getInputSplit();
@@ -81,32 +81,48 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
 
         t0 = now();
-        Extractor extractor = new Extractor(product, extractorConfig);
-        Iterable<Record> extractedRecords = getExtractedRecords(extractor, extractorConfig);
+        Extractor extractor = new Extractor(product, maConfig);
+        Iterable<Record> extractedRecords = getExtractedRecords(extractor, maConfig);
         context.progress();
         long recordReadTime = (now() - t0);
         LOG.info(String.format("%s read input records from %s, took %s sec",
-                               context.getTaskAttemptID(), extractorConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+                               context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+
+        RecordTransformer recordTransformer = new RecordTransformer(-1);
 
         t0 = now();
         int numMatchUps = 0;
+        int numEmittedRecords = 0;
         for (Record extractedRecord : extractedRecords) {
-            // write record
-            context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
-                          new RecordWritable(extractedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
-            context.progress();
+
+            // write records
+            if (maConfig.isAggregateMacroPixel()) {
+                Record aggregatedRecord = recordTransformer.aggregate(extractedRecord);
+                context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
+                              new RecordWritable(aggregatedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
+                numEmittedRecords++;
+            } else {
+                for (Record expandedRecord : recordTransformer.expand(extractedRecord)) {
+                    context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
+                                  new RecordWritable(expandedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
+                    numEmittedRecords++;
+                }
+            }
+
             numMatchUps++;
+            context.progress();
         }
         long recordWriteTime = (now() - t0);
-        LOG.info(String.format("%s extracted %s match-ups, took %s sec",
-                               context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
+        LOG.info(String.format("%s found %s match-ups, emitted %s records, took %s sec",
+                               context.getTaskAttemptID(), numMatchUps, numEmittedRecords, recordWriteTime / 1E3));
 
         if (numMatchUps > 0) {
             // write header
             context.write(new Text("#"),
                           new RecordWritable(extractor.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups total").increment(numMatchUps);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of records").increment(numEmittedRecords);
         } else {
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
         }
