@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.ma;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -66,5 +67,14 @@ public class DefaultRecord implements Record {
     @Override
     public Object[] getAttributeValues() {
         return values;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultRecord{" +
+                "coordinate=" + coordinate +
+                ", time=" + time +
+                ", values=" + Arrays.asList(values) +
+                '}';
     }
 }
