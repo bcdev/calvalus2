@@ -94,6 +94,9 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
 //        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
 //        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
         configuration.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+        // Enable JVM reuse, to speedup processing.
+        // Maybe apply to other workflow-items in the future.
+        configuration.setInt("mapred.job.reuse.jvm.num.tasks", 10);
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
 
