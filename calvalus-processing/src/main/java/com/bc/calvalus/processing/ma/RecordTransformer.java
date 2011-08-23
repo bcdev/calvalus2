@@ -23,14 +23,14 @@ public class RecordTransformer {
         int[] maskValues = getMaskValues(attributeValues);
 
         for (int recordIndex = 0; recordIndex < numRecords; recordIndex++) {
-            if (maskValues == null || maskValues[recordIndex] == 1) {
+            if (isGoodPixel(maskValues, recordIndex)) {
                 Object[] values = new Object[attributeValues.length];
                 for (int valueIndex = 0; valueIndex < values.length; valueIndex++) {
-                    Object o = attributeValues[valueIndex];
-                    if (o != null && o.getClass().isArray()) {
-                        values[valueIndex] = Array.get(o, recordIndex);
+                    Object attributeValue = attributeValues[valueIndex];
+                    if (attributeValue != null && attributeValue.getClass().isArray()) {
+                        values[valueIndex] = Array.get(attributeValue, recordIndex);
                     } else {
-                        values[valueIndex] = o;
+                        values[valueIndex] = attributeValue;
                     }
                 }
                 resultingRecords.add(new DefaultRecord(record.getCoordinate(), record.getTime(), values));
@@ -53,34 +53,54 @@ public class RecordTransformer {
         if (getCommonArrayValueLength(attributeValues) == -1) {
             return record;
         }
-        Object[] values = new Object[attributeValues.length];
-        for (int valueIndex = 0; valueIndex < values.length; valueIndex++) {
-            Object o = attributeValues[valueIndex];
-            if (o instanceof float[]) {
-                values[valueIndex] = aggregate((float[]) o);
-            } else if (o instanceof int[]) {
-                values[valueIndex] = aggregate((int[]) o);
+        int[] maskValues = getMaskValues(attributeValues);
+        Object[] aggregatedValues = new Object[attributeValues.length];
+        for (int valueIndex = 0; valueIndex < aggregatedValues.length; valueIndex++) {
+            Object attributeValue = attributeValues[valueIndex];
+            if (attributeValue == maskValues) {
+                aggregatedValues[valueIndex] = aggregate(maskValues, null);
+            } else  if (attributeValue instanceof float[]) {
+                aggregatedValues[valueIndex] = aggregate((float[]) attributeValue, maskValues);
+            } else if (attributeValue instanceof int[]) {
+                aggregatedValues[valueIndex] = aggregate((int[]) attributeValue, maskValues);
             } else {
-                values[valueIndex] = o;
+                aggregatedValues[valueIndex] = attributeValue;
             }
         }
-        return new DefaultRecord(record.getCoordinate(), record.getTime(), values);
+        return new DefaultRecord(record.getCoordinate(), record.getTime(), aggregatedValues);
     }
 
-    protected Number aggregate(float[] array) {
+    protected AggregatedNumber aggregate(float[] array, int[] maskValues) {
         float sum = 0F;
-        for (float value : array) {
-            sum += value;
+        int numGoodPixels = 0;
+        int numTotalPixels = 0;
+        for (int i = 0; i < array.length; i++) {
+            final float value = array[i];
+            if (!Float.isNaN(value)) {
+                numTotalPixels++;
+                if (isGoodPixel(maskValues, i)) {
+                    numGoodPixels++;
+                    sum += value;
+                }
+            }
         }
-        return sum / array.length;
+        return new AggregatedNumber(sum, numGoodPixels, numTotalPixels);
     }
 
-    protected Number aggregate(int[] array) {
+    protected AggregatedNumber aggregate(int[] array, int[] maskValues) {
         float sum = 0F;
-        for (float value : array) {
-            sum += value;
+        int numGoodPixels = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (isGoodPixel(maskValues, i)) {
+                numGoodPixels++;
+                sum += array[i];
+            }
         }
-        return sum / array.length;
+        return new AggregatedNumber(sum, numGoodPixels, array.length);
+    }
+
+    private static boolean isGoodPixel(int[] maskValues, int i) {
+        return maskValues == null || maskValues[i] != 0;
     }
 
     private static int getCommonArrayValueLength(Object[] attributeValues) {
@@ -103,38 +123,5 @@ public class RecordTransformer {
         return commonLength;
     }
 
-
-    public static class AggregatedFloat extends Number {
-        float mean;
-        float stddev;
-        int ngp;
-        int ntp;
-
-
-        @Override
-        public int intValue() {
-            return Math.round(mean);
-        }
-
-        @Override
-        public long longValue() {
-            return Math.round(mean);
-        }
-
-        @Override
-        public float floatValue() {
-            return mean;
-        }
-
-        @Override
-        public double doubleValue() {
-            return mean;
-        }
-
-        @Override
-        public String toString() {
-            return String.valueOf(mean);
-        }
-    }
 
 }
