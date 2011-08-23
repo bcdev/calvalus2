@@ -101,11 +101,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 
-        Properties properties = new Properties();
-        properties.setProperty("beam.reader.tileHeight", "64");
-        properties.setProperty("beam.reader.tileWidth", "*");
-        String propertiesString = JobUtils.convertProperties(properties);
-        configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
+        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
+        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
 

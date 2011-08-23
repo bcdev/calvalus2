@@ -82,21 +82,18 @@ public class BeamOpProcessingType {
         addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
         addIfNotEmpty(conf, JobConfNames.CALVALUS_PRIORITY, priority);
 
-        Map<String,String> propertiesMap = JobUtils.convertProperties(wpsConfig.getSystemProperties());
-        Properties properties = new Properties();
-        for (Map.Entry<String, String> entry : propertiesMap.entrySet()) {
-            properties.setProperty(entry.getKey(), entry.getValue());
+        Map<String,String> propertiesMap = wpsConfig.getSystemProperties();
+        if (!propertiesMap.containsKey("beam.reader.tileHeight")) {
+            propertiesMap.put("beam.reader.tileHeight", "64");
         }
-        if (!properties.containsKey("beam.reader.tileHeight")) {
-            properties.setProperty("beam.reader.tileHeight", "64");
+        if (!propertiesMap.containsKey("beam.reader.tileWidth")) {
+            propertiesMap.put("beam.reader.tileWidth", "*");
         }
-        if (!properties.containsKey("beam.reader.tileWidth")) {
-            properties.setProperty("beam.reader.tileWidth", "*");
+        for (Map.Entry<String, String> propertiesEntry : propertiesMap.entrySet()) {
+            String key = propertiesEntry.getKey();
+            String value = propertiesEntry.getValue();
+            conf.set("calvalus.system." + key, value);
         }
-
-        String propertiesString = JobUtils.convertProperties(properties);
-        conf.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
-
         return job;
     }
 

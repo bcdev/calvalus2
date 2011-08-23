@@ -30,6 +30,8 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulation the WPS XML configuration
@@ -132,12 +134,27 @@ public class WpsConfig {
         }
     }
 
-    public String getSystemProperties() {
+    public Map<String, String> getSystemProperties() {
         try {
-            return requestXmlDoc.getString(SYSTEM_PROPERTIES_XPATH, (String)null);
+            String propertiesString = requestXmlDoc.getString(SYSTEM_PROPERTIES_XPATH, (String) null);
+            return convertProperties(propertiesString);
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
+    }
+
+    static Map<String, String> convertProperties(String propertiesString) {
+        Map<String, String> map = new HashMap<String, String>();
+        if (propertiesString != null) {
+            String[] properties = propertiesString.split(",");
+            for (String property : properties) {
+                String[] keyValue = property.split("=");
+                if (keyValue.length == 2) {
+                    map.put(keyValue[0].trim(), keyValue[1].trim());
+                }
+            }
+        }
+        return map;
     }
 
     public String getLevel2Parameters() {

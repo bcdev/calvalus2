@@ -91,12 +91,9 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
-        Properties properties = new Properties();
-//        properties.setProperty("beam.reader.tileHeight", "64");
-//        properties.setProperty("beam.reader.tileWidth", "*");
-        properties.setProperty("beam.pixelGeoCoding.useTiling", "true");
-        String propertiesString = JobUtils.convertProperties(properties);
-        configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
+//        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
+//        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
+        configuration.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
 

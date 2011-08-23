@@ -70,7 +70,17 @@ public class ProductFactory {
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-        JobUtils.initSystemProperties(configuration);
+        initSystemProperties(configuration);
+    }
+
+    private static void initSystemProperties(Configuration configuration) {
+        for (Map.Entry<String, String> entry: configuration){
+            String key = entry.getKey();
+            if (key.startsWith("calvalus.system.")) {
+                String properiesName = key.substring("calvalus.system.".length());
+                System.setProperty(properiesName, entry.getValue());
+            }
+        }
     }
 
     // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'

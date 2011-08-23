@@ -23,9 +23,11 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for {@link com.bc.calvalus.processing.WpsConfig}.
@@ -92,6 +94,22 @@ public class WpsConfigTest {
         WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
         String roiWkt = wpsConfig.getGeometry();
         assertEquals("POLYGON((23.0 42.0, 11.0 42.0, 11.0 22.0, 23.0 22.0, 23.0 42.0)", roiWkt);
+    }
+
+    @Test
+    public void testConvertProperties() throws Exception {
+        Map<String, String> map = WpsConfig.convertProperties("");
+        assertEquals(0, map.size());
+
+        map = WpsConfig.convertProperties((String) null);
+        assertEquals(0, map.size());
+
+        map = WpsConfig.convertProperties("name1=value1,name2=value2");
+        assertEquals(2, map.size());
+        assertTrue(map.containsKey("name1"));
+        assertTrue(map.containsKey("name2"));
+        assertEquals("value1", map.get("name1"));
+        assertEquals("value2", map.get("name2"));
     }
 
     private WpsConfig createFromResource(String name) throws IOException, SAXException, ParserConfigurationException {

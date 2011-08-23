@@ -112,27 +112,4 @@ public class JobUtilsTest {
         assertEquals("reflec_13", targetBands[0].name);
         assertEquals("reflec_14", targetBands[1].name);
     }
-
-    @Test
-    public void testConvertProperties() throws Exception {
-        Properties p = new Properties();
-        assertEquals("", JobUtils.convertProperties(p));
-
-        p.setProperty("name1", "value1");
-        p.setProperty("name2", "value2");
-        assertEquals("name1=value1,name2=value2", JobUtils.convertProperties(p));
-
-        Map<String, String> map = JobUtils.convertProperties("");
-        assertEquals(0, map.size());
-
-        map = JobUtils.convertProperties((String) null);
-        assertEquals(0, map.size());
-
-        map = JobUtils.convertProperties("name1=value1,name2=value2");
-        assertEquals(2, map.size());
-        assertTrue(map.containsKey("name1"));
-        assertTrue(map.containsKey("name2"));
-        assertEquals("value1", map.get("name1"));
-        assertEquals("value2", map.get("name2"));
-    }
 }

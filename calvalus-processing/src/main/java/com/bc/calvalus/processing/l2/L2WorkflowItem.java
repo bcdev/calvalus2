@@ -77,11 +77,8 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, this.processorParameters);
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
-        Properties properties = new Properties();
-        properties.setProperty("beam.reader.tileHeight", "64");
-        properties.setProperty("beam.reader.tileWidth", "*");
-        String propertiesString = JobUtils.convertProperties(properties);
-        configuration.set(JobConfNames.CALVALUS_SYSTEM_PROPERTIES, propertiesString);
+        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
+        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
 
         JobUtils.clearAndSetOutputDir(job, this.outputDir);
 

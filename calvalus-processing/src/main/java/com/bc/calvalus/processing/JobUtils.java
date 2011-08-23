@@ -40,43 +40,7 @@ import java.util.Properties;
  */
 public class JobUtils {
 
-    public static void initSystemProperties(Configuration configuration) {
-        Map<String, String> properties = convertProperties(configuration.get(JobConfNames.CALVALUS_SYSTEM_PROPERTIES));
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
-            System.setProperty(entry.getKey(), entry.getValue());
-        }
-    }
 
-    public static String convertProperties(Properties properties) {
-        if (properties.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        List<String> nameList = new ArrayList<String>(properties.stringPropertyNames());
-        Collections.sort(nameList);
-        for (String name : nameList) {
-            sb.append(name);
-            sb.append("=");
-            sb.append(properties.getProperty(name));
-            sb.append(",");
-        }
-        int length = sb.length();
-        return sb.substring(0, length - 1);
-    }
-
-    public static Map<String, String> convertProperties(String propertiesString) {
-        Map<String, String> map = new HashMap<String, String>();
-        if (propertiesString != null) {
-            String[] properties = propertiesString.split(",");
-            for (String property : properties) {
-                String[] keyValue = property.split("=");
-                if (keyValue.length == 2) {
-                    map.put(keyValue[0].trim(), keyValue[1].trim());
-                }
-            }
-        }
-        return map;
-    }
 
     public static Geometry createGeometry(String geometryWkt) {
         if (geometryWkt == null || geometryWkt.isEmpty()) {
