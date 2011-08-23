@@ -23,57 +23,55 @@ package com.bc.calvalus.processing.ma;
  * @author MarcoZ
  * @author Norman
  */
-public class AggregatedNumber extends Number {
-    private final float sum;
-    private final float mean;
-    private final int numGoodPixels;
-    private final int numTotalPixels;
+public final class AggregatedNumber extends Number {
+    public final int numTotalPixels;
+    public final int numGoodPixels;
+    public final int numFilteredPixels;
+    public final float mean;
+    public final float stdDev;
+    public final float filteredMean;
+    public final float filteredStdDev;
+    public final float CV;
 
-    public AggregatedNumber(float sum, int numGoodPixels, int numTotalPixels) {
-        this.sum = sum;
-        this.mean = numGoodPixels > 0 ? sum / numGoodPixels : Float.NaN;
-        this.numGoodPixels = numGoodPixels;
+    public AggregatedNumber(int numTotalPixels,
+                            int numGoodPixels,
+                            int numFilteredPixels,
+                            float mean,
+                            float stdDev,
+                            float filteredMean,
+                            float filteredStdDev) {
         this.numTotalPixels = numTotalPixels;
-    }
-
-    public float getSum() {
-        return sum;
-    }
-
-    public float getMean() {
-        return mean;
-    }
-
-    public int getNumGoodPixels() {
-        return numGoodPixels;
-    }
-
-    public int getNumTotalPixels() {
-        return numTotalPixels;
+        this.numGoodPixels = numGoodPixels;
+        this.numFilteredPixels = numFilteredPixels;
+        this.mean = mean;
+        this.stdDev = stdDev;
+        this.filteredMean = filteredMean;
+        this.filteredStdDev = filteredStdDev;
+        this.CV = filteredStdDev / filteredMean;
     }
 
     @Override
     public int intValue() {
-        return Math.round(getMean());
+        return Math.round(mean);
     }
 
     @Override
     public long longValue() {
-        return Math.round(getMean());
+        return Math.round(mean);
     }
 
     @Override
     public float floatValue() {
-        return getMean();
+        return mean;
     }
 
     @Override
     public double doubleValue() {
-        return getMean();
+        return mean;
     }
 
     @Override
     public String toString() {
-        return String.valueOf(getMean());
+        return String.valueOf(mean);
     }
 }
