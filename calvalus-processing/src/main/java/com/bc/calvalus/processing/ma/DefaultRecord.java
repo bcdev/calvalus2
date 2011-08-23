@@ -48,7 +48,7 @@ public class DefaultRecord implements Record {
 */
 
 
-    DefaultRecord(GeoPos coordinate, Date time, Object[] values) {
+    public DefaultRecord(GeoPos coordinate, Date time, Object[] values) {
         this.coordinate = coordinate;
         this.time = time;
         this.values = values;
