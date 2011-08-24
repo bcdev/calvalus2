@@ -399,7 +399,7 @@ public class ExtractorTest {
         }
 
         @Override
-        public Date getTime() {
+        public Date getTimestamp() {
             return null;
         }
     }

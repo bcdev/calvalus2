@@ -99,7 +99,7 @@ public class PlacemarkRecordSource implements RecordSource {
         }
 
         @Override
-        public Date getTime() {
+        public Date getTimestamp() {
             return null;
         }
     }
