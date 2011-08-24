@@ -59,7 +59,6 @@ public class HadoopInventoryService implements InventoryService {
     public String[] getDataInputPaths(List<String> inputRegexs) throws IOException {
         List<Pattern> patternList = createPatternList(inputRegexs);
         String commonPathPrefix = getCommonPathPrefix(inputRegexs);
-        System.out.println("commonPathPrefix = " + commonPathPrefix);
         Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, commonPathPrefix);
         return listFilesRecursively(qualifiedPath, patternList);
     }
