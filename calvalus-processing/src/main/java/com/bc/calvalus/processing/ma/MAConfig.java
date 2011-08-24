@@ -95,11 +95,11 @@ public class MAConfig implements XmlConvertible {
     double filteredMeanCoeff;
 
     /**
-     * The date format used in the output.
+     * The time format used in the output.
      * Default is {@code "dd-MMM-yyyy HH:mm:ss"} (as used by Envisat).
      */
     @Parameter
-    private String exportDateFormat;
+    private String outputTimeFormat;
 
     @Parameter
     private String recordSourceSpiClassName;
@@ -136,7 +136,7 @@ public class MAConfig implements XmlConvertible {
     }
 
     private void setDefaults() {
-        exportDateFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
+        outputTimeFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
         maxTimeDifference = null;
         macroPixelSize = 1;
         aggregateMacroPixel = true;
@@ -151,8 +151,8 @@ public class MAConfig implements XmlConvertible {
         return recordSourceUrl;
     }
 
-    public String getExportDateFormat() {
-        return exportDateFormat;
+    public String getOutputTimeFormat() {
+        return outputTimeFormat;
     }
 
     public boolean isCopyInput() {

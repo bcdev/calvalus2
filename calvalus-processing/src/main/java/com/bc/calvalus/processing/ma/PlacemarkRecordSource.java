@@ -37,7 +37,7 @@ public class PlacemarkRecordSource implements RecordSource {
      * @param reader The reader for the placemark XML.
      */
     public PlacemarkRecordSource(Reader reader) {
-        this.header = new DefaultHeader(ATTRIBUTE_NAMES);
+        this.header = new DefaultHeader(true, false, ATTRIBUTE_NAMES);
         this.reader = reader;
 
     }

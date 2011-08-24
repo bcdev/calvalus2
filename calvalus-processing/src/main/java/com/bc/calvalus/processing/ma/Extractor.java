@@ -65,6 +65,10 @@ public class Extractor implements RecordSource {
             throw new IllegalStateException("No input record source set.");
         }
 
+        if (!getHeader().hasLocation()) {
+            throw new IllegalStateException("Records don't have locations.");
+        }
+
         // If the time criterion cannot be used, this data product cannot be used.
         if (shallApplyTimeCriterion() && !canApplyTimeCriterion()) {
             return Collections.emptyList();
@@ -116,7 +120,7 @@ public class Extractor implements RecordSource {
     }
 
     private boolean canApplyTimeCriterion() {
-        return pixelTimeProvider != null && getHeader().getTimeIndex() >= 0;
+        return pixelTimeProvider != null && getHeader().hasTime();
     }
 
     private Iterable<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
@@ -201,7 +205,11 @@ public class Extractor implements RecordSource {
     }
 
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getLocation(), null);
+        GeoPos location = referenceRecord.getLocation();
+        if (location == null) {
+            return null;
+        }
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             return pixelPos;
         }
@@ -380,12 +388,7 @@ public class Extractor implements RecordSource {
         // 3. tie-points
         attributeNames.addAll(Arrays.asList(product.getTiePointGridNames()));
 
-        DefaultHeader defaultHeader = new DefaultHeader(attributeNames.toArray(new String[attributeNames.size()]));
-        defaultHeader.setLatitudeIndex(attributeNames.indexOf("pixel_lat"));
-        defaultHeader.setLongitudeIndex(attributeNames.indexOf("pixel_lon"));
-        defaultHeader.setTimeIndex(attributeNames.indexOf("pixel_time"));
-        defaultHeader.setTimeFormat(ProductData.UTC.createDateFormat(config.getExportDateFormat()));
-        return defaultHeader;
+        return new DefaultHeader(true, true, attributeNames.toArray(new String[attributeNames.size()]));
     }
 
 

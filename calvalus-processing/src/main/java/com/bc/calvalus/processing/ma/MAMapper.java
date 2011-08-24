@@ -26,10 +26,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.text.DateFormat;
 import java.util.logging.Logger;
 
 /**
@@ -90,6 +92,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         RecordTransformer recordTransformer = new RecordTransformer(-1, 1.5);
 
+
+        DateFormat outputTimeFormat = ProductData.UTC.createDateFormat(maConfig.getOutputTimeFormat());
+
+
         t0 = now();
         int numMatchUps = 0;
         int numEmittedRecords = 0;
@@ -99,12 +105,12 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             if (maConfig.isAggregateMacroPixel()) {
                 Record aggregatedRecord = recordTransformer.aggregate(extractedRecord);
                 context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
-                              new RecordWritable(aggregatedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
+                              new RecordWritable(aggregatedRecord.getAttributeValues(), outputTimeFormat));
                 numEmittedRecords++;
             } else {
                 for (Record expandedRecord : recordTransformer.expand(extractedRecord)) {
                     context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
-                                  new RecordWritable(expandedRecord.getAttributeValues(), extractor.getHeader().getTimeFormat()));
+                                  new RecordWritable(expandedRecord.getAttributeValues(), outputTimeFormat));
                     numEmittedRecords++;
                 }
             }

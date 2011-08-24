@@ -36,7 +36,7 @@ public class ExtractorTest {
 
         // same test, but this time using the iterator
         extractor = createExtractor(2, 3);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
                                                    new TestRecord(new GeoPos(1, 0)),
                                                    new TestRecord(new GeoPos(1, 1)),
                                                    new TestRecord(new GeoPos(0, 0)),
@@ -58,7 +58,7 @@ public class ExtractorTest {
 
         // same test, but this time using the iterator
         extractor = createExtractor(2, 3);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
                                                    new TestRecord(new GeoPos(-1, -1)),
                                                    new TestRecord(new GeoPos(-1, 2)),
                                                    new TestRecord(new GeoPos(-3, -1))));
@@ -73,7 +73,7 @@ public class ExtractorTest {
     @Test
     public void testTheIteratorForSourceRecordsThatAreInAndOutOfProductBoundaries() throws Exception {
         Extractor extractor = createExtractor(2, 3);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
                                                    new TestRecord(new GeoPos(1, 0)),// in
                                                    new TestRecord(new GeoPos(-1, 2)),   // out
                                                    new TestRecord(new GeoPos(1, 1)), // in
@@ -91,7 +91,7 @@ public class ExtractorTest {
 
     @Test
     public void testThatPixelYXSortingWorks() throws Exception {
-        DefaultRecordSource recordSource = new DefaultRecordSource(new DefaultHeader("lat", "lon"),
+        DefaultRecordSource recordSource = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
                                                                    new TestRecord(new GeoPos(0.0F, 0.0F)),
                                                                    new TestRecord(new GeoPos(0.0F, 1.0F)),
                                                                    new TestRecord(new GeoPos(1.0F, 0.0F)),
@@ -166,7 +166,7 @@ public class ExtractorTest {
         extractor.setInput(new RecordSource() {
             @Override
             public Header getHeader() {
-                return new DefaultHeader("u", "v", "w");
+                return new DefaultHeader(true, "u", "v", "w");
             }
 
             @Override
@@ -218,7 +218,7 @@ public class ExtractorTest {
     public void testGetRecords() throws Exception {
         Extractor extractor = createExtractor(2, 3);
 
-        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader("lat", "lon"));
+        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"));
         addPointRecord(input, 1F, 0F);
         addPointRecord(input, 1F, 1F);
         addPointRecord(input, -2F, 1F);
@@ -289,7 +289,7 @@ public class ExtractorTest {
         assertEquals(0, ((int[]) values[index++])[0]);  // pixel_y
         assertEquals(1.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lat
         assertEquals(0.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lon
-        assertEquals("07-May-2010 10:25:14", extractor.getHeader().getTimeFormat().format((Date) values[index++])); // pixel_time
+        assertEquals("07-May-2010 10:25:14", ProductData.UTC.createDateFormat().format((Date) values[index++])); // pixel_time
         assertEquals(0, ((int[]) values[index++])[0]);   //pixel_mask
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b1 = X-0.5
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b2 = Y-0.5

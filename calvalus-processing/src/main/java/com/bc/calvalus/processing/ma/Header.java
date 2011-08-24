@@ -1,39 +1,25 @@
 package com.bc.calvalus.processing.ma;
 
-import java.text.DateFormat;
-
 /**
- * A header is used to describe the records of a record source.
+ * A header is used to describe the {@link Record}s provided by a {@link RecordSource}.
  *
  * @author MarcoZ
  * @author Norman
  */
 public interface Header {
+
+    /**
+     * @return {@code true}, if records that conform to this header return location values (see {@link Record#getLocation()}).
+     */
+    boolean hasLocation();
+
+    /**
+     * @return {@code true}, if records that conform to this header return time values (see {@link Record#getTime()}).
+     */
+    boolean hasTime();
+
     /**
      * @return The array of attribute names.
      */
     String[] getAttributeNames();
-
-    /**
-     * @return The index of the attribute that provides the longitude (a Java {@code Number}, decimal degrees, range -180 to +180).
-     * Returns {@code -1} if the attribute is missing.
-     */
-    int getLongitudeIndex();
-
-    /**
-     * @return The index of the attribute that provides the latitude (a Java {@code Number}, decimal degrees, range -90 to +90).
-     * Returns {@code -1} if the attribute is missing.
-     */
-    int getLatitudeIndex();
-
-    /**
-     * @return The index of the attribute that provides the time (a Java {@code Number}, decimal MJD).
-     * Returns {@code -1} if the attribute is missing.
-     */
-    int getTimeIndex();
-
-    /**
-     * @return The pattern used to convert time values into text. May be {@code null}.
-     */
-    DateFormat getTimeFormat();
 }

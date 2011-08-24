@@ -47,7 +47,7 @@ public class MAConfigTest {
     public static class TestRecordSourceSpi extends RecordSourceSpi {
         @Override
         public RecordSource createRecordSource(String url) {
-            DefaultHeader header = new DefaultHeader("lat", "lon");
+            DefaultHeader header = new DefaultHeader(true, "lat", "lon");
             DefaultRecordSource recordSource = new DefaultRecordSource(header);
             ExtractorTest.addPointRecord(recordSource, 0F, 0F);
             return recordSource;

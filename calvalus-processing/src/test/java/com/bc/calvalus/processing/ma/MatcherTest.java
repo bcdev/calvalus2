@@ -20,7 +20,7 @@ public class MatcherTest extends ExtractorTest {
         extractor.getConfig().setMaxTimeDifference(null);
         extractor.getConfig().setGoodPixelExpression("feq(X, 1.5)");
         extractor.setSortInputByPixelYX(true);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude"),
                                                    newRecord(new GeoPos(0.0F, 0.0F), null),  // --> X=0.5,Y=2.5 --> reject
                                                    newRecord(new GeoPos(0.0F, 1.0F), null),  // --> X=1.5,Y=2.5 --> ok
                                                    newRecord(new GeoPos(0.5F, 0.0F), null),  // --> X=0.5,Y=1.5 --> reject
@@ -44,7 +44,7 @@ public class MatcherTest extends ExtractorTest {
 
         float lon = 0.0F + 1.0F / (w - 1.0F);
         float lat = 1.0F - 1.0F / (h - 1.0F);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude"),
                                                    newRecord(new GeoPos(lat, lon), null)));  // --> center of first macro pixel
         List<Record> records = getRecords(extractor);
         assertEquals(1, records.size());
@@ -94,7 +94,7 @@ public class MatcherTest extends ExtractorTest {
 
         Extractor extractor = createExtractor(2, 3);
         extractor.getConfig().setMaxTimeDifference(null);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude", "time"),
                                                    newRecord(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
                                                    newRecord(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
                                                    newRecord(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
@@ -104,7 +104,7 @@ public class MatcherTest extends ExtractorTest {
 
         extractor = createExtractor(2, 3);
         extractor.getConfig().setMaxTimeDifference(0.25);
-        extractor.setInput(new DefaultRecordSource(new DefaultHeader("latitude", "longitude", "time"),
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude", "time"),
                                                    newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
                                                    newRecord(new GeoPos(0.5F, 0.5F), date("07-JUN-2010 13:25:00")), // rejected
                                                    newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 10:59:00")), // ok
