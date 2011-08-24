@@ -27,6 +27,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class InputPathResolverTest {
+
     @Test
     public void testPathIsAbsolute() {
         assertTrue(new Path("/a").isAbsolute());
@@ -39,7 +40,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatInputIsOutputWithSimpleNameAndNoVars() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("foo", null, null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("foo", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("foo", pathGlobs.get(0));
@@ -47,7 +48,7 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatInputIsOutputWithSlashesNameAndNoVars() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/", null, null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/", pathGlobs.get(0));
@@ -55,63 +56,63 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatRegionStringIsReplaced() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/*.N1", "northsea", null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${region}/.*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
-        assertEquals("/foo/northsea/*.N1", pathGlobs.get(0));
+        assertEquals("/foo/northsea/.*.N1", pathGlobs.get(0));
     }
 
     @Test
     public void testThatRegionStringIsReplacedWithStarWhenNotGiven() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/*.N1", null, null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${region}/.*.N1", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
-        assertEquals("/foo/*/*.N1", pathGlobs.get(0));
+        assertEquals("/foo/.*/.*.N1", pathGlobs.get(0));
     }
 
     @Test
     public void testThatRegionStringIsReplacedMultipleTimes() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${region}/bar/${region}/*.N1", "northsea", null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${region}/bar/${region}/.*.N1", "northsea", null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
-        assertEquals("/foo/northsea/bar/northsea/*.N1", pathGlobs.get(0));
+        assertEquals("/foo/northsea/bar/northsea/.*.N1", pathGlobs.get(0));
     }
 
     @Test
     public void testThatDatePartsAreReplaced() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, date("2005-12-30"), date("2006-01-02"));
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1", null, date("2005-12-30"), date("2006-01-02"));
         assertNotNull(pathGlobs);
         assertEquals(4, pathGlobs.size());
-        assertEquals("/foo/2005/12/30/*.N1", pathGlobs.get(0));
-        assertEquals("/foo/2005/12/31/*.N1", pathGlobs.get(1));
-        assertEquals("/foo/2006/01/01/*.N1", pathGlobs.get(2));
-        assertEquals("/foo/2006/01/02/*.N1", pathGlobs.get(3));
+        assertEquals("/foo/2005/12/30/.*.N1", pathGlobs.get(0));
+        assertEquals("/foo/2005/12/31/.*.N1", pathGlobs.get(1));
+        assertEquals("/foo/2006/01/01/.*.N1", pathGlobs.get(2));
+        assertEquals("/foo/2006/01/02/.*.N1", pathGlobs.get(3));
     }
 
     @Test
     public void testThatDatePartsAreReplacedWhenNotGiven() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/${dd}/*.N1", null, null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1", null, null, null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
-        assertEquals("/foo/*/*/*/*.N1", pathGlobs.get(0));
+        assertEquals("/foo/.*/.*/.*/.*.N1", pathGlobs.get(0));
     }
 
     @Test
     public void testThatGlobsAreUnique() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/${yyyy}/${MM}/*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/.*.N1", null, date("2005-01-01"), date("2005-01-03"));
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
-        assertEquals("/foo/2005/01/*.N1", pathGlobs.get(0));
+        assertEquals("/foo/2005/01/.*.N1", pathGlobs.get(0));
     }
 
     @Test
     public void testThatDatePartsAreConcatenated() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathGlobs("/foo/MER_RR__1P*${yyyy}${MM}${dd}*.N1", null, date("2005-01-01"), date("2005-01-03"));
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/MER_RR__1P\\p{Upper}+${yyyy}${MM}${dd}*.N1", null, date("2005-01-01"), date("2005-01-03"));
         assertNotNull(pathGlobs);
         assertEquals(3, pathGlobs.size());
-        assertEquals("/foo/MER_RR__1P*20050101*.N1", pathGlobs.get(0));
-        assertEquals("/foo/MER_RR__1P*20050102*.N1", pathGlobs.get(1));
-        assertEquals("/foo/MER_RR__1P*20050103*.N1", pathGlobs.get(2));
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+20050101*.N1", pathGlobs.get(0));
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+20050102*.N1", pathGlobs.get(1));
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+20050103*.N1", pathGlobs.get(2));
     }
 
     private Date date(String dateAsString) throws ParseException {

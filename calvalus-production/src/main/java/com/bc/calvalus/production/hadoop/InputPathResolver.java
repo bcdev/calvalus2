@@ -21,8 +21,8 @@ import org.esa.beam.framework.datamodel.ProductData;
 import java.util.*;
 
 /**
- * Transforms input path patterns into input path globs.
- * The pattern may be any path glob which may currently contain the variable references:
+ * Transforms input path patterns into input path regular-expressions.
+ * The pattern may be any path regex which may currently contain the variable references:
  * <ol>
  * <li>{@code ${region}} - the region name </li>
  * <li>{@code ${yyyy}} - the (sensing) year of a product file</li>
@@ -70,7 +70,7 @@ public class InputPathResolver {
         if (region != null) {
             inputPathPattern = inputPathPattern.replace("${region}", region);
         } else {
-            inputPathPattern = inputPathPattern.replace("${region}", "*");
+            inputPathPattern = inputPathPattern.replace("${region}", ".*");
         }
         List<String> globList = new ArrayList<String>(128);
 
@@ -91,15 +91,15 @@ public class InputPathResolver {
                 calendar.add(Calendar.DAY_OF_WEEK, 1);
             } while (!calendar.after(stopCal));
         } else {
-            String glob = inputPathPattern.replace("${yyyy}", "*");
-            glob = glob.replace("${MM}", "*");
-            glob = glob.replace("${dd}", "*");
+            String glob = inputPathPattern.replace("${yyyy}", ".*");
+            glob = glob.replace("${MM}", ".*");
+            glob = glob.replace("${dd}", ".*");
             globList.add(glob);
         }
         return globList;
     }
 
-    public static List<String> getInputPathGlobs(String inputPathPattern, String region, Date minDate, Date maxDate) {
+    public static List<String> getInputPathPatterns(String inputPathPattern, String region, Date minDate, Date maxDate) {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setRegion(region);
         inputPathResolver.setMinDate(minDate);
