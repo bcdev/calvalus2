@@ -22,7 +22,7 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/outputs/lc-sdr/Africa/${yyyy}/L2_of_MER_FSG_1P*${yyyy}${MM}${dd}_*.seq</wps:LiteralData>
+                <wps:LiteralData>/calvalus/outputs/lc-sdr/Africa/${yyyy}/L2_of_MER_FSG_1P.*${yyyy}${MM}${dd}_.*.seq</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

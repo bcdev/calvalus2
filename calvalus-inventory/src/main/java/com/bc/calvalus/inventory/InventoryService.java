@@ -1,6 +1,7 @@
 package com.bc.calvalus.inventory;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The interface to the Calvalus inventory.
@@ -20,10 +21,12 @@ public interface InventoryService {
     ProductSet[] getProductSets(String filter) throws Exception;
 
     /**
-     * @param inputGlob A relative or absolute data input path which may contain wildcards.
+     *
+     * @param inputRegexs A list of relative or absolute data input path which may contain wildcards.
      * @return An array of fully qualified URIs comprising the filesystem and absolute data input path.
+     * @throws java.io.IOException If an I/O error occurs.
      */
-    String[] getDataInputPaths(String inputGlob) throws IOException;
+    String[] getDataInputPaths(List<String> inputRegexs) throws IOException;
 
     /**
      * @param outputPath A relative or absolute data output path.

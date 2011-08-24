@@ -4,6 +4,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 
 import java.io.File;
+import java.util.List;
 
 /**
 *
@@ -27,7 +28,7 @@ public class LocalInventoryService implements InventoryService {
     }
 
     @Override
-    public String[] getDataInputPaths(String inputGlob) {
+    public String[] getDataInputPaths(List<String> inputRegexs) {
         return new String[] { INPUT_DIR.getPath() };
     }
 

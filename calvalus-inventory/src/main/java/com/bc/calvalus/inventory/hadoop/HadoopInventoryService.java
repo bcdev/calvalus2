@@ -15,6 +15,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class HadoopInventoryService implements InventoryService {
 
@@ -55,24 +56,26 @@ public class HadoopInventoryService implements InventoryService {
     }
 
     @Override
-    public String[] getDataInputPaths(String inputGlob) throws IOException {
-
-        Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, inputGlob);
-
-        FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
-        if (fileStatuses == null) {
-            return new String[0];
-        }
-        String[] resolvedPath = new String[fileStatuses.length];
-        for (int i = 0; i < fileStatuses.length; i++) {
-            resolvedPath[i] = fileStatuses[i].getPath().toString();
-        }
-        return resolvedPath;
+    public String[] getDataInputPaths(List<String> inputRegexs) throws IOException {
+        List<Pattern> patternList = createPatternList(inputRegexs);
+        String commonPathPrefix = getCommonPathPrefix(inputRegexs);
+        System.out.println("commonPathPrefix = " + commonPathPrefix);
+        Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, commonPathPrefix);
+        return listFilesRecursively(qualifiedPath, patternList);
     }
 
     @Override
     public String getDataOutputPath(String outputPath) {
         return makeQualified(CALVALUS_OUTPUTS_PATH, outputPath).toString();
+    }
+
+    private List<Pattern> createPatternList(List<String> inputRegexs) {
+        final List<Pattern> patternList = new ArrayList<Pattern>(inputRegexs.size());
+        for (String regex : inputRegexs) {
+            Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, regex);
+            patternList.add(Pattern.compile(qualifiedPath.toString()));
+        }
+        return patternList;
     }
 
     private Path makeQualified(String parent, String child) {
@@ -83,12 +86,55 @@ public class HadoopInventoryService implements InventoryService {
         return fileSystem.makeQualified(path);
     }
 
-    public String[] globFilePaths(String dirPathGlob) throws IOException {
-        FileStatus[] fileStatuses = fileSystem.globStatus(new Path(dirPathGlob));
-        String[] paths = new String[fileStatuses.length];
-        for (int i = 0; i < fileStatuses.length; i++) {
-            paths[i] = fileStatuses[i].getPath().toString();
+    private String[] listFilesRecursively(final Path f, final List<Pattern> patternList) throws IOException {
+        List<String> result = new ArrayList<String>();
+        listFilesRecursively(result, f, patternList);
+        return result.toArray(new String[result.size()]);
+    }
+
+    private void listFilesRecursively(List<String> result, Path path, List<Pattern> patternList) throws IOException {
+        FileStatus[] fileStatuses = fileSystem.listStatus(path);
+        if (fileStatuses != null) {
+            for (FileStatus fStat : fileStatuses) {
+                if (fStat.isDir()) {
+                    listFilesRecursively(result, fStat.getPath(), patternList);
+                } else {
+                    String fPath = fStat.getPath().toString();
+                    for (Pattern pattern : patternList) {
+                        if (pattern.matcher(fPath).matches()) {
+                            result.add(fPath);
+                            break;
+                        }
+                    }
+                }
+            }
         }
-        return paths;
+    }
+
+    static String getCommonPathPrefix(List<String> stringList) {
+        if (stringList.size() == 0) {
+            return "";
+        } else if (stringList.size() == 1) {
+            return stringList.get(0);
+        }
+        String first = stringList.get(0);
+        if (first.length() == 0) {
+            return "";
+        }
+        int lastSlash = -1;
+        for (int charIndex = 0; charIndex < first.length(); charIndex++) {
+            char current = first.charAt(charIndex);
+            if (current == '*') {
+                return first.substring(0, lastSlash != -1 ? lastSlash : charIndex);
+            } else if (current == '/') {
+                lastSlash = charIndex;
+            }
+            for (String s : stringList) {
+                if (s.length() <= charIndex || s.charAt(charIndex) != current) {
+                    return first.substring(0, lastSlash != -1 ? lastSlash : charIndex);
+                }
+            }
+        }
+        return "";
     }
 }

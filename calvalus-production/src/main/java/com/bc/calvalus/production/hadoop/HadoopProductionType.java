@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
@@ -28,8 +27,6 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -105,16 +102,9 @@ public abstract class HadoopProductionType implements ProductionType {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
-        List<String> inputGlobs = inputPathResolver.resolve(inputPathPattern);
+        List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         try {
-            List<String> inputPaths = new ArrayList<String>();
-            for (String inputGlob : inputGlobs) {
-                CalvalusLogger.getLogger().fine("Resolving input file glob '" + inputGlob + "'...");
-                List<String> resolvedGlob = Arrays.asList(inventoryService.getDataInputPaths(inputGlob));
-                inputPaths.addAll(resolvedGlob);
-                CalvalusLogger.getLogger().fine("Input files resolved, " + resolvedGlob.size() + " found.");
-            }
-            return inputPaths.toArray(new String[inputPaths.size()]);
+            return inventoryService.getDataInputPaths(inputPatterns);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }

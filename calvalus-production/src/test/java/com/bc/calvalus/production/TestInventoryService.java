@@ -4,6 +4,8 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import org.junit.Ignore;
 
+import java.util.List;
+
 /**
  * Test implementation of InventoryService.
  *
@@ -20,14 +22,20 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String[] getDataInputPaths(String inputGlob) {
-        if (inputGlob.contains("*")) {
-            throw new IllegalArgumentException("Hey, wildcards are not supported! This is a test class!");
+    public String[] getDataInputPaths(List<String> inputRegexs) {
+        String[] inputPathes = new String[inputRegexs.size()];
+        for (int i = 0; i < inputRegexs.size(); i++) {
+            String inputRegex = inputRegexs.get(i);
+
+            if (inputRegex.contains("*")) {
+                throw new IllegalArgumentException("Hey, wildcards are not supported! This is a test class!");
+            }
+            if (!inputRegex.startsWith("/")) {
+                inputRegex = "/calvalus/eodata/" + inputRegex;
+            }
+            inputPathes[i] = "hdfs://cvmaster00:9000" + inputRegex;
         }
-        if (!inputGlob.startsWith("/")) {
-            inputGlob = "/calvalus/eodata/" + inputGlob;
-        }
-        return new String[] {"hdfs://cvmaster00:9000" + inputGlob};
+        return inputPathes;
     }
 
     @Override
