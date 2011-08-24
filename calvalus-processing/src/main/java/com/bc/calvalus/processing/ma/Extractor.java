@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
+import com.bc.jexp.ParseException;
 import org.esa.beam.framework.datamodel.*;
 
 import java.awt.*;
@@ -16,7 +17,14 @@ import java.util.List;
  */
 public class Extractor implements RecordSource {
     public static final Float FLOAT_NAN = Float.NaN;
-    public static final String GOOD_PIXEL_MASK_NAME = "good_pixel";
+    public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
+    public static final String PIXEL_MASK_ATT_NAME = "pixel_mask";
+    public static final String PIXEL_TIME_ATT_NAME = "pixel_time";
+    public static final String PIXEL_LON_ATT_NAME = "pixel_lon";
+    public static final String PIXEL_LAT_ATT_NAME = "pixel_lat";
+    public static final String PIXEL_Y_ATT_NAME = "pixel_y";
+    public static final String PIXEL_X_ATT_NAME = "pixel_x";
+    public static final String SOURCE_NAME_ATT_NAME = "source_name";
     private final Product product;
     private final MAConfig config;
     private final PixelTimeProvider pixelTimeProvider;
@@ -61,9 +69,7 @@ public class Extractor implements RecordSource {
      */
     @Override
     public Iterable<Record> getRecords() throws Exception {
-        if (input == null) {
-            throw new IllegalStateException("No input record source set.");
-        }
+        checkInputSet();
 
         if (!getHeader().hasLocation()) {
             throw new IllegalStateException("Records don't have locations.");
@@ -91,6 +97,12 @@ public class Extractor implements RecordSource {
         };
     }
 
+    private void checkInputSet() {
+        if (input == null) {
+            throw new IllegalStateException("No input record source set.");
+        }
+    }
+
     private void addGoodPixelMaskToProduct() {
         Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
         if (mask != null) {
@@ -115,12 +127,17 @@ public class Extractor implements RecordSource {
         return config.getGoodPixelExpression() != null && !config.getGoodPixelExpression().isEmpty();
     }
 
+    private boolean shallApplyGoodRecordExpression() {
+        return config.getGoodRecordExpression() != null && !config.getGoodRecordExpression().isEmpty();
+    }
+
     private boolean shallApplyTimeCriterion() {
         return config.getMaxTimeDifference() != null;
     }
 
     private boolean canApplyTimeCriterion() {
-        return pixelTimeProvider != null && getHeader().hasTime();
+        checkInputSet();
+        return pixelTimeProvider != null && input.getHeader().hasTime();
     }
 
     private Iterable<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
@@ -251,23 +268,25 @@ public class Extractor implements RecordSource {
         int width = macroPixelRect.width;
         int height = macroPixelRect.height;
 
-        final int[] maskSamples = new int[width * height];
+        final int[] maskSamples;
         final Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
         if (mask != null) {
+            maskSamples = new int[width * height];
             mask.readPixels(macroPixelRect.x, macroPixelRect.y, macroPixelRect.width, macroPixelRect.height, maskSamples);
             boolean allBad = true;
-            for (int sample : maskSamples) {
+            for (int i = 0; i < maskSamples.length; i++) {
+                int sample = maskSamples[i];
                 if (sample != 0) {
+                    maskSamples[i] = 1;
                     allBad = false;
-                    break;
                 }
             }
-
             if (allBad) {
                 return null;
             }
+        } else {
+            maskSamples = null;
         }
-
 
         final Object[] values = new Object[getHeader().getAttributeNames().length];
 
@@ -286,7 +305,7 @@ public class Extractor implements RecordSource {
         for (int i = 0, y = y0; y < y0 + height; y++) {
             for (int x = x0; x < x0 + width; x++, i++) {
                 PixelPos pp = new PixelPos(x + 0.5F, y + 0.5F);
-                GeoPos gp =  product.getGeoCoding().getGeoPos(pp, null);
+                GeoPos gp = product.getGeoCoding().getGeoPos(pp, null);
                 // todo - compute actual source pixel positions (need offsets here!)  (mz,nf)
                 pixelXPositions[i] = x;
                 pixelYPositions[i] = y;
@@ -307,8 +326,10 @@ public class Extractor implements RecordSource {
         values[index++] = pixelLongitudes;
         // field "pixel_time"
         values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
-        // field "pixel_mask"
-        values[index++] = maskSamples;
+        if (maskSamples != null) {
+            // field "pixel_mask"
+            values[index++] = maskSamples;
+        }
 
         final Band[] productBands = product.getBands();
         for (Band band : productBands) {
@@ -356,13 +377,15 @@ public class Extractor implements RecordSource {
         }
 
         // 0. derived information
-        attributeNames.add("source_name");
-        attributeNames.add("pixel_x");
-        attributeNames.add("pixel_y");
-        attributeNames.add("pixel_lat");
-        attributeNames.add("pixel_lon");
-        attributeNames.add("pixel_time");
-        attributeNames.add("pixel_mask");
+        attributeNames.add(SOURCE_NAME_ATT_NAME);
+        attributeNames.add(PIXEL_X_ATT_NAME);
+        attributeNames.add(PIXEL_Y_ATT_NAME);
+        attributeNames.add(PIXEL_LAT_ATT_NAME);
+        attributeNames.add(PIXEL_LON_ATT_NAME);
+        attributeNames.add(PIXEL_TIME_ATT_NAME);
+        if (shallApplyGoodPixelExpression()) {
+            attributeNames.add(PIXEL_MASK_ATT_NAME);
+        }
 
         // 1. bands
         Band[] productBands = product.getBands();
@@ -388,7 +411,28 @@ public class Extractor implements RecordSource {
         // 3. tie-points
         attributeNames.addAll(Arrays.asList(product.getTiePointGridNames()));
 
-        return new DefaultHeader(true, true, attributeNames.toArray(new String[attributeNames.size()]));
+        return new DefaultHeader(true,
+                                 pixelTimeProvider != null,
+                                 attributeNames.toArray(new String[attributeNames.size()]));
+    }
+
+    public RecordTransformer createTransformer() {
+        final int pixelMaskAttributeIndex = Arrays.asList(getHeader().getAttributeNames()).indexOf(PIXEL_MASK_ATT_NAME);
+        if (shallApplyGoodRecordExpression()) {
+            final String goodRecordExpression = getConfig().getGoodRecordExpression();
+            final RecordFilter recordFilter;
+            try {
+                recordFilter = ExpressionRecordFilter.create(getHeader(), goodRecordExpression);
+            } catch (ParseException e) {
+                throw new IllegalStateException("Illegal configuration: goodRecordExpression is invalid: " + e.getMessage(), e);
+            }
+            return new RecordTransformer(pixelMaskAttributeIndex,
+                                         getConfig().getFilteredMeanCoeff(),
+                                         recordFilter);
+        } else {
+            return new RecordTransformer(pixelMaskAttributeIndex,
+                                         getConfig().getFilteredMeanCoeff());
+        }
     }
 
 

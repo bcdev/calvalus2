@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author MarcoZ
@@ -28,14 +29,6 @@ public class ExtractorTest {
     @Test
     public void testThatRecordsAreGeneratedForContainedCoordinates() throws Exception {
         Extractor extractor = createExtractor(2, 3);
-        extractor.getConfig().setCopyInput(false);
-        assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 0))));
-        assertNotNull(extractor.extract(new TestRecord(new GeoPos(1, 1))));
-        assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 0))));
-        assertNotNull(extractor.extract(new TestRecord(new GeoPos(0, 1))));
-
-        // same test, but this time using the iterator
-        extractor = createExtractor(2, 3);
         extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
                                                    new TestRecord(new GeoPos(1, 0)),
                                                    new TestRecord(new GeoPos(1, 1)),
@@ -145,7 +138,6 @@ public class ExtractorTest {
         assertEquals("pixel_lat", attributeNames[index++]);
         assertEquals("pixel_lon", attributeNames[index++]);
         assertEquals("pixel_time", attributeNames[index++]);
-        assertEquals("pixel_mask", attributeNames[index++]);
         // 1. bands
         assertEquals("b1", attributeNames[index++]);
         assertEquals("b2", attributeNames[index++]);
@@ -156,13 +148,14 @@ public class ExtractorTest {
         assertEquals("latitude", attributeNames[index++]);
         assertEquals("longitude", attributeNames[index++]);
 
-        assertEquals(13, index);
+        assertEquals(12, index);
     }
 
     @Test
     public void testThatInputIsCopied() throws Exception {
         Extractor extractor = createExtractor(2, 3);
         extractor.getConfig().setCopyInput(true);
+        extractor.getConfig().setGoodPixelExpression("b1 > 0");
         extractor.setInput(new RecordSource() {
             @Override
             public Header getHeader() {
@@ -270,7 +263,15 @@ public class ExtractorTest {
     public void testExtract() throws Exception {
         Extractor extractor = createExtractor(2, 3);
         extractor.getConfig().setCopyInput(false);
-        Record extract = extractor.extract(new TestRecord(new GeoPos(1.0F, 0.0F)));
+        extractor.getConfig().setGoodPixelExpression("b1 == 0");
+        extractor.setInput(new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+                                                   new TestRecord(new GeoPos(1.0F, 0.0F))));
+
+        Iterable<Record> records = extractor.getRecords();
+        Iterator<Record> iterator = records.iterator();
+        assertTrue(iterator.hasNext());
+
+        Record extract = iterator.next();
         assertNotNull(extract);
 
         assertNotNull(extractor.getHeader());
@@ -290,7 +291,7 @@ public class ExtractorTest {
         assertEquals(1.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lat
         assertEquals(0.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lon
         assertEquals("07-May-2010 10:25:14", ProductData.UTC.createDateFormat().format((Date) values[index++])); // pixel_time
-        assertEquals(0, ((int[]) values[index++])[0]);   //pixel_mask
+        assertEquals(1, ((int[]) values[index++])[0]);   // pixel_mask
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b1 = X-0.5
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b2 = Y-0.5
         assertEquals(0.5F, ((float[]) values[index++])[0], 1e-5F);   // b3 = 0.5 * (X+Y)

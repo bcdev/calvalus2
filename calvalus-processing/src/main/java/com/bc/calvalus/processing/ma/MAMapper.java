@@ -61,7 +61,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         long t0;
 
-
         t0 = now();
         final Path inputPath = split.getPath();
 
@@ -90,8 +89,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s read input records from %s, took %s sec",
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
-        RecordTransformer recordTransformer = new RecordTransformer(-1, maConfig.getFilteredMeanCoeff());
-
+        RecordTransformer recordTransformer = extractor.createTransformer();
 
         DateFormat outputTimeFormat = ProductData.UTC.createDateFormat(maConfig.getOutputTimeFormat());
 
