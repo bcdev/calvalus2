@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman Fomferra
  */
-public class RecordExprTest {
+public class RecordExpressionTest {
     @Test
     public void testRecordsWithArrays() throws Exception {
         DefaultHeader header = new DefaultHeader("chl");
@@ -29,13 +29,13 @@ public class RecordExprTest {
         Term t3 = parser.parse("chl.CV");
         Term t4 = parser.parse("chl.CV > 0.15");
 
-        recordEvalEnv.setValues(record1);
+        recordEvalEnv.setContext(record1);
         assertEquals(2.4 - 1.5 * 0.2, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(true, t2.evalB(recordEvalEnv));
         assertEquals(0.2 / 2.4, t3.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t4.evalB(recordEvalEnv));
 
-        recordEvalEnv.setValues(record2);
+        recordEvalEnv.setContext(record2);
         assertEquals(2.5 - 1.5 * 0.1, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t2.evalB(recordEvalEnv));
         assertEquals(0.1 / 2.5, t3.evalD(recordEvalEnv), 1e-6);
@@ -58,13 +58,13 @@ public class RecordExprTest {
         Term t3 = parser.parse("b");
         Term t4 = parser.parse("i > 3");
 
-        recordEvalEnv.setValues(record1);
+        recordEvalEnv.setContext(record1);
         assertEquals(4 + 1.5 * 0.6, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(true, t2.evalB(recordEvalEnv));
         assertEquals(false, t3.evalB(recordEvalEnv));
         assertEquals(true, t4.evalB(recordEvalEnv));
 
-        recordEvalEnv.setValues(record2);
+        recordEvalEnv.setContext(record2);
         assertEquals(3 + 1.5 * 0.5, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t2.evalB(recordEvalEnv));
         assertEquals(true, t3.evalB(recordEvalEnv));

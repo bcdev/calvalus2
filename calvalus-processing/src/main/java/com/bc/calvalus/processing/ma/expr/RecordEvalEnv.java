@@ -21,7 +21,7 @@ public class RecordEvalEnv implements EvalEnv {
         this.env = new HashMap<String, Object>(31);
     }
 
-    public void setValues(Record record) {
+    public void setContext(Record record) {
         String[] names = header.getAttributeNames();
         Object[] values = record.getAttributeValues();
         for (int i = 0; i < names.length; i++) {
