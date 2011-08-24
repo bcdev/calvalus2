@@ -13,12 +13,16 @@ import java.util.Date;
  */
 public class DefaultRecord implements Record {
     private final GeoPos location;
-    private final Date timestamp;
+    private final Date time;
     private final Object[] values;
 
-    public DefaultRecord(GeoPos location, Date timestamp, Object[] values) {
+    public DefaultRecord(Object ... values) {
+        this(null, null, values);
+    }
+
+    public DefaultRecord(GeoPos location, Date time, Object[] values) {
         this.location = location;
-        this.timestamp = timestamp;
+        this.time = time;
         this.values = values;
     }
 
@@ -28,8 +32,8 @@ public class DefaultRecord implements Record {
     }
 
     @Override
-    public Date getTimestamp() {
-        return timestamp;
+    public Date getTime() {
+        return time;
     }
 
     @Override
@@ -41,7 +45,7 @@ public class DefaultRecord implements Record {
     public String toString() {
         return "DefaultRecord{" +
                 "location=" + location +
-                ", time=" + timestamp +
+                ", time=" + time +
                 ", values=" + Arrays.asList(values) +
                 '}';
     }

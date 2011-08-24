@@ -35,7 +35,7 @@ public class RecordTransformer {
                         values[valueIndex] = attributeValue;
                     }
                 }
-                resultingRecords.add(new DefaultRecord(record.getLocation(), record.getTimestamp(), values));
+                resultingRecords.add(new DefaultRecord(record.getLocation(), record.getTime(), values));
             }
         }
 
@@ -78,7 +78,7 @@ public class RecordTransformer {
                 aggregatedValues[valueIndex] = attributeValue;
             }
         }
-        return new DefaultRecord(record.getLocation(), record.getTimestamp(), aggregatedValues);
+        return new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
     }
 
     protected AggregatedNumber aggregate(int[] array, int[] maskValues) {

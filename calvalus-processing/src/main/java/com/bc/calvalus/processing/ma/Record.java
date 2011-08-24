@@ -17,9 +17,9 @@ public interface Record {
     GeoPos getLocation();
 
     /**
-     * @return The UTC timestamp in milliseconds or {@code null} if the time is not available.
+     * @return The UTC time in milliseconds or {@code null} if the time is not available.
      */
-    Date getTimestamp();
+    Date getTime();
 
     /**
      * @return The attribute values according to {@link Header#getAttributeNames()}.

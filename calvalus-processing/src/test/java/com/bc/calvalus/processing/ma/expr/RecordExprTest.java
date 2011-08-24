@@ -19,14 +19,8 @@ public class RecordExprTest {
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
-        DefaultRecord record1 = new DefaultRecord(null, null, new Object[]{
-                new AggregatedNumber(25, 24, 16, 2.6f, 0.4f, 2.4f, 0.2f),
-        }
-        );
-        DefaultRecord record2 = new DefaultRecord(null, null, new Object[]{
-                new AggregatedNumber(25, 16, 12, 1.7f, 0.3f, 2.5f, 0.1f),
-        }
-        );
+        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(25, 24, 16, 2.6f, 0.4f, 2.4f, 0.2f));
+        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(25, 16, 12, 1.7f, 0.3f, 2.5f, 0.1f));
 
         ParserImpl parser = new ParserImpl(namespace);
 
@@ -54,14 +48,8 @@ public class RecordExprTest {
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
-        DefaultRecord record1 = new DefaultRecord(null, null, new Object[]{
-                false, "x", 4, 0.6F
-        }
-        );
-        DefaultRecord record2 = new DefaultRecord(null, null, new Object[]{
-                true, "y", 3, 0.5F
-        }
-        );
+        DefaultRecord record1 = new DefaultRecord(false, "x", 4, 0.6F);
+        DefaultRecord record2 = new DefaultRecord(true, "y", 3, 0.5F);
 
         ParserImpl parser = new ParserImpl(namespace);
 

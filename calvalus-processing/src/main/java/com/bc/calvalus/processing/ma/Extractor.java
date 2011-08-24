@@ -209,11 +209,11 @@ public class Extractor implements RecordSource {
     }
 
     private long getMinReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTimestamp().getTime() - getMaxTimeDifferenceInMillis();
+        return referenceRecord.getTime().getTime() - getMaxTimeDifferenceInMillis();
     }
 
     private long getMaxReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTimestamp().getTime() + getMaxTimeDifferenceInMillis();
+        return referenceRecord.getTime().getTime() + getMaxTimeDifferenceInMillis();
     }
 
     private long getMaxTimeDifferenceInMillis() {
@@ -324,7 +324,7 @@ public class Extractor implements RecordSource {
             values[index++] = floatSamples;
         }
 
-        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTimestamp(), values);
+        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values);
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
