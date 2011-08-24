@@ -88,7 +88,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s read input records from %s, took %s sec",
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
-        RecordTransformer recordTransformer = new RecordTransformer(-1);
+        RecordTransformer recordTransformer = new RecordTransformer(-1, 1.5);
 
         t0 = now();
         int numMatchUps = 0;

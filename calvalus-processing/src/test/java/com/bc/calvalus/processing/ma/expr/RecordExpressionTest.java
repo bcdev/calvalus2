@@ -19,27 +19,30 @@ public class RecordExpressionTest {
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
-        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(25, 24, 16, 2.6f, 0.4f, 2.4f, 0.2f));
-        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(25, 16, 12, 1.7f, 0.3f, 2.5f, 0.1f));
+        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.4, 0.2, 16));
+        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(25, 0.2, 4.1, 1.7, 0.3, 16, 2.5, 0.1, 12));
 
         ParserImpl parser = new ParserImpl(namespace);
 
         Term t1 = parser.parse("chl.filteredMean - 1.5 * chl.filteredStdDev");
         Term t2 = parser.parse("feq(chl.mean, 2.6)");
-        Term t3 = parser.parse("chl.CV");
-        Term t4 = parser.parse("chl.CV > 0.15");
+        Term t3 = parser.parse("chl.cv");
+        Term t4 = parser.parse("chl.cv > 0.15");
+        Term t5 = parser.parse("chl.max - chl.min");
 
         recordEvalEnv.setContext(record1);
         assertEquals(2.4 - 1.5 * 0.2, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(true, t2.evalB(recordEvalEnv));
         assertEquals(0.2 / 2.4, t3.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t4.evalB(recordEvalEnv));
+        assertEquals(4.0 - 0.1, t5.evalD(recordEvalEnv), 1e-6);
 
         recordEvalEnv.setContext(record2);
         assertEquals(2.5 - 1.5 * 0.1, t1.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t2.evalB(recordEvalEnv));
         assertEquals(0.1 / 2.5, t3.evalD(recordEvalEnv), 1e-6);
         assertEquals(false, t4.evalB(recordEvalEnv));
+        assertEquals(4.1 - 0.2, t5.evalD(recordEvalEnv), 1e-6);
     }
 
     @Test

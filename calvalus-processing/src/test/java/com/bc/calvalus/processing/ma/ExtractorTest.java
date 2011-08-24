@@ -370,7 +370,7 @@ public class ExtractorTest {
             list.addAll(Arrays.asList(values));
             return new DefaultRecord(coordinate, time, list.toArray(new Object[list.size()]));
         } else {
-            return new DefaultRecord(coordinate, time, values.clone());
+            return new DefaultRecord(values);
         }
     }
 

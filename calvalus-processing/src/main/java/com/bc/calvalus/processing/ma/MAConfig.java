@@ -59,31 +59,40 @@ public class MAConfig implements XmlConvertible {
     Double maxTimeDifference;
 
     /**
-     * Threshold for the <i>NGP/NTP criterion</i>.
-     * If {@code minNgpToNtpRatio = 0.0}, the criterion will not be used.
-     */
-    @Parameter
-    double minNgpToNtpRatio;
-
-    /**
-     * Band name for <i>filtered mean criterion</i>.
-     * If not given, the criterion will not be used.
-     */
-    @Parameter
-    String filteredMeanBandName;
-
-    /**
-     * Coefficient for <i>filtered mean criterion</i>.
-     */
-    @Parameter
-    double filteredMeanCoefficient;
-
-    /**
      * The band maths expression that identifies the "good" pixels in the macro pixel.
      * If not given, the criterion will not be used, thus all pixels will be considered being "good".
      */
     @Parameter
     String goodPixelExpression;
+
+    /**
+     * The band maths expression that identifies the "good" records in the macro pixel.
+     * If not given, the criterion will not be used, thus all pixels will be considered being "good".
+     */
+    @Parameter
+    String goodRecordExpression;
+
+    // Replaced by goodRecordExpression (nf, 2011-08-24)
+    /**
+     * Threshold for the <i>NGP/NTP criterion</i>.
+     * If {@code minNgpToNtpRatio = 0.0}, the criterion will not be used.
+     */
+    //@Parameter
+    //double minNgpToNtpRatio;
+
+    // Replaced by goodRecordExpression (nf, 2011-08-24)
+    /**
+     * Band name for <i>filtered mean criterion</i>.
+     * If not given, the criterion will not be used.
+     */
+    //@Parameter
+    //String filteredMeanBandName;
+
+    /**
+     * Coefficient for <i>filtered mean criterion</i>.
+     */
+    @Parameter
+    double filteredMeanCoeff;
 
     /**
      * The date format used in the output.
@@ -178,28 +187,12 @@ public class MAConfig implements XmlConvertible {
         this.maxTimeDifference = maxTimeDifference;
     }
 
-    public double getMinNgpToNtpRatio() {
-        return minNgpToNtpRatio;
+    public double getFilteredMeanCoeff() {
+        return filteredMeanCoeff;
     }
 
-    public void setMinNgpToNtpRatio(double minNgpToNtpRatio) {
-        this.minNgpToNtpRatio = minNgpToNtpRatio;
-    }
-
-    public String getFilteredMeanBandName() {
-        return filteredMeanBandName;
-    }
-
-    public void setFilteredMeanBandName(String filteredMeanBandName) {
-        this.filteredMeanBandName = filteredMeanBandName;
-    }
-
-    public double getFilteredMeanCoefficient() {
-        return filteredMeanCoefficient;
-    }
-
-    public void setFilteredMeanCoefficient(double filteredMeanCoefficient) {
-        this.filteredMeanCoefficient = filteredMeanCoefficient;
+    public void setFilteredMeanCoeff(double filteredMeanCoeff) {
+        this.filteredMeanCoeff = filteredMeanCoeff;
     }
 
     public String getGoodPixelExpression() {

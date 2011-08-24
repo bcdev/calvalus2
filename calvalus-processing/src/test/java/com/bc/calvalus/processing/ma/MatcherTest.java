@@ -67,7 +67,7 @@ public class MatcherTest extends ExtractorTest {
         assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
 
-        List<Record> flattenedRecords = new RecordTransformer(-1).expand(records.get(0));
+        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).expand(records.get(0));
         assertNotNull(flattenedRecords);
         assertEquals(9, flattenedRecords.size());
 

@@ -51,6 +51,18 @@ public class RecordSymbol implements Symbol {
         return toString(getValue(env));
     }
 
+    public static boolean toBoolean(Object o) {
+        if (o == null) {
+            return false;
+        } else if (o instanceof Boolean) {
+            return (Boolean) o;
+        } else if (o instanceof Number) {
+            return ((Number) o).intValue() != 0;
+        } else {
+            return Boolean.parseBoolean(o.toString());
+        }
+    }
+
     public static double toDouble(Object o) {
         if (o == null) {
             return Double.NaN;
@@ -64,24 +76,11 @@ public class RecordSymbol implements Symbol {
         }
     }
 
-    public static boolean toBoolean(Object o) {
-        if (o == null) {
-            return false;
-        } else if (o instanceof Boolean) {
-            return (Boolean) o;
-        } else if (o instanceof Number) {
-            return ((Number) o).intValue() != 0;
-        } else {
-            return Boolean.parseBoolean(o.toString());
-        }
-    }
-
     public static int toInt(Object o) {
         if (o == null) {
             return 0;
         } else if (o instanceof Number) {
-            Number number = (Number) o;
-            return number.intValue();
+            return ((Number) o).intValue();
         } else if (o instanceof Boolean) {
             return ((Boolean) o) ? 1 : 0;
         } else {
