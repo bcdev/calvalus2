@@ -15,6 +15,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HadoopInventoryService implements InventoryService {
@@ -57,10 +58,11 @@ public class HadoopInventoryService implements InventoryService {
 
     @Override
     public String[] getDataInputPaths(List<String> inputRegexs) throws IOException {
-        List<Pattern> patternList = createPatternList(inputRegexs);
+        Pattern pattern = createPattern(inputRegexs);
         String commonPathPrefix = getCommonPathPrefix(inputRegexs);
         Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, commonPathPrefix);
-        return listFilesRecursively(qualifiedPath, patternList);
+        String[] strings = listFilesRecursively(qualifiedPath, pattern);
+        return strings;
     }
 
     @Override
@@ -68,13 +70,18 @@ public class HadoopInventoryService implements InventoryService {
         return makeQualified(CALVALUS_OUTPUTS_PATH, outputPath).toString();
     }
 
-    private List<Pattern> createPatternList(List<String> inputRegexs) {
-        final List<Pattern> patternList = new ArrayList<Pattern>(inputRegexs.size());
+    private Pattern createPattern(List<String> inputRegexs) {
+        if (inputRegexs.size() == 0) {
+            return null;
+        }
+        StringBuilder hugePattern = new StringBuilder(inputRegexs.size() * inputRegexs.get(0).length());
         for (String regex : inputRegexs) {
             Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, regex);
-            patternList.add(Pattern.compile(qualifiedPath.toString()));
+            hugePattern.append(qualifiedPath.toString());
+            hugePattern.append("|");
         }
-        return patternList;
+        hugePattern.setLength(hugePattern.length() - 1);
+        return Pattern.compile(hugePattern.toString());
     }
 
     private Path makeQualified(String parent, String child) {
@@ -85,25 +92,31 @@ public class HadoopInventoryService implements InventoryService {
         return fileSystem.makeQualified(path);
     }
 
-    private String[] listFilesRecursively(final Path f, final List<Pattern> patternList) throws IOException {
+    private String[] listFilesRecursively(Path path, Pattern pattern) throws IOException {
         List<String> result = new ArrayList<String>();
-        listFilesRecursively(result, f, patternList);
+        listFilesRecursively(result, path, pattern);
         return result.toArray(new String[result.size()]);
     }
 
-    private void listFilesRecursively(List<String> result, Path path, List<Pattern> patternList) throws IOException {
+    private void listFilesRecursively(List<String> result, Path path, Pattern pattern) throws IOException {
         FileStatus[] fileStatuses = fileSystem.listStatus(path);
         if (fileStatuses != null) {
+            Matcher matcher = null;
+            if (pattern != null) {
+                matcher = pattern.matcher("");
+            }
             for (FileStatus fStat : fileStatuses) {
                 if (fStat.isDir()) {
-                    listFilesRecursively(result, fStat.getPath(), patternList);
+                    listFilesRecursively(result, fStat.getPath(), pattern);
                 } else {
                     String fPath = fStat.getPath().toString();
-                    for (Pattern pattern : patternList) {
-                        if (pattern.matcher(fPath).matches()) {
+                    if (matcher != null) {
+                        matcher.reset(fPath);
+                        if(matcher.matches()) {
                             result.add(fPath);
-                            break;
                         }
+                    } else {
+                        result.add(fPath);
                     }
                 }
             }
