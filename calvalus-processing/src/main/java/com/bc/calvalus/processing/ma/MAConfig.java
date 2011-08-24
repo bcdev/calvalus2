@@ -19,8 +19,6 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
-import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
 /**
@@ -34,43 +32,54 @@ public class MAConfig implements XmlConvertible {
      * copied into a corresponding output record.
      */
     @Parameter(defaultValue = "true")
-    boolean copyInput;
+    private boolean copyInput;
 
     /**
-     * Size of the macro pixel given as number {@code n} of 'normal' pixels. A window comprising
-     * {@code n x n} will be considered in the match-up process. Should be an odd integer,
+     * Size of the macro pixel given as number {@code n} of 'normal' pixels. An area comprising
+     * {@code n x n} pixels will be considered in the match-up process. Should be an odd integer,
      * so that {@code n/2 - 1} pixels are considered around a given center pixel.
+     * The default value size is {@code 5} pixels so that an area of 5 x 5 pixels will be considered.
+     * @see #aggregateMacroPixel
      */
-    @Parameter(defaultValue = "1")
-    int macroPixelSize;
+    @Parameter(defaultValue = "5")
+    private int macroPixelSize;
 
     /**
      * If {@code aggregateMacroPixel = true}, all 'good' macro pixel values will be aggregated (averaged).
      * If {@code aggregateMacroPixel = false}, all pixels comprising the macro pixel will be extracted.
      */
     @Parameter(defaultValue = "true")
-    boolean aggregateMacroPixel;
+    private boolean aggregateMacroPixel;
 
     /**
      * Maximum time difference in hours between reference and EO pixel.
      * If {@code maxTimeDifference = null}, the criterion will not be used and match-ups are found for all times.
+     * The default value is {@code 3.0} hours.
      */
-    @Parameter
-    Double maxTimeDifference;
+    @Parameter (defaultValue = "3.0")
+    private Double maxTimeDifference;
 
     /**
      * The band maths expression that identifies the "good" pixels in the macro pixel.
      * If not given, the criterion will not be used, thus all pixels will be considered being "good".
      */
     @Parameter
-    String goodPixelExpression;
+    private String goodPixelExpression;
+
+    /**
+     * Coefficient for <i>filtered mean criterion</i>.
+     * If {@code filteredMeanCoeff = null}, the criterion will not be used.
+     * The default value is {@code 1.5}.
+     */
+    @Parameter(defaultValue = "1.5")
+    private Double filteredMeanCoeff;
 
     /**
      * The band maths expression that identifies the "good" records in the macro pixel.
      * If not given, the criterion will not be used, thus all pixels will be considered being "good".
      */
     @Parameter
-    String goodRecordExpression;
+    private String goodRecordExpression;
 
     // Replaced by goodRecordExpression (nf, 2011-08-24)
     /**
@@ -89,36 +98,29 @@ public class MAConfig implements XmlConvertible {
     //String filteredMeanBandName;
 
     /**
-     * Coefficient for <i>filtered mean criterion</i>.
-     */
-    @Parameter
-    double filteredMeanCoeff;
-
-    /**
      * The time format used in the output.
      * Default is {@code "dd-MMM-yyyy HH:mm:ss"} (as used by Envisat).
      */
-    @Parameter
+    @Parameter(defaultValue = "dd-MMM-yyyy HH:mm:ss")
     private String outputTimeFormat;
 
-    @Parameter
+    /**
+     * The name of a class that implements the {@link RecordSourceSpi} interface.
+     * Instances of this class are used to create {@link RecordSource} objects which are in turn used to
+     * provide {@link Record}s.
+     */
+    @Parameter(defaultValue = "com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi")
     private String recordSourceSpiClassName;
 
+    /**
+     * The URL of a {@link RecordSource}.
+     * General parameter for many types of record sources.
+     */
     @Parameter
     private String recordSourceUrl;
 
 
     public MAConfig() {
-        setDefaults();
-    }
-
-    public MAConfig(String recordSourceSpiClassName,
-                    String recordSourceUrl) {
-        Assert.notNull(recordSourceSpiClassName, "recordSourceSpiClassName");
-        Assert.notNull(recordSourceUrl, "recordSourceUrl");
-        this.recordSourceSpiClassName = recordSourceSpiClassName;
-        this.recordSourceUrl = recordSourceUrl;
-        setDefaults();
     }
 
     public static MAConfig fromXml(String xml) {
@@ -135,27 +137,31 @@ public class MAConfig implements XmlConvertible {
         return service != null ? service.createRecordSource(recordSourceUrl) : null;
     }
 
-    private void setDefaults() {
-        outputTimeFormat = ProductData.UTC.DATE_FORMAT_PATTERN;
-        maxTimeDifference = null;
-        macroPixelSize = 1;
-        aggregateMacroPixel = true;
-        copyInput = true;
-    }
-
     public String getRecordSourceSpiClassName() {
         return recordSourceSpiClassName;
+    }
+
+    public void setRecordSourceSpiClassName(String recordSourceSpiClassName) {
+        this.recordSourceSpiClassName = recordSourceSpiClassName;
     }
 
     public String getRecordSourceUrl() {
         return recordSourceUrl;
     }
 
+    public void setRecordSourceUrl(String recordSourceUrl) {
+        this.recordSourceUrl = recordSourceUrl;
+    }
+
     public String getOutputTimeFormat() {
         return outputTimeFormat;
     }
 
-    public boolean isCopyInput() {
+    public void setOutputTimeFormat(String outputTimeFormat) {
+        this.outputTimeFormat = outputTimeFormat;
+    }
+
+    public boolean getCopyInput() {
         return copyInput;
     }
 
@@ -187,11 +193,11 @@ public class MAConfig implements XmlConvertible {
         this.maxTimeDifference = maxTimeDifference;
     }
 
-    public double getFilteredMeanCoeff() {
+    public Double getFilteredMeanCoeff() {
         return filteredMeanCoeff;
     }
 
-    public void setFilteredMeanCoeff(double filteredMeanCoeff) {
+    public void setFilteredMeanCoeff(Double filteredMeanCoeff) {
         this.filteredMeanCoeff = filteredMeanCoeff;
     }
 
@@ -201,5 +207,13 @@ public class MAConfig implements XmlConvertible {
 
     public void setGoodPixelExpression(String goodPixelExpression) {
         this.goodPixelExpression = goodPixelExpression;
+    }
+
+    public String getGoodRecordExpression() {
+        return goodRecordExpression;
+    }
+
+    public void setGoodRecordExpression(String goodRecordExpression) {
+        this.goodRecordExpression = goodRecordExpression;
     }
 }

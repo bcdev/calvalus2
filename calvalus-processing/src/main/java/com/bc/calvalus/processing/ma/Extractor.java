@@ -238,7 +238,7 @@ public class Extractor implements RecordSource {
      */
     private Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
 
-        final int macroPixelSize = getConfig().macroPixelSize;
+        final int macroPixelSize = getConfig().getMacroPixelSize();
 
         final Rectangle macroPixelRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight()).intersection(
                 new Rectangle((int) pixelPos.x - macroPixelSize / 2,
@@ -272,7 +272,7 @@ public class Extractor implements RecordSource {
         final Object[] values = new Object[getHeader().getAttributeNames().length];
 
         int index = 0;
-        if (config.isCopyInput()) {
+        if (config.getCopyInput()) {
             Object[] inputValues = inputRecord.getAttributeValues();
             System.arraycopy(inputValues, 0, values, 0, inputValues.length);
             index = inputValues.length;
@@ -348,7 +348,7 @@ public class Extractor implements RecordSource {
     private Header createHeader() {
         final List<String> attributeNames = new ArrayList<String>();
 
-        if (config.isCopyInput()) {
+        if (config.getCopyInput()) {
             if (input == null) {
                 throw new IllegalStateException("Still no input set, but config.copyInput=true.");
             }

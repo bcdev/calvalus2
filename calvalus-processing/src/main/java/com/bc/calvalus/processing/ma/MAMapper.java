@@ -90,7 +90,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s read input records from %s, took %s sec",
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
-        RecordTransformer recordTransformer = new RecordTransformer(-1, 1.5);
+        RecordTransformer recordTransformer = new RecordTransformer(-1, maConfig.getFilteredMeanCoeff());
 
 
         DateFormat outputTimeFormat = ProductData.UTC.createDateFormat(maConfig.getOutputTimeFormat());

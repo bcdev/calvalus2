@@ -301,7 +301,8 @@ public class ExtractorTest {
 
     protected Extractor createExtractor(int w, int h) {
         Product product = createProduct(w, h);
-        MAConfig config = new MAConfig(); // use defaults
+        MAConfig config = new MAConfig();
+        config.setMacroPixelSize(1);
         return createExtractor(product, config);
     }
 

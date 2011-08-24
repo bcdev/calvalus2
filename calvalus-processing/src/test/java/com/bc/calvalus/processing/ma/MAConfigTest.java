@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.util.Iterator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -33,8 +34,23 @@ import static org.junit.Assert.assertTrue;
 public class MAConfigTest {
 
     @Test
-    public void testGetRecordSource() throws Exception {
-        MAConfig maConfig = new MAConfig(TestRecordSourceSpi.class.getName(), "");
+    public void testFromXmlSetsDefaults() throws Exception {
+        MAConfig maConfig = MAConfig.fromXml("<parameters/>");
+
+        assertEquals("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi", maConfig.getRecordSourceSpiClassName());
+        assertEquals(null, maConfig.getRecordSourceUrl());
+        assertEquals(1.5, maConfig.getFilteredMeanCoeff(), 1E-6);
+        assertEquals(5, maConfig.getMacroPixelSize());
+        assertEquals(3.0, maConfig.getMaxTimeDifference(), 1E-6);
+        assertEquals(null, maConfig.getGoodPixelExpression());
+        assertEquals(null, maConfig.getGoodRecordExpression());
+        assertEquals("dd-MMM-yyyy HH:mm:ss", maConfig.getOutputTimeFormat());
+    }
+
+    @Test
+    public void testCreateRecordSource() throws Exception {
+        MAConfig maConfig = new MAConfig();
+        maConfig.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
         RecordSource recordSource = maConfig.createRecordSource();
         assertNotNull(recordSource);
         assertNotNull(recordSource.getRecords());
@@ -42,16 +58,6 @@ public class MAConfigTest {
         assertTrue(recordIterator.hasNext());
         Record record = recordIterator.next();
         assertNotNull(record);
-    }
-
-    public static class TestRecordSourceSpi extends RecordSourceSpi {
-        @Override
-        public RecordSource createRecordSource(String url) {
-            DefaultHeader header = new DefaultHeader(true, "lat", "lon");
-            DefaultRecordSource recordSource = new DefaultRecordSource(header);
-            ExtractorTest.addPointRecord(recordSource, 0F, 0F);
-            return recordSource;
-        }
     }
 
 }

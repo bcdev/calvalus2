@@ -35,7 +35,8 @@ public class MAWorkflowItemTest {
     @Test
     public void testCreateJob() throws Exception {
         HadoopProcessingService hadoopProcessingService = new HadoopProcessingService(new JobClient(new JobConf()));
-        MAConfig maConfig1 = new MAConfig("TestRecordSourceSpi", "");
+        MAConfig maConfig1 = new MAConfig();
+        maConfig1.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
 
         String jobName = "MaTestJob";
         String[] inputFiles = new String[]{"file1", "file2"};
@@ -67,7 +68,7 @@ public class MAWorkflowItemTest {
         String xml = configuration.get(JobConfNames.CALVALUS_MA_PARAMETERS);
         assertTrue(xml.startsWith("<parameters>"));
         assertTrue(xml.endsWith("</parameters>"));
-        assertTrue(xml.contains("TestRecordSourceSpi"));
+        assertTrue(xml.contains(TestRecordSourceSpi.class.getName()));
 
         assertEquals("file1,file2", configuration.get(JobConfNames.CALVALUS_INPUT));
 
