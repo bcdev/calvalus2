@@ -12,13 +12,13 @@ import java.util.Date;
 public interface Record {
 
     /**
-     * @return The location as (lat,lon) point or {@code null} if the location is not available.
+     * @return The location as (lat,lon) point or {@code null} if the location is not available (see {@link Header#hasLocation()}).
      *         The location is usually represented in form of one or more attribute values.
      */
     GeoPos getLocation();
 
     /**
-     * @return The UTC time in milliseconds or {@code null} if the time is not available.
+     * @return The UTC time in milliseconds or {@code null} if the time is not available (see {@link Header#hasTime()}).
      *         The location is usually represented in form of one or more attribute values.
      */
     Date getTime();
