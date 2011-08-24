@@ -201,7 +201,7 @@ public class Extractor implements RecordSource {
     }
 
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getCoordinate(), null);
+        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(referenceRecord.getLocation(), null);
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             return pixelPos;
         }
@@ -324,7 +324,7 @@ public class Extractor implements RecordSource {
             values[index++] = floatSamples;
         }
 
-        return new DefaultRecord(inputRecord.getCoordinate(), inputRecord.getTime(), values);
+        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values);
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {

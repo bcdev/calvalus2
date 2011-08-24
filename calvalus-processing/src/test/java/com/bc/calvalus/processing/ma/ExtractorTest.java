@@ -276,7 +276,7 @@ public class ExtractorTest {
         assertNotNull(extractor.getHeader());
         assertNotNull(extractor.getHeader().getAttributeNames());
 
-        GeoPos coordinate = extract.getCoordinate();
+        GeoPos coordinate = extract.getLocation();
         assertEquals(1.0F, coordinate.lat, 0.0001F);
         assertEquals(0.0F, coordinate.lon, 0.0001F);
 
@@ -394,7 +394,7 @@ public class ExtractorTest {
         }
 
         @Override
-        public GeoPos getCoordinate() {
+        public GeoPos getLocation() {
             return coordinate;
         }
 

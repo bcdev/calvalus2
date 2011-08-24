@@ -12,51 +12,19 @@ import java.util.Date;
  * @author Norman
  */
 public class DefaultRecord implements Record {
-    private final GeoPos coordinate;
+    private final GeoPos location;
     private final Date time;
     private final Object[] values;
 
-// Currently there is no use for the following block. Remove by end of September 2011   :-)   (nf)
-/*
-    public static DefaultRecord create(Header header, Object... values) {
-
-        final int latitudeIndex = header != null ? header.getLatitudeIndex() : -1;
-        final int longitudeIndex = header != null ? header.getLongitudeIndex() : -1;
-        final int timeIndex = header != null ? header.getTimeIndex() : -1;
-        final DateFormat timeFormat = header != null ? header.getTimeFormat() : null;
-
-        GeoPos coordinate = null;
-        if (latitudeIndex >= 0 && longitudeIndex >= 0) {
-            coordinate = new GeoPos(((Number) values[latitudeIndex]).floatValue(),
-                                    ((Number) values[longitudeIndex]).floatValue());
-        }
-
-        Date time = null;
-        if (timeIndex >= 0 && timeFormat != null) {
-            final String timeStr = (String) values[timeIndex];
-            if (timeStr != null) {
-                try {
-                    time = timeFormat.parse(timeStr);
-                } catch (ParseException e) {
-                    throw new IllegalArgumentException("Illegal time value: " + timeStr + ", expected format " + timeFormat);
-                }
-            }
-        }
-
-        return new DefaultRecord(coordinate, time, values);
-    }
-*/
-
-
-    public DefaultRecord(GeoPos coordinate, Date time, Object[] values) {
-        this.coordinate = coordinate;
+    public DefaultRecord(GeoPos location, Date time, Object[] values) {
+        this.location = location;
         this.time = time;
         this.values = values;
     }
 
     @Override
-    public GeoPos getCoordinate() {
-        return coordinate;
+    public GeoPos getLocation() {
+        return location;
     }
 
     @Override
@@ -72,7 +40,7 @@ public class DefaultRecord implements Record {
     @Override
     public String toString() {
         return "DefaultRecord{" +
-                "coordinate=" + coordinate +
+                "location=" + location +
                 ", time=" + time +
                 ", values=" + Arrays.asList(values) +
                 '}';

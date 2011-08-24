@@ -14,7 +14,7 @@ public interface Record {
     /**
      * @return The coordinate which is usually internally represented in form of one or more attribute values.
      */
-    GeoPos getCoordinate();
+    GeoPos getLocation();
 
     /**
      * @return The UTC time in milliseconds or {@code null} if the time is not available.

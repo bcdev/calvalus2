@@ -94,7 +94,7 @@ public class PlacemarkRecordSource implements RecordSource {
         }
 
         @Override
-        public GeoPos getCoordinate() {
+        public GeoPos getLocation() {
             return placemark.getGeoPos();
         }
 
