@@ -193,10 +193,10 @@ public class RecordTransformerTest {
     @Test
     public void testAggregateWithFilters() throws Exception {
         int maskAttributeIndex = -1;
-        AggregatedNumberFilter filter = new AggregatedNumberFilter() {
+        RecordFilter filter = new RecordFilter() {
             @Override
-            public boolean accept(int attributeIndex, AggregatedNumber number) {
-                return attributeIndex == 4 && number.mean < 1.0F;
+            public boolean accept(Record record) {
+                return ((AggregatedNumber)record.getAttributeValues()[4]).mean < 1.0F;
             }
         };
         Record goodRecord = new RecordTransformer(maskAttributeIndex, filter).aggregate(

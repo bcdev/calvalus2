@@ -8,11 +8,11 @@ import java.util.List;
 public class RecordTransformer {
 
     private final int maskAttributeIndex;
-    private final AggregatedNumberFilter[] filters;
+    private final RecordFilter[] recordFilters;
 
-    public RecordTransformer(int maskAttributeIndex, AggregatedNumberFilter... filters) {
+    public RecordTransformer(int maskAttributeIndex, RecordFilter... recordFilters) {
         this.maskAttributeIndex = maskAttributeIndex;
-        this.filters = filters;
+        this.recordFilters = recordFilters;
     }
 
     public List<Record> expand(Record record) {
@@ -35,7 +35,10 @@ public class RecordTransformer {
                         values[valueIndex] = attributeValue;
                     }
                 }
-                resultingRecords.add(new DefaultRecord(record.getLocation(), record.getTime(), values));
+                DefaultRecord resultingRecord = new DefaultRecord(record.getLocation(), record.getTime(), values);
+                if (isRecordAccepted(resultingRecord)) {
+                    resultingRecords.add(resultingRecord);
+                }
             }
         }
 
@@ -68,17 +71,16 @@ public class RecordTransformer {
                 aggregatedNumber = aggregate((int[]) attributeValue, maskValues);
             }
             if (aggregatedNumber != null) {
-                for (AggregatedNumberFilter filter : filters) {
-                    if (!filter.accept(valueIndex, aggregatedNumber)) {
-                        return null;
-                    }
-                }
                 aggregatedValues[valueIndex] = aggregatedNumber;
             } else {
                 aggregatedValues[valueIndex] = attributeValue;
             }
         }
-        return new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
+        DefaultRecord aggregatedRecord = new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
+        if (!isRecordAccepted(aggregatedRecord)) {
+            return null;
+        }
+        return aggregatedRecord;
     }
 
     protected AggregatedNumber aggregate(int[] array, int[] maskValues) {
@@ -172,6 +174,15 @@ public class RecordTransformer {
             throw new IllegalArgumentException("Record with zero-length arrays.");
         }
         return commonLength;
+    }
+
+    private boolean isRecordAccepted(Record record) {
+        for (RecordFilter filter : recordFilters) {
+            if (!filter.accept(record)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
