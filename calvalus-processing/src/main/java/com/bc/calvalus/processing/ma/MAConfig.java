@@ -81,6 +81,14 @@ public class MAConfig implements XmlConvertible {
     @Parameter
     private String goodRecordExpression;
 
+    /**
+     * If set to {@code true}, reference records that lie within the products boundaries are first sorted by their
+     * pixel's Y coordinate, then by X. This setting may improve reading performance during pixel extraction.
+     * The default value is {@code false}.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean sortInputByPixelYX;
+
     // Replaced by goodRecordExpression (nf, 2011-08-24)
     /**
      * Threshold for the <i>NGP/NTP criterion</i>.
@@ -133,8 +141,8 @@ public class MAConfig implements XmlConvertible {
     }
 
     public RecordSource createRecordSource() throws Exception {
-        RecordSourceSpi service = RecordSourceSpi.get(recordSourceSpiClassName);
-        return service != null ? service.createRecordSource(recordSourceUrl) : null;
+        RecordSourceSpi service = RecordSourceSpi.get(getRecordSourceSpiClassName());
+        return service != null ? service.createRecordSource(getRecordSourceUrl()) : null;
     }
 
     public String getRecordSourceSpiClassName() {
@@ -177,7 +185,7 @@ public class MAConfig implements XmlConvertible {
         this.macroPixelSize = macroPixelSize;
     }
 
-    public boolean isAggregateMacroPixel() {
+    public boolean getAggregateMacroPixel() {
         return aggregateMacroPixel;
     }
 
@@ -215,5 +223,13 @@ public class MAConfig implements XmlConvertible {
 
     public void setGoodRecordExpression(String goodRecordExpression) {
         this.goodRecordExpression = goodRecordExpression;
+    }
+
+    public boolean getSortInputByPixelYX() {
+        return sortInputByPixelYX;
+    }
+
+    public void setSortInputByPixelYX(boolean sortInputByPixelYX) {
+        this.sortInputByPixelYX = sortInputByPixelYX;
     }
 }

@@ -82,25 +82,31 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
 
         t0 = now();
-        Extractor extractor = new Extractor(product, maConfig);
-        Iterable<Record> extractedRecords = getExtractedRecords(extractor, maConfig);
-        context.progress();
+        ProductRecordSource productRecordSource;
+        Iterable<Record> extractedRecords;
+        try {
+            RecordSource referenceRecordSource = maConfig.createRecordSource();
+            productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
+            extractedRecords = productRecordSource.getRecords();
+            context.progress();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+
         long recordReadTime = (now() - t0);
         LOG.info(String.format("%s read input records from %s, took %s sec",
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
-        RecordTransformer recordTransformer = extractor.createTransformer();
-
+        RecordTransformer recordTransformer = ProductRecordSource.createTransformer(productRecordSource.getHeader(), maConfig);
         DateFormat outputTimeFormat = ProductData.UTC.createDateFormat(maConfig.getOutputTimeFormat());
-
 
         t0 = now();
         int numMatchUps = 0;
         int numEmittedRecords = 0;
-        for (Record extractedRecord : extractedRecords) {
+        for (Record extractedRecord :extractedRecords) {
 
             // write records
-            if (maConfig.isAggregateMacroPixel()) {
+            if (maConfig.getAggregateMacroPixel()) {
                 Record aggregatedRecord = recordTransformer.aggregate(extractedRecord);
                 context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
                               new RecordWritable(aggregatedRecord.getAttributeValues(), outputTimeFormat));
@@ -123,7 +129,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         if (numMatchUps > 0) {
             // write header
             context.write(new Text("#"),
-                          new RecordWritable(extractor.getHeader().getAttributeNames()));
+                          new RecordWritable(productRecordSource.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of records").increment(numEmittedRecords);
@@ -157,18 +163,5 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static long now() {
         return System.currentTimeMillis();
-    }
-
-    private static Iterable<Record> getExtractedRecords(Extractor extractor, MAConfig maConfig) {
-        Iterable<Record> extractedRecords;
-        try {
-            final RecordSource recordSource = maConfig.createRecordSource();
-            extractor.setInput(recordSource);
-            extractor.setSortInputByPixelYX(true);
-            extractedRecords = extractor.getRecords();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to retrieve input records.", e);
-        }
-        return extractedRecords;
     }
 }

@@ -15,14 +15,14 @@ public class RecordTransformerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksZeroLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
                                                                  "x",
                                                                  new float[0]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksVaryingLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
                                                                  "x",
                                                                  new float[3],
                                                                  new int[2]));
@@ -30,14 +30,14 @@ public class RecordTransformerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksSupportedArrayTypes() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
                                                                  "x",
                                                                  new Date[3]));
     }
 
     @Test
     public void testExpand() throws Exception {
-        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).expand(ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                                                                                  "africa",
                                                                                                  new float[]{1.1F, 1.2F, 1.4F, 1.8F},
                                                                                                  new int[]{64, 32, 16, 8}));
@@ -65,7 +65,7 @@ public class RecordTransformerTest {
 
     @Test
     public void testExpandWithMask() throws Exception {
-        List<Record> flattenedRecords = new RecordTransformer(6, 1.5).expand(ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+        List<Record> flattenedRecords = new RecordTransformer(6, 1.5).expand(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                                                                                 "africa",
                                                                                                 new float[]{1.1F, 1.2F, 1.4F, 1.8F},
                                                                                                 new int[]{64, 32, 16, 8},
@@ -94,14 +94,14 @@ public class RecordTransformerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksZeroLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).aggregate(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).aggregate(ProductRecordSourceTest.newRecord(null, null,
                                                                     "x",
                                                                     new float[0]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksVaryingLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).aggregate(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).aggregate(ProductRecordSourceTest.newRecord(null, null,
                                                                     "x",
                                                                     new float[3],
                                                                     new int[2]));
@@ -109,7 +109,7 @@ public class RecordTransformerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksSupportedArrayTypes() throws Exception {
-        new RecordTransformer(-1, 1.5).aggregate(ExtractorTest.newRecord(null, null,
+        new RecordTransformer(-1, 1.5).aggregate(ProductRecordSourceTest.newRecord(null, null,
                                                                     "x",
                                                                     new Date[3]));
     }
@@ -118,7 +118,7 @@ public class RecordTransformerTest {
     public void testAggregate() throws Exception {
         int maskAttributeIndex = -1;
         Record aggregatedRecord = new RecordTransformer(maskAttributeIndex, 1.5).aggregate(
-                ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                         "africa",
                                         new float[]{0.2F, 1.2F, 1.2F, 1.4F, 1.8F},
                                         new int[]{13, 10, 11, 32, 14},
@@ -173,7 +173,7 @@ public class RecordTransformerTest {
     public void testAggregateWithMask() throws Exception {
         int maskAttributeIndex = 6;
         Record aggregatedRecord = new RecordTransformer(maskAttributeIndex, 1.5).aggregate(
-                ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                         "africa",
                                         new float[]{1.1F, 1.2F, Float.NaN, 1.8F},
                                         new int[]{64, 32, 16, 8},
@@ -217,13 +217,13 @@ public class RecordTransformerTest {
             }
         };
         Record goodRecord = new RecordTransformer(maskAttributeIndex, 1.5, filter).aggregate(
-                ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                         "africa",
                                         new float[]{0.5F, 0.5F, 0.5F})); // mean = 0.5
         assertNotNull(goodRecord);
 
         Record badRecord = new RecordTransformer(maskAttributeIndex, 1.5, filter).aggregate(
-                ExtractorTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
                                         "africa",
                                         new float[]{2.0F, 2.0F, 2.0F})); // mean = 2.0
         assertNull(badRecord);
