@@ -1,10 +1,8 @@
 package com.bc.calvalus.processing.ma.expr;
 
 import com.bc.calvalus.processing.ma.Header;
-import com.bc.jexp.Function;
-import com.bc.jexp.Namespace;
-import com.bc.jexp.Symbol;
-import com.bc.jexp.Term;
+import com.bc.jexp.*;
+import com.bc.jexp.impl.AbstractFunction;
 import com.bc.jexp.impl.DefaultNamespace;
 
 import java.util.Arrays;
@@ -25,6 +23,17 @@ public class HeaderNamespace implements Namespace {
         this.header = header;
         this.namespace = new DefaultNamespace();
         this.headerNames = new HashSet<String>(Arrays.asList(header.getAttributeNames()));
+
+        namespace.registerFunction(new AbstractFunction.D("median", -1) {
+            @Override
+            public double evalD(EvalEnv env, Term[] args) throws EvalException {
+                double[] values = new double[args.length];
+                for (int i = 0; i < values.length; i++) {
+                     values[i] = args[i].evalD(env);
+                }
+                return values[args.length / 2];
+            }
+        });
     }
 
     @Override

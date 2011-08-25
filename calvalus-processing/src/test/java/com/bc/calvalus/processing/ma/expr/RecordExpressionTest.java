@@ -7,12 +7,34 @@ import com.bc.jexp.Term;
 import com.bc.jexp.impl.ParserImpl;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Norman Fomferra
  */
 public class RecordExpressionTest {
+
+    @Test
+    public void testMedian() throws Exception {
+        DefaultHeader header = new DefaultHeader("rho_1", "rho_2", "rho_3", "rho_4", "rho_5");
+        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
+        HeaderNamespace namespace = new HeaderNamespace(header);
+
+        DefaultRecord record = new DefaultRecord(new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.6, 0.1, 16),
+                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.7, 0.2, 16),
+                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.5, 0.1, 16),
+                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.6, 0.2, 16),
+                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.8, 0.3, 16));
+
+        ParserImpl parser = new ParserImpl(namespace);
+
+        Term term = parser.parse("median(rho_1.cv, rho_2.cv, rho_3.cv, rho_4.cv, rho_5.cv)");
+
+        recordEvalEnv.setContext(record);
+        assertEquals(0.04, term.evalD(recordEvalEnv), 1e-6);
+    }
+
+
     @Test
     public void testRecordsWithArrays() throws Exception {
         DefaultHeader header = new DefaultHeader("chl");
