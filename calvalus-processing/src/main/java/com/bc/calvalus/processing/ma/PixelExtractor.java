@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Date;
 
 /**
- * Generates output records from a {@link Product} using an input reference record.
+ * Generates an output record from a {@link Product} using an input reference record.
  *
  * @author MarcoZ
  * @author Norman
