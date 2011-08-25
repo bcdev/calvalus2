@@ -85,24 +85,24 @@ public class RecordTransformer {
         return aggregatedRecord;
     }
 
-    protected AggregatedNumber aggregate(int[] array, int[] maskValues) {
-        float[] floats = new float[array.length];
+    protected AggregatedNumber aggregate(int[] values, int[] maskValues) {
+        float[] floats = new float[values.length];
         for (int i = 0; i < floats.length; i++) {
-            floats[i] = array[i];
+            floats[i] = values[i];
         }
         return aggregate(floats, maskValues);
     }
 
-    protected AggregatedNumber aggregate(float[] array, int[] maskValues) {
+    protected AggregatedNumber aggregate(float[] values, int[] maskValues) {
 
-        // Step 1: Compute mean
+        // Step 1: Compute min, max, mean
         double sum = 0;
         double min = +Float.MAX_VALUE;
         double max = -Float.MAX_VALUE;
         int numGoodPixels = 0;
         int numTotalPixels = 0;
-        for (int i = 0; i < array.length; i++) {
-            final float value = array[i];
+        for (int i = 0; i < values.length; i++) {
+            final float value = values[i];
             if (!Float.isNaN(value)) {
                 numTotalPixels++;
                 if (isGoodPixel(maskValues, i)) {
@@ -117,8 +117,8 @@ public class RecordTransformer {
 
         // Step 2: Compute stdDev
         double sumSqrDev = 0;
-        for (int i = 0; i < array.length; i++) {
-            final float value = array[i];
+        for (int i = 0; i < values.length; i++) {
+            final float value = values[i];
             if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
                 sumSqrDev += (mean - value) * (mean - value);
             }
@@ -131,8 +131,8 @@ public class RecordTransformer {
             int numFilteredPixels = 0;
             final double lowerDistrLimit = mean - filteredMeanCoeff * stdDev;
             final double upperDistrLimit = mean + filteredMeanCoeff * stdDev;
-            for (int i = 0; i < array.length; i++) {
-                final float value = array[i];
+            for (int i = 0; i < values.length; i++) {
+                final float value = values[i];
                 if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
                     if (value > lowerDistrLimit && value < upperDistrLimit) {
                         numFilteredPixels++;
@@ -144,8 +144,8 @@ public class RecordTransformer {
 
             // Step 4: Compute filteredStdDev
             double filteredSumSqrDev = 0;
-            for (int i = 0; i < array.length; i++) {
-                final float value = array[i];
+            for (int i = 0; i < values.length; i++) {
+                final float value = values[i];
                 if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
                     if (value > lowerDistrLimit && value < upperDistrLimit) {
                         filteredSumSqrDev += (filteredMean - value) * (filteredMean - value);
