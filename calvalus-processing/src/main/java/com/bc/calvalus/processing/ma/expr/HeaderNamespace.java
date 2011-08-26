@@ -27,12 +27,23 @@ public class HeaderNamespace implements Namespace {
         namespace.registerFunction(new AbstractFunction.D("median", -1) {
             @Override
             public double evalD(EvalEnv env, Term[] args) throws EvalException {
-                double[] values = new double[args.length];
-                for (int i = 0; i < values.length; i++) {
-                     values[i] = args[i].evalD(env);
+                final int n = args.length;
+                if (n == 0) {
+                    return 0.0;
+                } else if (n == 1) {
+                    return args[0].evalD(env);
+                } else {
+                    final double[] values = new double[n];
+                    for (int i = 0; i < values.length; i++) {
+                        values[i] = args[i].evalD(env);
+                    }
+                    Arrays.sort(values);
+                    if (values.length % 2 == 1) {
+                        return values[n / 2];
+                    } else {
+                        return 0.5 * (values[n / 2 - 1] + values[n / 2]);
+                    }
                 }
-                Arrays.sort(values);
-                return values[args.length / 2];
             }
         });
     }

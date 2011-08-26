@@ -29,6 +29,19 @@ public class RecordExpressionTest {
         ParserImpl parser = new ParserImpl(namespace);
 
         recordEvalEnv.setContext(record);
+
+        // 0 arguments
+        assertEquals(0.0, parser.parse("median()").evalD(recordEvalEnv), 1e-6);
+
+        // 1 argument
+        assertEquals(0.1 / 2.6, parser.parse("rho_1.cv").evalD(recordEvalEnv), 1e-6);
+        assertEquals(0.1 / 2.6, parser.parse("median(rho_1.cv)").evalD(recordEvalEnv), 1e-6);
+
+        // 4 (even) arguments
+        assertEquals(0.5 * (0.2 / 2.6 + 0.3 / 2.6), parser.parse("0.5 * (rho_4.cv + rho_5.cv)").evalD(recordEvalEnv), 1e-6);
+        assertEquals(0.5 * (0.2 / 2.6 + 0.3 / 2.6), parser.parse("median(rho_1.cv, rho_3.cv, rho_4.cv, rho_5.cv)").evalD(recordEvalEnv), 1e-6);
+
+        // 5 (odd) arguments
         assertEquals(0.3 / 2.6, parser.parse("rho_5.cv").evalD(recordEvalEnv), 1e-6);
         assertEquals(0.3 / 2.6, parser.parse("median(rho_1.cv, rho_2.cv, rho_3.cv, rho_4.cv, rho_5.cv)").evalD(recordEvalEnv), 1e-6);
     }
