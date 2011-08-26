@@ -89,22 +89,6 @@ public class MAConfig implements XmlConvertible {
     @Parameter(defaultValue = "false")
     private boolean sortInputByPixelYX;
 
-    // Replaced by goodRecordExpression (nf, 2011-08-24)
-    /**
-     * Threshold for the <i>NGP/NTP criterion</i>.
-     * If {@code minNgpToNtpRatio = 0.0}, the criterion will not be used.
-     */
-    //@Parameter
-    //double minNgpToNtpRatio;
-
-    // Replaced by goodRecordExpression (nf, 2011-08-24)
-    /**
-     * Band name for <i>filtered mean criterion</i>.
-     * If not given, the criterion will not be used.
-     */
-    //@Parameter
-    //String filteredMeanBandName;
-
     /**
      * The time format used in the output.
      * Default is {@code "dd-MMM-yyyy HH:mm:ss"} (as used by Envisat).
@@ -127,6 +111,31 @@ public class MAConfig implements XmlConvertible {
     @Parameter
     private String recordSourceUrl;
 
+    // The following have been discussed but not yet decided.
+
+    /**
+     * The name of the column that holds the latitudes.
+     * General parameter for many types of record sources.
+     * May not be given.
+     */
+    // @Parameter (defaultValue = "lat")
+    // private String recordSourceColumnNameLat;
+
+    /**
+     * The name of the column that holds the longitudes.
+     * General parameter for many types of record sources.
+     * May not be given.
+     */
+    // @Parameter (defaultValue = "lon")
+    // private String recordSourceColumnNameLon;
+
+    /**
+     * The name of the column that holds the time.
+     * General parameter for many types of record sources.
+     * May not be given.
+     */
+    // @Parameter (defaultValue = "time")
+    // private String recordSourceColumnNameTime;
 
     public MAConfig() {
     }

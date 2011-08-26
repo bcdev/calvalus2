@@ -79,9 +79,9 @@ public class ProductRecordSource implements RecordSource {
             @Override
             public Iterator<Record> iterator() {
                 if (sortInput) {
-                    return new PixelPosRecordIterator(getInputRecordsSortedByPixelYX(records, pixelExtractor).iterator());
+                    return new PixelPosRecordGenerator(getInputRecordsSortedByPixelYX(records, pixelExtractor).iterator());
                 } else {
-                    return new RecordIterator(records.iterator());
+                    return new RecordGenerator(records.iterator());
                 }
             }
         };
@@ -176,39 +176,15 @@ public class ProductRecordSource implements RecordSource {
         return Arrays.asList(records);
     }
 
-    private abstract class OutputRecordGenerator<T> implements Iterator<Record> {
+    private abstract class OutputRecordGenerator<T> extends RecordIterator {
         private final Iterator<T> inputIterator;
-        private Record next;
-        private boolean nextValid;
 
         public OutputRecordGenerator(Iterator<T> inputIterator) {
             this.inputIterator = inputIterator;
         }
 
         @Override
-        public boolean hasNext() {
-            ensureValidNext();
-            return next != null;
-        }
-
-        @Override
-        public Record next() {
-            ensureValidNext();
-            if (next == null) {
-                throw new NoSuchElementException();
-            }
-            nextValid = false;
-            return next;
-        }
-
-        private void ensureValidNext() {
-            if (!nextValid) {
-                next = getNextNonNullRecord();
-                nextValid = true;
-            }
-        }
-
-        private Record getNextNonNullRecord() {
+        public Record getNextRecord() {
             while (inputIterator.hasNext()) {
                 T input = inputIterator.next();
                 try {
@@ -224,16 +200,11 @@ public class ProductRecordSource implements RecordSource {
         }
 
         protected abstract Record getRecord(T input) throws IOException;
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 
-    private class RecordIterator extends OutputRecordGenerator<Record> {
+    private class RecordGenerator extends OutputRecordGenerator<Record> {
 
-        public RecordIterator(Iterator<Record> inputIterator) {
+        public RecordGenerator(Iterator<Record> inputIterator) {
             super(inputIterator);
         }
 
@@ -243,9 +214,9 @@ public class ProductRecordSource implements RecordSource {
         }
     }
 
-    private class PixelPosRecordIterator extends OutputRecordGenerator<PixelPosRecord> {
+    private class PixelPosRecordGenerator extends OutputRecordGenerator<PixelPosRecord> {
 
-        public PixelPosRecordIterator(Iterator<PixelPosRecord> inputIterator) {
+        public PixelPosRecordGenerator(Iterator<PixelPosRecord> inputIterator) {
             super(inputIterator);
         }
 
