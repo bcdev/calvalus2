@@ -31,6 +31,7 @@ public class HeaderNamespace implements Namespace {
                 for (int i = 0; i < values.length; i++) {
                      values[i] = args[i].evalD(env);
                 }
+                Arrays.sort(values);
                 return values[args.length / 2];
             }
         });

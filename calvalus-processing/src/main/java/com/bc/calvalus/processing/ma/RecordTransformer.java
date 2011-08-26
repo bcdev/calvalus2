@@ -96,11 +96,14 @@ public class RecordTransformer {
     protected AggregatedNumber aggregate(float[] values, int[] maskValues) {
 
         // Step 1: Compute min, max, mean
+
         double sum = 0;
         double min = +Float.MAX_VALUE;
         double max = -Float.MAX_VALUE;
+
         int numGoodPixels = 0;
         int numTotalPixels = 0;
+
         for (int i = 0; i < values.length; i++) {
             final float value = values[i];
             if (!Float.isNaN(value)) {
@@ -125,56 +128,53 @@ public class RecordTransformer {
         }
         final double stdDev = numGoodPixels > 1 ? Math.sqrt(sumSqrDev / (numGoodPixels - 1)) : 0.0;
 
-        if (filteredMeanCoeff > 0) {
-            // Step 2: Compute filteredMean
-            double filteredSum = 0;
-            int numFilteredPixels = 0;
-            final double lowerDistrLimit = mean - filteredMeanCoeff * stdDev;
-            final double upperDistrLimit = mean + filteredMeanCoeff * stdDev;
-            for (int i = 0; i < values.length; i++) {
-                final float value = values[i];
-                if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
-                    if (value > lowerDistrLimit && value < upperDistrLimit) {
-                        numFilteredPixels++;
-                        filteredSum += value;
-                    }
-                }
-            }
-            final double filteredMean = numFilteredPixels > 0 ? filteredSum / numFilteredPixels : Float.NaN;
-
-            // Step 4: Compute filteredStdDev
-            double filteredSumSqrDev = 0;
-            for (int i = 0; i < values.length; i++) {
-                final float value = values[i];
-                if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
-                    if (value > lowerDistrLimit && value < upperDistrLimit) {
-                        filteredSumSqrDev += (filteredMean - value) * (filteredMean - value);
-                    }
-                }
-            }
-            final double filteredStdDev = numFilteredPixels > 1 ? Math.sqrt(filteredSumSqrDev / (numFilteredPixels - 1)) : 0.0;
-
-            // Done!
-            return new AggregatedNumber(numTotalPixels,
-                                        min,
-                                        max,
-                                        mean,
-                                        stdDev,
-                                        numGoodPixels,
-                                        filteredMean,
-                                        filteredStdDev,
-                                        numFilteredPixels);
-        } else {
-            return new AggregatedNumber(numTotalPixels,
-                                        min,
-                                        max,
-                                        mean,
-                                        stdDev,
-                                        numGoodPixels,
-                                        mean,  // = filteredMean
-                                        stdDev,  //  = filteredStdDev
-                                        numGoodPixels);  // = numFilteredPixels
+        // If we don't want to filter or we can't, then we are done.
+        if (filteredMeanCoeff <= 0.0 || Math.abs(stdDev) < 1E-10) {
+            return new AggregatedNumber(numGoodPixels, numTotalPixels, 0, min, max, mean, stdDev);
         }
+
+        // Step 3: Compute filteredMean
+
+        final double lowerBound = mean - filteredMeanCoeff * stdDev;
+        final double upperBound = mean + filteredMeanCoeff * stdDev;
+
+        numGoodPixels = 0;
+        int numFilteredPixels = 0;
+
+        double filteredSum = 0;
+        double filteredMin = +Float.MAX_VALUE;
+        double filteredMax = -Float.MAX_VALUE;
+
+        for (int i = 0; i < values.length; i++) {
+            final float value = values[i];
+            if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
+                if (value >= lowerBound && value <= upperBound) {
+                    filteredSum += value;
+                    filteredMin = Math.min(filteredMin, value);
+                    filteredMax = Math.max(filteredMax, value);
+                    numGoodPixels++;
+                } else {
+                    numFilteredPixels++;
+                }
+            }
+        }
+        final double filteredMean = numGoodPixels > 0 ? filteredSum / numGoodPixels : Float.NaN;
+
+        // Step 4: Compute filteredStdDev
+        double filteredSumSqrDev = 0;
+        for (int i = 0; i < values.length; i++) {
+            final float value = values[i];
+            if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
+                if (value > lowerBound && value < upperBound) {
+                    filteredSumSqrDev += (filteredMean - value) * (filteredMean - value);
+                }
+            }
+        }
+        final double filteredStdDev = numGoodPixels > 1 ? Math.sqrt(filteredSumSqrDev / (numGoodPixels - 1)) : 0.0;
+
+        // Done!
+        return new AggregatedNumber(numGoodPixels, numTotalPixels, numFilteredPixels,
+                                    filteredMin, filteredMax, filteredMean, filteredStdDev);
     }
 
     private static boolean isGoodPixel(int[] maskValues, int i) {

@@ -13,8 +13,8 @@ public class ExpressionRecordFilterTest {
         Header header = new DefaultHeader("chl");
         RecordFilter filter = ExpressionRecordFilter.create(header, "chl.mean > 2.0");
 
-        assertEquals(true, filter.accept(new DefaultRecord(new AggregatedNumber(25, 0.0, 3.0, 2.6, 0.4, 24, 2.4, 0.2, 16))));
-        assertEquals(false, filter.accept(new DefaultRecord(new AggregatedNumber(25, 0.0, 3.0, 1.7, 0.3, 16, 2.5, 0.1, 12))));
+        assertEquals(true, filter.accept(new DefaultRecord(new AggregatedNumber(24, 25, 16, 0.0, 3.0, 2.6, 0.4))));
+        assertEquals(false, filter.accept(new DefaultRecord(new AggregatedNumber(16, 25, 12, 0.0, 3.0, 1.7, 0.3))));
     }
 
     @Test

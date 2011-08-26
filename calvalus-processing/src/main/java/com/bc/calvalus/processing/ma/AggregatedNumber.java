@@ -26,79 +26,65 @@ package com.bc.calvalus.processing.ma;
 public final class AggregatedNumber extends Number {
 
     /**
-     * The number of total pixels is the number of values that are not NaN.
-     * In the BEAM data model: the pixels whose "validMask" is set.
-     */
-    public final int numTotalPixels;
-
-    /**
-     * The minimum value of all good pixels (see {@link #numGoodPixels}).
-     */
-    public final double min;
-
-    /**
-     * The maximum value of all good pixels (see {@link #numGoodPixels}).
-     */
-    public final double max;
-
-    /**
-     * The mean of the good pixels (see {@link #numGoodPixels}).
-     */
-    public final double mean;
-
-    /**
-     * The standard deviation of the good pixels (see {@link #numGoodPixels}).
-     */
-    public final double stdDev;
-
-    /**
-     * The number of good pixels is the number of values that are
+     * N is the number of "good" values that have been used to compute min, max, mean and stdDev.
      * <ol>
      * <li>not {@code NaN},</li>
      * <li>not masked out by a user-provided valid-mask.</li>
      * </ol>
      */
-    public final int numGoodPixels;
+    public final int n;
 
     /**
-     * The mean of filtered values (see {@link #numFilteredPixels}).
+     * NT is the total number of values that were not NaN.
+     * In the BEAM data model: the pixels whose "validMask" is set.
      */
-    public final double filteredMean;
+    public final int nT;
 
     /**
-     * The mean of filtered values (see {@link #numFilteredPixels}).
+     * NF is the number of values x that have been filtered out since they do not satisfy the condition
+     * ({@link #mean} - a * {@link #stdDev}) < x <  ({@link #mean} + a * {@link #stdDev}), where a is most likely
+     * 1.5.
      */
-    public final double filteredStdDev;
+    public final int nF;
 
     /**
-     * The coefficient of variance is {@link #filteredStdDev} / {@link #filteredMean}
+     * The minimum value of all "good" values (see {@link #n}).
+     */
+    public final double min;
+
+    /**
+     * The maximum value of all "good" values (see {@link #n}).
+     */
+    public final double max;
+
+    /**
+     * The mean of the "good" values (see {@link #n}).
+     */
+    public final double mean;
+
+    /**
+     * The standard deviation of the "good" values (see {@link #n}).
+     */
+    public final double stdDev;
+
+    /**
+     * The coefficient of variance is {@link #stdDev} / {@link #mean}.
      */
     public final double cv;
 
-    /**
-     * The number of filtered values is the number of values x satisfying ({@link #mean} - a * {@link #stdDev}) < x <  ({@link #mean} + a * {@link #stdDev}).
-     */
-    public final int numFilteredPixels;
-
-    public AggregatedNumber(int numTotalPixels,
+    public AggregatedNumber(int n, int nT, int nF,
                             double min,
                             double max,
                             double mean,
-                            double stdDev,
-                            int numGoodPixels,
-                            double filteredMean,
-                            double filteredStdDev,
-                            int numFilteredPixels) {
-        this.numTotalPixels = numTotalPixels;
+                            double stdDev) {
+        this.nT = nT;
         this.min = min;
         this.max = max;
-        this.numGoodPixels = numGoodPixels;
-        this.numFilteredPixels = numFilteredPixels;
+        this.n = n;
+        this.nF = nF;
         this.mean = mean;
         this.stdDev = stdDev;
-        this.filteredMean = filteredMean;
-        this.filteredStdDev = filteredStdDev;
-        this.cv = filteredStdDev / filteredMean;
+        this.cv = stdDev / mean;
     }
 
     @Override

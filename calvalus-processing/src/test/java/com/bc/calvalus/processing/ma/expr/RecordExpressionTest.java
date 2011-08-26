@@ -20,51 +20,62 @@ public class RecordExpressionTest {
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
-        DefaultRecord record = new DefaultRecord(new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.6, 0.1, 16),
-                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.7, 0.2, 16),
-                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.5, 0.1, 16),
-                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.6, 0.2, 16),
-                                                 new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.8, 0.3, 16));
+        DefaultRecord record = new DefaultRecord(new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.1),
+                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.5),
+                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.4),
+                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.2),
+                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.3));
 
         ParserImpl parser = new ParserImpl(namespace);
 
-        Term term = parser.parse("median(rho_1.cv, rho_2.cv, rho_3.cv, rho_4.cv, rho_5.cv)");
-
         recordEvalEnv.setContext(record);
-        assertEquals(0.04, term.evalD(recordEvalEnv), 1e-6);
+        assertEquals(0.3 / 2.6, parser.parse("rho_5.cv").evalD(recordEvalEnv), 1e-6);
+        assertEquals(0.3 / 2.6, parser.parse("median(rho_1.cv, rho_2.cv, rho_3.cv, rho_4.cv, rho_5.cv)").evalD(recordEvalEnv), 1e-6);
     }
 
 
     @Test
-    public void testRecordsWithArrays() throws Exception {
+    public void testRecordsWithAggregatedNumbers() throws Exception {
         DefaultHeader header = new DefaultHeader("chl");
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
-        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(25, 0.1, 4.0, 2.6, 0.4, 24, 2.4, 0.2, 16));
-        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(25, 0.2, 4.1, 1.7, 0.3, 16, 2.5, 0.1, 12));
+        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(24, 25, 4, 0.1, 4.0, 2.6, 0.4));
+        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(16, 25, 3, 0.2, 4.1, 3.7, 0.3));
 
         ParserImpl parser = new ParserImpl(namespace);
 
-        Term t1 = parser.parse("chl.filteredMean - 1.5 * chl.filteredStdDev");
-        Term t2 = parser.parse("feq(chl.mean, 2.6)");
-        Term t3 = parser.parse("chl.cv");
-        Term t4 = parser.parse("chl.cv > 0.15");
-        Term t5 = parser.parse("chl.max - chl.min");
+        Term t1 = parser.parse("chl.n");
+        Term t2 = parser.parse("chl.nT");
+        Term t3 = parser.parse("chl.nF");
+        Term t4 = parser.parse("chl.min");
+        Term t5 = parser.parse("chl.max");
+        Term t6 = parser.parse("chl.mean");
+        Term t7 = parser.parse("chl.stdDev");
+        Term t8 = parser.parse("chl.cv");
+        Term t9 = parser.parse("chl.cv < 0.15 && chl.n > 5");
 
         recordEvalEnv.setContext(record1);
-        assertEquals(2.4 - 1.5 * 0.2, t1.evalD(recordEvalEnv), 1e-6);
-        assertEquals(true, t2.evalB(recordEvalEnv));
-        assertEquals(0.2 / 2.4, t3.evalD(recordEvalEnv), 1e-6);
-        assertEquals(false, t4.evalB(recordEvalEnv));
-        assertEquals(4.0 - 0.1, t5.evalD(recordEvalEnv), 1e-6);
+        assertEquals(24, t1.evalI(recordEvalEnv));
+        assertEquals(25, t2.evalI(recordEvalEnv));
+        assertEquals(4, t3.evalI(recordEvalEnv));
+        assertEquals(0.1, t4.evalD(recordEvalEnv), 1e-10);
+        assertEquals(4.0, t5.evalD(recordEvalEnv), 1e-10);
+        assertEquals(2.6, t6.evalD(recordEvalEnv), 1e-10);
+        assertEquals(0.4, t7.evalD(recordEvalEnv), 1e-10);
+        assertEquals(0.4 / 2.6, t8.evalD(recordEvalEnv), 1e-10);
+        assertEquals(false, t9.evalB(recordEvalEnv));
 
         recordEvalEnv.setContext(record2);
-        assertEquals(2.5 - 1.5 * 0.1, t1.evalD(recordEvalEnv), 1e-6);
-        assertEquals(false, t2.evalB(recordEvalEnv));
-        assertEquals(0.1 / 2.5, t3.evalD(recordEvalEnv), 1e-6);
-        assertEquals(false, t4.evalB(recordEvalEnv));
-        assertEquals(4.1 - 0.2, t5.evalD(recordEvalEnv), 1e-6);
+        assertEquals(16, t1.evalI(recordEvalEnv));
+        assertEquals(25, t2.evalI(recordEvalEnv));
+        assertEquals(3, t3.evalI(recordEvalEnv));
+        assertEquals(0.2, t4.evalD(recordEvalEnv), 1e-10);
+        assertEquals(4.1, t5.evalD(recordEvalEnv), 1e-10);
+        assertEquals(3.7, t6.evalD(recordEvalEnv), 1e-10);
+        assertEquals(0.3, t7.evalD(recordEvalEnv), 1e-10);
+        assertEquals(0.3 / 3.7, t8.evalD(recordEvalEnv), 1e-10);
+        assertEquals(true, t9.evalB(recordEvalEnv));
     }
 
     @Test

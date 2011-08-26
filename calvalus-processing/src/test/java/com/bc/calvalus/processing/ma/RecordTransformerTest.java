@@ -133,36 +133,32 @@ public class RecordTransformerTest {
         Object v5 = aggregatedRecord.getAttributeValues()[4];
         assertEquals(AggregatedNumber.class, v5.getClass());
         AggregatedNumber a5 = (AggregatedNumber) v5;
-        assertEquals(5, a5.numTotalPixels);
-        assertEquals(5, a5.numGoodPixels);
-        assertEquals(4, a5.numFilteredPixels);
-        assertEquals(0.2, a5.min, 1E-6);
+        assertEquals(5, a5.nT);
+        assertEquals(4, a5.n);
+        assertEquals(1, a5.nF);
+        assertEquals(1.2, a5.min, 1E-6);
         assertEquals(1.8, a5.max, 1E-6);
-        assertEquals(1.16, a5.mean, 1E-6);
-        assertEquals(0.589915, a5.stdDev, 1E-6);
-        assertEquals(1.4, a5.filteredMean, 1E-6);
-        assertEquals(0.28284266, a5.filteredStdDev, 1E-6);
+        assertEquals(1.4, a5.mean, 1E-6);
+        assertEquals(0.28284266, a5.stdDev, 1E-6);
         assertEquals(a5.mean, a5.doubleValue(), 1E-6);
 
         Object v6 = aggregatedRecord.getAttributeValues()[5];
         assertEquals(AggregatedNumber.class, v6.getClass());
         AggregatedNumber a6 = (AggregatedNumber) v6;
-        assertEquals(5, a6.numTotalPixels);
-        assertEquals(5, a6.numGoodPixels);
-        assertEquals(4, a6.numFilteredPixels);
+        assertEquals(5, a6.nT);
+        assertEquals(4, a6.n);
+        assertEquals(1, a6.nF);
         assertEquals(10.0, a6.min, 1E-6);
-        assertEquals(32.0, a6.max, 1E-6);
-        assertEquals(16.0, a6.mean, 1E-6);
-        assertEquals(9.082951, a6.stdDev, 1E-6);
-        assertEquals(12.0, a6.filteredMean, 1E-6);
-        assertEquals(1.825742, a6.filteredStdDev, 1E-6);
+        assertEquals(14.0, a6.max, 1E-6);
+        assertEquals(12.0, a6.mean, 1E-6);
+        assertEquals(1.825742, a6.stdDev, 1E-6);
         assertEquals(a6.mean, a6.doubleValue(), 1E-6);
 
         Object v7 = aggregatedRecord.getAttributeValues()[6];
         assertEquals(AggregatedNumber.class, v7.getClass());
         AggregatedNumber a7 = (AggregatedNumber) v7;
-        assertEquals(5, a7.numGoodPixels);
-        assertEquals(5, a7.numTotalPixels);
+        assertEquals(5, a7.n);
+        assertEquals(5, a7.nT);
         assertEquals(0.0, a7.min, 1E-6);
         assertEquals(1.0, a7.max, 1E-6);
         assertEquals(0.6, a7.mean, 1E-6);
@@ -188,23 +184,27 @@ public class RecordTransformerTest {
         Object v5 = aggregatedRecord.getAttributeValues()[4];
         assertEquals(AggregatedNumber.class, v5.getClass());
         AggregatedNumber a5 = (AggregatedNumber) v5;
-        assertEquals(2, a5.numGoodPixels);
-        assertEquals(3, a5.numTotalPixels);
+        assertEquals(2, a5.n);
+        assertEquals(3, a5.nT);
+        assertEquals(0, a5.nF);
         assertEquals((1.1F + 1.2F) / 2, a5.floatValue(), 1E-5F);
 
         Object v6 = aggregatedRecord.getAttributeValues()[5];
         assertEquals(AggregatedNumber.class, v6.getClass());
         AggregatedNumber a6 = (AggregatedNumber) v6;
-        assertEquals(3, a6.numGoodPixels);
-        assertEquals(4, a6.numTotalPixels);
+        assertEquals(3, a6.n);
+        assertEquals(4, a6.nT);
+        assertEquals(0, a6.nF);
         assertEquals((64F + 32F + 16F) / 3, a6.floatValue(), 1E-5F);
 
+        // Test that the mask itself is treated differently: the mask shall not be applied to itself
         Object v7 = aggregatedRecord.getAttributeValues()[6];
         assertEquals(AggregatedNumber.class, v7.getClass());
         AggregatedNumber a7 = (AggregatedNumber) v7;
-        assertEquals(4, a7.numGoodPixels);
-        assertEquals(4, a7.numTotalPixels);
-        assertEquals(3F / 4, a7.floatValue(), 1E-5F);
+        assertEquals(4, a7.n);
+        assertEquals(4, a7.nT);
+        assertEquals(0, a7.nF);
+        assertEquals((1F + 1F + 1F) / 4, a7.floatValue(), 1E-5F);
     }
 
     @Test
