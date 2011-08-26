@@ -6,7 +6,6 @@ import org.esa.beam.util.io.CsvReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -17,7 +16,6 @@ import java.util.Iterator;
  * @author Norman
  */
 public class CsvRecordSource implements RecordSource {
-
 
     private static final String[] LAT_NAMES = new String[]{"lat", "latitude", "northing"};
     private static final String[] LON_NAMES = new String[]{"lon", "long", "longitude", "easting"};
@@ -34,9 +32,9 @@ public class CsvRecordSource implements RecordSource {
         csvReader = new CsvReader(reader, new char[]{'\t'}, true, "#");
         String[] attributeNames = csvReader.readRecord();
 
-        latIndex = indexOf(attributeNames, LAT_NAMES);
-        lonIndex = indexOf(attributeNames, LON_NAMES);
-        timeIndex = indexOf(attributeNames, TIME_NAMES);
+        latIndex = TextUtils.indexOf(attributeNames, LAT_NAMES);
+        lonIndex = TextUtils.indexOf(attributeNames, LON_NAMES);
+        timeIndex = TextUtils.indexOf(attributeNames, TIME_NAMES);
 
         header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, attributeNames);
     }
@@ -56,17 +54,6 @@ public class CsvRecordSource implements RecordSource {
         };
     }
 
-    private static int indexOf(String[] attributeNames, String[] possibleNames) {
-        for (String possibleName : possibleNames) {
-            for (int index = 0; index < attributeNames.length; index++) {
-                if (possibleName.equalsIgnoreCase(attributeNames[index])) {
-                    return index;
-                }
-            }
-        }
-        return -1;
-    }
-
 
     private class CsvRecordIterator extends RecordIterator {
         @Override
@@ -79,19 +66,7 @@ public class CsvRecordSource implements RecordSource {
                 throw new RuntimeException(e);
             }
 
-            final Object[] values = new Object[textValues.length];
-            for (int i = 0; i < textValues.length; i++) {
-                final String text = textValues[i];
-                try {
-                    values[i] = Double.valueOf(text);
-                } catch (NumberFormatException e) {
-                    try {
-                        values[i] = dateFormat.parse(text);
-                    } catch (ParseException e1) {
-                        values[i] = text;
-                    }
-                }
-            }
+            final Object[] values = TextUtils.convert(textValues, dateFormat);
 
             final GeoPos location;
             if (header.hasLocation() && values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
@@ -110,5 +85,6 @@ public class CsvRecordSource implements RecordSource {
 
             return new DefaultRecord(location, time, values);
         }
+
     }
 }

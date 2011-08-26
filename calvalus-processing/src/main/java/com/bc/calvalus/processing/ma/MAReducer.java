@@ -20,7 +20,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Reads the records emitted by the MAMapper.
@@ -34,10 +37,34 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
     @Override
     protected void reduce(Text key, Iterable<RecordWritable> values, Context context) throws IOException, InterruptedException {
+
+        HashMap<String, X> map = new HashMap<String, X>();
+
         Iterator<RecordWritable> iterator = values.iterator();
         if (iterator.hasNext()) {
             RecordWritable record = iterator.next();
             context.write(key, record);
         }
+    }
+
+    public static class X {
+        private final String siteName;
+        private final String variableName;
+
+        private final List<Number> referenceValues;
+        private final List<Number> meanValues;
+        private final List<Number> stdDevValues;
+        private final List<Number> nValues;
+
+        public X(String siteName, String variableName) {
+            this.siteName = siteName;
+            this.variableName = variableName;
+            referenceValues = new ArrayList<Number>(32);
+            meanValues = new ArrayList<Number>(32);
+            stdDevValues = new ArrayList<Number>(32);
+            nValues = new ArrayList<Number>(32);
+        }
+
+
     }
 }

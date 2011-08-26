@@ -42,7 +42,7 @@ public final class AggregatedNumber extends Number {
 
     /**
      * NF is the number of values x that have been filtered out since they do not satisfy the condition
-     * ({@link #mean} - a * {@link #stdDev}) < x <  ({@link #mean} + a * {@link #stdDev}), where a is most likely
+     * ({@link #mean} - a * {@link #sigma}) < x <  ({@link #mean} + a * {@link #sigma}), where a is most likely
      * 1.5.
      */
     public final int nF;
@@ -65,10 +65,10 @@ public final class AggregatedNumber extends Number {
     /**
      * The standard deviation of the "good" values (see {@link #n}).
      */
-    public final double stdDev;
+    public final double sigma;
 
     /**
-     * The coefficient of variance is {@link #stdDev} / {@link #mean}.
+     * The coefficient of variance is {@link #sigma} / {@link #mean}.
      */
     public final double cv;
 
@@ -76,15 +76,15 @@ public final class AggregatedNumber extends Number {
                             double min,
                             double max,
                             double mean,
-                            double stdDev) {
+                            double sigma) {
         this.nT = nT;
         this.min = min;
         this.max = max;
         this.n = n;
         this.nF = nF;
         this.mean = mean;
-        this.stdDev = stdDev;
-        this.cv = stdDev / mean;
+        this.sigma = sigma;
+        this.cv = sigma / mean;
     }
 
     @Override

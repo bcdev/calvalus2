@@ -139,7 +139,7 @@ public class RecordTransformerTest {
         assertEquals(1.2, a5.min, 1E-6);
         assertEquals(1.8, a5.max, 1E-6);
         assertEquals(1.4, a5.mean, 1E-6);
-        assertEquals(0.28284266, a5.stdDev, 1E-6);
+        assertEquals(0.28284266, a5.sigma, 1E-6);
         assertEquals(a5.mean, a5.doubleValue(), 1E-6);
 
         Object v6 = aggregatedRecord.getAttributeValues()[5];
@@ -151,7 +151,7 @@ public class RecordTransformerTest {
         assertEquals(10.0, a6.min, 1E-6);
         assertEquals(14.0, a6.max, 1E-6);
         assertEquals(12.0, a6.mean, 1E-6);
-        assertEquals(1.825742, a6.stdDev, 1E-6);
+        assertEquals(1.825742, a6.sigma, 1E-6);
         assertEquals(a6.mean, a6.doubleValue(), 1E-6);
 
         Object v7 = aggregatedRecord.getAttributeValues()[6];
