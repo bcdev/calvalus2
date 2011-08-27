@@ -1,9 +1,17 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,38 +25,36 @@ import java.util.Date;
  * @author Norman
  */
 public class PixelExtractor {
-    private final Product product;
-    private final PixelTimeProvider pixelTimeProvider;
-    private final boolean copyInput;
-    private final boolean usePixelMask;
-    private final boolean useMaxTimeDifference;
-    private final double maxTimeDifference;
-    private final int macroPixelSize;
+
+    public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
+
     private final Header header;
+    private final Product product;
     private final Mask pixelMask;
+    private final PixelTimeProvider pixelTimeProvider;
+    private final long maxTimeDifference; // Note: time in ms (NOT h)
+    private final int macroPixelSize;
+    private final boolean copyInput;
 
     public PixelExtractor(Header inputHeader,
                           Product product,
                           int macroPixelSize,
-                          boolean usePixelMask,
-                          boolean useMaxTimeDifference,
-                          double maxTimeDifference,
+                          String goodPixelMaskExpression,
+                          Double maxTimeDifference,
                           boolean copyInput) {
         this.product = product;
-        if (usePixelMask) {
-            this.pixelMask = product.getMaskGroup().get(ProductRecordSource.GOOD_PIXEL_MASK_NAME);
-            if (pixelMask == null) {
-                throw new IllegalArgumentException(String.format("Missing mask '%s' in product",
-                                                                 ProductRecordSource.GOOD_PIXEL_MASK_NAME));
-            }
+        if (goodPixelMaskExpression != null && !goodPixelMaskExpression.isEmpty()) {
+            this.pixelMask = createGoodPixelMask(product, goodPixelMaskExpression);
         } else {
             this.pixelMask = null;
         }
-        this.usePixelMask = usePixelMask;
         this.macroPixelSize = macroPixelSize;
-        this.useMaxTimeDifference = useMaxTimeDifference;
-        this.maxTimeDifference = maxTimeDifference;
         this.pixelTimeProvider = PixelTimeProvider.create(product);
+        if (maxTimeDifference != null && inputHeader.hasTime()) {
+            this.maxTimeDifference = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
+        } else {
+            this.maxTimeDifference = 0L;
+        }
         this.copyInput = copyInput;
 
         // Important note: createHeader() is dependent on a number of field values,
@@ -88,7 +94,6 @@ public class PixelExtractor {
      * @throws java.io.IOException If an I/O error occurs
      */
     public Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
-
 
         final Rectangle macroPixelRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight()).intersection(
                 new Rectangle((int) pixelPos.x - macroPixelSize / 2,
@@ -200,7 +205,7 @@ public class PixelExtractor {
 
     private PixelPos getTemporallyAndSpatiallyValidPixelPos(Record referenceRecord) {
 
-        if (useMaxTimeDifference) {
+        if (testTime()) {
 
             long minReferenceTime = getMinReferenceTime(referenceRecord);
             if (minReferenceTime > product.getEndTime().getAsDate().getTime()) {
@@ -228,6 +233,10 @@ public class PixelExtractor {
         return null;
     }
 
+    private boolean testTime() {
+        return maxTimeDifference != 0 && pixelTimeProvider != null;
+    }
+
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
         GeoPos location = referenceRecord.getLocation();
         if (location == null) {
@@ -241,15 +250,11 @@ public class PixelExtractor {
     }
 
     private long getMinReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() - getMaxTimeDifferenceInMillis();
+        return referenceRecord.getTime().getTime() - maxTimeDifference;
     }
 
     private long getMaxReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() + getMaxTimeDifferenceInMillis();
-    }
-
-    private long getMaxTimeDifferenceInMillis() {
-        return Math.round(maxTimeDifference * 60 * 60 * 1000);
+        return referenceRecord.getTime().getTime() + maxTimeDifference;
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
@@ -276,7 +281,7 @@ public class PixelExtractor {
         attributeNames.add(ProductRecordSource.PIXEL_LAT_ATT_NAME);
         attributeNames.add(ProductRecordSource.PIXEL_LON_ATT_NAME);
         attributeNames.add(ProductRecordSource.PIXEL_TIME_ATT_NAME);
-        if (usePixelMask) {
+        if (pixelMask != null) {
             attributeNames.add(ProductRecordSource.PIXEL_MASK_ATT_NAME);
         }
 
@@ -295,7 +300,7 @@ public class PixelExtractor {
                 String[] flagNames = flagCoding.getFlagNames();
                 for (String flagName : flagNames) {
                     attributeNames.add(band.getName() + "." + flagName);
-                    // todo - move this side-effect into a separate method
+                    // Note: side-effect here, adding new band to product
                     product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
                 }
             }
@@ -308,6 +313,31 @@ public class PixelExtractor {
                                  pixelTimeProvider != null,
                                  attributeNames.toArray(new String[attributeNames.size()]));
     }
+
+    private static Mask createGoodPixelMask(Product product, String goodPixelExpression) {
+        Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
+        if (mask != null) {
+            product.getMaskGroup().remove(mask);
+            mask.dispose();
+        }
+
+        int width = product.getSceneRasterWidth();
+        int height = product.getSceneRasterHeight();
+
+        mask = Mask.BandMathsType.create(GOOD_PIXEL_MASK_NAME,
+                                         null,
+                                         width,
+                                         height,
+                                         goodPixelExpression,
+                                         Color.RED,
+                                         0.5);
+
+        // Note: side-effect here, adding new mask to product
+        product.getMaskGroup().add(mask);
+
+        return mask;
+    }
+
 
     private static class PixelTimeProvider {
 

@@ -2,11 +2,9 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
 import com.bc.jexp.ParseException;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +29,6 @@ public class ProductRecordSource implements RecordSource {
     public static final String PIXEL_TIME_ATT_NAME = "pixel_time";
     public static final String PIXEL_MASK_ATT_NAME = "pixel_mask";
 
-    public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
-
-    private final Product product;
     private final RecordSource input;
     private final boolean sortInput;
     private final boolean empty;
@@ -48,21 +43,15 @@ public class ProductRecordSource implements RecordSource {
             throw new IllegalArgumentException("Input records don't have locations.");
         }
 
-        this.product = product;
         this.input = input;
         this.sortInput = config.getSortInputByPixelYX();
         this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(input);
 
-        if (shallApplyGoodPixelExpression(config)) {
-            addGoodPixelMaskToProduct(config.getGoodPixelExpression());
-        }
-
         pixelExtractor = new PixelExtractor(input.getHeader(),
                                             product,
                                             config.getMacroPixelSize(),
-                                            shallApplyGoodPixelExpression(config),
-                                            canApplyTimeCriterion(input) && shallApplyTimeCriterion(config),
-                                            config.getMaxTimeDifference() != null ? config.getMaxTimeDifference() : 0.0,
+                                            config.getGoodPixelExpression(),
+                                            config.getMaxTimeDifference(),
                                             config.getCopyInput());
     }
 
@@ -112,30 +101,6 @@ public class ProductRecordSource implements RecordSource {
             return new RecordTransformer(pixelMaskAttributeIndex,
                                          config.getFilteredMeanCoeff());
         }
-    }
-
-    private void addGoodPixelMaskToProduct(String goodPixelExpression) {
-        Mask mask = product.getMaskGroup().get(GOOD_PIXEL_MASK_NAME);
-        if (mask != null) {
-            product.getMaskGroup().remove(mask);
-            mask.dispose();
-        }
-
-        int width = product.getSceneRasterWidth();
-        int height = product.getSceneRasterHeight();
-
-        Mask goodPixelMask = Mask.BandMathsType.create(GOOD_PIXEL_MASK_NAME,
-                                                       null,
-                                                       width,
-                                                       height,
-                                                       goodPixelExpression,
-                                                       Color.RED,
-                                                       0.5);
-        product.getMaskGroup().add(goodPixelMask);
-    }
-
-    private static boolean shallApplyGoodPixelExpression(MAConfig config) {
-        return config.getGoodPixelExpression() != null && !config.getGoodPixelExpression().isEmpty();
     }
 
     private static boolean shallApplyGoodRecordExpression(MAConfig config) {
