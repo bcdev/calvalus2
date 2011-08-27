@@ -6,9 +6,13 @@ import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 
 /**
  * A special record source that generates its output records from a {@link Product} and an input record source.
@@ -53,9 +57,13 @@ public class ProductRecordSource implements RecordSource {
             addGoodPixelMaskToProduct(config.getGoodPixelExpression());
         }
 
-        pixelExtractor = new PixelExtractor(input.getHeader(), product,
-                                                            config.getMacroPixelSize(), shallApplyGoodPixelExpression(config), canApplyTimeCriterion(input) && shallApplyTimeCriterion(config), config.getMaxTimeDifference() != null ? config.getMaxTimeDifference() : 0.0, config.getCopyInput()
-        );
+        pixelExtractor = new PixelExtractor(input.getHeader(),
+                                            product,
+                                            config.getMacroPixelSize(),
+                                            shallApplyGoodPixelExpression(config),
+                                            canApplyTimeCriterion(input) && shallApplyTimeCriterion(config),
+                                            config.getMaxTimeDifference() != null ? config.getMaxTimeDifference() : 0.0,
+                                            config.getCopyInput());
     }
 
     @Override
@@ -151,29 +159,29 @@ public class ProductRecordSource implements RecordSource {
             }
         }
         PixelPosRecord[] records = pixelPosList.toArray(new PixelPosRecord[pixelPosList.size()]);
-        Arrays.sort(records, new Comparator<PixelPosRecord>() {
-            @Override
-            public int compare(PixelPosRecord o1, PixelPosRecord o2) {
-                float y1 = o1.pixelPos.y;
-                float y2 = o2.pixelPos.y;
-                if (y1 < y2) {
-                    return -2;
-                }
-                if (y1 > y2) {
-                    return 2;
-                }
-                float x1 = o1.pixelPos.x;
-                float x2 = o2.pixelPos.x;
-                if (x1 < x2) {
-                    return -1;
-                }
-                if (x1 > x2) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
+        Arrays.sort(records, new YXComparator());
         return Arrays.asList(records);
+    }
+
+    private static class YXComparator implements Comparator<PixelPosRecord> {
+        @Override
+        public int compare(PixelPosRecord o1, PixelPosRecord o2) {
+            float y1 = o1.pixelPos.y;
+            float y2 = o2.pixelPos.y;
+            if (y1 < y2) {
+                return -2;
+            } else if (y1 > y2) {
+                return 2;
+            }
+            float x1 = o1.pixelPos.x;
+            float x2 = o2.pixelPos.x;
+            if (x1 < x2) {
+                return -1;
+            } else if (x1 > x2) {
+                return 1;
+            }
+            return 0;
+        }
     }
 
     private abstract class OutputRecordGenerator<T> extends RecordIterator {
