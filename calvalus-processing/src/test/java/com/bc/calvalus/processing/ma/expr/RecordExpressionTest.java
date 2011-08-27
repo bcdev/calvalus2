@@ -64,7 +64,7 @@ public class RecordExpressionTest {
         Term t4 = parser.parse("chl.min");
         Term t5 = parser.parse("chl.max");
         Term t6 = parser.parse("chl.mean");
-        Term t7 = parser.parse("chl.stdDev");
+        Term t7 = parser.parse("chl.sigma");
         Term t8 = parser.parse("chl.cv");
         Term t9 = parser.parse("chl.cv < 0.15 && chl.n > 5");
 
