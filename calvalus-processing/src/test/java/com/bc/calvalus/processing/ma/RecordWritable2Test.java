@@ -25,11 +25,16 @@ public class RecordWritable2Test {
         assertEquals('\t', recordWritable.getSeparatorChar());
     }
 
-
     @Test
     public void testWriteAndRead() throws Exception {
-        Date date = new Date(1313740506645L);
-        Object[] inputValues = {"A", 76432, -2.14, date, 1, "XYZ"};
+        Object[] inputValues = {
+                "A",
+                76432,
+                -2.14,
+                new Date(1313740506645L),
+                1,
+                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
+        };
 
         RecordWritable2 recordWritable = new RecordWritable2();
         recordWritable.setValues(inputValues);
@@ -50,13 +55,25 @@ public class RecordWritable2Test {
 
     @Test
     public void testToString() throws Exception {
-        Date date = new Date(1313740506645L);
-        Object[] inputValues = {"A", 76432, -2.14, date, 1, "XYZ"};
+        Object[] inputValues = {
+                "A",
+                76432,
+                -2.14,
+                new Date(1313740506645L),
+                1,
+                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
+        };
 
         RecordWritable2 recordWritable = new RecordWritable2();
         recordWritable.setValues(inputValues);
         recordWritable.setDateFormat(DATE_FORMAT);
 
-        assertEquals("A\t76432\t-2.14\t8/19/11\t1\tXYZ", recordWritable.toString());
+        assertEquals("" +
+                             "A\t" +
+                             "76432\t" +
+                             "-2.14\t" +
+                             "8/19/11\t" +
+                             "1\t" +
+                             "0.5\t0.1\t15", recordWritable.toString());
     }
 }

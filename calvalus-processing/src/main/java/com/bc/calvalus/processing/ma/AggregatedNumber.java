@@ -111,4 +111,58 @@ public final class AggregatedNumber extends Number {
     public String toString() {
         return String.valueOf(floatValue());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AggregatedNumber that = (AggregatedNumber) o;
+
+        if (Double.compare(that.max, max) != 0) {
+            return false;
+        }
+        if (Double.compare(that.mean, mean) != 0) {
+            return false;
+        }
+        if (Double.compare(that.min, min) != 0) {
+            return false;
+        }
+        if (n != that.n) {
+            return false;
+        }
+        if (nF != that.nF) {
+            return false;
+        }
+        if (nT != that.nT) {
+            return false;
+        }
+        if (Double.compare(that.sigma, sigma) != 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = n;
+        result = 31 * result + nT;
+        result = 31 * result + nF;
+        temp = min != +0.0d ? Double.doubleToLongBits(min) : 0L;
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = max != +0.0d ? Double.doubleToLongBits(max) : 0L;
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = mean != +0.0d ? Double.doubleToLongBits(mean) : 0L;
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = sigma != +0.0d ? Double.doubleToLongBits(sigma) : 0L;
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
 }
