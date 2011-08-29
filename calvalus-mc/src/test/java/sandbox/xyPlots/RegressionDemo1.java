@@ -7,7 +7,6 @@
 
 package sandbox.xyPlots;
 
-import demos.DemoPanel;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -33,7 +32,7 @@ import java.awt.*;
  */
 public class RegressionDemo1 extends ApplicationFrame {
 
-    static class MyDemoPanel extends DemoPanel {
+    static class MyDemoPanel extends JPanel {
 
         /** Dataset 1. */
         private XYDataset data1;
@@ -64,8 +63,7 @@ public class RegressionDemo1 extends ApplicationFrame {
             series.add(9.0, 16.73);
             series.add(10.0, 14.21);
             series.add(11.0, 12.44);
-            XYDataset result = new XYSeriesCollection(series);
-            return result;
+            return new XYSeriesCollection(series);
         }
 
         /**
@@ -101,7 +99,7 @@ public class RegressionDemo1 extends ApplicationFrame {
             double[] coefficients = Regression.getOLSRegression(this.data1, 0);
             Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
             XYDataset regressionData = DatasetUtilities.sampleFunction2D(curve,
-                    2.0, 11.0, 100, "Fitted Regression Line");
+                    2.0, 11.0, 2, "Fitted Regression Line");
 
             plot.setDataset(1, regressionData);
             XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer(true,
@@ -113,9 +111,7 @@ public class RegressionDemo1 extends ApplicationFrame {
             JFreeChart chart = new JFreeChart("Linear Regression",
                     JFreeChart.DEFAULT_TITLE_FONT, plot, true);
             ChartUtilities.applyCurrentTheme(chart);
-            addChart(chart);
-            ChartPanel chartPanel = new ChartPanel(chart, false);
-            return chartPanel;
+            return new ChartPanel(chart, false);
 
         }
 
@@ -154,9 +150,7 @@ public class RegressionDemo1 extends ApplicationFrame {
             JFreeChart chart = new JFreeChart("Power Regression",
                     JFreeChart.DEFAULT_TITLE_FONT, plot, true);
             ChartUtilities.applyCurrentTheme(chart);
-            addChart(chart);
-            ChartPanel chartPanel = new ChartPanel(chart, false);
-            return chartPanel;
+            return new ChartPanel(chart, false);
 
         }
 
@@ -169,18 +163,10 @@ public class RegressionDemo1 extends ApplicationFrame {
      */
     public RegressionDemo1(String title) {
         super(title);
-        JPanel content = createDemoPanel();
+        JPanel content = new MyDemoPanel();
         getContentPane().add(content);
     }
 
-    /**
-     * Creates a panel for the demo (used by SuperDemo.java).
-     *
-     * @return A panel.
-     */
-    public static JPanel createDemoPanel() {
-        return new MyDemoPanel();
-    }
 
     /**
      * The starting point for the regression demo.
