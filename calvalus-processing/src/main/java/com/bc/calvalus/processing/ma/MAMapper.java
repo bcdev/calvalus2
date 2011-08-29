@@ -44,6 +44,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     public static final int MiB = 1024 * 1024;
+    public static final String HEADER_KEY = "#";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -109,12 +110,12 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             if (maConfig.getAggregateMacroPixel()) {
                 Record aggregatedRecord = recordTransformer.aggregate(extractedRecord);
                 context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
-                              new RecordWritable(aggregatedRecord.getAttributeValues(), outputTimeFormat));
+                              new RecordWritable(aggregatedRecord.getAttributeValues()));
                 numEmittedRecords++;
             } else {
                 for (Record expandedRecord : recordTransformer.expand(extractedRecord)) {
                     context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
-                                  new RecordWritable(expandedRecord.getAttributeValues(), outputTimeFormat));
+                                  new RecordWritable(expandedRecord.getAttributeValues()));
                     numEmittedRecords++;
                 }
             }
@@ -128,7 +129,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         if (numMatchUps > 0) {
             // write header
-            context.write(new Text("#"),
+            context.write(new Text(HEADER_KEY),
                           new RecordWritable(productRecordSource.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);

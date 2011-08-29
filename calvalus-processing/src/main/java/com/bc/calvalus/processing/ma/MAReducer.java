@@ -16,14 +16,13 @@
 
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.processing.JobConfNames;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Reads the records emitted by the MAMapper.
@@ -36,35 +35,24 @@ import java.util.List;
 public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritable> {
 
     @Override
-    protected void reduce(Text key, Iterable<RecordWritable> values, Context context) throws IOException, InterruptedException {
+    public void run(Context context) throws IOException, InterruptedException {
+        final Configuration jobConfig = context.getConfiguration();
+        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final String outputGroupName = maConfig.getOutputGroupName();
 
-        HashMap<String, X> map = new HashMap<String, X>();
+        PlotDataCollector collector = new PlotDataCollector(outputGroupName);
 
-        Iterator<RecordWritable> iterator = values.iterator();
-        if (iterator.hasNext()) {
-            RecordWritable record = iterator.next();
-            context.write(key, record);
-        }
-    }
-
-    public static class X {
-        private final String siteName;
-        private final String variableName;
-
-        private final List<Number> referenceValues;
-        private final List<Number> meanValues;
-        private final List<Number> stdDevValues;
-        private final List<Number> nValues;
-
-        public X(String siteName, String variableName) {
-            this.siteName = siteName;
-            this.variableName = variableName;
-            referenceValues = new ArrayList<Number>(32);
-            meanValues = new ArrayList<Number>(32);
-            stdDevValues = new ArrayList<Number>(32);
-            nValues = new ArrayList<Number>(32);
+        while (context.nextKey()) {
+            Text key = context.getCurrentKey();
+            Iterable<RecordWritable> values = context.getValues();
+            Iterator<RecordWritable> iterator = values.iterator();
+            if (iterator.hasNext()) {
+                RecordWritable record = iterator.next();
+                context.write(key, record);
+                collector.put(key.toString(), record);
+            }
         }
 
-
     }
+
 }

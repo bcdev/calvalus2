@@ -6,50 +6,30 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class RecordWritableTest {
 
-    public static final DateFormat DATE_FORMAT = SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT, Locale.ENGLISH);
-
     @Test
-    public void testStringArgsConstructor() throws Exception {
-        RecordWritable recordWritable = new RecordWritable(new String[] {"A", "B", "C"});
-        String[] values = recordWritable.getValues();
-        assertNotNull(values);
-        assertEquals(3, values.length);
-        assertEquals("A", values[0]);
-        assertEquals("B", values[1]);
-        assertEquals("C", values[2]);
-    }
-
-    @Test
-    public void testObjectArgsConstructor() throws Exception {
-        Date date = new Date(1313740506645L);
-        RecordWritable recordWritable = new RecordWritable(new Object[] {'A', 76432, -2.14, date, true, "XYZ"},
-                                                           DATE_FORMAT);
-        String[] values = recordWritable.getValues();
-        assertNotNull(values);
-        assertEquals(6, values.length);
-        assertEquals("A", values[0]);
-        assertEquals("76432", values[1]);
-        assertEquals("-2.14", values[2]);
-        assertEquals("8/19/11", values[3]);
-        assertEquals("true", values[4]);
-        assertEquals("XYZ", values[5]);
+    public void testConstructor() throws Exception {
+        RecordWritable recordWritable = new RecordWritable();
+        assertArrayEquals(null, recordWritable.getValues());
     }
 
     @Test
     public void testWriteAndRead() throws Exception {
-        Date date = new Date(1313740506645L);
-        RecordWritable recordWritable = new RecordWritable(new Object[] {'A', 76432, -2.14, date, true, "XYZ"},
-                                                           DATE_FORMAT);
+        Object[] inputValues = {
+                "A",
+                76432,
+                -2.14,
+                new Date(1313740506645L),
+                1,
+                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
+        };
+
+        RecordWritable recordWritable = new RecordWritable(inputValues);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         recordWritable.write(new DataOutputStream(out));
@@ -59,14 +39,31 @@ public class RecordWritableTest {
         recordWritable = new RecordWritable();
         recordWritable.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
 
-        String[] values = recordWritable.getValues();
-        assertNotNull(values);
-        assertEquals(6, values.length);
-        assertEquals("A", values[0]);
-        assertEquals("76432", values[1]);
-        assertEquals("-2.14", values[2]);
-        assertEquals("8/19/11", values[3]);
-        assertEquals("true", values[4]);
-        assertEquals("XYZ", values[5]);
+        Object[] outputValues = recordWritable.getValues();
+        assertNotNull(outputValues);
+        assertArrayEquals(inputValues, outputValues);
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        Object[] inputValues = {
+                "A",
+                76432,
+                -2.14,
+                new Date(1313740506645L),
+                1,
+                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
+        };
+
+        RecordWritable recordWritable = new RecordWritable();
+        recordWritable.setValues(inputValues);
+
+        assertEquals("" +
+                             "A\t" +
+                             "76432\t" +
+                             "-2.14\t" +
+                             "2011-08-19 07:55:06\t" +
+                             "1\t" +
+                             "0.5\t0.1\t15", recordWritable.toString());
     }
 }

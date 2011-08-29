@@ -97,6 +97,15 @@ public class MAConfig implements XmlConvertible {
     private String outputTimeFormat;
 
     /**
+     * The name of the attribute that is used for output grouping.
+     * A scatter plot is generated for each variable in a group.
+     * Default is {@code "Site"}, an attribute that is considered to provide the name of a site where
+     * in-situ data has been measured.
+     */
+    @Parameter(defaultValue = "site")
+    private String outputGroupName;
+
+    /**
      * The name of a class that implements the {@link RecordSourceSpi} interface.
      * Instances of this class are used to create {@link RecordSource} objects which are in turn used to
      * provide {@link Record}s.
@@ -176,6 +185,14 @@ public class MAConfig implements XmlConvertible {
 
     public void setOutputTimeFormat(String outputTimeFormat) {
         this.outputTimeFormat = outputTimeFormat;
+    }
+
+    public String getOutputGroupName() {
+        return outputGroupName;
+    }
+
+    public void setOutputGroupName(String outputGroupName) {
+        this.outputGroupName = outputGroupName;
     }
 
     public boolean getCopyInput() {

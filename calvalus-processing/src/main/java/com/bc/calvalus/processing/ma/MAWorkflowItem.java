@@ -29,7 +29,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for match-up extraction on n input products.

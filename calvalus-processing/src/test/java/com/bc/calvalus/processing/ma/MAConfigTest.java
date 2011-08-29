@@ -45,6 +45,7 @@ public class MAConfigTest {
         assertEquals(null, maConfig.getGoodPixelExpression());
         assertEquals(null, maConfig.getGoodRecordExpression());
         assertEquals("dd-MMM-yyyy HH:mm:ss", maConfig.getOutputTimeFormat());
+        assertEquals("site", maConfig.getOutputGroupName());
     }
 
     @Test
