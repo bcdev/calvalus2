@@ -8,16 +8,16 @@ import java.util.Map;
 /**
  * @author Norman
  */
-public class PlotDataCollector {
+public class PlotDatasetCollector {
 
     private final String groupAttributeName;
-    private Map<String, Plot> plotMap;
-    private List<Plot> plots;
+    private Map<String, PlotDataset> plotMap;
+    private List<PlotDataset> plotDatasets;
     private Object[] headerValues;
     private int groupAttributeIndex;
     private List<VariablePair> variablePairs;
 
-    public PlotDataCollector(String groupAttributeName) {
+    public PlotDatasetCollector(String groupAttributeName) {
         this.groupAttributeName = groupAttributeName;
     }
 
@@ -32,15 +32,15 @@ public class PlotDataCollector {
         return new VariablePair[0];
     }
 
-    public Plot[] getPlots() {
+    public PlotDataset[] getPlotDatasets() {
         if (plotMap != null) {
-            return plots.toArray(new Plot[plots.size()]);
+            return plotDatasets.toArray(new PlotDataset[plotDatasets.size()]);
         }
-        return new Plot[0];
+        return new PlotDataset[0];
     }
 
 
-    public void put(String key, RecordWritable record) {
+    public void collectRecord(String key, RecordWritable record) {
         if (key.equals(MAMapper.HEADER_KEY)) {
             if (headerValues != null) {
                 throw new IllegalStateException("Header record seen twice.");
@@ -48,8 +48,8 @@ public class PlotDataCollector {
             this.headerValues = record.getValues();
             this.groupAttributeIndex = findIndex(record.getValues(), groupAttributeName);
             this.variablePairs = findVariablePairs(record.getValues());
-            this.plotMap = new HashMap<String, Plot>();
-            this.plots = new ArrayList<Plot>();
+            this.plotMap = new HashMap<String, PlotDataset>();
+            this.plotDatasets = new ArrayList<PlotDataset>();
         } else {
             if (headerValues == null) {
                 throw new IllegalStateException("Data record seen before header record.");
@@ -64,11 +64,11 @@ public class PlotDataCollector {
                                                groupName,
                                                variablePair.referenceAttributeName,
                                                variablePair.satelliteAttributeName);
-                Plot plot = plotMap.get(plotKey);
-                if (plot == null) {
-                    plot = new Plot(groupName, variablePair);
-                    plotMap.put(plotKey, plot);
-                    plots.add(plot);
+                PlotDataset plotDataset = plotMap.get(plotKey);
+                if (plotDataset == null) {
+                    plotDataset = new PlotDataset(groupName, variablePair);
+                    plotMap.put(plotKey, plotDataset);
+                    plotDatasets.add(plotDataset);
                 }
                 Number referenceValue = (Number) values[variablePair.referenceAttributeIndex];
                 Number satelliteValue = (Number) values[variablePair.satelliteAttributeIndex];
@@ -76,12 +76,12 @@ public class PlotDataCollector {
                         && !Double.isNaN(satelliteValue.doubleValue())) {
                     if (satelliteValue instanceof AggregatedNumber) {
                         AggregatedNumber aggregatedNumber = (AggregatedNumber) satelliteValue;
-                        plot.points.add(new Point(referenceValue.doubleValue(),
+                        plotDataset.points.add(new Point(referenceValue.doubleValue(),
                                                   aggregatedNumber.mean,
                                                   aggregatedNumber.sigma,
                                                   aggregatedNumber.n));
                     } else {
-                        plot.points.add(new Point(referenceValue.doubleValue(),
+                        plotDataset.points.add(new Point(referenceValue.doubleValue(),
                                                   satelliteValue.doubleValue(),
                                                   0.0, 1));
                     }
@@ -116,12 +116,12 @@ public class PlotDataCollector {
         return variablePairs;
     }
 
-    public static class Plot {
+    public static class PlotDataset {
         private final String groupName;
         private final VariablePair variablePair;
         private final List<Point> points;
 
-        public Plot(String groupName, VariablePair variablePair) {
+        public PlotDataset(String groupName, VariablePair variablePair) {
             this.groupName = groupName;
             this.variablePair = variablePair;
             points = new ArrayList<Point>(32);

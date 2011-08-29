@@ -40,7 +40,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
         final String outputGroupName = maConfig.getOutputGroupName();
 
-        PlotDataCollector collector = new PlotDataCollector(outputGroupName);
+        PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
 
         while (context.nextKey()) {
             Text key = context.getCurrentKey();
@@ -49,10 +49,16 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
             if (iterator.hasNext()) {
                 RecordWritable record = iterator.next();
                 context.write(key, record);
-                collector.put(key.toString(), record);
+                plotDatasetCollector.collectRecord(key.toString(), record);
             }
         }
 
+        PlotGenerator plotGenerator = new PlotGenerator();
+        PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
+        for (int i = 0; i < plotDatasets.length; i++) {
+            PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[i];
+            plotGenerator.writeScatterPlotImage(plotDataset, "scatterplot-" + i);
+        }
     }
 
 }
