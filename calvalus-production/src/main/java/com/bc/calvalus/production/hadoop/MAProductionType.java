@@ -22,7 +22,6 @@ import java.util.Date;
  */
 public class MAProductionType extends HadoopProductionType {
 
-
     public static final String NAME = "MA";
 
     public MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
@@ -41,7 +40,13 @@ public class MAProductionType extends HadoopProductionType {
         // todo - use geoRegion to filter input files (nf,20.04.2011)
         String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
 
-        String inputFormat = productionRequest.getParameter("calvalus.input.format", "N1");
+        String inputFormat = productionRequest.getParameter("calvalus.input.format", "ENVISAT");
+
+        String processorName = productionRequest.getParameter("processorName");
+        String processorParameters = productionRequest.getParameter("processorParameters");
+        String processorBundle = String.format("%s-%s",
+                                               productionRequest.getParameter("processorBundleName"),
+                                               productionRequest.getParameter("processorBundleVersion"));
 
         WorkflowItem workflowItem;
         if (l1InputFiles.length > 0) {
@@ -50,9 +55,9 @@ public class MAProductionType extends HadoopProductionType {
             MAConfig maConfig = MAConfig.fromXml(productionRequest.getParameter("calvalus.ma.parameters"));
             workflowItem = new MAWorkflowItem(getProcessingService(),
                                               productionId,
-                                              "",
-                                              "",
-                                              "",
+                                              processorBundle,
+                                              processorName,
+                                              processorParameters,
                                               null,
                                               l1InputFiles,
                                               inputFormat,
