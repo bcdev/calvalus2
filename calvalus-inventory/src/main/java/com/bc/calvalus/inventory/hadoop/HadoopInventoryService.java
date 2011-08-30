@@ -93,7 +93,7 @@ public class HadoopInventoryService implements InventoryService {
     }
 
     private String[] listFilesRecursively(Path path, Pattern pattern) throws IOException {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<String>(1000);
         listFilesRecursively(result, path, pattern);
         return result.toArray(new String[result.size()]);
     }
