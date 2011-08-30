@@ -45,7 +45,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
     private final String inputFormat;
     private final String outputDir;
     private final MAConfig maConfig;
-    private final Geometry roiGeometry;
+    private final Geometry regionGeometry;
     private final String minDate;
     private final String maxDate;
 
@@ -54,7 +54,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
                           String processorBundle,
                           String processorName,
                           String processorParameters,
-                          Geometry roiGeometry,
+                          Geometry regionGeometry,
                           String[] inputFiles,
                           String inputFormat,
                           String outputDir,
@@ -69,7 +69,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         this.inputFormat = inputFormat;
         this.outputDir = outputDir;
         this.maConfig = maConfig;
-        this.roiGeometry = roiGeometry;
+        this.regionGeometry = regionGeometry;
         this.minDate = minDate;
         this.maxDate = maxDate;
     }
@@ -80,15 +80,18 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
 
     protected void configureJob(Job job) throws IOException {
 
-        // todo - use minDate/maxDate and roiGeometry to filter input products
-        // todo - use processorBundle/processorName/processorParameters to generate actual product for MA
+        // todo - use minDate/maxDate to filter input products
 
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         configuration.set(JobConfNames.CALVALUS_INPUT_FORMAT, inputFormat);
         configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
+        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
+        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
+        configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
 //        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
 //        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
@@ -111,6 +114,8 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(TextOutputFormat.class);
+
+        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
     }
 
 }

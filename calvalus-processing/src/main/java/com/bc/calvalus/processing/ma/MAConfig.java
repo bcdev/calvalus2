@@ -123,7 +123,7 @@ public class MAConfig implements XmlConvertible {
     // The following have been discussed but not yet decided.
 
     /**
-     * The name of the column that holds the latitudes.
+     * The name of the input column that holds the latitudes.
      * General parameter for many types of record sources.
      * May not be given.
      */
@@ -131,7 +131,7 @@ public class MAConfig implements XmlConvertible {
     // private String recordSourceColumnNameLat;
 
     /**
-     * The name of the column that holds the longitudes.
+     * The name of the input column that holds the longitudes.
      * General parameter for many types of record sources.
      * May not be given.
      */
@@ -139,12 +139,20 @@ public class MAConfig implements XmlConvertible {
     // private String recordSourceColumnNameLon;
 
     /**
-     * The name of the column that holds the time.
+     * The name of the input column that holds the time.
      * General parameter for many types of record sources.
      * May not be given.
      */
     // @Parameter (defaultValue = "time")
     // private String recordSourceColumnNameTime;
+
+    /**
+     * The input format used for the time.
+     * General parameter for many types of record sources.
+     * Default value is "yyyy-MM-dd hh:mm:ss".
+     */
+    // @Parameter (defaultValue = "yyyy-MM-dd hh:mm:ss")
+    // private String recordSourceTimeFormat;
 
     public MAConfig() {
     }

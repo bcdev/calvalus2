@@ -109,7 +109,7 @@ public class PixelExtractor {
         final int[] maskSamples;
         if (pixelMask != null) {
             maskSamples = new int[width * height];
-            pixelMask.readPixels(macroPixelRect.x, macroPixelRect.y, macroPixelRect.width, macroPixelRect.height, maskSamples);
+            pixelMask.readPixels(x0, y0, width, height, maskSamples);
             boolean allBad = true;
             for (int i = 0; i < maskSamples.length; i++) {
                 int sample = maskSamples[i];

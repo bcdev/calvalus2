@@ -16,13 +16,20 @@
 
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 /**
  * Reads the records emitted by the MAMapper.
@@ -33,6 +40,7 @@ import java.util.Iterator;
  * @author Norman Fomferra
  */
 public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritable> {
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -40,24 +48,49 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
         final String outputGroupName = maConfig.getOutputGroupName();
 
-        PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
+        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
+
+        LOG.warning("Collecting records...");
 
         while (context.nextKey()) {
-            Text key = context.getCurrentKey();
-            Iterable<RecordWritable> values = context.getValues();
-            Iterator<RecordWritable> iterator = values.iterator();
+            final Text key = context.getCurrentKey();
+            final Iterable<RecordWritable> values = context.getValues();
+            final Iterator<RecordWritable> iterator = values.iterator();
             if (iterator.hasNext()) {
-                RecordWritable record = iterator.next();
+                final RecordWritable record = iterator.next();
                 context.write(key, record);
-                plotDatasetCollector.collectRecord(key.toString(), record);
+                if (key.equals(MAMapper.HEADER_KEY)) {
+                    plotDatasetCollector.processHeaderRecord(record.getValues());
+                } else {
+                    plotDatasetCollector.processDataRecord(record.getValues());
+                }
             }
         }
 
-        PlotGenerator plotGenerator = new PlotGenerator();
-        PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
+        final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
+
+        LOG.warning(String.format("Generating %d plot(s)...", plotDatasets.length));
+
+        final PlotGenerator plotGenerator = new PlotGenerator();
+        plotGenerator.setImageWidth(400);
+        plotGenerator.setImageHeight(400);
         for (int i = 0; i < plotDatasets.length; i++) {
-            PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[i];
-            plotGenerator.writeScatterPlotImage(plotDataset, "scatterplot-" + i);
+            final PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[i];
+            final String title = plotDataset.getVariablePair().referenceAttributeName + " / " + plotDataset.getGroupName();
+            final String processorTitle = jobConfig.get(JobConfNames.CALVALUS_L2_BUNDLE) + ", " + jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
+            final String referenceTitle = new Path(maConfig.getRecordSourceUrl()).getName();
+            final BufferedImage plotImage = plotGenerator.createPlotImage(title, processorTitle, referenceTitle, plotDataset);
+            final String outputFilename = String.format("scatter-plot-%s-%s-%03d.png", plotDataset.getGroupName(), plotDataset.getVariablePair().satelliteAttributeName, i);
+            final Path outputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
+            final FSDataOutputStream outputStream = outputProductPath.getFileSystem(jobConfig).create(outputProductPath);
+            try {
+                LOG.warning(String.format("Writing %s", outputProductPath));
+                ImageIO.write(plotImage, "PNG", outputStream);
+            } catch (IOException e) {
+                LOG.warning(String.format("Failed to write %s: %s", outputProductPath, e.getMessage()));
+            } finally {
+                outputStream.close();
+            }
         }
     }
 

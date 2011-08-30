@@ -114,7 +114,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         } else {
             // Set VM maximum heap size
             configuration.set("mapred.child.java.opts",
-                              "-Xmx1G");
+                              "-Xmx2000M");
         }
         return configuration;
     }

@@ -12,23 +12,23 @@ public class PlotDatasetCollectorTest {
     @Test
     public void testThatGroupIndexIsIdentifiedIfAvailable() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("site");
-        collector.collectRecord(MAMapper.HEADER_KEY, new RecordWritable(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"}));
+        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"});
         assertEquals(3, collector.getGroupAttributeIndex());
     }
 
     @Test
     public void testThatGroupIndexIsNotIdentifiedIfNotFound() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("city");
-        collector.collectRecord(MAMapper.HEADER_KEY, new RecordWritable(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"}));
+        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"});
         assertEquals(-1, collector.getGroupAttributeIndex());
     }
 
     @Test
     public void testThatVariablePairsAreFound() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
-        collector.collectRecord(MAMapper.HEADER_KEY, new RecordWritable(new Object[]{
+       collector.processHeaderRecord(new Object[]{
                 "ID", "LAT", "LON", "DATE", "SITE",
-                "CHL", "WIND", "TSM", "TEMP", "pixel_x", "pixel_y", "chl", "algal", "tsm"}));
+                "CHL", "WIND", "TSM", "TEMP", "pixel_x", "pixel_y", "chl", "algal", "tsm"});
         PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
 
         assertNotNull(variablePairs);
@@ -49,10 +49,10 @@ public class PlotDatasetCollectorTest {
     public void testThatUngroupedPlotsAreGenerated() throws Exception {
 
         PlotDatasetCollector collector = new PlotDatasetCollector(null);
-        collector.collectRecord(MAMapper.HEADER_KEY, new RecordWritable(new Object[]{"SITE", "CHL", "chl"}));
-        collector.collectRecord("R1", new RecordWritable(new Object[]{"Benguela", 0.4, 0.41}));
-        collector.collectRecord("R2", new RecordWritable(new Object[]{"Benguela", 0.5, 0.49}));
-        collector.collectRecord("R3", new RecordWritable(new Object[]{"Benguela", 0.2, 0.27}));
+        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"});
+        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41});
+        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49});
+        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);
@@ -76,13 +76,13 @@ public class PlotDatasetCollectorTest {
     public void testThatGroupedPlotsAreGenerated() throws Exception {
 
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
-        collector.collectRecord(MAMapper.HEADER_KEY, new RecordWritable(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"}));
-        collector.collectRecord("R1", new RecordWritable(new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02}));
-        collector.collectRecord("R2", new RecordWritable(new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01}));
-        collector.collectRecord("R3", new RecordWritable(new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03}));
-        collector.collectRecord("R4", new RecordWritable(new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02}));
-        collector.collectRecord("R5", new RecordWritable(new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01}));
-        collector.collectRecord("R6", new RecordWritable(new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03}));
+        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"});
+        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02});
+        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01});
+        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03});
+        collector.processDataRecord(new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02});
+        collector.processDataRecord(new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01});
+        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);

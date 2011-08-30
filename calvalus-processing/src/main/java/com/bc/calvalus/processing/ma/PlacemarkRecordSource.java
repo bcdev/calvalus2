@@ -1,7 +1,5 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.calvalus.commons.CalvalusLogger;
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.esa.beam.dataio.placemark.PlacemarkIO;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PinDescriptor;
@@ -58,15 +56,6 @@ public class PlacemarkRecordSource implements RecordSource {
     }
 
     public static class Spi extends RecordSourceSpi {
-        static {
-            try {
-                URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
-            } catch (Throwable e) {
-                // ignore as its most likely already set
-                String msg = "Cannot set URLStreamHandlerFactory due " + e.getMessage() + ". This exception will be ignored.";
-                CalvalusLogger.getLogger().fine(msg);
-            }
-        }
 
         @Override
         public RecordSource createRecordSource(String url) throws Exception {

@@ -44,9 +44,9 @@ public class MAWorkflowItemTest {
 
         MAWorkflowItem maWorkflowItem = new MAWorkflowItem(hadoopProcessingService,
                                                            jobName,
-                                                           "",
-                                                           "",
-                                                           "",
+                                                           "coastcolour-processing-1.3-SNAPSHOT",
+                                                           "CoastColour.L2W",
+                                                           "<parameters/>",
                                                            null,
                                                            inputFiles,
                                                            "HADOOP-STREAMING",

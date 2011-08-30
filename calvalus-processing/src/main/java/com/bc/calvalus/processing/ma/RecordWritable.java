@@ -1,12 +1,10 @@
 package com.bc.calvalus.processing.ma;
 
 import org.apache.hadoop.io.Writable;
-import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -16,9 +14,6 @@ import java.util.HashMap;
  * @author Norman
  */
 public class RecordWritable implements Writable {
-
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd hh:mm:ss");
-    public static final char SEPARATOR_CHAR = '\t';
 
     public enum Type {
         NULL('_'),
@@ -142,41 +137,12 @@ public class RecordWritable implements Writable {
 
     /**
      * Used by Hadoop's TextOutputFormat.
+     *
      * @return A textual representation of this record.
      */
     @Override
     public String toString() {
-        return toString(values, SEPARATOR_CHAR, DATE_FORMAT);
-    }
-
-    public static  String toString(Object[] values, char separatorChar, DateFormat dateFormat) {
-        if (values == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder(256);
-        for (int i = 0; i < values.length; i++) {
-            if (i > 0) {
-                sb.append(separatorChar);
-            }
-            Object value = values[i];
-            if (value instanceof Date) {
-                if (dateFormat == null) {
-                    dateFormat = DATE_FORMAT;
-                }
-                sb.append(dateFormat.format((Date) value));
-            } else if (value instanceof AggregatedNumber) {
-                AggregatedNumber aggregatedNumber = (AggregatedNumber) value;
-                sb.append(aggregatedNumber.mean);
-                sb.append(separatorChar);
-                sb.append(aggregatedNumber.sigma);
-                sb.append(separatorChar);
-                sb.append(aggregatedNumber.n);
-            } else if (value != null) {
-                sb.append(value.toString());
-            }
-        }
-
-        return sb.toString();
+        return TextUtils.toString(values);
     }
 
     private static Type getValueType(Object value) {

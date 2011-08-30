@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.ma;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -15,35 +14,60 @@ import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Generates plots from the data collected by the {@link PlotDatasetCollector}.
+ * It encapsulates JFreeChart API calls, which are used to generate the plots.
  *
  * @author Norman
  */
 public class PlotGenerator {
 
+    private int imageWidth;
+    private int imageHeight;
 
-    public static JFreeChart createScatterPlotChart(String title, String subTitle, String labelX, String labelY, XYDataset dataset) {
-        if (PlotOrientation.VERTICAL == null) {
-            throw new IllegalArgumentException("Null 'orientation' argument.");
-        }
+    public PlotGenerator() {
+        imageWidth = 400;
+        imageHeight = 400;
+    }
+
+    public void setImageWidth(int imageWidth) {
+        this.imageWidth = imageWidth;
+    }
+
+    public void setImageHeight(int imageHeight) {
+        this.imageHeight = imageHeight;
+    }
+
+    public BufferedImage createPlotImage(String title,
+                                         String subTitle1,
+                                         String subTitle2,
+                                         PlotDatasetCollector.PlotDataset plotDataset) {
+        JFreeChart scatterPlotChart = createScatterPlotChart(title,
+                                                             subTitle1, subTitle2,
+                                                             plotDataset);
+        return scatterPlotChart.createBufferedImage(imageWidth, imageHeight);
+    }
+
+    static JFreeChart createScatterPlotChart(String title,
+                                             String subTitle1,
+                                             String subTitle2,
+                                             PlotDatasetCollector.PlotDataset plotDataset) {
+
+        IntervalXYDataset dataset = createDataset(plotDataset);
 
         Font tickLabelFont = new Font("Times New Roman", Font.PLAIN, 16);
         Font labelFont = new Font("Times New Roman", Font.BOLD, 16);
 
-        NumberAxis xAxis = new NumberAxis(labelX);
+        NumberAxis xAxis = new NumberAxis(plotDataset.getVariablePair().referenceAttributeName + " in-situ");
         xAxis.setAutoTickUnitSelection(true);
         xAxis.setTickLabelFont(tickLabelFont);
         xAxis.setLabelFont(labelFont);
 
-        NumberAxis yAxis = new NumberAxis(labelY);
+        NumberAxis yAxis = new NumberAxis(plotDataset.getVariablePair().satelliteAttributeName + " satellite");
         yAxis.setAutoTickUnitSelection(true);
         yAxis.setTickLabelFont(tickLabelFont);
         yAxis.setLabelFont(labelFont);
@@ -95,7 +119,12 @@ public class PlotGenerator {
         plot.setRenderer(series, regressionRenderer);
 
         JFreeChart chart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
-        chart.addSubtitle(new TextTitle(subTitle));
+        if (subTitle1 != null) {
+            chart.addSubtitle(new TextTitle(subTitle1));
+        }
+        if (subTitle2 != null) {
+            chart.addSubtitle(new TextTitle(subTitle2));
+        }
         chart.setTextAntiAlias(true);
         chart.setAntiAlias(true);
         return chart;
@@ -125,16 +154,4 @@ public class PlotGenerator {
     }
 
 
-    public void writeScatterPlotImage(PlotDatasetCollector.PlotDataset plotDataset, String name) throws IOException {
-        IntervalXYDataset dataset = createDataset(plotDataset);
-        JFreeChart scatterPlotChart = createScatterPlotChart(plotDataset.getVariablePair().referenceAttributeName + "/" + plotDataset.getGroupName(),
-                                                             name,
-                                                             plotDataset.getVariablePair().referenceAttributeName,
-                                                             plotDataset.getVariablePair().satelliteAttributeName,
-                                                             dataset);
-
-        final BufferedImage bufferedImage = scatterPlotChart.createBufferedImage(400, 400);
-        ImageIO.write(bufferedImage, "PNG", new File(name + ".png"));
-
-    }
 }

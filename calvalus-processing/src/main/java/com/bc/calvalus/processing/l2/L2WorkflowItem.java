@@ -28,7 +28,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for n input products processed to n output products using a BEAM GPF operator.
@@ -86,8 +85,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
 
-        HadoopProcessingService.addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_L2_BUNDLE),
-                                                     configuration);
+        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
     }
 
 }

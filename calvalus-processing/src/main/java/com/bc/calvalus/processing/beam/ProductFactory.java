@@ -54,11 +54,12 @@ public class ProductFactory {
     private static final int M = 1024 * 1024;
     public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
 
-    private  final Configuration configuration;
+    private final Configuration configuration;
 
     /**
      * Constructor.
-     * @param configuration       The Hadoop job configuration
+     *
+     * @param configuration The Hadoop job configuration
      */
     public ProductFactory(Configuration configuration) {
         this.configuration = configuration;
@@ -74,7 +75,7 @@ public class ProductFactory {
     }
 
     private static void initSystemProperties(Configuration configuration) {
-        for (Map.Entry<String, String> entry: configuration){
+        for (Map.Entry<String, String> entry : configuration) {
             String key = entry.getKey();
             if (key.startsWith("calvalus.system.")) {
                 String properiesName = key.substring("calvalus.system.".length());
@@ -84,6 +85,7 @@ public class ProductFactory {
     }
 
     // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
+
     /**
      * Reads a source product and generates a target product using the given parameters.
      * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
@@ -200,16 +202,16 @@ public class ProductFactory {
         return product;
     }
 
-    private static Product getProcessedProduct(Product sourceProduct,
-                                               String regionGeometryWkt,
-                                               String processorName,
-                                               String processorParameters) {
-        Product subsetProduct = ProductFactory.getSubsetProduct(sourceProduct, regionGeometryWkt);
+    static Product getProcessedProduct(Product sourceProduct,
+                                       String regionGeometryWkt,
+                                       String processorName,
+                                       String processorParameters) {
+        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometryWkt);
         if (subsetProduct == null) {
             return null;
         }
-        Product targetProduct = ProductFactory.getProcessedProduct(subsetProduct, processorName, processorParameters);
-        if (targetProduct != null) {
+        Product targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+        if (targetProduct != null && targetProduct != subsetProduct) {
             if (targetProduct.getStartTime() == null) {
                 targetProduct.setStartTime(subsetProduct.getStartTime());
             }

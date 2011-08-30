@@ -9,7 +9,6 @@ import org.junit.Ignore;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -20,10 +19,27 @@ import java.io.IOException;
 public class PlotGeneratorTest {
 
     public static void main(String[] args) throws IOException {
-        ApplicationFrame appFrame = new ApplicationFrame("JFreeChart: Regression Demo 1");
-        DefaultIntervalXYDataset dataset = createDataset();
 
-        JFreeChart chart = PlotGenerator.createScatterPlotChart("Bussole", "CHL", "CHL In-Situ", "CHL Satellite", dataset);
+        PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
+        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"});
+        int n = 6;
+        double delta = 1.0 / n;
+        for (int i = 0; i < n; i++) {
+            double ref = delta * (i + Math.random());
+            double mean = delta * (i + Math.random());
+            double sigma = 0.01 + 0.1 * Math.random();
+            collector.processDataRecord(new Object[]{"Boussole", ref, new AggregatedNumber(20, 25, 2, 0.0, 1.0, mean, sigma)});
+        }
+
+        PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
+
+
+        ApplicationFrame appFrame = new ApplicationFrame("JFreeChart: Regression Demo 1");
+
+        PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[0];
+        final String title = plotDataset.getVariablePair().referenceAttributeName + " / " + plotDataset.getGroupName();
+
+        JFreeChart chart = PlotGenerator.createScatterPlotChart(title, "beam-idepix 2.3, idepix.ComputeChain", "myinsitu.csv", plotDataset);
 
         ChartPanel chartPanel = new ChartPanel(chart, false);
         chartPanel.setPreferredSize(new Dimension(500, 500));
@@ -33,12 +49,9 @@ public class PlotGeneratorTest {
         RefineryUtilities.centerFrameOnScreen(appFrame);
         appFrame.setVisible(true);
 
-        writeChartAsImage(500, chart, 500, new File("scatterplot-"+System.currentTimeMillis()+".png"));
-    }
-
-    private static void writeChartAsImage(int width, JFreeChart chart, int height, File file) throws IOException {
-        final BufferedImage bufferedImage = chart.createBufferedImage(width, height);
-        ImageIO.write(bufferedImage, "PNG", file);
+        ImageIO.write(chart.createBufferedImage(500, 500),
+                      "PNG",
+                      new File("scatterplot-"+System.currentTimeMillis()+".png"));
     }
 
     private static DefaultIntervalXYDataset createDataset() {

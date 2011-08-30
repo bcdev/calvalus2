@@ -22,7 +22,6 @@ import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobPriority;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
@@ -110,7 +109,6 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         }
         jobConf.setUseNewMapper(true);
         jobConf.setUseNewReducer(true);
-        jobConf.setJobPriority(JobPriority.VERY_HIGH);  //TODO make this an option
         RunningJob runningJob = processingService.getJobClient().submitJob(jobConf);
         return runningJob.getID();
     }

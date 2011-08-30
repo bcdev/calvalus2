@@ -6,14 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Builds a list of {@code PlotDataset}s from given record data.
+ *
  * @author Norman
  */
 public class PlotDatasetCollector {
 
     private final String groupAttributeName;
-    private Map<String, PlotDataset> plotMap;
+    private Map<String, PlotDataset> plotDatasetMap;
     private List<PlotDataset> plotDatasets;
-    private Object[] headerValues;
     private int groupAttributeIndex;
     private List<VariablePair> variablePairs;
 
@@ -26,68 +27,92 @@ public class PlotDatasetCollector {
     }
 
     public VariablePair[] getVariablePairs() {
-        if (variablePairs != null) {
+        if (hasHeaderBeenSeen()) {
             return variablePairs.toArray(new VariablePair[variablePairs.size()]);
         }
         return new VariablePair[0];
     }
 
     public PlotDataset[] getPlotDatasets() {
-        if (plotMap != null) {
+        if (hasHeaderBeenSeen()) {
             return plotDatasets.toArray(new PlotDataset[plotDatasets.size()]);
         }
         return new PlotDataset[0];
     }
 
+    public void processHeaderRecord(Object[] headerValues) {
+        if (hasHeaderBeenSeen()) {
+            throw new IllegalStateException("Header record seen twice.");
+        }
+        this.groupAttributeIndex = findIndex(headerValues, groupAttributeName);
+        this.variablePairs = findVariablePairs(headerValues);
+        this.plotDatasetMap = new HashMap<String, PlotDataset>();
+        this.plotDatasets = new ArrayList<PlotDataset>();
+    }
 
-    public void collectRecord(String key, RecordWritable record) {
-        if (key.equals(MAMapper.HEADER_KEY)) {
-            if (headerValues != null) {
-                throw new IllegalStateException("Header record seen twice.");
-            }
-            this.headerValues = record.getValues();
-            this.groupAttributeIndex = findIndex(record.getValues(), groupAttributeName);
-            this.variablePairs = findVariablePairs(record.getValues());
-            this.plotMap = new HashMap<String, PlotDataset>();
-            this.plotDatasets = new ArrayList<PlotDataset>();
-        } else {
-            if (headerValues == null) {
-                throw new IllegalStateException("Data record seen before header record.");
-            }
-            Object[] values = record.getValues();
-            String groupName = "";
-            if (groupAttributeIndex >= 0) {
-                groupName = String.valueOf(values[groupAttributeIndex]);
-            }
-            for (VariablePair variablePair : variablePairs) {
-                String plotKey = String.format("%s.%s.%s",
-                                               groupName,
-                                               variablePair.referenceAttributeName,
-                                               variablePair.satelliteAttributeName);
-                PlotDataset plotDataset = plotMap.get(plotKey);
-                if (plotDataset == null) {
-                    plotDataset = new PlotDataset(groupName, variablePair);
-                    plotMap.put(plotKey, plotDataset);
-                    plotDatasets.add(plotDataset);
-                }
-                Number referenceValue = (Number) values[variablePair.referenceAttributeIndex];
-                Number satelliteValue = (Number) values[variablePair.satelliteAttributeIndex];
-                if (!Double.isNaN(referenceValue.doubleValue())
-                        && !Double.isNaN(satelliteValue.doubleValue())) {
-                    if (satelliteValue instanceof AggregatedNumber) {
-                        AggregatedNumber aggregatedNumber = (AggregatedNumber) satelliteValue;
-                        plotDataset.points.add(new Point(referenceValue.doubleValue(),
-                                                  aggregatedNumber.mean,
-                                                  aggregatedNumber.sigma,
-                                                  aggregatedNumber.n));
-                    } else {
-                        plotDataset.points.add(new Point(referenceValue.doubleValue(),
-                                                  satelliteValue.doubleValue(),
-                                                  0.0, 1));
-                    }
-                }
+    public void processDataRecord(Object[] recordValues) {
+        if (!hasHeaderBeenSeen()) {
+            throw new IllegalStateException("Data record seen before header record.");
+        }
+        final String groupName = getGroupName(recordValues);
+        for (VariablePair variablePair : variablePairs) {
+            PlotDataset plotDataset = getPlotDataset(groupName, variablePair);
+            Number referenceValue = (Number) recordValues[variablePair.referenceAttributeIndex];
+            Number satelliteValue = (Number) recordValues[variablePair.satelliteAttributeIndex];
+            if (isValidDataPoint(referenceValue, satelliteValue)) {
+                collectDataPoint(plotDataset, referenceValue, satelliteValue);
             }
         }
+    }
+
+    private boolean isValidDataPoint(Number referenceValue, Number satelliteValue) {
+        return isValidNumber(referenceValue) && isValidNumber(satelliteValue);
+    }
+
+    private boolean isValidNumber(Number number) {
+        return number != null
+                && !Double.isNaN(number.doubleValue())
+                && !Double.isInfinite(number.doubleValue());
+    }
+
+    private static void collectDataPoint(PlotDataset plotDataset, Number referenceValue, Number satelliteValue) {
+        if (satelliteValue instanceof AggregatedNumber) {
+            AggregatedNumber aggregatedNumber = (AggregatedNumber) satelliteValue;
+            plotDataset.points.add(new Point(referenceValue.doubleValue(),
+                                             aggregatedNumber.mean,
+                                             aggregatedNumber.sigma,
+                                             aggregatedNumber.n));
+        } else {
+            plotDataset.points.add(new Point(referenceValue.doubleValue(),
+                                             satelliteValue.doubleValue(),
+                                             0.0, 1));
+        }
+    }
+
+    private boolean hasHeaderBeenSeen() {
+        return variablePairs != null;
+    }
+
+    private String getGroupName(Object[] values) {
+        String groupName = "";
+        if (groupAttributeIndex >= 0) {
+            groupName = String.valueOf(values[groupAttributeIndex]);
+        }
+        return groupName;
+    }
+
+    private PlotDataset getPlotDataset(String groupName, VariablePair variablePair) {
+        String plotKey = String.format("%s.%s.%s",
+                                       groupName,
+                                       variablePair.referenceAttributeName,
+                                       variablePair.satelliteAttributeName);
+        PlotDataset plotDataset = plotDatasetMap.get(plotKey);
+        if (plotDataset == null) {
+            plotDataset = new PlotDataset(groupName, variablePair);
+            plotDatasetMap.put(plotKey, plotDataset);
+            plotDatasets.add(plotDataset);
+        }
+        return plotDataset;
     }
 
     private static int findIndex(Object[] headerValues, String attributeName) {
