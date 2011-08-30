@@ -48,29 +48,31 @@ public class RecordTransformer {
     }
 
     private int[] getMaskValues(Object[] attributeValues) {
-        int[] maskValues = null;
         if (maskAttributeIndex != -1) {
-            maskValues = (int[]) attributeValues[maskAttributeIndex];
+            return (int[]) attributeValues[maskAttributeIndex];
+        } else {
+            return null;
         }
-        return maskValues;
     }
 
     public Record aggregate(Record record) {
-        Object[] attributeValues = record.getAttributeValues();
+        final Object[] attributeValues = record.getAttributeValues();
         if (getCommonArrayValueLength(attributeValues) == -1) {
             return record;
         }
-        int[] maskValues = getMaskValues(attributeValues);
-        Object[] aggregatedValues = new Object[attributeValues.length];
+        final int[] maskValues = getMaskValues(attributeValues);
+        final Object[] aggregatedValues = new Object[attributeValues.length];
         for (int valueIndex = 0; valueIndex < aggregatedValues.length; valueIndex++) {
-            Object attributeValue = attributeValues[valueIndex];
-            AggregatedNumber aggregatedNumber = null;
-            if (attributeValue == maskValues) {
+            final Object attributeValue = attributeValues[valueIndex];
+            final AggregatedNumber aggregatedNumber;
+            if (attributeValue != null && attributeValue == maskValues) {
                 aggregatedNumber = aggregate(maskValues, null);
             } else if (attributeValue instanceof float[]) {
                 aggregatedNumber = aggregate((float[]) attributeValue, maskValues);
             } else if (attributeValue instanceof int[]) {
                 aggregatedNumber = aggregate((int[]) attributeValue, maskValues);
+            } else {
+                aggregatedNumber = null;
             }
             if (aggregatedNumber != null) {
                 aggregatedValues[valueIndex] = aggregatedNumber;
@@ -78,7 +80,7 @@ public class RecordTransformer {
                 aggregatedValues[valueIndex] = attributeValue;
             }
         }
-        DefaultRecord aggregatedRecord = new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
+        final DefaultRecord aggregatedRecord = new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
         if (!isRecordAccepted(aggregatedRecord)) {
             return null;
         }
