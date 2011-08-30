@@ -8,9 +8,14 @@ import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RunningJob;
 import org.jdom.JDOMException;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +78,7 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
+                || commandLine.hasOption("kill")
                 || commandLine.hasOption("copy")
                 || commandLine.hasOption("help");
         List argList = commandLine.getArgList();
@@ -113,12 +119,19 @@ public class ProductionTool {
                 copyFilesToHDFS(commandLine.getOptionValue("copy"), config);
             }
 
-            if (requestPath == null) {
+            if (requestPath == null && !commandLine.hasOption("kill")) {
                 return;
             }
 
             HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
             productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(), new File("."));
+
+            if (commandLine.hasOption("kill")) {
+                cancelProduction(productionService, commandLine.getOptionValue("kill"), config);
+            }
+            if (requestPath == null) {
+                return;
+            }
 
             FileReader requestReader = new FileReader(requestPath);
             ProductionRequest request;
@@ -158,27 +171,45 @@ public class ProductionTool {
         say("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
-        say("Production successfully ordered.");
-        while (!production.getProcessingStatus().getState().isDone()) {
-            Thread.sleep(1000);
-            productionService.updateStatuses();
-            ProcessStatus processingStatus = production.getProcessingStatus();
-            say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
-                              processingStatus.getState(),
-                              processingStatus.getProgress(),
-                              processingStatus.getMessage()));
-        }
-        if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
-            say("Production completed. Output directory is " + production.getStagingPath());
-        } else {
-            exit("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage(), 2);
-        }
+        say("Production successfully ordered. The production ID is: " + production.getId());
+        observeProduction(productionService, production);
         return production;
+    }
+
+    private void cancelProduction(ProductionService productionService, String productionId, Map<String, String> config) throws ProductionException, InterruptedException {
+        if (productionId.startsWith("job_")) {
+            say("Killing Hadoop job '" + productionId + "'...");
+            Configuration hadoopConfig = new Configuration();
+            hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
+            hadoopConfig.set("mapred.job.tracker", config.get("calvalus.hadoop.mapred.job.tracker"));
+            try {
+                JobClient jobClient = new JobClient(new JobConf(hadoopConfig));
+                RunningJob job = jobClient.getJob(productionId);
+                if (job != null) {
+                    job.killJob();
+                }
+            } catch (IOException e) {
+                exit("Failed to kill job", 100, e);
+            }
+        } else {
+            say("Cancelling production '" + productionId + "'...");
+            productionService.cancelProductions(productionId);
+            Production production = productionService.getProduction(productionId);
+            if (production != null) {
+                observeProduction(productionService, production);
+            } else {
+                say("Warning: Production not found: " + productionId);
+            }
+        }
     }
 
     private void stageProduction(ProductionService productionService, Production production) throws ProductionException, InterruptedException {
         say("Staging results...");
         productionService.stageProductions(production.getId());
+        observeStagingStatus(productionService, production);
+    }
+
+    private void observeStagingStatus(ProductionService productionService, Production production) throws InterruptedException {
         while (!production.getStagingStatus().isDone()) {
             Thread.sleep(500);
             productionService.updateStatuses();
@@ -192,6 +223,23 @@ public class ProductionTool {
             say("Staging completed.");
         } else {
             exit("Error: Staging did not complete normally: " + production.getStagingStatus().getMessage(), 1);
+        }
+    }
+
+    private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
+        while (!production.getProcessingStatus().getState().isDone()) {
+            Thread.sleep(1000);
+            productionService.updateStatuses();
+            ProcessStatus processingStatus = production.getProcessingStatus();
+            say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
+                              processingStatus.getState(),
+                              processingStatus.getProgress(),
+                              processingStatus.getMessage()));
+        }
+        if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
+            say("Production completed. Output directory is " + production.getStagingPath());
+        } else {
+            exit("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage(), 2);
         }
     }
 
@@ -339,6 +387,12 @@ public class ProductionTool {
                                   .withArgName("FILES")
                                   .withDescription("Copies FILES to '/calvalus/home/<user>' before the request is executed." +
                                                            "Use the colon ':' to separate paths in SOURCES.")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("kill")
+                                  .hasArgs()
+                                  .withArgName("PID")
+                                  .withDescription("Kills the production with given identifier PID.")
                                   .create());  // (sub) commands don't have short options
         return options;
     }
