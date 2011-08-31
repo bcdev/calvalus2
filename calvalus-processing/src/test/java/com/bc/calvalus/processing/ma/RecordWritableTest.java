@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -12,6 +13,21 @@ import static org.junit.Assert.*;
 
 public class RecordWritableTest {
 
+    private Object[] inputValues;
+
+    @Before
+    public void setUp() throws Exception {
+        inputValues = new Object[]{
+                "Benguela",
+                76432,
+                -2.14,
+                new Date(1313740506645L),
+                Double.NaN,
+                1,
+                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
+        };
+    }
+
     @Test
     public void testConstructor() throws Exception {
         RecordWritable recordWritable = new RecordWritable();
@@ -20,14 +36,6 @@ public class RecordWritableTest {
 
     @Test
     public void testWriteAndRead() throws Exception {
-        Object[] inputValues = {
-                "A",
-                76432,
-                -2.14,
-                new Date(1313740506645L),
-                1,
-                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
-        };
 
         RecordWritable recordWritable = new RecordWritable(inputValues);
 
@@ -46,24 +54,18 @@ public class RecordWritableTest {
 
     @Test
     public void testToString() throws Exception {
-        Object[] inputValues = {
-                "A",
-                76432,
-                -2.14,
-                new Date(1313740506645L),
-                1,
-                new AggregatedNumber(15, 25, 5, 0.0, 1.0, 0.5, 0.1)
-        };
 
         RecordWritable recordWritable = new RecordWritable();
         recordWritable.setValues(inputValues);
 
         assertEquals("" +
-                             "A\t" +
+                             "Benguela\t" +
                              "76432\t" +
                              "-2.14\t" +
                              "2011-08-19 07:55:06\t" +
+                             "NaN\t" +
                              "1\t" +
-                             "0.5\t0.1\t15", recordWritable.toString());
+                             "0.5\t0.1\t15",
+                     recordWritable.toString());
     }
 }

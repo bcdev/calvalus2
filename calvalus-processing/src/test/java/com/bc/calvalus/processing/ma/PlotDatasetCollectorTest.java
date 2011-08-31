@@ -83,6 +83,7 @@ public class PlotDatasetCollectorTest {
         collector.processDataRecord(new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02});
         collector.processDataRecord(new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01});
         collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03});
+        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03});  // will be rejected, warning logged
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);

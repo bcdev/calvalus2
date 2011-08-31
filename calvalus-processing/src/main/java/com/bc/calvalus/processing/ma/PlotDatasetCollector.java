@@ -1,9 +1,12 @@
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Builds a list of {@code PlotDataset}s from given record data.
@@ -11,6 +14,8 @@ import java.util.Map;
  * @author Norman
  */
 public class PlotDatasetCollector {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final String groupAttributeName;
     private Map<String, PlotDataset> plotDatasetMap;
@@ -57,16 +62,36 @@ public class PlotDatasetCollector {
         final String groupName = getGroupName(recordValues);
         for (VariablePair variablePair : variablePairs) {
             PlotDataset plotDataset = getPlotDataset(groupName, variablePair);
-            Number referenceValue = (Number) recordValues[variablePair.referenceAttributeIndex];
-            Number satelliteValue = (Number) recordValues[variablePair.satelliteAttributeIndex];
-            if (isValidDataPoint(referenceValue, satelliteValue)) {
-                collectDataPoint(plotDataset, referenceValue, satelliteValue);
+            Object referenceValue = recordValues[variablePair.referenceAttributeIndex];
+            Object satelliteValue = recordValues[variablePair.satelliteAttributeIndex];
+            Number referenceNumber = toNumber(referenceValue);
+            Number satelliteNumber = toNumber(satelliteValue);
+            if (isValidDataPoint(referenceNumber, satelliteNumber)) {
+                collectDataPoint(plotDataset, referenceNumber, satelliteNumber);
+            } else {
+                LOG.warning(String.format("Match-up data point rejected: " +
+                                                  "referenceName=[%s], " +
+                                                  "referenceIndex=[%s], " +
+                                                  "referenceValue=[%s], " +
+                                                  "satelliteName=[%s], " +
+                                                  "satelliteIndex=[%s], " +
+                                                  "satelliteValue=[%s]",
+                                          variablePair.referenceAttributeName,
+                                          variablePair.referenceAttributeIndex,
+                                          referenceValue,
+                                          variablePair.satelliteAttributeName,
+                                          variablePair.satelliteAttributeIndex,
+                                          satelliteValue));
             }
         }
     }
 
     private boolean isValidDataPoint(Number referenceValue, Number satelliteValue) {
         return isValidNumber(referenceValue) && isValidNumber(satelliteValue);
+    }
+
+    private Number toNumber(Object value) {
+        return value instanceof Number ? (Number) value : null;
     }
 
     private boolean isValidNumber(Number number) {
