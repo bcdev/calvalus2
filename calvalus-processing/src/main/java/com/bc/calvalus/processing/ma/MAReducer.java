@@ -54,8 +54,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
         while (context.nextKey()) {
             final Text key = context.getCurrentKey();
-            final Iterable<RecordWritable> values = context.getValues();
-            final Iterator<RecordWritable> iterator = values.iterator();
+            final Iterator<RecordWritable> iterator = context.getValues().iterator();
             if (iterator.hasNext()) {
                 final RecordWritable record = iterator.next();
                 context.write(key, record);
