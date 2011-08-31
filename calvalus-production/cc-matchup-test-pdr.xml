@@ -29,14 +29,14 @@
         <wps:Input>
             <ows:Identifier>minDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2005-01-01</wps:LiteralData>
+                <wps:LiteralData>2005-05-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2006-01-01</wps:LiteralData>
+                <wps:LiteralData>2005-09-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
