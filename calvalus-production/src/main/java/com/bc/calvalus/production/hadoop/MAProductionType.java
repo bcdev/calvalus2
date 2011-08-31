@@ -38,11 +38,10 @@ public class MAProductionType extends HadoopProductionType {
         String inputPath = productionRequest.getParameter("inputPath");
         Date minDate = productionRequest.getDate("minDate", null);
         Date maxDate = productionRequest.getDate("maxDate", null);
-        // todo - use geoRegion to filter input files (nf,20.04.2011)
-        String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
-
+        String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
+        String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
 
         String inputFormat = productionRequest.getParameter("calvalus.input.format", "ENVISAT");
 

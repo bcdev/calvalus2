@@ -22,7 +22,7 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/eodata/MER_FSG_1P/.*/${yyyy}/${MM}/${dd}/.*.N1</wps:LiteralData>
+                <wps:LiteralData>/calvalus/eodata/MER_FSG_1P/${region}/${yyyy}/${MM}/${dd}/.*.N1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -37,6 +37,23 @@
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>2006-01-01</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>regionName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>northsea</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>regionWKT</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>
+                    polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00,
+                             0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))
+                </wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -65,30 +82,15 @@
         </wps:Input>
 
         <wps:Input>
-             <ows:Identifier>processorParameters</ows:Identifier>
-             <ows:Title>The processor's parameters</ows:Title>
-             <wps:Data>
-                 <wps:ComplexData>
-                     <parameters>
-                       <averageSalinity>35</averageSalinity>
-                       <averageTemperature>15</averageTemperature>
-                     </parameters>
-                 </wps:ComplexData>
-             </wps:Data>
-         </wps:Input>
-
-         <wps:Input>
-             <ows:Identifier>calvalus.system.properties</ows:Identifier>
-             <wps:Data>
-                 <wps:LiteralData>beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true,beam.pixelGeoCoding.fractionAccuracy=true</wps:LiteralData>
-             </wps:Data>
-         </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.hadoop.mapred.job.priority</ows:Identifier>
-            <ows:Title>The priority of the Hadoop job. One of VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW </ows:Title>
+            <ows:Identifier>processorParameters</ows:Identifier>
+            <ows:Title>The processor's parameters</ows:Title>
             <wps:Data>
-                <wps:LiteralData>VERY_HIGH</wps:LiteralData>
+                <wps:ComplexData>
+                    <parameters>
+                        <averageSalinity>35</averageSalinity>
+                        <averageTemperature>15</averageTemperature>
+                    </parameters>
+                </wps:ComplexData>
             </wps:Data>
         </wps:Input>
 

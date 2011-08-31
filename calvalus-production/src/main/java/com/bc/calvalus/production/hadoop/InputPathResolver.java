@@ -35,19 +35,19 @@ import java.util.*;
  */
 public class InputPathResolver {
 
-    String region;
-    Date minDate;
-    Date maxDate;
+    private Date minDate;
+    private Date maxDate;
+    private String regionName;
 
     public InputPathResolver() {
     }
 
-    public String getRegion() {
-        return region;
+    public String getRegionName() {
+        return regionName;
     }
 
-    public void setRegion(String region) {
-        this.region = region;
+    public void setRegionName(String regionName) {
+        this.regionName = regionName;
     }
 
     public Date getMinDate() {
@@ -67,8 +67,8 @@ public class InputPathResolver {
     }
 
     public List<String> resolve(String inputPathPattern) {
-        if (region != null) {
-            inputPathPattern = inputPathPattern.replace("${region}", region);
+        if (regionName != null) {
+            inputPathPattern = inputPathPattern.replace("${region}", regionName);
         } else {
             inputPathPattern = inputPathPattern.replace("${region}", ".*");
         }
@@ -99,11 +99,11 @@ public class InputPathResolver {
         return globList;
     }
 
-    public static List<String> getInputPathPatterns(String inputPathPattern, String region, Date minDate, Date maxDate) {
+    public static List<String> getInputPathPatterns(String inputPathPattern, Date minDate, Date maxDate, String regionName) {
         InputPathResolver inputPathResolver = new InputPathResolver();
-        inputPathResolver.setRegion(region);
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
+        inputPathResolver.setRegionName(regionName);
         return inputPathResolver.resolve(inputPathPattern);
     }
 }

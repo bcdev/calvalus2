@@ -98,10 +98,11 @@ public abstract class HadoopProductionType implements ProductionType {
     protected abstract Staging createUnsubmittedStaging(Production production);
 
 
-    public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate) throws ProductionException {
+    public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
+        inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         try {
             return inventoryService.getDataInputPaths(inputPatterns);

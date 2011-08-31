@@ -63,6 +63,7 @@ public class L2ProductionType extends HadoopProductionType {
                                       ProductionRequest productionRequest) throws ProductionException {
 
         String inputPath = productionRequest.getParameter("inputPath");
+        String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
         String dateList = productionRequest.getParameter("dateList", null);
@@ -74,7 +75,7 @@ public class L2ProductionType extends HadoopProductionType {
             for (String dateAsString : dateSet) {
                 try {
                     Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
-                    inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date)));
+                    inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date, regionName)));
                 } catch (ParseException e) {
                     throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
                 }
@@ -83,7 +84,7 @@ public class L2ProductionType extends HadoopProductionType {
         } else {
             Date minDate = productionRequest.getDate("minDate", null);
             Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputPaths(inputPath, minDate, maxDate);
+            inputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
         }
         if (inputFiles.length == 0) {
             throw new ProductionException("No input files found for given time range.");

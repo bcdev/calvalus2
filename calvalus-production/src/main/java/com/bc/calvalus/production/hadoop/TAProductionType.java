@@ -45,6 +45,7 @@ public class TAProductionType extends HadoopProductionType {
                                                productionRequest.getParameter("processorBundleName"),
                                                productionRequest.getParameter("processorBundleVersion"));
 
+        String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
         L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
@@ -61,8 +62,7 @@ public class TAProductionType extends HadoopProductionType {
             String l3JobName = String.format("%s_%d_L3", productionId, (i + 1));
             String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
 
-            // todo - use geoRegion to filter input files (nf,20.04.2011)
-            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2);
+            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
                 String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);

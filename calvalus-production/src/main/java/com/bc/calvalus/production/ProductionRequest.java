@@ -255,6 +255,10 @@ public class ProductionRequest {
         return getBoolean("autoStaging", false);
     }
 
+    public String getRegionName() {
+        return getParameter("regionName", null);
+    }
+
     public Geometry getRegionGeometry() throws ProductionException {
         Geometry geometry = getGeometry("regionWKT", null);
         if (geometry == null) {
