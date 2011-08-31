@@ -155,15 +155,30 @@ public class PlotDatasetCollector {
     private static List<VariablePair> findVariablePairs(Object[] headerValues) {
         ArrayList<VariablePair> variablePairs = new ArrayList<VariablePair>();
         for (int i = 0; i < headerValues.length - 1; i++) {
-            String headerName1 = headerValues[i].toString();
-            for (int j = i + 1; j < headerValues.length; j++) {
-                String headerName2 = headerValues[j].toString();
-                if (headerName1.equalsIgnoreCase(headerName2)) {
-                    variablePairs.add(new VariablePair(headerName1, i, headerName2, j));
-                }
+            VariablePair pair = findPair(headerValues, i);
+            if (pair != null) {
+                variablePairs.add(pair);
             }
         }
         return variablePairs;
+    }
+
+    private static VariablePair findPair(Object[] headerValues, int i) {
+        VariablePair pair = null;
+        String headerName1 = headerValues[i].toString();
+        for (int j = i + 1; j < headerValues.length; j++) {
+            String headerName2 = headerValues[j].toString();
+            if (headerName1.equalsIgnoreCase(headerName2)) {
+                return new VariablePair(headerName1, i, headerName2, j);
+            }
+        }
+        for (int j = i + 1; j < headerValues.length; j++) {
+            String headerName2 = headerValues[j].toString();
+            if (headerName2.toLowerCase().startsWith(headerName1)) {
+                return new VariablePair(headerName1, i, headerName2, j);
+            }
+        }
+        return pair;
     }
 
     public static class PlotDataset {
