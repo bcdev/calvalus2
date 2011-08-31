@@ -88,9 +88,9 @@ public class L3ProductionTypeTest {
     @Test
     public void testGeoRegion() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        Geometry regionOfInterest = productionRequest.getRegionGeometry();
-        assertNotNull(regionOfInterest);
-        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionOfInterest.toString());
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        assertNotNull(regionGeometry);
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", regionGeometry.toString());
     }
 
     /*

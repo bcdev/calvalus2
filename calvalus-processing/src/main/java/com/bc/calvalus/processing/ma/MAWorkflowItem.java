@@ -93,12 +93,21 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
-//        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
-//        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
-        configuration.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+        // Note: the are used in ProductFactory.
+        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
+        configuration.set("calvalus.system.beam.reader.tileHeight", "32");
+        configuration.set("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
+        configuration.set("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
+        configuration.set("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
+
         // Enable JVM reuse, to speedup processing.
         // Maybe apply to other workflow-items in the future.
-        configuration.setInt("mapred.job.reuse.jvm.num.tasks", 10);
+        // configuration.setInt("mapred.job.reuse.jvm.num.tasks", 10);
+
+        // disabled
+        configuration.setInt("mapred.job.reuse.jvm.num.tasks", 1);
+
+        // beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true,beam.pixelGeoCoding.fractionAccuracy=true
 
         JobUtils.clearAndSetOutputDir(job, outputDir);
 

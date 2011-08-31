@@ -45,7 +45,7 @@ public class TAProductionType extends HadoopProductionType {
                                                productionRequest.getParameter("processorBundleName"),
                                                productionRequest.getParameter("processorBundleVersion"));
 
-        Geometry roiGeometry = productionRequest.getRegionGeometry();
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
 
         L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
         TAConfig taConfig = createTAConfig(productionRequest);
@@ -72,7 +72,7 @@ public class TAProductionType extends HadoopProductionType {
                                                                    processorBundle,
                                                                    processorName,
                                                                    processorParameters,
-                                                                   roiGeometry,
+                                                                   regionGeometry,
                                                                    l1InputFiles,
                                                                    l3OutputDir,
                                                                    l3Config,
@@ -129,8 +129,8 @@ public class TAProductionType extends HadoopProductionType {
 
     static TAConfig createTAConfig(ProductionRequest productionRequest) throws ProductionException {
         String regionName = productionRequest.getParameter("regionName");
-        Geometry geometry = productionRequest.getRegionGeometry();
-        TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, geometry);
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, regionGeometry);
         return new TAConfig(regionConfiguration);
     }
 }

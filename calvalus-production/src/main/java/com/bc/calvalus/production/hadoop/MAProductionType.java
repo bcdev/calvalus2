@@ -10,6 +10,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.Date;
 
@@ -40,6 +41,9 @@ public class MAProductionType extends HadoopProductionType {
         // todo - use geoRegion to filter input files (nf,20.04.2011)
         String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate);
 
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+
+
         String inputFormat = productionRequest.getParameter("calvalus.input.format", "ENVISAT");
 
         String processorName = productionRequest.getParameter("processorName");
@@ -58,14 +62,13 @@ public class MAProductionType extends HadoopProductionType {
                                               processorBundle,
                                               processorName,
                                               processorParameters,
-                                              null,
+                                              regionGeometry,
                                               l1InputFiles,
                                               inputFormat,
                                               outputDir,
                                               maConfig,
                                               "",
                                               "");
-
         } else {
             throw new ProductionException("No input products found for given time range.");
         }

@@ -135,7 +135,7 @@ public class ProductionRequestTest {
     @Test
     public void testGetRegionGeometry() throws ProductionException {
         ProductionRequest req = new ProductionRequest("typeA", "ewa");
-        Geometry regionOfInterest;
+        Geometry regionGeometry;
 
         try {
             req.getRegionGeometry();
@@ -150,21 +150,21 @@ public class ProductionRequestTest {
                                     "maxLon", "-20.0",
                                     "minLat", "13.4",
                                     "maxLat", "23.4");
-        regionOfInterest = req.getRegionGeometry();
-        assertTrue(regionOfInterest instanceof Polygon);
-        assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionOfInterest.toString());
+        regionGeometry = req.getRegionGeometry();
+        assertTrue(regionGeometry instanceof Polygon);
+        assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionGeometry.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POINT(-60.0 13.4)");
-        regionOfInterest = req.getRegionGeometry();
-        assertTrue(regionOfInterest instanceof Point);
-        assertEquals("POINT (-60 13.4)", regionOfInterest.toString());
+        regionGeometry = req.getRegionGeometry();
+        assertTrue(regionGeometry instanceof Point);
+        assertEquals("POINT (-60 13.4)", regionGeometry.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))");
-        regionOfInterest = req.getRegionGeometry();
-        assertTrue(regionOfInterest instanceof Polygon);
-        assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionOfInterest.toString());
+        regionGeometry = req.getRegionGeometry();
+        assertTrue(regionGeometry instanceof Polygon);
+        assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionGeometry.toString());
     }
 
 

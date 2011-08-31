@@ -45,7 +45,7 @@ class L3Staging extends Staging {
             stagingDir.mkdirs();
         }
 
-        Geometry roiGeometry = production.getProductionRequest().getRegionGeometry();
+        Geometry regionGeometry = production.getProductionRequest().getRegionGeometry();
 
         Logger logger = Logger.getLogger("com.bc.calvalus");
         float progress = 0f;
@@ -72,7 +72,7 @@ class L3Staging extends Staging {
                                                                               l3WorkflowItem.getMaxDate());
 
                     // todo - need a progress monitor here
-                    formatter.format(formatterConfig, l3Config, outputDir, roiGeometry);
+                    formatter.format(formatterConfig, l3Config, outputDir, regionGeometry);
 
                     String outputFilename = new File(formatterConfig.getOutputFile()).getName();
                     String zipFileName = FileUtils.exchangeExtension(outputFilename, ".zip");

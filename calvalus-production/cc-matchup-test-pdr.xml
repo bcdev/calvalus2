@@ -52,41 +52,43 @@
             <ows:Identifier>processorBundleVersion</ows:Identifier>
             <ows:Title>The processor's bundle version</ows:Title>
             <wps:Data>
-                <wps:LiteralData>1.3-SNAPSHOT</wps:LiteralData>
+                <wps:LiteralData>1.2-SNAPSHOT</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>processorName</ows:Identifier>
-            <ows:Title>the name of the GPF operator</ows:Title>
+            <ows:Title>The name of the GPF operator</ows:Title>
             <wps:Data>
                 <wps:LiteralData>CoastColour.L2W</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
-            <ows:Identifier>processorParameters</ows:Identifier>
-            <ows:Title>The processor's parameters</ows:Title>
+             <ows:Identifier>processorParameters</ows:Identifier>
+             <ows:Title>The processor's parameters</ows:Title>
+             <wps:Data>
+                 <wps:ComplexData>
+                     <parameters>
+                       <averageSalinity>35</averageSalinity>
+                       <averageTemperature>15</averageTemperature>
+                     </parameters>
+                 </wps:ComplexData>
+             </wps:Data>
+         </wps:Input>
+
+         <wps:Input>
+             <ows:Identifier>calvalus.system.properties</ows:Identifier>
+             <wps:Data>
+                 <wps:LiteralData>beam.reader.tileHeight=32,beam.reader.tileWidth=*,beam.pixelGeoCoding.useTiling=true,beam.envisat.usePixelGeoCoding=true,beam.pixelGeoCoding.fractionAccuracy=true</wps:LiteralData>
+             </wps:Data>
+         </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.hadoop.mapred.job.priority</ows:Identifier>
+            <ows:Title>The priority of the Hadoop job. One of VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW </ows:Title>
             <wps:Data>
-                <wps:ComplexData>
-                    <parameters>
-                        <doCalibration>true</doCalibration>
-                        <doSmile>true</doSmile>
-                        <doEqualization>true</doEqualization>
-                        <useIdepix>true</useIdepix>
-                        <algorithm>CoastColour</algorithm>
-                        <brightTestThreshold>0.03</brightTestThreshold>
-                        <brightTestWavelength>865</brightTestWavelength>
-                        <averageSalinity>35.0</averageSalinity>
-                        <averageTemperature>15.0</averageTemperature>
-                        <landExpression>l1p_flags.CC_LAND</landExpression>
-                        <cloudIceExpression>l1p_flags.CC_CLOUD || l1p_flags.CC_SNOW_ICE</cloudIceExpression>
-                        <invalidPixelExpression>l2r_flags.INVALID</invalidPixelExpression>
-                        <outputReflec>false</outputReflec>
-                        <outputAPoc>false</outputAPoc>
-                        <outputKdSpectrum>true</outputKdSpectrum>
-                    </parameters>
-                </wps:ComplexData>
+                <wps:LiteralData>VERY_HIGH</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -108,15 +110,6 @@
 
                     </parameters>
                 </wps:ComplexData>
-            </wps:Data>
-        </wps:Input>
-
-
-        <wps:Input>
-            <ows:Identifier>calvalus.hadoop.mapred.job.priority</ows:Identifier>
-            <ows:Title>The priority of the Hadoop job. One of VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW </ows:Title>
-            <wps:Data>
-                <wps:LiteralData>VERY_HIGH</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

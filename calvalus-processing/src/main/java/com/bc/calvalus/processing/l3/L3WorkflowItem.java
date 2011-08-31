@@ -31,7 +31,6 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Properties;
 
 /**
  * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
@@ -44,7 +43,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
     private final String[] inputFiles;
     private final String outputDir;
     private final L3Config l3Config;
-    private final Geometry roiGeometry;
+    private final Geometry regionGeometry;
     private final String minDate;
     private final String maxDate;
 
@@ -53,7 +52,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
                           String processorBundle,
                           String processorName,
                           String processorParameters,
-                          Geometry roiGeometry,
+                          Geometry regionGeometry,
                           String[] inputFiles,
                           String outputDir,
                           L3Config l3Config,
@@ -66,7 +65,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         this.inputFiles = inputFiles;
         this.outputDir = outputDir;
         this.l3Config = l3Config;
-        this.roiGeometry = roiGeometry;
+        this.regionGeometry = regionGeometry;
         this.minDate = minDate;
         this.maxDate = maxDate;
     }
@@ -97,7 +96,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
         configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
         configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
-        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, roiGeometry != null ? roiGeometry.toString() : "");
+        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
         configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
 
