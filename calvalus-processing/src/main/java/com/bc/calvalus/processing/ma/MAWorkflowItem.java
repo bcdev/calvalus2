@@ -94,7 +94,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
         // Note: the are used in ProductFactory.
-        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
+        configuration.set("calvalus.system.beam.reader.tileWidth", "32");
         configuration.set("calvalus.system.beam.reader.tileHeight", "32");
         configuration.set("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
         configuration.set("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
