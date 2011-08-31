@@ -36,7 +36,7 @@
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2005-09-01</wps:LiteralData>
+                <wps:LiteralData>2005-07-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
