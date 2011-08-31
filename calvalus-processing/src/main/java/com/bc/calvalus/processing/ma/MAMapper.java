@@ -41,20 +41,22 @@ import java.util.logging.Logger;
  */
 public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWritable> {
 
+    public static final Text HEADER_KEY = new Text("#");
+
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-    public static final int MiB = 1024 * 1024;
-    public static final Text HEADER_KEY = new Text("#");
+    private static final int MiB = 1024 * 1024;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        final FileSplit split = (FileSplit) context.getInputSplit();
+        final Path inputPath = split.getPath();
+
         final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
         final ProductFactory productFactory = new ProductFactory(jobConfig);
-
-        final FileSplit split = (FileSplit) context.getInputSplit();
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
@@ -63,7 +65,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         long t0;
 
         t0 = now();
-        final Path inputPath = split.getPath();
 
         String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
         String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
@@ -74,6 +75,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                     regionGeometryWkt,
                                                     level2OperatorName,
                                                     level2Parameters);
+        if (product == null) {
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
+            return;
+        }
+
         // Actually wrong name for processed products, but we need the field "source_name" in the export data table
         product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
@@ -104,7 +110,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         t0 = now();
         int numMatchUps = 0;
         int numEmittedRecords = 0;
-        for (Record extractedRecord :extractedRecords) {
+        for (Record extractedRecord : extractedRecords) {
 
             // write records
             if (maConfig.getAggregateMacroPixel()) {
