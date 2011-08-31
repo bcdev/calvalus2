@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * A factory for products.
@@ -53,6 +55,9 @@ import java.util.Map;
 public class ProductFactory {
     private static final int M = 1024 * 1024;
     public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
 
     private final Configuration configuration;
 
@@ -67,19 +72,21 @@ public class ProductFactory {
     }
 
     public static void initGpf(Configuration configuration, ClassLoader classLoader) {
+        initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(classLoader);
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-        initSystemProperties(configuration);
     }
 
     private static void initSystemProperties(Configuration configuration) {
         for (Map.Entry<String, String> entry : configuration) {
             String key = entry.getKey();
             if (key.startsWith("calvalus.system.")) {
-                String properiesName = key.substring("calvalus.system.".length());
-                System.setProperty(properiesName, entry.getValue());
+                String propertyName = key.substring("calvalus.system.".length());
+                String propertyValue = entry.getValue();
+                LOG.info(String.format("Setting system property: %s=%s", propertyName, propertyValue));
+                System.setProperty(propertyName, propertyValue);
             }
         }
     }
