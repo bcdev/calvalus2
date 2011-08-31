@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.ma.MAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -13,7 +14,6 @@ import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * The staging job for match-up analysis (MA) results.
@@ -22,7 +22,6 @@ import java.util.logging.Logger;
  */
 class MAStaging extends Staging {
 
-    public static final Logger LOGGER = Logger.getLogger("com.bc.calvalus");
     private final Production production;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
@@ -39,16 +38,44 @@ class MAStaging extends Staging {
     public Object call() throws Exception {
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0F, ""));
         MAWorkflowItem workflow = (MAWorkflowItem) production.getWorkflow();
-        Path remoteFile = new Path(workflow.getOutputDir(), "part-r-00000");
+        Path remoteDataFile = new Path(workflow.getOutputDir(), "part-r-00000");
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
+
         try {
-            FileSystem fileSystem = remoteFile.getFileSystem(hadoopConfiguration);
-            FileUtil.copy(fileSystem, remoteFile, new File(stagingDir.getCanonicalPath(), "ma-result.csv"), false, hadoopConfiguration);
-            production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
+            FileSystem fileSystem = remoteDataFile.getFileSystem(hadoopConfiguration);
+
+            /*
+            Text key = new Text();
+            RecordWritable value = new RecordWritable();
+            SequenceFile.Reader dataReader = new SequenceFile.Reader(fileSystem, remoteDataFile, hadoopConfiguration);
+            while (dataReader.next(key, value)) {
+
+            }
+            */
+
+            FileUtil.copy(fileSystem, remoteDataFile, new File(stagingDir, "ma-result.csv"), false, hadoopConfiguration);
+            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.5F, ""));
+
+            FileStatus[] imageFileStatuses = fileSystem.globStatus(new Path(workflow.getOutputDir(), "*.png"));
+            Path[] imageFilePaths = FileUtil.stat2Paths(imageFileStatuses);
+            if (imageFilePaths != null) {
+                for (int i = 0; i < imageFilePaths.length; i++) {
+                    Path remoteImageFile = imageFilePaths[i];
+                    FileUtil.copy(fileSystem, remoteImageFile, new File(stagingDir, remoteImageFile.getName()),
+                                  false, hadoopConfiguration);
+                    production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.5F + (0.5F * i) / imageFilePaths.length, ""));
+                }
+            }
+
+            zip(stagingDir, new File(stagingDir.getParentFile(), stagingDir.getName() + ".zip"));
+            // FileUtil.fullyDelete();
+
+            production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
+
         } catch (IOException e) {
-            production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, 1.0f, e.getMessage()));
+            production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, 1.0F, e.getMessage()));
         }
 
         return null;
