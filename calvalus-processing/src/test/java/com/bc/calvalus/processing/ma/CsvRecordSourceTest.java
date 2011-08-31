@@ -7,10 +7,10 @@ import org.junit.Test;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.text.DateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class CsvRecordSourceTest {
     @Test
@@ -126,9 +126,10 @@ public class CsvRecordSourceTest {
 
         Header header = recordSource.getHeader();
         assertNotNull(header);
-        assertNotNull(header.getAttributeNames());
-        assertArrayEquals(new String[]{"ID", "SITE", "FILE_ID", "LAT", "LONG", "TIME", "CONC_CHL", "KD_490"},
-                          header.getAttributeNames());
+        String[] headerAttributeNames = header.getAttributeNames();
+        assertNotNull(headerAttributeNames);
+        assertEquals(8, headerAttributeNames.length);
+        assertArrayEquals(new String[]{"ID", "SITE", "FILE_ID", "LAT", "LONG", "TIME", "CONC_CHL", "KD_490"}, headerAttributeNames);
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
 
@@ -136,9 +137,25 @@ public class CsvRecordSourceTest {
         Iterable<Record> records = recordSource.getRecords();
         int n = 0;
         for (Record record : records) {
-             n++;
+            Object[] dataAttributeValues = record.getAttributeValues();
+            assertEquals(8, dataAttributeValues.length);
+            assertType(n, Double.class, dataAttributeValues[0]);
+            assertType(n, Double.class, dataAttributeValues[1]);
+            assertType(n, Double.class, dataAttributeValues[2]);
+            assertType(n, Double.class, dataAttributeValues[3]);
+            assertType(n, Double.class, dataAttributeValues[4]);
+            assertType(n, Date.class, dataAttributeValues[5]);
+            assertType(n, Double.class, dataAttributeValues[6]);
+            assertType(n, Double.class, dataAttributeValues[7]);
+            n++;
         }
         assertEquals(11876, n);
         System.out.println("CsvRecordSource read " + n + " records, took " + (System.currentTimeMillis() - t0) + " ms");
+    }
+
+    private static void assertType(int n, Class<?> expectedType, Object attributeValue) {
+        if (attributeValue != null) {
+            assertEquals(String.format("Record #%d: value=%s ", (n + 1), attributeValue), expectedType, attributeValue.getClass());
+        }
     }
 }

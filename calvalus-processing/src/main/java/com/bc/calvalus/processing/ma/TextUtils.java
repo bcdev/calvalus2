@@ -27,29 +27,6 @@ public class TextUtils {
         return -1;
     }
 
-    public static Object[] toObjects(String[] textValues) {
-        return toObjects(textValues, DEFAULT_DATE_FORMAT);
-    }
-
-    public static Object[] toObjects(String[] textValues, DateFormat dateFormat) {
-        final Object[] values = new Object[textValues.length];
-        for (int i = 0; i < textValues.length; i++) {
-            final String text = textValues[i];
-            if (text != null && !text.isEmpty()) {
-                try {
-                    values[i] = Double.valueOf(text);
-                } catch (NumberFormatException e) {
-                    try {
-                        values[i] = dateFormat.parse(text);
-                    } catch (ParseException e1) {
-                        values[i] = text;
-                    }
-                }
-            }
-        }
-        return values;
-    }
-
     public static String toString(Object[] values) {
         return toString(values, DEFAULT_COLUMN_SEPARATOR_CHAR, DEFAULT_DATE_FORMAT);
     }
