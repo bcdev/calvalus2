@@ -271,7 +271,7 @@ public class ProductionTool {
     }
 
     private Path[] toPathArray(String pathsSpec) {
-        String[] parts = pathsSpec.split(":");
+        String[] parts = pathsSpec.split(File.pathSeparator);
         Path[] paths = new Path[parts.length];
         for (int i = 0; i < parts.length; i++) {
             paths[i] = new Path(parts[i]);
