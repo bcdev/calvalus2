@@ -9,6 +9,10 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.AGGREGATION_PREFIX;
 
 public class RecordTransformer {
 
+    private static final String SUFFIX_MEAN = "_mean";
+    private static final String SUFFIX_SIGMA = "_sigma";
+    private static final String SUFFIX_N = "_n";
+
     private final int maskAttributeIndex;
     private final double filteredMeanCoeff;
     private final RecordFilter[] recordFilters;
@@ -123,24 +127,24 @@ public class RecordTransformer {
         final double mean = numGoodPixels > 0 ? sum / numGoodPixels : Float.NaN;
 
         // Step 2: Compute stdDev
-        double sumSqrDev = 0;
+        double sumSigma = 0;
         for (int i = 0; i < values.length; i++) {
             final float value = values[i];
             if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
-                sumSqrDev += (mean - value) * (mean - value);
+                sumSigma += (mean - value) * (mean - value);
             }
         }
-        final double stdDev = numGoodPixels > 1 ? Math.sqrt(sumSqrDev / (numGoodPixels - 1)) : 0.0;
+        final double sigma = numGoodPixels > 1 ? Math.sqrt(sumSigma / (numGoodPixels - 1)) : 0.0;
 
         // If we don't want to filter or we can't, then we are done.
-        if (filteredMeanCoeff <= 0.0 || Math.abs(stdDev) < 1E-10) {
-            return new AggregatedNumber(numGoodPixels, numTotalPixels, 0, min, max, mean, stdDev);
+        if (filteredMeanCoeff <= 0.0 || Math.abs(sigma) < 1E-10) {
+            return new AggregatedNumber(numGoodPixels, numTotalPixels, 0, min, max, mean, sigma);
         }
 
         // Step 3: Compute filteredMean
 
-        final double lowerBound = mean - filteredMeanCoeff * stdDev;
-        final double upperBound = mean + filteredMeanCoeff * stdDev;
+        final double lowerBound = mean - filteredMeanCoeff * sigma;
+        final double upperBound = mean + filteredMeanCoeff * sigma;
 
         numGoodPixels = 0;
         int numFilteredPixels = 0;
@@ -165,20 +169,20 @@ public class RecordTransformer {
         final double filteredMean = numGoodPixels > 0 ? filteredSum / numGoodPixels : Float.NaN;
 
         // Step 4: Compute filteredStdDev
-        double filteredSumSqrDev = 0;
+        double filteredSumSigma = 0;
         for (int i = 0; i < values.length; i++) {
             final float value = values[i];
             if (!Float.isNaN(value) && isGoodPixel(maskValues, i)) {
                 if (value > lowerBound && value < upperBound) {
-                    filteredSumSqrDev += (filteredMean - value) * (filteredMean - value);
+                    filteredSumSigma += (filteredMean - value) * (filteredMean - value);
                 }
             }
         }
-        final double filteredStdDev = numGoodPixels > 1 ? Math.sqrt(filteredSumSqrDev / (numGoodPixels - 1)) : 0.0;
+        final double filteredSigma = numGoodPixels > 1 ? Math.sqrt(filteredSumSigma / (numGoodPixels - 1)) : 0.0;
 
         // Done!
         return new AggregatedNumber(numGoodPixels, numTotalPixels, numFilteredPixels,
-                                    filteredMin, filteredMax, filteredMean, filteredStdDev);
+                                    filteredMin, filteredMax, filteredMean, filteredSigma);
     }
 
     private static boolean isGoodPixel(int[] maskValues, int i) {
@@ -228,9 +232,9 @@ public class RecordTransformer {
             if (attributeName.startsWith(AGGREGATION_PREFIX)) {
                 String name = attributeName.substring(AGGREGATION_PREFIX.length());
                 if (makeStatColumns) {
-                    strings.add(name + "_mean");
-                    strings.add(name + "_sigma");
-                    strings.add(name + "_n");
+                    strings.add(name + SUFFIX_MEAN);
+                    strings.add(name + SUFFIX_SIGMA);
+                    strings.add(name + SUFFIX_N);
                 } else {
                     strings.add(name);
                 }
