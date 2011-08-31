@@ -148,20 +148,20 @@ public class ProductRecordSourceTest {
 
         // 0. derived information
         assertEquals("source_name", attributeNames[index++]);
-        assertEquals("pixel_x", attributeNames[index++]);
-        assertEquals("pixel_y", attributeNames[index++]);
-        assertEquals("pixel_lat", attributeNames[index++]);
-        assertEquals("pixel_lon", attributeNames[index++]);
+        assertEquals("*pixel_x", attributeNames[index++]);
+        assertEquals("*pixel_y", attributeNames[index++]);
+        assertEquals("*pixel_lat", attributeNames[index++]);
+        assertEquals("*pixel_lon", attributeNames[index++]);
         assertEquals("pixel_time", attributeNames[index++]);
         // 1. bands
-        assertEquals("b1", attributeNames[index++]);
-        assertEquals("b2", attributeNames[index++]);
-        assertEquals("b3", attributeNames[index++]);
+        assertEquals("*b1", attributeNames[index++]);
+        assertEquals("*b2", attributeNames[index++]);
+        assertEquals("*b3", attributeNames[index++]);
         // 2. flags
-        assertEquals("f.valid", attributeNames[index++]);
+        assertEquals("*f.valid", attributeNames[index++]);
         // 3. tie-points
-        assertEquals("latitude", attributeNames[index++]);
-        assertEquals("longitude", attributeNames[index++]);
+        assertEquals("*latitude", attributeNames[index++]);
+        assertEquals("*longitude", attributeNames[index++]);
 
         assertEquals(12, index);
     }
@@ -198,21 +198,21 @@ public class ProductRecordSourceTest {
         assertEquals("v", attributeNames[index++]);
         assertEquals("w", attributeNames[index++]);
         assertEquals("source_name", attributeNames[index++]);
-        assertEquals("pixel_x", attributeNames[index++]);
-        assertEquals("pixel_y", attributeNames[index++]);
-        assertEquals("pixel_lat", attributeNames[index++]);
-        assertEquals("pixel_lon", attributeNames[index++]);
+        assertEquals("*pixel_x", attributeNames[index++]);
+        assertEquals("*pixel_y", attributeNames[index++]);
+        assertEquals("*pixel_lat", attributeNames[index++]);
+        assertEquals("*pixel_lon", attributeNames[index++]);
         assertEquals("pixel_time", attributeNames[index++]);
-        assertEquals("pixel_mask", attributeNames[index++]);
+        assertEquals("*pixel_mask", attributeNames[index++]);
         // 1. bands
-        assertEquals("b1", attributeNames[index++]);
-        assertEquals("b2", attributeNames[index++]);
-        assertEquals("b3", attributeNames[index++]);
+        assertEquals("*b1", attributeNames[index++]);
+        assertEquals("*b2", attributeNames[index++]);
+        assertEquals("*b3", attributeNames[index++]);
         // 2. flags
-        assertEquals("f.valid", attributeNames[index++]);
+        assertEquals("*f.valid", attributeNames[index++]);
         // 3. tie-points
-        assertEquals("latitude", attributeNames[index++]);
-        assertEquals("longitude", attributeNames[index++]);
+        assertEquals("*latitude", attributeNames[index++]);
+        assertEquals("*longitude", attributeNames[index++]);
         assertEquals(16, index);
 
         Iterable<Record> records = output.getRecords();
@@ -376,7 +376,7 @@ public class ProductRecordSourceTest {
         assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
 
-        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).expand(records.get(0));
+        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).explode(records.get(0));
         assertNotNull(flattenedRecords);
         assertEquals(9, flattenedRecords.size());
 

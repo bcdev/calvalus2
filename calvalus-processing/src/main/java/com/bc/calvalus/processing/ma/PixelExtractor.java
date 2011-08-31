@@ -1,20 +1,11 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
@@ -27,6 +18,7 @@ import java.util.Date;
 public class PixelExtractor {
 
     public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
+    public static final String AGGREGATION_PREFIX = "*";
 
     private final Header header;
     private final Product product;
@@ -276,20 +268,20 @@ public class PixelExtractor {
 
         // 0. derived information
         attributeNames.add(ProductRecordSource.SOURCE_NAME_ATT_NAME);
-        attributeNames.add(ProductRecordSource.PIXEL_X_ATT_NAME);
-        attributeNames.add(ProductRecordSource.PIXEL_Y_ATT_NAME);
-        attributeNames.add(ProductRecordSource.PIXEL_LAT_ATT_NAME);
-        attributeNames.add(ProductRecordSource.PIXEL_LON_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LAT_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LON_ATT_NAME);
         attributeNames.add(ProductRecordSource.PIXEL_TIME_ATT_NAME);
         if (pixelMask != null) {
-            attributeNames.add(ProductRecordSource.PIXEL_MASK_ATT_NAME);
+            attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_MASK_ATT_NAME);
         }
 
         // 1. bands
         Band[] productBands = product.getBands();
         for (Band band : productBands) {
             if (!band.isFlagBand()) {
-                attributeNames.add(band.getName());
+                attributeNames.add(AGGREGATION_PREFIX + band.getName());
             }
         }
 
@@ -299,7 +291,7 @@ public class PixelExtractor {
                 FlagCoding flagCoding = band.getFlagCoding();
                 String[] flagNames = flagCoding.getFlagNames();
                 for (String flagName : flagNames) {
-                    attributeNames.add(band.getName() + "." + flagName);
+                    attributeNames.add(AGGREGATION_PREFIX + band.getName() + "." + flagName);
                     // Note: side-effect here, adding new band to product
                     product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
                 }
@@ -307,7 +299,11 @@ public class PixelExtractor {
         }
 
         // 3. tie-points
-        attributeNames.addAll(Arrays.asList(product.getTiePointGridNames()));
+
+        String[] tiePointGridNames = product.getTiePointGridNames();
+        for (String tiePointGridName : tiePointGridNames) {
+            attributeNames.add(AGGREGATION_PREFIX + tiePointGridName);
+        }
 
         return new DefaultHeader(true,
                                  pixelTimeProvider != null,

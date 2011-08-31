@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.bc.calvalus.processing.ma.PixelExtractor.AGGREGATION_PREFIX;
+
 public class RecordTransformer {
 
     private final int maskAttributeIndex;
@@ -17,7 +19,7 @@ public class RecordTransformer {
         this.recordFilters = recordFilters;
     }
 
-    public List<Record> expand(Record record) {
+    public List<Record> explode(Record record) {
         Object[] attributeValues = record.getAttributeValues();
         int numRecords = getCommonArrayValueLength(attributeValues);
         if (numRecords == -1) {
@@ -210,6 +212,33 @@ public class RecordTransformer {
             }
         }
         return true;
+    }
+
+    public static String[] getHeaderForAggregatedRecords(String[] attributeNames) {
+        return transformHeader(attributeNames, true);
+    }
+
+    public static String[] getHeaderForExplodedRecords(String[] attributeNames) {
+        return transformHeader(attributeNames, false);
+    }
+
+    private static String[] transformHeader(String[] attributeNames, boolean makeStatColumns) {
+        ArrayList<String> strings = new ArrayList<String>(attributeNames.length * (makeStatColumns ? 3 : 1));
+        for (String attributeName : attributeNames) {
+            if (attributeName.startsWith(AGGREGATION_PREFIX)) {
+                String name = attributeName.substring(AGGREGATION_PREFIX.length());
+                if (makeStatColumns) {
+                    strings.add(name + "_mean");
+                    strings.add(name + "_sigma");
+                    strings.add(name + "_n");
+                } else {
+                    strings.add(name);
+                }
+            } else {
+                strings.add(attributeName);
+            }
+        }
+        return strings.toArray(new String[strings.size()]);
     }
 
 }

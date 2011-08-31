@@ -119,7 +119,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                               new RecordWritable(aggregatedRecord.getAttributeValues()));
                 numEmittedRecords++;
             } else {
-                for (Record expandedRecord : recordTransformer.expand(extractedRecord)) {
+                for (Record expandedRecord : recordTransformer.explode(extractedRecord)) {
                     context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
                                   new RecordWritable(expandedRecord.getAttributeValues()));
                     numEmittedRecords++;
@@ -135,8 +135,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         if (numMatchUps > 0) {
             // write header
-            context.write(HEADER_KEY,
-                          new RecordWritable(productRecordSource.getHeader().getAttributeNames()));
+            final String[] header;
+            if (maConfig.getAggregateMacroPixel()) {
+                header = RecordTransformer.getHeaderForAggregatedRecords(productRecordSource.getHeader().getAttributeNames());
+            } else {
+                header = RecordTransformer.getHeaderForExplodedRecords(productRecordSource.getHeader().getAttributeNames());
+            }
+            context.write(HEADER_KEY, new RecordWritable(header));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of records").increment(numEmittedRecords);

@@ -15,32 +15,32 @@ public class RecordTransformerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksZeroLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
-                                                                 "x",
-                                                                 new float[0]));
+        new RecordTransformer(-1, 1.5).explode(ProductRecordSourceTest.newRecord(null, null,
+                                                                                 "x",
+                                                                                 new float[0]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksVaryingLengthArrays() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
-                                                                 "x",
-                                                                 new float[3],
-                                                                 new int[2]));
+        new RecordTransformer(-1, 1.5).explode(ProductRecordSourceTest.newRecord(null, null,
+                                                                                 "x",
+                                                                                 new float[3],
+                                                                                 new int[2]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testExpandChecksSupportedArrayTypes() throws Exception {
-        new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(null, null,
-                                                                 "x",
-                                                                 new Date[3]));
+        new RecordTransformer(-1, 1.5).explode(ProductRecordSourceTest.newRecord(null, null,
+                                                                                 "x",
+                                                                                 new Date[3]));
     }
 
     @Test
     public void testExpand() throws Exception {
-        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).expand(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
-                                                                                                 "africa",
-                                                                                                 new float[]{1.1F, 1.2F, 1.4F, 1.8F},
-                                                                                                 new int[]{64, 32, 16, 8}));
+        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).explode(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                                                                                                                 "africa",
+                                                                                                                 new float[]{1.1F, 1.2F, 1.4F, 1.8F},
+                                                                                                                 new int[]{64, 32, 16, 8}));
         assertNotNull(flattenedRecords);
         assertEquals(4, flattenedRecords.size());
 
@@ -65,11 +65,11 @@ public class RecordTransformerTest {
 
     @Test
     public void testExpandWithMask() throws Exception {
-        List<Record> flattenedRecords = new RecordTransformer(6, 1.5).expand(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
-                                                                                                "africa",
-                                                                                                new float[]{1.1F, 1.2F, 1.4F, 1.8F},
-                                                                                                new int[]{64, 32, 16, 8},
-                                                                                                new int[]{1, 0, 0, 1}));
+        List<Record> flattenedRecords = new RecordTransformer(6, 1.5).explode(ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                                                                                                                "africa",
+                                                                                                                new float[]{1.1F, 1.2F, 1.4F, 1.8F},
+                                                                                                                new int[]{64, 32, 16, 8},
+                                                                                                                new int[]{1, 0, 0, 1}));
         assertNotNull(flattenedRecords);
         assertEquals(2, flattenedRecords.size());
 
@@ -230,4 +230,12 @@ public class RecordTransformerTest {
     }
 
 
+    @Test
+    public void testHeaderTransformation() throws Exception {
+        assertArrayEquals(new String[]{"a", "b", "c_mean", "c_sigma", "c_n", "d_mean", "d_sigma", "d_n"},
+                          RecordTransformer.getHeaderForAggregatedRecords(new String[]{"a", "b", "*c", "*d"}));
+
+        assertArrayEquals(new String[]{"a", "b", "c", "d"},
+                          RecordTransformer.getHeaderForExplodedRecords(new String[]{"a", "b", "*c", "*d"}));
+    }
 }
