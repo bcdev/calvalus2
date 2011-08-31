@@ -37,8 +37,8 @@ public class ProductRecordSource implements RecordSource {
     public ProductRecordSource(Product product, RecordSource input, MAConfig config) {
 
         Assert.notNull(product, "product");
-        Assert.notNull(config, "config");
         Assert.notNull(input, "input");
+        Assert.notNull(config, "config");
         if (!input.getHeader().hasLocation()) {
             throw new IllegalArgumentException("Input records don't have locations.");
         }
