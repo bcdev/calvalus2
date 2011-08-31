@@ -39,6 +39,7 @@ public class MAConfig implements XmlConvertible {
      * {@code n x n} pixels will be considered in the match-up process. Should be an odd integer,
      * so that {@code n/2 - 1} pixels are considered around a given center pixel.
      * The default value size is {@code 5} pixels so that an area of 5 x 5 pixels will be considered.
+     *
      * @see #aggregateMacroPixel
      */
     @Parameter(defaultValue = "5")
@@ -56,7 +57,7 @@ public class MAConfig implements XmlConvertible {
      * If {@code maxTimeDifference = null}, the criterion will not be used and match-ups are found for all times.
      * The default value is {@code 3.0} hours.
      */
-    @Parameter (defaultValue = "3.0")
+    @Parameter(defaultValue = "3.0")
     private Double maxTimeDifference;
 
     /**
@@ -153,7 +154,6 @@ public class MAConfig implements XmlConvertible {
      */
     // @Parameter (defaultValue = "yyyy-MM-dd hh:mm:ss")
     // private String recordSourceTimeFormat;
-
     public MAConfig() {
     }
 
@@ -162,13 +162,18 @@ public class MAConfig implements XmlConvertible {
     }
 
     @Override
-    public String toXml()  {
+    public String toXml() {
         return new XmlBinding().convertObjectToXml(this);
     }
 
     public RecordSource createRecordSource() throws Exception {
-        RecordSourceSpi service = RecordSourceSpi.get(getRecordSourceSpiClassName());
-        return service != null ? service.createRecordSource(getRecordSourceUrl()) : null;
+        String className = getRecordSourceSpiClassName();
+        RecordSourceSpi service = RecordSourceSpi.get(className);
+        if (service != null) {
+            return service.createRecordSource(getRecordSourceUrl());
+        } else {
+            throw new IllegalStateException("Service not found: " + className);
+        }
     }
 
     public String getRecordSourceSpiClassName() {
