@@ -42,32 +42,63 @@ public class PlotGenerator {
         this.imageHeight = imageHeight;
     }
 
-    public BufferedImage createPlotImage(String title,
-                                         String subTitle1,
-                                         String subTitle2,
-                                         PlotDatasetCollector.PlotDataset plotDataset) {
-        JFreeChart scatterPlotChart = createScatterPlotChart(title,
-                                                             subTitle1, subTitle2,
-                                                             plotDataset);
-        return scatterPlotChart.createBufferedImage(imageWidth, imageHeight);
+    public static class Result {
+        final PlotDatasetCollector.PlotDataset plotDataset;
+        final JFreeChart scatterPlotChart;
+        final BufferedImage plotImage;
+        final double[] regressionCoefficients;
+
+        public Result(PlotDatasetCollector.PlotDataset plotDataset, JFreeChart scatterPlotChart, BufferedImage plotImage, double[] regressionCoefficients) {
+            this.plotDataset = plotDataset;
+            this.scatterPlotChart = scatterPlotChart;
+            this.plotImage = plotImage;
+            this.regressionCoefficients = regressionCoefficients;
+        }
     }
 
-    static JFreeChart createScatterPlotChart(String title,
-                                             String subTitle1,
-                                             String subTitle2,
-                                             PlotDatasetCollector.PlotDataset plotDataset) {
-
+    public Result createResult(String title,
+                               String subTitle,
+                               PlotDatasetCollector.PlotDataset plotDataset) {
+        String xTitle = plotDataset.getVariablePair().referenceAttributeName + " in-situ";
+        String yTitle = plotDataset.getVariablePair().satelliteAttributeName + " satellite";
         IntervalXYDataset dataset = createDataset(plotDataset);
+        double[] regressionCoefficients = {0.0, 1.0};
+        if (dataset.getItemCount(0) >= 2) {
+            regressionCoefficients = Regression.getOLSRegression(dataset, 0);
+        }
+        final String subTitle2 = String.format("n=%d, a=%s, b=%s",
+                                               plotDataset.getPoints().length,
+                                               regressionCoefficients[0],
+                                               regressionCoefficients[1]);
+        JFreeChart scatterPlotChart = createChart(title,
+                                                  subTitle,
+                                                  subTitle2,
+                                                  xTitle, yTitle,
+                                                  dataset);
+        BufferedImage bufferedImage = scatterPlotChart.createBufferedImage(imageWidth, imageHeight);
+        return new Result(plotDataset, scatterPlotChart, bufferedImage, regressionCoefficients);
+    }
 
+    static JFreeChart createChart(String title,
+                                  String subTitle1,
+                                  String subTitle2,
+                                  PlotDatasetCollector.PlotDataset plotDataset) {
+        String xTitle = plotDataset.getVariablePair().referenceAttributeName + " in-situ";
+        String yTitle = plotDataset.getVariablePair().satelliteAttributeName + " satellite";
+        IntervalXYDataset dataset = createDataset(plotDataset);
+        return createChart(title, subTitle1, subTitle2, xTitle, yTitle, dataset);
+    }
+
+    static JFreeChart createChart(String title, String subTitle1, String subTitle2, String xTitle, String yTitle, IntervalXYDataset dataset) {
         Font tickLabelFont = new Font("Times New Roman", Font.PLAIN, 16);
         Font labelFont = new Font("Times New Roman", Font.BOLD, 16);
 
-        NumberAxis xAxis = new NumberAxis(plotDataset.getVariablePair().referenceAttributeName + " in-situ");
+        NumberAxis xAxis = new NumberAxis(xTitle);
         xAxis.setAutoTickUnitSelection(true);
         xAxis.setTickLabelFont(tickLabelFont);
         xAxis.setLabelFont(labelFont);
 
-        NumberAxis yAxis = new NumberAxis(plotDataset.getVariablePair().satelliteAttributeName + " satellite");
+        NumberAxis yAxis = new NumberAxis(yTitle);
         yAxis.setAutoTickUnitSelection(true);
         yAxis.setTickLabelFont(tickLabelFont);
         yAxis.setLabelFont(labelFont);

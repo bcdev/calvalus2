@@ -39,7 +39,7 @@ public class PlotGeneratorTest {
         PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[0];
         final String title = plotDataset.getVariablePair().referenceAttributeName + " / " + plotDataset.getGroupName();
 
-        JFreeChart chart = PlotGenerator.createScatterPlotChart(title, "beam-idepix 2.3, idepix.ComputeChain", "myinsitu.csv", plotDataset);
+        JFreeChart chart = PlotGenerator.createChart(title, "beam-idepix 2.3, idepix.ComputeChain", "myinsitu.csv", plotDataset);
 
         ChartPanel chartPanel = new ChartPanel(chart, false);
         chartPanel.setPreferredSize(new Dimension(500, 500));

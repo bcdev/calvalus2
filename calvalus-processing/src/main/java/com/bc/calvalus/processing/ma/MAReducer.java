@@ -26,9 +26,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -52,8 +52,8 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
         final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
 
-        final CsvRecordWriter recordWriter = new CsvRecordWriter(createTextFile(context, "records-all.txt"),
-                                                                 createTextFile(context, "records-agg.txt"));
+        final CsvRecordWriter recordWriter = new CsvRecordWriter(createWriter(context, "records-all.txt"),
+                                                                 createWriter(context, "records-agg.txt"));
 
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
                 plotDatasetCollector,
@@ -85,27 +85,53 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
         LOG.warning(String.format("Generating %d plot(s)...", plotDatasets.length));
 
+        PrintStream summaryFileWriter = new PrintStream(createOutputStream(context, "analysis-summary.xml"));
+        summaryFileWriter.print("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "<?xml-stylesheet type=\"text/xsl\" href=\"analysis-summary.xsl\"?>\n" +
+                                        "\n" +
+                                        "<analysisSummary>\n");
+
+        summaryFileWriter.println();
+        summaryFileWriter.print("<jobConfig>\n");
+        jobConfig.writeXml(summaryFileWriter);
+        summaryFileWriter.print("</jobConfig>\n");
+        summaryFileWriter.println();
+
         final PlotGenerator plotGenerator = new PlotGenerator();
         plotGenerator.setImageWidth(400);
         plotGenerator.setImageHeight(400);
         for (int i = 0; i < plotDatasets.length; i++) {
             final PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[i];
             final String title = plotDataset.getVariablePair().referenceAttributeName + " / " + plotDataset.getGroupName();
-            final String processorTitle = jobConfig.get(JobConfNames.CALVALUS_L2_BUNDLE) + ", " + jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            final String referenceTitle = new Path(maConfig.getRecordSourceUrl()).getName();
-            final BufferedImage plotImage = plotGenerator.createPlotImage(title, processorTitle, referenceTitle, plotDataset);
-            final String outputFilename = String.format("scatter-plot-%s-%s-%03d.png", plotDataset.getGroupName(), plotDataset.getVariablePair().satelliteAttributeName, i);
-            final Path outputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
+            final String subTitle = "Grouped by " + maConfig.getOutputGroupName() + "=" + plotDataset.getGroupName();
+            PlotGenerator.Result result = plotGenerator.createResult(title, subTitle, plotDataset);
+            final String imageFilename = String.format("scatter-plot-%s-%s-%03d.png", plotDataset.getGroupName(), plotDataset.getVariablePair().satelliteAttributeName, i);
+            final Path outputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), imageFilename);
             final FSDataOutputStream outputStream = outputProductPath.getFileSystem(jobConfig).create(outputProductPath);
             try {
                 LOG.warning(String.format("Writing %s", outputProductPath));
-                ImageIO.write(plotImage, "PNG", outputStream);
+                ImageIO.write(result.plotImage, "PNG", outputStream);
             } catch (IOException e) {
                 LOG.warning(String.format("Failed to write %s: %s", outputProductPath, e.getMessage()));
             } finally {
                 outputStream.close();
             }
+
+            summaryFileWriter.printf("<dataset>\n");
+            summaryFileWriter.printf("    <referenceVariable>%s</referenceVariable>\n", plotDataset.getVariablePair().referenceAttributeName);
+            summaryFileWriter.printf("    <satelliteVariable>%s</satelliteVariable>\n", plotDataset.getVariablePair().referenceAttributeName);
+            summaryFileWriter.printf("    <statistics>\n");
+            summaryFileWriter.printf("        <numDataPoints>%s</numDataPoints>\n", plotDataset.getPoints().length);
+            summaryFileWriter.printf("        <regressionInter>%s</regressionInter>\n", result.regressionCoefficients[0]);
+            summaryFileWriter.printf("        <regressionSlope>%s</regressionSlope>\n", result.regressionCoefficients[1]);
+            summaryFileWriter.printf("        <scatterPlotImage>%s</scatterPlotImage>\n", imageFilename);
+            summaryFileWriter.printf("    </statistics>\n");
+            summaryFileWriter.printf("</dataset>\n");
         }
+
+        summaryFileWriter.println("</analysisSummary>");
+        summaryFileWriter.close();
     }
 
     private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
@@ -126,10 +152,12 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         }
     }
 
-    private Writer createTextFile(Context context, String fileName) throws IOException, InterruptedException {
-        Path recordsAllPath = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
-        FSDataOutputStream outputStream = recordsAllPath.getFileSystem(context.getConfiguration()).create(recordsAllPath);
-        return new OutputStreamWriter(outputStream);
+    private Writer createWriter(Context context, String fileName) throws IOException, InterruptedException {
+        return new OutputStreamWriter(createOutputStream(context, fileName));
     }
 
+    private FSDataOutputStream createOutputStream(Context context, String fileName) throws IOException, InterruptedException {
+        Path recordsAllPath = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        return recordsAllPath.getFileSystem(context.getConfiguration()).create(recordsAllPath);
+    }
 }
