@@ -47,15 +47,15 @@
             </wps:Data>
         </wps:Input>
 
-        <wps:Input>
-            <ows:Identifier>regionWKT</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>
-                    polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00,
-                             0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))
-                </wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
+        <!--<wps:Input>-->
+            <!--<ows:Identifier>regionWKT</ows:Identifier>-->
+            <!--<wps:Data>-->
+                <!--<wps:LiteralData>-->
+                    <!--polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00,-->
+                             <!--0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))-->
+                <!--</wps:LiteralData>-->
+            <!--</wps:Data>-->
+        <!--</wps:Input>-->
 
         <wps:Input>
             <ows:Identifier>processorBundleName</ows:Identifier>
