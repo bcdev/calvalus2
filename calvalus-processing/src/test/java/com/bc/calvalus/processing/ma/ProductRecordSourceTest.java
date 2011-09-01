@@ -97,7 +97,7 @@ public class ProductRecordSourceTest {
                                                             new TestRecord(new GeoPos(0.5F, 0.5F)),
                                                             new TestRecord(new GeoPos(1.0F, 1.0F)));
 
-        final int PIXEL_Y = 2;
+        final int PIXEL_Y = 3;
 
         MAConfig config1 = new MAConfig();
         config1.setMacroPixelSize(1);
@@ -148,11 +148,11 @@ public class ProductRecordSourceTest {
 
         // 0. derived information
         assertEquals("source_name", attributeNames[index++]);
+        assertEquals("pixel_time", attributeNames[index++]);
         assertEquals("*pixel_x", attributeNames[index++]);
         assertEquals("*pixel_y", attributeNames[index++]);
         assertEquals("*pixel_lat", attributeNames[index++]);
         assertEquals("*pixel_lon", attributeNames[index++]);
-        assertEquals("pixel_time", attributeNames[index++]);
         // 1. bands
         assertEquals("*b1", attributeNames[index++]);
         assertEquals("*b2", attributeNames[index++]);
@@ -198,11 +198,11 @@ public class ProductRecordSourceTest {
         assertEquals("v", attributeNames[index++]);
         assertEquals("w", attributeNames[index++]);
         assertEquals("source_name", attributeNames[index++]);
+        assertEquals("pixel_time", attributeNames[index++]);
         assertEquals("*pixel_x", attributeNames[index++]);
         assertEquals("*pixel_y", attributeNames[index++]);
         assertEquals("*pixel_lat", attributeNames[index++]);
         assertEquals("*pixel_lon", attributeNames[index++]);
-        assertEquals("pixel_time", attributeNames[index++]);
         assertEquals("*pixel_mask", attributeNames[index++]);
         // 1. bands
         assertEquals("*b1", attributeNames[index++]);
@@ -302,11 +302,11 @@ public class ProductRecordSourceTest {
         assertEquals(output.getHeader().getAttributeNames().length, values.length);
         int index = 0;
         assertEquals("MER_RR__2P.N1", values[index++]); // product_name
+        assertEquals("07-May-2010 10:25:14", ProductData.UTC.createDateFormat().format((Date) values[index++])); // pixel_time
         assertEquals(0, ((int[]) values[index++])[0]);  // pixel_x
         assertEquals(0, ((int[]) values[index++])[0]);  // pixel_y
         assertEquals(1.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lat
         assertEquals(0.0F, ((float[]) values[index++])[0], 1e-5F);  // pixel_lon
-        assertEquals("07-May-2010 10:25:14", ProductData.UTC.createDateFormat().format((Date) values[index++])); // pixel_time
         assertEquals(1, ((int[]) values[index++])[0]);   // pixel_mask
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b1 = X-0.5
         assertEquals(0.0F, ((int[]) values[index++])[0], 1e-5F);   // b2 = Y-0.5
@@ -357,8 +357,8 @@ public class ProductRecordSourceTest {
         List<Record> records = getRecords(output);
         assertEquals(1, records.size());
 
-        final int PIXEL_X = 1;
-        final int PIXEL_Y = 2;
+        final int PIXEL_X = 2;
+        final int PIXEL_Y = 3;
 
         //  "pixel_x" : int[9]
         Object pixelXValue = records.get(0).getAttributeValues()[PIXEL_X];

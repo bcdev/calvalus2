@@ -49,6 +49,10 @@ public class RecordAggregator implements RecordTransformer {
     }
 
     private Number aggregate(int[] values, int[] maskValues) {
+        if (values.length == 1) {
+            // Case: macroPixelSize = 1
+            return isGoodPixel(maskValues, 0) ? values[0] : null;
+        }
         float[] floats = new float[values.length];
         for (int i = 0; i < floats.length; i++) {
             floats[i] = values[i];

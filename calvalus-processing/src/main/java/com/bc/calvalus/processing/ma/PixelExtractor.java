@@ -143,8 +143,13 @@ public class PixelExtractor {
             }
         }
 
+        ////////////////////////////////////
+        // 1. derived information
+        //
         // field "source_name"
         values[index++] = product.getName();
+        // field "pixel_time"
+        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
         // field "pixel_x"
         values[index++] = pixelXPositions;
         // field "pixel_y"
@@ -153,13 +158,14 @@ public class PixelExtractor {
         values[index++] = pixelLatitudes;
         // field "pixel_lon"
         values[index++] = pixelLongitudes;
-        // field "pixel_time"
-        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
         if (maskSamples != null) {
             // field "pixel_mask"
             values[index++] = maskSamples;
         }
 
+        ////////////////////////////////////
+        // 2. + 3. bands and flags
+        //
         final Band[] productBands = product.getBands();
         for (Band band : productBands) {
             if (!band.isFlagBand()) {
@@ -176,6 +182,9 @@ public class PixelExtractor {
             }
         }
 
+        ////////////////////////////////////
+        // 4. tie-points
+        //
         for (TiePointGrid tiePointGrid : product.getTiePointGrids()) {
             final float[] floatSamples = new float[macroPixelRect.width * macroPixelRect.height];
             tiePointGrid.readPixels(x0, y0, width, height, floatSamples);
@@ -183,6 +192,64 @@ public class PixelExtractor {
         }
 
         return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values);
+    }
+
+    private Header createHeader(Header inputHeader) {
+        final java.util.List<String> attributeNames = new ArrayList<String>();
+
+        if (copyInput) {
+            Collections.addAll(attributeNames, inputHeader.getAttributeNames());
+        }
+
+        ////////////////////////////////////
+        // 1. derived information
+        //
+        attributeNames.add(ProductRecordSource.SOURCE_NAME_ATT_NAME);
+        attributeNames.add(ProductRecordSource.PIXEL_TIME_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LAT_ATT_NAME);
+        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LON_ATT_NAME);
+        if (pixelMask != null) {
+            attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_MASK_ATT_NAME);
+        }
+
+        ////////////////////////////////////
+        // 2. bands
+        //
+        Band[] productBands = product.getBands();
+        for (Band band : productBands) {
+            if (!band.isFlagBand()) {
+                attributeNames.add(AGGREGATION_PREFIX + band.getName());
+            }
+        }
+
+        ////////////////////////////////////
+        // 3. flags (virtual bands)
+        //
+        for (Band band : productBands) {
+            if (band.isFlagBand()) {
+                FlagCoding flagCoding = band.getFlagCoding();
+                String[] flagNames = flagCoding.getFlagNames();
+                for (String flagName : flagNames) {
+                    attributeNames.add(AGGREGATION_PREFIX + band.getName() + "." + flagName);
+                    // Note: side-effect here, adding new band to product
+                    product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
+                }
+            }
+        }
+
+        ////////////////////////////////////
+        // 4. tie-points
+        //
+        String[] tiePointGridNames = product.getTiePointGridNames();
+        for (String tiePointGridName : tiePointGridNames) {
+            attributeNames.add(AGGREGATION_PREFIX + tiePointGridName);
+        }
+
+        return new DefaultHeader(true,
+                                 pixelTimeProvider != null,
+                                 attributeNames.toArray(new String[attributeNames.size()]));
     }
 
     /**
@@ -257,57 +324,6 @@ public class PixelExtractor {
                 }
             }
         }
-    }
-
-    private Header createHeader(Header inputHeader) {
-        final java.util.List<String> attributeNames = new ArrayList<String>();
-
-        if (copyInput) {
-            Collections.addAll(attributeNames, inputHeader.getAttributeNames());
-        }
-
-        // 0. derived information
-        attributeNames.add(ProductRecordSource.SOURCE_NAME_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LAT_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LON_ATT_NAME);
-        attributeNames.add(ProductRecordSource.PIXEL_TIME_ATT_NAME);
-        if (pixelMask != null) {
-            attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_MASK_ATT_NAME);
-        }
-
-        // 1. bands
-        Band[] productBands = product.getBands();
-        for (Band band : productBands) {
-            if (!band.isFlagBand()) {
-                attributeNames.add(AGGREGATION_PREFIX + band.getName());
-            }
-        }
-
-        // 2. flags (virtual bands)
-        for (Band band : productBands) {
-            if (band.isFlagBand()) {
-                FlagCoding flagCoding = band.getFlagCoding();
-                String[] flagNames = flagCoding.getFlagNames();
-                for (String flagName : flagNames) {
-                    attributeNames.add(AGGREGATION_PREFIX + band.getName() + "." + flagName);
-                    // Note: side-effect here, adding new band to product
-                    product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
-                }
-            }
-        }
-
-        // 3. tie-points
-
-        String[] tiePointGridNames = product.getTiePointGridNames();
-        for (String tiePointGridName : tiePointGridNames) {
-            attributeNames.add(AGGREGATION_PREFIX + tiePointGridName);
-        }
-
-        return new DefaultHeader(true,
-                                 pixelTimeProvider != null,
-                                 attributeNames.toArray(new String[attributeNames.size()]));
     }
 
     private static Mask createGoodPixelMask(Product product, String goodPixelExpression) {
