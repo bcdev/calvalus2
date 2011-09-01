@@ -50,7 +50,7 @@ public class L3ProductionType extends HadoopProductionType {
                                                productionRequest.getParameter("processorBundleVersion"));
 
         String regionName = productionRequest.getRegionName();
-        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         L3Config l3Config = createL3Config(productionRequest);
 

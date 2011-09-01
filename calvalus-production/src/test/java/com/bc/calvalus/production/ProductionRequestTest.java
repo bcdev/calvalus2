@@ -134,12 +134,15 @@ public class ProductionRequestTest {
 
     @Test
     public void testGetRegionGeometry() throws ProductionException {
-        ProductionRequest req = new ProductionRequest("typeA", "ewa");
+        ProductionRequest req;
         Geometry regionGeometry;
 
         try {
-            req.getRegionGeometry();
-            fail("No production parameters for geometry present");
+            req = new ProductionRequest("typeA", "ewa",
+                                    "maxLon", "-20.0",
+                                    "maxLat", "23.4");
+            req.getRegionGeometry(null);
+            fail("Incomplete definition of region geometry");
         } catch (ProductionException e) {
             // ok
         }
@@ -150,21 +153,26 @@ public class ProductionRequestTest {
                                     "maxLon", "-20.0",
                                     "minLat", "13.4",
                                     "maxLat", "23.4");
-        regionGeometry = req.getRegionGeometry();
+        regionGeometry = req.getRegionGeometry(null);
         assertTrue(regionGeometry instanceof Polygon);
         assertEquals("POLYGON ((-60 13.4, -20 13.4, -20 23.4, -60 23.4, -60 13.4))", regionGeometry.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POINT(-60.0 13.4)");
-        regionGeometry = req.getRegionGeometry();
+        regionGeometry = req.getRegionGeometry(null);
         assertTrue(regionGeometry instanceof Point);
         assertEquals("POINT (-60 13.4)", regionGeometry.toString());
 
         req = new ProductionRequest("typeA", "ewa",
                                     "regionWKT", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))");
-        regionGeometry = req.getRegionGeometry();
+        regionGeometry = req.getRegionGeometry(null);
         assertTrue(regionGeometry instanceof Polygon);
         assertEquals("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", regionGeometry.toString());
+
+        req = new ProductionRequest("typeA", "ewa");
+        Point defaultGeometry = new GeometryFactory().createPoint(new Coordinate(1, 2));
+        regionGeometry = req.getRegionGeometry(defaultGeometry);
+        assertSame(defaultGeometry,  regionGeometry);
     }
 
 

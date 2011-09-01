@@ -260,12 +260,23 @@ public class ProductionRequest {
     }
 
     public Geometry getRegionGeometry() throws ProductionException {
+        Geometry regionGeometry = getRegionGeometry(null);
+        if (regionGeometry == null) {
+             throw new ProductionException("Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
+        }
+        return regionGeometry;
+    }
+
+    public Geometry getRegionGeometry(Geometry defaultGeometry) throws ProductionException {
         Geometry geometry = getGeometry("regionWKT", null);
-        if (geometry == null) {
-            double x1 = getDouble("minLon");
-            double y1 = getDouble("minLat");
-            double x2 = getDouble("maxLon");
-            double y2 = getDouble("maxLat");
+        if (geometry != null) {
+            return geometry;
+        }
+        Double x1 = getDouble("minLon", null);
+        Double y1 = getDouble("minLat", null);
+        Double x2 = getDouble("maxLon", null);
+        Double y2 = getDouble("maxLat", null);
+        if (x1 != null && y1 != null && x2 != null && y2 != null) {
             GeometryFactory factory = new GeometryFactory();
             return factory.createPolygon(factory.createLinearRing(new Coordinate[]{
                     new Coordinate(x1, y1),
@@ -274,9 +285,13 @@ public class ProductionRequest {
                     new Coordinate(x1, y2),
                     new Coordinate(x1, y1),
             }), null);
+        } else if (x1 == null && y1 == null && x2 == null && y2 == null) {
+            return defaultGeometry;
+        } else {
+            throw new ProductionException("Parameters 'minLon', 'minLat','maxLon','maxLat' must all be given");
         }
-        return geometry;
     }
+
 
     /////////////////////////////////////////////////////////////////////////
     // Implementation helpers

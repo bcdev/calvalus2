@@ -45,7 +45,7 @@ class L3Staging extends Staging {
             stagingDir.mkdirs();
         }
 
-        Geometry regionGeometry = production.getProductionRequest().getRegionGeometry();
+        Geometry regionGeometry = production.getProductionRequest().getRegionGeometry(null);
 
         Logger logger = Logger.getLogger("com.bc.calvalus");
         float progress = 0f;

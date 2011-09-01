@@ -39,7 +39,7 @@ public class MAProductionType extends HadoopProductionType {
         Date minDate = productionRequest.getDate("minDate", null);
         Date maxDate = productionRequest.getDate("maxDate", null);
         String regionName = productionRequest.getRegionName();
-        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
 

@@ -64,7 +64,7 @@ public class L2ProductionType extends HadoopProductionType {
 
         String inputPath = productionRequest.getParameter("inputPath");
         String regionName = productionRequest.getRegionName();
-        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         String dateList = productionRequest.getParameter("dateList", null);
         String[] inputFiles;
