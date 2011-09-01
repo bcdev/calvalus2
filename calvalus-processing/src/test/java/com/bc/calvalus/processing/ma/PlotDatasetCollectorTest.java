@@ -28,7 +28,7 @@ public class PlotDatasetCollectorTest {
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
        collector.processHeaderRecord(new Object[]{
                 "ID", "LAT", "LON", "DATE", "SITE",
-                "CHL", "WIND", "TSM", "TEMP", "pixel_x", "pixel_y", "chl", "algal", "tsm"});
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "*tsm"});
         PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
 
         assertNotNull(variablePairs);

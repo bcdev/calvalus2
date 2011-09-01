@@ -72,19 +72,22 @@ public class PlotDatasetCollector implements RecordProcessor {
             if (isValidDataPoint(referenceNumber, satelliteNumber)) {
                 collectDataPoint(plotDataset, referenceNumber, satelliteNumber);
             } else {
-                LOG.warning(String.format("Match-up data point rejected: " +
-                                                  "referenceName=[%s], " +
-                                                  "referenceIndex=[%s], " +
-                                                  "referenceValue=[%s], " +
-                                                  "satelliteName=[%s], " +
-                                                  "satelliteIndex=[%s], " +
-                                                  "satelliteValue=[%s]",
-                                          variablePair.referenceAttributeName,
-                                          variablePair.referenceAttributeIndex,
-                                          referenceValue,
-                                          variablePair.satelliteAttributeName,
-                                          variablePair.satelliteAttributeIndex,
-                                          satelliteValue));
+                // Uncomment the following if you want to find out why your plots are empty
+
+//                LOG.warning(String.format("Match-up data point rejected: " +
+//                                                  "referenceName=[%s], " +
+//                                                  "referenceIndex=[%s], " +
+//                                                  "referenceValue=[%s], " +
+//                                                  "satelliteName=[%s], " +
+//                                                  "satelliteIndex=[%s], " +
+//                                                  "satelliteValue=[%s]",
+//                                          variablePair.referenceAttributeName,
+//                                          variablePair.referenceAttributeIndex,
+//                                          referenceValue,
+//                                          variablePair.satelliteAttributeName,
+//                                          variablePair.satelliteAttributeIndex,
+//                                          satelliteValue));
+
             }
         }
     }
@@ -180,12 +183,15 @@ public class PlotDatasetCollector implements RecordProcessor {
                 return new VariablePair(headerName1, i, headerName2, j);
             }
         }
+
+        String aggHeaderName1 = PixelExtractor.AGGREGATION_PREFIX +headerName1;
         for (int j = i + 1; j < headerValues.length; j++) {
             String headerName2 = headerValues[j].toString();
-            if (headerName2.toLowerCase().startsWith(headerName1)) {
-                return new VariablePair(headerName1, i, headerName2, j);
+            if (aggHeaderName1.equalsIgnoreCase(headerName2)) {
+                return new VariablePair(headerName1, i, headerName2.substring(PixelExtractor.AGGREGATION_PREFIX.length()), j);
             }
         }
+
         return pair;
     }
 
