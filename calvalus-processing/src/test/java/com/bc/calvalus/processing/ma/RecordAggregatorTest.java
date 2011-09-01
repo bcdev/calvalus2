@@ -40,7 +40,7 @@ public class RecordAggregatorTest {
         Record aggregatedRecord = new RecordAggregator(maskAttributeIndex, 1.5).transform(
                 createDataRecord(new float[]{0.2F, 1.2F, 1.2F, 1.4F, 1.8F},
                                  new int[]{13, 10, 11, 32, 14},
-                                 new int[]{1, 0, 1, 1, 0}));  // not a mask!
+                                 new int[]{1, 0, 1, 1, 0}));
         assertNotNull(aggregatedRecord);
 
         testFirst4Values(aggregatedRecord);
@@ -56,6 +56,7 @@ public class RecordAggregatorTest {
         assertEquals(1.4, a5.mean, 1E-6);
         assertEquals(0.28284266, a5.sigma, 1E-6);
         assertEquals(a5.mean, a5.doubleValue(), 1E-6);
+        assertArrayEquals(new float[] {0.2F, 1.2F, 1.2F, 1.4F, 1.8F}, a5.data, 1E-6F);
 
         Object v6 = aggregatedRecord.getAttributeValues()[5];
         assertEquals(AggregatedNumber.class, v6.getClass());
@@ -68,6 +69,7 @@ public class RecordAggregatorTest {
         assertEquals(12.0, a6.mean, 1E-6);
         assertEquals(1.825742, a6.sigma, 1E-6);
         assertEquals(a6.mean, a6.doubleValue(), 1E-6);
+        assertArrayEquals(new float[]{13, 10, 11, 32, 14}, a6.data, 1E-6F);
 
         Object v7 = aggregatedRecord.getAttributeValues()[6];
         assertEquals(AggregatedNumber.class, v7.getClass());
@@ -78,6 +80,7 @@ public class RecordAggregatorTest {
         assertEquals(1.0, a7.max, 1E-6);
         assertEquals(0.6, a7.mean, 1E-6);
         assertEquals(a7.mean, a7.doubleValue(), 1E-6);
+        assertArrayEquals(new float[]{1, 0, 1, 1, 0}, a7.data, 1E-6F);
     }
 
     private void testFirst4Values(Record aggregatedRecord) {

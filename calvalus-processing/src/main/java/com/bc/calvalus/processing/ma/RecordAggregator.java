@@ -102,7 +102,7 @@ public class RecordAggregator implements RecordTransformer {
 
         // If we don't want to filter or we can't, then we are done.
         if (filteredMeanCoeff <= 0.0 || Math.abs(sigma) < 1E-10) {
-            return new AggregatedNumber(numGoodPixels, numTotalPixels, 0, min, max, mean, sigma);
+            return new AggregatedNumber(numGoodPixels, numTotalPixels, 0, min, max, mean, sigma, values);
         }
 
         // Step 3: Compute filteredMin, filteredMax, filteredMean
@@ -146,7 +146,7 @@ public class RecordAggregator implements RecordTransformer {
 
         // Done!
         return new AggregatedNumber(numGoodPixels, numTotalPixels, numFilteredPixels,
-                                    filteredMin, filteredMax, filteredMean, filteredSigma);
+                                    filteredMin, filteredMax, filteredMean, filteredSigma, values);
     }
 
     private static boolean isGoodPixel(int[] maskValues, int i) {
