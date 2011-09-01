@@ -72,11 +72,25 @@ public final class AggregatedNumber extends Number {
      */
     public final double cv;
 
+    /**
+     * The data that have been used to generate this object.
+     */
+    public final float[] data;
+
     public AggregatedNumber(int n, int nT, int nF,
                             double min,
                             double max,
                             double mean,
                             double sigma) {
+        this(n, nT, nF, min, max, mean, sigma, null);
+    }
+
+    public AggregatedNumber(int n, int nT, int nF,
+                            double min,
+                            double max,
+                            double mean,
+                            double sigma,
+                            float[] data) {
         this.nT = nT;
         this.min = min;
         this.max = max;
@@ -85,6 +99,7 @@ public final class AggregatedNumber extends Number {
         this.mean = mean;
         this.sigma = sigma;
         this.cv = sigma / mean;
+        this.data = data;
     }
 
     @Override

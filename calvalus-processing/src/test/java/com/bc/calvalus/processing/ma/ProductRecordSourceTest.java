@@ -341,7 +341,6 @@ public class ProductRecordSourceTest {
         MAConfig config = new MAConfig();
         config.setCopyInput(false);
         config.setMacroPixelSize(3);
-        config.setAggregateMacroPixel(false);
 
         int w = 2 * 3;
         int h = 3 * 3;
@@ -376,7 +375,7 @@ public class ProductRecordSourceTest {
         assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
 
-        List<Record> flattenedRecords = new RecordTransformer(-1, 1.5).explode(records.get(0));
+        List<Record> flattenedRecords = new RecordExploder(-1).explode(records.get(0));
         assertNotNull(flattenedRecords);
         assertEquals(9, flattenedRecords.size());
 

@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
  *
  * @author Norman
  */
-public class PlotDatasetCollector {
+public class PlotDatasetCollector implements RecordProcessor {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -45,6 +46,7 @@ public class PlotDatasetCollector {
         return new PlotDataset[0];
     }
 
+    @Override
     public void processHeaderRecord(Object[] headerValues) {
         if (hasHeaderBeenSeen()) {
             throw new IllegalStateException("Header record seen twice.");
@@ -55,7 +57,8 @@ public class PlotDatasetCollector {
         this.plotDatasets = new ArrayList<PlotDataset>();
     }
 
-    public void processDataRecord(Object[] recordValues) {
+    @Override
+    public void processDataRecord(int recordIndex, Object[] recordValues) {
         if (!hasHeaderBeenSeen()) {
             throw new IllegalStateException("Data record seen before header record.");
         }
@@ -84,6 +87,11 @@ public class PlotDatasetCollector {
                                           satelliteValue));
             }
         }
+    }
+
+    @Override
+    public void finalizeRecordProcessing(int numRecords) throws IOException {
+        // todo - generate plot images here...
     }
 
     private boolean isValidDataPoint(Number referenceValue, Number satelliteValue) {

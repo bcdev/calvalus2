@@ -38,39 +38,30 @@ class MAStaging extends Staging {
     public Object call() throws Exception {
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0F, ""));
         MAWorkflowItem workflow = (MAWorkflowItem) production.getWorkflow();
-        Path remoteDataFile = new Path(workflow.getOutputDir(), "part-r-00000");
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
 
+        Path remoteOutputDir = new Path(workflow.getOutputDir());
+        FileSystem fileSystem = remoteOutputDir.getFileSystem(hadoopConfiguration);
+
+        // Simply copy entire content of remoteOutputDir
         try {
-            FileSystem fileSystem = remoteDataFile.getFileSystem(hadoopConfiguration);
-
-            /*
-            Text key = new Text();
-            RecordWritable value = new RecordWritable();
-            SequenceFile.Reader dataReader = new SequenceFile.Reader(fileSystem, remoteDataFile, hadoopConfiguration);
-            while (dataReader.next(key, value)) {
-
-            }
-            */
-
-            FileUtil.copy(fileSystem, remoteDataFile, new File(stagingDir, "ma-result.csv"), false, hadoopConfiguration);
-            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.5F, ""));
-
-            FileStatus[] imageFileStatuses = fileSystem.globStatus(new Path(workflow.getOutputDir(), "*.png"));
-            Path[] imageFilePaths = FileUtil.stat2Paths(imageFileStatuses);
-            if (imageFilePaths != null) {
-                for (int i = 0; i < imageFilePaths.length; i++) {
-                    Path remoteImageFile = imageFilePaths[i];
-                    FileUtil.copy(fileSystem, remoteImageFile, new File(stagingDir, remoteImageFile.getName()),
+            FileStatus[] fileStatuses = fileSystem.globStatus(new Path(remoteOutputDir, "*.*"));
+            Path[] paths = FileUtil.stat2Paths(fileStatuses);
+            if (paths != null) {
+                for (int i = 0; i < paths.length; i++) {
+                    Path path = paths[i];
+                    FileUtil.copy(fileSystem,
+                                  path,
+                                  new File(stagingDir, path.getName()),
                                   false, hadoopConfiguration);
-                    production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.5F + (0.5F * i) / imageFilePaths.length, ""));
+                    production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / paths.length, path.getName()));
                 }
             }
 
             zip(stagingDir, new File(stagingDir.getParentFile(), stagingDir.getName() + ".zip"));
-            // FileUtil.fullyDelete();
+            // todo FileUtil.fullyDelete();
 
             production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
 

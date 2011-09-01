@@ -221,7 +221,7 @@ public class CsvRecordSource implements RecordSource {
         public RecordSource createRecordSource(String url) throws Exception {
             InputStream inputStream = new URL(url).openStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            return new CsvRecordSource(inputStreamReader, TextUtils.DEFAULT_DATE_FORMAT);
+            return new CsvRecordSource(inputStreamReader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
         }
     }
 

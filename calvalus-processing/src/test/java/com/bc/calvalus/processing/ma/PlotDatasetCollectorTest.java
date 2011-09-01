@@ -50,9 +50,9 @@ public class PlotDatasetCollectorTest {
 
         PlotDatasetCollector collector = new PlotDatasetCollector(null);
         collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"});
-        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41});
-        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49});
-        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27});
+        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41});
+        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49});
+        collector.processDataRecord(2, new Object[]{"Benguela", 0.2, 0.27});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);
@@ -77,13 +77,13 @@ public class PlotDatasetCollectorTest {
 
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
         collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"});
-        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02});
-        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01});
-        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03});
-        collector.processDataRecord(new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02});
-        collector.processDataRecord(new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01});
-        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03});
-        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03});  // will be rejected, warning logged
+        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02});
+        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01});
+        collector.processDataRecord(2, new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03});
+        collector.processDataRecord(3, new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02});
+        collector.processDataRecord(4, new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01});
+        collector.processDataRecord(5, new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03});
+        collector.processDataRecord(6, new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03});  // will be rejected, warning logged
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);

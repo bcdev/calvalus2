@@ -107,7 +107,6 @@
 
                         <copyInput>true</copyInput>
                         <macroPixelSize>5</macroPixelSize>
-                        <aggregateMacroPixel>true</aggregateMacroPixel>
                         <maxTimeDifference>5.0</maxTimeDifference>
 
                     </parameters>

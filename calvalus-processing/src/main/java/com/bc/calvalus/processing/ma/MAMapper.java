@@ -26,12 +26,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.text.DateFormat;
 import java.util.logging.Logger;
 
 /**
@@ -105,50 +103,31 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
 
         RecordTransformer recordTransformer = ProductRecordSource.createTransformer(productRecordSource.getHeader(), maConfig);
-        DateFormat outputTimeFormat = ProductData.UTC.createDateFormat(maConfig.getOutputTimeFormat());
+        RecordFilter recordFilter = ProductRecordSource.createRecordFilter(productRecordSource.getHeader(), maConfig);
 
         t0 = now();
         int numMatchUps = 0;
-        int numEmittedRecords = 0;
         for (Record extractedRecord : extractedRecords) {
-
-            // write records
-            if (maConfig.getAggregateMacroPixel()) {
-                Record aggregatedRecord = recordTransformer.aggregate(extractedRecord);
-                context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
+            Record aggregatedRecord = recordTransformer.transform(extractedRecord);
+            if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
+                context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
                               new RecordWritable(aggregatedRecord.getAttributeValues()));
-                numEmittedRecords++;
-            } else {
-                for (Record expandedRecord : recordTransformer.explode(extractedRecord)) {
-                    context.write(new Text(String.format("%s_%06d", product.getName(), numEmittedRecords + 1)),
-                                  new RecordWritable(expandedRecord.getAttributeValues()));
-                    numEmittedRecords++;
-                }
+                numMatchUps++;
+                context.progress();
             }
-
-            numMatchUps++;
-            context.progress();
         }
         long recordWriteTime = (now() - t0);
-        LOG.info(String.format("%s found %s match-ups, emitted %s records, took %s sec",
-                               context.getTaskAttemptID(), numMatchUps, numEmittedRecords, recordWriteTime / 1E3));
+        LOG.info(String.format("%s found %s match-ups, took %s sec",
+                               context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
 
         if (numMatchUps > 0) {
             // write header
-            final String[] header;
-            if (maConfig.getAggregateMacroPixel()) {
-                header = RecordTransformer.getHeaderForAggregatedRecords(productRecordSource.getHeader().getAttributeNames());
-            } else {
-                header = RecordTransformer.getHeaderForExplodedRecords(productRecordSource.getHeader().getAttributeNames());
-            }
-            context.write(HEADER_KEY, new RecordWritable(header));
+            context.write(HEADER_KEY, new RecordWritable(productRecordSource.getHeader().getAttributeNames()));
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of records").increment(numEmittedRecords);
         } else {
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
         }
-
 
         t0 = now();
         product.dispose();

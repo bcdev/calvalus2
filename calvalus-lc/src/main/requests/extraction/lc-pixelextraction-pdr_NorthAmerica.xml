@@ -50,7 +50,6 @@
                         <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/home/marcoz/CEOS_AERONET_NorthAmerica.placemark</recordSourceUrl>
                         <exportDateFormat>yyyy-MM-dd HH:mm:ss</exportDateFormat>
                         <macroPixelSize>3</macroPixelSize>
-                        <aggregateMacroPixel>true</aggregateMacroPixel>
                     </parameters>
                 </wps:ComplexData>
             </wps:Data>

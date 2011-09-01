@@ -86,6 +86,10 @@ public class ProductRecordSource implements RecordSource {
 
     public static RecordTransformer createTransformer(Header header, MAConfig config) {
         final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(PIXEL_MASK_ATT_NAME);
+        return new RecordAggregator(pixelMaskAttributeIndex, config.getFilteredMeanCoeff());
+    }
+
+    public static RecordFilter createRecordFilter(Header header, MAConfig config) {
         if (shallApplyGoodRecordExpression(config)) {
             final String goodRecordExpression = config.getGoodRecordExpression();
             final RecordFilter recordFilter;
@@ -94,12 +98,14 @@ public class ProductRecordSource implements RecordSource {
             } catch (ParseException e) {
                 throw new IllegalStateException("Illegal configuration: goodRecordExpression is invalid: " + e.getMessage(), e);
             }
-            return new RecordTransformer(pixelMaskAttributeIndex,
-                                         config.getFilteredMeanCoeff(),
-                                         recordFilter);
+            return recordFilter;
         } else {
-            return new RecordTransformer(pixelMaskAttributeIndex,
-                                         config.getFilteredMeanCoeff());
+            return new RecordFilter() {
+                @Override
+                public boolean accept(Record record) {
+                    return true;
+                }
+            };
         }
     }
 

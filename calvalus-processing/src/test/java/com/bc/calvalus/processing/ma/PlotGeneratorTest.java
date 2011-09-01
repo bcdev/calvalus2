@@ -28,7 +28,7 @@ public class PlotGeneratorTest {
             double ref = delta * (i + Math.random());
             double mean = delta * (i + Math.random());
             double sigma = 0.01 + 0.1 * Math.random();
-            collector.processDataRecord(new Object[]{"Boussole", ref, new AggregatedNumber(20, 25, 2, 0.0, 1.0, mean, sigma)});
+            collector.processDataRecord(i, new Object[]{"Boussole", ref, new AggregatedNumber(20, 25, 2, 0.0, 1.0, mean, sigma)});
         }
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();

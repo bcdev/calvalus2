@@ -28,6 +28,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -50,21 +52,34 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
         final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
 
-        LOG.warning("Collecting records...");
+        final CsvRecordWriter recordWriter = new CsvRecordWriter(createTextFile(context, "records-all.txt"),
+                                                                 createTextFile(context, "records-agg.txt"));
 
+        final RecordProcessor[] recordProcessors = new RecordProcessor[]{
+                plotDatasetCollector,
+                recordWriter,
+        };
+
+        LOG.warning("Collecting records...");
+        int recordIndex = 0;
         while (context.nextKey()) {
             final Text key = context.getCurrentKey();
             final Iterator<RecordWritable> iterator = context.getValues().iterator();
             if (iterator.hasNext()) {
+
                 final RecordWritable record = iterator.next();
                 context.write(key, record);
+
                 if (key.equals(MAMapper.HEADER_KEY)) {
-                    plotDatasetCollector.processHeaderRecord(record.getValues());
+                    processHeaderRecord(record, recordProcessors);
                 } else {
-                    plotDatasetCollector.processDataRecord(record.getValues());
+                    processDataRecord(recordIndex, record, recordProcessors);
+                    recordIndex++;
                 }
             }
         }
+
+        finalizeRecordProcessing(recordIndex, recordProcessors);
 
         final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
 
@@ -91,6 +106,30 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                 outputStream.close();
             }
         }
+    }
+
+    private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
+        for (RecordProcessor recordProcessor : recordProcessors) {
+            recordProcessor.processHeaderRecord(record.getValues());
+        }
+    }
+
+    private void processDataRecord(int recordIndex, RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
+        for (RecordProcessor recordProcessor : recordProcessors) {
+            recordProcessor.processDataRecord(recordIndex, record.getValues());
+        }
+    }
+
+    private void finalizeRecordProcessing(int numRecords, RecordProcessor[] recordProcessors) throws IOException {
+        for (RecordProcessor recordProcessor : recordProcessors) {
+            recordProcessor.finalizeRecordProcessing(numRecords);
+        }
+    }
+
+    private Writer createTextFile(Context context, String fileName) throws IOException, InterruptedException {
+        Path recordsAllPath = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        FSDataOutputStream outputStream = recordsAllPath.getFileSystem(context.getConfiguration()).create(recordsAllPath);
+        return new OutputStreamWriter(outputStream);
     }
 
 }

@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.junit.Test;
 
@@ -72,7 +73,7 @@ public class MAWorkflowItemTest {
 
         assertEquals("file1,file2", configuration.get(JobConfNames.CALVALUS_INPUT));
 
-        assertSame(TextOutputFormat.class, job.getOutputFormatClass());
+        assertSame(SequenceFileOutputFormat.class, job.getOutputFormatClass());
         assertEquals(outputDir, FileOutputFormat.getOutputPath(job).getName());
 
     }

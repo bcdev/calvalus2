@@ -39,18 +39,9 @@ public class MAConfig implements XmlConvertible {
      * {@code n x n} pixels will be considered in the match-up process. Should be an odd integer,
      * so that {@code n/2 - 1} pixels are considered around a given center pixel.
      * The default value size is {@code 5} pixels so that an area of 5 x 5 pixels will be considered.
-     *
-     * @see #aggregateMacroPixel
      */
     @Parameter(defaultValue = "5")
     private int macroPixelSize;
-
-    /**
-     * If {@code aggregateMacroPixel = true}, all 'good' macro pixel values will be aggregated (averaged).
-     * If {@code aggregateMacroPixel = false}, all pixels comprising the macro pixel will be extracted.
-     */
-    @Parameter(defaultValue = "true")
-    private boolean aggregateMacroPixel;
 
     /**
      * Maximum time difference in hours between reference and EO pixel.
@@ -222,14 +213,6 @@ public class MAConfig implements XmlConvertible {
 
     public void setMacroPixelSize(int macroPixelSize) {
         this.macroPixelSize = macroPixelSize;
-    }
-
-    public boolean getAggregateMacroPixel() {
-        return aggregateMacroPixel;
-    }
-
-    public void setAggregateMacroPixel(boolean aggregateMacroPixel) {
-        this.aggregateMacroPixel = aggregateMacroPixel;
     }
 
     public Double getMaxTimeDifference() {
