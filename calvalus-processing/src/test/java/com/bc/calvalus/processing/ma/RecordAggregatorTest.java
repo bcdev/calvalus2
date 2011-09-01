@@ -4,80 +4,13 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.junit.Test;
 
 import java.util.Date;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 /**
  * @author Norman
  */
-public class RecordTransformerTest {
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testExpandChecksZeroLengthArrays() throws Exception {
-        new RecordExploder(-1).explode(ProductRecordSourceTest.newRecord(null, null,
-                                                                         "x",
-                                                                         new float[0]));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testExpandChecksVaryingLengthArrays() throws Exception {
-        new RecordExploder(-1).explode(ProductRecordSourceTest.newRecord(null, null,
-                                                                         "x",
-                                                                         new float[3],
-                                                                         new int[2]));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testExpandChecksSupportedArrayTypes() throws Exception {
-        new RecordExploder(-1).explode(ProductRecordSourceTest.newRecord(null, null,
-                                                                         "x",
-                                                                         new Date[3]));
-    }
-
-    @Test
-    public void testExpand() throws Exception {
-        List<Record> flattenedRecords = new RecordExploder(-1).explode(
-                createDataRecord(new float[]{1.1F, 1.2F, 1.4F, 1.8F},
-                                 new int[]{64, 32, 16, 8},
-                                 new int[]{1, 1, 1, 1}));
-        assertNotNull(flattenedRecords);
-        assertEquals(4, flattenedRecords.size());
-
-        Record r1 = flattenedRecords.get(0);
-        assertEquals(7, r1.getAttributeValues().length);
-        testFirst4Values(r1);
-        assertEquals(1.1F, (Float) r1.getAttributeValues()[4], 1E-5F);
-        assertEquals(64, r1.getAttributeValues()[5]);
-
-        Record r4 = flattenedRecords.get(3);
-        assertEquals(7, r4.getAttributeValues().length);
-        testFirst4Values(r4);
-        assertEquals(1.8F, (Float) r4.getAttributeValues()[4], 1E-5F);
-        assertEquals(8, r4.getAttributeValues()[5]);
-    }
-
-    @Test
-    public void testExpandWithMask() throws Exception {
-        List<Record> flattenedRecords = new RecordExploder(6).explode(
-                createDataRecord(new float[]{1.1F, 1.2F, 1.4F, 1.8F},
-                                 new int[]{64, 32, 16, 8},
-                                 new int[]{1, 0, 0, 1}));
-        assertNotNull(flattenedRecords);
-        assertEquals(2, flattenedRecords.size());
-
-        Record r1 = flattenedRecords.get(0);
-        assertEquals(7, r1.getAttributeValues().length);
-        testFirst4Values(r1);
-        assertEquals(1.1F, (Float) r1.getAttributeValues()[4], 1E-5F);
-        assertEquals(64, r1.getAttributeValues()[5]);
-
-        Record r4 = flattenedRecords.get(1);
-        assertEquals(7, r4.getAttributeValues().length);
-        testFirst4Values(r4);
-        assertEquals(1.8F, (Float) r4.getAttributeValues()[4], 1E-5F);
-        assertEquals(8, r4.getAttributeValues()[5]);
-    }
+public class RecordAggregatorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksZeroLengthArrays() throws Exception {
@@ -249,12 +182,4 @@ public class RecordTransformerTest {
                                                  mask);
     }
 
-    @Test
-    public void testHeaderTransformation() throws Exception {
-        assertArrayEquals(new String[]{"a", "b", "c_mean", "c_sigma", "c_n", "d_mean", "d_sigma", "d_n"},
-                          RecordExploder.getHeaderForAggregatedRecords(new String[]{"a", "b", "*c", "*d"}));
-
-        assertArrayEquals(new String[]{"a", "b", "c", "d"},
-                          RecordExploder.getHeaderForExplodedRecords(new String[]{"a", "b", "*c", "*d"}));
-    }
 }

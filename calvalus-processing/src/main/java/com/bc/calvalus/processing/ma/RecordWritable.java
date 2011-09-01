@@ -208,7 +208,7 @@ public class RecordWritable implements Writable {
      */
     @Override
     public String toString() {
-        return CsvRecordWriter.recordToString(values);
+        return CsvRecordWriter.toString(values);
     }
 
 }

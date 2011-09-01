@@ -374,24 +374,6 @@ public class ProductRecordSourceTest {
 
         assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
-
-        List<Record> flattenedRecords = new RecordExploder(-1).explode(records.get(0));
-        assertNotNull(flattenedRecords);
-        assertEquals(9, flattenedRecords.size());
-
-        actualX = new int[9];
-        actualY = new int[9];
-        for (int i = 0; i < 9; i++) {
-            pixelXValue = flattenedRecords.get(i).getAttributeValues()[PIXEL_X];
-            assertEquals(Integer.class, pixelXValue.getClass());
-            actualX[i] = (Integer) pixelXValue;
-
-            pixelYValue = flattenedRecords.get(i).getAttributeValues()[PIXEL_Y];
-            assertEquals(Integer.class, pixelYValue.getClass());
-            actualY[i] = (Integer) pixelYValue;
-        }
-        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
-        assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
     }
 
     @Test

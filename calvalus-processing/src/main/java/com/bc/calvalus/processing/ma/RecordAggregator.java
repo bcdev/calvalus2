@@ -19,7 +19,7 @@ public class RecordAggregator implements RecordTransformer {
     @Override
     public Record transform(Record record) {
         final Object[] attributeValues = record.getAttributeValues();
-        int length = RecordExploder.getCommonArrayValueLength(attributeValues);
+        int length = getCommonArrayValueLength(attributeValues);
         if (length == -1) {
             // If there are not primitive int[] or float[] values in attributeValues, we are done
             return record;
