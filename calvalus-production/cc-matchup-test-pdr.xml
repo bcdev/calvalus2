@@ -29,7 +29,7 @@
         <wps:Input>
             <ows:Identifier>minDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2005-05-01</wps:LiteralData>
+                <wps:LiteralData>2005-06-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
