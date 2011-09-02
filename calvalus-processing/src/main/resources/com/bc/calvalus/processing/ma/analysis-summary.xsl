@@ -7,7 +7,7 @@
     Note: In order to further develop test this XSD,
           run com.bc.calvalus.processing.ma.ReportGeneratorTest.
 
-    TODO:
+    TODO - add more information here (nf)
     * Provide processing statistics, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters
     * Make the NTML nicer, use CSS
 -->

@@ -32,7 +32,6 @@ public class FileDownloadServlet extends HttpServlet {
 
         File downloadDir = new BackendConfig(getServletContext()).getLocalStagingDir();
         File file = new File(downloadDir, filePath);
-        // todo - check: do we need to set contentLength on resp (which is an int)? (nf)
         if (file.length() > Integer.MAX_VALUE) {
             throw new ServletException(String.format("File size too big (expected less than 2 GB, but got %d bytes).", file.length()));
         }

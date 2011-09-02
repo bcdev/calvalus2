@@ -90,7 +90,6 @@ public class L2ProductionType extends HadoopProductionType {
             throw new ProductionException("No input files found for given time range.");
         }
 
-        // todo - use regionGeometry to filter input files
         String outputDir = getOutputDir(productionId, productionRequest);
 
         String processorName = productionRequest.getParameter("processorName");

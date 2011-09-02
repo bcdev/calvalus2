@@ -99,7 +99,7 @@ public class AggregatorAverageMLTest {
         assertEquals(sqrt(3f) + sqrt(2f) + sqrt(1f) + sqrt(7f), tvec.get(2), 1e-5);
 
         /*
-        todo - add asserts for output values
+        todo - add asserts for output  (nf)
         float mean = ...;
         float sigma = ...;
         float median = ...;

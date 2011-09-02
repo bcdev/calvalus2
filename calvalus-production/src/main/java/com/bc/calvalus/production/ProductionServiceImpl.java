@@ -27,7 +27,7 @@ public class ProductionServiceImpl implements ProductionService {
     public static enum Action {
         CANCEL,
         DELETE,
-        RESTART,// todo - implement restart
+        RESTART,// todo - implement restart (nf)
     }
 
     private final InventoryService inventoryService;

@@ -94,7 +94,6 @@ public class PlotDatasetCollector implements RecordProcessor {
 
     @Override
     public void finalizeRecordProcessing(int numRecords) throws IOException {
-        // todo - generate plot images here...
     }
 
     private boolean isValidDataPoint(Number referenceValue, Number satelliteValue) {

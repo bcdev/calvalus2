@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing;
 
 /**
- * todo - add api doc
+ * A text converter for job IDs.
  *
  * @author Norman Fomferra
  */

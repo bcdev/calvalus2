@@ -4,7 +4,7 @@ import com.bc.calvalus.processing.JobIdFormat;
 import org.apache.hadoop.mapreduce.JobID;
 
 /**
-* todo - add api doc
+* A converter for Hadoop job IDs.
 *
 * @author Norman Fomferra
 */

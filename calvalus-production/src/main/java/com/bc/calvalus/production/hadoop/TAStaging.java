@@ -115,7 +115,6 @@ class TAStaging extends Staging {
                     reader.close();
                 }
             } catch (IOException e) {
-                // todo - or fail? (nf)
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to read TA output " + inputDir, e);
             }
@@ -136,7 +135,6 @@ class TAStaging extends Staging {
                 Writer writer = new OutputStreamWriter(new FileOutputStream(regionFile));
                 taReport.writeRegionCsvReport(writer, regionName);
             } catch (IOException e) {
-                // todo - or fail? (nf)
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to write TA csv file " + regionFile, e);
             }
@@ -156,7 +154,6 @@ class TAStaging extends Staging {
                     imgUrls.add(pngFile.getName());
                 }
             } catch (IOException e) {
-                // todo - or fail? (nf)
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to write TA graph file " + (pngFile != null ? pngFile : ""), e);
             }

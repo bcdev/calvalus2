@@ -71,7 +71,6 @@ class L3Staging extends Staging {
                                                                               l3WorkflowItem.getMinDate(),
                                                                               l3WorkflowItem.getMaxDate());
 
-                    // todo - need a progress monitor here
                     formatter.format(formatterConfig, l3Config, outputDir, regionGeometry);
 
                     String outputFilename = new File(formatterConfig.getOutputFile()).getName();
@@ -82,7 +81,7 @@ class L3Staging extends Staging {
                 }
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
             } catch (Exception e) {
-                // todo - if job has been cancelled, it must not change its state anymore
+                // check: if job has been cancelled, it must not change its state anymore (nf)
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 logger.log(Level.WARNING, "Formatting failed.", e);
             }
@@ -105,13 +104,16 @@ class L3Staging extends Staging {
         } else if (outputFormat.equals("GeoTIFF")) {
             extension = "tif";
         } else {
-            extension = "xxx"; // todo  what else to handle ?
+            extension = "xxx"; // todo - what else to handle? (mz)
         }
-        String filename = String.format("L3_%s_%s.%s", dateStart, dateStop, extension);  // todo - specify Calvalus L3 filename convention
+        // todo - specify common Calvalus L3 filename convention (mz)
+        String filename = String.format("L3_%s_%s.%s", dateStart, dateStop, extension);
         String stagingFilePath = new File(outputDir, filename).getPath();
 
-        String outputType = "Product"; // todo - from production request
-        L3FormatterConfig.BandConfiguration[] rgbBandConfig = new L3FormatterConfig.BandConfiguration[0];  // todo -  from production request
+        // todo - make 'outputType' a production request parameter (mz)
+        String outputType = "Product";
+        // todo - make 'bandConfiguration' a production request parameter (mz)
+        L3FormatterConfig.BandConfiguration[] rgbBandConfig = new L3FormatterConfig.BandConfiguration[0];
 
         return new L3FormatterConfig(outputType,
                                      stagingFilePath,

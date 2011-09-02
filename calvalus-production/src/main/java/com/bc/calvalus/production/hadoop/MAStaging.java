@@ -61,7 +61,7 @@ class MAStaging extends Staging {
             }
 
             zip(stagingDir, new File(stagingDir.getParentFile(), stagingDir.getName() + ".zip"));
-            // todo FileUtil.fullyDelete();
+            // todo - delete the files we just zipped (but without deleting the zip!)  (nf)
 
             production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
 

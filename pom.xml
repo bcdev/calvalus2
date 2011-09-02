@@ -26,7 +26,7 @@
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
 
-        <!-- Plug-ins to Calvalus (todo - names to be confirmed in Feb 2011) -->
+        <!-- Plug-ins to Calvalus -->
         <module>calvalus-binning</module>
         <module>calvalus-l2gen</module>
         <!--<module>calvalus-matchup</module>-->

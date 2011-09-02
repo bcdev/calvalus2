@@ -72,7 +72,7 @@ public class L3FormatterTool extends Configured implements Tool {
     }
 
 
-    // todo: replace by configuration (e.g. in shell script) to start application suspended
+    // todo: replace by configuration (e.g. in shell script) to start application suspended (nf)
     // like in :
     //     if [ ! -z  $CV_DEBUG ]; then
     //         CV_OPTIONS="-Xdebug -Xrunjdwp:transport=dt_socket,address=8001,server=y,suspend=y"

@@ -9,10 +9,10 @@ import java.util.List;
  * options without value "--key" or "-key" as properties with value "true",
  * and all other arguments as simple arguments.
  *
- * TODO  move to utility package, or harmonise with existing utilities
- *
  * @author Martin Boettcher
+ * @deprecated We use Apache commons-cli from now on (which is alo used by the Hadoop client)
  */
+@Deprecated
 public class Args extends Hashtable<String,String>
 {
     private String[] args = null;

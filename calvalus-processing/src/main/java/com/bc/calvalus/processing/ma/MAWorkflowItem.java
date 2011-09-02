@@ -81,8 +81,6 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
 
     protected void configureJob(Job job) throws IOException {
 
-        // todo - use minDate/maxDate to filter input products
-
         Configuration configuration = job.getConfiguration();
 
         configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));

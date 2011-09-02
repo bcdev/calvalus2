@@ -43,16 +43,13 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
-        final String outputGroupName = maConfig.getOutputGroupName();
 
-        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(outputGroupName);
-
-        final CsvRecordWriter recordWriter = new CsvRecordWriter(createWriter(context, "records-all.txt"),
-                                                                 createWriter(context, "records-agg.txt"));
+        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName());
 
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
+                new CsvRecordWriter(createWriter(context, "records-all.txt"),
+                                    createWriter(context, "records-agg.txt")),
                 plotDatasetCollector,
-                recordWriter,
         };
 
         LOG.warning("Collecting records...");

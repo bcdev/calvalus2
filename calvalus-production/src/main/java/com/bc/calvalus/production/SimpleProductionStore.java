@@ -278,7 +278,7 @@ public class SimpleProductionStore implements ProductionStore {
      * @return The workflow.
      */
     protected WorkflowItem createWorkflow(Object[] jobIds, Date[] dates, ProcessStatus processStatus) {
-        // todo - we need a factory that creates the correct Workflow for a production
+        // todo - we need a factory that creates the correct Workflow for a production, need workflow persistence (nf)
         ProxyWorkflowItem workflowItem = new ProxyWorkflowItem(jobIds);
         workflowItem.setStatus(processStatus);
         workflowItem.setSubmitTime(dates[0]);

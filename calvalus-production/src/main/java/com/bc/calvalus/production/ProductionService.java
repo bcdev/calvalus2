@@ -14,7 +14,6 @@ public interface ProductionService {
 
     /**
      * Gets all known product sets.
-     * TODO - Check: move to InventoryService?
      *
      * @param filter A filter expression (not yet used).
      * @return The product sets.
@@ -79,7 +78,7 @@ public interface ProductionService {
      */
     void stageProductions(String ... productionIds) throws ProductionException;
 
-    // todo - actually the service shall update itself on a regular basis
+    // todo - actually the service shall update itself on a regular basis (nf)
     /**
      * A request to retrieve and update the status of all workflows.
      */
