@@ -3,6 +3,14 @@
 
 <xsl:template match="/">
 
+<!--
+    Note: In order to further develop test this XSD,
+          run com.bc.calvalus.processing.ma.ReportGeneratorTest.
+
+    TODO:
+    * Provide processing statistics, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters
+    * Make the NTML nicer, use CSS
+-->
 
 <html>
     <head>
@@ -15,11 +23,6 @@
 
 <h3>Processing Information</h3>
 
-<!--
-    TODO:
-    * Provide processing statistics, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters
-    * Make the NTML nicer, use CSS
--->
 <table>
     <tr>
         <td class="name">Performed at:</td>
@@ -116,12 +119,12 @@
         <td class="dataset-info">
             <table>
                 <tr>
-                    <td class="name">Reference variable:</td>
-                    <td class="value"><xsl:value-of select="referenceVariable"/></td>
-                </tr>
-                <tr>
                     <td class="name">Satellite variable:</td>
                     <td class="value"><xsl:value-of select="satelliteVariable"/></td>
+                </tr>
+                <tr>
+                    <td class="name">Reference variable:</td>
+                    <td class="value"><xsl:value-of select="referenceVariable"/></td>
                 </tr>
                 <tr>
                     <td class="name">Number of data points:</td>

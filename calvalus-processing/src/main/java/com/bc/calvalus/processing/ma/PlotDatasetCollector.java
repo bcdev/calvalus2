@@ -201,9 +201,13 @@ public class PlotDatasetCollector implements RecordProcessor {
         private final List<Point> points;
 
         public PlotDataset(String groupName, VariablePair variablePair) {
+            this(groupName, variablePair, new ArrayList<Point>(32));
+        }
+
+        public PlotDataset(String groupName, VariablePair variablePair, List<Point> points) {
             this.groupName = groupName;
             this.variablePair = variablePair;
-            points = new ArrayList<Point>(32);
+            this.points = points;
         }
 
         public String getGroupName() {
