@@ -3,7 +3,12 @@
 
 <xsl:template match="/">
 
+
 <html>
+    <head>
+        <title>Match-up Analysis</title>
+        <link rel="stylesheet" type="text/css" href="styleset.css"/>
+    </head>
 <body>
 
 <h2>Match-up Analysis</h2>
@@ -15,88 +20,88 @@
     * Provide processing statistics, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters
     * Make the NTML nicer, use CSS
 -->
-<table border="0">
+<table>
     <tr>
-        <td>Performed at:</td>
-        <td><xsl:value-of select="analysisSummary/performedAt"/></td>
+        <td class="name">Performed at:</td>
+        <td class="value"><xsl:value-of select="analysisSummary/performedAt"/></td>
     </tr>
     <tr>
-        <td>Number of match-ups:</td>
-        <td><xsl:value-of select="analysisSummary/recordCount"/></td>
+        <td class="name">Number of match-ups:</td>
+        <td class="value"><xsl:value-of select="analysisSummary/recordCount"/></td>
     </tr>
 </table>
 
 <h3>Analysis Parameters</h3>
 
-<table border="0">
+<table>
     <xsl:for-each select="analysisSummary/configuration/property">
     <xsl:choose>
     <xsl:when test="name='calvalus.calvalus.bundle'">
         <tr>
-            <td>Calvalus bundle:</td>
-            <td><xsl:value-of select="value"/></td>
+            <td class="name">Calvalus bundle:</td>
+            <td class="value"><xsl:value-of select="value"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.beam.bundle'">
         <tr>
-            <td>BEAM bundle:</td>
-            <td><xsl:value-of select="value"/></td>
+            <td class="name">BEAM bundle:</td>
+            <td class="value"><xsl:value-of select="value"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.l2.bundle'">
         <tr>
-            <td>Processor bundle:</td>
-            <td><xsl:value-of select="value"/></td>
+            <td class="name">Processor bundle:</td>
+            <td class="value"><xsl:value-of select="value"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.l2.operator'">
         <tr>
-            <td>Processor name:</td>
-            <td><xsl:value-of select="value"/></td>
+            <td class="name">Processor name:</td>
+            <td class="value"><xsl:value-of select="value"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.l2.parameters'">
         <tr>
-            <td>Processor parameters:</td>
-            <td><xsl:value-of select="value"/></td>
+            <td class="name">Processor parameters:</td>
+            <td class="value"><xsl:value-of select="value"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.ma.parameters'">
         <tr>
-            <td>Input reference dataset:</td>
-            <td><xsl:value-of select="value/parameters/recordSourceUrl"/></td>
+            <td class="name">Input reference dataset:</td>
+            <td class="value"><xsl:value-of select="value/parameters/recordSourceUrl"/></td>
         </tr>
         <tr>
-            <td>Output group name:</td>
-            <td><xsl:value-of select="value/parameters/outputGroupName"/></td>
+            <td class="name">Output group name:</td>
+            <td class="value"><xsl:value-of select="value/parameters/outputGroupName"/></td>
         </tr>
         <tr>
-            <td>Output date/time format:</td>
-            <td><xsl:value-of select="value/parameters/outputTimeFormat"/></td>
+            <td class="name">Output date/time format:</td>
+            <td class="value"><xsl:value-of select="value/parameters/outputTimeFormat"/></td>
         </tr>
         <tr>
-            <td>Macro pixel size:</td>
-            <td><xsl:value-of select="value/parameters/macroPixelSize"/></td>
+            <td class="name">Macro pixel size:</td>
+            <td class="value"><xsl:value-of select="value/parameters/macroPixelSize"/></td>
         </tr>
         <tr>
-            <td>Max. time difference (h):</td>
-            <td><xsl:value-of select="value/parameters/maxTimeDifference"/></td>
+            <td class="name">Max. time difference (h):</td>
+            <td class="value"><xsl:value-of select="value/parameters/maxTimeDifference"/></td>
         </tr>
         <tr>
-            <td>Good-pixel expression:</td>
-            <td><xsl:value-of select="value/parameters/goodPixelExpression"/></td>
+            <td class="name">Good-pixel expression:</td>
+            <td class="value"><xsl:value-of select="value/parameters/goodPixelExpression"/></td>
         </tr>
         <tr>
-            <td>Good-record expression:</td>
-            <td><xsl:value-of select="value/parameters/goodRecordExpression"/></td>
+            <td class="name">Good-record expression:</td>
+            <td class="value"><xsl:value-of select="value/parameters/goodRecordExpression"/></td>
         </tr>
         <tr>
-            <td>Copy input:</td>
-            <td><xsl:value-of select="value/parameters/copyInput"/></td>
+            <td class="name">Copy input:</td>
+            <td class="value"><xsl:value-of select="value/parameters/copyInput"/></td>
         </tr>
         <tr>
-            <td>Filtered mean coefficient:</td>
-            <td><xsl:value-of select="value/parameters/filteredMeanCoeff"/></td>
+            <td class="name">Filtered mean coefficient:</td>
+            <td class="value"><xsl:value-of select="value/parameters/filteredMeanCoeff"/></td>
         </tr>
     </xsl:when>
     </xsl:choose>
@@ -105,34 +110,34 @@
 
 <h3>Scatter plots</h3>
 
-<table border="0">
+<table>
     <xsl:for-each select="analysisSummary/dataset">
     <tr>
-        <td>
-            <table border="0">
+        <td class="dataset-info">
+            <table>
                 <tr>
-                    <td>Reference variable:</td>
-                    <td><xsl:value-of select="referenceVariable"/></td>
+                    <td class="name">Reference variable:</td>
+                    <td class="value"><xsl:value-of select="referenceVariable"/></td>
                 </tr>
                 <tr>
-                    <td>Satellite variable:</td>
-                    <td><xsl:value-of select="satelliteVariable"/></td>
+                    <td class="name">Satellite variable:</td>
+                    <td class="value"><xsl:value-of select="satelliteVariable"/></td>
                 </tr>
                 <tr>
-                    <td>Number of data points:</td>
-                    <td><xsl:value-of select="statistics/numDataPoints"/></td>
+                    <td class="name">Number of data points:</td>
+                    <td class="value"><xsl:value-of select="statistics/numDataPoints"/></td>
                 </tr>
                 <tr>
-                    <td>Lin. regression interception:</td>
-                    <td><xsl:value-of select="statistics/regressionInter"/></td>
+                    <td class="name">Lin. regression interception:</td>
+                    <td class="value"><xsl:value-of select="statistics/regressionInter"/></td>
                 </tr>
                 <tr>
-                    <td>Lin. regression slope:</td>
-                    <td><xsl:value-of select="statistics/regressionSlope"/></td>
+                    <td class="name">Lin. regression slope:</td>
+                    <td class="value"><xsl:value-of select="statistics/regressionSlope"/></td>
                 </tr>
             </table>
         </td>
-        <td>
+        <td class="dataset-graph">
             <img>
             <xsl:attribute name="src">
                 <xsl:value-of select="statistics/scatterPlotImage" />
