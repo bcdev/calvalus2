@@ -20,11 +20,10 @@ import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowStatusEvent;
 import com.bc.calvalus.commons.WorkflowStatusListener;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -41,72 +40,54 @@ import java.io.IOException;
  */
 public class TAWorkflowItem extends HadoopWorkflowItem {
 
-    private final String inputDir;
-    private final String outputDir;
-    private final L3Config l3Config;
-    private final TAConfig taConfig;
-    private final String minDate;
-    private final String maxDate;
-
-    public TAWorkflowItem(HadoopProcessingService processingService,
-                          String jobName,
-                          String inputDir,
-                          String outputDir,
-                          L3Config l3Config,
-                          TAConfig taConfig,
-                          String minDate,
-                          String maxDate) {
-        super(processingService, jobName);
-        this.inputDir = inputDir;
-        this.outputDir = outputDir;
-        this.l3Config = l3Config;
-        this.taConfig = taConfig;
-        this.minDate = minDate;
-        this.maxDate = maxDate;
-    }
-
-    public String getMaxDate() {
-        return maxDate;
-    }
-
-    public String getMinDate() {
-        return minDate;
+    public TAWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+        super(processingService, jobName, jobConfig);
     }
 
     public String getInputDir() {
-        return inputDir;
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
     }
 
     public String getOutputDir() {
-        return outputDir;
+        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT);
     }
 
+    public String getMinDate() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_MIN_DATE);
+    }
+
+    public String getMaxDate() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_MAX_DATE);
+    }
+
+    @Override
+    protected String[][] getJobConfigDefaults() {
+        return new String[][]{
+                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_OUTPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_TA_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}
+        };
+    }
+
+    @Override
     protected void configureJob(Job job) throws IOException {
 
-        Configuration configuration = job.getConfiguration();
-
-        configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
-        configuration.set(JobConfNames.CALVALUS_TA_PARAMETERS, taConfig.toXml());
-        configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
-        configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
-
-        SequenceFileInputFormat.addInputPath(job, new Path(inputDir));
+        SequenceFileInputFormat.addInputPath(job, new Path(getInputDir()));
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, outputDir);
+        JobUtils.clearAndSetOutputDir(job, getOutputDir());
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        // job.setOutputFormatClass(TextOutputFormat.class);
-
-        job.setNumReduceTasks(1);
 
         job.setMapperClass(TAMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(TemporalBin.class);
-
         job.setReducerClass(TAReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(TAPoint.class);
+        job.setNumReduceTasks(1);
 
         // If this item is completed, clear L3 output dir, which is not used anymore
         addWorkflowStatusListener(new InputDirCleaner(job));
@@ -129,7 +110,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
         private void clearInputDir(Job job) {
             try {
-                JobUtils.clearDir(job, inputDir);
+                JobUtils.clearDir(job, getInputDir());
             } catch (IOException e) {
                 // todo - nf/** 19.04.2011: log error
             }

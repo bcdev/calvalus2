@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -24,13 +24,13 @@ import java.util.logging.Logger;
 /**
  * An input format that maps each input file to a single (file) split.
  * Input files are given by the configuration parameter
- * {@link com.bc.calvalus.processing.JobConfNames#CALVALUS_INPUT CALVALUS_INPUT}. Its value is expected to
+ * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_INPUT CALVALUS_INPUT}. Its value is expected to
  * be a comma-separated list of file paths (HDFS URLs).
  * <p/>
  * <b>Important note:</b> The implementation assumes that all input files comprise a single block.
  * That is, each file's size must be less than (unlikely) or equal to (more likely) its block size.
  * The behaviour for files that do not meet this requirement depends on the configuration parameter
- * {@link com.bc.calvalus.processing.JobConfNames#CALVALUS_FAIL_FAST CALVALUS_FAIL_FAST}:
+ * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_FAIL_FAST CALVALUS_FAIL_FAST}:
  * If it is "true", an I/O exception will be thrown, otherwise only a message will be logged.
  *
  * @author Martin
@@ -44,7 +44,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
     /**
      * Maps each input file to a single (file) split.
      * Input files are given by the configuration parameter
-     * {@link com.bc.calvalus.processing.JobConfNames#CALVALUS_INPUT}. Its value is expected to
+     * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_INPUT}. Its value is expected to
      * be a comma-separated list of file paths (HDFS URLs).
      */
     @Override
@@ -53,9 +53,9 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
         try {
             // parse request
             Configuration configuration = job.getConfiguration();
-            String[] inputUrls = configuration.get(JobConfNames.CALVALUS_INPUT).split(",");
-            boolean failFast = Boolean.parseBoolean(configuration.get(JobConfNames.CALVALUS_FAIL_FAST, "false"));
-            String inputFormat = configuration.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+            String[] inputUrls = configuration.get(JobConfigNames.CALVALUS_INPUT).split(",");
+            boolean failFast = Boolean.parseBoolean(configuration.get(JobConfigNames.CALVALUS_FAIL_FAST, "false"));
+            String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
 
             // create splits for each calvalus.input in request
             List<FileSplit> splits = new ArrayList<FileSplit>(inputUrls.length);

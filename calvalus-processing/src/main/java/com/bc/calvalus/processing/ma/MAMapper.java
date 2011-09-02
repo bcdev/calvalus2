@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -53,7 +53,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfigNames.CALVALUS_MA_PARAMETERS));
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         // write initial log entry for runtime measurements
@@ -64,10 +64,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         t0 = now();
 
-        String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-        String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         Product product = productFactory.getProduct(inputPath,
                                                     inputFormat,
                                                     regionGeometryWkt,

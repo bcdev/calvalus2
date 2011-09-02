@@ -18,9 +18,8 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.WpsConfig;
 import com.bc.calvalus.processing.l3.L3Mapper;
 import com.bc.calvalus.processing.l3.L3Partitioner;
@@ -42,7 +41,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
@@ -71,16 +69,16 @@ public class BeamOpProcessingType {
         if (priority == null) {
             priority = "LOW";
         }
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT, inputs);
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_INPUT_FORMAT, wpsConfig.getInputFormat());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_BUNDLE, wpsConfig.getProcessorPackage());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L2_PARAMETERS, wpsConfig.getLevel2Parameters());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
-        addIfNotEmpty(conf, JobConfNames.CALVALUS_PRIORITY, priority);
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_INPUT, inputs);
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_INPUT_FORMAT, wpsConfig.getInputFormat());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_BUNDLE, wpsConfig.getProcessorPackage());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_PARAMETERS, wpsConfig.getLevel2Parameters());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_PRIORITY, priority);
 
         Map<String,String> propertiesMap = wpsConfig.getSystemProperties();
         if (!propertiesMap.containsKey("beam.reader.tileHeight")) {
@@ -131,7 +129,7 @@ public class BeamOpProcessingType {
 
     public void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
-        String output = configuration.get(JobConfNames.CALVALUS_OUTPUT);
+        String output = configuration.get(JobConfigNames.CALVALUS_OUTPUT);
         // clear output directory
         final Path outputPath = new Path(output);
         final FileSystem fileSystem = outputPath.getFileSystem(configuration);
@@ -140,7 +138,7 @@ public class BeamOpProcessingType {
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
 
-        if (configuration.get(JobConfNames.CALVALUS_L3_PARAMETERS) != null) {
+        if (configuration.get(JobConfigNames.CALVALUS_L3_PARAMETERS) != null) {
             job.setNumReduceTasks(4);
 
             job.setMapperClass(L3Mapper.class);
@@ -198,7 +196,7 @@ public class BeamOpProcessingType {
         configuration.set("mapred.child.java.opts", "-Xmx2000m");
         job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
 
-        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
-        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_L2_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE), configuration);
     }
 }

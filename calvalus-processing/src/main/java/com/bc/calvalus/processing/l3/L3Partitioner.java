@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -57,10 +57,10 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETERS);
+        String level3Parameters = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
         L3Config l3Config = L3Config.fromXml(level3Parameters);
         this.binningGrid = l3Config.getBinningGrid();
-        String regionGeometry = conf.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
+        String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {
             Envelope envelope = roiGeometry.getEnvelopeInternal();

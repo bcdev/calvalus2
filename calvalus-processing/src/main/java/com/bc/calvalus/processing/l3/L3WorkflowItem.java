@@ -18,17 +18,15 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 
@@ -37,73 +35,53 @@ import java.io.IOException;
  */
 public class L3WorkflowItem extends HadoopWorkflowItem {
 
-    private final String processorBundle;
-    private final String processorName;
-    private final String processorParameters;
-    private final String[] inputFiles;
-    private final String outputDir;
-    private final L3Config l3Config;
-    private final Geometry regionGeometry;
-    private final String minDate;
-    private final String maxDate;
-
-    public L3WorkflowItem(HadoopProcessingService processingService,
-                          String jobName,
-                          String processorBundle,
-                          String processorName,
-                          String processorParameters,
-                          Geometry regionGeometry,
-                          String[] inputFiles,
-                          String outputDir,
-                          L3Config l3Config,
-                          String minDate,
-                          String maxDate) {
-        super(processingService, jobName);
-        this.processorBundle = processorBundle;
-        this.processorName = processorName;
-        this.processorParameters = processorParameters;
-        this.inputFiles = inputFiles;
-        this.outputDir = outputDir;
-        this.l3Config = l3Config;
-        this.regionGeometry = regionGeometry;
-        this.minDate = minDate;
-        this.maxDate = maxDate;
+    public L3WorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+        super(processingService, jobName, jobConfig);
     }
 
     public String getMinDate() {
-        return minDate;
+        return getJobConfig().get(JobConfigNames.CALVALUS_MIN_DATE);
     }
 
     public String getMaxDate() {
-        return maxDate;
+        return getJobConfig().get(JobConfigNames.CALVALUS_MAX_DATE);
     }
 
     public String getOutputDir() {
-        return outputDir;
+        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT);
+    }
+
+    public String getProcessorBundle() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
     }
 
     public L3Config getL3Config() {
-        return l3Config;
+        return L3Config.fromXml(JobConfigNames.CALVALUS_L3_PARAMETERS);
     }
 
+
+    @Override
+    protected String[][] getJobConfigDefaults() {
+        return new String[][]{
+                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_OUTPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
+                {JobConfigNames.CALVALUS_L2_OPERATOR, null},
+                {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
+                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_REGION_GEOMETRY, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}
+        };
+    }
+
+    @Override
     protected void configureJob(Job job) throws IOException {
 
-        Configuration configuration = job.getConfiguration();
+        Configuration jobConfig = job.getConfiguration();
 
-        configuration.set(JobConfNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-        configuration.set(JobConfNames.CALVALUS_OUTPUT, outputDir);
-        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, processorBundle);
-        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, processorName);
-        configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        configuration.set(JobConfNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
-        configuration.set(JobConfNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        configuration.set(JobConfNames.CALVALUS_MIN_DATE, minDate);
-        configuration.set(JobConfNames.CALVALUS_MAX_DATE, maxDate);
-
-        configuration.set("calvalus.system.beam.reader.tileHeight", "64");
-        configuration.set("calvalus.system.beam.reader.tileWidth", "*");
-
-        JobUtils.clearAndSetOutputDir(job, outputDir);
+        jobConfig.set("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.set("calvalus.system.beam.reader.tileWidth", "*");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setNumReduceTasks(4);
@@ -116,7 +94,10 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(TemporalBin.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        HadoopProcessingService.addBundleToClassPath(processorBundle, configuration);
+        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        if (getProcessorBundle() != null) {
+            HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
+        }
     }
 
 }

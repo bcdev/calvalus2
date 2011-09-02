@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.MAWorkflowItem;
@@ -11,6 +12,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.util.StringUtils;
 
 import java.util.Date;
 
@@ -54,20 +57,19 @@ public class MAProductionType extends HadoopProductionType {
         WorkflowItem workflowItem;
         if (l1InputFiles.length > 0) {
             String outputDir = getOutputDir(productionRequest.getUserName(), productionId);
-
             MAConfig maConfig = MAConfig.fromXml(productionRequest.getParameter("calvalus.ma.parameters"));
-            workflowItem = new MAWorkflowItem(getProcessingService(),
-                                              productionId,
-                                              processorBundle,
-                                              processorName,
-                                              processorParameters,
-                                              regionGeometry,
-                                              l1InputFiles,
-                                              inputFormat,
-                                              outputDir,
-                                              maConfig,
-                                              "",
-                                              "");
+
+            Configuration maJobConfig = createJobConfig(productionRequest);
+            maJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
+            maJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+            maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+            maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+            maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+            workflowItem = new MAWorkflowItem(getProcessingService(), productionId, maJobConfig);
+
         } else {
             throw new ProductionException("No input products found for given time range.");
         }

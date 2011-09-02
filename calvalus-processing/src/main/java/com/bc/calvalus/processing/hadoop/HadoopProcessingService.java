@@ -76,6 +76,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
     }
 
+    // this code exists somewhere else already
     private String readFile(FileStatus subPath) throws IOException {
         InputStream is = fileSystem.open(subPath.getPath());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -102,32 +103,32 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    public final Configuration createJobConfiguration() {
-        Configuration configuration = new Configuration(getJobClient().getConf());
-        initCommonConfiguration(configuration);
-        return configuration;
+    public final Configuration createJobConfig() {
+        Configuration jobConfig = new Configuration(getJobClient().getConf());
+        initCommonJobConfig(jobConfig);
+        return jobConfig;
     }
 
-    protected void initCommonConfiguration(Configuration configuration) {
+    protected void initCommonJobConfig(Configuration jobConfig) {
         // Make user hadoop owns the outputs, required by "fuse"
-        configuration.set("hadoop.job.ugi", "hadoop,hadoop");
+        jobConfig.set("hadoop.job.ugi", "hadoop,hadoop");
 
-        configuration.set("mapred.map.tasks.speculative.execution", "false");
-        configuration.set("mapred.reduce.tasks.speculative.execution", "false");
+        jobConfig.set("mapred.map.tasks.speculative.execution", "false");
+        jobConfig.set("mapred.reduce.tasks.speculative.execution", "false");
 
         if (DEBUG) {
             // For debugging uncomment following line:
-            configuration.set("mapred.child.java.opts",
-                              "-Xmx1G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+            jobConfig.set("mapred.child.java.opts",
+                          "-Xmx1G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         } else {
             // Set VM maximum heap size
-            configuration.set("mapred.child.java.opts",
-                              "-Xmx2000M");
+            jobConfig.set("mapred.child.java.opts",
+                          "-Xmx2000M");
         }
     }
 
-    public Job createJob(Configuration configuration, String jobName) throws IOException {
-        return new Job(configuration, jobName);
+    public Job createJob(String jobName, Configuration jobConfig) throws IOException {
+        return new Job(jobConfig, jobName);
     }
 
     public JobClient getJobClient() {

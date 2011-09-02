@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -42,7 +42,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfNames.CALVALUS_MA_PARAMETERS));
+        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfigNames.CALVALUS_MA_PARAMETERS));
 
         final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName());
 

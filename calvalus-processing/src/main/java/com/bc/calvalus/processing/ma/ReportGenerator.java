@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 
 import javax.imageio.ImageIO;
@@ -70,8 +70,8 @@ public class ReportGenerator {
                                          plotDataset.getVariablePair().satelliteAttributeName,
                                          plotDataset.getGroupName());
             String subTitle = String.format("%s, %s",
-                                            configuration.get(JobConfNames.CALVALUS_L2_BUNDLE),
-                                            configuration.get(JobConfNames.CALVALUS_L2_OPERATOR));
+                                            configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE),
+                                            configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR));
             String imageFilename = String.format(SCATTER_PLOT_PNG,
                                                  i + 1,
                                                  mkFilename(plotDataset.getGroupName()),

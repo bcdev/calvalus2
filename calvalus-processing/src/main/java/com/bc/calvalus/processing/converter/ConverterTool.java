@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.converter;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.shellexec.ExecutablesInputFormat;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
@@ -115,7 +115,7 @@ public class ConverterTool extends Configured implements Tool {
             }
             job.getConfiguration().set("mapred.jar", pathname);
 
-            addBundleToClassPath(job.getConfiguration().get(JobConfNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), job.getConfiguration());
+            addBundleToClassPath(job.getConfiguration().get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), job.getConfiguration());
             //addBundleToClassPath(job.getConfiguration().get(JobConfNames.CALVALUS_L2_BUNDLE), job.getConfiguration());
 
             int result = job.waitForCompletion(true) ? 0 : 1;

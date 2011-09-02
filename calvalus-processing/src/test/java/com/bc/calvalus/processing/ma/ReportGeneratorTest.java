@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Ignore;
 
@@ -38,7 +38,7 @@ public class ReportGeneratorTest {
                                                                                              new PlotDatasetCollector.VariablePair("K_490", -1, "k_490", -1),
                                                                                              points1);
         Configuration configuration = new Configuration();
-        configuration.set(JobConfNames.CALVALUS_MA_PARAMETERS, "" +
+        configuration.set(JobConfigNames.CALVALUS_MA_PARAMETERS, "" +
                 "<parameters>\n" +
                 "    <recordSourceSpiClassName>com.bc.calvalus.processing.ma.CsvRecordSource$Spi</recordSourceSpiClassName>\n" +
                 "    <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/home/norman/cc-matchup-test-insitu.csv</recordSourceUrl>\n" +
@@ -50,11 +50,11 @@ public class ReportGeneratorTest {
                 "    <macroPixelSize>5</macroPixelSize>\n" +
                 "    <maxTimeDifference>5.0</maxTimeDifference>\n" +
                 "</parameters>");
-        configuration.set(JobConfNames.CALVALUS_BEAM_BUNDLE, "beam-4.10-SNAPSHOT" );
-        configuration.set(JobConfNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-0.3-SNAPSHOT" );
-        configuration.set(JobConfNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.2-SNAPSHOT" );
-        configuration.set(JobConfNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W" );
-                configuration.set(JobConfNames.CALVALUS_L2_PARAMETERS, "" +
+        configuration.set(JobConfigNames.CALVALUS_BEAM_BUNDLE, "beam-4.10-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-0.3-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.2-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W" );
+                configuration.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "" +
                 "<parameters>\n" +
                 "    <averageSalinity>35</averageSalinity>\n" +
                 "    <averageTemperature>15</averageTemperature>\n" +

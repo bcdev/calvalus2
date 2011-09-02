@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
@@ -35,25 +35,42 @@ import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
  */
 public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
 
+    protected static final String NO_DEFAULT = "[[NO_DEFAULT]]";
     private final HadoopProcessingService processingService;
     private final String jobName;
+    private final Configuration jobConfig;
     private JobID jobId;
 
-    public HadoopWorkflowItem(HadoopProcessingService processingService, String jobName) {
+    public HadoopWorkflowItem(HadoopProcessingService processingService,
+                              String jobName, Configuration jobConfig) {
         this.processingService = processingService;
         this.jobName = jobName;
+        this.jobConfig = jobConfig;
     }
 
-    public HadoopProcessingService getProcessingService() {
+    public final HadoopProcessingService getProcessingService() {
         return processingService;
     }
 
-    protected JobID getJobId() {
+    public final String getJobName() {
+        return jobName;
+    }
+
+    public final Configuration getJobConfig() {
+        return jobConfig;
+    }
+
+    public final JobID getJobId() {
         return jobId;
     }
 
-    protected void setJobId(JobID jobId) {
+    protected final void setJobId(JobID jobId) {
         this.jobId = jobId;
+    }
+
+    @Override
+    public final Object[] getJobIds() {
+        return jobId != null ? new Object[]{getJobId()} : new Object[0];
     }
 
     @Override
@@ -76,16 +93,11 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     }
 
     @Override
-    public Object[] getJobIds() {
-        return jobId != null ? new Object[]{getJobId()} : new Object[0];
-    }
-
-    @Override
     public void submit() throws WorkflowException {
         try {
-            Configuration configuration = getProcessingService().createJobConfiguration();
-            Job job = getProcessingService().createJob(configuration, jobName);
+            Job job = getProcessingService().createJob(jobName, jobConfig);
             configureJob(job);
+            validateJob(job);
             JobID jobId = submitJob(job);
             setJobId(jobId);
         } catch (IOException e) {
@@ -93,14 +105,34 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         }
     }
 
+    protected void validateJob(Job job) throws WorkflowException {
+        Configuration jobConfig = job.getConfiguration();
+        String[][] configDefaults = getJobConfigDefaults();
+        for (int i = 0; i < configDefaults.length; i++) {
+            String[] configDefault = configDefaults[i];
+            String propertyName = configDefault[0];
+            String propertyDefault = configDefault[1];
+            String propertyValue = jobConfig.get(propertyName);
+            if (propertyValue == null) {
+                if (NO_DEFAULT.equals(propertyDefault)) {
+                    throw new WorkflowException("Missing value for job configuration property '" + propertyName + "'");
+                }  else if (propertyDefault != null) {
+                    jobConfig.set(propertyName, propertyDefault);
+                }
+            }
+        }
+    }
+
     protected abstract void configureJob(Job job) throws IOException;
+
+    protected abstract String[][] getJobConfigDefaults();
 
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE), configuration);
         // Add BEAM modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

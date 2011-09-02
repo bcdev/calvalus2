@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -13,6 +14,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.util.StringUtils;
 
 import java.util.List;
 
@@ -67,26 +70,26 @@ public class TAProductionType extends HadoopProductionType {
                 String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
                 String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
 
-                L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                                   l3JobName,
-                                                                   processorBundle,
-                                                                   processorName,
-                                                                   processorParameters,
-                                                                   regionGeometry,
-                                                                   l1InputFiles,
-                                                                   l3OutputDir,
-                                                                   l3Config,
-                                                                   date1Str,
-                                                                   date2Str);
+                Configuration l3JobConfig = createJobConfig(productionRequest);
+                l3JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
+                l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT, l3OutputDir);
+                l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+                l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+                l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                l3JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+                l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+                l3JobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+                L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(), l3JobName, l3JobConfig);
 
-                TAWorkflowItem taWorkflowItem = new TAWorkflowItem(getProcessingService(),
-                                                                   taJobName,
-                                                                   l3OutputDir,
-                                                                   taOutputDir,
-                                                                   l3Config,
-                                                                   taConfig,
-                                                                   date1Str,
-                                                                   date2Str);
+                Configuration taJobConfig = createJobConfig(productionRequest);
+                taJobConfig.set(JobConfigNames.CALVALUS_INPUT, l3OutputDir);
+                taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT, taOutputDir);
+                taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                taJobConfig.set(JobConfigNames.CALVALUS_TA_PARAMETERS, taConfig.toXml());
+                taJobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+                taJobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+                TAWorkflowItem taWorkflowItem = new TAWorkflowItem(getProcessingService(), taJobName, taJobConfig);
 
                 sequential.add(l3WorkflowItem);
                 sequential.add(taWorkflowItem);

@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.xml.XmlBinding;
@@ -75,7 +75,7 @@ public class ProductFactory {
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(classLoader);
         JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfigNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 

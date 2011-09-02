@@ -54,20 +54,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
 
     private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {
         Configuration jobConfiguration = new Configuration();
-        transferConfiguration(serviceConfiguration, jobConfiguration);
+        HadoopProductionType.setJobConfig(jobConfiguration, serviceConfiguration);
         return jobConfiguration;
-    }
-
-    public static void transferConfiguration(Map<String, String> serviceConfiguration, Configuration jobConfiguration) {
-        for (Map.Entry<String, String> entry : serviceConfiguration.entrySet()) {
-            String name = entry.getKey();
-            if (name.startsWith("calvalus.hadoop.")) {
-                String hadoopName = name.substring("calvalus.hadoop.".length());
-                jobConfiguration.set(hadoopName, entry.getValue());
-            } else if (name.startsWith("calvalus.")) {
-                jobConfiguration.set(name, entry.getValue());
-            }
-        }
     }
 
 }

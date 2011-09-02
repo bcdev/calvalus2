@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -11,6 +12,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.util.StringUtils;
 
 import java.text.ParseException;
 import java.util.*;
@@ -62,18 +65,18 @@ public class L3ProductionType extends HadoopProductionType {
             String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i + 1);
-
+                Configuration jobConfig = createJobConfig(productionRequest);
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+                jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+                jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+                jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+                jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
                 L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                                   productionId + "_" + (i + 1),
-                                                                   processorBundle,
-                                                                   processorName,
-                                                                   processorParameters,
-                                                                   regionGeometry,
-                                                                   l1InputFiles,
-                                                                   outputDir,
-                                                                   l3Config,
-                                                                   date1Str,
-                                                                   date2Str);
+                                                                   productionId + "_" + (i + 1), jobConfig);
                 workflow.add(l3WorkflowItem);
             }
         }

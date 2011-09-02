@@ -133,6 +133,8 @@ public class ProductionTool {
                 return;
             }
 
+            // todo - put WPS XML filename into ProductionRequest using parameter "calvalus.request.file" (nf)
+            // todo - put WPS XML content into ProductionRequest using parameter "calvalus.request.xml" (nf)
             FileReader requestReader = new FileReader(requestPath);
             ProductionRequest request;
             try {

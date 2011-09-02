@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -9,6 +10,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.util.StringUtils;
 
 import java.text.ParseException;
 import java.util.*;
@@ -98,15 +101,15 @@ public class L2ProductionType extends HadoopProductionType {
                                                productionRequest.getParameter("processorBundleName"),
                                                productionRequest.getParameter("processorBundleVersion"));
 
-        return new L2WorkflowItem(getProcessingService(),
-                                  productionId,
-                                  processorBundle,
-                                  processorName,
-                                  processorParameters,
-                                  regionGeometry,
-                                  inputFiles,
-                                  outputDir
-        );
+        Configuration l2JobConfig = createJobConfig(productionRequest);
+        l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+        l2JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+        l2JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+        l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+        l2JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+
+        return new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
     }
 
     String getOutputDir(String productionId, ProductionRequest productionRequest) {

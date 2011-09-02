@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -57,10 +57,10 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             // parse request
 
             Path inputPath = split.getPath();
-            String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-            String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-            String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+            String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+            String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+            String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
             Product targetProduct = productFactory.getProduct(inputPath,
                                                               inputFormat,
                                                               regionGeometryWkt,

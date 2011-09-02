@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.*;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
@@ -54,7 +54,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
-        final L3Config l3Config = L3Config.fromXml(jobConfig.get(JobConfNames.CALVALUS_L3_PARAMETERS));
+        final L3Config l3Config = L3Config.fromXml(jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final BinningContext ctx = l3Config.getBinningContext();
@@ -68,10 +68,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         Path inputPath = split.getPath();
-        String inputFormat = jobConfig.get(JobConfNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        String regionGeometryWkt = jobConfig.get(JobConfNames.CALVALUS_REGION_GEOMETRY);
-        String level2OperatorName = jobConfig.get(JobConfNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfNames.CALVALUS_L2_PARAMETERS);
+        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         Product product = productFactory.getProduct(inputPath,
                                                     inputFormat,
                                                     regionGeometryWkt,

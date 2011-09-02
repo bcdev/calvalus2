@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -29,18 +30,10 @@ import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
- * <p/>
- * <i>Important TODOs</i>
- * <ol>
- * <li>todo - Rename HadoopWorkflowItem --> ProcessingStep (mz, nf, 2011.08.15)</li>
- * <li>todo - Express in API that the HadoopProductionType is responsible for setting up the workflow comprising one or more ProcessingSteps (mz, nf, 2011.08.15)</li>
- * <li>todo - Express in API that the HadoopProductionType is responsible for converting a ProductionRequest into processing parameters for each ProcessingStep (mz, nf, 2011.08.15)</li>
- * <li>todo - Constructors of ProcessingStep shall use a job configuration to pass processing parameters (mz, nf, 2011.08.15)</li>
- * <li>todo - Use {@link #serializeProductionRequest} method to serialize the productionRequest into the Hadoop job configuration (mz, nf, 2011.08.15)</li>
- * </ol>
  *
  * @author MarcoZ
  * @author Norman
@@ -97,6 +90,17 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected abstract Staging createUnsubmittedStaging(Production production);
 
+    protected final Configuration createJobConfig(ProductionRequest request) {
+        Configuration jobConfig = getProcessingService().createJobConfig();
+        jobConfig.set(JobConfigNames.CALVALUS_USER, request.getUserName());
+        jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, request.getProductionType());
+        initJobConfig(jobConfig, request);
+        return jobConfig;
+    }
+
+    protected void initJobConfig(Configuration jobConfig, ProductionRequest request) {
+        setJobConfig(jobConfig, request.getParameters());
+    }
 
     public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
@@ -111,10 +115,30 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
-    protected void serializeProductionRequest(ProductionRequest productionRequest, Configuration jobConfiguration) {
-        HadoopProductionServiceFactory.transferConfiguration(productionRequest.getParameters(), jobConfiguration);
-        jobConfiguration.set("calvalus.productionRequest.productionType", productionRequest.getProductionType());
-        jobConfiguration.set("calvalus.productionRequest.userName", productionRequest.getUserName());
+    /**
+     * Sets {@code jobConfig} values from the given {@code parameters} map.
+     * <ol>
+     * <li>
+     * If a parameter's name is of the form
+     * "calvalus.hadoop.&lt;name&gt;" than "&lt;name&gt;" will be set to the parameter value.
+     * </li>
+     * <li>If a
+     * a parameter's name is of the form "calvalus.&lt;name&gt;" this name will be used.</li>
+     * <li>If the name if of any other form, the parameter will be ignored.</li>
+     * </ol>
+     *
+     * @param jobConfig  A Hadoop job configuration.
+     * @param parameters The parameters.
+     */
+    public static void setJobConfig(Configuration jobConfig, Map<String, String> parameters) {
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            String name = entry.getKey();
+            if (name.startsWith("calvalus.hadoop.")) {
+                String hadoopName = name.substring("calvalus.hadoop.".length());
+                jobConfig.set(hadoopName, entry.getValue());
+            } else if (name.startsWith("calvalus.")) {
+                jobConfig.set(name, entry.getValue());
+            }
+        }
     }
 }

@@ -19,7 +19,7 @@ package com.bc.calvalus.processing;
 /**
  * Names of Hadoop job configuration parameters.
  */
-public interface JobConfNames {
+public interface JobConfigNames {
     String CALVALUS_CALVALUS_BUNDLE = "calvalus.calvalus.bundle";
     String CALVALUS_BEAM_BUNDLE = "calvalus.beam.bundle";
     String CALVALUS_INPUT = "calvalus.input";
@@ -32,10 +32,24 @@ public interface JobConfNames {
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
-    String CALVALUS_BEAM_TILE_CACHE_SIZE = "calvalus.beam.tileCacheSize";
     String CALVALUS_FAIL_FAST = "calvalus.failFast";
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";
+    String CALVALUS_REGION_NAME = "calvalus.regionName";
     String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
+    String CALVALUS_USER = "calvalus.user";
+    String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";
+    String CALVALUS_REQUEST = "calvalus.request";
+
+    /**
+     * @deprecated use following syntax to set (BEAM) system properties: calvalus.system.<system-property-name>
+     */
+    @Deprecated
+    String CALVALUS_BEAM_TILE_CACHE_SIZE = "calvalus.beam.tileCacheSize";
+
+    /**
+     * @deprecated use following syntax to set Hadoop properties: calvalus.hadoop.<hadoop-property-name>
+     */
+    @Deprecated
     String CALVALUS_PRIORITY = "calvalus.priority";
 }

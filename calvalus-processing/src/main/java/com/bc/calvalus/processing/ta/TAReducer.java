@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.JobConfNames;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -54,11 +54,11 @@ public class TAReducer extends Reducer<Text, TemporalBin, Text, TAPoint> impleme
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = conf.get(JobConfNames.CALVALUS_L3_PARAMETERS);
+        String level3Parameters = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
         L3Config l3Config = L3Config.fromXml(level3Parameters);
         this.binManager = l3Config.getBinningContext().getBinManager();
-        minDate = conf.get(JobConfNames.CALVALUS_MIN_DATE);
-        maxDate = conf.get(JobConfNames.CALVALUS_MAX_DATE);
+        minDate = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
+        maxDate = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
     }
 
     @Override
