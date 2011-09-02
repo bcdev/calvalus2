@@ -73,19 +73,10 @@ public class ReportGenerator {
                                             configuration.get(JobConfNames.CALVALUS_L2_BUNDLE),
                                             configuration.get(JobConfNames.CALVALUS_L2_OPERATOR));
             String imageFilename = String.format(SCATTER_PLOT_PNG,
-                                                 i,
+                                                 i + 1,
                                                  mkFilename(plotDataset.getGroupName()),
                                                  mkFilename(plotDataset.getVariablePair().satelliteAttributeName));
             PlotGenerator.Result result = plotGenerator.createResult(title, subTitle, plotDataset);
-            OutputStream outputStream = outputStreamFactory.createOutputStream(imageFilename);
-            try {
-                LOG.warning(String.format("Writing %s", imageFilename));
-                ImageIO.write(result.plotImage, "PNG", outputStream);
-            } catch (IOException e) {
-                LOG.warning(String.format("Failed to write %s: %s", imageFilename, e.getMessage()));
-            } finally {
-                outputStream.close();
-            }
 
             summaryFileWriter.printf("<dataset>\n");
             summaryFileWriter.printf("    <referenceVariable>%s</referenceVariable>\n", plotDataset.getVariablePair().referenceAttributeName);
@@ -97,6 +88,8 @@ public class ReportGenerator {
             summaryFileWriter.printf("        <scatterPlotImage>%s</scatterPlotImage>\n", imageFilename);
             summaryFileWriter.printf("    </statistics>\n");
             summaryFileWriter.printf("</dataset>\n");
+
+            writeImage(result, outputStreamFactory, imageFilename);
         }
 
         summaryFileWriter.println("</analysisSummary>");
@@ -104,6 +97,18 @@ public class ReportGenerator {
 
         copyResource(outputStreamFactory, ANALYSIS_SUMMARY_XSL);
         copyResource(outputStreamFactory, STYLESET_CSS);
+    }
+
+    private static void writeImage(PlotGenerator.Result result, OutputStreamFactory outputStreamFactory, String imageFilename) throws IOException, InterruptedException {
+        OutputStream outputStream = outputStreamFactory.createOutputStream(imageFilename);
+        try {
+            LOG.warning(String.format("Writing %s", imageFilename));
+            ImageIO.write(result.plotImage, "PNG", outputStream);
+        } catch (IOException e) {
+            LOG.warning(String.format("Failed to write %s: %s", imageFilename, e.getMessage()));
+        } finally {
+            outputStream.close();
+        }
     }
 
     private static String mkFilename(String s) {
