@@ -60,12 +60,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 for (FileStatus subPath : subPaths) {
                     if (subPath.getPath().toString().endsWith("processor-descriptor.xml")) {
                         try {
-                            InputStream is = fileSystem.open(subPath.getPath());
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            IOUtils.copyBytes(is, baos);
-                            String xmlContent = baos.toString();
                             ProcessorDescriptor pd = new ProcessorDescriptor();
-                            new XmlBinding().convertXmlToObject(xmlContent, pd);
+                            new XmlBinding().convertXmlToObject(readFile(subPath), pd);
                             descriptors.add(pd);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());
@@ -78,6 +74,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
 
         return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
+    }
+
+    private String readFile(FileStatus subPath) throws IOException {
+        InputStream is = fileSystem.open(subPath.getPath());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copyBytes(is, baos);
+        return baos.toString();
     }
 
 
@@ -99,8 +102,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    public Configuration createJobConfiguration() {
+    public final Configuration createJobConfiguration() {
         Configuration configuration = new Configuration(getJobClient().getConf());
+        initCommonConfiguration(configuration);
+        return configuration;
+    }
+
+    protected void initCommonConfiguration(Configuration configuration) {
         // Make user hadoop owns the outputs, required by "fuse"
         configuration.set("hadoop.job.ugi", "hadoop,hadoop");
 
@@ -116,7 +124,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             configuration.set("mapred.child.java.opts",
                               "-Xmx2000M");
         }
-        return configuration;
     }
 
     public Job createJob(Configuration configuration, String jobName) throws IOException {
