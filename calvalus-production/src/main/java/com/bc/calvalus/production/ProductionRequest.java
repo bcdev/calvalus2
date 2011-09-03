@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -19,13 +20,15 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class ProductionRequest {
+public class ProductionRequest implements XmlConvertible {
+
     public static final String DATE_PATTERN = "yyyy-MM-dd";
     public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
 
     private final String productionType;
     private final String userName;
     private final Map<String, String> productionParameters;
+    private final String xml;
 
     public ProductionRequest(String productionType,
                              String userName,
@@ -54,6 +57,7 @@ public class ProductionRequest {
         this.productionType = productionType;
         this.userName = userName;
         this.productionParameters = new HashMap<String, String>(productionParameters);
+        this.xml = null;
     }
 
     public String getProductionType() {
@@ -262,7 +266,7 @@ public class ProductionRequest {
     public Geometry getRegionGeometry() throws ProductionException {
         Geometry regionGeometry = getRegionGeometry(null);
         if (regionGeometry == null) {
-             throw new ProductionException("Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
+            throw new ProductionException("Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
         }
         return regionGeometry;
     }
@@ -292,6 +296,17 @@ public class ProductionRequest {
         }
     }
 
+    /////////////////////////////////////////////////////////////////////////
+    // XmlConvertible
+
+    @Override
+    public String toXml() {
+        return null;
+    }
+
+    public static ProductionRequest fromXml(String xml) {
+        return null;
+    }
 
     /////////////////////////////////////////////////////////////////////////
     // Implementation helpers

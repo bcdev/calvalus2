@@ -18,7 +18,7 @@ public interface ProcessingService<JobId> {
      * @return The list of processors supported by the service.
      * @throws IOException if an I/O error occurs.
      */
-    ProcessorDescriptor[] getProcessors(String filter) throws IOException;
+    ProcessorDescriptor[] getProcessors(String filter) throws Exception;
 
     /**
      * @return The format used represent job IDs as plain text.
@@ -39,7 +39,7 @@ public interface ProcessingService<JobId> {
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    boolean killJob(JobId jobId) throws IOException;
+    boolean killJob(JobId jobId) throws Exception;
 
     /**
      * A request to retrieve and update the status of all processes.
@@ -47,7 +47,7 @@ public interface ProcessingService<JobId> {
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    void updateStatuses() throws IOException;
+    void updateStatuses() throws Exception;
 
     /**
      * Indicates the service will no longer be used.
@@ -55,5 +55,5 @@ public interface ProcessingService<JobId> {
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    void close() throws IOException;
+    void close() throws Exception;
 }

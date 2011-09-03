@@ -53,7 +53,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             statusObserver.cancel();
             try {
                 productionService.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log("Failed to close production service", e);
             }
             productionService = null;

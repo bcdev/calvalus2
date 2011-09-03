@@ -25,6 +25,7 @@ import org.jdom.input.SAXBuilder;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,10 @@ import java.util.List;
  */
 class WpsProductionRequestConverter {
     private final Document document;
+
+    WpsProductionRequestConverter(String xml) throws JDOMException, IOException {
+        this(new StringReader(xml));
+    }
 
     WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
         SAXBuilder saxBuilder = new SAXBuilder();

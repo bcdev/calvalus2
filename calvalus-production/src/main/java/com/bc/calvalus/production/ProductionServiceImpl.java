@@ -56,7 +56,7 @@ public class ProductionServiceImpl implements ProductionService {
 
         try {
             productionStore.load();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
     }
@@ -74,7 +74,7 @@ public class ProductionServiceImpl implements ProductionService {
     public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
         try {
             return processingService.getProcessors(filter);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ProductionException("Failed to load list of processors.", e);
         }
     }
@@ -188,12 +188,17 @@ public class ProductionServiceImpl implements ProductionService {
     public void updateStatuses() {
         try {
             processingService.updateStatuses();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.warning("Failed to update job statuses: " + e.getMessage());
         }
 
         // Update state of all registered productions
-        Production[] productions = productionStore.getProductions();
+        Production[] productions = new Production[0];
+        try {
+            productions = productionStore.getProductions();
+        } catch (ProductionException e) {
+            logger.warning("Failed to get production status from store: " + e.getMessage());
+        }
         for (Production production : productions) {
             production.getWorkflow().updateStatus();
         }
@@ -203,7 +208,11 @@ public class ProductionServiceImpl implements ProductionService {
             if (production.getProcessingStatus().isDone()) {
                 Action action = productionActionMap.get(production.getId());
                 if (action == Action.DELETE) {
-                    removeProduction(production);
+                    try {
+                        removeProduction(production);
+                    } catch (ProductionException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -225,13 +234,13 @@ public class ProductionServiceImpl implements ProductionService {
         // write to persistent storage
         try {
             productionStore.store();
-        } catch (IOException e) {
+        } catch (ProductionException e) {
             logger.warning("Failed to persist productions: " + e.getMessage());
         }
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws Exception {
         try {
             stagingService.close();
         } finally {
@@ -258,7 +267,7 @@ public class ProductionServiceImpl implements ProductionService {
                                                     productionRequest.getProductionType()));
     }
 
-    private synchronized void removeProduction(Production production) {
+    private synchronized void removeProduction(Production production) throws ProductionException {
         productionStore.removeProduction(production);
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());

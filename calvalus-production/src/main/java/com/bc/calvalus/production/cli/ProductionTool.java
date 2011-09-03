@@ -162,7 +162,7 @@ public class ProductionTool {
             if (productionService != null) {
                 try {
                     productionService.close();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     exit("Warning: Failed to close production service! Job may be still alive!", 0);
                 }
             }

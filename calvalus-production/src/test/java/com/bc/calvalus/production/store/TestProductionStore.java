@@ -3,7 +3,6 @@ package com.bc.calvalus.production.store;
 import com.bc.calvalus.production.Production;
 import org.junit.Ignore;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -40,15 +39,15 @@ public class TestProductionStore implements ProductionStore {
     }
 
     @Override
-    public void load() throws IOException {
+    public void load() {
     }
 
     @Override
-    public void store() throws IOException {
+    public void store() {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         closed = true;
     }
 

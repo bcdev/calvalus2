@@ -7,6 +7,7 @@ import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
 import java.io.BufferedReader;
@@ -69,31 +70,40 @@ public class CsvProductionStore implements ProductionStore {
     }
 
     @Override
-    public synchronized void load() throws IOException {
+    public synchronized void load() throws ProductionException {
         load(databaseFile);
     }
 
     @Override
-    public synchronized void store() throws IOException {
-        store(databaseFile);
+    public synchronized void store() throws ProductionException {
+        try {
+            store(databaseFile);
+        } catch (IOException e) {
+            String message = String.format("Failed to store productions in: %s\n%s",
+                                           databaseFile.getPath(), e.getMessage());
+            throw new ProductionException(message, e);
+        }
+    }
+
+    private void load(File databaseFile) throws ProductionException {
+        if (databaseFile.exists()) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
+                try {
+                    load(reader);
+                } finally {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                String message = String.format("Failed to load production store from: %s\n%s",
+                                               databaseFile.getPath(), e.getMessage());
+                throw new ProductionException(message, e);
+            }
+        }
     }
 
     @Override
-    public void close() throws IOException {
-    }
-
-    private void load(File databaseFile) throws IOException {
-        if (databaseFile.exists()) {
-            BufferedReader reader = new BufferedReader(new FileReader(databaseFile));
-            try {
-                load(reader);
-            } catch (Throwable t) {
-                String message = String.format("Failed to load production store from: %s\n%s", databaseFile.getPath(), t.getMessage());
-                throw new IOException(message, t);
-            } finally {
-                reader.close();
-            }
-        }
+    public void close() throws ProductionException {
     }
 
     private void store(File databaseFile) throws IOException {
@@ -272,9 +282,7 @@ public class CsvProductionStore implements ProductionStore {
      * The default implementation creates a proxy workflow that can neither be submitted, killed nor
      * updated.
      *
-     *
-     *
-     * @param jobIds Array of job identifiers
+     * @param jobIds        Array of job identifiers
      * @param dates
      * @param processStatus
      * @return The workflow.

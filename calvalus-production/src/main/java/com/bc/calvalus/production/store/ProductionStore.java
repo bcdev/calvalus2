@@ -1,8 +1,7 @@
 package com.bc.calvalus.production.store;
 
 import com.bc.calvalus.production.Production;
-
-import java.io.IOException;
+import com.bc.calvalus.production.ProductionException;
 
 /**
  * Persistence for productions.
@@ -10,21 +9,22 @@ import java.io.IOException;
  * @author Norman
  */
 public interface ProductionStore {
-    void addProduction(Production production);
+    void addProduction(Production production) throws ProductionException;
 
-    void removeProduction(Production production);
+    void removeProduction(Production production) throws ProductionException;
 
-    Production[] getProductions();
+    Production[] getProductions() throws ProductionException;
 
-    Production getProduction(String productionId);
+    Production getProduction(String productionId) throws ProductionException;
 
-    void load() throws IOException;
+    void load() throws ProductionException;
 
-    void store() throws IOException;
+    void store() throws ProductionException;
 
     /**
      * Indicates the service will no longer be used.
      * Invocation has no additional effect if already closed.
+     * @throws Exception If any error occurs
      */
-    void close() throws IOException;
+    void close() throws ProductionException;
 }

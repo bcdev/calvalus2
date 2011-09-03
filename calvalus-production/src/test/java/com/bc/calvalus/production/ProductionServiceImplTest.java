@@ -266,7 +266,7 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testClose() throws IOException {
+    public void testClose() throws Exception {
         assertEquals(false, stagingServiceMock.isClosed());
         assertEquals(false, processingServiceMock.isClosed());
         assertEquals(false, productionStoreMock.isClosed());

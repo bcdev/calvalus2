@@ -88,5 +88,5 @@ public interface ProductionService {
      * Indicates the service will no longer be used.
      * Invocation has no additional effect if already closed.
      */
-    void close() throws IOException;
+    void close() throws Exception;
 }

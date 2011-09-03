@@ -82,7 +82,7 @@ public class TestProductionType implements ProductionType {
         public void kill() throws WorkflowException {
             try {
                 processingService.killJob(getJobId());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new WorkflowException(e);
             }
         }
