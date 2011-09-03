@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.xml;
 
+// todo - move to commons (nf)
+
 /**
  * An object that can be converted to XML.
  * <p/>

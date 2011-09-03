@@ -16,6 +16,8 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+// todo - move to commons (nf)
+
 /**
  * A utility class that converts Java objects into XML and vice versa.
  *
