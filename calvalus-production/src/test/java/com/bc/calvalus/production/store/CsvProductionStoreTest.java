@@ -1,9 +1,12 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.production.store;
 
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestWorkflowItem;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -16,18 +19,18 @@ import java.util.Date;
 
 import static org.junit.Assert.*;
 
-public class SimpleProductionStoreTest {
+public class CsvProductionStoreTest {
 
     @Test
     public void testIO() throws IOException {
         File unusedDbFile = new File("x");
-        SimpleProductionStore db = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
+        CsvProductionStore db = new CsvProductionStore(JobIdFormat.STRING, unusedDbFile);
 
         Production prod1 = new Production("id1", "name1",
                                           "path1",
                                           false, new ProductionRequest("test", "marco",
-                                                                "a", "5",
-                                                                "b", "9"),
+                                                                       "a", "5",
+                                                                       "b", "9"),
                                           new TestWorkflowItem<String>("job5",
                                                                        new ProcessStatus(ProcessState.RUNNING, 0.6f),
                                                                        new Date(1),
@@ -36,8 +39,8 @@ public class SimpleProductionStoreTest {
 
         Production prod2 = new Production("id2", "name2", null,
                                           false, new ProductionRequest("test", "martin",
-                                                                "a", "9",
-                                                                "b", "2"),
+                                                                       "a", "9",
+                                                                       "b", "2"),
                                           new TestWorkflowItem<String>("job9",
                                                                        new ProcessStatus(ProcessState.COMPLETED),
                                                                        new Date(1),
@@ -46,9 +49,9 @@ public class SimpleProductionStoreTest {
 
         Production prod3 = new Production("id3", "name3", "path3",
                                           true, new ProductionRequest("test", "norman",
-                                                                "a", "1",
-                                                                "b", "0",
-                                                                "autoStaging", "true"),
+                                                                      "a", "1",
+                                                                      "b", "0",
+                                                                      "autoStaging", "true"),
                                           new TestWorkflowItem<String>("job2",
                                                                        new ProcessStatus(ProcessState.COMPLETED),
                                                                        new Date(1),
@@ -63,7 +66,7 @@ public class SimpleProductionStoreTest {
         StringWriter out = new StringWriter();
         db.store(new PrintWriter(out));
 
-        SimpleProductionStore db2 = new SimpleProductionStore(JobIdFormat.STRING, unusedDbFile);
+        CsvProductionStore db2 = new CsvProductionStore(JobIdFormat.STRING, unusedDbFile);
         db2.load(new BufferedReader(new StringReader(out.toString())));
 
         Production[] productions = db2.getProductions();

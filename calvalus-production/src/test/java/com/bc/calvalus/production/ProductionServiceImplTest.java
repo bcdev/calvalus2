@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.production.store.TestProductionStore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -266,13 +267,13 @@ public class ProductionServiceImplTest {
 
     @Test
     public void testClose() throws IOException {
-        assertEquals(false, stagingServiceMock.closed);
-        assertEquals(false, processingServiceMock.closed);
-        assertEquals(false, productionStoreMock.closed);
+        assertEquals(false, stagingServiceMock.isClosed());
+        assertEquals(false, processingServiceMock.isClosed());
+        assertEquals(false, productionStoreMock.isClosed());
         productionServiceUnderTest.close();
-        assertEquals(true, stagingServiceMock.closed);
-        assertEquals(true, processingServiceMock.closed);
-        assertEquals(true, productionStoreMock.closed);
+        assertEquals(true, stagingServiceMock.isClosed());
+        assertEquals(true, processingServiceMock.isClosed());
+        assertEquals(true, productionStoreMock.isClosed());
     }
 
 }

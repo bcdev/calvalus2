@@ -12,7 +12,7 @@ import java.util.List;
 @Ignore
 public class TestStagingService implements StagingService {
     private List<Staging> stagings = new ArrayList<Staging>();
-    boolean closed;
+    private boolean closed;
 
     public TestStagingService() {
     }
@@ -38,5 +38,9 @@ public class TestStagingService implements StagingService {
     @Override
     public void close() {
         closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }

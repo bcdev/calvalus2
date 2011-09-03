@@ -1,4 +1,6 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.production.store;
+
+import com.bc.calvalus.production.Production;
 
 import java.io.IOException;
 

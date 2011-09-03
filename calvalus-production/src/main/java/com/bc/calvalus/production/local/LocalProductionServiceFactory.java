@@ -4,6 +4,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.store.CsvProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
 
 import java.io.File;
@@ -80,7 +81,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
         ProductionServiceImpl productionService = new ProductionServiceImpl(inventoryService,
                                                                             processingService,
                                                                             stagingService,
-                                                                            new SimpleProductionStore(processingService.getJobIdFormat(),
+                                                                            new CsvProductionStore(processingService.getJobIdFormat(),
                                                                                                       new File(localContextDir, "test-productions.csv")),
                                                                             new DummyProductionType(processingService, stagingService)) {
             @Override
@@ -91,7 +92,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
             }
         };
 
-        if (new SimpleProductionStore(processingService.getJobIdFormat(),
+        if (new CsvProductionStore(processingService.getJobIdFormat(),
                                       new File("test-productions.csv")).getProductions().length == 0) {
             productionService.orderProduction(new ProductionRequest("test", "ewa",
                                                                     "name", "Formatting all hard drives",

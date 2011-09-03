@@ -1,5 +1,6 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.production.store;
 
+import com.bc.calvalus.production.Production;
 import org.junit.Ignore;
 
 import java.io.IOException;
@@ -49,5 +50,9 @@ public class TestProductionStore implements ProductionStore {
     @Override
     public void close() throws IOException {
         closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }

@@ -1,4 +1,4 @@
-package com.bc.calvalus.production;
+package com.bc.calvalus.production.store;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
@@ -6,6 +6,8 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionRequest;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,14 +26,14 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class SimpleProductionStore implements ProductionStore {
+public class CsvProductionStore implements ProductionStore {
 
     private final File databaseFile;
     private final List<Production> productionsList;
     private final Map<String, Production> productionsMap;
     private final JobIdFormat jobIdFormat;
 
-    public SimpleProductionStore(JobIdFormat jobIdFormat, File databaseFile) {
+    public CsvProductionStore(JobIdFormat jobIdFormat, File databaseFile) {
         if (jobIdFormat == null) {
             throw new NullPointerException("jobIdFormat");
         }

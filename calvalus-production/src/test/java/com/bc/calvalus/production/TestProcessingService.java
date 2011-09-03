@@ -18,7 +18,7 @@ import java.util.HashMap;
 @Ignore
 public class TestProcessingService implements ProcessingService<String> {
     private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
-    boolean closed;
+    private boolean closed;
 
     @Override
     public JobIdFormat<String> getJobIdFormat() {
@@ -59,5 +59,9 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public void close() throws IOException {
         closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }
