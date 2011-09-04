@@ -66,7 +66,6 @@ public class Production {
         return workflow;
     }
 
-    @Deprecated
     public Object[] getJobIds() {
         return workflow.getJobIds();
     }
