@@ -1,11 +1,9 @@
 package com.bc.calvalus.production.store;
 
-import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -32,17 +30,17 @@ public class CsvProductionStore implements ProductionStore {
     private final File databaseFile;
     private final List<Production> productionsList;
     private final Map<String, Production> productionsMap;
-    private final JobIdFormat jobIdFormat;
+    private final ProcessingService processingService;
 
-    public CsvProductionStore(JobIdFormat jobIdFormat, File databaseFile) {
-        if (jobIdFormat == null) {
-            throw new NullPointerException("jobIdFormat");
+    public CsvProductionStore(ProcessingService processingService, File databaseFile) {
+        if (processingService == null) {
+            throw new NullPointerException("processingService");
         }
         if (databaseFile == null) {
             throw new NullPointerException("databaseFile");
         }
         this.databaseFile = databaseFile;
-        this.jobIdFormat = jobIdFormat;
+        this.processingService = processingService;
         this.productionsList = new ArrayList<Production>();
         this.productionsMap = new HashMap<String, Production>();
     }
@@ -168,7 +166,7 @@ public class CsvProductionStore implements ProductionStore {
         int numJobs = Integer.parseInt(tokens[off++]);
         Object[] jobIds = new Object[numJobs];
         for (int i = 0; i < numJobs; i++) {
-            jobIds[i] = jobIdFormat.parse(decodeTSV(tokens[off++]));
+            jobIds[i] = processingService.getJobIdFormat().parse(decodeTSV(tokens[off++]));
         }
         offpt[0] = off;
         return jobIds;
@@ -204,7 +202,7 @@ public class CsvProductionStore implements ProductionStore {
         sb.append(jobIds.length);
         for (Object jobId : jobIds) {
             sb.append("\t");
-            sb.append(encodeTSV(jobIdFormat.format(jobId)));
+            sb.append(encodeTSV(processingService.getJobIdFormat().format(jobId)));
         }
         return sb.toString();
     }
@@ -288,38 +286,11 @@ public class CsvProductionStore implements ProductionStore {
      * @return The workflow.
      */
     protected WorkflowItem createWorkflow(Object[] jobIds, Date[] dates, ProcessStatus processStatus) {
-        // todo - we need a factory that creates the correct Workflow for a production, need workflow persistence (nf)
-        ProxyWorkflowItem workflowItem = new ProxyWorkflowItem(jobIds);
-        workflowItem.setStatus(processStatus);
-        workflowItem.setSubmitTime(dates[0]);
-        workflowItem.setStartTime(dates[1]);
-        workflowItem.setStopTime(dates[2]);
-        return workflowItem;
-    }
-
-    private static class ProxyWorkflowItem extends AbstractWorkflowItem {
-        private final Object[] jobIds;
-
-        public ProxyWorkflowItem(Object[] jobIds) {
-            this.jobIds = jobIds;
-        }
-
-        @Override
-        public void submit() throws WorkflowException {
-        }
-
-        @Override
-        public void kill() throws WorkflowException {
-        }
-
-        @Override
-        public void updateStatus() {
-        }
-
-        @Override
-        @Deprecated
-        public Object[] getJobIds() {
-            return jobIds;
-        }
+        ProxyWorkflow workflow = new ProxyWorkflow(processingService, jobIds, dates[0], dates[1], dates[2], processStatus);
+        workflow.setStatus(processStatus);
+        workflow.setSubmitTime(dates[0]);
+        workflow.setStartTime(dates[1]);
+        workflow.setStopTime(dates[2]);
+        return workflow;
     }
 }

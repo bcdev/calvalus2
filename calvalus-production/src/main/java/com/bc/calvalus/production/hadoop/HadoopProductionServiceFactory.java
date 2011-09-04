@@ -2,7 +2,11 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.production.ProductionServiceImpl;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.store.CsvProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
@@ -34,8 +38,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             JobClient jobClient = new JobClient(jobConf);
             HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
-            ProductionStore productionStore = new CsvProductionStore(processingService.getJobIdFormat(),
-                                                                        new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
+            ProductionStore productionStore = new CsvProductionStore(processingService,
+                                                                     new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);

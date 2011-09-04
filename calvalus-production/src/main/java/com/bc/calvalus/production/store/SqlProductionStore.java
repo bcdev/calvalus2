@@ -1,6 +1,8 @@
 package com.bc.calvalus.production.store;
 
-import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,26 +28,60 @@ import java.util.Arrays;
  */
 public class SqlProductionStore implements ProductionStore {
 
-    private final JobIdFormat jobIdFormat;
+    private final ProcessingService processingService;
     private final Connection connection;
 
-    public SqlProductionStore(JobIdFormat jobIdFormat, Connection connection) {
-        this.jobIdFormat = jobIdFormat;
+    public SqlProductionStore(ProcessingService processingService, Connection connection) {
+        this.processingService = processingService;
         this.connection = connection;
     }
 
     @Override
     public synchronized void addProduction(Production production) throws ProductionException {
         try {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO Course VALUES (?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO production " +
+                                                                              "(" +
+                                                                              "id, " +
+                                                                              "name, " +
+                                                                              "user, " +
+                                                                              "job_id_list, " +
+                                                                              "submit_time, " +
+                                                                              "start_time, " +
+                                                                              "stop_time, " +
+                                                                              "processing_state, " +
+                                                                              "processing_progress, " +
+                                                                              "processing_message, " +
+                                                                              "staging_state, " +
+                                                                              "staging_progress, " +
+                                                                              "staging_message, " +
+                                                                              "staging_path, " +
+                                                                              "auto_staging, " +
+                                                                              "request_xml" +
+                                                                              ") " +
+                                                                              "VALUES " +
+                                                                              "(" +
+                                                                              "?, ?, ?, ?," +
+                                                                              "?, ?, ?, ?," +
+                                                                              "?, ?, ?, ?," +
+                                                                              "?, ?, ?, ?" +
+                                                                              ")");
             statement.clearParameters();
             statement.setString(1, production.getId());
             statement.setString(2, production.getName());
-            statement.setString(3, production.getStagingPath());
-            statement.setString(4, production.getProcessingStatus().toString());
-            statement.setString(5, production.getStagingStatus().toString());
-            statement.setString(6, Arrays.toString(production.getJobIds()));
-            statement.setString(7, production.getProductionRequest().toXml());
+            statement.setString(3, production.getProductionRequest().getUserName());
+            statement.setString(4, Arrays.toString(production.getJobIds()));
+            statement.setDate(5, new java.sql.Date(production.getWorkflow().getSubmitTime().getTime()));
+            statement.setDate(6, new java.sql.Date(production.getWorkflow().getStartTime().getTime()));
+            statement.setDate(7, new java.sql.Date(production.getWorkflow().getStopTime().getTime()));
+            statement.setString(8, production.getProcessingStatus().getState().toString());
+            statement.setFloat(9, production.getProcessingStatus().getProgress());
+            statement.setString(10, production.getProcessingStatus().getMessage());
+            statement.setString(11, production.getStagingStatus().getState().toString());
+            statement.setFloat(12, production.getStagingStatus().getProgress());
+            statement.setString(13, production.getStagingStatus().getMessage());
+            statement.setString(14, production.getStagingPath());
+            statement.setBoolean(15, production.isAutoStaging());
+            statement.setString(16, production.getProductionRequest().toXml());
             statement.executeUpdate();
             statement.close();
         } catch (SQLException e) {
@@ -54,13 +91,14 @@ public class SqlProductionStore implements ProductionStore {
 
     @Override
     public synchronized void removeProduction(Production production) throws ProductionException {
+        // todo
     }
 
     @Override
     public synchronized Production[] getProductions() throws ProductionException {
         try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM Production");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM production");
             ArrayList<Production> productions = new ArrayList<Production>(512);
             while (resultSet.next()) {
                 productions.add(createProduction(resultSet));
@@ -75,7 +113,7 @@ public class SqlProductionStore implements ProductionStore {
     public synchronized Production getProduction(String productionId) throws ProductionException {
         try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM Production WHERE ID='" + productionId + "'");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM production WHERE id='" + productionId + "'");
             if (resultSet.next()) {
                 return createProduction(resultSet);
             } else {
@@ -110,13 +148,44 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private Production createProduction(ResultSet resultSet) throws SQLException {
-        String id = resultSet.getString(1);
-        String name = resultSet.getString(2);
-        String stagingPath = resultSet.getString(3);
-        boolean autoStaging = resultSet.getBoolean(4);
-        String pdrXml = resultSet.getString(5);
-        ProductionRequest productionRequest = ProductionRequest.fromXml(pdrXml);
-        return new Production(id, name, stagingPath, autoStaging, productionRequest, null);
+        String id = resultSet.getString("id");
+        String name = resultSet.getString("name");
+        String userName = resultSet.getString("user");
+        String jobIdList = resultSet.getString("job_id_list");
+        Date submitTime = resultSet.getDate("submit_time");
+        Date startTime = resultSet.getDate("start_time");
+        Date stopTime = resultSet.getDate("stop_time");
+        String procState = resultSet.getString("processing_state");
+        float procProgress = resultSet.getFloat("processing_progress");
+        String procMessage = resultSet.getString("processing_message");
+        String stagingState = resultSet.getString("staging_state");
+        float stagingProgress = resultSet.getFloat("staging_progress");
+        String stagingMessage = resultSet.getString("staging_message");
+        String stagingPath = resultSet.getString("staging_path");
+        boolean autoStaging = resultSet.getBoolean("auto_staging");
+        String requestXml = resultSet.getString("request_xml");
+
+        ProductionRequest productionRequest = ProductionRequest.fromXml(requestXml);
+        Object[] jobIds = parseJobIds(processingService, jobIdList);
+        ProcessStatus processStatus = new ProcessStatus(ProcessState.valueOf(procState),
+                                                        procProgress,
+                                                        procMessage);
+        ProcessStatus stagingStatus = new ProcessStatus(ProcessState.valueOf(stagingState),
+                                                        stagingProgress,
+                                                        stagingMessage);
+        ProxyWorkflow workflow = new ProxyWorkflow(processingService,
+                                                   jobIds,
+                                                   submitTime,
+                                                   startTime,
+                                                   stopTime,
+                                                   processStatus);
+        Production production = new Production(id, name,
+                                               stagingPath,
+                                               autoStaging,
+                                               productionRequest,
+                                               workflow);
+        production.setStagingStatus(stagingStatus);
+        return production;
     }
 
     public void commit() throws SQLException {
@@ -148,11 +217,11 @@ public class SqlProductionStore implements ProductionStore {
         }
         statement.close();
         connection.commit();
-        return new SqlProductionStore(JobIdFormat.STRING, connection);
+        return new SqlProductionStore(null, connection);
     }
 
     public static SqlProductionStore open(String url) throws SQLException, IOException {
-        return new SqlProductionStore(JobIdFormat.STRING, getConnection(url));
+        return new SqlProductionStore(null, getConnection(url));
     }
 
     public static void main(String[] args) {
@@ -214,5 +283,13 @@ public class SqlProductionStore implements ProductionStore {
         store.close();
     }
 
+    private static Object[] parseJobIds(ProcessingService processingService, String jobIdList) {
+        String[] jobIdsStrings = jobIdList.split(",");
+        Object[] jobIds = new Object[jobIdsStrings.length];
+        for (int i = 0; i < jobIds.length; i++) {
+            jobIds[i] = processingService.getJobIdFormat().parse(jobIdsStrings[i]);
+        }
+        return jobIds;
+    }
 
 }

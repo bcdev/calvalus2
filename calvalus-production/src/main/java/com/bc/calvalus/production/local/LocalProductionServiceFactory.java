@@ -78,11 +78,12 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                         new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))
         );
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
+        CsvProductionStore productionStore = new CsvProductionStore(processingService,
+                                                                    new File(localContextDir, "test-productions.csv"));
         ProductionServiceImpl productionService = new ProductionServiceImpl(inventoryService,
                                                                             processingService,
                                                                             stagingService,
-                                                                            new CsvProductionStore(processingService.getJobIdFormat(),
-                                                                                                      new File(localContextDir, "test-productions.csv")),
+                                                                            productionStore,
                                                                             new DummyProductionType(processingService, stagingService)) {
             @Override
             public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
@@ -92,8 +93,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
             }
         };
 
-        if (new CsvProductionStore(processingService.getJobIdFormat(),
-                                      new File("test-productions.csv")).getProductions().length == 0) {
+        if (productionStore.getProductions().length == 0) {
             productionService.orderProduction(new ProductionRequest("test", "ewa",
                                                                     "name", "Formatting all hard drives",
                                                                     "user", "martin",

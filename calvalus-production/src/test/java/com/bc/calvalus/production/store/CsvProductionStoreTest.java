@@ -3,9 +3,9 @@ package com.bc.calvalus.production.store;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestProcessingService;
 import com.bc.calvalus.production.TestWorkflowItem;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ public class CsvProductionStoreTest {
     @Test
     public void testIO() throws IOException {
         File unusedDbFile = new File("x");
-        CsvProductionStore db = new CsvProductionStore(JobIdFormat.STRING, unusedDbFile);
+        CsvProductionStore db = new CsvProductionStore(new TestProcessingService(), unusedDbFile);
 
         Production prod1 = new Production("id1", "name1",
                                           "path1",
@@ -66,7 +66,7 @@ public class CsvProductionStoreTest {
         StringWriter out = new StringWriter();
         db.store(new PrintWriter(out));
 
-        CsvProductionStore db2 = new CsvProductionStore(JobIdFormat.STRING, unusedDbFile);
+        CsvProductionStore db2 = new CsvProductionStore(new TestProcessingService(), unusedDbFile);
         db2.load(new BufferedReader(new StringReader(out.toString())));
 
         Production[] productions = db2.getProductions();
