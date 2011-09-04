@@ -3,6 +3,9 @@ package com.bc.calvalus.production.store;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * todo - add api doc
@@ -16,6 +19,17 @@ class SqlReader {
     public SqlReader(Reader reader) {
         this.reader = new LineNumberReader(reader);
     }
+
+    public void executeAll(Connection connection) throws SQLException, IOException {
+        String sql;
+        Statement statement = connection.createStatement();
+        while ((sql = readSql()) != null) {
+            statement.executeUpdate(sql);
+        }
+        statement.close();
+        connection.commit();
+    }
+
 
     public String readSql() throws IOException {
         StringBuilder sql = null;
