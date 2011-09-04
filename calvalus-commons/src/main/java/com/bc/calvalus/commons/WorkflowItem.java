@@ -68,14 +68,19 @@ public interface WorkflowItem {
      */
     void addWorkflowStatusListener(WorkflowStatusListener listener);
 
+    // create ProxWorkflows when we need a factory that creates the correct Workflow for a production, need workflow persistence (nf)
+
     /**
      * Gets the identifiers of all the jobs that this workflow is managing.
      * The type of the job identifiers depends on the underlying job engine(s) used.
+     * <p/>
+     * <i>
+     * TODO - nf/nf 2011-09-04 The only use of this method is currently to persist workflows.
+     * But it it is actually better to perform serialisation/deserialisation by the {@code WorkflowItem} itself.
+     * Also, not all types of workflow items have job IDs. </i>
      *
      * @return The array of job identifiers.
-     * @deprecated No replacement. Not all types of workflow items have job IDs. A workflow shall not expose its job IDs.
      */
-    @Deprecated
     Object[] getJobIds();
 
     /**

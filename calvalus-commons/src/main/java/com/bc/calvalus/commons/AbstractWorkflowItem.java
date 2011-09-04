@@ -72,7 +72,6 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
      * @return The default implementation returns an empty array.
      */
     @Override
-    @Deprecated
     public Object[] getJobIds() {
         return new Object[0];
     }
