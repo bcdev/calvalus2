@@ -52,9 +52,9 @@ public class CsvProductionStore implements ProductionStore {
     }
 
     @Override
-    public synchronized void removeProduction(Production production) {
-        productionsList.remove(production);
-        productionsMap.remove(production.getId());
+    public synchronized void removeProduction(String  productionId) {
+        productionsList.remove(productionId);
+        productionsMap.remove(productionId);
     }
 
     @Override
@@ -68,12 +68,12 @@ public class CsvProductionStore implements ProductionStore {
     }
 
     @Override
-    public synchronized void load() throws ProductionException {
+    public synchronized void update() throws ProductionException {
         load(databaseFile);
     }
 
     @Override
-    public synchronized void store() throws ProductionException {
+    public synchronized void persist() throws ProductionException {
         try {
             store(databaseFile);
         } catch (IOException e) {

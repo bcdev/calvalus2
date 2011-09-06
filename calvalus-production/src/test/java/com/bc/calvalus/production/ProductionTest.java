@@ -29,24 +29,16 @@ public class ProductionTest {
     }
 
     @Test
-    public void testJobIdsArrayDoesNotEscape() throws Exception {
-        Production production;
-        JobID jobID = new JobID("34627985F47", 4);
+    public void testGetJobIds() throws Exception {
+        Production production = new Production("9A3F", "Toasting", null,
+                                               false, new ProductionRequest("test", "ewa"),
+                                               new MyWorkflowItem(new JobID("34627985F47", 4)));
 
-        production = new Production("9A3F", "Toasting", null,
-                                    false, new ProductionRequest("test", "ewa"),
-                                    new MyWorkflowItem(jobID));
-
-        assertEquals(jobID, production.getJobIds()[0]);
-
-        Object[] jobIds = production.getJobIds();
-        jobIds[0] = new JobID("745928345", 5324);
-
-        assertEquals(jobID, production.getJobIds()[0]);
+        assertArrayEquals(new Object[]{new JobID("34627985F47", 4)}, production.getJobIds());
     }
 
     @Test
-    public void testCreateId()  {
+    public void testCreateId() {
         String id = Production.createId("level4");
         assertTrue(id.contains("level4"));
         assertFalse(id.equals(Production.createId("level4")));

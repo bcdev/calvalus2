@@ -7,20 +7,29 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * An SQL-based database for productions.
+ * A persistent store for productions that uses an SQL database.
+ * <p/>
+ * This store's {@link #persist()} method will update the database with production status information
+ * retrieved from the processing system (e.g. Hadoop). It does NOT update cached production objects
+ * with status information retrieved from the database. With other words, the only source of status
+ * information is the processing system. Thus this service assumes, that no 2nd store exists, that
+ * updates the database with production status information.
  *
  * @author Norman
  */
@@ -29,97 +38,63 @@ public class SqlProductionStore implements ProductionStore {
     private final ProcessingService processingService;
     private final Connection connection;
 
+    private final Map<String, Production> cachedProductions;
+    private final Set<String> addedProductionIds;
+    private final Set<String> removedProductionIds;
+
+    private PreparedStatement deleteProductionsStmt;
+    private PreparedStatement insertProductionStmt;
+    private PreparedStatement updateProductionStmt;
+
     public SqlProductionStore(ProcessingService processingService, Connection connection) {
         this.processingService = processingService;
         this.connection = connection;
+        this.cachedProductions = new HashMap<String, Production>(73);
+        this.addedProductionIds = new HashSet<String>();
+        this.removedProductionIds = new HashSet<String>();
     }
 
     @Override
-    public synchronized void addProduction(Production production) throws ProductionException {
+    public synchronized void addProduction(Production production) {
+        cachedProductions.put(production.getId(), production);
+        addedProductionIds.add(production.getId());
+        removedProductionIds.remove(production.getId());
+    }
+
+    @Override
+    public synchronized void removeProduction(String productionId) {
+        cachedProductions.remove(productionId);
+        addedProductionIds.remove(productionId);
+        removedProductionIds.add(productionId);
+    }
+
+    @Override
+    public synchronized Production[] getProductions() {
+        Collection<Production> values = cachedProductions.values();
+        return values.toArray(new Production[0]);
+    }
+
+    @Override
+    public synchronized Production getProduction(String productionId) {
+        return cachedProductions.get(productionId);
+    }
+
+    @Override
+    public synchronized void update() throws ProductionException {
         try {
-            String sql = "INSERT INTO production " +
-                    "(" +
-                    "id, " +
-                    "name, " +
-                    "production_type, " +
-                    "user, " +
-                    "job_id_list, " +
-                    "submit_time, " +
-                    "start_time, " +
-                    "stop_time, " +
-                    "processing_state, " +
-                    "processing_progress, " +
-                    "processing_message, " +
-                    "staging_state, " +
-                    "staging_progress, " +
-                    "staging_message, " +
-                    "staging_path, " +
-                    "auto_staging, " +
-                    "request_xml" +
-                    ") " +
-                    "VALUES " +
-                    "(" +
-                    "?, ?, ?, ?, " +
-                    "?, ?, ?, ?, " +
-                    "?, ?, ?, ?, " +
-                    "?, ?, ?, ?, " +
-                    "?" +
-                    ")";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.clearParameters();
-            statement.setString(1, production.getId());
-            statement.setString(2, production.getName());
-            statement.setString(3, production.getProductionRequest().getProductionType());
-            statement.setString(4, production.getProductionRequest().getUserName());
-            statement.setString(5, formatJobIds(processingService, production.getJobIds()));
-            statement.setDate(6, toSqlDate(production.getWorkflow().getSubmitTime()));
-            statement.setDate(7, toSqlDate(production.getWorkflow().getStartTime()));
-            statement.setDate(8, toSqlDate(production.getWorkflow().getStopTime()));
-            statement.setString(9, production.getProcessingStatus().getState().toString());
-            statement.setFloat(10, production.getProcessingStatus().getProgress());
-            statement.setString(11, production.getProcessingStatus().getMessage());
-            statement.setString(12, production.getStagingStatus().getState().toString());
-            statement.setFloat(13, production.getStagingStatus().getProgress());
-            statement.setString(14, production.getStagingStatus().getMessage());
-            statement.setString(15, production.getStagingPath());
-            statement.setBoolean(16, production.isAutoStaging());
-            statement.setString(17, production.getProductionRequest().toXml());
-            statement.executeUpdate();
-            statement.close();
-        } catch (SQLException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public synchronized void removeProduction(Production production) throws ProductionException {
-        // todo
-    }
-
-    @Override
-    public synchronized Production[] getProductions() throws ProductionException {
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM production");
-            ArrayList<Production> productions = new ArrayList<Production>(512);
-            while (resultSet.next()) {
-                productions.add(createProduction(resultSet));
-            }
-            return productions.toArray(new Production[productions.size()]);
-        } catch (SQLException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public synchronized Production getProduction(String productionId) throws ProductionException {
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM production WHERE id='" + productionId + "'");
-            if (resultSet.next()) {
-                return createProduction(resultSet);
-            } else {
-                return null;
+            List<Production> productionList = selectProductions();
+            for (Production production : productionList) {
+                Production cachedProduction = cachedProductions.get(production.getId());
+                if (cachedProduction != null) {
+                    // todo
+                    // cachedProduction.setSubmitTime(...)
+                    // cachedProduction.setStartTime(...)
+                    // cachedProduction.setStopTime(...)
+                    cachedProduction.setProcessingStatus(production.getProcessingStatus());
+                    cachedProduction.setStagingStatus(production.getStagingStatus());
+                } else {
+                    cachedProductions.put(production.getId(), production);
+                }
             }
         } catch (SQLException e) {
             throw new ProductionException(e);
@@ -127,11 +102,31 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     @Override
-    public synchronized void load() throws ProductionException {
-    }
+    public synchronized void persist() throws ProductionException {
+        try {
+            for (String productionId : removedProductionIds) {
+                deleteProduction(productionId);
+            }
 
-    @Override
-    public synchronized void store() throws ProductionException {
+            for (String productionId : addedProductionIds) {
+                insertProduction(cachedProductions.get(productionId));
+            }
+
+            for (String productionId : cachedProductions.keySet()) {
+                if (!addedProductionIds.contains(productionId) &&
+                        !removedProductionIds.contains(productionId)) {
+                    updateProductionStatus(cachedProductions.get(productionId));
+                }
+            }
+
+            connection.commit();
+
+            addedProductionIds.clear();
+            removedProductionIds.clear();
+
+        } catch (SQLException e) {
+            throw new ProductionException("Failed to persist production store", e);
+        }
     }
 
     @Override
@@ -139,7 +134,7 @@ public class SqlProductionStore implements ProductionStore {
         try {
             connection.close();
         } catch (SQLException e) {
-            throw new ProductionException(e);
+            throw new ProductionException("Failed to close production store", e);
         }
     }
 
@@ -149,7 +144,18 @@ public class SqlProductionStore implements ProductionStore {
         close();
     }
 
-    private Production createProduction(ResultSet resultSet) throws SQLException {
+    private List<Production> selectProductions() throws SQLException {
+        PreparedStatement selectProductions = connection.prepareStatement("SELECT * FROM production");
+        ResultSet resultSet = selectProductions.executeQuery();
+        ArrayList<Production> productions = new ArrayList<Production>(100 + cachedProductions.size());
+        while (resultSet.next()) {
+            Production production = getNextProduction(resultSet);
+            productions.add(production);
+        }
+        return productions;
+    }
+
+    private Production getNextProduction(ResultSet resultSet) throws SQLException {
         String id = resultSet.getString("id");
         String name = resultSet.getString("name");
         String productionType = resultSet.getString("production_type");
@@ -166,8 +172,8 @@ public class SqlProductionStore implements ProductionStore {
         String stagingMessage = resultSet.getString("staging_message");
         String stagingPath = resultSet.getString("staging_path");
         boolean autoStaging = resultSet.getBoolean("auto_staging");
-        String requestXml = resultSet.getString("request_xml");
         // todo
+        // String requestXml = resultSet.getString("request_xml");
         // ProductionRequest productionRequest = ProductionRequest.fromXml(requestXml);
         ProductionRequest productionRequest = new ProductionRequest(productionType, userName);
         Object[] jobIds = parseJobIds(processingService, jobIdList);
@@ -192,27 +198,91 @@ public class SqlProductionStore implements ProductionStore {
         return production;
     }
 
-    public void commit() throws SQLException {
-        connection.commit();
-    }
-
-    private static Connection getConnection(String url) throws SQLException {
-        return DriverManager.getConnection("jdbc:hsqldb:" + url, "SA", "");
-    }
-
-    static {
-        try {
-            Class.forName("org.hsqldb.jdbcDriver");
-        } catch (Exception e) {
-            System.err.println("Error: failed to load HSQLDB JDBC driver.");
-            e.printStackTrace(System.err);
+    private void insertProduction(Production production) throws SQLException {
+        if (insertProductionStmt == null) {
+            insertProductionStmt = connection.prepareStatement("INSERT INTO production " +
+                                                                       "(" +
+                                                                       "id, " +
+                                                                       "name, " +
+                                                                       "production_type, " +
+                                                                       "user, " +
+                                                                       "job_id_list, " +
+                                                                       "submit_time, " +
+                                                                       "start_time, " +
+                                                                       "stop_time, " +
+                                                                       "processing_state, " +
+                                                                       "processing_progress, " +
+                                                                       "processing_message, " +
+                                                                       "staging_state, " +
+                                                                       "staging_progress, " +
+                                                                       "staging_message, " +
+                                                                       "staging_path, " +
+                                                                       "auto_staging, " +
+                                                                       "request_xml" +
+                                                                       ") " +
+                                                                       " VALUES " +
+                                                                       "(" +
+                                                                       "?, ?, ?, ?, " +
+                                                                       "?, ?, ?, ?, " +
+                                                                       "?, ?, ?, ?, " +
+                                                                       "?, ?, ?, ?, " +
+                                                                       "?" +
+                                                                       ")");
         }
+        insertProductionStmt.clearParameters();
+        insertProductionStmt.setString(1, production.getId());
+        insertProductionStmt.setString(2, production.getName());
+        insertProductionStmt.setString(3, production.getProductionRequest().getProductionType());
+        insertProductionStmt.setString(4, production.getProductionRequest().getUserName());
+        insertProductionStmt.setString(5, formatJobIds(processingService, production.getJobIds()));
+        insertProductionStmt.setDate(6, toSqlDate(production.getWorkflow().getSubmitTime()));
+        insertProductionStmt.setDate(7, toSqlDate(production.getWorkflow().getStartTime()));
+        insertProductionStmt.setDate(8, toSqlDate(production.getWorkflow().getStopTime()));
+        insertProductionStmt.setString(9, production.getProcessingStatus().getState().toString());
+        insertProductionStmt.setFloat(10, production.getProcessingStatus().getProgress());
+        insertProductionStmt.setString(11, production.getProcessingStatus().getMessage());
+        insertProductionStmt.setString(12, production.getStagingStatus().getState().toString());
+        insertProductionStmt.setFloat(13, production.getStagingStatus().getProgress());
+        insertProductionStmt.setString(14, production.getStagingStatus().getMessage());
+        insertProductionStmt.setString(15, production.getStagingPath());
+        insertProductionStmt.setBoolean(16, production.isAutoStaging());
+        insertProductionStmt.setString(17, production.getProductionRequest().toXml());
+        insertProductionStmt.executeUpdate();
     }
 
-    public static SqlProductionStore create(String url) throws SQLException, IOException {
-        Connection connection = getConnection(url);
-        initDatabase(connection);
-        return new SqlProductionStore(null, connection);
+    private void updateProductionStatus(Production production) throws SQLException {
+        if (updateProductionStmt == null) {
+            updateProductionStmt = connection.prepareStatement("UPDATE production SET " +
+                                                                       "start_time=?, " +
+                                                                       "stop_time=?, " +
+                                                                       "processing_state=?, " +
+                                                                       "processing_progress=?, " +
+                                                                       "processing_message=?, " +
+                                                                       "staging_state=?, " +
+                                                                       "staging_progress=?, " +
+                                                                       "staging_message=? " +
+                                                                       " WHERE id=?");
+        }
+        updateProductionStmt.clearParameters();
+        updateProductionStmt.setDate(1, toSqlDate(production.getWorkflow().getStartTime()));
+        updateProductionStmt.setDate(2, toSqlDate(production.getWorkflow().getStopTime()));
+        updateProductionStmt.setString(3, production.getProcessingStatus().getState().toString());
+        updateProductionStmt.setFloat(4, production.getProcessingStatus().getProgress());
+        updateProductionStmt.setString(5, production.getProcessingStatus().getMessage());
+        updateProductionStmt.setString(6, production.getStagingStatus().getState().toString());
+        updateProductionStmt.setFloat(7, production.getStagingStatus().getProgress());
+        updateProductionStmt.setString(8, production.getStagingStatus().getMessage());
+        updateProductionStmt.setString(9, production.getId());
+        updateProductionStmt.executeUpdate();
+    }
+
+    private void deleteProduction(String productionId) throws SQLException {
+        if (deleteProductionsStmt == null) {
+            deleteProductionsStmt = connection.prepareStatement("DELETE FROM production WHERE id=?");
+        }
+        deleteProductionsStmt.clearParameters();
+        deleteProductionsStmt.setString(1, productionId);
+        deleteProductionsStmt.executeUpdate();
     }
 
     public static void initDatabase(Connection connection) throws SQLException, IOException {
@@ -223,69 +293,6 @@ public class SqlProductionStore implements ProductionStore {
         } finally {
             streamReader.close();
         }
-    }
-
-    public static SqlProductionStore open(String url) throws SQLException, IOException {
-        return new SqlProductionStore(null, getConnection(url));
-    }
-
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Usage: " + SqlProductionStore.class.getSimpleName().toLowerCase() + " [status] | [new] | [test]");
-            return;
-        }
-        String command = args[0];
-        try {
-            File databaseDir = new File("./database").getAbsoluteFile();
-            if (command.equalsIgnoreCase("new")) {
-                newDb(databaseDir);
-            } else if (command.equalsIgnoreCase("test")) {
-                testDb(databaseDir);
-            } else {
-                status(databaseDir);
-            }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-
-    }
-
-    private static void newDb(File databaseDir) throws Exception {
-        if (databaseDir.exists()) {
-            databaseDir.mkdirs();
-        }
-        SqlProductionStore gsmdb = SqlProductionStore.create(String.format("file:%s/calvalus-store;shutdown=true",
-                                                                           databaseDir));
-        gsmdb.commit();
-        gsmdb.close();
-    }
-
-    private static void testDb(File databaseDir) throws Exception {
-        if (databaseDir.exists()) {
-            databaseDir.mkdirs();
-        }
-        SqlProductionStore store = SqlProductionStore.create(String.format("file:%s/calvalus-store;shutdown=true", databaseDir));
-        for (int i = 1; i <= 100; i++) {
-            store.addProduction(new Production("P" + i,
-                                               "N" + i,
-                                               "/out/" + i,
-                                               true,
-                                               new ProductionRequest("X", "eva", "a", "1", "b", "2"),
-                                               null));
-        }
-        store.commit();
-        store.close();
-    }
-
-    private static void status(File databaseDir) throws Exception {
-        SqlProductionStore store = SqlProductionStore.open(String.format("file:%s/calvalus-store", databaseDir));
-
-        Production[] productions = store.getProductions();
-        System.out.println(productions.length + " productions(s)");
-        for (Production production : productions) {
-            System.out.println("  " + production);
-        }
-        store.close();
     }
 
     private static Object[] parseJobIds(ProcessingService processingService, String jobIdList) {
@@ -311,6 +318,4 @@ public class SqlProductionStore implements ProductionStore {
     private static Date toSqlDate(java.util.Date date) {
         return date != null ? new Date(date.getTime()) : null;
     }
-
-
 }

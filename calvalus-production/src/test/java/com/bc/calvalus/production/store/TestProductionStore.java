@@ -19,8 +19,11 @@ public class TestProductionStore implements ProductionStore {
     }
 
     @Override
-    public void removeProduction(Production production) {
-        list.remove(production);
+    public void removeProduction(String productionId) {
+        Production production = getProduction(productionId);
+        if (production != null) {
+            list.remove(production);
+        }
     }
 
     @Override
@@ -39,11 +42,11 @@ public class TestProductionStore implements ProductionStore {
     }
 
     @Override
-    public void load() {
+    public void update() {
     }
 
     @Override
-    public void store() {
+    public void persist() {
     }
 
     @Override

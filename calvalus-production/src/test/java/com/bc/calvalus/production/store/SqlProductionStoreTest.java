@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -17,25 +18,137 @@ import static org.junit.Assert.*;
  * @author Norman
  */
 public class SqlProductionStoreTest {
-
-    static {
-
+    @Before
+    public void setUp() throws Exception {
+        Class.forName("org.hsqldb.jdbcDriver");
     }
 
     @Test
-    public void testIt() throws Exception {
-        Class.forName("org.hsqldb.jdbcDriver");
-        Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:testdb", "SA", "");
-        SqlProductionStore.initDatabase(connection);
-        SqlProductionStore store = new SqlProductionStore(new TestProcessingService(), connection);
-        Production production = new Production("pid1", "pname1", "/out/spath1", true, new ProductionRequest("X", "eva", "a", "1"),
-                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job1", "job2"},
-                                                                 new Date(1315153761000L),
-                                                                 new Date(1315153764000L),
-                                                                 null,
-                                                                 new ProcessStatus(ProcessState.SCHEDULED, 0.0F, "Under way")));
-        production.setStagingStatus(new ProcessStatus(ProcessState.UNKNOWN, 0.0F, "Not yet started"));
+    public void testAddAndRemove() throws Exception {
+        Production[] productions;
+
+        SqlProductionStore store = openStore(true);
+        store.addProduction(createProduction1());
+        store.addProduction(createProduction2());
+        store.addProduction(createProduction3());
+        store.persist();
+        store.close();
+
+        productions = store.getProductions();
+        assertEquals(3, productions.length);
+
+        store = openStore(false);
+        store.update();
+        store.removeProduction("pid2");
+        store.removeProduction("pid3");
+        store.persist();
+        store.close();
+
+        store = openStore(false);
+        store.update();
+
+        productions = store.getProductions();
+        assertEquals(1, productions.length);
+        store.removeProduction("pid1");
+        store.persist();
+        store.close();
+
+        store = openStore(false);
+        store.update();
+        productions = store.getProductions();
+        assertEquals(0, productions.length);
+    }
+
+    @Test
+    public void testPersistAndUpdateWithAStatusChange() throws Exception {
+        SqlProductionStore store = openStore(true);
+        Production production = createProduction2();
         store.addProduction(production);
+
+        ProcessStatus oldStatus = new ProcessStatus(ProcessState.RUNNING, 0.4F, "In progress");
+        ProcessStatus newStatus = new ProcessStatus(ProcessState.COMPLETED, 1.0F, "");
+
+        // Check current status
+        assertEquals(oldStatus, production.getProcessingStatus());
+        // Change current status
+        production.getWorkflow().setStatus(newStatus);
+        // Persist change
+        store.persist();
+        store.close();
+
+        // Reopen store
+        store = openStore(false);
+        store.update();
+        Production[] updatedProductions = store.getProductions();
+        assertEquals(1, updatedProductions.length);
+        // Expect change
+        assertEquals(newStatus, updatedProductions[0].getProcessingStatus());
+    }
+
+    @Test
+    public void testPersistUpdateOf3AddedProductions() throws Exception {
+        SqlProductionStore store1 = openStore(true);
+        SqlProductionStore store2 = openStore(false);
+
+        store1.addProduction(createProduction1());
+        store1.addProduction(createProduction2());
+        store1.addProduction(createProduction3());
+
+        Production[] productions1 = store1.getProductions();
+        assertNotNull(productions1);
+        assertEquals(3, productions1.length);
+
+        Production[] productions2 = store2.getProductions();
+        assertNotNull(productions2);
+        assertEquals(0, productions2.length);
+
+        store1.persist();
+        store2.update();
+
+        productions2 = store2.getProductions();
+        assertNotNull(productions2);
+        assertEquals(3, productions2.length);
+    }
+
+    @Test
+    public void testThatGetProductionsReturnsSameInstances() throws Exception {
+
+        SqlProductionStore store = openStore(true);
+        store.addProduction(createProduction1());
+        store.addProduction(createProduction2());
+
+        Production[] productions1 = store.getProductions();
+        Production[] productions2 = store.getProductions();
+
+        assertNotNull(productions1);
+        assertEquals(2, productions1.length);
+        assertNotNull(productions2);
+        assertEquals(2, productions2.length);
+        assertSame(productions2[0], productions1[0]);
+        assertSame(productions2[1], productions1[1]);
+    }
+
+    @Test
+    public void testThatGetProductionWithIdReturnsSameInstances() throws Exception {
+
+        SqlProductionStore store = openStore(true);
+        store.addProduction(createProduction1());
+        store.addProduction(createProduction2());
+
+        Production production1 = store.getProduction("pid1");
+        Production production2 = store.getProduction("pid2");
+
+        assertNotNull(production1);
+        assertNotNull(production2);
+        assertSame(production1, store.getProduction("pid1"));
+        assertSame(production2, store.getProduction("pid2"));
+    }
+
+    @Test
+    public void testThatProductionIsDeserialisedCorrectly() throws Exception {
+
+        SqlProductionStore store = openStore(true);
+        store.addProduction(createProduction1());
 
         Production[] productions = store.getProductions();
         assertNotNull(productions);
@@ -60,5 +173,46 @@ public class SqlProductionStoreTest {
         assertNotNull(production1.getWorkflow().getSubmitTime());
         assertNotNull(production1.getWorkflow().getStartTime());
         assertNull(production1.getWorkflow().getStopTime());
+    }
+
+    private SqlProductionStore openStore(boolean init) throws Exception {
+        Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:calvalus-test", "SA", "");
+        if (init) {
+            SqlProductionStore.initDatabase(connection);
+        }
+        return new SqlProductionStore(new TestProcessingService(), connection);
+    }
+
+    private static Production createProduction1() {
+        Production production = new Production("pid1", "pname1", "/out/spath1", true, new ProductionRequest("X", "eva", "a", "1"),
+                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job1", "job2"},
+                                                                 new Date(1315153761000L),
+                                                                 new Date(1315153764000L),
+                                                                 null,
+                                                                 new ProcessStatus(ProcessState.SCHEDULED, 0.0F, "Under way")));
+        production.setStagingStatus(new ProcessStatus(ProcessState.UNKNOWN, 0.0F, "Not yet started"));
+        return production;
+    }
+
+    private static Production createProduction2() {
+        Production production = new Production("pid2", "pname2", "/out/spath2", true, new ProductionRequest("X", "eva", "a", "6"),
+                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job4", "job5"},
+                                                                 new Date(1315153961000L),
+                                                                 new Date(1315153964000L),
+                                                                 null,
+                                                                 new ProcessStatus(ProcessState.RUNNING, 0.4F, "In progress")));
+        production.setStagingStatus(new ProcessStatus(ProcessState.UNKNOWN, 0.0F, "Not yet started"));
+        return production;
+    }
+
+    private static Production createProduction3() {
+        Production production = new Production("pid3", "pname3", "/out/spath3", true, new ProductionRequest("X", "eva", "a", "3"),
+                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job6", "job7"},
+                                                                 new Date(1315153961000L),
+                                                                 new Date(1315153964000L),
+                                                                 null,
+                                                                 new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Processed")));
+        production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Staged"));
+        return production;
     }
 }

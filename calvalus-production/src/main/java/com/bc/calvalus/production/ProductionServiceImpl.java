@@ -55,7 +55,7 @@ public class ProductionServiceImpl implements ProductionService {
         this.logger = Logger.getLogger("com.bc.calvalus");
 
         try {
-            productionStore.load();
+            productionStore.update();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
         }
@@ -193,12 +193,7 @@ public class ProductionServiceImpl implements ProductionService {
         }
 
         // Update state of all registered productions
-        Production[] productions = new Production[0];
-        try {
-            productions = productionStore.getProductions();
-        } catch (ProductionException e) {
-            logger.warning("Failed to get production status from store: " + e.getMessage());
-        }
+        Production[] productions = productionStore.getProductions();
         for (Production production : productions) {
             production.getWorkflow().updateStatus();
         }
@@ -231,9 +226,9 @@ public class ProductionServiceImpl implements ProductionService {
             }
         }
 
-        // write to persistent storage
+        // write changes to persistent storage
         try {
-            productionStore.store();
+            productionStore.persist();
         } catch (ProductionException e) {
             logger.warning("Failed to persist productions: " + e.getMessage());
         }
@@ -268,7 +263,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     private synchronized void removeProduction(Production production) throws ProductionException {
-        productionStore.removeProduction(production);
+        productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
         try {
