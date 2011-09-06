@@ -231,6 +231,9 @@ public class BinningParametersForm extends Composite {
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
+        if (selectedProcessor == null) {
+            return;
+        }
         processorVariableDefaults.clear();
         variableNames.clear();
         DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
