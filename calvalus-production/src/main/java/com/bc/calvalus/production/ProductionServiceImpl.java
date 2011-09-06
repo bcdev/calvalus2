@@ -53,12 +53,6 @@ public class ProductionServiceImpl implements ProductionService {
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
         this.logger = Logger.getLogger("com.bc.calvalus");
-
-        try {
-            productionStore.update();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to load productions: " + e.getMessage(), e);
-        }
     }
 
     @Override
@@ -230,7 +224,7 @@ public class ProductionServiceImpl implements ProductionService {
         try {
             productionStore.persist();
         } catch (ProductionException e) {
-            logger.warning("Failed to persist productions: " + e.getMessage());
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
