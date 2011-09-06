@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * A production type that does nothing.
@@ -48,6 +49,7 @@ class DummyProductionType implements ProductionType {
             @Override
             public void submit() {
                 jobId = processingService.submitJob();
+                setSubmitTime(new Date());
             }
 
             @Override
