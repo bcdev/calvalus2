@@ -101,7 +101,11 @@ public class ManageProductionsView extends PortalView {
 
                     @Override
                     public void onSuccess(DtoProductionRequest result) {
-                        ShowProductionRequestAction.run(production.getId(), result);
+                        if (result != null) {
+                            ShowProductionRequestAction.run(production.getId(), result);
+                        } else {
+                            Dialog.showMessage(production.getId(), "No production request available.");
+                        }
                     }
                 };
                 getPortal().getBackendService().getProductionRequest(production.getId(), callback);
