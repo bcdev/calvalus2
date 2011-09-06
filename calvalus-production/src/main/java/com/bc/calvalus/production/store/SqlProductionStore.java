@@ -160,7 +160,7 @@ public class SqlProductionStore implements ProductionStore {
             removedProductionIds.clear();
 
         } catch (SQLException e) {
-            throw new ProductionException("Failed to persist production store", e);
+            throw new ProductionException("Failed to persist production store: " + e.getMessage(), e);
         }
     }
 
@@ -169,7 +169,7 @@ public class SqlProductionStore implements ProductionStore {
         try {
             connection.close();
         } catch (SQLException e) {
-            throw new ProductionException("Failed to close production store", e);
+            throw new ProductionException("Failed to close production store: " + e.getMessage(), e);
         }
     }
 
