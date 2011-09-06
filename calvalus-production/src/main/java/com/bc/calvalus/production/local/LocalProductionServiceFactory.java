@@ -3,8 +3,13 @@ package com.bc.calvalus.production.local;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.*;
-import com.bc.calvalus.production.store.CsvProductionStore;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.production.ProductionServiceImpl;
+import com.bc.calvalus.production.store.ProductionStore;
+import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
 
 import java.io.File;
@@ -78,8 +83,21 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                         new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))
         );
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
-        CsvProductionStore productionStore = new CsvProductionStore(processingService,
-                                                                    new File(localContextDir, "test-productions.csv"));
+        // todo - get the database connect info from configuration
+        String dbDriver = "org.hsqldb.jdbcDriver";
+        try {
+            Class.forName(dbDriver);
+        } catch (ClassNotFoundException e) {
+            throw new ProductionException("Failed to load database driver " + dbDriver);
+        }
+
+        String dbName = "test-productions";
+        File databaseFile = new File(localContextDir, dbName);
+        File databaseLogFile = new File(localContextDir, dbName + ".log");
+
+        ProductionStore productionStore = SqlProductionStore.create(processingService,
+                                                                    "jdbc:hsqldb:file:" + databaseFile.getPath(), "SA", "",
+                                                                    !databaseLogFile.exists());
         ProductionServiceImpl productionService = new ProductionServiceImpl(inventoryService,
                                                                             processingService,
                                                                             stagingService,
