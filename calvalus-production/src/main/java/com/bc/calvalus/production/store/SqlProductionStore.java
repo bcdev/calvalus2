@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -46,7 +47,41 @@ public class SqlProductionStore implements ProductionStore {
     private PreparedStatement insertProductionStmt;
     private PreparedStatement updateProductionStmt;
 
-    public SqlProductionStore(ProcessingService processingService, Connection connection) {
+    /**
+     * Creates a new production store.
+     *
+     * @param processingService The processing service.
+     * @param url               The database URL.
+     * @param user              The database user's name.
+     * @param password          The database user' password.
+     * @param init              If {@code true}, the database initialisation SQL script {@code calvalus-init.sql} will be run.
+     *                          If {@code false}, {@link #update()} will be called immediately after the store has been created.
+     * @return A new production store.
+     * @throws ProductionException If an error occurs.
+     */
+
+    public static SqlProductionStore create(ProcessingService processingService,
+                                            String url,
+                                            String user,
+                                            String password,
+                                            boolean init) throws ProductionException {
+        try {
+            Connection connection = DriverManager.getConnection(url, user, password);
+            SqlProductionStore store = new SqlProductionStore(processingService, connection);
+            if (init) {
+                store.init();
+            }else {
+                store.update();
+            }
+            return store;
+        } catch (SQLException e) {
+            throw new ProductionException("Failed to create production store: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new ProductionException("Failed to create production store: " + e.getMessage(), e);
+        }
+    }
+
+    private SqlProductionStore(ProcessingService processingService, Connection connection) {
         this.processingService = processingService;
         this.connection = connection;
         this.cachedProductions = new HashMap<String, Production>(73);
@@ -285,11 +320,12 @@ public class SqlProductionStore implements ProductionStore {
         deleteProductionsStmt.executeUpdate();
     }
 
-    public static void initDatabase(Connection connection) throws SQLException, IOException {
+    private void init() throws SQLException, IOException {
         InputStreamReader streamReader = new InputStreamReader(SqlProductionStore.class.getResourceAsStream("calvalus-store.sql"));
         try {
             SqlReader sqlReader = new SqlReader(streamReader);
             sqlReader.executeAll(connection);
+            connection.commit();
         } finally {
             streamReader.close();
         }

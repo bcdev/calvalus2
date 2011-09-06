@@ -3,6 +3,7 @@ package com.bc.calvalus.production.store;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
 import org.junit.Before;
@@ -175,12 +176,8 @@ public class SqlProductionStoreTest {
         assertNull(production1.getWorkflow().getStopTime());
     }
 
-    private SqlProductionStore openStore(boolean init) throws Exception {
-        Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:calvalus-test", "SA", "");
-        if (init) {
-            SqlProductionStore.initDatabase(connection);
-        }
-        return new SqlProductionStore(new TestProcessingService(), connection);
+    private SqlProductionStore openStore(boolean init) throws ProductionException {
+       return SqlProductionStore.create(new TestProcessingService(), "jdbc:hsqldb:mem:calvalus-test", "SA", "", init);
     }
 
     private static Production createProduction1() {

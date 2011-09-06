@@ -27,7 +27,6 @@ class SqlReader {
             statement.executeUpdate(sql);
         }
         statement.close();
-        connection.commit();
     }
 
 

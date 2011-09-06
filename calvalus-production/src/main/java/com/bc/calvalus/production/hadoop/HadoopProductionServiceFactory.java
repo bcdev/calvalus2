@@ -7,8 +7,8 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.production.store.CsvProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
+import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
@@ -23,7 +23,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
-    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME = "calvalus-productions-db.csv";
+    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME = "calvalus-database";
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
@@ -38,8 +38,11 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             JobClient jobClient = new JobClient(jobConf);
             HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
-            ProductionStore productionStore = new CsvProductionStore(processingService,
-                                                                     new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME));
+            File databaseFile = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME);
+            // todo - get the database connect info from configuration
+            ProductionStore productionStore = SqlProductionStore.create(processingService,
+                                                                        "jdbc:hsqldb:file:" + databaseFile, "SA", "",
+                                                                        !databaseFile.exists());
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
