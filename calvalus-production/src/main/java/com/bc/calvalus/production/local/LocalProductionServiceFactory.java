@@ -84,14 +84,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,
-                                                                            new DummyProductionType(processingService, stagingService)) {
-            @Override
-            public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
-                // Return some dummy processors
-                return new ProcessorDescriptor[]{
-                };
-            }
-        };
+                                                                            new DummyProductionType(processingService, stagingService));
 
         if (productionStore.getProductions().length == 0) {
             productionService.orderProduction(new ProductionRequest("test", "ewa",
