@@ -53,17 +53,22 @@ public class BindingContext {
     }
 
     private static class BindingImpl<T> implements Binding<T> {
-        String name;
-        HasValue<T> widget;
-        HandlerRegistration handlerRegistration1;
-        HandlerRegistration handlerRegistration2;
+        private String name;
+        private HasValue<T> widget;
+        private final HandlerRegistration[] handlerRegistrations;
 
-        private BindingImpl(String name, HasValue<T> widget, HandlerRegistration handlerRegistration1, HandlerRegistration handlerRegistration2) {
+        private BindingImpl(String name, HasValue<T> widget, HandlerRegistration ... handlerRegistrations) {
             this.name = name;
             this.widget = widget;
-            this.handlerRegistration1 = handlerRegistration1;
-            this.handlerRegistration2 = handlerRegistration2;
+            this.handlerRegistrations = handlerRegistrations;
         }
+
+        @Override
+        protected void finalize() throws Throwable {
+            super.finalize();
+            unbind();
+        }
+
         @Override
         public String getName() {
             return name;
@@ -92,8 +97,9 @@ public class BindingContext {
         }
 
         public void unbind() {
-            this.handlerRegistration1.removeHandler();
-            this.handlerRegistration2.removeHandler();
+            for (HandlerRegistration handlerRegistration: handlerRegistrations) {
+                handlerRegistration.removeHandler();
+            }
         }
     }
 }
