@@ -36,7 +36,8 @@ public class TestProcessingService implements ProcessingService<String> {
 
     @Override
     public ProcessStatus getJobStatus(String jobId) {
-        return jobStatusMap.get(jobId);
+        ProcessStatus status = jobStatusMap.get(jobId);
+        return status != null ? status : ProcessStatus.UNKNOWN;
     }
 
     public void setJobStatus(String jobId, ProcessStatus status) {

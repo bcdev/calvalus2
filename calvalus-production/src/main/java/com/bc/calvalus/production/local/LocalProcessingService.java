@@ -61,7 +61,8 @@ class LocalProcessingService implements ProcessingService<String> {
     @Override
     public ProcessStatus getJobStatus(String jobId) {
         synchronized (jobStatuses) {
-            return jobStatuses.get(jobId);
+            ProcessStatus jobStatus = jobStatuses.get(jobId);
+            return jobStatus != null ? jobStatus : ProcessStatus.UNKNOWN;
         }
     }
 

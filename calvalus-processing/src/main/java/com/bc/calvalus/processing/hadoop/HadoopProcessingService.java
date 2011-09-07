@@ -156,7 +156,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     @Override
     public ProcessStatus getJobStatus(JobID jobId) {
         synchronized (jobStatusMap) {
-            return jobStatusMap.get(jobId);
+            ProcessStatus jobStatus = jobStatusMap.get(jobId);
+            return jobStatus != null ? jobStatus : ProcessStatus.UNKNOWN;
         }
     }
 

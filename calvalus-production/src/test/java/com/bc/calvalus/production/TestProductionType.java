@@ -89,10 +89,7 @@ public class TestProductionType implements ProductionType {
 
         @Override
         public void updateStatus() {
-            ProcessStatus jobStatus = processingService.getJobStatus(getJobId());
-            if (jobStatus != null) {
-                setStatus(jobStatus);
-            }
+            setStatus(processingService.getJobStatus(getJobId()));
         }
     }
 }

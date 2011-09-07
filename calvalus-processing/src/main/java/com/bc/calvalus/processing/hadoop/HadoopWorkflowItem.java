@@ -85,10 +85,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void updateStatus() {
         if (jobId != null) {
-            ProcessStatus jobStatus = processingService.getJobStatus(jobId);
-            if (jobStatus != null) {
-                setStatus(jobStatus);
-            }
+            setStatus(processingService.getJobStatus(jobId));
         }
     }
 

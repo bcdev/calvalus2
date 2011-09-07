@@ -11,6 +11,7 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.jidesoft.status.ProgressStatusBarItem;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,10 +65,7 @@ class DummyProductionType implements ProductionType {
             @Override
             public void updateStatus() {
                 if (jobId != null) {
-                    ProcessStatus jobStatus = processingService.getJobStatus(jobId);
-                    if (jobStatus != null) {
-                        setStatus(jobStatus);
-                    }
+                    setStatus(processingService.getJobStatus(jobId));
                 }
             }
 
