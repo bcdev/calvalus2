@@ -10,6 +10,7 @@ import java.util.Date;
  * @author Norman
  */
 public class DtoProductSet implements IsSerializable {
+    private String name;
     private String path;
     private Date minDate;
     private Date maxDate;
@@ -21,10 +22,15 @@ public class DtoProductSet implements IsSerializable {
     public DtoProductSet() {
     }
 
-    public DtoProductSet(String id, Date minDate, Date maxDate) {
-        this.path = id;
+    public DtoProductSet(String name, String path, Date minDate, Date maxDate) {
+        this.name = name;
+        this.path = path;
         this.minDate = minDate;
         this.maxDate = maxDate;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getPath() {

@@ -40,14 +40,15 @@ public class HadoopInventoryService implements InventoryService {
             Path path1 = fileSystem.makeQualified(databasePath);
             InputStream is = fileSystem.open(path1);
             InputStreamReader reader = new InputStreamReader(is);
-            CsvReader csvReader = new CsvReader(reader, new char[]{','});
+            CsvReader csvReader = new CsvReader(reader, new char[]{';'});
             List<String[]> stringRecords = csvReader.readStringRecords();
             for (String[] record : stringRecords) {
                 if (record.length == 3) {
-                    String path = record[0];
-                    Date date1 = DATE_FORMAT.parse(record[1]);
-                    Date date2 = DATE_FORMAT.parse(record[2]);
-                    productSets.add(new ProductSet(path, date1, date2));
+                    String name = record[0];
+                    String path = record[2];
+                    Date date1 = DATE_FORMAT.parse(record[3]);
+                    Date date2 = DATE_FORMAT.parse(record[4]);
+                    productSets.add(new ProductSet(name, path, date1, date2));
                 }
             }
             return productSets.toArray(new ProductSet[productSets.size()]);

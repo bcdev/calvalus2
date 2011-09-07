@@ -32,7 +32,7 @@ public class ProductSetSelectionForm extends Composite {
 
         inputProductSet.setName("inputProductSet");
         for (DtoProductSet productSet : productSets) {
-            inputProductSet.addItem(productSet.getPath());
+            inputProductSet.addItem(productSet.getName());
         }
         inputProductSet.setSelectedIndex(0);
     }

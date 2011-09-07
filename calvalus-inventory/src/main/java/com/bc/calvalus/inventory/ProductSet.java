@@ -9,14 +9,20 @@ import java.util.Date;
  * @author Norman
  */
 public class ProductSet {
+    private final String name;
     private final String path;
     private final Date minDate;
     private final Date maxDate;
 
-    public ProductSet(String path, Date minDate, Date maxDate) {
+    public ProductSet(String name, String path, Date minDate, Date maxDate) {
+        this.name = name;
         this.path = path;
         this.minDate = minDate;
         this.maxDate = maxDate;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getPath() {

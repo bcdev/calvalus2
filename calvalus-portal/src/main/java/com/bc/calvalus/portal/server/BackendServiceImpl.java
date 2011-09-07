@@ -175,7 +175,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private DtoProductSet convert(ProductSet productSet) {
-        return new DtoProductSet(productSet.getPath(),
+        return new DtoProductSet(productSet.getName(),
+                                 productSet.getPath(),
                                  productSet.getMinDate(),
                                  productSet.getMaxDate());
     }
