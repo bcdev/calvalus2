@@ -16,8 +16,8 @@ public class TestInventoryService implements InventoryService {
     @Override
     public ProductSet[] getProductSets(String filter) throws Exception {
         return new ProductSet[]{
-                new ProductSet("ps0", null, null),
-                new ProductSet("ps1", null, null),
+                new ProductSet("ps0", "ps0", null, null),
+                new ProductSet("ps1", "ps1", null, null),
         };
     }
 

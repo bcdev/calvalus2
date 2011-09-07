@@ -61,10 +61,17 @@ public class SqlProductionStore implements ProductionStore {
      */
 
     public static SqlProductionStore create(ProcessingService processingService,
+                                            String driver,
                                             String url,
                                             String user,
                                             String password,
                                             boolean init) throws ProductionException {
+        try {
+            Class.forName(driver);
+        } catch (ClassNotFoundException e) {
+            throw new ProductionException("Failed to load database driver " + driver);
+        }
+
         try {
             Connection connection = DriverManager.getConnection(url, user, password);
             SqlProductionStore store = new SqlProductionStore(processingService, connection);

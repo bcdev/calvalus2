@@ -19,10 +19,7 @@ import static org.junit.Assert.*;
  * @author Norman
  */
 public class SqlProductionStoreTest {
-    @Before
-    public void setUp() throws Exception {
-        Class.forName("org.hsqldb.jdbcDriver");
-    }
+
 
     @Test
     public void testAddAndRemove() throws Exception {
@@ -177,7 +174,10 @@ public class SqlProductionStoreTest {
     }
 
     private SqlProductionStore openStore(boolean init) throws ProductionException {
-       return SqlProductionStore.create(new TestProcessingService(), "jdbc:hsqldb:mem:calvalus-test", "SA", "", init);
+       return SqlProductionStore.create(new TestProcessingService(),
+                                        "org.hsqldb.jdbcDriver",
+                                        "jdbc:hsqldb:mem:calvalus-test",
+                                        "SA", "", init);
     }
 
     private static Production createProduction1() {
