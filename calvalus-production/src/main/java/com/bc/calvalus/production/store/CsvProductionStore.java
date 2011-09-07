@@ -135,7 +135,7 @@ public class CsvProductionStore implements ProductionStore {
             ProcessStatus processStatus = decodeProductionStatusTSV(tokens, offpt);
             ProcessStatus stagingStatus = decodeProductionStatusTSV(tokens, offpt);
             WorkflowItem workflow = createWorkflow(jobIDs, dates, processStatus);
-            boolean autoStaging = Boolean.parseBoolean(productionRequest.getParameter("autoStaging", "false"));
+            boolean autoStaging = Boolean.parseBoolean(productionRequest.getString("autoStaging", "false"));
             Production production = new Production(id, name,
                                                    stagingPath,
                                                    autoStaging,

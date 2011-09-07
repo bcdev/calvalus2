@@ -16,15 +16,16 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.aggregators.AggregatorAverage;
-import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
-import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
-import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.binning.VariableContext;
+import com.bc.calvalus.binning.aggregators.AggregatorAverage;
+import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
+import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
+import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
 import com.bc.calvalus.processing.WpsConfig;
+import com.bc.ceres.binding.BindingException;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class L3ConfigTest {
     private L3Config l3Config;
 
     @Before
-    public void createL3Config() throws IOException, SAXException, ParserConfigurationException {
+    public void createL3Config() throws IOException, SAXException, ParserConfigurationException, BindingException {
         l3Config = loadConfig("l3-request.xml");
     }
 
@@ -71,9 +72,9 @@ public class L3ConfigTest {
         superSamplingSteps = config.getSuperSamplingSteps();
         assertNotNull(superSamplingSteps);
         assertEquals(3, superSamplingSteps.length);
-        assertEquals(1f/6, superSamplingSteps[0], 0.0001);
-        assertEquals(3f/6, superSamplingSteps[1], 0.0001);
-        assertEquals(5f/6, superSamplingSteps[2], 0.0001);
+        assertEquals(1f / 6, superSamplingSteps[0], 0.0001);
+        assertEquals(3f / 6, superSamplingSteps[1], 0.0001);
+        assertEquals(5f / 6, superSamplingSteps[2], 0.0001);
     }
 
     @Test
@@ -152,12 +153,12 @@ public class L3ConfigTest {
         assertEquals(AggregatorMinMax.class, binManager.getAggregator(5).getClass());
     }
 
-        @Test
+    @Test
     public void testNumRows() {
-            assertEquals(4320, l3Config.numRows);
-        }
+        assertEquals(4320, l3Config.numRows);
+    }
 
-    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException {
+    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException, BindingException {
         String wpsRequest = loadConfigProperties(configPath);
         WpsConfig wpsConfig = new WpsConfig(wpsRequest);
         return L3Config.fromXml(wpsConfig.getLevel3Parameters());

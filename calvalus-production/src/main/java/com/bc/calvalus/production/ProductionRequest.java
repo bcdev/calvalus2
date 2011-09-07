@@ -72,15 +72,6 @@ public class ProductionRequest implements XmlConvertible {
         return Collections.unmodifiableMap(productionParameters);
     }
 
-    public String getParameter(String name, String def) {
-        String value = productionParameters.get(name);
-        return value != null ? value : def;
-    }
-
-    public String getParameter(String name) throws ProductionException {
-        return getParameter(name, true);
-    }
-
     public String getParameter(String name, boolean notNull) throws ProductionException {
         String value = productionParameters.get(name);
         if (value == null && notNull) {
@@ -89,9 +80,8 @@ public class ProductionRequest implements XmlConvertible {
         return value;
     }
 
-
     public void ensureParameterSet(String name) throws ProductionException {
-        getParameter(name);
+        getString(name);
     }
 
     public static DateFormat getDateFormat() {
@@ -100,6 +90,29 @@ public class ProductionRequest implements XmlConvertible {
 
     /////////////////////////////////////////////////////////////////////////
     // Support for parameters of different types
+
+    /**
+     * Gets a mandatory String parameter value.
+     *
+     * @param name The parameter name.
+     * @return The parameter value.
+     * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
+     */
+    public String getString(String name) throws ProductionException {
+        return getParameter(name, true);
+    }
+
+    /**
+     * Gets an optional String parameter value.
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     * @throws ProductionException If the parameter cannot be converted to the requested type.
+     */
+    public String getString(String name, String def) {
+        String value = productionParameters.get(name);
+        return value != null ? value : def;
+    }
 
     /**
      * Gets a mandatory Boolean parameter value.
@@ -260,7 +273,7 @@ public class ProductionRequest implements XmlConvertible {
     }
 
     public String getRegionName() {
-        return getParameter("regionName", null);
+        return getString("regionName", null);
     }
 
     public Geometry getRegionGeometry() throws ProductionException {

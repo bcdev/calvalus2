@@ -42,7 +42,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfigNames.CALVALUS_MA_PARAMETERS));
+        final MAConfig maConfig = MAConfig.get(jobConfig);
 
         final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName());
 

@@ -39,6 +39,7 @@ public class L3ProductionTypeTest {
     public void testCreateProduction() throws ProductionException, IOException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         Production production = productionType.createProduction(productionRequest);
+
         assertNotNull(production);
         assertEquals("Level 3 production using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
@@ -67,7 +68,7 @@ public class L3ProductionTypeTest {
     @Test
     public void testCreateL3Config() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
+        L3Config l3Config = L3ProductionType.getL3Config(productionRequest);
         assertNotNull(l3Config);
         assertEquals(4320, l3Config.getBinningContext().getBinningGrid().getNumRows());
         assertEquals("NOT INVALID", l3Config.getVariableContext().getMaskExpr());

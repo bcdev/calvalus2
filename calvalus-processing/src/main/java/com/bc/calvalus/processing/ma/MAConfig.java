@@ -17,8 +17,12 @@
 package com.bc.calvalus.processing.ma;
 
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
+import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
 /**
@@ -148,18 +152,39 @@ public class MAConfig implements XmlConvertible {
     public MAConfig() {
     }
 
-    public static MAConfig fromXml(String xml) {
+    public static MAConfig get(Configuration conf) {
+        String xml = conf.get(JobConfigNames.CALVALUS_MA_PARAMETERS);
+        if (xml == null) {
+            throw new IllegalArgumentException("Missing match-up analysis configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+        }
+        try {
+            return fromXml(xml);
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("Invalid match-up analysis configuration: " + e.getMessage(), e);
+        }
+    }
+
+    public static MAConfig fromXml(String xml) throws BindingException {
         return new XmlBinding().convertXmlToObject(xml, new MAConfig());
     }
 
     @Override
     public String toXml() {
-        return new XmlBinding().convertObjectToXml(this);
+        try {
+            return new XmlBinding().convertObjectToXml(this);
+        } catch (ConversionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public RecordSource createRecordSource() throws Exception {
         String className = getRecordSourceSpiClassName();
-        RecordSourceSpi service = RecordSourceSpi.get(className);
+        RecordSourceSpi service;
+        if (className != null) {
+                service = RecordSourceSpi.getForClassName(className);
+        }else {
+            service = RecordSourceSpi.getForUrl(getRecordSourceUrl());
+        }
         if (service != null) {
             return service.createRecordSource(getRecordSourceUrl());
         } else {

@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.xml.XmlBinding;
+import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -39,7 +40,7 @@ import org.esa.beam.util.SystemUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collections;
@@ -158,7 +159,7 @@ public class ProductFactory {
         return product;
     }
 
-    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) {
+    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws BindingException {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
@@ -203,7 +204,12 @@ public class ProductFactory {
         Product product = source;
         if (operatorName != null && !operatorName.isEmpty()) {
             // transform request into parameter objects
-            Map<String, Object> parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+            Map<String, Object> parameterMap = null;
+            try {
+                parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+            } catch (BindingException e) {
+                throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
+            }
             product = GPF.createProduct(operatorName, parameterMap, product);
         }
         return product;

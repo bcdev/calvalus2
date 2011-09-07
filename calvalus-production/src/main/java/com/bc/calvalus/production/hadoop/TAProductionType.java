@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
@@ -39,20 +38,20 @@ public class TAProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createTAProductionName(productionRequest);
 
-        String inputPath = productionRequest.getParameter("inputPath");
+        String inputPath = productionRequest.getString("inputPath");
         List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 32);
 
-        String processorName = productionRequest.getParameter("processorName");
-        String processorParameters = productionRequest.getParameter("processorParameters");
+        String processorName = productionRequest.getString("processorName");
+        String processorParameters = productionRequest.getString("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameter("processorBundleName"),
-                                               productionRequest.getParameter("processorBundleVersion"));
+                                               productionRequest.getString("processorBundleName"),
+                                               productionRequest.getString("processorBundleVersion"));
 
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
-        L3Config l3Config = L3ProductionType.createL3Config(productionRequest);
-        TAConfig taConfig = createTAConfig(productionRequest);
+        String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
+        TAConfig taConfig = getTAConfig(productionRequest);
 
         Workflow.Parallel parallel = new Workflow.Parallel();
         for (int i = 0; i < datePairList.size(); i++) {
@@ -76,7 +75,7 @@ public class TAProductionType extends HadoopProductionType {
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-                l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 l3JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 l3JobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
@@ -85,7 +84,7 @@ public class TAProductionType extends HadoopProductionType {
                 Configuration taJobConfig = createJobConfig(productionRequest);
                 taJobConfig.set(JobConfigNames.CALVALUS_INPUT, l3OutputDir);
                 taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT, taOutputDir);
-                taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 taJobConfig.set(JobConfigNames.CALVALUS_TA_PARAMETERS, taConfig.toXml());
                 taJobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 taJobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
@@ -125,13 +124,13 @@ public class TAProductionType extends HadoopProductionType {
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Trend analysis using input path '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputPath"),
-                             productionRequest.getParameter("processorName"));
+                             productionRequest.getString("inputPath"),
+                             productionRequest.getString("processorName"));
 
     }
 
-    static TAConfig createTAConfig(ProductionRequest productionRequest) throws ProductionException {
-        String regionName = productionRequest.getParameter("regionName");
+    static TAConfig getTAConfig(ProductionRequest productionRequest) throws ProductionException {
+        String regionName = productionRequest.getString("regionName");
         Geometry regionGeometry = productionRequest.getRegionGeometry();
         TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, regionGeometry);
         return new TAConfig(regionConfiguration);

@@ -36,7 +36,7 @@ public class LcL3Converter implements FormatConverter {
     {
         final String formattingWpsRequest = configuration.get("calvalus.request");
         WpsConfig formattingWpsConfig = new WpsConfig(formattingWpsRequest);
-        L3FormatterConfig formatterConfig = L3FormatterConfig.create(formattingWpsConfig.getFormatterParameters());
+        L3FormatterConfig formatterConfig = L3FormatterConfig.fromXml(formattingWpsConfig.getFormatterParameters());
 
         final String filename = l3FilenameOf(inputPath, formattingWpsConfig);
         final File tmpDir = new File(TMP_DIR + File.separator + taskId);

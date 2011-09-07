@@ -11,7 +11,6 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.jidesoft.status.ProgressStatusBarItem;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,7 +37,7 @@ class DummyProductionType implements ProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        String name = productionRequest.getParameter("name", null);
+        String name = productionRequest.getString("name", null);
         if (name == null) {
             name = "Doing something";
         }

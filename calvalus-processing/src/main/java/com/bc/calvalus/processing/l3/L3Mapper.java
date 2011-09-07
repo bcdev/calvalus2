@@ -54,7 +54,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
-        final L3Config l3Config = L3Config.fromXml(jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+        final L3Config l3Config = L3Config.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         final BinningContext ctx = l3Config.getBinningContext();

@@ -223,6 +223,12 @@ public class CsvRecordSource implements RecordSource {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             return new CsvRecordSource(inputStreamReader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
         }
+
+        @Override
+        protected boolean canDecodeContent(String recordSourceUrl) {
+            return recordSourceUrl.endsWith(".txt") || recordSourceUrl.endsWith(".csv");
+        }
+
     }
 
 }

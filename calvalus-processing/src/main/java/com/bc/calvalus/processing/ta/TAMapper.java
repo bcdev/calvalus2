@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -41,9 +40,9 @@ public class TAMapper extends Mapper<LongWritable, TemporalBin, Text, TemporalBi
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        L3Config l3Config = L3Config.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+        L3Config l3Config = L3Config.get(conf);
         binningGrid = l3Config.getBinningContext().getBinningGrid();
-        taConfig = TAConfig.fromXml(conf.get(JobConfigNames.CALVALUS_TA_PARAMETERS));
+        taConfig = TAConfig.get(conf);
     }
 
     @Override

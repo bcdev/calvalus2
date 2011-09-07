@@ -21,7 +21,7 @@ public class WpsXmlGeneratorTest {
     public void testL3WpsXml() throws WorkflowException, ProductionException {
         ProductionRequest productionRequest = L3ProductionTypeTest.createValidL3ProductionRequest();
 
-        L3Config binningConfig = L3ProductionType.createL3Config(productionRequest);
+        L3Config binningConfig = L3ProductionType.getL3Config(productionRequest);
 
         Map<String, Object> templateParameters = new HashMap<String, Object>(productionRequest.getParameters());
         templateParameters.put("productionId", "ID_pi-pa-po");

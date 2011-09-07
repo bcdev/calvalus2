@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.xml;
 
 // todo - move to commons (nf)
 
+import com.bc.ceres.binding.BindingException;
+
 /**
  * An object that can be converted to XML.
  * <p/>

@@ -216,8 +216,9 @@ public class ProductSetFilterForm extends Composite {
         });
     }
 
+    // note: factory is found solely for return type, method name is insignificant
     @UiFactory
-    public RegionMapWidget createRegionMap() { // method name is insignificant
+    public RegionMapWidget createRegionMap() {
         return new RegionMapWidget(portal.getRegionMapModel(), false);
     }
 

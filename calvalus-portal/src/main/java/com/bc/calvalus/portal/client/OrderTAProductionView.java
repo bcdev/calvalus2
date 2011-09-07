@@ -23,7 +23,7 @@ public class OrderTAProductionView extends OrderProductionView {
     private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
-    private BinningParametersForm binningParametersForm;
+    private L3ParametersForm l3ParametersForm;
     private OutputParametersForm outputParametersForm;
 
     private Widget widget;
@@ -44,7 +44,7 @@ public class OrderTAProductionView extends OrderProductionView {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
-                binningParametersForm.setSelectedProcessor(processorDescriptor);
+                l3ParametersForm.setSelectedProcessor(processorDescriptor);
             }
         });
 
@@ -61,19 +61,19 @@ public class OrderTAProductionView extends OrderProductionView {
 
             @Override
             public void spatialFilterChanged(Map<String, String> data) {
-                binningParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
+                l3ParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
 
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
 
-        binningParametersForm = new BinningParametersForm();
-        binningParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
-        binningParametersForm.resolution.setEnabled(false);
-        binningParametersForm.superSampling.setEnabled(false);
-        binningParametersForm.steppingPeriodLength.setValue(32);
-        binningParametersForm.compositingPeriodLength.setValue(4);
+        l3ParametersForm = new L3ParametersForm();
+        l3ParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        l3ParametersForm.resolution.setEnabled(false);
+        l3ParametersForm.superSampling.setEnabled(false);
+        l3ParametersForm.steppingPeriodLength.setValue(32);
+        l3ParametersForm.compositingPeriodLength.setValue(4);
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
@@ -113,7 +113,7 @@ public class OrderTAProductionView extends OrderProductionView {
         panel.add(panel1);
         panel.add(productSetFilterForm);
         panel.add(processorParametersForm);
-        panel.add(binningParametersForm);
+        panel.add(l3ParametersForm);
         // panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
         panel.add(orderPanel);
@@ -130,7 +130,7 @@ public class OrderTAProductionView extends OrderProductionView {
             minDate = ProductSetFilterForm.DATE_FORMAT.parse(minDateString);
             maxDate = ProductSetFilterForm.DATE_FORMAT.parse(maxDateString);
         }
-        binningParametersForm.updateTemporalParameters(minDate, maxDate);
+        l3ParametersForm.updateTemporalParameters(minDate, maxDate);
     }
 
     @Override
@@ -161,7 +161,7 @@ public class OrderTAProductionView extends OrderProductionView {
             processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
             processorParametersForm.validateForm();
-            binningParametersForm.validateForm();
+            l3ParametersForm.validateForm();
             //outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
@@ -186,7 +186,7 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
-        parameters.putAll(binningParametersForm.getValueMap());
+        parameters.putAll(l3ParametersForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }

@@ -98,7 +98,7 @@ public class ProductionRequestTest {
         Date date = ProductionRequest.DATE_FORMAT.parse("2011-07-13");
         Point point = gf.createPoint(new Coordinate(15.1, 11.6));
 
-        assertEquals("Calvalus rules!", req.getParameter("s"));
+        assertEquals("Calvalus rules!", req.getString("s"));
         assertEquals(true, req.getBoolean("b"));
         assertEquals(4, req.getInteger("i"));
         assertEquals(-2.3F, req.getFloat("f"), 1e-5F);
@@ -106,7 +106,7 @@ public class ProductionRequestTest {
         assertEquals(date, req.getDate("d"));
         assertTrue(point.equalsExact(req.getGeometry("g")));
 
-        assertEquals("Calvalus sucks?", req.getParameter("missingParam", "Calvalus sucks?"));
+        assertEquals("Calvalus sucks?", req.getString("missingParam", "Calvalus sucks?"));
         assertEquals(true, req.getBoolean("missingParam", true));
         assertEquals(234, (int) req.getInteger("missingParam", 234));
         assertEquals(1.9F, req.getFloat("missingParam", 1.9F), 1e-5F);
@@ -114,7 +114,7 @@ public class ProductionRequestTest {
         assertSame(date, req.getDate("missingParam", date));
         assertSame(point, req.getGeometry("missingParam", point));
 
-        assertNull(req.getParameter("missingParam", null));
+        assertNull(req.getString("missingParam", null));
         assertNull(req.getBoolean("missingParam", null));
         assertNull(req.getInteger("missingParam", null));
         assertNull(req.getFloat("missingParam", null));
@@ -123,7 +123,7 @@ public class ProductionRequestTest {
         assertNull(req.getGeometry("missingParam", null));
 
         try {
-            req.getParameter("missingParam");
+            req.getString("missingParam");
             fail("ProductionException expected");
         } catch (ProductionException e) {
             // ok

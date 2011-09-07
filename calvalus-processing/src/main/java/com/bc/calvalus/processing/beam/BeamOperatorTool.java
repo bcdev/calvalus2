@@ -118,7 +118,7 @@ public class BeamOperatorTool extends Configured implements Tool {
 
                     L3Config l3Config = L3Config.fromXml(wpsConfig.getLevel3Parameters());
                     String hadoopJobOutputDir = wpsConfig.getRequestOutputDir();
-                    L3FormatterConfig formatterConfig = L3FormatterConfig.create(wpsConfig.getFormatterParameters());
+                    L3FormatterConfig formatterConfig = L3FormatterConfig.fromXml(wpsConfig.getFormatterParameters());
                     L3Formatter formatter = new L3Formatter(getConf());
                     Geometry roiGeometry = JobUtils.createGeometry(job.getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
                     result = formatter.format(formatterConfig, l3Config, hadoopJobOutputDir, roiGeometry);

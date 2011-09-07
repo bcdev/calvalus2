@@ -58,18 +58,18 @@ public class L2ProductionType extends HadoopProductionType {
 
     static String createL2ProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Level 2 production using input path '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputPath"),
-                             productionRequest.getParameter("processorName"));
+                             productionRequest.getString("inputPath"),
+                             productionRequest.getString("processorName"));
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        String inputPath = productionRequest.getParameter("inputPath");
+        String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
-        String dateList = productionRequest.getParameter("dateList", null);
+        String dateList = productionRequest.getString("dateList", null);
         String[] inputFiles;
         if (dateList != null) {
             String[] splits =  dateList.trim().split("\\s");
@@ -95,11 +95,11 @@ public class L2ProductionType extends HadoopProductionType {
 
         String outputDir = getOutputDir(productionId, productionRequest);
 
-        String processorName = productionRequest.getParameter("processorName");
-        String processorParameters = productionRequest.getParameter("processorParameters");
+        String processorName = productionRequest.getString("processorName");
+        String processorParameters = productionRequest.getString("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameter("processorBundleName"),
-                                               productionRequest.getParameter("processorBundleVersion"));
+                                               productionRequest.getString("processorBundleName"),
+                                               productionRequest.getString("processorBundleVersion"));
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));

@@ -63,6 +63,11 @@ public class PlacemarkRecordSource implements RecordSource {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             return new PlacemarkRecordSource(inputStreamReader);
         }
+
+        @Override
+        protected boolean canDecodeContent(String recordSourceUrl) {
+            return recordSourceUrl.endsWith(".placemark");
+        }
     }
 
     private final class PlacemarkRecord implements Record {

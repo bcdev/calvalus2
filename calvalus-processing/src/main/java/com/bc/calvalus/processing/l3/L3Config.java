@@ -17,10 +17,23 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.*;
+import com.bc.calvalus.binning.Aggregator;
+import com.bc.calvalus.binning.AggregatorDescriptor;
+import com.bc.calvalus.binning.AggregatorDescriptorRegistry;
+import com.bc.calvalus.binning.BinManager;
+import com.bc.calvalus.binning.BinManagerImpl;
+import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.BinningContextImpl;
+import com.bc.calvalus.binning.BinningGrid;
+import com.bc.calvalus.binning.IsinBinningGrid;
+import com.bc.calvalus.binning.VariableContext;
+import com.bc.calvalus.binning.VariableContextImpl;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
+import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertyContainer;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
 @SuppressWarnings({"UnusedDeclaration"})
@@ -57,15 +70,30 @@ public class L3Config implements XmlConvertible {
     @Parameter(itemAlias = "aggregator")
     AggregatorConfiguration[] aggregators;
 
-    public static L3Config fromXml(String xml) {
+    public static L3Config get(Configuration jobConfig) {
+        String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
+        if (xml == null) {
+            throw new IllegalArgumentException("Missing L3 configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+        }
+        try {
+            return fromXml(xml);
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("Invalid L3 configuration: " + e.getMessage(), e);
+        }
+    }
+
+    public static L3Config fromXml(String xml) throws BindingException {
         return new XmlBinding().convertXmlToObject(xml, new L3Config());
     }
 
     @Override
     public String toXml() {
-        return new XmlBinding().convertObjectToXml(this);
+        try {
+            return new XmlBinding().convertObjectToXml(this);
+        } catch (BindingException e) {
+            throw new RuntimeException(e);
+        }
     }
-
 
     public int getNumRows() {
         return numRows;

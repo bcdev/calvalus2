@@ -16,4 +16,9 @@ public class TestRecordSourceSpi extends RecordSourceSpi {
         ProductRecordSourceTest.addPointRecord(recordSource, 2F, 2F);
         return recordSource;
     }
+
+    @Override
+    protected boolean canDecodeContent(String recordSourceUrl) {
+        return false;
+    }
 }

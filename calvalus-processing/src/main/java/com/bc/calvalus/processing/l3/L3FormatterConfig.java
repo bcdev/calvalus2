@@ -17,6 +17,9 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.xml.XmlBinding;
+import com.bc.calvalus.processing.xml.XmlConvertible;
+import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
@@ -26,7 +29,7 @@ import java.text.ParseException;
 /**
  * The configuration of the L3 formatter
  */
-public class L3FormatterConfig {
+public class L3FormatterConfig implements XmlConvertible {
 
     public static class BandConfiguration {
         String index;
@@ -48,17 +51,6 @@ public class L3FormatterConfig {
     @Parameter
     private String endTime;
 
-    /**
-     * Creates a new formatter configuration object.
-     * @param xml The configuration as an XML string.
-     * @return The new formatter configuration object.
-     */
-    public static L3FormatterConfig create(String xml) {
-        L3FormatterConfig formatterConfig = new L3FormatterConfig();
-        new XmlBinding().convertXmlToObject(xml, formatterConfig);
-        return formatterConfig;
-    }
-
     public L3FormatterConfig() {
         // used by DOM converter
     }
@@ -75,6 +67,27 @@ public class L3FormatterConfig {
         this.bands = bands;
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    /**
+     * Creates a new formatter configuration object.
+     *
+     * @param xml The configuration as an XML string.
+     * @return The new formatter configuration object.
+     * @throws com.bc.ceres.binding.BindingException
+     *          If the XML cannot be converted to a new formatter configuration object
+     */
+    public static L3FormatterConfig fromXml(String xml) throws BindingException {
+        return new XmlBinding().convertXmlToObject(xml, new L3FormatterConfig());
+    }
+
+    @Override
+    public String toXml() {
+        try {
+            return new XmlBinding().convertObjectToXml(this);
+        } catch (ConversionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getOutputType() {

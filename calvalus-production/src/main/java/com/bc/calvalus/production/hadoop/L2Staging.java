@@ -74,7 +74,7 @@ class L2Staging extends Staging {
                 stagingDir.mkdirs();
             }
 
-            String outputFormat = production.getProductionRequest().getParameter("outputFormat", "BEAM-DIMAP");
+            String outputFormat = production.getProductionRequest().getString("outputFormat", "BEAM-DIMAP");
             String extension;
             if (outputFormat.equals("BEAM-DIMAP")) {
                 extension = ".dim";

@@ -19,7 +19,6 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -51,13 +50,11 @@ public class L3Reducer extends Reducer<LongWritable, SpatialBin, LongWritable, T
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
-        L3Config l3Config = L3Config.fromXml(level3Parameters);
-        this.binManager = l3Config.getBinningContext().getBinManager();
+        this.binManager = L3Config.get(conf).getBinningContext().getBinManager();
     }
 
     @Override
     public Configuration getConf() {
         return conf;
     }
- }
+}

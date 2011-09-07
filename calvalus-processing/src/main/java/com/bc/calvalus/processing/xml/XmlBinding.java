@@ -1,8 +1,10 @@
 package com.bc.calvalus.processing.xml;
 
 import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertySet;
+import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.binding.dom.DefaultDomConverter;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.binding.dom.Xpp3DomElement;
@@ -43,38 +45,30 @@ public class XmlBinding {
         return new Xpp3DomElement(xpp3Dom);
     }
 
-    public <T> T convertXmlToObject(String xml, T object) {
+    public <T> T convertXmlToObject(String xml, T object) throws BindingException {
         convertXmlToPropertySet(xml, object.getClass(),
                                 PropertyContainer.createObjectBacked(object, parameterDescriptorFactory));
         return object;
     }
 
-    public Map<String, Object> convertXmlToMap(String xml, Class<?> schema) {
+    public Map<String, Object> convertXmlToMap(String xml, Class<?> schema) throws ValidationException, ConversionException {
         Map<String, Object> map = new HashMap<String, Object>();
         convertXmlToPropertySet(xml, schema,
                                 PropertyContainer.createMapBacked(map, schema, parameterDescriptorFactory));
         return map;
     }
 
-    public String convertObjectToXml(Object object) {
+    public String convertObjectToXml(Object object) throws ConversionException {
         DefaultDomConverter domConverter = new DefaultDomConverter(object.getClass(), parameterDescriptorFactory);
-        try {
-            DomElement parametersDom = new Xpp3DomElement("parameters");
-            domConverter.convertValueToDom(object, parametersDom);
-            return parametersDom.toXml();
-        } catch (BindingException e) {
-            throw new IllegalStateException("Failed to convert Java object to XML: " + e.getMessage(), e);
-        }
+        DomElement parametersDom = new Xpp3DomElement("parameters");
+        domConverter.convertValueToDom(object, parametersDom);
+        return parametersDom.toXml();
     }
 
-    private void convertXmlToPropertySet(String xml, Class<? extends Object> schema, PropertySet propertySet) {
+    private void convertXmlToPropertySet(String xml, Class<? extends Object> schema, PropertySet propertySet) throws ValidationException, ConversionException {
         propertySet.setDefaultValues();
         DefaultDomConverter domConverter = new DefaultDomConverter(schema, parameterDescriptorFactory);
         DomElement domElement = convertXmlToDomElement(xml);
-        try {
-            domConverter.convertDomToValue(domElement, propertySet);
-        } catch (BindingException e) {
-            throw new IllegalStateException("Failed to convert XML to Java object: " + e.getMessage(), e);
-        }
+        domConverter.convertDomToValue(domElement, propertySet);
     }
 }

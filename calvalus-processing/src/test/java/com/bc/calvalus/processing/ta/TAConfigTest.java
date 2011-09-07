@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ta;
 
 
-import com.bc.calvalus.processing.ta.TAConfig;
+import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -40,7 +40,7 @@ public class TAConfigTest {
     }
 
     @Test
-    public void testXmlConversions() {
+    public void testXmlConversions() throws BindingException {
         String xml = config.toXml();
         assertNotNull(xml);
 

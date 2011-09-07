@@ -4,8 +4,12 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.client.map.RegionMapWidget;
-import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -140,6 +144,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         views = new PortalView[]{
                 new OrderL2ProductionView(this),
+                new OrderMAProductionView(this),
                 new OrderL3ProductionView(this),
                 new OrderTAProductionView(this),
                 new ManageRegionsView(this),

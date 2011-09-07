@@ -4,14 +4,14 @@ import com.google.gwt.junit.client.GWTTestCase;
 
 import java.util.Map;
 
-public class BinningParametersFormTest extends GWTTestCase {
+public class L3ParametersFormTest extends GWTTestCase {
     public String getModuleName() {
         return "com.bc.calvalus.portal.CalvalusPortalJUnit";
     }
 
     public void testValueMap() {
-        BinningParametersForm binningParametersForm = new BinningParametersForm();
-        Map<String, String> valueMap = binningParametersForm.getValueMap();
+        L3ParametersForm l3ParametersForm = new L3ParametersForm();
+        Map<String, String> valueMap = l3ParametersForm.getValueMap();
         assertNotNull(valueMap);
         assertEquals(10, valueMap.size());
 

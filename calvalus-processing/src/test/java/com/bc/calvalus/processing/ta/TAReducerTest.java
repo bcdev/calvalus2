@@ -83,7 +83,8 @@ public class TAReducerTest {
     }
 
     private Configuration createConfiguration() {
-        Configuration configuration = new Configuration();
+        Configuration configuration = null;
+        configuration = new Configuration();
         L3Config l3Config = createL3Config();
         configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
         configuration.set(JobConfigNames.CALVALUS_MIN_DATE, "2010-01-01");

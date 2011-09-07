@@ -103,7 +103,7 @@ public class L3FormatterTool extends Configured implements Tool {
         final String formattingWpsRequest = FileUtil.readFile(requestPath);
 
         WpsConfig formattingWpsConfig = new WpsConfig(formattingWpsRequest);
-        L3FormatterConfig formatterConfig = L3FormatterConfig.create(formattingWpsConfig.getFormatterParameters());
+        L3FormatterConfig formatterConfig = L3FormatterConfig.fromXml(formattingWpsConfig.getFormatterParameters());
         String hadoopJobOutputDir = formattingWpsConfig.getRequestOutputDir();
 
         String processingWps = loadProcessingWpsXml(hadoopJobOutputDir);

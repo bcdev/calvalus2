@@ -18,13 +18,13 @@ public class PlacemarkRecordSourceTest {
 
     @Test
     public void testThatPlacemarkRecordSourceIsRegisteredAsService() throws Exception {
-        RecordSourceSpi spi = RecordSourceSpi.get("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
+        RecordSourceSpi spi = RecordSourceSpi.getForClassName("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
         assertNotNull(spi);
     }
 
     @Test
     public void testThatPlacemarkSpiCanProduce78Records() throws Exception {
-        RecordSourceSpi spi = RecordSourceSpi.get("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
+        RecordSourceSpi spi = RecordSourceSpi.getForClassName("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
         assertNotNull(spi);
         String url = getClass().getResource("CEOS_AERONET.placemark").toURI().toString();
         RecordSource recordSource = spi.createRecordSource(url);
@@ -34,7 +34,7 @@ public class PlacemarkRecordSourceTest {
 
     @Test
     public void testThatPlacemarkSpiCanProduce78RecordsFromHDFS() throws Exception {
-        RecordSourceSpi spi = RecordSourceSpi.get("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
+        RecordSourceSpi spi = RecordSourceSpi.getForClassName("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
         assertNotNull(spi);
         String url = "hdfs://cvmaster00:9000/calvalus/auxiliary/LC_cci/CEOS_AERONET.placemark ";
         try {

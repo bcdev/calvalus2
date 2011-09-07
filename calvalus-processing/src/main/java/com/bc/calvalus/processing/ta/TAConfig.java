@@ -17,9 +17,13 @@
 package com.bc.calvalus.processing.ta;
 
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
+import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 
@@ -41,15 +45,29 @@ public class TAConfig implements XmlConvertible {
         return regions;
     }
 
-    @Override
-    public String toXml() {
-        return new XmlBinding().convertObjectToXml(this);
+    public static TAConfig get(Configuration conf) {
+        String xml = conf.get(JobConfigNames.CALVALUS_TA_PARAMETERS);
+        if (xml == null) {
+            throw new IllegalArgumentException("Missing trend analysis configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+        }
+        try {
+            return fromXml(xml);
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("Invalid trend analysis configuration: " + e.getMessage(), e);
+        }
     }
 
-    public static TAConfig fromXml(String xml) {
-        TAConfig config = new TAConfig();
-        new XmlBinding().convertXmlToObject(xml, config);
-        return config;
+    public static TAConfig fromXml(String xml) throws BindingException {
+        return new XmlBinding().convertXmlToObject(xml, new TAConfig());
+    }
+
+    @Override
+    public String toXml() {
+        try {
+            return new XmlBinding().convertObjectToXml(this);
+        } catch (ConversionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class RegionConfiguration {

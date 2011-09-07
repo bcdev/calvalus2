@@ -74,7 +74,7 @@ public class TAProductionTypeTest {
     @Test
     public void testCreateTAConfig() throws ProductionException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        TAConfig taConfig = TAProductionType.createTAConfig(productionRequest);
+        TAConfig taConfig = TAProductionType.getTAConfig(productionRequest);
         assertNotNull(taConfig);
         TAConfig.RegionConfiguration[] taConfigRegions = taConfig.getRegions();
         assertNotNull(taConfigRegions);

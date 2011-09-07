@@ -18,11 +18,13 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -55,8 +57,12 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
     }
 
-    public L3Config getL3Config() {
-        return L3Config.fromXml(JobConfigNames.CALVALUS_L3_PARAMETERS);
+    public L3Config getL3Config() throws WorkflowException {
+        try {
+            return L3Config.fromXml(JobConfigNames.CALVALUS_L3_PARAMETERS);
+        } catch (BindingException e) {
+            throw new WorkflowException("Illegal L3 parameters: " + e.getMessage(), e);
+        }
     }
 
 

@@ -57,8 +57,7 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        String level3Parameters = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
-        L3Config l3Config = L3Config.fromXml(level3Parameters);
+        L3Config l3Config = L3Config.get(conf);
         this.binningGrid = l3Config.getBinningGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);

@@ -37,12 +37,21 @@ public abstract class RecordSourceSpi {
     public abstract RecordSource createRecordSource(String recordSourceUrl) throws Exception;
 
     /**
+     * Checks if the content identified by the given URL can be decoded by this SPI.
+     * A simple test could be to just check for known filename extensions.
+     *
+     * @param recordSourceUrl A record source URL.
+     * @return {@code true}, if this SPI can decode the content of the given URL.
+     */
+    protected abstract boolean canDecodeContent(String recordSourceUrl);
+
+    /**
      * Gets a SPI instance for the given SPI class name.
      *
      * @param className The SPI class name.
      * @return The SPI instance, or {@code null} if {@code className} is not the name of a registered SPI.
      */
-    public static RecordSourceSpi get(String className) {
+    public static RecordSourceSpi getForClassName(String className) {
         ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
         for (RecordSourceSpi spi : loader) {
             if (spi.getClass().getName().equals(className)) {
@@ -51,4 +60,21 @@ public abstract class RecordSourceSpi {
         }
         return null;
     }
+
+    /**
+     * Gets a SPI instance for the given URL.
+     *
+     * @param recordSourceUrl The record source URL.
+     * @return The SPI instance, or {@code null} if {@code recordSourceUrl} is not recorgnized by any registered SPI.
+     */
+    public static RecordSourceSpi getForUrl(String recordSourceUrl) {
+        ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
+        for (RecordSourceSpi spi : loader) {
+            if (spi.canDecodeContent(recordSourceUrl)) {
+                return spi;
+            }
+        }
+        return null;
+    }
+
 }

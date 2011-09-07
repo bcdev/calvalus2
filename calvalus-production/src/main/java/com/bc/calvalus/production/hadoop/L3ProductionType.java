@@ -11,14 +11,20 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -43,19 +49,19 @@ public class L3ProductionType extends HadoopProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        String inputPath = productionRequest.getParameter("inputPath");
+        String inputPath = productionRequest.getString("inputPath");
         List<DatePair> datePairList = getDatePairList(productionRequest, 10);
 
-        String processorName = productionRequest.getParameter("processorName");
-        String processorParameters = productionRequest.getParameter("processorParameters");
+        String processorName = productionRequest.getString("processorName");
+        String processorParameters = productionRequest.getString("processorParameters");
         String processorBundle = String.format("%s-%s",
-                                               productionRequest.getParameter("processorBundleName"),
-                                               productionRequest.getParameter("processorBundleVersion"));
+                                               productionRequest.getString("processorBundleName"),
+                                               productionRequest.getString("processorBundleVersion"));
 
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
-        L3Config l3Config = createL3Config(productionRequest);
+        String l3ConfigXml = getL3ConfigXml(productionRequest);
 
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (int i = 0; i < datePairList.size(); i++) {
@@ -71,7 +77,7 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-                jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+                jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
@@ -111,14 +117,14 @@ public class L3ProductionType extends HadoopProductionType {
 
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Level 3 production using input path '%s' and L2 processor '%s'",
-                             productionRequest.getParameter("inputPath"),
-                             productionRequest.getParameter("processorName"));
+                             productionRequest.getString("inputPath"),
+                             productionRequest.getString("processorName"));
 
     }
 
     static List<DatePair> getDatePairList(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
         List<DatePair> datePairList = new ArrayList<DatePair>();
-        String dateList = productionRequest.getParameter("dateList", null);
+        String dateList = productionRequest.getString("dateList", null);
 
         if (dateList != null) {
             String[] splits = dateList.trim().split("\\s");
@@ -158,11 +164,27 @@ public class L3ProductionType extends HadoopProductionType {
         return datePairList;
     }
 
-    static L3Config createL3Config(ProductionRequest productionRequest) throws ProductionException {
+    public static String getL3ConfigXml(ProductionRequest productionRequest) throws ProductionException {
+        String l3ConfigXml = productionRequest.getString(JobConfigNames.CALVALUS_L3_PARAMETERS, null);
+        if (l3ConfigXml == null) {
+            L3Config l3Config = getL3Config(productionRequest);
+            l3ConfigXml = l3Config.toXml();
+        } else {
+            // Check L3 XML before sending it to Hadoop
+            try {
+                L3Config.fromXml(l3ConfigXml);
+            } catch (BindingException e) {
+                throw new ProductionException("Illegal L3 configuration: " + e.getMessage(), e);
+            }
+        }
+        return l3ConfigXml;
+    }
+
+    static L3Config getL3Config(ProductionRequest productionRequest) throws ProductionException {
         L3Config l3Config = new L3Config();
         l3Config.setNumRows(getNumRows(productionRequest));
         l3Config.setSuperSampling(productionRequest.getInteger("superSampling", 1));
-        l3Config.setMaskExpr(productionRequest.getParameter("maskExpr", ""));
+        l3Config.setMaskExpr(productionRequest.getString("maskExpr", ""));
         l3Config.setVariables(getVariables(productionRequest));
         l3Config.setAggregators(getAggregators(productionRequest));
         return l3Config;
@@ -173,8 +195,8 @@ public class L3ProductionType extends HadoopProductionType {
         L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[variableCount];
         for (int i = 0; i < variableCount; i++) {
             String prefix = "variables." + i;
-            String variableName = request.getParameter(prefix + ".name");
-            String aggregatorName = request.getParameter(prefix + ".aggregator");
+            String variableName = request.getString(prefix + ".name");
+            String aggregatorName = request.getString(prefix + ".aggregator");
             Double weightCoeff = request.getDouble(prefix + ".weightCoeff", null);
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal

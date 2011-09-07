@@ -53,7 +53,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.fromXml(jobConfig.get(JobConfigNames.CALVALUS_MA_PARAMETERS));
+        final MAConfig maConfig = MAConfig.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         // write initial log entry for runtime measurements
