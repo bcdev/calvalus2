@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.*;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -182,8 +183,7 @@ public class ProductionTool {
         if (productionId.startsWith("job_")) {
             say("Killing Hadoop job '" + productionId + "'...");
             Configuration hadoopConfig = new Configuration();
-            hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
-            hadoopConfig.set("mapred.job.tracker", config.get("calvalus.hadoop.mapred.job.tracker"));
+            HadoopProductionType.setJobConfig(hadoopConfig, config);
             try {
                 JobClient jobClient = new JobClient(new JobConf(hadoopConfig));
                 RunningJob job = jobClient.getJob(productionId);
