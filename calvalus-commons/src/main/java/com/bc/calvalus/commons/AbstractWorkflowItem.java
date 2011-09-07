@@ -46,14 +46,23 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
         statusListeners.add(l);
     }
 
+    /**
+     * @return the current status.
+     */
     @Override
-    public ProcessStatus getStatus() {
+    public final ProcessStatus getStatus() {
         return status;
     }
 
+    /**
+     * Sets the new status.
+     *
+     * @param newStatus The new status.
+     * @throws NullPointerException if newStatus is null.
+     */
     @Override
-    public void setStatus(ProcessStatus newStatus) {
-        if (!status.equals(newStatus)) {
+    public final void setStatus(ProcessStatus newStatus) {
+        if (!newStatus.equals(status)) {
             ProcessStatus oldStatus = status;
             status = newStatus;
             fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus, new Date()));
@@ -78,12 +87,14 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
 
     @Override
     public void handleStatusChanged(WorkflowStatusEvent event) {
+        setTimesOnStateTransitionEvent(event);
+    }
+
+    private void setTimesOnStateTransitionEvent(WorkflowStatusEvent event) {
         ProcessState oldState = event.getOldStatus().getState();
         ProcessState newState = event.getNewStatus().getState();
         if (oldState != newState && event.getSource() == this) {
-            if (newState == ProcessState.UNKNOWN) {
-               throw new IllegalStateException("Transition to unknown state is not allowed.");
-            } else if (newState == ProcessState.SCHEDULED) {
+            if (newState == ProcessState.SCHEDULED) {
                 setSubmitTime(event.getTime());
             } else if (newState == ProcessState.RUNNING) {
                 setStartTime(event.getTime());
@@ -99,16 +110,25 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
         }
     }
 
+    /**
+     * @return The workflow item's submit time, or {@code null} if unknown.
+     */
     @Override
     public Date getSubmitTime() {
         return submitTime;
     }
 
+    /**
+     * @return The workflow item's start time, or {@code null} if unknown.
+     */
     @Override
     public Date getStartTime() {
         return startTime;
     }
 
+    /**
+     * @return The workflow item's stop time, or {@code null} if unknown.
+     */
     @Override
     public Date getStopTime() {
         return stopTime;

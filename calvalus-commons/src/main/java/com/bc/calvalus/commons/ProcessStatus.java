@@ -37,6 +37,29 @@ public class ProcessStatus {
         this.progress = progress;
     }
 
+    /**
+     * Aggregates the given statuses.
+     * <ul>
+     * <li>The resulting <b>state</b> is computed as follows:
+     * <ol>
+     * <li>If a single state is CANCELLED: CANCELLED</li>
+     * <li>If a single state is ERROR: ERROR</li>
+     * <li>If all states are COMPLETE: COMPLETE</li>
+     * <li>If some are COMPLETE or some are RUNNING: RUNNING</li>
+     * <li>If none are COMPLETE or RUNNING, but some are SCHEDULED: SCHEDULED</li>
+     * <li>If neither of the above: UNKNOWN</li>
+     * </ol>
+     * </li>
+     * <li>The resulting <b>progress</b> of is the average progress of all statuses</b></li>
+     * <li>The resulting <b>message</b> is either the CANCELLED / ERROR message or
+     * the first non-empty message</b></li>
+     * </ul>
+     *
+     * @param statuses The statuses to aggregate. If {@code statuses} is not given,
+     * the method returns {@link ProcessStatus#UNKNOWN} in order to avoid returning {@code null}.
+     * @return The aggregated status.
+     * @throws NullPointerException if any of the given {@code statuses} is {@code null}.
+     */
     public static ProcessStatus aggregate(ProcessStatus... statuses) {
         for (int i = 0; i < statuses.length; i++) {
             if (statuses[i] == null) {
@@ -45,7 +68,7 @@ public class ProcessStatus {
         }
 
         if (statuses.length == 0) {
-            return null;
+            return UNKNOWN;
         } else if (statuses.length == 1) {
             return statuses[0];
         }
@@ -86,25 +109,33 @@ public class ProcessStatus {
     }
 
     private static ProcessState getCummulativeState(ProcessStatus[] statuses) {
-        Map<ProcessState, Integer> map = new EnumMap<ProcessState, Integer>(ProcessState.class);
+        Map<ProcessState, Integer> stateCounters = new EnumMap<ProcessState, Integer>(ProcessState.class);
+        // Init state counts to zero
         for (ProcessState value : ProcessState.values()) {
-            map.put(value, 0);
+            stateCounters.put(value, 0);
         }
+        // Count states
         for (ProcessStatus status : statuses) {
-            map.put(status.getState(), map.get(status.getState()) + 1);
+            int oldCount = stateCounters.get(status.getState());
+            stateCounters.put(status.getState(), oldCount + 1);
         }
-        if (map.get(ProcessState.COMPLETED) == statuses.length) {
+        // All are COMPLETE --> COMPLETE
+        if (stateCounters.get(ProcessState.COMPLETED) == statuses.length) {
             return ProcessState.COMPLETED;
         }
-        if (map.get(ProcessState.COMPLETED) > 0) {
+        // Only some are COMPLETE --> So its must be still RUNNING
+        if (stateCounters.get(ProcessState.COMPLETED) > 0) {
             return ProcessState.RUNNING;
         }
-        if (map.get(ProcessState.RUNNING) > 0) {
+        // None COMPLETE, some are RUNNING --> So its RUNNING
+        if (stateCounters.get(ProcessState.RUNNING) > 0) {
             return ProcessState.RUNNING;
         }
-        if (map.get(ProcessState.SCHEDULED) > 0) {
+        // None COMPLETE, nore RUNNING, some are SCHEDULED --> So its SCHEDULED
+        if (stateCounters.get(ProcessState.SCHEDULED) > 0) {
             return ProcessState.SCHEDULED;
         }
+        // UNKNOWN if the state is none of the above.
         return ProcessState.UNKNOWN;
     }
 

@@ -259,11 +259,10 @@ public class WorkflowTest {
         assertNotNull(job.getStartTime());
         assertNotNull(job.getStopTime());
 
-        try {
-            job.setStatus(new ProcessStatus(ProcessState.UNKNOWN));
-            fail("Transition to UNKNOWN is not allowed.");
-        } catch (IllegalStateException e) {
-        }
+        job.setStatus(new ProcessStatus(ProcessState.UNKNOWN));
+        assertNotNull(job.getSubmitTime());
+        assertNotNull(job.getStartTime());
+        assertNotNull(job.getStopTime());
     }
 
     @Test

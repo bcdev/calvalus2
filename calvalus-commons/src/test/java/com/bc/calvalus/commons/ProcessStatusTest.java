@@ -41,7 +41,7 @@ public class ProcessStatusTest {
 
     @Test
     public void testAggregate() {
-        assertEquals(null,
+        assertEquals(ProcessStatus.UNKNOWN,
                      ProcessStatus.aggregate());
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!"),
                      ProcessStatus.aggregate(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!")));
@@ -91,6 +91,7 @@ public class ProcessStatusTest {
             // ok
         }
     }
+
 
     @Test
     public void testIsDone() {
