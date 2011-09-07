@@ -7,6 +7,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A Hadoop writable for {@link com.bc.calvalus.processing.ma.Record}s. The supported valuze types are given
@@ -37,8 +38,8 @@ public class RecordWritable implements Writable {
         DATE('T', Date.class),
         AGGREGATED_NUMBER('A', AggregatedNumber.class);
 
-        private static final HashMap<Character, Type> TYPE_ID_TO_TYPE_MAP = new HashMap<Character, Type>();
-        private static final HashMap<Class, Type> CLASS_TO_TYPE_MAP = new HashMap<Class, Type>();
+        private static final Map<Character, Type> TYPE_ID_TO_TYPE_MAP = new HashMap<Character, Type>();
+        private static final Map<Class, Type> CLASS_TO_TYPE_MAP = new HashMap<Class, Type>();
 
         private final char id;
         private final Class type;
