@@ -14,7 +14,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -26,7 +31,7 @@ public class L2ProductionType extends HadoopProductionType {
 
     static final String NAME = "L2";
 
-    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -96,7 +101,7 @@ public class L2ProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
         String processorName = productionRequest.getString("processorName");
-        String processorParameters = productionRequest.getString("processorParameters");
+        String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
         String processorBundle = String.format("%s-%s",
                                                productionRequest.getString("processorBundleName"),
                                                productionRequest.getString("processorBundleVersion"));
