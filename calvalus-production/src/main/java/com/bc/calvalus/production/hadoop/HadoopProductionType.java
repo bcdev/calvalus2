@@ -109,17 +109,17 @@ public abstract class HadoopProductionType implements ProductionType {
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         try {
-            return inventoryService.getDataInputPaths(inputPatterns);
+            return inventoryService.globPaths(inputPatterns);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }
     }
 
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
-        String defaultDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
+        String defaultDir = String.format("home/%s/%s", productionRequest.getUserName(), productionId);
         String outputPath = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR,
                                                         productionRequest.getString("outputPath", defaultDir));
-        return getInventoryService().getDataOutputPath(outputPath + dirSuffix);
+        return getInventoryService().getPath(outputPath + dirSuffix);
     }
 
     /**

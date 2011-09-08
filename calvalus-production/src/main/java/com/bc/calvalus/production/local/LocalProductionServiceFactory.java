@@ -1,13 +1,8 @@
 package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.inventory.InventoryService;
-import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceFactory;
-import com.bc.calvalus.production.ProductionServiceImpl;
+import com.bc.calvalus.production.*;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
@@ -27,16 +22,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                     File localContextDir,
                                     File localStagingDir) throws ProductionException, IOException {
 
-        InventoryService inventoryService = new LocalInventoryService(
-                // Return some dummy product sets
-                new ProductSet("MERIS RR 2004-2009", "MER_RR__1P/r03/${yyyy}/${dd}/${MM}/${dd}/*.N1", asDate("2004-01-01"), asDate("2009-12-31")),
-                new ProductSet("MERIS RR 2004", "MER_RR__1P/r03/2004/${dd}/${MM}/${dd}/*.N1", asDate("2004-01-01"), asDate("2004-12-31")),
-                new ProductSet("MERIS RR 2005", "MER_RR__1P/r03/2005/${dd}/${MM}/${dd}/*.N1", asDate("2005-01-01"), asDate("2005-12-31")),
-                new ProductSet("MERIS RR 2006", "MER_RR__1P/r03/2006/${dd}/${MM}/${dd}/*.N1", asDate("2006-01-01"), asDate("2006-12-31")),
-                new ProductSet("MERIS RR 2007", "MER_RR__1P/r03/2007/${dd}/${MM}/${dd}/*.N1", asDate("2007-01-01"), asDate("2007-12-31")),
-                new ProductSet("MERIS RR 2008", "MER_RR__1P/r03/2008/${dd}/${MM}/${dd}/*.N1", asDate("2008-01-01"), asDate("2008-12-31")),
-                new ProductSet("MERIS RR 2009", "MER_RR__1P/r03/2009/${dd}/${MM}/${dd}/*.N1", asDate("2009-01-01"), asDate("2009-12-31"))
-        );
+        InventoryService inventoryService = new LocalInventoryService();
 
         LocalProcessingService processingService = new LocalProcessingService(
                 new ProcessorDescriptor("pc1", "MERIS IOP Case2R",

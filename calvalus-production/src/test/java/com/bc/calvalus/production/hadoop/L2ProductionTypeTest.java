@@ -75,7 +75,7 @@ public class L2ProductionTypeTest {
         assertTrue(workflow instanceof L2WorkflowItem);
 
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03", inputFiles);
@@ -111,7 +111,7 @@ public class L2ProductionTypeTest {
         assertEquals(0, workflowItems.length);
         assertTrue(workflow instanceof L2WorkflowItem);
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +
@@ -175,7 +175,7 @@ public class L2ProductionTypeTest {
         assertEquals(0, workflowItems.length);
         assertTrue(workflow instanceof L2WorkflowItem);
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +

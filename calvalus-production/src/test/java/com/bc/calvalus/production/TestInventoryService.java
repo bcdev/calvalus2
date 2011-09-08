@@ -22,10 +22,10 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String[] getDataInputPaths(List<String> inputRegexs) {
-        String[] inputPathes = new String[inputRegexs.size()];
-        for (int i = 0; i < inputRegexs.size(); i++) {
-            String inputRegex = inputRegexs.get(i);
+    public String[] globPaths(List<String> pathPatterns) {
+        String[] inputPathes = new String[pathPatterns.size()];
+        for (int i = 0; i < pathPatterns.size(); i++) {
+            String inputRegex = pathPatterns.get(i);
 
             if (inputRegex.contains("*")) {
                 throw new IllegalArgumentException("Hey, wildcards are not supported! This is a test class!");
@@ -39,7 +39,7 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String getDataOutputPath(String outputPath) {
+    public String getPath(String outputPath) {
         if (!outputPath.startsWith("/")) {
             outputPath = "/calvalus/outputs/" + outputPath;
         }

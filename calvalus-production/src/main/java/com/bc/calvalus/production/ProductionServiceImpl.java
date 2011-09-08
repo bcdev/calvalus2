@@ -13,6 +13,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -230,16 +231,40 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws ProductionException {
         try {
-            stagingService.close();
-        } finally {
             try {
-                processingService.close();
+                stagingService.close();
             } finally {
-                productionStore.close();
+                try {
+                    processingService.close();
+                } finally {
+                    productionStore.close();
+                }
             }
+        } catch (Exception e) {
+            throw new ProductionException("Failed to close production service: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String[] listUserFiles(String userName, String dirPath) throws ProductionException {
+        try {
+            String glob = getUserGlob(userName, dirPath);
+            return inventoryService.globPaths(Arrays.asList(glob));
+        } catch (IOException e) {
+            throw new ProductionException("Failed to list user files: " + e.getMessage(), e);
+        }
+    }
+
+    private String getUserGlob(String userName, String dirPath) {
+        String glob;
+        if (dirPath.isEmpty() || "/".equals(dirPath)) {
+            glob = String.format("home/%s/.*", userName.toLowerCase());
+        } else {
+            glob = String.format("home/%s/%s/.*", userName.toLowerCase(), dirPath);
+        }
+        return glob;
     }
 
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {

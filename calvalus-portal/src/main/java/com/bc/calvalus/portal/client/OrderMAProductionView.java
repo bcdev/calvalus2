@@ -68,7 +68,7 @@ public class OrderMAProductionView extends OrderProductionView {
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
 
-        maParametersForm = new MAParametersForm();
+        maParametersForm = new MAParametersForm(portalContext);
         maParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
 
         Button orderButton = new Button("Order Production");

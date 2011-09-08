@@ -29,7 +29,7 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/eodata/MER_FSG_1P/${region}/${yyyy}/${MM}/${dd}/.*.N1</wps:LiteralData>
+                <wps:LiteralData>MER_FSG_1P/${region}/${yyyy}/${MM}/${dd}/.*.N1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

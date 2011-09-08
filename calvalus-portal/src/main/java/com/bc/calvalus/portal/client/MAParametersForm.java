@@ -1,46 +1,17 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
-import com.google.gwt.cell.client.EditTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
-import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.geom.LatLngBounds;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.cellview.client.CellTable;
-import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.ProvidesKey;
-import com.google.gwt.view.client.SingleSelectionModel;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-
-import static java.lang.Math.*;
 
 /**
  * Form for MA (matup analysis) parameters.
@@ -57,11 +28,11 @@ public class MAParametersForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
-     ListBox recordSources;
-     @UiField
-     Button addRecordSourceButton;
-     @UiField
-     Button removeRecordSourceButton;
+    ListBox recordSources;
+    @UiField
+    Button addRecordSourceButton;
+    @UiField
+    Button removeRecordSourceButton;
 
     @UiField
     IntegerBox macroPixelSize;
@@ -78,7 +49,7 @@ public class MAParametersForm extends Composite {
     TextBox goodRecordExpression;
 
 
-    public MAParametersForm() {
+    public MAParametersForm(PortalContext portalContext) {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
 
         initWidget(uiBinder.createAndBindUi(this));
@@ -102,11 +73,29 @@ public class MAParametersForm extends Composite {
         filteredMeanCoeff.setValue(1.5);
         outputGroupName.setValue("SITE");
 
-        recordSources.addItem("file1.txt");
-        recordSources.addItem("file2.csv");
-        recordSources.addItem("file3.placemark");
-        recordSources.setSelectedIndex(0);
+        portalContext.getBackendService().listUserFiles("", new AsyncCallback<String[]>() {
+            @Override
+            public void onSuccess(String[] filePaths) {
+                recordSources.clear();
+                final String BASE_DIR = "calvalus/home/";
+                for (String filePath : filePaths) {
+                    int baseDirPos = filePath.indexOf(BASE_DIR);
+                    if (baseDirPos >= 0) {
+                        recordSources.addItem(filePath.substring(baseDirPos + BASE_DIR.length()), filePath);
+                    } else {
+                        recordSources.addItem(filePath, filePath);
+                    }
+                }
+                if (recordSources.getItemCount() > 0) {
+                    recordSources.setSelectedIndex(0);
+                }
+            }
 
+            @Override
+            public void onFailure(Throwable caught) {
+                // todo
+            }
+        });
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
@@ -131,19 +120,19 @@ public class MAParametersForm extends Composite {
         }
 
         boolean maxTimeDifferenceValid = maxTimeDifference.getValue() >= 0;
-         if (!maxTimeDifferenceValid) {
-             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables time criterion)");
-         }
+        if (!maxTimeDifferenceValid) {
+            throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables time criterion)");
+        }
 
         boolean outputGroupNameValid = !outputGroupName.getText().trim().isEmpty();
-              if (!outputGroupNameValid) {
-                  throw new ValidationException(maxTimeDifference, "Output group name must be given.");
-              }
+        if (!outputGroupNameValid) {
+            throw new ValidationException(maxTimeDifference, "Output group name must be given.");
+        }
 
         boolean recordSourceValid = recordSources.getSelectedIndex() >= 0;
-          if (!recordSourceValid) {
-                  throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
-              }
+        if (!recordSourceValid) {
+            throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
+        }
 
     }
 
@@ -161,4 +150,4 @@ public class MAParametersForm extends Composite {
         return parameters;
     }
 
- }
+}

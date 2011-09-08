@@ -12,6 +12,8 @@ public interface BackendServiceAsync {
 
     void storeRegions(DtoRegion[] regions, AsyncCallback<Void> callback);
 
+    void listUserFiles(String dir, AsyncCallback<String[]> callback);
+
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);

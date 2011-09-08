@@ -1,8 +1,8 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.*;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.*;
@@ -10,7 +10,8 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import java.io.*;
+import java.io.IOException;
+import java.security.Principal;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -174,6 +175,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    @Override
+    public String[] listUserFiles(String dir) throws BackendServiceException {
+        try {
+            return productionService.listUserFiles(getUserName(), dir);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
     private DtoProductSet convert(ProductSet productSet) {
         return new DtoProductSet(productSet.getName(),
                                  productSet.getPath(),
@@ -193,9 +203,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private DtoProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
-        int numElems = outputVariables != null ? outputVariables.length : 0;
-        DtoProcessorVariable[] processorVariables = new DtoProcessorVariable[numElems];
-        for (int i = 0; i < numElems; i++) {
+        if (outputVariables == null) {
+            return new DtoProcessorVariable[0];
+        }
+        DtoProcessorVariable[] processorVariables = new DtoProcessorVariable[outputVariables.length];
+        for (int i = 0; i < outputVariables.length; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             DtoProcessorVariable dtoProcessorVariable = new DtoProcessorVariable(outputVariable.getName(),
                                                                                  outputVariable.getDefaultAggregator(),
@@ -247,9 +259,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private ProductionRequest convert(DtoProductionRequest gwtProductionRequest) {
-        String userName = getThreadLocalRequest().getRemoteUser();
         return new ProductionRequest(gwtProductionRequest.getProductionType(),
-                                     userName != null ? userName : "calvalus",
+                                     getUserName(),
                                      gwtProductionRequest.getProductionParameters());
     }
 
@@ -298,11 +309,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void startObservingProductionService() {
         statusObserver = new Timer("StatusObserver", true);
         statusObserver.scheduleAtFixedRate(new TimerTask() {
-                                               @Override
-                                               public void run() {
-                                                   updateProductionStatuses();
-                                               }
-                                           }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
+            @Override
+            public void run() {
+                updateProductionStatuses();
+            }
+        }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
     }
 
     private void updateProductionStatuses() {
@@ -315,6 +326,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private String getUserName() {
-        return getThreadLocalRequest().getUserPrincipal().getName();
+        Principal userPrincipal = getThreadLocalRequest().getUserPrincipal();
+        if (userPrincipal != null) {
+            return userPrincipal.getName();
+        }
+        String userName = getThreadLocalRequest().getRemoteUser();
+        if (userName != null) {
+            return userName;
+        }
+        return "anonymous";
     }
 }

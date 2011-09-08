@@ -22,15 +22,15 @@ public interface InventoryService {
 
     /**
      *
-     * @param inputRegexs A list of relative or absolute data input path which may contain wildcards.
+     * @param pathPatterns A list of relative or absolute data paths which may contain regular expressions  (e.g. the file '*' wildcards is written as '.*').
      * @return An array of fully qualified URIs comprising the filesystem and absolute data input path.
      * @throws java.io.IOException If an I/O error occurs.
      */
-    String[] getDataInputPaths(List<String> inputRegexs) throws IOException;
+    String[] globPaths(List<String> pathPatterns) throws IOException;
 
     /**
-     * @param outputPath A relative or absolute data output path.
+     * @param path A relative or absolute path.
      * @return A fully qualified URI comprising the filesystem and absolute data output path.
      */
-    String getDataOutputPath(String outputPath);
+    String getPath(String path);
 }

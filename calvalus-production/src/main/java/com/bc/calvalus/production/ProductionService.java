@@ -3,8 +3,6 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 
-import java.io.IOException;
-
 /**
  * The interface to the Calvalus production service.
  *
@@ -59,26 +57,30 @@ public interface ProductionService {
 
     /**
      * Requests cancellation of productions with given IDs.
+     *
      * @param productionIds The production IDs.
      * @throws ProductionException If a service error occurred.
      */
-    void cancelProductions(String ... productionIds) throws ProductionException;
+    void cancelProductions(String... productionIds) throws ProductionException;
 
     /**
      * Requests deletion of productions with given IDs.
+     *
      * @param productionIds The production IDs.
      * @throws ProductionException If a service error occurred.
      */
-    void deleteProductions(String ... productionIds) throws ProductionException;
+    void deleteProductions(String... productionIds) throws ProductionException;
 
     /**
      * Requests stating of productions with given IDs.
+     *
      * @param productionIds The production IDs.
      * @throws ProductionException If a service error occurred.
      */
-    void stageProductions(String ... productionIds) throws ProductionException;
+    void stageProductions(String... productionIds) throws ProductionException;
 
     // todo - actually the service shall update itself on a regular basis (nf)
+
     /**
      * A request to retrieve and update the status of all workflows.
      */
@@ -88,5 +90,14 @@ public interface ProductionService {
      * Indicates the service will no longer be used.
      * Invocation has no additional effect if already closed.
      */
-    void close() throws Exception;
+    void close() throws ProductionException;
+
+    /**
+     * Gets user owned files.
+     *
+     * @param userName
+     * @param glob A glob that may contain
+     * @return The listing of files.
+     */
+    String[] listUserFiles(String userName, String glob) throws ProductionException;
 }

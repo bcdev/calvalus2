@@ -61,7 +61,7 @@ public class L3ProductionTypeTest {
         L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) item;
         assertEquals(date1, l3WorkflowItem.getMinDate());
         assertEquals(date2, l3WorkflowItem.getMaxDate());
-        assertEquals(true, l3WorkflowItem.getOutputDir().contains("calvalus/outputs/ewa/"));
+        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
     }
 
 

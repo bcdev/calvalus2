@@ -1,6 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.inventory.hadoop.HadoopInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
@@ -36,7 +36,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClient jobClient = new JobClient(jobConf);
-            HadoopInventoryService inventoryService = new HadoopInventoryService(jobClient.getFs());
+            HdfsInventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             // todo - get the database connect info from configuration
             File databaseFile = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME);
