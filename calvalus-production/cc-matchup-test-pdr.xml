@@ -19,6 +19,13 @@
             </wps:Data>
         </wps:Input>
 
+        <!--<wps:Input>-->
+            <!--<ows:Identifier>outputPath</ows:Identifier>-->
+            <!--<wps:Data>-->
+                <!--<wps:LiteralData>test-MA</wps:LiteralData>-->
+            <!--</wps:Data>-->
+        <!--</wps:Input>-->
+
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
