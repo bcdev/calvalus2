@@ -60,13 +60,13 @@ public class MAProductionType extends HadoopProductionType {
             throw new ProductionException("No input products found for given time range.");
         }
 
-        String outputDir = getOutputDir(productionRequest.getUserName(), productionId);
+        String outputDir = getOutputPath(productionRequest, productionId, "");
         String maParametersXml = getMAConfigXml(productionRequest);
 
         Configuration maJobConfig = createJobConfig(productionRequest);
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
-        maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+        maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         maJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         maJobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
         maJobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
@@ -89,10 +89,6 @@ public class MAProductionType extends HadoopProductionType {
         return new MAStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    String getOutputDir(String userName, String dirName) {
-        return getInventoryService().getDataOutputPath(String.format("%s/%s", userName, dirName));
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {

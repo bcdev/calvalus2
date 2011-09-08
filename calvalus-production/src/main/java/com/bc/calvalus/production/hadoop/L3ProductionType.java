@@ -70,10 +70,10 @@ public class L3ProductionType extends HadoopProductionType {
             String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
             String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
-                String outputDir = getOutputDir(productionRequest.getUserName(), productionId, i + 1);
+                String outputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
-                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
@@ -109,10 +109,6 @@ public class L3ProductionType extends HadoopProductionType {
         return new L3Staging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    String getOutputDir(String userName, String productionId, int index) {
-        return getInventoryService().getDataOutputPath(String.format("%s/%s_%d", userName, productionId, index));
     }
 
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {

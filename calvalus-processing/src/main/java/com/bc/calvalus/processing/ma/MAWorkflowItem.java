@@ -41,7 +41,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
     }
 
     public String getOutputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT);
+        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
 
     public String getProcessorBundle() {
@@ -53,7 +53,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
-                {JobConfigNames.CALVALUS_OUTPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},

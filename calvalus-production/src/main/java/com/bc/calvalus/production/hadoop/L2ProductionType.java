@@ -93,7 +93,7 @@ public class L2ProductionType extends HadoopProductionType {
             throw new ProductionException("No input files found for given time range.");
         }
 
-        String outputDir = getOutputDir(productionId, productionRequest);
+        String outputDir = getOutputPath(productionRequest, productionId, "");
 
         String processorName = productionRequest.getString("processorName");
         String processorParameters = productionRequest.getString("processorParameters");
@@ -103,7 +103,7 @@ public class L2ProductionType extends HadoopProductionType {
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT, outputDir);
+        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
@@ -112,7 +112,4 @@ public class L2ProductionType extends HadoopProductionType {
         return new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
     }
 
-    String getOutputDir(String productionId, ProductionRequest productionRequest) {
-        return getInventoryService().getDataOutputPath(String.format("%s/%s", productionRequest.getUserName(), productionId));
-    }
 }

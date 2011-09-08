@@ -61,17 +61,17 @@ public class TAProductionType extends HadoopProductionType {
 
             Workflow.Sequential sequential = new Workflow.Sequential();
 
-            String l3JobName = String.format("%s_%d_L3", productionId, (i + 1));
-            String taJobName = String.format("%s_%d_TA", productionId, (i + 1));
+            String l3JobName = String.format("%s-L3-%d", productionId, (i + 1));
+            String taJobName = String.format("%s-TA-%d", productionId, (i + 1));
 
             String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
-                String l3OutputDir = getOutputDir(productionRequest.getUserName(), l3JobName);
-                String taOutputDir = getOutputDir(productionRequest.getUserName(), taJobName);
+                String l3OutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
+                String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));
 
                 Configuration l3JobConfig = createJobConfig(productionRequest);
                 l3JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
-                l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT, l3OutputDir);
+                l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l3OutputDir);
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
@@ -83,7 +83,7 @@ public class TAProductionType extends HadoopProductionType {
 
                 Configuration taJobConfig = createJobConfig(productionRequest);
                 taJobConfig.set(JobConfigNames.CALVALUS_INPUT, l3OutputDir);
-                taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT, taOutputDir);
+                taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, taOutputDir);
                 taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 taJobConfig.set(JobConfigNames.CALVALUS_TA_PARAMETERS, taConfig.toXml());
                 taJobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -116,10 +116,6 @@ public class TAProductionType extends HadoopProductionType {
         return new TAStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    String getOutputDir(String userName, String dirName) {
-        return getInventoryService().getDataOutputPath(String.format("%s/%s", userName, dirName));
     }
 
     static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {

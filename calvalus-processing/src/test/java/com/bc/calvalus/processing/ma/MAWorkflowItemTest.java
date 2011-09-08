@@ -44,7 +44,7 @@ public class MAWorkflowItemTest {
         Configuration jobConfig = processingService.createJobConfig();
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, "file1,file2");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT, "out_004");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, "out_004");
         jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.3-SNAPSHOT");
         jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W");
         jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");

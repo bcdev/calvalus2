@@ -71,7 +71,7 @@ public class BeamOpProcessingType {
         }
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_INPUT, inputs);
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_INPUT_FORMAT, wpsConfig.getInputFormat());
-        addIfNotEmpty(conf, JobConfigNames.CALVALUS_OUTPUT, wpsConfig.getRequestOutputDir());
+        addIfNotEmpty(conf, JobConfigNames.CALVALUS_OUTPUT_DIR, wpsConfig.getRequestOutputDir());
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_BUNDLE, wpsConfig.getProcessorPackage());
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_OPERATOR, wpsConfig.getOperatorName());
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_L2_PARAMETERS, wpsConfig.getLevel2Parameters());
@@ -129,7 +129,7 @@ public class BeamOpProcessingType {
 
     public void configureJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
-        String output = configuration.get(JobConfigNames.CALVALUS_OUTPUT);
+        String output = configuration.get(JobConfigNames.CALVALUS_OUTPUT_DIR);
         // clear output directory
         final Path outputPath = new Path(output);
         final FileSystem fileSystem = outputPath.getFileSystem(configuration);

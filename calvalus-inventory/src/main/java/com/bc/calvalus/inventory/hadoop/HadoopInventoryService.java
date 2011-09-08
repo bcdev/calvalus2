@@ -45,9 +45,9 @@ public class HadoopInventoryService implements InventoryService {
             for (String[] record : stringRecords) {
                 if (record.length == 3) {
                     String name = record[0];
-                    String path = record[2];
-                    Date date1 = DATE_FORMAT.parse(record[3]);
-                    Date date2 = DATE_FORMAT.parse(record[4]);
+                    String path = record[1];
+                    Date date1 = DATE_FORMAT.parse(record[2]);
+                    Date date2 = DATE_FORMAT.parse(record[3]);
                     productSets.add(new ProductSet(name, path, date1, date2));
                 }
             }
@@ -62,8 +62,7 @@ public class HadoopInventoryService implements InventoryService {
         Pattern pattern = createPattern(inputRegexs);
         String commonPathPrefix = getCommonPathPrefix(inputRegexs);
         Path qualifiedPath = makeQualified(CALVALUS_INPUT_PATH, commonPathPrefix);
-        String[] strings = listFilesRecursively(qualifiedPath, pattern);
-        return strings;
+        return listFilesRecursively(qualifiedPath, pattern);
     }
 
     @Override

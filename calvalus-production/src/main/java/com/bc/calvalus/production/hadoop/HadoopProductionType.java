@@ -115,6 +115,13 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
+    protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
+        String defaultDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
+        String outputPath = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR,
+                                                        productionRequest.getString("outputPath", defaultDir));
+        return getInventoryService().getDataOutputPath(outputPath + dirSuffix);
+    }
+
     /**
      * Sets {@code jobConfig} values from the given {@code parameters} map.
      * <ol>

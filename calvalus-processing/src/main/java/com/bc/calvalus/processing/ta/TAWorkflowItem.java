@@ -49,7 +49,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     }
 
     public String getOutputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT);
+        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
 
     public String getMinDate() {
@@ -64,7 +64,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_TA_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},

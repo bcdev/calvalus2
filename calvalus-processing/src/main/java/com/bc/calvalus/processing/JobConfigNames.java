@@ -24,7 +24,7 @@ public interface JobConfigNames {
     String CALVALUS_BEAM_BUNDLE = "calvalus.beam.bundle";
     String CALVALUS_INPUT = "calvalus.input";
     String CALVALUS_INPUT_FORMAT = "calvalus.input.format";
-    String CALVALUS_OUTPUT = "calvalus.output";
+    String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
