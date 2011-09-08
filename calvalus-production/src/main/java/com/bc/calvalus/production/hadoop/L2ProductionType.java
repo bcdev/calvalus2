@@ -85,7 +85,7 @@ public class L2ProductionType extends HadoopProductionType {
                     Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
                     inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date, regionName)));
                 } catch (ParseException e) {
-                    throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
+                    throw new ProductionException("Failed to parse date from 'dateList': '" + dateAsString + "'", e);
                 }
             }
             inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
