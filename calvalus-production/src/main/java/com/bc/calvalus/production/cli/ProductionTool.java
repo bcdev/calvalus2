@@ -2,10 +2,21 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionResponse;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.Parser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -147,7 +158,7 @@ public class ProductionTool {
             }
 
             Production production = orderProduction(productionService, request);
-            if (!production.isAutoStaging()) {
+            if (production.isAutoStaging()) {
                 stageProduction(productionService, production);
             }
 
