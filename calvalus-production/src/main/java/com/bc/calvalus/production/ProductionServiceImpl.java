@@ -223,7 +223,7 @@ public class ProductionServiceImpl implements ProductionService {
         // write changes to persistent storage
         try {
             productionStore.persist();
-            logger.info("Production store persisted.");
+            // logger.info("Production store persisted.");
         } catch (ProductionException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
