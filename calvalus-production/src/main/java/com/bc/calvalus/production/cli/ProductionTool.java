@@ -50,7 +50,7 @@ import java.util.Map;
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
  *                         the production. Defaults to 'calvalus-0.3-201108'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
- *                         request is executed.Use the colon ':' to separate paths in SOURCES.
+ *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
  *                         request is executed. The Calvalus bundle given by the 'calvalus' option.
  *                         Use the colon ':' to separate multiple paths in FILES.
@@ -399,7 +399,7 @@ public class ProductionTool {
                                   .hasArgs()
                                   .withArgName("FILES")
                                   .withDescription("Copies FILES to '/calvalus/home/<user>' before the request is executed." +
-                                                           "Use the colon ':' to separate paths in SOURCES.")
+                                                           "Use the colon ':' to separate paths in FILES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("kill")
