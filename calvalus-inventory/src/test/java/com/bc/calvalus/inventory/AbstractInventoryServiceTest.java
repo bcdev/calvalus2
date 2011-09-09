@@ -16,31 +16,23 @@
 
 package com.bc.calvalus.inventory;
 
+import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 /**
  * @author MarcoZ
+ * @author Norman
  */
 public class AbstractInventoryServiceTest {
-
-    @Test
-    public void testRegexp() throws Exception {
-        assertEquals(true, glob("", ""));
-    }
-
-    private boolean glob(String glob, String filePath) {
-        Pattern pattern = Pattern.compile(glob);
-        Matcher matcher = pattern.matcher(filePath);
-        return matcher.matches();
-    }
 
     @Test
     public void testGetCommonPathPrefix() throws Exception {
@@ -75,4 +67,82 @@ public class AbstractInventoryServiceTest {
         assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/*")));
         */
     }
+
+    @Test
+    public void testReadProductSetFromCsv() throws Exception {
+        String csv = "MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31\n" +
+                "MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31\n" +
+                "MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31\n";
+        ProductSet[] productSets = AbstractInventoryService.readProductSetFromCsv(new ByteArrayInputStream(csv.getBytes()));
+        assertNotNull(productSets);
+        assertEquals(3, productSets.length);
+        assertEquals("MERIS RR L1b 2004", productSets[1].getName());
+        assertEquals("eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1", productSets[1].getPath());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"), productSets[1].getMinDate());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"), productSets[1].getMaxDate());
+    }
+
+    @Test
+    public void testGetRegexpForPathGlob() throws Exception {
+        // empty
+        testGetRegexpForPathGlob("", "^$", "", true);
+        testGetRegexpForPathGlob("", "^$", "abc", false);
+
+        // *
+        testGetRegexpForPathGlob("*", "^[^/]*$", "", true);
+        testGetRegexpForPathGlob("*", "^[^/]*$", "abc", true);
+        testGetRegexpForPathGlob("abc/*", "^abc/[^/]*$", "abc", false);
+        testGetRegexpForPathGlob("abc/*", "^abc/[^/]*$", "abc/def", true);
+        testGetRegexpForPathGlob("abc/*", "^abc/[^/]*$", "abc/def/ghi", false);
+        testGetRegexpForPathGlob("abc/*/def", "^abc/[^/]*/def$", "abc/ghi/def", true);
+        testGetRegexpForPathGlob("abc/*/def", "^abc/[^/]*/def$", "abc/def/ghi", false);
+        testGetRegexpForPathGlob("abc/*/def", "^abc/[^/]*/def$", "abc/def", false);
+
+        // '*' and '.'
+        testGetRegexpForPathGlob("abc/*.zip", "^abc/[^/]*\\.zip$", "abc/efg.zip", true);
+        testGetRegexpForPathGlob("abc/*.zip", "^abc/[^/]*\\.zip$", "abc/efgzip", false);
+        testGetRegexpForPathGlob("abc/*.zip", "^abc/[^/]*\\.zip$", "abc/efg/.zip", false);
+
+        // ?
+        testGetRegexpForPathGlob("abc/?.zip", "^abc/[^/]{1}\\.zip$", "abc/a.zip", true);
+        testGetRegexpForPathGlob("abc/?.zip", "^abc/[^/]{1}\\.zip$", "abc/2.zip", true);
+        testGetRegexpForPathGlob("abc/?.zip", "^abc/[^/]{1}\\.zip$", "abc/.zip", false);
+        testGetRegexpForPathGlob("abc/?.zip", "^abc/[^/]{1}\\.zip$", "abc/zip", false);
+        testGetRegexpForPathGlob("abc?efg", "^abc[^/]{1}efg$", "abcdefg", true);
+        testGetRegexpForPathGlob("abc?efg", "^abc[^/]{1}efg$", "abc.efg", true);
+        testGetRegexpForPathGlob("abc?efg", "^abc[^/]{1}efg$", "abc/efg", false);
+        testGetRegexpForPathGlob("abc?efg", "^abc[^/]{1}efg$", "abcefg", false);
+
+        // **
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/def/ghi", true);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/def/def/ghi", true);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/def/uvw/xyz/ghi", true);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/def/uvw/ghi/ghi", true);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/ghi", false);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc", false);
+        testGetRegexpForPathGlob("abc/**/ghi", "^abc/.*/ghi$", "abc/", false);
+        testGetRegexpForPathGlob("**/def/ghi", "^.*/def/ghi$", "abc/def/ghi", true);
+        testGetRegexpForPathGlob("**/def/ghi", "^.*/def/ghi$", "abc/cba/uvw/def/ghi", true);
+        testGetRegexpForPathGlob("**/def/ghi", "^.*/def/ghi$", "def/ghi", false);
+        testGetRegexpForPathGlob("abc/**", "^abc/.*$", "abc/def", true);
+        testGetRegexpForPathGlob("abc/**", "^abc/.*$", "abc/def/ghi", true);
+        testGetRegexpForPathGlob("abc/**", "^abc/.*$", "abc", false);
+        testGetRegexpForPathGlob("abc/**", "^abc/.*$", "abc/.", true);
+
+        // '**', '*' and '?'
+        testGetRegexpForPathGlob("/eodata/**/MER__RR_?P*.N1", "^/eodata/.*/MER__RR_[^/]{1}P[^/]*\\.N1$",
+                                 "/eodata/r03/2005/05/21/MER__RR_2PACR200505211025.N1", true);
+        testGetRegexpForPathGlob("/eodata/**/MER__RR_?P*.N1", "^/eodata/.*/MER__RR_[^/]{1}P[^/]*\\.N1$",
+                                 "/eodata/r03/2005/05/21/MER__RR_2BACR200505211025.N1", false);
+        testGetRegexpForPathGlob("/eodata/**/MER__RR_?P*.N1", "^/eodata/.*/MER__RR_[^/]{1}P[^/]*\\.N1$",
+                                 "/eodata/MER__RR_2BACR200505211025.N1", false);
+
+    }
+
+    private void testGetRegexpForPathGlob(String testGlob, String expectedRegexp, String testPath, boolean expectedMatch) {
+        String regex = AbstractInventoryService.getRegexpForPathGlob(testGlob);
+        assertEquals(expectedRegexp, regex);
+        assertEquals(expectedMatch, Pattern.matches(regex, testPath));
+    }
+
 }

@@ -17,6 +17,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Abstract implementation of the {@link InventoryService}.
+ *
+ * @author MarcoZ
+ * @author Norman
+ */
 public abstract class AbstractInventoryService implements InventoryService {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
@@ -27,13 +33,14 @@ public abstract class AbstractInventoryService implements InventoryService {
         this.fileSystem = fileSystem;
     }
 
+
     public FileSystem getFileSystem() {
         return fileSystem;
     }
 
     @Override
     public ProductSet[] getProductSets(String filter) throws Exception {
-        InputStream is = openProductSetCsv();
+        InputStream is = getInputStream("eodata/product-sets.csv");
         try {
             return readProductSetFromCsv(is);
         } catch (Exception e) {
@@ -43,9 +50,12 @@ public abstract class AbstractInventoryService implements InventoryService {
         }
     }
 
-    protected abstract InputStream openProductSetCsv() throws IOException;
+    private InputStream getInputStream(String path) throws IOException {
+        Path databasePath = new Path(getPath(path));
+        return getFileSystem().open(databasePath);
+    }
 
-    private static ProductSet[] readProductSetFromCsv(InputStream is) throws IOException, ParseException {
+    static ProductSet[] readProductSetFromCsv(InputStream is) throws IOException, ParseException {
         InputStreamReader reader = new InputStreamReader(is);
         CsvReader csvReader = new CsvReader(reader, new char[]{';'});
         ArrayList<ProductSet> productSets = new ArrayList<ProductSet>();
@@ -194,4 +204,48 @@ public abstract class AbstractInventoryService implements InventoryService {
         return "";
     }
     */
+
+    /**
+     * Gets the regular expression for the given path containing wildcards.
+     * <ol>
+     * <li>'?' is used to match any character in a directory/file name (so it does not match the '/' character).</li>
+     * <li>'*' is used to match zero or more characters in a directory/file name (so it does not match the '/' character).</li>
+     * <li>'**' is used to match zero or more directories (so it matches also the '/' character).</li>
+     * </ol>
+     *
+     * @param wildcardPath The path containing wildcards.
+     * @return The corresponding regular expression.
+     */
+    public static String getRegexpForPathGlob(String wildcardPath) {
+        final String regexpMetaCharacters = "([{\\^-$|]})?*+.";
+        final String wildcardMetaCharacters = "?*";
+        final StringBuilder regexp = new StringBuilder();
+        regexp.append('^');  // matches line start
+        final int n = wildcardPath.length();
+        for (int i = 0; i < n; i++) {
+            char c = wildcardPath.charAt(i);
+            if (regexpMetaCharacters.indexOf(c) != -1
+                    && wildcardMetaCharacters.indexOf(c) == -1) {
+                regexp.append('\\');
+                regexp.append(c);
+            } else if (c == '?') {
+                regexp.append("[^/]{1}");
+            } else if (c == '*') {
+                if (i < n - 1) {
+                    if (wildcardPath.charAt(i + 1) == '*') {
+                        regexp.append(".*");
+                        i++;
+                    } else {
+                        regexp.append("[^/]*");
+                    }
+                } else {
+                    regexp.append("[^/]*");
+                }
+            } else {
+                regexp.append(c);
+            }
+        }
+        regexp.append('$');  // matches line end
+        return regexp.toString();
+    }
 }

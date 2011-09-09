@@ -21,8 +21,11 @@ public interface InventoryService {
     ProductSet[] getProductSets(String filter) throws Exception;
 
     /**
+     * Globs the given path pattern list against the inventory service's file system.
+     * <p/>
+     * <i>TODO: Use Unix file system wildcards instead (nf, 2011-09-09). See {@link AbstractInventoryService#getRegexpForPathGlob(String)}. </i>
      *
-     * @param pathPatterns A list of relative or absolute data paths which may contain regular expressions  (e.g. the file '*' wildcards is written as '.*').
+     * @param pathPatterns A list of relative or absolute data paths which may contain regular expressions.
      * @return An array of fully qualified URIs comprising the filesystem and absolute data input path.
      * @throws java.io.IOException If an I/O error occurs.
      */
