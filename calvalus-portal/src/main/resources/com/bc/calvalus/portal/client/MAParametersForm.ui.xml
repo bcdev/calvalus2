@@ -14,6 +14,7 @@
 
             <g:VerticalPanel spacing="2">
                 <g:Label>In-situ and point data sources:</g:Label>
+
                 <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8"/>
                 <g:HorizontalPanel spacing="2">
                     <g:Button ui:field='addRecordSourceButton' text="Add"/>

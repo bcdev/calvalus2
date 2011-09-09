@@ -48,23 +48,73 @@ public class MAParametersForm extends Composite {
     @UiField
     TextBox goodRecordExpression;
 
+    private FileUpload fileUpload;
+    private FormPanel uploadForm;
 
-    public MAParametersForm(PortalContext portalContext) {
+    public MAParametersForm(final PortalContext portalContext) {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
 
         initWidget(uiBinder.createAndBindUi(this));
 
+
+        fileUpload = new FileUpload();
+        fileUpload.setName("fileUpload");
+        uploadForm = new FormPanel();
+        uploadForm.setWidget(fileUpload);
+
+        FileUploadManager.configureForm(uploadForm,
+                                        "echo=1",
+                                        new FormPanel.SubmitHandler() {
+                                            public void onSubmit(FormPanel.SubmitEvent event) {
+                                                // we can check for valid input here
+                                            }
+                                        },
+                                        new FormPanel.SubmitCompleteHandler() {
+                                            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
+                                                String results = event.getResults();
+                                                System.out.println("results = " + results);
+                                                updateRecordSources(portalContext);
+                                                Dialog.showMessage("File Upload",
+                                                                   new Label("File successfully uploaded."));
+
+                                            }
+                                        }
+        );
+
         addRecordSourceButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                // todo - show upload dialog
+                VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
+                                                                          new HTML("Select in-situ or point data file:"),
+                                                                          uploadForm,
+                                                                          new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>) and BEAM placemark files (<b>*.placemark</b>)."));
+                                                                          new HTML("The first line of the TAB-separated CSV file must contain header names, e.g. LAT, LON, TIME, CONC_CHL.");
+                Dialog dialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+                    @Override
+                    protected void onOk() {
+                        String filename = fileUpload.getFilename();
+                        if (filename == null || filename.isEmpty()) {
+                            Dialog.showMessage("File Upload",
+                                               new HTML("No filename selected."),
+                                               new HTML("Please specify a in-situ or point data file."),
+                                               new HTML("Supported are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>) files"),
+                                               new HTML("and BEAM placemark files (<b>*.placemark</b>)."));
+                            return;
+                        }
+                        uploadForm.submit();
+                        hide();
+                    }
+                };
+                dialog.show();
             }
         });
 
         removeRecordSourceButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                // todo - show upload dialog
+                // todo - remove selected file from server
+                Dialog.showMessage("File Upload",
+                                   new HTML("Not yet implemented."));
             }
         });
 
@@ -73,22 +123,14 @@ public class MAParametersForm extends Composite {
         filteredMeanCoeff.setValue(1.5);
         outputGroupName.setValue("SITE");
 
+        updateRecordSources(portalContext);
+    }
+
+    private void updateRecordSources(PortalContext portalContext) {
         portalContext.getBackendService().listUserFiles("", new AsyncCallback<String[]>() {
             @Override
             public void onSuccess(String[] filePaths) {
-                recordSources.clear();
-                final String BASE_DIR = "calvalus/home/";
-                for (String filePath : filePaths) {
-                    int baseDirPos = filePath.indexOf(BASE_DIR);
-                    if (baseDirPos >= 0) {
-                        recordSources.addItem(filePath.substring(baseDirPos + BASE_DIR.length()), filePath);
-                    } else {
-                        recordSources.addItem(filePath, filePath);
-                    }
-                }
-                if (recordSources.getItemCount() > 0) {
-                    recordSources.setSelectedIndex(0);
-                }
+                setRecordSources(filePaths);
             }
 
             @Override
@@ -96,6 +138,22 @@ public class MAParametersForm extends Composite {
                 // todo
             }
         });
+    }
+
+    private void setRecordSources(String[] filePaths) {
+        recordSources.clear();
+        final String BASE_DIR = "calvalus/home/";
+        for (String filePath : filePaths) {
+            int baseDirPos = filePath.indexOf(BASE_DIR);
+            if (baseDirPos >= 0) {
+                recordSources.addItem(filePath.substring(baseDirPos + BASE_DIR.length()), filePath);
+            } else {
+                recordSources.addItem(filePath, filePath);
+            }
+        }
+        if (recordSources.getItemCount() > 0) {
+            recordSources.setSelectedIndex(0);
+        }
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
@@ -149,5 +207,6 @@ public class MAParametersForm extends Composite {
         parameters.put("recordSourceUrl", selectedIndex >= 0 ? recordSources.getValue(selectedIndex) : "");
         return parameters;
     }
+
 
 }

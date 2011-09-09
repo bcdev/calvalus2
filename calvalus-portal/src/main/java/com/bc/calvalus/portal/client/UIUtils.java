@@ -1,48 +1,39 @@
 package com.bc.calvalus.portal.client;
 
-import com.google.gwt.user.client.ui.*;
-import com.google.gwt.user.datepicker.client.DateBox;
-
-import java.util.Date;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * GUI utilities.
+ *
  * @author Norman
  */
 public class UIUtils {
-    public static void validateDateBox(String label, DateBox dateBox) throws ValidationException {
-        Date value = dateBox.getValue();
-        if (value == null) {
-            throw new ValidationException(dateBox, "Missing value for '" + label + "'");
-        }
+
+    public static VerticalPanel createVerticalPanel(Widget... widgets) {
+        return createVerticalPanel(0, widgets);
     }
 
-    public static void validateDoubleBox(String label, DoubleBox doubleBox, double min, double max) throws ValidationException {
-        Double value = doubleBox.getValue();
-        if (value == null) {
-            throw new ValidationException(doubleBox, "Missing value for '" + label + "'");
-        }
-        if (value < min) {
-            throw new ValidationException(doubleBox, "Value for '" + label + "' must be greater than or equal to " + min);
-        }
-        if (value > max) {
-            throw new ValidationException(doubleBox, "Value for '" + label + "' must be greater than or equal to " + max);
-        }
-    }
-
-    public static VerticalPanel createLabeledWidgetV(String labelText, Widget widget) {
+    public static VerticalPanel createVerticalPanel(int spacing, Widget... widgets) {
         VerticalPanel panel = new VerticalPanel();
-        panel.setSpacing(2);
-        panel.add(new Label(labelText));
-        panel.add(widget);
+        panel.setSpacing(spacing);
+        for (Widget widget : widgets) {
+            panel.add(widget);
+        }
         return panel;
     }
 
-    public static HorizontalPanel createLabeledWidgetH(String labelText, Widget widget) {
+    public static HorizontalPanel createHorizontalPanel(Widget... widgets) {
+        return createHorizontalPanel(0, widgets);
+    }
+
+    public static HorizontalPanel createHorizontalPanel(int spacing, Widget... widgets) {
         HorizontalPanel panel = new HorizontalPanel();
-        panel.setSpacing(2);
-        panel.add(new Label(labelText));
-        panel.add(widget);
+        panel.setSpacing(spacing);
+        for (Widget widget : widgets) {
+            panel.add(widget);
+        }
         return panel;
     }
 }

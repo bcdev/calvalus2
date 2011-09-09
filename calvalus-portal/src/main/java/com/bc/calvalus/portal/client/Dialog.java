@@ -52,8 +52,12 @@ public class Dialog {
         new Dialog(title, new HTML(htmlMessage), ButtonType.CLOSE).show();
     }
 
-    public static void showMessage(String title, Widget message) {
-        new Dialog(title, message, ButtonType.CLOSE).show();
+    public static void showMessage(String title, Widget ... messages) {
+        if (messages.length == 1) {
+            new Dialog(title, messages[0], ButtonType.CLOSE).show();
+        }else {
+            new Dialog(title, UIUtils.createVerticalPanel(0, messages), ButtonType.CLOSE).show();
+        }
     }
 
     public void show() {
