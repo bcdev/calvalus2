@@ -34,7 +34,7 @@ import static java.lang.Math.PI;
  *
  * @author Norman
  */
-public class L3ParametersForm extends Composite {
+public class L3ConfigForm extends Composite {
 
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
@@ -43,7 +43,7 @@ public class L3ParametersForm extends Composite {
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
 
-    interface TheUiBinder extends UiBinder<Widget, L3ParametersForm> {
+    interface TheUiBinder extends UiBinder<Widget, L3ConfigForm> {
     }
 
     public static class Variable {
@@ -87,7 +87,7 @@ public class L3ParametersForm extends Composite {
     private Date minDate;
     private Date maxDate;
 
-    public L3ParametersForm() {
+    public L3ConfigForm() {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
         variableNames = new ArrayList<String>();
         variableProvider = new ListDataProvider<Variable>();

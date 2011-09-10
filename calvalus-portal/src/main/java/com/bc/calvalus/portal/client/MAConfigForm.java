@@ -18,11 +18,11 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class MAParametersForm extends Composite {
+public class MAConfigForm extends Composite {
 
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
 
-    interface TheUiBinder extends UiBinder<Widget, MAParametersForm> {
+    interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -51,7 +51,7 @@ public class MAParametersForm extends Composite {
     private FileUpload fileUpload;
     private FormPanel uploadForm;
 
-    public MAParametersForm(final PortalContext portalContext) {
+    public MAConfigForm(final PortalContext portalContext) {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
 
         initWidget(uiBinder.createAndBindUi(this));

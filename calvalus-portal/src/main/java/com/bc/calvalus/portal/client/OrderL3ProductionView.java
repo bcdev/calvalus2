@@ -25,7 +25,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
-    private L3ParametersForm l3ParametersForm;
+    private L3ConfigForm l3ConfigForm;
     private OutputParametersForm outputParametersForm;
 
     private Widget widget;
@@ -46,7 +46,7 @@ public class OrderL3ProductionView extends OrderProductionView {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
-                l3ParametersForm.setSelectedProcessor(processorDescriptor);
+                l3ConfigForm.setSelectedProcessor(processorDescriptor);
             }
         });
 
@@ -61,17 +61,17 @@ public class OrderL3ProductionView extends OrderProductionView {
 
             @Override
             public void spatialFilterChanged(Map<String, String> data) {
-                l3ParametersForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
+                l3ConfigForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
             }
         });
 
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
 
-        l3ParametersForm = new L3ParametersForm();
-        l3ParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
-        l3ParametersForm.steppingPeriodLength.setValue(30);
-        l3ParametersForm.compositingPeriodLength.setValue(30);
+        l3ConfigForm = new L3ConfigForm();
+        l3ConfigForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        l3ConfigForm.steppingPeriodLength.setValue(30);
+        l3ConfigForm.compositingPeriodLength.setValue(30);
 
         outputParametersForm = new OutputParametersForm();
 
@@ -111,7 +111,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(panel1);
         panel.add(productSetFilterForm);
         panel.add(processorParametersForm);
-        panel.add(l3ParametersForm);
+        panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
         panel.add(orderPanel);
@@ -125,16 +125,16 @@ public class OrderL3ProductionView extends OrderProductionView {
             String[] splits =  data.get("dateList").split("\\s");
             HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
             int numDays = set.size();
-            l3ParametersForm.periodCount.setValue(numDays);
+            l3ConfigForm.periodCount.setValue(numDays);
 
-            l3ParametersForm.steppingPeriodLength.setEnabled(false);
-            l3ParametersForm.steppingPeriodLength.setValue(1);
+            l3ConfigForm.steppingPeriodLength.setEnabled(false);
+            l3ConfigForm.steppingPeriodLength.setValue(1);
 
-            l3ParametersForm.compositingPeriodLength.setEnabled(false);
-            l3ParametersForm.compositingPeriodLength.setValue(1);
+            l3ConfigForm.compositingPeriodLength.setEnabled(false);
+            l3ConfigForm.compositingPeriodLength.setValue(1);
         } else {
-            l3ParametersForm.steppingPeriodLength.setEnabled(true);
-            l3ParametersForm.compositingPeriodLength.setEnabled(true);
+            l3ConfigForm.steppingPeriodLength.setEnabled(true);
+            l3ConfigForm.compositingPeriodLength.setEnabled(true);
 
             String minDateString = data.get("minDate");
             String maxDateString = data.get("maxDate");
@@ -144,7 +144,7 @@ public class OrderL3ProductionView extends OrderProductionView {
                 minDate = ProductSetFilterForm.DATE_FORMAT.parse(minDateString);
                 maxDate = ProductSetFilterForm.DATE_FORMAT.parse(maxDateString);
             }
-            l3ParametersForm.updateTemporalParameters(minDate, maxDate);
+            l3ConfigForm.updateTemporalParameters(minDate, maxDate);
         }
     }
 
@@ -176,7 +176,7 @@ public class OrderL3ProductionView extends OrderProductionView {
             processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
             processorParametersForm.validateForm();
-            l3ParametersForm.validateForm();
+            l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
@@ -201,7 +201,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
-        parameters.putAll(l3ParametersForm.getValueMap());
+        parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }

@@ -27,7 +27,7 @@ public class OrderMAProductionView extends OrderProductionView {
     private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private ProcessorParametersForm processorParametersForm;
-    private MAParametersForm maParametersForm;
+    private MAConfigForm maConfigForm;
 
     private Widget widget;
 
@@ -47,7 +47,7 @@ public class OrderMAProductionView extends OrderProductionView {
             @Override
             public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
                 processorParametersForm.setProcessorDescriptor(processorDescriptor);
-                maParametersForm.setSelectedProcessor(processorDescriptor);
+                maConfigForm.setSelectedProcessor(processorDescriptor);
             }
         });
 
@@ -68,8 +68,8 @@ public class OrderMAProductionView extends OrderProductionView {
         processorParametersForm = new ProcessorParametersForm("Processing Parameters");
         processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
 
-        maParametersForm = new MAParametersForm(portalContext);
-        maParametersForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        maConfigForm = new MAConfigForm(portalContext);
+        maConfigForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
 
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
@@ -105,7 +105,7 @@ public class OrderMAProductionView extends OrderProductionView {
         panel.add(panel1);
         panel.add(productSetFilterForm);
         panel.add(processorParametersForm);
-        panel.add(maParametersForm);
+        panel.add(maConfigForm);
         panel.add(new HTML("<br/>"));
         panel.add(orderPanel);
 
@@ -140,7 +140,7 @@ public class OrderMAProductionView extends OrderProductionView {
             processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
             processorParametersForm.validateForm();
-            maParametersForm.validateForm();
+            maConfigForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -163,7 +163,7 @@ public class OrderMAProductionView extends OrderProductionView {
         parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
         parameters.put("processorName", selectedProcessor.getExecutableName());
         parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
-        parameters.putAll(maParametersForm.getValueMap());
+        parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
         return parameters;
     }
