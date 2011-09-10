@@ -1,0 +1,88 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+        >
+
+    <g:VerticalPanel spacing="2">
+
+        <g:HTMLPanel width="100%">
+            <h3>Match-up Analysis Parameters</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:HorizontalPanel width="100%" spacing="2">
+
+            <g:VerticalPanel spacing="2">
+                <g:Label>In-situ and point data sources:</g:Label>
+
+                <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8"/>
+                <g:HorizontalPanel spacing="2">
+                    <g:Button ui:field='addRecordSourceButton' text="Add"/>
+                    <g:Button ui:field='removeRecordSourceButton' text="Remove"/>
+                </g:HorizontalPanel>
+            </g:VerticalPanel>
+
+            <g:HTMLPanel>
+                <table cellspacing="2">
+                    <tr>
+                        <td>
+                            <g:Label>Macro pixel size:</g:Label>
+                        </td>
+                        <td>
+                            <g:IntegerBox ui:field="macroPixelSize" visibleLength="8"/>
+                        </td>
+                        <td>pixels</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <g:Label>Maximum time difference:</g:Label>
+                        </td>
+                        <td>
+                            <g:DoubleBox ui:field="maxTimeDifference" visibleLength="8"/>
+                        </td>
+                        <td>hours</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <g:Label>Filtered mean coefficient:</g:Label>
+                        </td>
+                        <td>
+                            <g:DoubleBox ui:field='filteredMeanCoeff' visibleLength="8"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <g:Label>Output group name:</g:Label>
+                        </td>
+                        <td colspan="2">
+                            <g:TextBox ui:field='outputGroupName' visibleLength="12"/>
+                        </td>
+                    </tr>
+                </table>
+            </g:HTMLPanel>
+        </g:HorizontalPanel>
+
+        <g:HTMLPanel width="100%">
+            <table width="100%" cellspacing="2">
+                <tr>
+                    <td>
+                        <g:Label>Good-pixel expression:</g:Label>
+                    </td>
+                    <td>
+                        <g:TextBox ui:field="goodPixelExpression" visibleLength="50"/>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <g:Label>Good-record expression:</g:Label>
+                    </td>
+                    <td>
+                        <g:TextBox ui:field="goodRecordExpression" visibleLength="50"/>
+                    </td>
+                </tr>
+
+            </table>
+        </g:HTMLPanel>
+    </g:VerticalPanel>
+</ui:UiBinder>
