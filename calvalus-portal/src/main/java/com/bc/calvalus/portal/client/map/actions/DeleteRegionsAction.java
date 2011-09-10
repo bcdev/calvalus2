@@ -23,11 +23,11 @@ public class DeleteRegionsAction extends AbstractMapAction {
     public void run(final RegionMap regionMap) {
         final Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
-            Dialog.showMessage(TITLE, "No region selected.");
+            Dialog.info(TITLE, "No region selected.");
             return;
         }
         if (!selectedRegion.isUserRegion()) {
-            Dialog.showMessage(TITLE, "You can only delete your own regions.");
+            Dialog.info(TITLE, "You can only delete your own regions.");
             return;
         }
         Dialog dialog = new Dialog(TITLE,

@@ -77,5 +77,7 @@ public interface BackendService extends RemoteService {
 
     void stageProductions(String[] productionIds) throws BackendServiceException;
 
-    String[] listUserFiles(String dir) throws BackendServiceException;
+    String[] listUserFiles(String dirPath) throws BackendServiceException;
+
+    boolean removeUserFile(String filePath) throws BackendServiceException;
 }

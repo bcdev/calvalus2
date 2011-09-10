@@ -38,12 +38,12 @@ public class ManageRegionsView extends PortalView {
 
                     @Override
                     public void onSuccess(Void result) {
-                        Dialog.showMessage("Manage Regions", "Regions successfully saved.");
+                        Dialog.info("Manage Regions", "Regions successfully saved.");
                     }
 
                     @Override
                     public void onFailure(Throwable caught) {
-                        Dialog.showMessage("Manage Regions", "Failed to safe regions:\n" + caught.getMessage());
+                        Dialog.info("Manage Regions", "Failed to safe regions:\n" + caught.getMessage());
                     }
                 });
             }

@@ -104,7 +104,7 @@ public class ManageProductionsView extends PortalView {
                         if (result != null) {
                             ShowProductionRequestAction.run(production.getId(), result);
                         } else {
-                            Dialog.showMessage(production.getId(), "No production request available.");
+                            Dialog.info(production.getId(), "No production request available.");
                         }
                     }
                 };

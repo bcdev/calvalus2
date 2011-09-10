@@ -36,6 +36,6 @@ public class ShowProductionRequestAction {
         ScrollPanel scrollPanel = new ScrollPanel(flexTable);
         scrollPanel.setWidth("640px");
         scrollPanel.setHeight("480px");
-        Dialog.showMessage(title, scrollPanel);
+        Dialog.info(title, scrollPanel);
     }
 }

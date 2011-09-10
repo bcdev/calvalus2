@@ -25,11 +25,11 @@ public class RenameRegionAction extends AbstractMapAction {
     public void run(final RegionMap regionMap) {
         final Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
-            Dialog.showMessage(TITLE, "No user region selected.");
+            Dialog.info(TITLE, "No user region selected.");
             return;
         }
         if (!selectedRegion.isUserRegion()) {
-            Dialog.showMessage(TITLE, "You can only rename your own regions.");
+            Dialog.info(TITLE, "You can only rename your own regions.");
             return;
         }
 
@@ -47,11 +47,11 @@ public class RenameRegionAction extends AbstractMapAction {
             protected void onOk() {
                 String value = nameBox.getValue();
                 if (value.isEmpty()) {
-                    Dialog.showMessage(TITLE, "Please provide a name.");
+                    Dialog.info(TITLE, "Please provide a name.");
                     return;
                 }
                 if (regionMap.getRegion("user." + value) != null) {
-                    Dialog.showMessage(TITLE, "A user region with this name already exists.");
+                    Dialog.info(TITLE, "A user region with this name already exists.");
                     return;
                 }
                 selectedRegion.setName(value);

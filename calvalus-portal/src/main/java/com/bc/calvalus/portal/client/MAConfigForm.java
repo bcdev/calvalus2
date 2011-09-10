@@ -8,7 +8,17 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.FileUpload;
+import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +31,8 @@ import java.util.Map;
 public class MAConfigForm extends Composite {
 
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
+    private final PortalContext portalContext;
+    private static final String POINT_DATA_DIR = "point-data";
 
     interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
     }
@@ -52,10 +64,18 @@ public class MAConfigForm extends Composite {
     private FormPanel uploadForm;
 
     public MAConfigForm(final PortalContext portalContext) {
+        this.portalContext = portalContext;
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
 
         initWidget(uiBinder.createAndBindUi(this));
 
+        macroPixelSize.setValue(5);
+        maxTimeDifference.setValue(3.0);
+        filteredMeanCoeff.setValue(1.5);
+        outputGroupName.setValue("SITE");
+
+        addRecordSourceButton.addClickHandler(new AddRecordSourceAction());
+        removeRecordSourceButton.addClickHandler(new RemoveRecordSourceAction());
 
         fileUpload = new FileUpload();
         fileUpload.setName("fileUpload");
@@ -63,7 +83,7 @@ public class MAConfigForm extends Composite {
         uploadForm.setWidget(fileUpload);
 
         FileUploadManager.configureForm(uploadForm,
-                                        "echo=1",
+                                        "dir=" + POINT_DATA_DIR,
                                         new FormPanel.SubmitHandler() {
                                             public void onSubmit(FormPanel.SubmitEvent event) {
                                                 // we can check for valid input here
@@ -71,63 +91,19 @@ public class MAConfigForm extends Composite {
                                         },
                                         new FormPanel.SubmitCompleteHandler() {
                                             public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-                                                String results = event.getResults();
-                                                System.out.println("results = " + results);
-                                                updateRecordSources(portalContext);
-                                                Dialog.showMessage("File Upload",
-                                                                   new Label("File successfully uploaded."));
+                                                updateRecordSources();
+                                                Dialog.info("File Upload",
+                                                            "File successfully uploaded.");
 
                                             }
                                         }
         );
 
-        addRecordSourceButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
-                                                                          new HTML("Select in-situ or point data file:"),
-                                                                          uploadForm,
-                                                                          new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>) and BEAM placemark files (<b>*.placemark</b>)."));
-                                                                          new HTML("The first line of the TAB-separated CSV file must contain header names, e.g. LAT, LON, TIME, CONC_CHL.");
-                Dialog dialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
-                    @Override
-                    protected void onOk() {
-                        String filename = fileUpload.getFilename();
-                        if (filename == null || filename.isEmpty()) {
-                            Dialog.showMessage("File Upload",
-                                               new HTML("No filename selected."),
-                                               new HTML("Please specify a in-situ or point data file."),
-                                               new HTML("Supported are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>) files"),
-                                               new HTML("and BEAM placemark files (<b>*.placemark</b>)."));
-                            return;
-                        }
-                        uploadForm.submit();
-                        hide();
-                    }
-                };
-                dialog.show();
-            }
-        });
-
-        removeRecordSourceButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                // todo - remove selected file from server
-                Dialog.showMessage("File Upload",
-                                   new HTML("Not yet implemented."));
-            }
-        });
-
-        macroPixelSize.setValue(5);
-        maxTimeDifference.setValue(3.0);
-        filteredMeanCoeff.setValue(1.5);
-        outputGroupName.setValue("SITE");
-
-        updateRecordSources(portalContext);
+        updateRecordSources();
     }
 
-    private void updateRecordSources(PortalContext portalContext) {
-        portalContext.getBackendService().listUserFiles("", new AsyncCallback<String[]>() {
+    private void updateRecordSources() {
+        portalContext.getBackendService().listUserFiles(POINT_DATA_DIR, new AsyncCallback<String[]>() {
             @Override
             public void onSuccess(String[] filePaths) {
                 setRecordSources(filePaths);
@@ -135,25 +111,46 @@ public class MAConfigForm extends Composite {
 
             @Override
             public void onFailure(Throwable caught) {
-                // todo
+                Dialog.error("Error", "Failed to get list of point data files from server.");
+            }
+        });
+    }
+
+    private void removeRecordSource(final String recordSource) {
+        portalContext.getBackendService().removeUserFile(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean removed) {
+                updateRecordSources();
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Error", "Failed to remove file '" + recordSource + "' from server.");
             }
         });
     }
 
     private void setRecordSources(String[] filePaths) {
         recordSources.clear();
-        final String BASE_DIR = "calvalus/home/";
         for (String filePath : filePaths) {
-            int baseDirPos = filePath.indexOf(BASE_DIR);
+            int baseDirPos = filePath.lastIndexOf(POINT_DATA_DIR + "/");
             if (baseDirPos >= 0) {
-                recordSources.addItem(filePath.substring(baseDirPos + BASE_DIR.length()), filePath);
+                recordSources.addItem(filePath.substring(baseDirPos + POINT_DATA_DIR.length() + 1), filePath);
             } else {
-                recordSources.addItem(filePath, filePath);
+                recordSources.addItem(filePath);
             }
         }
         if (recordSources.getItemCount() > 0) {
             recordSources.setSelectedIndex(0);
         }
+    }
+
+    String getSelectedRecordSourceFilename() {
+        int selectedIndex = recordSources.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            return recordSources.getItemText(selectedIndex);
+        }
+        return null;
     }
 
     public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
@@ -209,4 +206,55 @@ public class MAConfigForm extends Composite {
     }
 
 
+    private class AddRecordSourceAction implements ClickHandler {
+        @Override
+        public void onClick(ClickEvent event) {
+            VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
+                                                                      new HTML("Select in-situ or point data file:"),
+                                                                      uploadForm,
+                                                                      new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
+                                                                                       "and BEAM placemark files (<b>*.placemark</b>)."),
+                                                                      new HTML("<p>The first line of the TAB-separated CSV file must contain header names. <br/>" +
+                                                                                       "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
+                                                                                       "application of the max. time difference criterion. Other names will be<br/>" +
+                                                                                       "matched against names in the resulting L2 products in order to generate<br/>" +
+                                                                                       "the match-up scatter-plots and statistics, for example 'CONC_CHL'.</p>"));
+            Dialog dialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+                @Override
+                protected void onOk() {
+                    String filename = fileUpload.getFilename();
+                    if (filename == null || filename.isEmpty()) {
+                        Dialog.info("File Upload",
+                                    new HTML("No filename selected."),
+                                    new HTML("Please specify a point data file."));
+                        return;
+                    }
+                    uploadForm.submit();
+                    hide();
+                }
+            };
+            dialog.show();
+        }
+    }
+
+    private class RemoveRecordSourceAction implements ClickHandler {
+        @Override
+        public void onClick(ClickEvent event) {
+            final String recordSource = getSelectedRecordSourceFilename();
+            if (recordSource != null) {
+                Dialog.ask("Remove File",
+                           new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
+                                            "Do you really want to continue?"),
+                           new Runnable() {
+                               @Override
+                               public void run() {
+                                   removeRecordSource(recordSource);
+                               }
+                           });
+            } else {
+                Dialog.error("Remove File",
+                             "No file selected.");
+            }
+        }
+    }
 }

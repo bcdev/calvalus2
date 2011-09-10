@@ -8,6 +8,16 @@ import com.google.gwt.user.client.ui.FormPanel;
 
 /**
  * Enables file uploads.
+ * <p/>
+ * The {@link com.bc.calvalus.portal.server.FileUploadServlet} implements the server-side of this class.
+ * <p/>
+ * The action is {@code "/calvalus/upload[?<parameters>]"}, where parameters are
+ * <ul>
+ * <li>{@code echo=1} The file contents will be echoed in the response.</li>
+ * <li>{@code local=1} The file will be stored locally.</li>
+ * <li>{@code dir=<rel-path>} The relative path to the directory into which the file(s) will be written.</li>
+ * </ul>
+ * If neither {@code echo=1} nor {@code local=1}, the file will be copied into the user's inventory space.
  *
  * @author Norman
  */

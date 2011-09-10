@@ -48,16 +48,36 @@ public class Dialog {
         this.buttonTypes = buttonTypes;
     }
 
-    public static void showMessage(String title, String htmlMessage) {
+    public static void ask(String title, Widget question, final Runnable action) {
+        Dialog dialog = new Dialog(title, question, ButtonType.YES, ButtonType.NO) {
+            @Override
+            protected void onYes() {
+                action.run();
+                hide();
+            }
+        };
+        dialog.show();
+    }
+
+    public static void info(String title, String htmlMessage) {
         new Dialog(title, new HTML(htmlMessage), ButtonType.CLOSE).show();
     }
 
-    public static void showMessage(String title, Widget ... messages) {
-        if (messages.length == 1) {
-            new Dialog(title, messages[0], ButtonType.CLOSE).show();
-        }else {
-            new Dialog(title, UIUtils.createVerticalPanel(0, messages), ButtonType.CLOSE).show();
+    public static void info(String title, Widget... widgets) {
+        if (widgets.length == 1) {
+            new Dialog(title, widgets[0], ButtonType.CLOSE).show();
+        } else {
+            new Dialog(title, UIUtils.createVerticalPanel(widgets), ButtonType.CLOSE).show();
         }
+    }
+
+    public static void error(String title, String htmlMessage) {
+        error(title, new HTML(htmlMessage));
+    }
+
+    public static void error(String title, Widget... widgets) {
+        // use error logo here
+        info(title, widgets);
     }
 
     public void show() {
@@ -153,11 +173,11 @@ public class Dialog {
             final ButtonType buttonType = buttonTypes[i];
             final int buttonIndex = i;
             final Button button = new Button(buttonType.getLabel(),
-                    new ClickHandler() {
-                        public void onClick(ClickEvent event) {
-                            onButtonClicked(buttonType, buttonIndex);
-                        }
-                    });
+                                             new ClickHandler() {
+                                                 public void onClick(ClickEvent event) {
+                                                     onButtonClicked(buttonType, buttonIndex);
+                                                 }
+                                             });
             buttonRow.add(button);
             buttonRow.setCellHorizontalAlignment(button, HasHorizontalAlignment.ALIGN_RIGHT);
         }

@@ -3,6 +3,8 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 
+import java.io.OutputStream;
+
 /**
  * The interface to the Calvalus production service.
  *
@@ -92,12 +94,34 @@ public interface ProductionService {
      */
     void close() throws ProductionException;
 
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Facade for special inventory usages.
+
     /**
-     * Gets user owned files.
+     * Lists files within the user's file space in the inventory.
      *
-     * @param userName
+     * @param userName  The name of an authorised user.
      * @param glob A glob that may contain
      * @return The listing of files.
+     * @throws ProductionException If an error occured.
      */
     String[] listUserFiles(String userName, String glob) throws ProductionException;
+
+    /**
+     * Creates a file from the user's file space in the inventory.
+     * @param userName  The name of an authorised user.
+     * @param path  A relative path into the user's file space.
+     * @return  An output stream.
+     * @throws ProductionException If an error occured.
+     */
+    OutputStream addUserFile(String userName, String path) throws ProductionException;
+
+    /**
+     * Deletes a file from the user's file space in the inventory.
+     * @param userName  The name of an authorised user.
+     * @param path  A relative path into the user's file space.
+     * @throws ProductionException If an error occured (file exists, but can't be removed).
+     * @return true, if the file could be found and removed.
+     */
+    boolean removeUserFile(String userName, String path) throws ProductionException;
 }

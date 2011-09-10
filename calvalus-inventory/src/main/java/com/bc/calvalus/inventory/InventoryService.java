@@ -1,6 +1,7 @@
 package com.bc.calvalus.inventory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -35,5 +36,9 @@ public interface InventoryService {
      * @param path A relative or absolute path.
      * @return A fully qualified URI comprising the filesystem and absolute data output path.
      */
-    String getPath(String path);
+    String getQualifiedPath(String path);
+
+    OutputStream addFile(String userPath)throws IOException;
+
+    boolean removeFile(String userPath)throws IOException;
 }

@@ -48,11 +48,11 @@ public class EditVerticesAction extends AbstractMapAction {
     public void run(final RegionMap regionMap) {
         final Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion == null) {
-            Dialog.showMessage(TITLE, "No region selected.");
+            Dialog.info(TITLE, "No region selected.");
             return;
         }
         if (!selectedRegion.isUserRegion()) {
-            Dialog.showMessage(TITLE, "You can only edit your own regions.");
+            Dialog.info(TITLE, "You can only edit your own regions.");
             return;
         }
         final VerticesTable verticesTable = new VerticesTable(selectedRegion);

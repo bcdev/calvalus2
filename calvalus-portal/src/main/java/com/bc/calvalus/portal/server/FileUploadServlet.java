@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.production.ProductionService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -9,14 +10,26 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
+
+import static com.bc.calvalus.portal.server.BackendServiceImpl.*;
 
 /**
  * Servlet to handle file upload requests.
- * If the parameter "echo" is set to any value, the servlet
- * echoes the upload file back in its response.
+ * <p/>
+ * The action is {@code "/calvalus/upload[?<parameters>]"}, where parameters are
+ * <ul>
+ * <li>{@code echo=1} The file contents will be echoed in the response.</li>
+ * <li>{@code local=1} The file will be stored locally.</li>
+ * <li>{@code dir=<rel-path>} The relative path to the directory into which the file(s) will be written.</li>
+ * </ul>
+ * If neither {@code echo=1} nor {@code local=1}, the file will be copied into the user's inventory space.
  *
  * @author Norman
  */
@@ -34,26 +47,27 @@ public class FileUploadServlet extends HttpServlet {
 
         if (!ServletFileUpload.isMultipartContent(req)) {
             resp.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
-                           "Request contents type is not supported by the servlet.");
+                           "The request's content type is not supported.");
             return;
         }
         BackendConfig backendConfig = new BackendConfig(getServletContext());
         final FileHandler fileHandler;
-        if (req.getParameter("echo") != null) {
-            fileHandler = new FileEchoHandler();
+        if ("1".equals(req.getParameter("echo"))) {
+            fileHandler = new EchoFileHandler();
+        } else if ("1".equals(req.getParameter("local"))) {
+            fileHandler = new LocalFileHandler(backendConfig.getLocalUploadDir());
         } else {
-            fileHandler = new FileStoreHandler(backendConfig.getLocalUploadDir());
+            fileHandler = new InventoryFileHandler();
         }
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         try {
             List<FileItem> items = upload.parseRequest(req);
             for (FileItem item : items) {
                 // process only file upload - discard other form item types
-                if (item.isFormField()) {
-                    continue;
+                if (!item.isFormField()) {
+                    fileHandler.handleFileItem(req, resp, item);
+                    resp.flushBuffer();
                 }
-                fileHandler.handleFileItem(item, resp);
-                resp.flushBuffer();
             }
         } catch (Exception e) {
             log("Error uploading a file", e);
@@ -62,18 +76,36 @@ public class FileUploadServlet extends HttpServlet {
     }
 
     public interface FileHandler {
-        void handleFileItem(FileItem item, HttpServletResponse resp) throws Exception;
+        void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception;
     }
 
-    private class FileStoreHandler implements FileHandler {
+    private class EchoFileHandler implements FileHandler {
+
+        @Override
+        public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
+            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+            resp.setHeader("content-type", "text/html");
+            resp.getWriter().print(item.getString());
+            log("Echoed file " + item);
+        }
+    }
+
+    private class LocalFileHandler implements FileHandler {
+
         File uploadDir;
 
-        public FileStoreHandler(File uploadDir) {
+        public LocalFileHandler(File uploadDir) {
             this.uploadDir = uploadDir;
         }
 
         @Override
-        public void handleFileItem(FileItem item, HttpServletResponse resp) throws Exception {
+        public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
+            File uploadDir = new File(this.uploadDir, getUserName(req).toLowerCase());
+            String relPath = req.getParameter("dir");
+            if (relPath != null) {
+                uploadDir = new File(uploadDir, relPath);
+            }
+
             File file = new File(uploadDir, FilenameUtils.getName(item.getName()));
             item.write(file);
             resp.setStatus(HttpServletResponse.SC_CREATED);
@@ -81,16 +113,47 @@ public class FileUploadServlet extends HttpServlet {
             resp.getWriter().print(file.getPath());
             log("Downloaded file " + item + " to " + file);
         }
+
     }
 
-    private class FileEchoHandler implements FileHandler {
+    private class InventoryFileHandler implements FileHandler {
 
         @Override
-        public void handleFileItem(FileItem item, HttpServletResponse resp) throws Exception {
-            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+        public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
+            String filePath = FilenameUtils.getName(item.getName());
+            String relPath = req.getParameter("dir");
+            if (relPath != null) {
+                filePath = relPath + "/" + filePath;
+            }
+
+            ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+            InputStream in = new BufferedInputStream(item.getInputStream(), 64 * 1024);
+            try {
+                OutputStream out = new BufferedOutputStream(productionService.addUserFile(getUserName(req).toLowerCase(), filePath), 64 * 1024);
+                try {
+                    copy(in, out);
+                } finally {
+                    out.close();
+                }
+            } finally {
+                in.close();
+            }
+            resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.setHeader("content-type", "text/html");
-            resp.getWriter().print(item.getString());
-            log("Echoed file " + item);
+            resp.getWriter().print(item.getName());
+            log("Copied file " + item + " for user '" + getUserName(req) + "' to inventory");
         }
+
+        private void copy(InputStream in, OutputStream out) throws IOException {
+            // How often have I been writing this method? (nf)
+            while (true) {
+                int b = in.read();
+                if (b == -1) {
+                    break;
+                }
+                out.write(b);
+            }
+        }
+
     }
 }

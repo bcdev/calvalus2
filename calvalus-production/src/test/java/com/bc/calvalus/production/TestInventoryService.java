@@ -4,6 +4,8 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import org.junit.Ignore;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -26,7 +28,6 @@ public class TestInventoryService implements InventoryService {
         String[] inputPathes = new String[pathPatterns.size()];
         for (int i = 0; i < pathPatterns.size(); i++) {
             String inputRegex = pathPatterns.get(i);
-
             if (inputRegex.contains("*")) {
                 throw new IllegalArgumentException("Hey, wildcards are not supported! This is a test class!");
             }
@@ -39,11 +40,20 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String getPath(String outputPath) {
+    public String getQualifiedPath(String outputPath) {
         if (!outputPath.startsWith("/")) {
             outputPath = "/calvalus/outputs/" + outputPath;
         }
         return "hdfs://cvmaster00:9000" + outputPath;
     }
 
+    @Override
+    public OutputStream addFile(String userPath) throws IOException {
+        return null;
+    }
+
+    @Override
+    public boolean removeFile(String userPath) throws IOException {
+        return false;
+    }
 }

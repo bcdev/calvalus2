@@ -13,6 +13,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -253,18 +254,39 @@ public class ProductionServiceImpl implements ProductionService {
             String glob = getUserGlob(userName, dirPath);
             return inventoryService.globPaths(Arrays.asList(glob));
         } catch (IOException e) {
-            throw new ProductionException("Failed to list user files: " + e.getMessage(), e);
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
+    public OutputStream addUserFile(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.addFile(getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
+    public boolean removeUserFile(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.removeFile(getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
         }
     }
 
     private String getUserGlob(String userName, String dirPath) {
-        String glob;
+        return getUserPath(userName, dirPath) + "/.*";
+    }
+    private String getUserPath(String userName, String dirPath) {
+        String path;
         if (dirPath.isEmpty() || "/".equals(dirPath)) {
-            glob = String.format("home/%s/.*", userName.toLowerCase());
+            path = String.format("home/%s", userName.toLowerCase());
         } else {
-            glob = String.format("home/%s/%s/.*", userName.toLowerCase(), dirPath);
+            path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
         }
-        return glob;
+        return path;
     }
 
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {

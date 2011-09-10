@@ -14,6 +14,8 @@ public interface BackendServiceAsync {
 
     void listUserFiles(String dir, AsyncCallback<String[]> callback);
 
+    void removeUserFile(String path, AsyncCallback<Boolean> callback);
+
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
@@ -29,5 +31,4 @@ public interface BackendServiceAsync {
     void deleteProductions(String[] productionIds, AsyncCallback<Void> callback);
 
     void stageProductions(String[] productionIds, AsyncCallback<Void> callback);
-
 }

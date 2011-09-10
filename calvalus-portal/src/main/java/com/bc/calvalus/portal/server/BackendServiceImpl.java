@@ -10,6 +10,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -176,9 +177,18 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public String[] listUserFiles(String dir) throws BackendServiceException {
+    public String[] listUserFiles(String dirPath) throws BackendServiceException {
         try {
-            return productionService.listUserFiles(getUserName(), dir);
+            return productionService.listUserFiles(getUserName(), dirPath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public boolean removeUserFile(String filePath) throws BackendServiceException {
+        try {
+            return productionService.removeUserFile(getUserName(), filePath);
         } catch (ProductionException e) {
             throw convert(e);
         }
@@ -301,6 +311,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             productionService = productionServiceFactory.create(backendConfig.getConfigMap(),
                                                                 backendConfig.getLocalAppDataDir(),
                                                                 backendConfig.getLocalStagingDir());
+            // Make the production servlet accessible by other servlets:
+            getServletContext().setAttribute("productionService", productionService);
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -326,11 +338,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private String getUserName() {
-        Principal userPrincipal = getThreadLocalRequest().getUserPrincipal();
+        return getUserName(getThreadLocalRequest());
+    }
+
+    public static String getUserName(HttpServletRequest request) {
+        Principal userPrincipal = request.getUserPrincipal();
         if (userPrincipal != null) {
             return userPrincipal.getName();
         }
-        String userName = getThreadLocalRequest().getRemoteUser();
+        String userName = request.getRemoteUser();
         if (userName != null) {
             return userName;
         }
