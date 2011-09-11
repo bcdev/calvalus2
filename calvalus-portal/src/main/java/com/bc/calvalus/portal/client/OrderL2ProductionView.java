@@ -1,11 +1,15 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
 
@@ -18,9 +22,8 @@ public class OrderL2ProductionView extends OrderProductionView {
     public static final String ID = OrderL2ProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
-    private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
-    private ProcessorParametersForm processorParametersForm;
+    private L2ConfigForm l2ConfigForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
 
@@ -35,19 +38,10 @@ public class OrderL2ProductionView extends OrderProductionView {
             }
         });
 
-        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
-        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
-            @Override
-            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
-                processorParametersForm.setProcessorDescriptor(processorDescriptor);
-            }
-        });
+        l2ConfigForm = new L2ConfigForm(portalContext, true);
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
-
-        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
-        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
 
@@ -78,13 +72,13 @@ public class OrderL2ProductionView extends OrderProductionView {
         HorizontalPanel panel1 = new HorizontalPanel();
         panel1.setSpacing(16);
         panel1.add(productSetSelectionForm);
-        panel1.add(processorSelectionForm);
+        panel1.add(new HTML("<b>TODO: Path selection here</b>"));
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(panel1);
         panel.add(productSetFilterForm);
-        panel.add(processorParametersForm);
+        panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
         panel.add(orderPanel);
@@ -117,9 +111,8 @@ public class OrderL2ProductionView extends OrderProductionView {
     protected boolean validateForm() {
         try {
             productSetSelectionForm.validateForm();
-            processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            processorParametersForm.validateForm();
+            l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
@@ -134,16 +127,11 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     private HashMap<String, String> getProductionParameters() {
-        DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputPath", productSetSelectionForm.getSelectedProductSet().getPath());
-        parameters.put("outputFormat", outputParametersForm.getOutputFormat());
-        parameters.put("autoStaging", outputParametersForm.isAutoStaging() + "");
-        parameters.put("processorBundleName", selectedProcessor.getBundleName());
-        parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
-        parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
+        parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(l2ConfigForm.getValueMap());
+        parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
     }
 }

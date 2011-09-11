@@ -230,7 +230,7 @@ public class L3ConfigForm extends Composite {
         targetHeight.setValue(height);
     }
 
-    public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
+    public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
         if (selectedProcessor == null) {
             return;
         }

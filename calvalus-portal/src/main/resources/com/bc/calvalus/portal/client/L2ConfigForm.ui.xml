@@ -1,0 +1,39 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns="http://www.w3.org/1999/html"
+        >
+
+    <g:HorizontalPanel spacing="16">
+        <g:VerticalPanel spacing="2">
+
+            <g:HTMLPanel width="100%">
+                <h3>L2 Processor</h3>
+                <hr/>
+            </g:HTMLPanel>
+
+            <g:ListBox ui:field="processorList" visibleItemCount="8"/>
+
+        </g:VerticalPanel>
+
+        <g:VerticalPanel spacing="2">
+
+            <g:HTMLPanel width="100%">
+                <h3>L2 Parameters</h3>
+                <hr/>
+            </g:HTMLPanel>
+
+            <g:TextArea ui:field="processorParametersArea"
+                        characterWidth="100"
+                        visibleLines="10"/>
+            <g:FormPanel ui:field="uploadForm" method="POST">
+                <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+            </g:FormPanel>
+            <g:DisclosurePanel>
+                <g:header>Processor description:</g:header>
+                <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
+            </g:DisclosurePanel>
+        </g:VerticalPanel>
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

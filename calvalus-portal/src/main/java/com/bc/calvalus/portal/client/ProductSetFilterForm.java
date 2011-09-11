@@ -31,11 +31,20 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -151,15 +160,15 @@ public class ProductSetFilterForm extends Composite {
         if (temporalFilterByDateRange.getValue()) {
             Date min = minDate.getValue();
             Date max = maxDate.getValue();
-            numDays.setValue("" +((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
+            numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
         } else if (temporalFilterByDateList.getValue()) {
             String[] splits = dateList.getValue().split("\\s");
             HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
             numDays.setValue("" + set.size());
-        } else if (productSet != null){
+        } else if (productSet != null) {
             Date min = productSet.getMinDate();
             Date max = productSet.getMaxDate();
-            numDays.setValue("" +((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
+            numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
         }
     }
 

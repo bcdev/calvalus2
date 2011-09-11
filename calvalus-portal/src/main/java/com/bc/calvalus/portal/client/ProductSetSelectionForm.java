@@ -9,6 +9,9 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Demo view that lets users submit a new L2 production.
  *
@@ -41,12 +44,12 @@ public class ProductSetSelectionForm extends Composite {
         inputProductSet.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                changeHandler.onProductSetChanged(getSelectedProductSet());
+                changeHandler.onProductSetChanged(getProductSet());
             }
         });
     }
 
-    public DtoProductSet getSelectedProductSet() {
+    public DtoProductSet getProductSet() {
         int selectedIndex = inputProductSet.getSelectedIndex();
         if (selectedIndex >= 0) {
             return productSets[selectedIndex];
@@ -56,7 +59,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        DtoProductSet selectedProductSet = getSelectedProductSet();
+        DtoProductSet selectedProductSet = getProductSet();
         boolean inputProductSetIdValid = selectedProductSet != null;
         if (!inputProductSetIdValid) {
             throw new ValidationException(inputProductSet, "An input product set must be selected.");
@@ -67,5 +70,10 @@ public class ProductSetSelectionForm extends Composite {
         void onProductSetChanged(DtoProductSet productSet);
     }
 
+    public Map<String, String> getValueMap() {
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put("inputPath", getProductSet().getPath());
+        return parameters;
+    }
 
 }

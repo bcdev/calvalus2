@@ -1,8 +1,9 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -24,9 +25,8 @@ public class OrderMAProductionView extends OrderProductionView {
     public static final String ID = OrderMAProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
-    private ProcessorSelectionForm processorSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
-    private ProcessorParametersForm processorParametersForm;
+    private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
 
     private Widget widget;
@@ -42,17 +42,16 @@ public class OrderMAProductionView extends OrderProductionView {
             }
         });
 
-        processorSelectionForm = new ProcessorSelectionForm(portalContext.getProcessors(), "Processor");
-        processorSelectionForm.addChangeHandler(new ProcessorSelectionForm.ChangeHandler() {
+        l2ConfigForm = new L2ConfigForm(portalContext, false);
+        l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
-            public void onProcessorChanged(DtoProcessorDescriptor processorDescriptor) {
-                processorParametersForm.setProcessorDescriptor(processorDescriptor);
-                maConfigForm.setSelectedProcessor(processorDescriptor);
+            public void onChange(ChangeEvent event) {
+                maConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
             }
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void temporalFilterChanged(Map<String, String> data) {
@@ -65,11 +64,8 @@ public class OrderMAProductionView extends OrderProductionView {
             }
         });
 
-        processorParametersForm = new ProcessorParametersForm("Processing Parameters");
-        processorParametersForm.setProcessorDescriptor(processorSelectionForm.getSelectedProcessor());
-
         maConfigForm = new MAConfigForm(portalContext);
-        maConfigForm.setSelectedProcessor(processorSelectionForm.getSelectedProcessor());
+        maConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
 
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
@@ -98,13 +94,13 @@ public class OrderMAProductionView extends OrderProductionView {
         HorizontalPanel panel1 = new HorizontalPanel();
         panel1.setSpacing(16);
         panel1.add(productSetSelectionForm);
-        panel1.add(processorSelectionForm);
+        panel1.add(new HTML("<b>TODO: Path selection here</b>"));
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(panel1);
         panel.add(productSetFilterForm);
-        panel.add(processorParametersForm);
+        panel.add(l2ConfigForm);
         panel.add(maConfigForm);
         panel.add(new HTML("<br/>"));
         panel.add(orderPanel);
@@ -137,9 +133,8 @@ public class OrderMAProductionView extends OrderProductionView {
     protected boolean validateForm() {
         try {
             productSetSelectionForm.validateForm();
-            processorSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            processorParametersForm.validateForm();
+            l2ConfigForm.validateForm();
             maConfigForm.validateForm();
             return true;
         } catch (ValidationException e) {
@@ -155,16 +150,12 @@ public class OrderMAProductionView extends OrderProductionView {
 
     // todo - Provide JUnit test for this method
     public HashMap<String, String> getProductionParameters() {
-        DtoProcessorDescriptor selectedProcessor = processorSelectionForm.getSelectedProcessor();
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputPath", productSetSelectionForm.getSelectedProductSet().getPath());
-        parameters.put("autoStaging", "true");
-        parameters.put("processorBundleName", selectedProcessor.getBundleName());
-        parameters.put("processorBundleVersion", selectedProcessor.getBundleVersion());
-        parameters.put("processorName", selectedProcessor.getExecutableName());
-        parameters.put("processorParameters", processorParametersForm.getProcessorParameters());
+        parameters.putAll(productSetSelectionForm.getValueMap());
+        parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.put("autoStaging", "true");
         return parameters;
     }
 }

@@ -153,7 +153,7 @@ public class MAConfigForm extends Composite {
         return null;
     }
 
-    public void setSelectedProcessor(DtoProcessorDescriptor selectedProcessor) {
+    public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
         if (selectedProcessor == null) {
             return;
         }

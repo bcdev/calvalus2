@@ -8,6 +8,9 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Demo view that lets users submit a new L2 production.
  *
@@ -55,4 +58,12 @@ public class OutputParametersForm extends Composite {
 
     public void validateForm() throws ValidationException {
     }
+
+    public Map<String, String> getValueMap() {
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put("outputFormat", getOutputFormat());
+        parameters.put("autoStaging", isAutoStaging() + "");
+        return parameters;
+    }
+
 }
