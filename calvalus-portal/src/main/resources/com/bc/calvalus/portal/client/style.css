@@ -1,0 +1,9 @@
+.centeredHorizontalPanel {
+    vertical-align: middle;
+}
+
+.explanatoryText {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 9pt;
+    color: #AAA;
+}

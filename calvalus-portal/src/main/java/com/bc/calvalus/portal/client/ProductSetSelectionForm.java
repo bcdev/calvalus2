@@ -5,8 +5,10 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
@@ -28,6 +30,10 @@ public class ProductSetSelectionForm extends Composite {
 
     @UiField
     ListBox inputProductSet;
+    @UiField
+    CheckBox useAlternateInputPath;
+    @UiField
+    TextBox alternateInputPath;
 
     public ProductSetSelectionForm(DtoProductSet[] productSets) {
         this.productSets = productSets;
@@ -37,7 +43,27 @@ public class ProductSetSelectionForm extends Composite {
         for (DtoProductSet productSet : productSets) {
             inputProductSet.addItem(productSet.getName());
         }
-        inputProductSet.setSelectedIndex(0);
+        if (inputProductSet.getItemCount() > 0) {
+            inputProductSet.setSelectedIndex(0);
+        }
+
+        inputProductSet.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                updateAlternateInputPath();
+            }
+        });
+
+        updateAlternateInputPath();
+    }
+
+    private void updateAlternateInputPath() {
+        if (!useAlternateInputPath.getValue()) {
+            DtoProductSet productSet = getProductSet();
+            if (productSet != null) {
+                alternateInputPath.setValue(productSet.getPath());
+            }
+        }
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
@@ -59,10 +85,17 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        DtoProductSet selectedProductSet = getProductSet();
-        boolean inputProductSetIdValid = selectedProductSet != null;
-        if (!inputProductSetIdValid) {
-            throw new ValidationException(inputProductSet, "An input product set must be selected.");
+        if (useAlternateInputPath.getValue()) {
+            boolean alternateInputPathValid = !alternateInputPath.getValue().trim().isEmpty();
+            if (!alternateInputPathValid) {
+                throw new ValidationException(alternateInputPath, "Please enter an alternative input path.");
+            }
+        } else {
+            DtoProductSet productSet = getProductSet();
+            boolean productSetValid = productSet != null;
+            if (!productSetValid) {
+                throw new ValidationException(inputProductSet, "An input product set must be selected.");
+            }
         }
     }
 
@@ -72,7 +105,11 @@ public class ProductSetSelectionForm extends Composite {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputPath", getProductSet().getPath());
+        if (useAlternateInputPath.getValue()) {
+            parameters.put("inputPath", alternateInputPath.getValue().trim());
+        } else {
+            parameters.put("inputPath", getProductSet().getPath());
+        }
         return parameters;
     }
 

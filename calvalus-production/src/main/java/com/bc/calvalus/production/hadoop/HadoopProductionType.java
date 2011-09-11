@@ -115,8 +115,19 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
+    /**
+     * outputPath :=  if parameter "outputPath" set: "${outputPath}": else "${defaultDir}"<br/>
+     * defaultDir := "home/${user}/${relDir}"<br/>
+     * relDir := if parameter "outputDir" set: "${outputDir}" else:  "${productionId}"  <br/>
+     *
+     * @param productionRequest request
+     * @param productionId      production ID
+     * @param dirSuffix         suffix to make multiple outputs unique
+     * @return the fully qualified output path
+     */
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
-        String defaultDir = String.format("home/%s/%s", productionRequest.getUserName(), productionId);
+        String relDir = productionRequest.getString("outputDir", productionId);
+        String defaultDir = String.format("home/%s/%s", productionRequest.getUserName(), relDir);
         String outputPath = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR,
                                                         productionRequest.getString("outputPath", defaultDir));
         return getInventoryService().getQualifiedPath(outputPath + dirSuffix);

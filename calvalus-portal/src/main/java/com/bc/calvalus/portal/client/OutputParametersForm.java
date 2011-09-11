@@ -6,6 +6,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
@@ -26,11 +27,15 @@ public class OutputParametersForm extends Composite {
     @UiField
     ListBox outputFormat;
     @UiField
+    TextBox outputDir;
+    @UiField
     CheckBox autoStaging;
+    @UiField
+    CheckBox autoDelete;
 
     public OutputParametersForm() {
         initWidget(uiBinder.createAndBindUi(this));
-
+        // todo - get the available output formats from
         setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
     }
 
@@ -52,18 +57,27 @@ public class OutputParametersForm extends Composite {
         return outputFormat.getValue(index);
     }
 
-    public boolean isAutoStaging() {
-        return autoStaging.getValue();
-    }
-
     public void validateForm() throws ValidationException {
+        String value = outputDir.getText().trim();
+        boolean outputDirValid = value.startsWith("/");
+        if (!outputDirValid) {
+             throw new ValidationException(outputDir, "The ouput directory must not be an absolute path.");
+        }
     }
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
+        if (!getOutputDir().isEmpty()) {
+            parameters.put("outputDir", getOutputDir());
+        }
         parameters.put("outputFormat", getOutputFormat());
-        parameters.put("autoStaging", isAutoStaging() + "");
+        parameters.put("autoStaging", autoStaging.getValue() + "");
+        parameters.put("autoDelete", autoDelete.getValue() + "");
         return parameters;
+    }
+
+    private String getOutputDir() {
+        return outputDir.getValue().trim();
     }
 
 }

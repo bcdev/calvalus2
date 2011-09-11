@@ -1,25 +1,57 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
-             xmlns:g='urn:import:com.google.gwt.user.client.ui'
-        >
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
-    <g:VerticalPanel spacing="2">
+    <ui:style src="style.css"/>
 
-        <g:HTMLPanel width="100%">
-            <h3>Output</h3>
-            <hr/>
-        </g:HTMLPanel>
+    <g:HorizontalPanel spacing="16">
+        <g:VerticalPanel spacing="2">
 
-        <g:HorizontalPanel spacing="2">
-            <g:Label>File format:</g:Label>
-            <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
-            <g:Label>Note that the available file formats may depend on the selected processor.</g:Label>
-        </g:HorizontalPanel>
+            <g:HTMLPanel width="100%">
+                <h3>Output Parameters</h3>
+                <hr/>
+            </g:HTMLPanel>
 
-        <g:CheckBox ui:field="autoStaging"
-                    text="Automatically perform staging step after successful production"
-                    checked="true"/>
+            <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                <g:Label>Directory:</g:Label>
+                <g:TextBox ui:field="outputDir" visibleLength="48"/>
+            </g:HorizontalPanel>
+            <g:HTML addStyleNames="{style.explanatoryText}">
+                Provide a directory name only if you want to use the output as input to another production later.
+                Note that the direcory will be cleaned,
+                before production outputs are written. If left empty, a temporary output directory will
+                be used.
+                <p/>
+            </g:HTML>
 
-    </g:VerticalPanel>
+            <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                <g:Label>Format:</g:Label>
+                <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
+            </g:HorizontalPanel>
+            <g:HTML addStyleNames="{style.explanatoryText}">
+                Note that the available file formats
+                may depend on the selected processor.
+                <p/>
+            </g:HTML>
+
+            <g:CheckBox ui:field="autoStaging"
+                        text="Perform staging step after successful production"
+                        checked="true"/>
+            <g:HTMLPanel addStyleNames="{style.explanatoryText}">
+                Leave unchecked, leave unchecked if output is used as input
+                for another production step.
+                <p/>
+            </g:HTMLPanel>
+
+            <g:CheckBox ui:field="autoDelete"
+                        text="Delete production output after successful staging"
+                        checked="true"/>
+            <g:HTML addStyleNames="{style.explanatoryText}">
+                Leave unchecked, leave unchecked if output is used as input
+                for another production step.
+                <p/>
+            </g:HTML>
+        </g:VerticalPanel>
+    </g:HorizontalPanel>
 
 </ui:UiBinder>

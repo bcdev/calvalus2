@@ -5,27 +5,28 @@
         >
 
     <g:HorizontalPanel spacing="16">
+
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <h3>L2 Processor</h3>
+                <h3>Level-2 Processor</h3>
                 <hr/>
             </g:HTMLPanel>
 
-            <g:ListBox ui:field="processorList" visibleItemCount="8"/>
+            <g:ListBox ui:field="processorList" width="12em" visibleItemCount="8"/>
 
         </g:VerticalPanel>
 
         <g:VerticalPanel spacing="2">
 
             <g:HTMLPanel width="100%">
-                <h3>L2 Parameters</h3>
+                <h3>Level-2 Parameters</h3>
                 <hr/>
             </g:HTMLPanel>
 
             <g:TextArea ui:field="processorParametersArea"
-                        characterWidth="100"
-                        visibleLines="10"/>
+                        characterWidth="80"
+                        visibleLines="8"/>
             <g:FormPanel ui:field="uploadForm" method="POST">
                 <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
             </g:FormPanel>

@@ -31,12 +31,8 @@ public class L2ConfigForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
-    HTML processorListTitle;
-    @UiField
     ListBox processorList;
 
-    @UiField
-    HTML processorParametersTitle;
     @UiField
     TextArea processorParametersArea;
     @UiField

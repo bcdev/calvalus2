@@ -1,0 +1,6 @@
+On Monday:
+    Deploy
+    Regions: Use correct region names, store regions in DB or /calvalus/home/${user}/?
+    Processors: allow multiple processors in a bundle, enable QAA
+    Manage Productions: display output path, so that it can be used as input path
+    Test, test, test

@@ -69,14 +69,9 @@ public class OrderL2ProductionView extends OrderProductionView {
         orderPanel.add(buttonPanel);
         orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
 
-        HorizontalPanel panel1 = new HorizontalPanel();
-        panel1.setSpacing(16);
-        panel1.add(productSetSelectionForm);
-        panel1.add(new HTML("<b>TODO: Path selection here</b>"));
-
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
-        panel.add(panel1);
+        panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);

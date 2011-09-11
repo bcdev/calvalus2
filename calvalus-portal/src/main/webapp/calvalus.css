@@ -17,7 +17,7 @@
 }
 
 .title {
-    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-family: Calibri, Verdana, Arial, sans-serif;
     color: #7b8fae;
     font-size: 32pt;
     font-weight: bold;
@@ -27,7 +27,7 @@
 }
 
 .subTitle {
-    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 16pt;
     color: #888;
     margin: 0;
@@ -35,7 +35,7 @@
 }
 
 .userName {
-    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 10pt;
     color: #AAA;
     text-align: right;
@@ -44,7 +44,7 @@
 }
 
 .copyright {
-    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 9pt;
     color: #AAA;
     text-align: center;
@@ -52,7 +52,7 @@
 }
 
 .loginPanel {
-    font-family: Calibri,Verdana,Arial,sans-serif;
+    font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 12pt;
     text-align: center;
     padding-top: 20px;
@@ -68,6 +68,9 @@
     margin: 10px;
     padding: 5px;
 }
+
+
+
 
 
 
