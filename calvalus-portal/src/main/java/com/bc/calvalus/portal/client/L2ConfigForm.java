@@ -50,11 +50,13 @@ public class L2ConfigForm extends Composite {
 
         FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=1",
                                          new FormPanel.SubmitHandler() {
+                                             @Override
                                              public void onSubmit(FormPanel.SubmitEvent event) {
                                                  // we can check for valid input here
                                              }
                                          },
                                          new FormPanel.SubmitCompleteHandler() {
+                                             @Override
                                              public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
                                                  String results = event.getResults();
                                                  processorParametersArea.setText(results != null ? results : "");
