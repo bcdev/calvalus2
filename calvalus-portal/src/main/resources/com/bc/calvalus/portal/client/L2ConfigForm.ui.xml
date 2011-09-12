@@ -13,7 +13,7 @@
                 <hr/>
             </g:HTMLPanel>
 
-            <g:ListBox ui:field="processorList" width="12em" visibleItemCount="8"/>
+            <g:ListBox ui:field="processorList" width="24em" visibleItemCount="8"/>
 
         </g:VerticalPanel>
 
