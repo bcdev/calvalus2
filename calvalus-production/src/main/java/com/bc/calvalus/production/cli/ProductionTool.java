@@ -2,21 +2,10 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionResponse;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceConfig;
+import com.bc.calvalus.production.*;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
+import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -64,16 +53,18 @@ import java.util.Map;
  */
 public class ProductionTool {
 
-    private static final String TOOL_NAME = "cpt";
-
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
     private static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
     private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-201108";
 
+    private static final String CALVALUS_SOFTWARE_HOME = "/calvalus/software/0.5";
+    private static final String BUNDLE_SEPARATOR = "-->";
+
+    private static final String TOOL_NAME = "cpt";
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
 
     private boolean errors;
-    private boolean quite;
+    private boolean quiet;
 
     public static void main(String[] args) {
         new ProductionTool().run(args);
@@ -90,6 +81,8 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
+                || commandLine.hasOption("uninstall")
+                || commandLine.hasOption("install")
                 || commandLine.hasOption("kill")
                 || commandLine.hasOption("copy")
                 || commandLine.hasOption("help");
@@ -103,7 +96,7 @@ public class ProductionTool {
         String requestPath = argList.size() == 1 ? (String) argList.get(0) : null;
 
         errors = commandLine.hasOption("errors");
-        quite = commandLine.hasOption("quite");
+        quiet = commandLine.hasOption("quiet");
 
         if (commandLine.hasOption("help")) {
             printHelp();
@@ -123,14 +116,23 @@ public class ProductionTool {
             Map<String, String> config = ProductionServiceConfig.loadConfig(new File(configFile), defaultConfig);
             say("Configuration loaded.");
 
+            if (commandLine.hasOption("uninstall")) {
+                uninstallBundles(commandLine.getOptionValue("uninstall"), config);
+            }
+
+            if (commandLine.hasOption("install")) {
+                installBundles(commandLine.getOptionValue("install"), config);
+            }
+
             if (commandLine.hasOption("deploy")) {
-                deployCalvalusSoftware(commandLine.getOptionValue("deploy"), config);
+                deployBundleFiles(commandLine.getOptionValue("deploy"), config);
             }
 
             if (commandLine.hasOption("copy")) {
                 copyFilesToHDFS(commandLine.getOptionValue("copy"), config);
             }
 
+            // Don't exit if we want to 'kill' something, since we need the production service to do so.
             if (requestPath == null && !commandLine.hasOption("kill")) {
                 return;
             }
@@ -256,14 +258,39 @@ public class ProductionTool {
         }
     }
 
-    private void deployCalvalusSoftware(String sourcePathsString, Map<String, String> config) {
-        final Path destinationPath = new Path(String.format("/calvalus/software/0.5/%s",
-                                                            config.get("calvalus.calvalus.bundle")));
+    private void installBundles(String sourcePathsString, Map<String, String> config) {
         Path[] sourcePaths = getSourcePaths(sourcePathsString);
         try {
-            copyToHDFS(sourcePaths, destinationPath, config);
+            installBundles0(sourcePaths, config);
         } catch (IOException e) {
-            exit("Error: Failed to deploy one or more files to Calvalus", 22, e);
+            exit("Error: Failed to install one or more bundles on Calvalus", 22, e);
+        }
+    }
+
+    private void uninstallBundles(String uninstallArg, Map<String, String> config) {
+        String[] bundleNames = uninstallArg.split(",");
+        try {
+            uninstallBundles0(bundleNames, config);
+        } catch (IOException e) {
+            exit("Error: Failed to uninstall one or more bundles from Calvalus", 22, e);
+        }
+    }
+
+    private void deployBundleFiles(String deployArg, Map<String, String> config) {
+        int pos = deployArg.lastIndexOf(BUNDLE_SEPARATOR);
+        if (pos < 0 || pos == deployArg.length() - BUNDLE_SEPARATOR.length()) {
+            exit("Error: Failed to deploy bundle files: no bundle name given: " + deployArg, 22);
+        } else if (pos == 0) {
+            exit("Error: Failed to deploy bundle files: no files given: " + deployArg, 22);
+        }
+        String bundleName = deployArg.substring(pos + BUNDLE_SEPARATOR.length());
+        String sourcePathsString = deployArg.substring(0, pos);
+        Path[] sourcePaths = getSourcePaths(sourcePathsString);
+        try {
+            FileSystem fs = getHDFS(config);
+            copy(sourcePaths, fs, getQualifiedBundlePath(fs, bundleName));
+        } catch (IOException e) {
+            exit("Error: Failed to deploy one or more bundle files", 22, e);
         }
     }
 
@@ -294,23 +321,70 @@ public class ProductionTool {
 
     private void ensureLocalPathsExist(Path[] paths) {
         for (Path path : paths) {
-            if (!new File(path.toString()).isFile()) {
+            if (!new File(path.toString()).exists()) {
                 exit("Error: Local file does not exist: " + path, 21);
             }
         }
     }
 
+    private void installBundles0(Path[] sourcePaths, Map<String, String> config) throws IOException {
+        Configuration hadoopConfig = getHadoopConf(config);
+        FileSystem hdfs = FileSystem.get(hadoopConfig);
+        say("Installing " + sourcePaths.length + " bundle(s) in '" + getQualifiedSoftwareHome(hdfs) + "'...");
+        for (Path sourcePath : sourcePaths) {
+            String bundleName = getBundleName(sourcePath);
+            Path bundlePath = getQualifiedBundlePath(hdfs, bundleName);
+            uninstallBundle(hdfs, bundlePath, false);
+            installBundle(sourcePath, hdfs, bundlePath, hadoopConfig);
+        }
+        say(sourcePaths.length + " bundles installed.");
+    }
+
+    private void uninstallBundles0(String[] bundleNames, Map<String, String> config) throws IOException {
+        FileSystem hdfs = getHDFS(config);
+        say("Uninstalling " + bundleNames.length + " bundle(s) from '" + getQualifiedSoftwareHome(hdfs) + "'...");
+        for (String bundleName : bundleNames) {
+            Path bundlePath = getQualifiedBundlePath(hdfs, bundleName);
+            uninstallBundle(hdfs, bundlePath, true);
+        }
+        say(bundleNames.length + " bundle(s) uninstalled.");
+    }
+
+    private void installBundle(Path sourcePath, FileSystem hdfs, Path bundlePath, Configuration hadoopConfig) throws IOException {
+        DirCopy.copyDir(new File(sourcePath.toString()), hdfs, bundlePath, hadoopConfig);
+        say("+ " + bundlePath.getName() + " installed");
+    }
+
+    private void uninstallBundle(FileSystem hdfs, Path qualifiedDestinationPath, boolean mustExist) throws IOException {
+        if (hdfs.exists(qualifiedDestinationPath)) {
+            if (hdfs.delete(qualifiedDestinationPath, true)) {
+                say("- " + qualifiedDestinationPath.getName() + " uninstalled");
+            } else {
+                say("! " + qualifiedDestinationPath.getName() + " could not be deleted");
+            }
+        } else if (mustExist) {
+            say("! " + qualifiedDestinationPath.getName() + " does not exists");
+        }
+    }
+
+    private FileSystem getHDFS(Map<String, String> config) throws IOException {
+        Configuration hadoopConfig = getHadoopConf(config);
+        return FileSystem.get(hadoopConfig);
+    }
+
+
     private void copyToHDFS(Path[] sourcePaths, Path destinationPath, Map<String, String> config) throws IOException {
-        say("Copying " + sourcePaths.length + " local file(s) to HDFS...");
-        Configuration hadoopConfig = new Configuration();
-        hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
-        FileSystem fs = FileSystem.get(hadoopConfig);
+        copy(sourcePaths, getHDFS(config), destinationPath);
+    }
+
+    private void copy(Path[] sourcePaths, FileSystem fs, Path destinationPath) throws IOException {
+        say("Copying " + sourcePaths.length + " local file(s) to "+destinationPath+"...");
         Path qualifiedDestinationPath = fs.makeQualified(destinationPath);
         for (Path sourcePath : sourcePaths) {
-            say("*  " + sourcePath + " --> " + qualifiedDestinationPath);
+            say("+ " + sourcePath.getName());
         }
         copyFromLocalFile(fs, sourcePaths, qualifiedDestinationPath);
-        say("Files copied.");
+        say(sourcePaths.length + " file(s) copied.");
     }
 
     private void copyFromLocalFile(FileSystem fs, Path[] sourcePaths, Path destinationDir) throws IOException {
@@ -318,6 +392,37 @@ public class ProductionTool {
         boolean delSrc = false;
         fs.mkdirs(destinationDir);
         fs.copyFromLocalFile(delSrc, overwrite, sourcePaths, destinationDir);
+    }
+
+    private Configuration getHadoopConf(Map<String, String> config) {
+        Configuration hadoopConfig = new Configuration();
+        hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
+        return hadoopConfig;
+    }
+
+    private Path getQualifiedBundlePath(FileSystem fs, String bundleName) {
+        char[] invalidCharacters = {'/', ':', ';', ','};
+        for (char invalidCharacter : invalidCharacters) {
+            if (bundleName.indexOf(invalidCharacter) != -1) {
+                exit("Error: Invalid bundle name: " + bundleName, 22);
+            }
+        }
+        return new Path(getQualifiedSoftwareHome(fs), bundleName);
+    }
+
+    private Path getQualifiedSoftwareHome(FileSystem fs) {
+        return fs.makeQualified(new Path(CALVALUS_SOFTWARE_HOME));
+    }
+
+    private String getBundleName(Path sourcePath) {
+        String bundleName = sourcePath.getName();
+        if (bundleName.toLowerCase().endsWith(".zip")) {
+            return bundleName.substring(0, bundleName.length() - ".zip".length());
+        }
+        if (bundleName.toLowerCase().endsWith(".jar")) {
+            return bundleName.substring(0, bundleName.length() - ".jar".length());
+        }
+        return bundleName;
     }
 
     private void exit(String message, int exitCode, Throwable error) {
@@ -329,7 +434,7 @@ public class ProductionTool {
     }
 
     private void say(String message) {
-        if (!quite) {
+        if (!quiet) {
             System.out.println(message);
         }
     }
@@ -357,8 +462,8 @@ public class ProductionTool {
     public static Options createCommandlineOptions() {
         Options options = new Options();
         options.addOption(OptionBuilder
-                                  .withLongOpt("quite")
-                                  .withDescription("Quite mode, only minimum console output.")
+                                  .withLongOpt("quiet")
+                                  .withDescription("Quiet mode, only minimum console output.")
                                   .create("q"));
         options.addOption(OptionBuilder
                                   .withLongOpt("errors")
@@ -372,7 +477,7 @@ public class ProductionTool {
                                   .withLongOpt("calvalus")
                                   .hasArg()
                                   .withArgName("NAME")
-                                  .withDescription("The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'")
+                                  .withDescription("The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
                                   .create("C"));
         options.addOption(OptionBuilder
                                   .withLongOpt("beam")
@@ -387,19 +492,35 @@ public class ProductionTool {
                                   .withDescription("The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
                                   .create("c"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("deploy")
-                                  .hasArg()
-                                  .withArgName("FILES")
-                                  .withDescription("Deploys FILES to the Calvalus bundle before the request is executed. " +
-                                                           "The Calvalus bundle given by the 'calvalus' option. " +
-                                                           "Use the colon ':' to separate multiple paths in FILES.")
-                                  .create());  // (sub) commands don't have short options
-        options.addOption(OptionBuilder
                                   .withLongOpt("copy")
                                   .hasArgs()
                                   .withArgName("FILES")
-                                  .withDescription("Copies FILES to '/calvalus/home/<user>' before the request is executed." +
-                                                           "Use the colon ':' to separate paths in FILES.")
+                                  .withDescription("Copies FILES to '/calvalus/home/<user>' before any request is executed." +
+                                                           "Use character '"+File.pathSeparator+"' to separate paths in FILES.")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("deploy")
+                                  .hasArg()
+                                  .withArgName("FILES-->BUNDLE")
+                                  .withDescription("Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
+                                                           "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
+                                                           "Use character '"+File.pathSeparator+"' to separate multiple paths in FILES.")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("install")
+                                  .hasArgs()
+                                  .withArgName("BUNDLES")
+                                  .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
+                                                           "on Calvalus before any request is executed." +
+                                                           "Use character '"+File.pathSeparator+"' to separate multiple entries in BUNDLES.")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("uninstall")
+                                  .hasArgs()
+                                  .withArgName("BUNDLES")
+                                  .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
+                                                           "from Calvalus before any request is executed." +
+                                                           "Use character ',' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("kill")
