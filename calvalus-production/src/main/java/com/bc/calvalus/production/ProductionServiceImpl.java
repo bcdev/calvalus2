@@ -6,8 +6,8 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
@@ -67,9 +67,9 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public ProcessorDescriptor[] getProcessors(String filter) throws ProductionException {
+    public BundleDescriptor[] getBundles(String filter) throws ProductionException {
         try {
-            return processingService.getProcessors(filter);
+            return processingService.getBundles(filter);
         } catch (Exception e) {
             throw new ProductionException("Failed to load list of processors.", e);
         }

@@ -7,9 +7,9 @@ public class ProcessorDescriptor {
 
     public static class Variable {
 
-        String name;
-        String defaultAggregator;
-        String defaultWeightCoeff;
+        private String name;
+        private String defaultAggregator;
+        private String defaultWeightCoeff;
 
         // empty constructor for XML serialization
         public Variable() {
@@ -39,11 +39,7 @@ public class ProcessorDescriptor {
     @Parameter
     private String processorName;
     @Parameter
-    private String defaultParameter;
-    @Parameter
-    private String bundleName;
-    @Parameter
-    private String bundleVersion;
+    private String defaultParameters;
     @Parameter
     private String[] outputFormats;
 
@@ -70,21 +66,15 @@ public class ProcessorDescriptor {
 
     public ProcessorDescriptor(String executableName,
                                String processorName,
-                               String defaultParameter,
-                               String bundleName,
-                               String bundleVersion,
+                               String defaultParameters,
                                Variable ... outputVariables) {
 
         Assert.notNull(executableName, "executableName");
         Assert.notNull(processorName, "processorName");
-        Assert.notNull(defaultParameter, "defaultParameters");
-        Assert.notNull(bundleName, "bundleName");
-        Assert.notNull(bundleVersion, "bundleVersions");
+        Assert.notNull(defaultParameters, "defaultParameters");
         this.executableName = executableName;
         this.processorName = processorName;
-        this.defaultParameter = defaultParameter;
-        this.bundleName = bundleName;
-        this.bundleVersion = bundleVersion;
+        this.defaultParameters = defaultParameters;
         this.outputVariables = outputVariables;
     }
 
@@ -96,16 +86,8 @@ public class ProcessorDescriptor {
         return processorName;
     }
 
-    public String getDefaultParameter() {
-        return defaultParameter;
-    }
-
-    public String getBundleName() {
-        return bundleName;
-    }
-
-    public String getBundleVersion() {
-        return bundleVersion;
+    public String getDefaultParameters() {
+        return defaultParameters;
     }
 
     public String[] getOutputFormats() {

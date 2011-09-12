@@ -2,9 +2,9 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.ProcessorDescriptor;
 import org.junit.Ignore;
 
 import java.io.IOException;
@@ -26,8 +26,8 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
-        return new ProcessorDescriptor[0];
+    public BundleDescriptor[] getBundles(String filter) throws IOException {
+        return new BundleDescriptor[0];
     }
 
     @Override

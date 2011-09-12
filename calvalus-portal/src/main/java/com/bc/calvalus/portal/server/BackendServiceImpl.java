@@ -3,9 +3,25 @@ package com.bc.calvalus.portal.server;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.ProductSet;
-import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceException;
+import com.bc.calvalus.portal.shared.DtoProcessState;
+import com.bc.calvalus.portal.shared.DtoProcessStatus;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
+import com.bc.calvalus.portal.shared.DtoProductionResponse;
+import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionResponse;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
@@ -13,7 +29,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 /**
@@ -100,15 +123,26 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException {
         try {
-            ProcessorDescriptor[] processorDescriptors = productionService.getProcessors(filter);
-            DtoProcessorDescriptor[] dtoProcessorDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
-            for (int i = 0; i < processorDescriptors.length; i++) {
-                dtoProcessorDescriptors[i] = convert(processorDescriptors[i]);
+            List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
+            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(filter);
+            for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
+                DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
+                dtoProcessorDescriptors.addAll(Arrays.asList(dtoDescriptors));
             }
-            return dtoProcessorDescriptors;
+            return dtoProcessorDescriptors.toArray(new DtoProcessorDescriptor[dtoProcessorDescriptors.size()]);
         } catch (ProductionException e) {
             throw convert(e);
         }
+    }
+
+    private DtoProcessorDescriptor[] getDtoProcessorDescriptors(BundleDescriptor bundleDescriptor) {
+        ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
+        DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
+        for (int i = 0; i < processorDescriptors.length; i++) {
+            dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
+                                        processorDescriptors[i]);
+        }
+        return dtoDescriptors;
     }
 
     @Override
@@ -201,12 +235,13 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getMaxDate());
     }
 
-    private DtoProcessorDescriptor convert(ProcessorDescriptor processorDescriptor) {
+    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion,
+                                           ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
-                                          processorDescriptor.getDefaultParameter() != null ? processorDescriptor.getDefaultParameter().trim() : "",
-                                          processorDescriptor.getBundleName(),
-                                          processorDescriptor.getBundleVersion(),
+                                          processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
+                                          bundleName,
+                                          bundleVersion,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           processorDescriptor.getMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()));

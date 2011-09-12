@@ -3,9 +3,9 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -49,8 +49,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
-        ArrayList<ProcessorDescriptor> descriptors = new ArrayList<ProcessorDescriptor>();
+    public BundleDescriptor[] getBundles(String filter) throws IOException {
+        ArrayList<BundleDescriptor> descriptors = new ArrayList<BundleDescriptor>();
 
         try {
             Path softwarePath = fileSystem.makeQualified(new Path(CALVALUS_SOFTWARE_PATH));
@@ -58,11 +58,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             for (FileStatus path : paths) {
                 FileStatus[] subPaths = fileSystem.listStatus(path.getPath());
                 for (FileStatus subPath : subPaths) {
-                    if (subPath.getPath().toString().endsWith("processor-descriptor.xml")) {
+                    if (subPath.getPath().toString().endsWith("bundle-descriptor.xml")) {
                         try {
-                            ProcessorDescriptor pd = new ProcessorDescriptor();
-                            new XmlBinding().convertXmlToObject(readFile(subPath), pd);
-                            descriptors.add(pd);
+                            BundleDescriptor bd = new BundleDescriptor();
+                            new XmlBinding().convertXmlToObject(readFile(subPath), bd);
+                            descriptors.add(bd);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());
                         }
@@ -73,7 +73,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             logger.warning(e.getMessage());
         }
 
-        return descriptors.toArray(new ProcessorDescriptor[descriptors.size()]);
+        return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
     }
 
     // this code exists somewhere else already

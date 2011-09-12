@@ -1,7 +1,7 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.inventory.ProductSet;
-import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.BundleDescriptor;
 
 import java.io.OutputStream;
 
@@ -24,11 +24,12 @@ public interface ProductionService {
     /**
      * Gets all known processors.
      *
+     *
      * @param filter A filter expression (not yet used).
      * @return The processors.
      * @throws ProductionException If a service error occurred.
      */
-    ProcessorDescriptor[] getProcessors(String filter) throws ProductionException;
+    BundleDescriptor[] getBundles(String filter) throws ProductionException;
 
     /**
      * Gets all known productions.

@@ -14,11 +14,12 @@ public interface ProcessingService<JobId> {
     /**
      * Gets the list of processors supported by the service.
      *
+     *
      * @param filter An optional filter expression (unused)
      * @return The list of processors supported by the service.
      * @throws IOException if an I/O error occurs.
      */
-    ProcessorDescriptor[] getProcessors(String filter) throws Exception;
+    BundleDescriptor[] getBundles(String filter) throws Exception;
 
     /**
      * @return The format used represent job IDs as plain text.

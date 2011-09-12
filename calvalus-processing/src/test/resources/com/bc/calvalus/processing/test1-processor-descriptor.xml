@@ -1,9 +1,7 @@
 <processorDescriptor>
     <executableName>CoastColour.L2W</executableName>
     <processorName>MERIS CoastColour</processorName>
-    <bundleName>coastcolour-processing</bundleName>
-    <bundleVersion>0.5-SNAPSHOT</bundleVersion>
-    <defaultParameter>
+    <defaultParameters>
         <![CDATA[
 <parameters>
     <useIdepix>false</useIdepix>
@@ -11,7 +9,7 @@
     <outputReflec>false</outputReflec>
 </parameters>
     ]]>
-    </defaultParameter>
+    </defaultParameters>
     <outputFormats>BEAM-DIMAP,NetCDF,GeoTIFF</outputFormats>
     <descriptionHtml>
         <![CDATA[

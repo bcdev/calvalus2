@@ -2,35 +2,36 @@ package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.inventory.InventoryService;
-import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.ProcessorDescriptor;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * A processing system that is implemented locally (e.g. using BEAM).
  */
 class LocalProcessingService implements ProcessingService<String> {
-    private final ProcessorDescriptor[] processorDescriptors;
+    private final BundleDescriptor[] bundleDescriptors;
     private final Map<String, Job> jobs;
     private final Map<String, ProcessStatus> jobStatuses;
 
     static long jobNum = System.nanoTime();
 
-    public LocalProcessingService(ProcessorDescriptor... processorDescriptors) {
-        this.processorDescriptors = processorDescriptors;
+    public LocalProcessingService(BundleDescriptor... bundleDescriptors) {
+        this.bundleDescriptors = bundleDescriptors;
         jobs = new HashMap<String, Job>();
         jobStatuses = new HashMap<String, ProcessStatus>();
     }
 
     @Override
-    public ProcessorDescriptor[] getProcessors(String filter) throws IOException {
-        return processorDescriptors;
+    public BundleDescriptor[] getBundles(String filter) throws IOException {
+        return bundleDescriptors;
     }
 
     @Override

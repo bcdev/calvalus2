@@ -1,8 +1,13 @@
 package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
@@ -25,48 +30,47 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
         InventoryService inventoryService = new LocalInventoryService();
 
         LocalProcessingService processingService = new LocalProcessingService(
-                new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
-                                        "a=2\nb=5",
-                                        "beam-meris-case2r",
-                                        "1.5-SNAPSHOT",
-                                        new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                new BundleDescriptor("beam-meris-case2r","1.5-SNAPSHOT",
+                                     new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "a=2\nb=5",
+                                                             new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
+                                                                                              "0.5"),
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG",
+                                                                                              "1.0")),
+                                     new ProcessorDescriptor("pc1-1", "MERIS Glint", "a=2\nb=5",
+                                                             new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
+                                                                                              "0.5"),
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG",
+                                                                                              "1.0"))),
+                new BundleDescriptor("beam-meris-case2r","1.4",
                 new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
                                         "a=1\nb=4",
-                                        "beam-meris-case2r",
-                                        "1.4",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-case2r","1.3",
                 new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
                                         "a=2\nb=1",
-                                        "beam-meris-case2r",
-                                        "1.3",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-case2r","1.3-marco3",
                 new ProcessorDescriptor("pc1", "MERIS IOP Case2R",
                                         "a=3\nb=5",
-                                        "beam-meris-case2r",
-                                        "1.3-marco3",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa","1.2-SNAPSHOT",
                 new ProcessorDescriptor("pc2", "MERIS IOP QAA",
                                         "u = 2\nv = 5",
-                                        "beam-meris-qaa",
-                                        "1.2-SNAPSHOT",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa","1.1.3",
                 new ProcessorDescriptor("pc2", "MERIS IOP QAA",
                                         "u = 2\nv = 7",
-                                        "beam-meris-qaa",
-                                        "1.1.3",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")),
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa","1.0.1",
                 new ProcessorDescriptor("pc2", "MERIS IOP QAA",
                                         "u = 1\nv = 2",
-                                        "beam-meris-qaa",
-                                        "1.0.1",
                                         new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))
+                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")))
         );
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
 

@@ -1,0 +1,15 @@
+<bundleDescriptor>
+    <bundleName>bundle-test-name</bundleName>
+    <bundleVersion>1.1-SNAPSHOT</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>executeMe.bat</executableName>
+            <processorName>Science Test Processor</processorName>
+        </processorDescriptor>
+        <processorDescriptor>
+            <executableName>run.exe</executableName>
+            <processorName>Do Test Processing</processorName>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>

@@ -40,10 +40,8 @@ public class ProcessorDescriptorTest {
         assertNotNull(processorDescriptor.getExecutableName());
         assertEquals("CoastColour.L2W", processorDescriptor.getExecutableName());
         assertEquals("MERIS CoastColour", processorDescriptor.getProcessorName());
-        assertEquals("coastcolour-processing", processorDescriptor.getBundleName());
-        assertEquals("0.5-SNAPSHOT", processorDescriptor.getBundleVersion());
 
-        String defaultParameter = processorDescriptor.getDefaultParameter().trim();
+        String defaultParameter = processorDescriptor.getDefaultParameters().trim();
         String expectedParameter = "<parameters>\n" +
                 "    <useIdepix>false</useIdepix>\n" +
                 "    <landExpression>l1_flags.LAND_OCEAN</landExpression>\n" +
