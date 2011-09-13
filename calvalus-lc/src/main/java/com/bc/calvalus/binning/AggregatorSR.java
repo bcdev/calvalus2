@@ -149,24 +149,32 @@ public class AggregatorSR extends AbstractAggregator {
         if (status == STATUS_LAND) {
             int landCount = (int) spatialVector.get(0);
             int snowCount = (int) spatialVector.get(2);
+            // If we haven't seen LAND so far, but we had SNOW, clear SDRs
             if (landCount == 0 && snowCount > 0) {
                 for (int i = 0; i < numSdrBands + numSdrBands + 1; i++) {
                     spatialVector.set(SBIN_SDR_OFFSET + i, 0.0f);
                 }
             }
+            // SSince we have seen LAND now, accumulate LAND SDRs
             addSpatialSdrs(observationVector, spatialVector);
+            // Count LAND
             spatialVector.set(0, landCount + 1);
         } else if (status == STATUS_WATER) {
+            // Count WATER
             spatialVector.set(1, spatialVector.get(1) + 1);
         } else if (status == STATUS_SNOW) {
             int landCount = (int) spatialVector.get(0);
+            // If we haven't seen LAND so far, accumulate SNOW SDRs
             if (landCount == 0) {
                 addSpatialSdrs(observationVector, spatialVector);
             }
+            // Count SNOW
             spatialVector.set(2, spatialVector.get(2) + 1);
         } else if (status == STATUS_CLOUD) {
+            // Count CLOUD
             spatialVector.set(3, spatialVector.get(3) + 1);
         } else if (status == STATUS_CLOUD_SHADOW) {
+            // Count CLOUD_SHADOW
             spatialVector.set(4, spatialVector.get(4) + 1);
         }
     }
