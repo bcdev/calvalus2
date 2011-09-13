@@ -80,9 +80,9 @@ public class MAConfig implements XmlConvertible {
     /**
      * If set to {@code true}, reference records that lie within the products boundaries are first sorted by their
      * pixel's Y coordinate, then by X. This setting may improve reading performance during pixel extraction.
-     * The default value is {@code false}.
+     * The default value is {@code true}.
      */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     private boolean sortInputByPixelYX;
 
     /**
