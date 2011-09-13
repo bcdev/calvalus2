@@ -18,18 +18,18 @@
             </g:HorizontalPanel>
             <g:HTML addStyleNames="{style.explanatoryText}">
                 Provide a directory name only if you want to use the output as input to another production later.
-                Note that the direcory will be cleaned,
+                Note that the directory will be cleaned,
                 before production outputs are written. If left empty, a temporary output directory will
                 be used.
                 <p/>
             </g:HTML>
 
             <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
-                <g:Label>Format:</g:Label>
+                <g:Label>Product file format:</g:Label>
                 <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
             </g:HorizontalPanel>
             <g:HTML addStyleNames="{style.explanatoryText}">
-                Note that the available file formats
+                Note that the available product file formats
                 may depend on the selected processor.
                 <p/>
             </g:HTML>
