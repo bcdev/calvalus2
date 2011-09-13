@@ -28,7 +28,7 @@
                             <g:Label>Path pattern:</g:Label>
                             <g:TextBox ui:field="alternateInputPath" visibleLength="48"/>
                         </g:HorizontalPanel>
-                        <g:HTML addStyleNames="{style.explanatoryText}">
+                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                             The common use is to specify the path of an output of a previous production here.
                             The path pattern may contain wildcards (<b>?</b>&nbsp;<b>*</b>&nbsp;<b>**</b>)
                             and references to the temporal and spatial filters:

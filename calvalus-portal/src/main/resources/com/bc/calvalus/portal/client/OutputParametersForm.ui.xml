@@ -16,7 +16,7 @@
                 <g:Label>Directory:</g:Label>
                 <g:TextBox ui:field="outputDir" visibleLength="48"/>
             </g:HorizontalPanel>
-            <g:HTML addStyleNames="{style.explanatoryText}">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                 Provide a directory name only if you want to use the output as input to another production later.
                 Note that the directory will be cleaned,
                 before production outputs are written. If left empty, a temporary output directory will
@@ -28,7 +28,7 @@
                 <g:Label>Product file format:</g:Label>
                 <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
             </g:HorizontalPanel>
-            <g:HTML addStyleNames="{style.explanatoryText}">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                 Note that the available product file formats
                 may depend on the selected processor.
                 <p/>
@@ -37,16 +37,16 @@
             <g:CheckBox ui:field="autoStaging"
                         text="Perform staging step after successful production"
                         checked="true"/>
-            <g:HTMLPanel addStyleNames="{style.explanatoryText}">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                 Leave unchecked, leave unchecked if output is used as input
                 for another production step.
                 <p/>
-            </g:HTMLPanel>
+            </g:HTML>
 
             <g:CheckBox ui:field="autoDelete"
                         text="Delete production output after successful staging"
                         checked="true"/>
-            <g:HTML addStyleNames="{style.explanatoryText}">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                 Leave unchecked, leave unchecked if output is used as input
                 for another production step.
                 <p/>
