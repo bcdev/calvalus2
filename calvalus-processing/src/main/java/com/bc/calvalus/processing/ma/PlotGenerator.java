@@ -66,7 +66,7 @@ public class PlotGenerator {
         if (dataset.getItemCount(0) >= 2) {
             regressionCoefficients = Regression.getOLSRegression(dataset, 0);
         }
-        final String subTitle2 = String.format("n=%d, a=%s, b=%s",
+        final String subTitle2 = String.format("n=%d, a=%.5f, b=%.5f",
                                                plotDataset.getPoints().length,
                                                regressionCoefficients[0],
                                                regressionCoefficients[1]);
