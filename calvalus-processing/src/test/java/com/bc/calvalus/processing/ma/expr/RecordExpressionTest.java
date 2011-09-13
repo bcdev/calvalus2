@@ -58,6 +58,7 @@ public class RecordExpressionTest {
 
         ParserImpl parser = new ParserImpl(namespace);
 
+        Term t0 = parser.parse("chl");
         Term t1 = parser.parse("chl.n");
         Term t2 = parser.parse("chl.nT");
         Term t3 = parser.parse("chl.nF");
@@ -69,6 +70,7 @@ public class RecordExpressionTest {
         Term t9 = parser.parse("chl.cv < 0.15 && chl.n > 5");
 
         recordEvalEnv.setContext(record1);
+        assertEquals(2.6, t0.evalD(recordEvalEnv), 1e-10);
         assertEquals(24, t1.evalI(recordEvalEnv));
         assertEquals(25, t2.evalI(recordEvalEnv));
         assertEquals(4, t3.evalI(recordEvalEnv));
