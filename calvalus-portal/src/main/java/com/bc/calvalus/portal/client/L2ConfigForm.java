@@ -113,8 +113,9 @@ public class L2ConfigForm extends Composite {
 
     public DtoProcessorDescriptor getProcessorDescriptor() {
         int selectedIndex = processorList.getSelectedIndex();
-        if (selectedIndex >= (selectionMandatory ? 0 : 1)) {
-            return processorDescriptors[selectedIndex];
+        int offset = selectionMandatory ? 0 : 1;
+        if (selectedIndex >= offset) {
+            return processorDescriptors[selectedIndex - offset];
         } else {
             return null;
         }
