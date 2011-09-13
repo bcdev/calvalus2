@@ -6,3 +6,8 @@ On Monday:
     Manage Productions: display output path, so that it can be used as input path
     Test, test, test
     Recognize prod. param. "autoDelete" (output params)
+    Missing portal features:
+         Restart
+         Request Templates
+         Logout
+         Help
