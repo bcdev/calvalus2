@@ -5,38 +5,45 @@
 
     <ui:style src="style.css"/>
 
-    <g:HorizontalPanel spacing="16">
+    <g:VerticalPanel spacing="2">
 
-        <g:VerticalPanel spacing="2">
+        <g:HorizontalPanel spacing="16">
 
-            <g:HTMLPanel width="100%">
-                <h3>Level-2 Processor</h3>
-                <hr/>
-            </g:HTMLPanel>
+            <g:VerticalPanel spacing="2">
 
-            <g:ListBox ui:field="processorList" width="24em" visibleItemCount="8"/>
-            <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryText}"/>
+                <g:HTMLPanel width="100%">
+                    <h3>Level-2 Processor</h3>
+                    <hr/>
+                </g:HTMLPanel>
 
-        </g:VerticalPanel>
+                <g:ListBox ui:field="processorList" width="24em" visibleItemCount="8"/>
+                <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryText}"/>
 
-        <g:VerticalPanel spacing="2">
+            </g:VerticalPanel>
 
-            <g:HTMLPanel width="100%">
-                <h3>Level-2 Parameters</h3>
-                <hr/>
-            </g:HTMLPanel>
+            <g:VerticalPanel spacing="2">
 
-            <g:TextArea ui:field="processorParametersArea"
-                        characterWidth="80"
-                        visibleLines="8"/>
-            <g:FormPanel ui:field="uploadForm" method="POST">
-                <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
-            </g:FormPanel>
-            <g:DisclosurePanel>
-                <g:header>Processor description:</g:header>
-                <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
-            </g:DisclosurePanel>
-        </g:VerticalPanel>
-    </g:HorizontalPanel>
+                <g:HTMLPanel width="100%">
+                    <h3>Level-2 Parameters</h3>
+                    <hr/>
+                </g:HTMLPanel>
+
+                <g:TextArea ui:field="processorParametersArea"
+                            characterWidth="80"
+                            visibleLines="8"/>
+                <g:FormPanel ui:field="uploadForm" method="POST">
+                    <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+                </g:FormPanel>
+            </g:VerticalPanel>
+
+        </g:HorizontalPanel>
+
+        <g:DisclosurePanel>
+            <g:header>Processor description:</g:header>
+            <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
+        </g:DisclosurePanel>
+
+    </g:VerticalPanel>
+
 
 </ui:UiBinder>
