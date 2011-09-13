@@ -59,9 +59,9 @@ public class OutputParametersForm extends Composite {
 
     public void validateForm() throws ValidationException {
         String value = outputDir.getText().trim();
-        boolean outputDirValid = value.startsWith("/");
+        boolean outputDirValid = !value.startsWith("/");
         if (!outputDirValid) {
-             throw new ValidationException(outputDir, "The ouput directory must not be an absolute path.");
+             throw new ValidationException(outputDir, "The output directory must not be an absolute path.");
         }
     }
 
