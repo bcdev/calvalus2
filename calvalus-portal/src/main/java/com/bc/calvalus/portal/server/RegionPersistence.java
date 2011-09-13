@@ -66,8 +66,7 @@ public class RegionPersistence {
 
     private Properties getUserRegions(DtoRegion[] regions) {
         Properties userRegions = new Properties();
-        for (int i = 0; i < regions.length; i++) {
-            DtoRegion region = regions[i];
+        for (DtoRegion region : regions) {
             if (region.getCategory().equalsIgnoreCase("user")) {
                 String fullName = region.getCategory() + "." + region.getName();
                 System.out.println("storing region " + fullName + " = " + region.getGeometryWkt());
