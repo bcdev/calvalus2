@@ -86,17 +86,25 @@ public class L2ConfigForm extends Composite {
             String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
             this.processorList.addItem(label);
         }
+
         if (processorDescriptors.length > 0) {
             processorList.setSelectedIndex(0);
         }
+
         processorList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                DtoProcessorDescriptor processorDescriptor = getProcessorDescriptor();
-                updateBundleName(processorDescriptor);
-                setProcessorDescriptor(processorDescriptor);
+                updateProcessorDetails();
             }
         });
+
+        updateProcessorDetails();
+    }
+
+    private void updateProcessorDetails() {
+        DtoProcessorDescriptor processorDescriptor = getProcessorDescriptor();
+        updateBundleName(processorDescriptor);
+        setProcessorDescriptor(processorDescriptor);
     }
 
     private void updateBundleName(DtoProcessorDescriptor processorDescriptor) {
