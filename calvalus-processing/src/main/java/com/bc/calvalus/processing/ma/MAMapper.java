@@ -65,12 +65,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         t0 = now();
 
         String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
         String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         Product product = productFactory.getProduct(inputPath,
                                                     inputFormat,
-                                                    regionGeometryWkt,
+                                                    null, // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
                                                     level2OperatorName,
                                                     level2Parameters);
         if (product == null) {
@@ -146,7 +147,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         context.getCounter(hostGroupName, "MAMapper runs").increment(1);
         context.getCounter(hostGroupName, "Product open time (ms)").increment(productOpenTime);
         context.getCounter(hostGroupName, "Record read time (ms)").increment(recordReadTime);
-        context.getCounter(hostGroupName, "Record write time (ms)").increment(recordWriteTime);
+        context.getCounter(hostGroupName, "Record processing time (ms)").increment(recordWriteTime);
         context.getCounter(hostGroupName, "Product close time (ms)").increment(productCloseTime);
         context.getCounter(hostGroupName, "MAMapper total time (ms)").increment(mapperTotalTime);
 
