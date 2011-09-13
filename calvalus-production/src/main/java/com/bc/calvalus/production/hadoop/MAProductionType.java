@@ -49,11 +49,15 @@ public class MAProductionType extends HadoopProductionType {
 
         String inputFormat = productionRequest.getString("calvalus.input.format", "ENVISAT");
 
-        String processorName = productionRequest.getString("processorName");
-        String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-        String processorBundle = String.format("%s-%s",
-                                               productionRequest.getString("processorBundleName"),
-                                               productionRequest.getString("processorBundleVersion"));
+        String processorName = productionRequest.getString("processorName", null);
+        String processorParameters = null;
+        String processorBundle = null;
+        if (processorName != null) {
+            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+            processorBundle = String.format("%s-%s",
+                                            productionRequest.getString("processorBundleName"),
+                                            productionRequest.getString("processorBundleVersion"));
+        }
 
         WorkflowItem workflowItem;
         if (l1InputFiles.length == 0) {

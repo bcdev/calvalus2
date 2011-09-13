@@ -52,11 +52,15 @@ public class L3ProductionType extends HadoopProductionType {
         String inputPath = productionRequest.getString("inputPath");
         List<DatePair> datePairList = getDatePairList(productionRequest, 10);
 
-        String processorName = productionRequest.getString("processorName");
-        String processorParameters = productionRequest.getString("processorParameters");
-        String processorBundle = String.format("%s-%s",
-                                               productionRequest.getString("processorBundleName"),
-                                               productionRequest.getString("processorBundleVersion"));
+        String processorName = productionRequest.getString("processorName", null);
+        String processorParameters = null;
+        String processorBundle = null;
+        if (processorName != null) {
+            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+            processorBundle = String.format("%s-%s",
+                                            productionRequest.getString("processorBundleName"),
+                                            productionRequest.getString("processorBundleVersion"));
+        }
 
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
