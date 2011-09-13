@@ -269,6 +269,12 @@ public class ProductSetFilterForm extends Composite {
                 throw new ValidationException(regionMap, "Please select a region.");
             }
         }
+
+        if (productSet.getPath().contains("${region}")) {
+            if (!spatialFilterByRegion.getValue()) {
+                throw new ValidationException(spatialFilterByRegion, "You have to select a region, because the file set's path requires it.");
+            }
+        }
     }
 
     public Map<String, String> getValueMap() {
@@ -286,7 +292,7 @@ public class ProductSetFilterForm extends Composite {
         }
 
         if (spatialFilterOff.getValue()) {
-            parameters.put("regionName", "global.World");
+            parameters.put("regionName", "World");
             parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
             parameters.put("minLon", "-180");
             parameters.put("minLat", "-90");
@@ -297,7 +303,7 @@ public class ProductSetFilterForm extends Composite {
             if (region != null) {
                 Polygon polygon = region.createPolygon();
                 LatLngBounds bounds = polygon.getBounds();
-                parameters.put("regionName", region.getQualifiedName());
+                parameters.put("regionName", region.getName());
                 parameters.put("regionWKT", region.getGeometryWkt());
                 parameters.put("minLon", bounds.getNorthEast().getLongitude() + "");
                 parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
