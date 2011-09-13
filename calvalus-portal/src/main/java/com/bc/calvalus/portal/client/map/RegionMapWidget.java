@@ -176,7 +176,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         Cell<Region> regionCell = new AbstractCell<Region>() {
             @Override
             public void render(Context context, Region value, SafeHtmlBuilder sb) {
-                sb.appendHtmlConstant(value.getName() + " <font size=\"-1\" color=\"#AAAAAA\">" + value.getCategory() + "</font>");
+                sb.appendHtmlConstant(value.getName() + " <font size=\"-2\" color=\"#777799\">" + value.getCategory() + "</font>");
             }
         };
 
