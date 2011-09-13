@@ -239,6 +239,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
+                                          processorDescriptor.getProcessorVersion(),
                                           processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
                                           bundleName,
                                           bundleVersion,

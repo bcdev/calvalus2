@@ -39,6 +39,8 @@ public class ProcessorDescriptor {
     @Parameter
     private String processorName;
     @Parameter
+    private String processorVersion;
+    @Parameter
     private String defaultParameters;
     @Parameter
     private String[] outputFormats;
@@ -66,14 +68,17 @@ public class ProcessorDescriptor {
 
     public ProcessorDescriptor(String executableName,
                                String processorName,
+                               String processorVersion,
                                String defaultParameters,
                                Variable ... outputVariables) {
 
         Assert.notNull(executableName, "executableName");
         Assert.notNull(processorName, "processorName");
+        Assert.notNull(processorVersion, "processorVersion");
         Assert.notNull(defaultParameters, "defaultParameters");
         this.executableName = executableName;
         this.processorName = processorName;
+        this.processorVersion = processorVersion;
         this.defaultParameters = defaultParameters;
         this.outputVariables = outputVariables;
     }
@@ -84,6 +89,10 @@ public class ProcessorDescriptor {
 
     public String getProcessorName() {
         return processorName;
+    }
+
+    public String getProcessorVersion() {
+        return processorVersion;
     }
 
     public String getDefaultParameters() {

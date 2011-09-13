@@ -10,6 +10,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class DtoProcessorDescriptor implements IsSerializable {
     private String executableName;
     private String processorName;
+    private String processorVersion;
     private String defaultParameter;
     private String bundleName;
     private String bundleVersion;
@@ -25,6 +26,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
 
     public DtoProcessorDescriptor(String executableName,
                                   String processorName,
+                                  String processorVersion,
                                   String defaultParameter,
                                   String bundleName,
                                   String bundleVersion,
@@ -33,6 +35,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   DtoProcessorVariable[] processorVariables) {
         this.executableName = executableName;
         this.processorName = processorName;
+        this.processorVersion = processorVersion;
         this.defaultParameter = defaultParameter;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
@@ -47,6 +50,10 @@ public class DtoProcessorDescriptor implements IsSerializable {
 
     public String getProcessorName() {
         return processorName;
+    }
+
+    public String getProcessorVersion() {
+        return processorVersion;
     }
 
     public String getDefaultParameter() {
