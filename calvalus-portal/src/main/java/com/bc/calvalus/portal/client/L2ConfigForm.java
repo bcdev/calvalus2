@@ -7,13 +7,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FileUpload;
-import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +35,8 @@ public class L2ConfigForm extends Composite {
     FileUpload fileUpload;
     @UiField
     FormPanel uploadForm;
+    @UiField
+    Label processorBundleName;
 
     private DtoProcessorDescriptor[] processorDescriptors;
     private final boolean selectionMandatory;
@@ -87,9 +83,19 @@ public class L2ConfigForm extends Composite {
         processorList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                setProcessorDescriptor(getProcessorDescriptor());
+                DtoProcessorDescriptor processorDescriptor = getProcessorDescriptor();
+                updateBundleName(processorDescriptor);
+                setProcessorDescriptor(processorDescriptor);
             }
         });
+    }
+
+    private void updateBundleName(DtoProcessorDescriptor processorDescriptor) {
+        if (processorDescriptor != null) {
+            processorBundleName.setText("Bundle: " + processorDescriptor.getBundleName() + " v" + processorDescriptor.getBundleVersion());
+        } else {
+            processorBundleName.setText("");
+        }
     }
 
     public HandlerRegistration addChangeHandler(final ChangeHandler changeHandler) {
