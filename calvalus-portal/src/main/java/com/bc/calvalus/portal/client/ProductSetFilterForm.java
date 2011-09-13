@@ -252,7 +252,7 @@ public class ProductSetFilterForm extends Composite {
                     throw new ValidationException(minDate, "Start date must be after start date of product set.");
                 }
                 if (!max.before(productSet.getMaxDate())) {
-                    throw new ValidationException(minDate, "Stop date must be before end date of product set.");
+                    throw new ValidationException(minDate, "End date must be before end date of product set.");
                 }
             }
         } else if (temporalFilterByDateList.getValue()) {
