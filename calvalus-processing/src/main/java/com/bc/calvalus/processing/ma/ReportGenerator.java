@@ -66,7 +66,7 @@ public class ReportGenerator {
         plotGenerator.setImageHeight(400);
         for (int i = 0; i < plotDatasets.length; i++) {
             PlotDatasetCollector.PlotDataset plotDataset = plotDatasets[i];
-            String title = String.format("%s @ %s",
+            String title = String.format("%s %s",
                                          plotDataset.getVariablePair().satelliteAttributeName,
                                          plotDataset.getGroupName());
             String subTitle = String.format("%s, %s",
@@ -83,8 +83,8 @@ public class ReportGenerator {
             summaryFileWriter.printf("    <satelliteVariable>%s</satelliteVariable>\n", plotDataset.getVariablePair().satelliteAttributeName);
             summaryFileWriter.printf("    <statistics>\n");
             summaryFileWriter.printf("        <numDataPoints>%s</numDataPoints>\n", plotDataset.getPoints().length);
-            summaryFileWriter.printf("        <regressionInter>%s</regressionInter>\n", result.regressionCoefficients[0]);
-            summaryFileWriter.printf("        <regressionSlope>%s</regressionSlope>\n", result.regressionCoefficients[1]);
+            summaryFileWriter.printf("        <regressionInter>%.5f</regressionInter>\n", result.regressionCoefficients[0]);
+            summaryFileWriter.printf("        <regressionSlope>%.5f</regressionSlope>\n", result.regressionCoefficients[1]);
             summaryFileWriter.printf("        <scatterPlotImage>%s</scatterPlotImage>\n", imageFilename);
             summaryFileWriter.printf("    </statistics>\n");
             summaryFileWriter.printf("</dataset>\n");
