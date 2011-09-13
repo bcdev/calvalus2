@@ -47,6 +47,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+
+        context.progress();
+
         final FileSplit split = (FileSplit) context.getInputSplit();
         final Path inputPath = split.getPath();
 
