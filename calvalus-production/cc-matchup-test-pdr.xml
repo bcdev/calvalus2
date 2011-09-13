@@ -84,6 +84,7 @@
             <ows:Identifier>processorName</ows:Identifier>
             <ows:Title>The name of the GPF operator</ows:Title>
             <wps:Data>
+                <!--<wps:LiteralData>PassThrough</wps:LiteralData>-->
                 <wps:LiteralData>CoastColour.L2W</wps:LiteralData>
             </wps:Data>
         </wps:Input>
@@ -93,6 +94,7 @@
             <ows:Title>The processor's parameters</ows:Title>
             <wps:Data>
                 <wps:ComplexData>
+                    <!--<parameters></parameters>-->
                     <parameters>
                         <averageSalinity>35</averageSalinity>
                         <averageTemperature>15</averageTemperature>
@@ -115,12 +117,19 @@
                         <copyInput>true</copyInput>
                         <macroPixelSize>5</macroPixelSize>
                         <maxTimeDifference>5.0</maxTimeDifference>
+                        <sortInputByPixelYX>false</sortInputByPixelYX>
 
                     </parameters>
                 </wps:ComplexData>
             </wps:Data>
         </wps:Input>
 
+        <wps:Input>
+            <ows:Identifier>autoStaging</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>true</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
 
     </wps:DataInputs>
 
