@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
-import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
@@ -105,15 +104,14 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected void validateJob(Job job) throws WorkflowException {
         Configuration jobConfig = job.getConfiguration();
         String[][] configDefaults = getJobConfigDefaults();
-        for (int i = 0; i < configDefaults.length; i++) {
-            String[] configDefault = configDefaults[i];
+        for (String[] configDefault : configDefaults) {
             String propertyName = configDefault[0];
             String propertyDefault = configDefault[1];
             String propertyValue = jobConfig.get(propertyName);
             if (propertyValue == null) {
                 if (NO_DEFAULT.equals(propertyDefault)) {
                     throw new WorkflowException("Missing value for job configuration property '" + propertyName + "'");
-                }  else if (propertyDefault != null) {
+                } else if (propertyDefault != null) {
                     jobConfig.set(propertyName, propertyDefault);
                 }
             }
