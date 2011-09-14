@@ -1,5 +1,6 @@
 On Monday:
     Deploy
+    Make sure Ewa uses BEAM-4.10-SNAPSHOT and gets all required Case2R files.
     Regions: Use correct region names, store regions in DB or /calvalus/home/${user}/?
     Processors: allow multiple processors in a bundle, enable QAA
     All productions: users need to provide output name (= also used as job name & staging file name).
