@@ -11,9 +11,9 @@ public class TestRecordSourceSpi extends RecordSourceSpi {
     public RecordSource createRecordSource(String url) {
         DefaultHeader header = new DefaultHeader(true, "lat", "lon");
         DefaultRecordSource recordSource = new DefaultRecordSource(header);
-        ProductRecordSourceTest.addPointRecord(recordSource, 0F, 0F);
-        ProductRecordSourceTest.addPointRecord(recordSource, 1F, 1F);
-        ProductRecordSourceTest.addPointRecord(recordSource, 2F, 2F);
+        RecordUtils.addPointRecord(recordSource, 0F, 0F);
+        RecordUtils.addPointRecord(recordSource, 1F, 1F);
+        RecordUtils.addPointRecord(recordSource, 2F, 2F);
         return recordSource;
     }
 

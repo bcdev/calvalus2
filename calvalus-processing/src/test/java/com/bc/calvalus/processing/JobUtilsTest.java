@@ -30,8 +30,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.Properties;
 
+import static com.bc.calvalus.processing.JobUtils.*;
 import static org.junit.Assert.*;
 
 /**
@@ -41,7 +41,7 @@ public class JobUtilsTest {
 
     @Before
     public void before() {
-         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 
 
@@ -90,7 +90,7 @@ public class JobUtilsTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String,Object> operatorParameters = ProductFactory.getOperatorParameterMap(level2OperatorName, level2Parameters);
+        Map<String, Object> operatorParameters = ProductFactory.getOperatorParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 
@@ -112,4 +112,5 @@ public class JobUtilsTest {
         assertEquals("reflec_13", targetBands[0].name);
         assertEquals("reflec_14", targetBands[1].name);
     }
+
 }

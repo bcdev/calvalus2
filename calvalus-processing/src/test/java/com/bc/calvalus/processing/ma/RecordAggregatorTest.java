@@ -14,24 +14,24 @@ public class RecordAggregatorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksZeroLengthArrays() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(ProductRecordSourceTest.newRecord(null, null,
-                                                                                  "x",
-                                                                                  new float[0]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
+                                                                      "x",
+                                                                      new float[0]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksVaryingLengthArrays() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(ProductRecordSourceTest.newRecord(null, null,
-                                                                                  "x",
-                                                                                  new float[3],
-                                                                                  new int[2]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
+                                                                      "x",
+                                                                      new float[3],
+                                                                      new int[2]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksSupportedArrayTypes() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(ProductRecordSourceTest.newRecord(null, null,
-                                                                                  "x",
-                                                                                  new Date[3]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
+                                                                      "x",
+                                                                      new Date[3]));
     }
 
     @Test
@@ -178,11 +178,11 @@ public class RecordAggregatorTest {
     }
 
     private DefaultRecord createDataRecord(float[] value5, int[] value6, int[] mask) {
-        return ProductRecordSourceTest.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
-                                                 "africa",
-                                                 value5,
-                                                 value6,
-                                                 mask);
+        return RecordUtils.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
+                                     "africa",
+                                     value5,
+                                     value6,
+                                     mask);
     }
 
 }

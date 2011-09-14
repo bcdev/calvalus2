@@ -19,10 +19,10 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.ceres.binding.BindingException;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -40,7 +40,7 @@ import org.esa.beam.util.SystemUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collections;
@@ -99,24 +99,26 @@ public class ProductFactory {
      * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
      * Currently only GPG operator names are supported.
      *
-     * @param regionGeometryWkt   The geometry of the region of interest given as WKT. May be {@code null} or empty.
-     * @param processorName       The name of a processor. May be {@code null} or empty.
-     * @param processorParameters The text-encoded parameters for the processor.
      * @param inputPath           The input path
      * @param inputFormat         The input format
-     * @return The target product.
+     * @param regionGeometry      The geometry of the region of interest. May be {@code null} or empty.
+     * @param allowSpatialSubset  If true, and the geometry intersects the product's boundary, a subset of the source product will be created.
+     * @param processorName       The name of a processor. May be {@code null} or empty.
+     * @param processorParameters The text-encoded parameters for the processor.   @return The target product.
      * @throws java.io.IOException If an I/O error occurs
+     * @return The product corresponding to the given input path, region geometry and processor.
      */
     public Product getProduct(Path inputPath,
                               String inputFormat,
-                              String regionGeometryWkt,
+                              Geometry regionGeometry,
+                              boolean allowSpatialSubset,
                               String processorName,
                               String processorParameters) throws IOException {
 
         Product sourceProduct = readProduct(inputPath, inputFormat, configuration);
         Product targetProduct;
         try {
-            targetProduct = getProcessedProduct(sourceProduct, regionGeometryWkt, processorName, processorParameters);
+            targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, processorName, processorParameters);
             if (targetProduct == null) {
                 sourceProduct.dispose();
             }
@@ -175,9 +177,8 @@ public class ProductFactory {
         return operatorSpi.getOperatorClass();
     }
 
-    private static Product getSubsetProduct(Product product, String regionGeometryWkt) {
-        final Geometry regionGeometry = JobUtils.createGeometry(regionGeometryWkt);
-        if (regionGeometry == null || regionGeometry.isEmpty()) {
+    private static Product getSubsetProduct(Product product, Geometry regionGeometry, boolean allowSpatialSubset) {
+        if (regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry)) {
             return product;
         }
         final Rectangle pixelRegion;
@@ -192,6 +193,9 @@ public class ProductFactory {
         if (pixelRegion.isEmpty()) {
             return null;
         }
+        if (!allowSpatialSubset) {
+            return product;
+        }
 
         final SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);
@@ -200,11 +204,25 @@ public class ProductFactory {
         return op.getTargetProduct();
     }
 
+    public static boolean isGlobalCoverageGeometry(Geometry geometry) {
+        Envelope envelopeInternal = geometry.getEnvelopeInternal();
+        return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
+                &&  eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
+                &&  eq(envelopeInternal.getMinY(), -90.0, 1E-8)
+                &&  eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
+    }
+
+    private static boolean eq(double x1, double x2, double eps) {
+        double delta = x1 - x2;
+        return delta > 0 ? delta < eps : -delta < eps;
+    }
+
+
     private static Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
         Product product = source;
         if (operatorName != null && !operatorName.isEmpty()) {
             // transform request into parameter objects
-            Map<String, Object> parameterMap = null;
+            Map<String, Object> parameterMap;
             try {
                 parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
             } catch (BindingException e) {
@@ -216,10 +234,11 @@ public class ProductFactory {
     }
 
     static Product getProcessedProduct(Product sourceProduct,
-                                       String regionGeometryWkt,
+                                       Geometry regionGeometry,
+                                       boolean allowSpatialSubset,
                                        String processorName,
                                        String processorParameters) {
-        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometryWkt);
+        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometry, allowSpatialSubset);
         if (subsetProduct == null) {
             return null;
         }

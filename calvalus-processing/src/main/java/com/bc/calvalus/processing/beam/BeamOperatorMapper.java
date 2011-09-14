@@ -2,7 +2,9 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -58,12 +60,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
             Path inputPath = split.getPath();
             String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-            String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
             String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
             Product targetProduct = productFactory.getProduct(inputPath,
                                                               inputFormat,
-                                                              regionGeometryWkt,
+                                                              regionGeometry,
+                                                              true,
                                                               level2OperatorName,
                                                               level2Parameters);
             if (targetProduct == null) {

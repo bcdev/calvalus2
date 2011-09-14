@@ -18,7 +18,9 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -57,24 +59,27 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
+        final String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
+        final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        final String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
                                context.getTaskAttemptID(), split, (MiB / 2 + split.getLength()) / MiB));
 
+        RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+
         long t0;
 
         t0 = now();
 
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-        // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
-        String regionGeometryWkt = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         Product product = productFactory.getProduct(inputPath,
                                                     inputFormat,
-                                                    null, // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
+                                                    regionGeometry,
+                                                    false, // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
                                                     level2OperatorName,
                                                     level2Parameters);
         if (product == null) {
@@ -94,7 +99,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProductRecordSource productRecordSource;
         Iterable<Record> extractedRecords;
         try {
-            RecordSource referenceRecordSource = maConfig.createRecordSource();
             productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
             extractedRecords = productRecordSource.getRecords();
             context.progress();
@@ -155,6 +159,19 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         context.getCounter(hostGroupName, "Product close time (ms)").increment(productCloseTime);
         context.getCounter(hostGroupName, "MAMapper total time (ms)").increment(mapperTotalTime);
 
+    }
+
+    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
+        final RecordSource referenceRecordSource;
+        try {
+            referenceRecordSource = maConfig.createRecordSource();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        if (regionGeometry == null) {
+            return referenceRecordSource;
+        }
+        return new FilteredRecordSource(referenceRecordSource, new GeometryRecordFilter(regionGeometry));
     }
 
     private void logAttributeNames(ProductRecordSource productRecordSource) {
