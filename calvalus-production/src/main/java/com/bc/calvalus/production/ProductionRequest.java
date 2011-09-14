@@ -10,10 +10,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A production request. Production requests are submitted to the backend service.
@@ -242,6 +239,28 @@ public class ProductionRequest implements XmlConvertible {
         return text != null ? parseDate(name, text) : def;
     }
 
+    public Date[] getDates(String name, Date[] def) throws ProductionException {
+        String text = getParameter(name, false);
+        if (text == null) {
+            return def;
+        }
+
+        String[] splits = text.trim().split("\\s");
+        Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
+        dateSet.remove("");
+        splits = dateSet.toArray(new String[0]);
+        Arrays.sort(splits);
+
+        Date[] dates = new Date[splits.length];
+        for (int i = 0; i < splits.length; i++) {
+            dates[i] = parseDate(name, splits[i]);
+        }
+
+        return dates;
+    }
+
+
+
     /**
      * Gets a mandatory geometry parameter value.
      *
@@ -390,4 +409,6 @@ public class ProductionRequest implements XmlConvertible {
             throw new ProductionException("Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
         }
     }
+
+
 }

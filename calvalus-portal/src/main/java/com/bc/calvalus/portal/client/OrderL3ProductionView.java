@@ -120,6 +120,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         if (dateList) {
             String[] splits = data.get("dateList").split("\\s");
             HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            set.remove("");
             int numDays = set.size();
             l3ConfigForm.periodCount.setValue(numDays);
 

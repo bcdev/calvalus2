@@ -1,15 +1,10 @@
 package com.bc.calvalus.production;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.*;
 import org.junit.Test;
 
 import java.text.ParseException;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -139,8 +134,8 @@ public class ProductionRequestTest {
 
         try {
             req = new ProductionRequest("typeA", "ewa",
-                                    "maxLon", "-20.0",
-                                    "maxLat", "23.4");
+                                        "maxLon", "-20.0",
+                                        "maxLat", "23.4");
             req.getRegionGeometry(null);
             fail("Incomplete definition of region geometry");
         } catch (ProductionException e) {
@@ -172,7 +167,27 @@ public class ProductionRequestTest {
         req = new ProductionRequest("typeA", "ewa");
         Point defaultGeometry = new GeometryFactory().createPoint(new Coordinate(1, 2));
         regionGeometry = req.getRegionGeometry(defaultGeometry);
-        assertSame(defaultGeometry,  regionGeometry);
+        assertSame(defaultGeometry, regionGeometry);
+    }
+
+    @Test
+    public void testDateListParsing() throws ParseException, ProductionException {
+        String dateList = "2002-03-19\n2003-02-28\t\t2002-05-21 " +
+                "\n2002-11-13     2003-01-15 2002-04-28 2003-04-29\n\t 2003-04-30 ";
+        ProductionRequest productionRequest = new ProductionRequest("L2", "ewa", "dateList", dateList);
+
+
+        Date[] dates = productionRequest.getDates("dateList", null);
+        assertNotNull(dates);
+        assertEquals(8, dates.length);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2002-03-19"), dates[0]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2002-04-28"), dates[1]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2002-05-21"), dates[2]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2002-11-13"), dates[3]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-01-15"), dates[4]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-02-28"), dates[5]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-04-29"), dates[6]);
+        assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-04-30"), dates[7]);
     }
 
 

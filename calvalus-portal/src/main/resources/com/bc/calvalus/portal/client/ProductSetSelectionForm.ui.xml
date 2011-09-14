@@ -16,7 +16,7 @@
 
                 <g:VerticalPanel spacing="2">
                     <g:Label>Predefined file sets:</g:Label>
-                    <g:ListBox ui:field="inputProductSet" width="12em" visibleItemCount="8"/>
+                    <g:ListBox ui:field="inputProductSet" width="24em" visibleItemCount="8"/>
                 </g:VerticalPanel>
 
                 <g:VerticalPanel spacing="16"/>

@@ -16,15 +16,11 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -124,18 +120,11 @@ public class L3ProductionType extends HadoopProductionType {
 
     static List<DatePair> getDatePairList(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
         List<DatePair> datePairList = new ArrayList<DatePair>();
-        String dateList = productionRequest.getString("dateList", null);
+        Date[] dateList = productionRequest.getDates("dateList", null);
 
         if (dateList != null) {
-            String[] splits = dateList.trim().split("\\s");
-            Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
-            for (String dateAsString : dateSet) {
-                try {
-                    Date date = ProductionRequest.DATE_FORMAT.parse(dateAsString);
-                    datePairList.add(new DatePair(date, date));
-                } catch (ParseException e) {
-                    throw new ProductionException("Failed to parse date from 'datelist': '" + dateAsString + "'", e);
-                }
+            for (Date date : dateList) {
+                datePairList.add(new DatePair(date, date));
             }
         } else {
             Date minDate = productionRequest.getDate("minDate");
