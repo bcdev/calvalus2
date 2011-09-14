@@ -77,7 +77,7 @@
 
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" styleName="{style.centeredHorizontalPanel}">
+                            <g:HTMLPanel width="100%">
                                 The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
                                 that is evaluated
                                 for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
@@ -85,8 +85,7 @@
                                 For BEAM processors, you usually don't need to specify it, because BEAM products usually
                                 already
                                 have valid-masks attached to their geo-physical output variables.
-                                <p/>
-                            </g:HTML>
+                            </g:HTMLPanel>
                         </td>
                     </tr>
 
@@ -101,7 +100,7 @@
 
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" styleName="{style.centeredHorizontalPanel}">
+                            <g:HTMLPanel width="100%">
                                 The good-record expression also is a BEAM band maths expression
                                 that is evaluated
                                 for each aggregated macro pixel (= record). For each geo-physical output variable
@@ -135,8 +134,7 @@
                                     </li>
                                 </ul>
                                 For example: median(reflec_1.cv, reflec_2.cv, reflec_3.cv) &lt; 0.15
-                                <p/>
-                            </g:HTML>
+                            </g:HTMLPanel>
                         </td>
                     </tr>
 
