@@ -183,11 +183,11 @@ public class PlotDatasetCollector implements RecordProcessor {
             }
         }
 
-        String aggHeaderName1 = PixelExtractor.AGGREGATION_PREFIX +headerName1;
+        String aggHeaderName1 = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX +headerName1;
         for (int j = i + 1; j < headerValues.length; j++) {
             String headerName2 = headerValues[j].toString();
             if (aggHeaderName1.equalsIgnoreCase(headerName2)) {
-                return new VariablePair(headerName1, i, headerName2.substring(PixelExtractor.AGGREGATION_PREFIX.length()), j);
+                return new VariablePair(headerName1, i, headerName2.substring(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX.length()), j);
             }
         }
 

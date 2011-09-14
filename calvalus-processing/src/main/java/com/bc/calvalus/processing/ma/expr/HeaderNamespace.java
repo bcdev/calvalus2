@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma.expr;
 
 import com.bc.calvalus.processing.ma.Header;
+import com.bc.calvalus.processing.ma.PixelExtractor;
 import com.bc.jexp.*;
 import com.bc.jexp.impl.AbstractFunction;
 import com.bc.jexp.impl.DefaultNamespace;
@@ -8,6 +9,8 @@ import com.bc.jexp.impl.DefaultNamespace;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
 
 /**
  * A namespace that is constructed from header names.
@@ -22,7 +25,15 @@ public class HeaderNamespace implements Namespace {
     public HeaderNamespace(Header header) {
         this.header = header;
         this.namespace = new DefaultNamespace();
-        this.headerNames = new HashSet<String>(Arrays.asList(header.getAttributeNames()));
+        String[] attributeNames = header.getAttributeNames();
+        this.headerNames = new HashSet<String>(attributeNames.length * 2);
+        for (String attributeName : attributeNames) {
+            if (attributeName.startsWith(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX)) {
+                headerNames.add(attributeName.substring(ATTRIB_NAME_AGGREG_PREFIX.length()));
+            } else {
+                headerNames.add(attributeName);
+            }
+        }
 
         namespace.registerFunction(new AbstractFunction.D("median", -1) {
             @Override

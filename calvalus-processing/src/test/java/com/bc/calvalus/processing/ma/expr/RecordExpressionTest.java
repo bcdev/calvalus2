@@ -7,7 +7,7 @@ import com.bc.jexp.Term;
 import com.bc.jexp.impl.ParserImpl;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author Norman Fomferra
@@ -46,6 +46,17 @@ public class RecordExpressionTest {
         assertEquals(0.3 / 2.6, parser.parse("median(rho_1.cv, rho_2.cv, rho_3.cv, rho_4.cv, rho_5.cv)").evalD(recordEvalEnv), 1e-6);
     }
 
+    @Test
+    public void testThatHeaderNamespaceIgnoresAggregationPrefix() throws Exception {
+        DefaultHeader header = new DefaultHeader("lat", "lon", "*conc_chl", "*kd_460");
+        HeaderNamespace namespace = new HeaderNamespace(header);
+        assertNotNull(namespace.resolveSymbol("lat") );
+        assertNotNull(namespace.resolveSymbol("lon") );
+        assertNull(namespace.resolveSymbol("*conc_chl") );
+        assertNotNull(namespace.resolveSymbol("conc_chl") );
+        assertNull(namespace.resolveSymbol("*kd_460") );
+        assertNotNull(namespace.resolveSymbol("kd_460") );
+    }
 
     @Test
     public void testRecordsWithAggregatedNumbers() throws Exception {

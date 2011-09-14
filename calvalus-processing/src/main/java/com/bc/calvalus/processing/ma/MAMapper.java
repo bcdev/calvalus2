@@ -105,6 +105,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         long recordReadTime = (now() - t0);
         LOG.info(String.format("%s read input records from %s, took %s sec",
                                context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+        logAttributeNames(productRecordSource);
 
         RecordTransformer recordTransformer = ProductRecordSource.createTransformer(productRecordSource.getHeader(), maConfig);
         RecordFilter recordFilter = ProductRecordSource.createRecordFilter(productRecordSource.getHeader(), maConfig);
@@ -154,6 +155,15 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         context.getCounter(hostGroupName, "Product close time (ms)").increment(productCloseTime);
         context.getCounter(hostGroupName, "MAMapper total time (ms)").increment(mapperTotalTime);
 
+    }
+
+    private void logAttributeNames(ProductRecordSource productRecordSource) {
+        String[] attributeNames = productRecordSource.getHeader().getAttributeNames();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < attributeNames.length; i++) {
+            sb.append(String.format("  attributeNames[%d] = \"%s\"\n", i, attributeNames[i]));
+        }
+        LOG.info("Attribute names:\n" + sb);
     }
 
     private static long now() {

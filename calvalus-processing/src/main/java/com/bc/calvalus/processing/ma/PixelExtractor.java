@@ -18,7 +18,7 @@ import java.util.Date;
 public class PixelExtractor {
 
     public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
-    public static final String AGGREGATION_PREFIX = "*";
+    public static final String ATTRIB_NAME_AGGREG_PREFIX = "*";
 
     private final Header header;
     private final Product product;
@@ -206,12 +206,12 @@ public class PixelExtractor {
         //
         attributeNames.add(ProductRecordSource.SOURCE_NAME_ATT_NAME);
         attributeNames.add(ProductRecordSource.PIXEL_TIME_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LAT_ATT_NAME);
-        attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_LON_ATT_NAME);
+        attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
+        attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
+        attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_LAT_ATT_NAME);
+        attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_LON_ATT_NAME);
         if (pixelMask != null) {
-            attributeNames.add(AGGREGATION_PREFIX + ProductRecordSource.PIXEL_MASK_ATT_NAME);
+            attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_MASK_ATT_NAME);
         }
 
         ////////////////////////////////////
@@ -220,7 +220,7 @@ public class PixelExtractor {
         Band[] productBands = product.getBands();
         for (Band band : productBands) {
             if (!band.isFlagBand()) {
-                attributeNames.add(AGGREGATION_PREFIX + band.getName());
+                attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + band.getName());
             }
         }
 
@@ -232,7 +232,7 @@ public class PixelExtractor {
                 FlagCoding flagCoding = band.getFlagCoding();
                 String[] flagNames = flagCoding.getFlagNames();
                 for (String flagName : flagNames) {
-                    attributeNames.add(AGGREGATION_PREFIX + band.getName() + "." + flagName);
+                    attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + band.getName() + "." + flagName);
                     // Note: side-effect here, adding new band to product
                     product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
                 }
@@ -244,7 +244,7 @@ public class PixelExtractor {
         //
         String[] tiePointGridNames = product.getTiePointGridNames();
         for (String tiePointGridName : tiePointGridNames) {
-            attributeNames.add(AGGREGATION_PREFIX + tiePointGridName);
+            attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + tiePointGridName);
         }
 
         return new DefaultHeader(true,

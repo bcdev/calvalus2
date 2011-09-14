@@ -7,7 +7,7 @@ import java.io.Writer;
 import java.text.DateFormat;
 import java.util.Date;
 
-import static com.bc.calvalus.processing.ma.PixelExtractor.AGGREGATION_PREFIX;
+import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
 
 /**
  * Outputs records to 2 CSV files: records-all.txt and records-agg.txt
@@ -107,8 +107,8 @@ public class CsvRecordWriter implements RecordProcessor {
             final Object value = values[i];
             if (value != null) {
                 String name = value.toString();
-                if (name.startsWith(AGGREGATION_PREFIX)) {
-                    name = name.substring(AGGREGATION_PREFIX.length());
+                if (name.startsWith(ATTRIB_NAME_AGGREG_PREFIX)) {
+                    name = name.substring(ATTRIB_NAME_AGGREG_PREFIX.length());
                     if (statColumns) {
                         sb.append(name).append(SUFFIX_MEAN).append(separatorChar);
                         sb.append(name).append(SUFFIX_SIGMA).append(separatorChar);
