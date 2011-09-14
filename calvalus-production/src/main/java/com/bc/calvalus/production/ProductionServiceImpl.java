@@ -199,11 +199,7 @@ public class ProductionServiceImpl implements ProductionService {
             if (production.getProcessingStatus().isDone()) {
                 Action action = productionActionMap.get(production.getId());
                 if (action == Action.DELETE) {
-                    try {
-                        removeProduction(production);
-                    } catch (ProductionException e) {
-                        e.printStackTrace();
-                    }
+                    removeProduction(production);
                 }
             }
         }
@@ -304,7 +300,7 @@ public class ProductionServiceImpl implements ProductionService {
                                                     productionRequest.getProductionType()));
     }
 
-    private synchronized void removeProduction(Production production) throws ProductionException {
+    private synchronized void removeProduction(Production production) {
         productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
