@@ -292,12 +292,12 @@ public class ProductSetFilterForm extends Composite {
         }
 
         if (spatialFilterOff.getValue()) {
-            parameters.put("regionName", "World");
+            parameters.put("regionName", "Globe");
             parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
-            parameters.put("minLon", "-180");
-            parameters.put("minLat", "-90");
-            parameters.put("maxLon", "180");
-            parameters.put("maxLat", "90");
+            parameters.put("minLon", "-180.0");
+            parameters.put("minLat", "-90.0");
+            parameters.put("maxLon", "180.0");
+            parameters.put("maxLat", "90.0");
         } else if (spatialFilterByRegion.getValue()) {
             Region region = getSelectedRegion();
             if (region != null) {
@@ -305,10 +305,10 @@ public class ProductSetFilterForm extends Composite {
                 LatLngBounds bounds = polygon.getBounds();
                 parameters.put("regionName", region.getName());
                 parameters.put("regionWKT", region.getGeometryWkt());
-                parameters.put("minLon", bounds.getNorthEast().getLongitude() + "");
-                parameters.put("minLat", bounds.getNorthEast().getLatitude() + "");
-                parameters.put("maxLon", bounds.getSouthWest().getLongitude() + "");
-                parameters.put("maxLat", bounds.getSouthWest().getLatitude() + "");
+                parameters.put("minLon", bounds.getSouthWest().getLongitude() + "");
+                parameters.put("minLat", bounds.getSouthWest().getLatitude() + "");
+                parameters.put("maxLon", bounds.getNorthEast().getLongitude() + "");
+                parameters.put("maxLat", bounds.getNorthEast().getLatitude() + "");
             }
         }
 
