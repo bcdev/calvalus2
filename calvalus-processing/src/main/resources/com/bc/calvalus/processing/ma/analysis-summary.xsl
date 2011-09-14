@@ -66,7 +66,7 @@
     <xsl:when test="name='calvalus.l2.parameters'">
         <tr>
             <td class="name">Processor parameters:</td>
-            <td class="value"><xsl:value-of select="value"/></td>
+            <td class="value"><xsl:value-of select="value" disable-output-escaping="yes"/></td>
         </tr>
     </xsl:when>
     <xsl:when test="name='calvalus.ma.parameters'">
