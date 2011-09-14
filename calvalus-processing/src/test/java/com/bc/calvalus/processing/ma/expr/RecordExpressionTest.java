@@ -49,7 +49,7 @@ public class RecordExpressionTest {
 
     @Test
     public void testRecordsWithAggregatedNumbers() throws Exception {
-        DefaultHeader header = new DefaultHeader("chl");
+        DefaultHeader header = new DefaultHeader("conc_chl");
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
 
@@ -58,16 +58,16 @@ public class RecordExpressionTest {
 
         ParserImpl parser = new ParserImpl(namespace);
 
-        Term t0 = parser.parse("chl");
-        Term t1 = parser.parse("chl.n");
-        Term t2 = parser.parse("chl.nT");
-        Term t3 = parser.parse("chl.nF");
-        Term t4 = parser.parse("chl.min");
-        Term t5 = parser.parse("chl.max");
-        Term t6 = parser.parse("chl.mean");
-        Term t7 = parser.parse("chl.sigma");
-        Term t8 = parser.parse("chl.cv");
-        Term t9 = parser.parse("chl.cv < 0.15 && chl.n > 5");
+        Term t0 = parser.parse("conc_chl");
+        Term t1 = parser.parse("conc_chl.n");
+        Term t2 = parser.parse("conc_chl.nT");
+        Term t3 = parser.parse("conc_chl.nF");
+        Term t4 = parser.parse("conc_chl.min");
+        Term t5 = parser.parse("conc_chl.max");
+        Term t6 = parser.parse("conc_chl.mean");
+        Term t7 = parser.parse("conc_chl.sigma");
+        Term t8 = parser.parse("conc_chl.cv");
+        Term t9 = parser.parse("conc_chl.cv < 0.15 && conc_chl.n > 5");
 
         recordEvalEnv.setContext(record1);
         assertEquals(2.6, t0.evalD(recordEvalEnv), 1e-10);
