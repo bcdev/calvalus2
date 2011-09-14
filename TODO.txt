@@ -8,7 +8,7 @@ On Monday:
     Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
     Test, test, test
     Recognize prod. param. "autoDelete" (output params)
-    Write FAT plan, incl L2 proc. description.
+    ATD: incl L2 proc. description., describe MA input format,
     Missing portal features:
          Restart
          Request Templates
