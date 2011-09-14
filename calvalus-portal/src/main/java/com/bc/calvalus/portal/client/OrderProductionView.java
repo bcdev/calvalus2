@@ -72,7 +72,7 @@ public abstract class OrderProductionView extends PortalView {
                                                    "seconds to minutes.<br/>" +
                                                    "<br/>" +
                                                    "This dialog box will then close automatically."));
-            progressBox.show();
+            progressBox.center();
 
             getPortal().getBackendService().orderProduction(request, new AsyncCallback<DtoProductionResponse>() {
                 public void onSuccess(final DtoProductionResponse response) {
