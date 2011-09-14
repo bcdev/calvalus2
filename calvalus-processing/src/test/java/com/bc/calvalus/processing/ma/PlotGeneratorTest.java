@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.ma;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 import org.junit.Ignore;
@@ -54,28 +53,6 @@ public class PlotGeneratorTest {
                       new File("scatterplot-"+System.currentTimeMillis()+".png"));
     }
 
-    private static DefaultIntervalXYDataset createDataset() {
-        DefaultIntervalXYDataset dataset = new DefaultIntervalXYDataset();
-        int n = 6;
-        double[][] data = new double[6][n];
-        double[] xData = data[0];
-        double[] xsData = data[1];
-        double[] xeData = data[2];
-        double[] yData = data[3];
-        double[] ysData = data[4];
-        double[] yeData = data[5];
-        double delta = 1.0 / n;
-        for (int i = 0; i < n; i++) {
-            xData[i] = delta * (i + Math.random());
-            yData[i] = delta * (i + 2 * Math.random());
-            xsData[i] = xeData[i] = xData[i];
-            double dy = 0.1 * Math.random();
-            ysData[i] = yData[i] - dy;
-            yeData[i] = yData[i] + dy;
-        }
-        dataset.addSeries("Test series", data);
-        return dataset;
-    }
 
 
 }
