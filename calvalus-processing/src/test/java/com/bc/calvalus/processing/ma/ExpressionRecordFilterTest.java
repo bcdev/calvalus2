@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 public class ExpressionRecordFilterTest {
     @Test
     public void testExprFilterWithAggregatedNumbers() throws Exception {
-        Header header = new DefaultHeader("chl");
+        Header header = new DefaultHeader("*chl");
         RecordFilter filter = ExpressionRecordFilter.create(header, "chl.mean > 2.0");
 
         assertEquals(true, filter.accept(new DefaultRecord(new AggregatedNumber(24, 25, 16, 0.0, 3.0, 2.6, 0.4))));

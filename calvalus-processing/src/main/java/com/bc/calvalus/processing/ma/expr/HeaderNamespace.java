@@ -7,8 +7,7 @@ import com.bc.jexp.impl.AbstractFunction;
 import com.bc.jexp.impl.DefaultNamespace;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
 
@@ -18,22 +17,21 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PR
  * @author Norman Fomferra
  */
 public class HeaderNamespace implements Namespace {
-    private final DefaultNamespace namespace;
     private final Header header;
-    private Set<String> headerNames;
+    private final DefaultNamespace namespace;
+    private final String[] attributeNames;
+    private final HashMap<String, String> attributeTypes;
+
+    private static final String ATT_TYPE_SCALAR = "scalar";
+    private static final String ATT_TYPE_AGGREG = "aggreg";
 
     public HeaderNamespace(Header header) {
         this.header = header;
         this.namespace = new DefaultNamespace();
         String[] attributeNames = header.getAttributeNames();
-        this.headerNames = new HashSet<String>(attributeNames.length * 2);
-        for (String attributeName : attributeNames) {
-            if (attributeName.startsWith(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX)) {
-                headerNames.add(attributeName.substring(ATTRIB_NAME_AGGREG_PREFIX.length()));
-            } else {
-                headerNames.add(attributeName);
-            }
-        }
+        this.attributeNames = new String[attributeNames.length];
+        this.attributeTypes = new HashMap<String, String>(attributeNames.length * 2);
+        initAttributeNamesAndTypes(attributeNames);
 
         namespace.registerFunction(new AbstractFunction.D("median", -1) {
             @Override
@@ -59,6 +57,24 @@ public class HeaderNamespace implements Namespace {
         });
     }
 
+    private void initAttributeNamesAndTypes(String[] attributeNames) {
+        for (int i = 0; i < attributeNames.length; i++) {
+            String attributeName = attributeNames[i];
+            if (attributeName.startsWith(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX)) {
+                String newName = attributeName.substring(ATTRIB_NAME_AGGREG_PREFIX.length());
+                this.attributeNames[i] = newName;
+                this.attributeTypes.put(newName, ATT_TYPE_AGGREG);
+            } else {
+                this.attributeNames[i] = attributeName;
+                this.attributeTypes.put(attributeName, ATT_TYPE_SCALAR);
+            }
+        }
+    }
+
+    public String[] getAttributeNames() {
+        return attributeNames;
+    }
+
     @Override
     public Function resolveFunction(String name, Term[] args) {
         return namespace.resolveFunction(name, args);
@@ -71,21 +87,22 @@ public class HeaderNamespace implements Namespace {
             return symbol;
         }
         RecordSymbol recordSymbol = createSymbol(name);
-        if (!headerNames.contains(recordSymbol.getVariableName())) {
-            return null;
+        if (recordSymbol != null) {
+            namespace.registerSymbol(recordSymbol);
         }
-        namespace.registerSymbol(recordSymbol);
         return recordSymbol;
     }
 
     private RecordSymbol createSymbol(String name) {
-        int pos = name.indexOf('.');
+        int pos = name.lastIndexOf('.');
         if (pos > 0) {
             String variableName = name.substring(0, pos);
-            String fieldName = name.substring(pos + 1);
-            return new RecordFieldSymbol(variableName, fieldName);
-        } else {
-            return new RecordSymbol(name);
+            if (ATT_TYPE_AGGREG.equals(attributeTypes.get(variableName))) {
+                String fieldName = name.substring(pos + 1);
+                return new RecordFieldSymbol(variableName, fieldName);
+            }
         }
+        return attributeTypes.get(name) != null ? new RecordSymbol(name) : null;
     }
+
 }

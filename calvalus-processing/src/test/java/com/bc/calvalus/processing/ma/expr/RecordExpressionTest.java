@@ -3,11 +3,13 @@ package com.bc.calvalus.processing.ma.expr;
 import com.bc.calvalus.processing.ma.AggregatedNumber;
 import com.bc.calvalus.processing.ma.DefaultHeader;
 import com.bc.calvalus.processing.ma.DefaultRecord;
+import com.bc.jexp.Symbol;
 import com.bc.jexp.Term;
 import com.bc.jexp.impl.ParserImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Norman Fomferra
@@ -16,9 +18,9 @@ public class RecordExpressionTest {
 
     @Test
     public void testMedian() throws Exception {
-        DefaultHeader header = new DefaultHeader("rho_1", "rho_2", "rho_3", "rho_4", "rho_5");
-        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
+        DefaultHeader header = new DefaultHeader("*rho_1", "*rho_2", "*rho_3", "*rho_4", "*rho_5");
         HeaderNamespace namespace = new HeaderNamespace(header);
+        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
         DefaultRecord record = new DefaultRecord(new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.1),
                                                  new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.5),
@@ -48,21 +50,54 @@ public class RecordExpressionTest {
 
     @Test
     public void testThatHeaderNamespaceIgnoresAggregationPrefix() throws Exception {
-        DefaultHeader header = new DefaultHeader("lat", "lon", "*conc_chl", "*kd_460");
+        DefaultHeader header = new DefaultHeader("lat", "lon", "*conc_chl", "*kd_460", "*l1p_flags.CC_LAND");
         HeaderNamespace namespace = new HeaderNamespace(header);
-        assertNotNull(namespace.resolveSymbol("lat") );
-        assertNotNull(namespace.resolveSymbol("lon") );
-        assertNull(namespace.resolveSymbol("*conc_chl") );
-        assertNotNull(namespace.resolveSymbol("conc_chl") );
-        assertNull(namespace.resolveSymbol("*kd_460") );
-        assertNotNull(namespace.resolveSymbol("kd_460") );
+        assertNotNull(namespace.resolveSymbol("lat"));
+        assertNotNull(namespace.resolveSymbol("lon"));
+        assertNull(namespace.resolveSymbol("*conc_chl"));
+        assertNotNull(namespace.resolveSymbol("conc_chl"));
+        assertNull(namespace.resolveSymbol("*kd_460"));
+        assertNotNull(namespace.resolveSymbol("kd_460"));
+        assertNull(namespace.resolveSymbol("*l1p_flags.CC_LAND"));
+        assertNotNull(namespace.resolveSymbol("l1p_flags.CC_LAND"));
+    }
+
+    @Test
+    public void testThatDotsCanBePartOfNameOfAggregatedVariables() throws Exception {
+        DefaultHeader header = new DefaultHeader("*l1p_flags.CC_LAND", "ref.CONC_CHL");
+        HeaderNamespace namespace = new HeaderNamespace(header);
+
+        Symbol sym1 = namespace.resolveSymbol("l1p_flags.CC_LAND");
+        assertNotNull(sym1);
+        assertEquals(RecordSymbol.class, sym1.getClass());
+        RecordSymbol fieldSym1 = (RecordSymbol) sym1;
+        assertEquals("l1p_flags.CC_LAND", fieldSym1.getName());
+        assertEquals("l1p_flags.CC_LAND", fieldSym1.getVariableName());
+
+        Symbol sym2 = namespace.resolveSymbol("l1p_flags.CC_LAND.mean");
+        assertNotNull(sym2);
+        assertEquals(RecordFieldSymbol.class, sym2.getClass());
+        RecordFieldSymbol fieldSym2 = (RecordFieldSymbol) sym2;
+        assertEquals("l1p_flags.CC_LAND.mean", fieldSym2.getName());
+        assertEquals("l1p_flags.CC_LAND", fieldSym2.getVariableName());
+        assertEquals("mean", fieldSym2.getFieldName());
+
+        Symbol sym3 = namespace.resolveSymbol("ref.CONC_CHL");
+        assertNotNull(sym3);
+        assertEquals(RecordSymbol.class, sym3.getClass());
+        RecordSymbol fieldSym3 = (RecordSymbol) sym3;
+        assertEquals("ref.CONC_CHL", fieldSym3.getName());
+        assertEquals("ref.CONC_CHL", fieldSym3.getVariableName());
+
+        Symbol sym4 = namespace.resolveSymbol("ref.CONC_CHL.mean");
+        assertNull(sym4);
     }
 
     @Test
     public void testRecordsWithAggregatedNumbers() throws Exception {
-        DefaultHeader header = new DefaultHeader("conc_chl");
-        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
+        DefaultHeader header = new DefaultHeader("*conc_chl");
         HeaderNamespace namespace = new HeaderNamespace(header);
+        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
         DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(24, 25, 4, 0.1, 4.0, 2.6, 0.4));
         DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(16, 25, 3, 0.2, 4.1, 3.7, 0.3));
@@ -107,8 +142,8 @@ public class RecordExpressionTest {
     @Test
     public void testRecordsWithScalars() throws Exception {
         DefaultHeader header = new DefaultHeader("b", "s", "i", "f");
-        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(header);
         HeaderNamespace namespace = new HeaderNamespace(header);
+        RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
         DefaultRecord record1 = new DefaultRecord(false, "x", 4, 0.6F);
         DefaultRecord record2 = new DefaultRecord(true, "y", 3, 0.5F);

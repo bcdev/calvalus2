@@ -13,16 +13,16 @@ import java.util.HashMap;
 */
 public class RecordEvalEnv implements EvalEnv {
 
-    private final Header header;
+    private final HeaderNamespace namespace;
     private final HashMap<String, Object> env;
 
-    public RecordEvalEnv(Header header) {
-        this.header = header;
+    public RecordEvalEnv(HeaderNamespace namespace) {
+        this.namespace = namespace;
         this.env = new HashMap<String, Object>(31);
     }
 
     public void setContext(Record record) {
-        String[] names = header.getAttributeNames();
+        String[] names = namespace.getAttributeNames();
         Object[] values = record.getAttributeValues();
         for (int i = 0; i < names.length; i++) {
             String name = names[i];

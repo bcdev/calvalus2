@@ -18,7 +18,7 @@ public class ExpressionRecordFilter implements RecordFilter {
     public static RecordFilter create(Header header, String expr) throws ParseException {
         HeaderNamespace namespace = new HeaderNamespace(header);
         ParserImpl parser = new ParserImpl(namespace, false);
-        return new ExpressionRecordFilter(new RecordEvalEnv(header), parser.parse(expr));
+        return new ExpressionRecordFilter(new RecordEvalEnv(namespace), parser.parse(expr));
     }
 
     private ExpressionRecordFilter(RecordEvalEnv recordEvalEnv, Term compiledExpr) {
