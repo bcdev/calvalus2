@@ -164,6 +164,7 @@ public class ProductSetFilterForm extends Composite {
         } else if (temporalFilterByDateList.getValue()) {
             String[] splits = dateList.getValue().split("\\s");
             HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            set.remove("");
             numDays.setValue("" + set.size());
         } else if (productSet != null) {
             Date min = productSet.getMinDate();
