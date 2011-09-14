@@ -186,7 +186,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      */
     static ProcessStatus convertStatus(JobStatus jobStatus) {
         if (jobStatus != null) {
-            float progress = (jobStatus.mapProgress() + jobStatus.reduceProgress()) / 2;
+            float progress = (9.0F * jobStatus.mapProgress() + jobStatus.reduceProgress()) / 10.0F;
             if (jobStatus.getRunState() == JobStatus.FAILED) {
                 return new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
             } else if (jobStatus.getRunState() == JobStatus.KILLED) {
