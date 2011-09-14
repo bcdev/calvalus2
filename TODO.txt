@@ -3,6 +3,8 @@ On Monday:
     Regions: Use correct region names, store regions in DB or /calvalus/home/${user}/?
     Processors: allow multiple processors in a bundle, enable QAA
     All productions: users need to provide output name (= also used as job name & staging file name).
+    All production outputs: Provide production statistics XML, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters,
+                            provide WPS XML
     MA: Include input product set, minDate, maxDate, region in report, need to cite in-situ dataset (!!!)
     Manage Productions: display output path, so that it can be used as input path, display, start time
     Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
