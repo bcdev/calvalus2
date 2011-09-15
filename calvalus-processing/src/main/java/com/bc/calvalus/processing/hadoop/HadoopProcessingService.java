@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
 public class HadoopProcessingService implements ProcessingService<JobID> {
@@ -44,7 +45,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public HadoopProcessingService(JobClient jobClient) throws IOException {
         this.jobClient = jobClient;
         this.fileSystem = FileSystem.get(jobClient.getConf());
-        this.jobStatusMap = new HashMap<JobID, ProcessStatus>();
+        this.jobStatusMap = new WeakHashMap<JobID, ProcessStatus>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
@@ -119,11 +120,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         if (DEBUG) {
             // For debugging uncomment following line:
             jobConfig.set("mapred.child.java.opts",
-                          "-Xmx1G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
+                          "-Xmx2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
         } else {
             // Set VM maximum heap size
             jobConfig.set("mapred.child.java.opts",
-                          "-Xmx2000M");
+                          "-Xmx2G");
         }
     }
 
@@ -144,7 +145,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public void updateStatuses() throws IOException {
         JobStatus[] jobStatuses = jobClient.getAllJobs();
         synchronized (jobStatusMap) {
-            jobStatusMap.clear();
             if (jobStatuses != null) {
                 for (JobStatus jobStatus : jobStatuses) {
                     jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
