@@ -29,7 +29,7 @@ public class SimpleStagingService implements StagingService {
 
     @Override
     public void submitStaging(Staging staging) throws IOException {
-        executorService.submit(staging);
+        executorService.execute(staging);
     }
 
     @Override

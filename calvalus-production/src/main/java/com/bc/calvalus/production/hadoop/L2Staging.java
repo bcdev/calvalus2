@@ -21,9 +21,8 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
-import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,84 +39,78 @@ import java.io.File;
  *
  * @author MarcoZ
  */
-class L2Staging extends Staging {
+class L2Staging extends ProductionStaging {
 
-    private final Production production;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
     public L2Staging(Production production,
                      Configuration hadoopConfiguration,
                      File stagingAreaPath) {
-        this.production = production;
+        super(production);
         this.hadoopConfiguration = hadoopConfiguration;
         this.stagingDir = new File(stagingAreaPath, production.getStagingPath());
     }
 
     @Override
-    public Object call() throws Exception {
+    public void performStaging() throws Throwable {
+        Production production = getProduction();
+
         L2WorkflowItem workflow = (L2WorkflowItem) production.getWorkflow();
         String outputDir = workflow.getOutputDir();
 
         float progress = 0f;
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
-        try {
-            Path outputPath = new Path(outputDir);
-            FileSystem fileSystem = outputPath.getFileSystem(hadoopConfiguration);
-            FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return path.getName().endsWith(".seq");
-                }
-            });
-            if (!stagingDir.exists()) {
-                stagingDir.mkdirs();
+        Path outputPath = new Path(outputDir);
+        FileSystem fileSystem = outputPath.getFileSystem(hadoopConfiguration);
+        FileStatus[] seqFiles = fileSystem.listStatus(outputPath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith(".seq");
             }
-
-            String outputFormat = production.getProductionRequest().getString("outputFormat", "BEAM-DIMAP");
-            String extension;
-            if (outputFormat.equals("BEAM-DIMAP")) {
-                extension = ".dim";
-            } else if (outputFormat.equals("NetCDF")) {
-                extension = ".nc";
-                outputFormat = "NetCDF-BEAM"; // use NetCDF with beam extensions
-            } else if (outputFormat.equals("GeoTIFF")) {
-                extension = ".tif";
-            } else {
-                extension = ".xxx"; // todo  what else to handle ?
-            }
-
-            int index = 0;
-            for (FileStatus seqFile : seqFiles) {
-                Path seqProductPath = seqFile.getPath();
-                StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConfiguration);
-                Product product = reader.readProductNodes(null, null);
-
-                File tmpDir = new File(stagingDir, "tmp");
-                try {
-                    tmpDir.mkdir();
-                    String name = seqProductPath.getName();
-                    String productFileName = FileUtils.exchangeExtension(name, extension);
-                    File productFile = new File(tmpDir, productFileName);
-                    ProductIO.writeProduct(product, productFile, outputFormat, false);
-
-                    String zipFileName = FileUtils.exchangeExtension(name, ".zip");
-                    zip(tmpDir, new File(stagingDir, zipFileName));
-                } finally {
-                    FileUtils.deleteTree(tmpDir);
-                }
-                index++;
-                progress = (index + 1) / seqFiles.length;
-                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
-            }
-            production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
-            // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
-        } catch (Exception e) {
-            e.printStackTrace();
-            production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
-            throw new ProductionException("Error: " + e.getMessage(), e);
+        });
+        if (!stagingDir.exists()) {
+            stagingDir.mkdirs();
         }
+
+        String outputFormat = production.getProductionRequest().getString("outputFormat", "BEAM-DIMAP");
+        String extension;
+        if (outputFormat.equals("BEAM-DIMAP")) {
+            extension = ".dim";
+        } else if (outputFormat.equals("NetCDF")) {
+            extension = ".nc";
+            outputFormat = "NetCDF-BEAM"; // use NetCDF with beam extensions
+        } else if (outputFormat.equals("GeoTIFF")) {
+            extension = ".tif";
+        } else {
+            extension = ".xxx"; // todo  what else to handle ?
+        }
+
+        int index = 0;
+        for (FileStatus seqFile : seqFiles) {
+            Path seqProductPath = seqFile.getPath();
+            StreamingProductReader reader = new StreamingProductReader(seqProductPath, hadoopConfiguration);
+            Product product = reader.readProductNodes(null, null);
+
+            File tmpDir = new File(stagingDir, "tmp");
+            try {
+                tmpDir.mkdir();
+                String name = seqProductPath.getName();
+                String productFileName = FileUtils.exchangeExtension(name, extension);
+                File productFile = new File(tmpDir, productFileName);
+                ProductIO.writeProduct(product, productFile, outputFormat, false);
+
+                String zipFileName = FileUtils.exchangeExtension(name, ".zip");
+                zip(tmpDir, new File(stagingDir, zipFileName));
+            } finally {
+                FileUtils.deleteTree(tmpDir);
+            }
+            index++;
+            progress = (index + 1) / seqFiles.length;
+            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
+        }
+        production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
+        // todo - zip or tar.gz all output DIMAPs to outputPath.getName() + ".zip" and remove outputPath.getName()
         new ProductionWriter(production).write(stagingDir);
-        return null;
     }
 }

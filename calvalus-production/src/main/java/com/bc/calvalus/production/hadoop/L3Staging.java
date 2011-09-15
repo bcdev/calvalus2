@@ -9,8 +9,8 @@ import com.bc.calvalus.processing.l3.L3FormatterConfig;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
-import com.bc.calvalus.staging.Staging;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.io.FileUtils;
@@ -24,23 +24,22 @@ import java.util.logging.Logger;
  *
  * @author MarcoZ
  */
-class L3Staging extends Staging {
+class L3Staging extends ProductionStaging {
 
-    private final Production production;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
     public L3Staging(Production production,
                      Configuration hadoopConfiguration,
                      File stagingAreaPath) {
-        this.production = production;
+        super(production);
         this.hadoopConfiguration = hadoopConfiguration;
         this.stagingDir = new File(stagingAreaPath, production.getStagingPath());
     }
 
     @Override
-    public Object call() throws Exception {
-
+    public void performStaging() throws Throwable {
+        Production production = getProduction();
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
@@ -55,7 +54,7 @@ class L3Staging extends Staging {
         for (int i = 0; i < items.length; i++) {
 
             if (isCancelled()) {
-                return null;
+                return;
             }
             L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) items[i];
             String outputDir = l3WorkflowItem.getOutputDir();
@@ -90,10 +89,10 @@ class L3Staging extends Staging {
         progress = 1.0f;
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, progress, ""));
         new ProductionWriter(production).write(stagingDir);
-        return null;
     }
 
     private L3FormatterConfig createFormatterConfig(File outputDir, String dateStart, String dateStop) throws ProductionException {
+        Production production = getProduction();
 
         String outputFormat = production.getProductionRequest().getString("outputFormat");
         String extension;
@@ -127,6 +126,6 @@ class L3Staging extends Staging {
     public void cancel() {
         super.cancel();
         FileUtils.deleteTree(stagingDir);
-        production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
+        getProduction().setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
     }
 }

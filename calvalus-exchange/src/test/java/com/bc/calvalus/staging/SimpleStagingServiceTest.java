@@ -25,8 +25,7 @@ public class SimpleStagingServiceTest {
         SimpleStagingService stagingService = new SimpleStagingService(new File("/foo/bar/buz"), 1);
         Staging staging = new Staging() {
             @Override
-            public Object call() throws Exception {
-                return null;
+            public void run() {
             }
         };
         stagingService.submitStaging(staging);

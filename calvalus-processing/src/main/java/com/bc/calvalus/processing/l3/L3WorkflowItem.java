@@ -60,7 +60,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
     public L3Config getL3Config() throws WorkflowException {
         try {
-            return L3Config.fromXml(JobConfigNames.CALVALUS_L3_PARAMETERS);
+            String xml = getJobConfig().get(JobConfigNames.CALVALUS_L3_PARAMETERS);
+            return L3Config.fromXml(xml);
         } catch (BindingException e) {
             throw new WorkflowException("Illegal L3 parameters: " + e.getMessage(), e);
         }

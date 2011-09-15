@@ -1,14 +1,7 @@
 package com.bc.calvalus.production.local;
 
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.AbstractWorkflowItem;
-import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.commons.*;
+import com.bc.calvalus.production.*;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
@@ -106,50 +99,45 @@ class DummyProductionType implements ProductionType {
         return true;
     }
 
-    private class DummyStaging extends Staging {
-        private final Production production;
+    private class DummyStaging extends ProductionStaging {
 
         public DummyStaging(Production production) {
-            this.production = production;
+            super(production);
         }
 
         @Override
-        public Object call() throws Exception {
-            try {
-                final File outputFile = new File(stagingService.getStagingDir(), production.getStagingPath());
-                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0f));
-                if (!outputFile.exists()) {
-                    File parentFile = outputFile.getParentFile();
-                    if (parentFile != null) {
-                        parentFile.mkdirs();
-                    }
-                    FileOutputStream stream = new FileOutputStream(outputFile);
-                    byte[] buffer = new byte[1024 * 1024];
-                    try {
-                        for (int i = 0; i < 32; i++) {
-                            if (isCancelled()) {
-                                return null;
-                            }
-                            Thread.sleep(500);
-                            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, i / 32f));
-                            Arrays.fill(buffer, (byte) i);
-                            stream.write(buffer);
-                        }
-                    } finally {
-                        stream.close();
-                    }
+        public void performStaging() throws Throwable {
+            Production production = getProduction();
+            final File outputFile = new File(stagingService.getStagingDir(), production.getStagingPath());
+            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0f));
+            if (!outputFile.exists()) {
+                File parentFile = outputFile.getParentFile();
+                if (parentFile != null) {
+                    parentFile.mkdirs();
                 }
-                production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1f));
-            } catch (IOException e) {
-                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, production.getStagingStatus().getProgress(), e.getMessage()));
+                FileOutputStream stream = new FileOutputStream(outputFile);
+                byte[] buffer = new byte[1024 * 1024];
+                try {
+                    for (int i = 0; i < 32; i++) {
+                        if (isCancelled()) {
+                            return;
+                        }
+                        Thread.sleep(500);
+                        production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, i / 32f));
+                        Arrays.fill(buffer, (byte) i);
+                        stream.write(buffer);
+                    }
+                } finally {
+                    stream.close();
+                }
             }
-            return null;
+            production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1f));
         }
 
         @Override
         public void cancel() {
             super.cancel();
-            production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
+            getProduction().setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
         }
     }
 }

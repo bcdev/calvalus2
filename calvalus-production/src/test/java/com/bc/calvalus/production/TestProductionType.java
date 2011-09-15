@@ -43,10 +43,8 @@ public class TestProductionType implements ProductionType {
     @Override
     public Staging createStaging(Production production) throws ProductionException {
         Staging staging = new Staging() {
-
             @Override
-            public Object call() throws Exception {
-                return null;
+            public void run() {
             }
 
         };

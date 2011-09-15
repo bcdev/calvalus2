@@ -9,14 +9,10 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.ta.TAGraph;
-import com.bc.calvalus.processing.ta.TAPoint;
-import com.bc.calvalus.processing.ta.TAReport;
-import com.bc.calvalus.processing.ta.TAResult;
-import com.bc.calvalus.processing.ta.TAWorkflowItem;
+import com.bc.calvalus.processing.ta.*;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
-import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,11 +21,7 @@ import org.apache.hadoop.io.Text;
 import org.esa.beam.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,23 +35,23 @@ import java.util.logging.Logger;
  * @author Norman
  * @author MarcoZ
  */
-class TAStaging extends Staging {
+class TAStaging extends ProductionStaging {
 
     public static final Logger LOGGER = Logger.getLogger("com.bc.calvalus");
-    private final Production production;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
     public TAStaging(Production production,
                      Configuration hadoopConfiguration,
                      File stagingAreaPath) {
-        this.production = production;
+        super(production);
         this.hadoopConfiguration = hadoopConfiguration;
         this.stagingDir = new File(stagingAreaPath, production.getStagingPath());
     }
 
     @Override
-    public Object call() throws Exception {
+    public void performStaging() throws Throwable {
+        Production production = getProduction();
 
         FileSystem fs = FileSystem.get(hadoopConfiguration);
 
@@ -78,7 +70,7 @@ class TAStaging extends Staging {
         for (WorkflowItem parallelItem : parallelItems) {
 
             if (isCancelled()) {
-                return null;
+                return;
             }
 
             WorkflowItem[] sequentialItems = parallelItem.getItems();
@@ -143,12 +135,12 @@ class TAStaging extends Staging {
             try {
                 String[] outputFeatureNames = taResult.getOutputFeatureNames();
                 for (int featureIndex = 0; featureIndex < outputFeatureNames.length; featureIndex++) {
-                    pngFile = new File(stagingDir, "Yearly_cycle-"+ regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    pngFile = new File(stagingDir, "Yearly_cycle-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
                     JFreeChart chart = taGraph.createYearlyCyclGaph(regionName, featureIndex);
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
 
-                    pngFile = new File(stagingDir, "Timeseries-"+ regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    pngFile = new File(stagingDir, "Timeseries-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
                     chart = taGraph.createTimeseriesGaph(regionName, featureIndex);
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
@@ -160,14 +152,13 @@ class TAStaging extends Staging {
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
         new ProductionWriter(production, imgUrls.toArray(new String[imgUrls.size()])).write(stagingDir);
-        return null;
     }
 
     @Override
     public void cancel() {
         super.cancel();
         FileUtils.deleteTree(stagingDir);
-        production.setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
+        getProduction().setStagingStatus(new ProcessStatus(ProcessState.CANCELLED));
     }
 
     private File getCsvFile(String regionName) {

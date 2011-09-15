@@ -4,21 +4,21 @@ import com.bc.ceres.core.CanceledException;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 
 import java.io.*;
-import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public abstract class Staging implements Callable<Object> {
+public abstract class Staging implements Runnable {
     private boolean cancelled;
 
     /**
      * Performs the staging.
-     *
-     * @return The relative staging path.
-     * @throws Exception if an error occurs.
      */
     @Override
-    public abstract Object call() throws Exception;
+    public abstract void run();
+
+    public void performStaging() throws Throwable {
+    }
+
 
     public final boolean isCancelled() {
         return cancelled;
