@@ -71,9 +71,11 @@ public class MAProductionType extends HadoopProductionType {
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
         maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-        maJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-        maJobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-        maJobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+        if (processorName != null) {
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+            maJobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+        }
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         workflowItem = new MAWorkflowItem(getProcessingService(), productionId, maJobConfig);

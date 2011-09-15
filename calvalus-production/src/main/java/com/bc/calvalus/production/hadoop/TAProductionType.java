@@ -41,11 +41,15 @@ public class TAProductionType extends HadoopProductionType {
         String inputPath = productionRequest.getString("inputPath");
         List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 32);
 
-        String processorName = productionRequest.getString("processorName");
-        String processorParameters = productionRequest.getString("processorParameters");
-        String processorBundle = String.format("%s-%s",
-                                               productionRequest.getString("processorBundleName"),
-                                               productionRequest.getString("processorBundleVersion"));
+        String processorName = productionRequest.getString("processorName", null);
+        String processorParameters = null;
+        String processorBundle = null;
+        if (processorName != null) {
+            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+            processorBundle = String.format("%s-%s",
+                                            productionRequest.getString("processorBundleName"),
+                                            productionRequest.getString("processorBundleVersion"));
+        }
 
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
@@ -72,9 +76,11 @@ public class TAProductionType extends HadoopProductionType {
                 Configuration l3JobConfig = createJobConfig(productionRequest);
                 l3JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
                 l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l3OutputDir);
-                l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-                l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-                l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                if (processorName != null) {
+                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                }
                 l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 l3JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);

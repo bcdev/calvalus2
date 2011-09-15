@@ -74,9 +74,11 @@ public class L3ProductionType extends HadoopProductionType {
                 Configuration jobConfig = createJobConfig(productionRequest);
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-                jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-                jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                if (processorName != null) {
+                    jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+                    jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+                    jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+                }
                 jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
