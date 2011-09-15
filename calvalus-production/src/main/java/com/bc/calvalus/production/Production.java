@@ -20,11 +20,13 @@ public class Production {
     private final WorkflowItem workflow;
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
+    private final String outputPath;
     private final String stagingPath;
     private ProcessStatus stagingStatus;
 
     public Production(String id,
                       String name,
+                      String outputPath,
                       String stagingPath,
                       boolean autoStaging,
                       ProductionRequest productionRequest,
@@ -39,7 +41,8 @@ public class Production {
             throw new NullPointerException("productionRequest");
         }
         this.id = id;
-        this.name = name;  // todo - check: remove field, instead get from productionRequest.name? (nf)
+        this.name = name;  // todo - check: remove field, instead get from productionRequest.name (nf)
+        this.outputPath = outputPath;
         this.stagingPath = stagingPath;
         this.autoStaging = autoStaging;
         this.workflow = workflow;
@@ -76,6 +79,10 @@ public class Production {
 
     public ProductionRequest getProductionRequest() {
         return productionRequest;
+    }
+
+    public String getOutputPath() {
+        return outputPath;
     }
 
     public String getStagingPath() {

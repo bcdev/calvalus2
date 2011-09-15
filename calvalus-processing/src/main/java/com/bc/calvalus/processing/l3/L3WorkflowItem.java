@@ -49,6 +49,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_MAX_DATE);
     }
 
+    @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }

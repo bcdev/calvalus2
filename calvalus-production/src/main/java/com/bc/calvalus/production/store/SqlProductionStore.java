@@ -198,10 +198,10 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private Production getNextProduction(ResultSet resultSet) throws SQLException {
-        String id = resultSet.getString("id");
-        String name = resultSet.getString("name");
+        String id = resultSet.getString("production_id");
+        String name = resultSet.getString("production_name");
         String productionType = resultSet.getString("production_type");
-        String userName = resultSet.getString("user");
+        String userName = resultSet.getString("production_user");
         String jobIdList = resultSet.getString("job_id_list");
         Date submitTime = resultSet.getDate("submit_time");
         Date startTime = resultSet.getDate("start_time");
@@ -209,6 +209,7 @@ public class SqlProductionStore implements ProductionStore {
         String procState = resultSet.getString("processing_state");
         float procProgress = resultSet.getFloat("processing_progress");
         String procMessage = resultSet.getString("processing_message");
+        String outputPath = resultSet.getString("output_path");
         String stagingState = resultSet.getString("staging_state");
         float stagingProgress = resultSet.getFloat("staging_progress");
         String stagingMessage = resultSet.getString("staging_message");
@@ -232,6 +233,7 @@ public class SqlProductionStore implements ProductionStore {
                                                    stopTime,
                                                    processStatus);
         Production production = new Production(id, name,
+                                               outputPath,
                                                stagingPath,
                                                autoStaging,
                                                productionRequest,
@@ -244,10 +246,10 @@ public class SqlProductionStore implements ProductionStore {
         if (insertProductionStmt == null) {
             insertProductionStmt = connection.prepareStatement("INSERT INTO production " +
                                                                        "(" +
-                                                                       "id, " +
-                                                                       "name, " +
+                                                                       "production_id, " +
+                                                                       "production_name, " +
                                                                        "production_type, " +
-                                                                       "user, " +
+                                                                       "production_user, " +
                                                                        "job_id_list, " +
                                                                        "submit_time, " +
                                                                        "start_time, " +
@@ -255,6 +257,7 @@ public class SqlProductionStore implements ProductionStore {
                                                                        "processing_state, " +
                                                                        "processing_progress, " +
                                                                        "processing_message, " +
+                                                                       "output_path, " +
                                                                        "staging_state, " +
                                                                        "staging_progress, " +
                                                                        "staging_message, " +
@@ -268,7 +271,7 @@ public class SqlProductionStore implements ProductionStore {
                                                                        "?, ?, ?, ?, " +
                                                                        "?, ?, ?, ?, " +
                                                                        "?, ?, ?, ?, " +
-                                                                       "?" +
+                                                                       "?, ?" +
                                                                        ")");
         }
         insertProductionStmt.clearParameters();
@@ -283,12 +286,13 @@ public class SqlProductionStore implements ProductionStore {
         insertProductionStmt.setString(9, production.getProcessingStatus().getState().toString());
         insertProductionStmt.setFloat(10, production.getProcessingStatus().getProgress());
         insertProductionStmt.setString(11, production.getProcessingStatus().getMessage());
-        insertProductionStmt.setString(12, production.getStagingStatus().getState().toString());
-        insertProductionStmt.setFloat(13, production.getStagingStatus().getProgress());
-        insertProductionStmt.setString(14, production.getStagingStatus().getMessage());
-        insertProductionStmt.setString(15, production.getStagingPath());
-        insertProductionStmt.setBoolean(16, production.isAutoStaging());
-        insertProductionStmt.setString(17, production.getProductionRequest().toXml());
+        insertProductionStmt.setString(12, production.getOutputPath());
+        insertProductionStmt.setString(13, production.getStagingStatus().getState().toString());
+        insertProductionStmt.setFloat(14, production.getStagingStatus().getProgress());
+        insertProductionStmt.setString(15, production.getStagingStatus().getMessage());
+        insertProductionStmt.setString(16, production.getStagingPath());
+        insertProductionStmt.setBoolean(17, production.isAutoStaging());
+        insertProductionStmt.setString(18, production.getProductionRequest().toXml());
         insertProductionStmt.executeUpdate();
     }
 
@@ -303,7 +307,7 @@ public class SqlProductionStore implements ProductionStore {
                                                                        "staging_state=?, " +
                                                                        "staging_progress=?, " +
                                                                        "staging_message=? " +
-                                                                       " WHERE id=?");
+                                                                       " WHERE production_id=?");
         }
         updateProductionStmt.clearParameters();
         updateProductionStmt.setDate(1, toSqlDate(production.getWorkflow().getStartTime()));
@@ -320,7 +324,7 @@ public class SqlProductionStore implements ProductionStore {
 
     private void deleteProduction(String productionId) throws SQLException {
         if (deleteProductionsStmt == null) {
-            deleteProductionsStmt = connection.prepareStatement("DELETE FROM production WHERE id=?");
+            deleteProductionsStmt = connection.prepareStatement("DELETE FROM production WHERE production_id=?");
         }
         deleteProductionsStmt.clearParameters();
         deleteProductionsStmt.setString(1, productionId);

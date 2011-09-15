@@ -80,6 +80,7 @@ class DummyProductionType implements ProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               name,
+                              null,
                               stagingDir,
                               autoStaging,
                               productionRequest,

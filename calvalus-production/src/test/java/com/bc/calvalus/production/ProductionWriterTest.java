@@ -27,7 +27,7 @@ public class ProductionWriterTest {
 
     @Before
     public void setUp() throws Exception {
-        Production production = new Production("9A3F", "Toasting", null,
+        Production production = new Production("9A3F", "Toasting", null, null,
                                                false, new ProductionRequest("test", "ewa", "a", "a1", "b", "b2"),
                                                new TestWorkflowItem(null));
 

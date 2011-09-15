@@ -6,11 +6,8 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestProcessingService;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.Date;
 
 import static org.junit.Assert.*;
@@ -154,6 +151,7 @@ public class SqlProductionStoreTest {
         Production production1 = productions[0];
         assertEquals("pid1", production1.getId());
         assertEquals("pname1", production1.getName());
+        assertEquals("home/ewa/tmp6455", production1.getOutputPath());
         assertEquals("/out/spath1", production1.getStagingPath());
         assertArrayEquals(new Object[]{"job1", "job2"}, production1.getJobIds());
         assertEquals(new ProcessStatus(ProcessState.SCHEDULED, 0.0F, "Under way"), production1.getProcessingStatus());
@@ -181,7 +179,7 @@ public class SqlProductionStoreTest {
     }
 
     private static Production createProduction1() {
-        Production production = new Production("pid1", "pname1", "/out/spath1", true, new ProductionRequest("X", "eva", "a", "1"),
+        Production production = new Production("pid1", "pname1", "home/ewa/tmp6455", "/out/spath1", true, new ProductionRequest("X", "eva", "a", "1"),
                                                new ProxyWorkflow(new TestProcessingService(), new Object[]{"job1", "job2"},
                                                                  new Date(1315153761000L),
                                                                  new Date(1315153764000L),
@@ -192,7 +190,7 @@ public class SqlProductionStoreTest {
     }
 
     private static Production createProduction2() {
-        Production production = new Production("pid2", "pname2", "/out/spath2", true, new ProductionRequest("X", "eva", "a", "6"),
+        Production production = new Production("pid2", "pname2", null, "/out/spath2", true, new ProductionRequest("X", "eva", "a", "6"),
                                                new ProxyWorkflow(new TestProcessingService(), new Object[]{"job4", "job5"},
                                                                  new Date(1315153961000L),
                                                                  new Date(1315153964000L),
@@ -203,7 +201,7 @@ public class SqlProductionStoreTest {
     }
 
     private static Production createProduction3() {
-        Production production = new Production("pid3", "pname3", "/out/spath3", true, new ProductionRequest("X", "eva", "a", "3"),
+        Production production = new Production("pid3", "pname3", "home/ewa/tmp6457", "/out/spath3", true, new ProductionRequest("X", "eva", "a", "3"),
                                                new ProxyWorkflow(new TestProcessingService(), new Object[]{"job6", "job7"},
                                                                  new Date(1315153961000L),
                                                                  new Date(1315153964000L),

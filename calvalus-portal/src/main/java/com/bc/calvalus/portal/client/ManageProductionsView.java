@@ -4,11 +4,7 @@ import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
 import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
-import com.google.gwt.cell.client.ButtonCell;
-import com.google.gwt.cell.client.Cell;
-import com.google.gwt.cell.client.CheckboxCell;
-import com.google.gwt.cell.client.ClickableTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.*;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -20,11 +16,7 @@ import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
@@ -47,7 +39,6 @@ public class ManageProductionsView extends PortalView {
     private static final String CANCEL = "Cancel";
     private static final String STAGE = "Stage";
     private static final String DOWNLOAD = "Download";
-    private static final String INFO = "Info";
 
     private static final String BEAM_NAME = "BEAM 4.9";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
@@ -87,6 +78,24 @@ public class ManageProductionsView extends PortalView {
 
         Column<DtoProduction, String> idColumn = new Column<DtoProduction, String>(new ClickableTextCell()) {
             @Override
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
+                String productionId = production.getId();
+                String productionName = production.getName();
+
+                sb.appendHtmlConstant("<font size=\"-2\" color=\"#777799\">");
+                sb.appendEscaped(productionId);
+                sb.appendHtmlConstant("</font>");
+                sb.appendHtmlConstant("<br/>");
+                sb.appendEscaped(productionName);
+
+                String inventoryPath = production.getInventoryPath();
+                if (inventoryPath != null) {
+                    sb.appendHtmlConstant("<br/>");
+                    sb.appendEscaped("Output path: " + inventoryPath);
+                }
+            }
+
+            @Override
             public String getValue(DtoProduction production) {
                 return production.getId();
             }
@@ -111,15 +120,7 @@ public class ManageProductionsView extends PortalView {
                 getPortal().getBackendService().getProductionRequest(production.getId(), callback);
             }
         });
-        idColumn.setSortable(false);
-
-        TextColumn<DtoProduction> nameColumn = new TextColumn<DtoProduction>() {
-            @Override
-            public String getValue(DtoProduction production) {
-                return production.getName();
-            }
-        };
-        nameColumn.setSortable(true);
+        idColumn.setSortable(true);
 
         TextColumn<DtoProduction> userColumn = new TextColumn<DtoProduction>() {
             @Override
@@ -194,8 +195,7 @@ public class ManageProductionsView extends PortalView {
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
         productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        productionTable.addColumn(idColumn, "Production ID");
-        productionTable.addColumn(nameColumn, "Production Name");
+        productionTable.addColumn(idColumn, "Production");
         productionTable.addColumn(userColumn, "User");
         productionTable.addColumn(productionStatusColumn, "Processing Status");
         productionTable.addColumn(productionTimeColumn, "Processing Time");
@@ -286,22 +286,11 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void restartProduction(DtoProduction production) {
-        // todo - implement
-        Window.alert("Not implemented yet:\n" +
-                             "Restart " + production);
-    }
-
-    private void showProductionInfo(DtoProduction production) {
-        // todo - implement
-        Window.alert("Not implemented yet:\n" +
-                             "Show info on " + production);
+        // todo - implement 'Restart'
+        Window.alert("Sorry, 'Restart' has not been implemented yet.");
     }
 
     private void downloadProduction(DtoProduction production) {
-/*
-        Window.open(DOWNLOAD_ACTION_URL + "?file=" + production.getOutputUrl(),
-                    "_blank", "");
-*/
         Window.open(production.getDownloadPath(), "_blank", "");
     }
 
@@ -422,8 +411,6 @@ public class ManageProductionsView extends PortalView {
                 downloadProduction(production);
             } else if (STAGE.equals(value)) {
                 stageProduction(production);
-            } else if (INFO.equals(value)) {
-                showProductionInfo(production);
             }
         }
 

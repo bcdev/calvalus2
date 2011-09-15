@@ -3,25 +3,11 @@ package com.bc.calvalus.portal.server;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.ProductSet;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceException;
-import com.bc.calvalus.portal.shared.DtoProcessState;
-import com.bc.calvalus.portal.shared.DtoProcessStatus;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProcessorVariable;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoProductionRequest;
-import com.bc.calvalus.portal.shared.DtoProductionResponse;
-import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.*;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionResponse;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.production.*;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import javax.servlet.ServletContext;
@@ -29,14 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -267,6 +246,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return new DtoProduction(production.getId(),
                                  production.getName(),
                                  production.getProductionRequest().getUserName(),
+                                 production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem)production.getWorkflow()).getOutputDir() : null,
                                  backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
                                  production.isAutoStaging(),
                                  convert(production.getProcessingStatus(), production.getWorkflow()),

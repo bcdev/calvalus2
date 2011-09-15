@@ -1,6 +1,5 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.ProcessingService;
@@ -34,6 +33,7 @@ public class TestProductionType implements ProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production("id_" + productionCount,
                               "name_" + productionCount,
+                              "outputPath_" + productionCount,
                               "stagingPath_" + productionCount,
                               autoStaging,
                               productionRequest,

@@ -48,6 +48,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
     }
 
+    @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }

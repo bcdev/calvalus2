@@ -13,7 +13,7 @@ public class ProductionTest {
         Production production;
         JobID jobID = new JobID("34627598547", 6);
 
-        production = new Production("9A3F", "Toasting", null,
+        production = new Production("9A3F", "Toasting", null, null,
                                     false, new ProductionRequest("test", "ewa"),
                                     new MyWorkflowItem(jobID));
         assertEquals("9A3F", production.getId());
@@ -30,7 +30,7 @@ public class ProductionTest {
 
     @Test
     public void testGetJobIds() throws Exception {
-        Production production = new Production("9A3F", "Toasting", null,
+        Production production = new Production("9A3F", "Toasting", null, null,
                                                false, new ProductionRequest("test", "ewa"),
                                                new MyWorkflowItem(new JobID("34627985F47", 4)));
 

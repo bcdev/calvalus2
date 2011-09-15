@@ -9,7 +9,6 @@ On Monday:
     MA: Include input product set, minDate, maxDate, region in report, need to cite in-situ dataset (!!!)
     Manage Productions: display output path, so that it can be used as input path, display, start time
     Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
-    Get rid of input format parameter
     Test, test, test
     Recognize prod. param. "autoDelete" (output params) or hide from UI
     ATD: incl L2 proc. description., describe MA input format,

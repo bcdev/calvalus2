@@ -45,6 +45,7 @@ public class L2ProductionType extends HadoopProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
+                              workflowItem.getOutputDir(),
                               stagingDir,
                               autoStaging,
                               productionRequest,

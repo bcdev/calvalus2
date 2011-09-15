@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -59,7 +58,6 @@ public class MAProductionType extends HadoopProductionType {
                                             productionRequest.getString("processorBundleVersion"));
         }
 
-        WorkflowItem workflowItem;
         if (l1InputFiles.length == 0) {
             throw new ProductionException("No input products found for given time range.");
         }
@@ -78,12 +76,13 @@ public class MAProductionType extends HadoopProductionType {
         }
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        workflowItem = new MAWorkflowItem(getProcessingService(), productionId, maJobConfig);
+        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionId, maJobConfig);
 
         String stagingDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
+                              workflowItem.getOutputDir(),
                               stagingDir,
                               autoStaging,
                               productionRequest,

@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.util.Date;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class CsvProductionStoreTest {
 
@@ -27,7 +28,8 @@ public class CsvProductionStoreTest {
         CsvProductionStore db = new CsvProductionStore(new TestProcessingService(), unusedDbFile);
 
         Production prod1 = new Production("id1", "name1",
-                                          "path1",
+                                          "opath1",
+                                          "spath1",
                                           false, new ProductionRequest("test", "marco",
                                                                        "a", "5",
                                                                        "b", "9"),
@@ -37,7 +39,7 @@ public class CsvProductionStoreTest {
                                                                        new Date(5),
                                                                        null));
 
-        Production prod2 = new Production("id2", "name2", null,
+        Production prod2 = new Production("id2", "name2", null, null,
                                           false, new ProductionRequest("test", "martin",
                                                                        "a", "9",
                                                                        "b", "2"),
@@ -47,7 +49,7 @@ public class CsvProductionStoreTest {
                                                                        new Date(2),
                                                                        new Date(13)));
 
-        Production prod3 = new Production("id3", "name3", "path3",
+        Production prod3 = new Production("id3", "name3", "opath3", "spath3",
                                           true, new ProductionRequest("test", "norman",
                                                                       "a", "1",
                                                                       "b", "0",
@@ -76,7 +78,8 @@ public class CsvProductionStoreTest {
         Production restoredProd1 = productions[0];
         assertEquals("id1", restoredProd1.getId());
         assertEquals("name1", restoredProd1.getName());
-        assertEquals("path1", restoredProd1.getStagingPath());
+        assertEquals("opath1", restoredProd1.getOutputPath());
+        assertEquals("spath1", restoredProd1.getStagingPath());
         assertEquals("job5", restoredProd1.getJobIds()[0]);
         assertEquals(false, restoredProd1.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.6f), restoredProd1.getProcessingStatus());
@@ -93,6 +96,7 @@ public class CsvProductionStoreTest {
         Production restoredProd2 = productions[1];
         assertEquals("id2", restoredProd2.getId());
         assertEquals("name2", restoredProd2.getName());
+        assertEquals(null, restoredProd2.getOutputPath());
         assertEquals(null, restoredProd2.getStagingPath());
         assertEquals("job9", restoredProd2.getJobIds()[0]);
         assertEquals(false, restoredProd2.isAutoStaging());
@@ -110,7 +114,8 @@ public class CsvProductionStoreTest {
         Production restoredProd3 = productions[2];
         assertEquals("id3", restoredProd3.getId());
         assertEquals("name3", restoredProd3.getName());
-        assertEquals("path3", restoredProd3.getStagingPath());
+        assertEquals("opath3", restoredProd3.getOutputPath());
+        assertEquals("spath3", restoredProd3.getStagingPath());
         assertEquals("job2", restoredProd3.getJobIds()[0]);
         assertEquals(true, restoredProd3.isAutoStaging());
         assertEquals(new ProcessStatus(ProcessState.COMPLETED), restoredProd3.getProcessingStatus());

@@ -11,6 +11,7 @@ public class DtoProduction implements IsSerializable {
     String id;
     String name;
     String user;
+    String archivePath;
     String downloadPath;
     boolean autoStaging;
     DtoProcessStatus processingStatus;
@@ -25,6 +26,7 @@ public class DtoProduction implements IsSerializable {
     public DtoProduction(String id,
                          String name,
                          String user,
+                         String archivePath,
                          String downloadPath,
                          boolean autoStaging,
                          DtoProcessStatus processingStatus,
@@ -47,6 +49,7 @@ public class DtoProduction implements IsSerializable {
         this.id = id;
         this.name = name;
         this.user = user;
+        this.archivePath = archivePath;
         this.downloadPath = downloadPath;
         this.autoStaging = autoStaging;
         this.processingStatus = processingStatus;
@@ -63,6 +66,10 @@ public class DtoProduction implements IsSerializable {
 
     public String getUser() {
         return user;
+    }
+
+    public String getInventoryPath() {
+        return archivePath;
     }
 
     public String getDownloadPath() {

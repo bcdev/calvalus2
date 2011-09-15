@@ -40,6 +40,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
     }
 
+    @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }

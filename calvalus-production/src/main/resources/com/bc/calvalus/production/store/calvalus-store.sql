@@ -8,10 +8,10 @@ DROP TABLE Production IF EXISTS;
 
 CREATE TABLE production
 (
-    id                  VARCHAR PRIMARY KEY,
-    name                VARCHAR NOT NULL,
+    production_id       VARCHAR PRIMARY KEY,
+    production_name     VARCHAR NOT NULL,
     production_type     VARCHAR NOT NULL,
-    user                VARCHAR NOT NULL,
+    production_user     VARCHAR NOT NULL,
     submit_time         DATE,
     start_time          DATE,
     stop_time           DATE,
@@ -19,6 +19,7 @@ CREATE TABLE production
     processing_state    VARCHAR NOT NULL,
     processing_progress FLOAT NOT NULL,
     processing_message  VARCHAR NOT NULL,
+    output_path         VARCHAR,
     staging_state       VARCHAR NOT NULL,
     staging_progress    FLOAT NOT NULL,
     staging_message     VARCHAR NOT NULL,

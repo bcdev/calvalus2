@@ -40,6 +40,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         super(processingService, jobName, jobConfig);
     }
 
+    @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
