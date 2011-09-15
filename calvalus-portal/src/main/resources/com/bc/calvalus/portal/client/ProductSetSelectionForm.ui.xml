@@ -30,11 +30,11 @@
                         </g:HorizontalPanel>
                         <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                             The common use is to specify the path of an output of a previous production here.
-                            The path pattern may contain wildcards (<b>?</b>&nbsp;<b>*</b>&nbsp;<b>**</b>)
-                            and references to the temporal and spatial filters:
-                            the year, month and day (<b>${yyyy}</b>&nbsp;<b>${MM}</b>&nbsp;
+                            The path pattern is a <i>regular expression</i> any may contain
+                            and references to the settings in the temporal and spatial filters:
+                            the year, month and day <b>${yyyy}</b>&nbsp;<b>${MM}</b>&nbsp;
                             <b>${dd}</b>
-                            and the name of the selected region using<b>${region}</b>.
+                            and the name of the selected region using <b>${region}</b>.
                             <br/>
                         </g:HTML>
                     </g:VerticalPanel>

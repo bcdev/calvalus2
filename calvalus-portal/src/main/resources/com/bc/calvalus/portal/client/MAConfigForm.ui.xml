@@ -3,6 +3,8 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
         >
 
+    <ui:style src="style.css"/>
+
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
@@ -70,7 +72,22 @@
                             <g:Label>Good-pixel expression:</g:Label>
                         </td>
                         <td>
-                            <g:TextBox ui:field="goodPixelExpression" visibleLength="50"/>
+                            <g:TextBox ui:field="goodPixelExpression" width="36em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="100%">
+                                The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
+                                that is evaluated
+                                for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
+                                will be used for further analysis.
+                                For BEAM processors, you usually don't need to specify it, because BEAM products usually
+                                already
+                                have valid-masks attached to their geo-physical output variables.
+                                <br/>
+                                For example: conc_chl &lt; 50 AND Kd_490 > 0 AND NOT l2p_flags.OOTR
+                            </g:HTML>
                         </td>
                     </tr>
 
@@ -79,9 +96,50 @@
                             <g:Label>Good-record expression:</g:Label>
                         </td>
                         <td>
-                            <g:TextBox ui:field="goodRecordExpression" visibleLength="50"/>
+                            <g:TextBox ui:field="goodRecordExpression" width="36em"/>
                         </td>
                     </tr>
+
+                    <tr>
+                        <td colspan="2">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="100%">
+                                The good-record expression also is a BEAM band maths expression
+                                that is evaluated
+                                for each aggregated macro pixel (= record). For each geo-physical output variable
+                                <i>var</i>
+                                the following derived variables are usable in this expression:
+                                <ul>
+                                    <li><i>var</i>.min - minimum value of all good pixels
+                                    </li>
+                                    <li><i>var</i>.max - maximum value of all good pixels
+                                    </li>
+                                    <li><i>var</i>.mean - (filtered) mean value
+                                    </li>
+                                    <li><i>var</i>.sigma - (filtered) mean value
+                                    </li>
+                                    <li><i>var</i>.vc - The coefficient of variance: sigma / mean
+                                    </li>
+                                    <li><i>var</i>.n - Number of good pixels that have been used for the analysis. n =
+                                        nT -
+                                        nF - nNaN,
+                                        where nNaN are the pixels, where has missing values:<i>var</i>=NaN.
+                                    </li>
+                                    <li><i>var</i>.nF - Number of pixels that have been filtered out since they do not
+                                        satisfy the condition
+                                        mean - a * sigma &lt;
+                                        <i>var</i>
+                                        &lt; mean + a *sigma,
+                                        where a is the filtered mean coefficient
+                                    </li>
+
+                                    <li><i>var</i>.nT - Total number of pixels
+                                    </li>
+                                </ul>
+                                For example: median(reflec_1.cv, reflec_2.cv, reflec_3.cv) &lt; 0.15
+                            </g:HTML>
+                        </td>
+                    </tr>
+
 
                 </table>
             </g:HTMLPanel>

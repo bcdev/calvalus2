@@ -45,8 +45,9 @@
 
             <g:CheckBox ui:field="autoDelete"
                         text="Delete production output after successful staging"
-                        checked="true"/>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                        checked="false"
+                        visible="false"/>
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" visible="false">
                 Leave unchecked, leave unchecked if output is used as input
                 for another production step.
                 <p/>
