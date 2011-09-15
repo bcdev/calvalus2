@@ -90,8 +90,15 @@ public class ManageProductionsView extends PortalView {
 
                 String inventoryPath = production.getInventoryPath();
                 if (inventoryPath != null) {
+                    String searchString = "/calvalus/";
+                    int pos = inventoryPath.indexOf(searchString);
+                    if (pos > 0) {
+                        inventoryPath.substring(pos + searchString.length());
+                    }
                     sb.appendHtmlConstant("<br/>");
-                    sb.appendEscaped("Output path: " + inventoryPath);
+                    sb.appendHtmlConstant("<font size=\"-2\" color=\"#779977\">");
+                    sb.appendEscaped(inventoryPath);
+                    sb.appendHtmlConstant("</font>");
                 }
             }
 
