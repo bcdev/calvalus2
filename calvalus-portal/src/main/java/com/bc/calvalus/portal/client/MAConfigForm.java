@@ -1,24 +1,13 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.FileUpload;
-import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,9 +19,9 @@ import java.util.Map;
  */
 public class MAConfigForm extends Composite {
 
-    private final Map<String, DtoProcessorVariable> processorVariableDefaults;
-    private final PortalContext portalContext;
     private static final String POINT_DATA_DIR = "point-data";
+
+    private final PortalContext portalContext;
 
     interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
     }
@@ -65,7 +54,6 @@ public class MAConfigForm extends Composite {
 
     public MAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
-        processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
 
         initWidget(uiBinder.createAndBindUi(this));
 
@@ -154,12 +142,6 @@ public class MAConfigForm extends Composite {
     }
 
     public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
-        if (selectedProcessor == null) {
-            return;
-        }
-        processorVariableDefaults.clear();
-        goodPixelExpression.setValue(selectedProcessor.getDefaultMaskExpr());
-        goodRecordExpression.setValue(selectedProcessor.getProcessorVariables()[0].getName() + ".cv < 0.15");
     }
 
     public void validateForm() throws ValidationException {
