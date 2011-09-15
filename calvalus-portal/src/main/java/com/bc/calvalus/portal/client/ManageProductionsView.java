@@ -93,7 +93,7 @@ public class ManageProductionsView extends PortalView {
                     String searchString = "/calvalus/";
                     int pos = inventoryPath.indexOf(searchString);
                     if (pos > 0) {
-                        inventoryPath.substring(pos + searchString.length());
+                        inventoryPath = inventoryPath.substring(pos + searchString.length());
                     }
                     sb.appendHtmlConstant("<br/>");
                     sb.appendHtmlConstant("<font size=\"-2\" color=\"#779977\">");
