@@ -59,7 +59,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
-        final String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        final String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
         final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         final String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);

@@ -70,7 +70,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final long startTime = System.nanoTime();
 
         Path inputPath = split.getPath();
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
+        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);

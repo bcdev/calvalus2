@@ -100,13 +100,13 @@ public class ProductFactory {
      * Currently only GPG operator names are supported.
      *
      * @param inputPath           The input path
-     * @param inputFormat         The input format
+     * @param inputFormat         The input format, may be {@code null}. If {@code null}, the file format will be detected.
      * @param regionGeometry      The geometry of the region of interest. May be {@code null} or empty.
      * @param allowSpatialSubset  If true, and the geometry intersects the product's boundary, a subset of the source product will be created.
      * @param processorName       The name of a processor. May be {@code null} or empty.
      * @param processorParameters The text-encoded parameters for the processor.   @return The target product.
-     * @throws java.io.IOException If an I/O error occurs
      * @return The product corresponding to the given input path, region geometry and processor.
+     * @throws java.io.IOException If an I/O error occurs
      */
     public Product getProduct(Path inputPath,
                               String inputFormat,
@@ -133,22 +133,22 @@ public class ProductFactory {
      * Reads a product from the distributed file system.
      *
      * @param inputPath     The input path
-     * @param inputFormat   The input format
+     * @param inputFormat   The input format, may be {@code null}. If {@code null}, the file format will be detected.
      * @param configuration the configuration
-     * @return The product
+     * @return The product The product read.
      * @throws java.io.IOException If an I/O error occurs
      */
-    private static Product readProduct(Path inputPath, String inputFormat, Configuration configuration) throws IOException {
+    public static Product readProduct(Path inputPath, String inputFormat, Configuration configuration) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
         final Product product;
-        if (inputFormat.equals("HADOOP-STREAMING")) {
+        if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
         } else {
             final FileStatus status = fs.getFileStatus(inputPath);
             final FSDataInputStream in = fs.open(inputPath);
             final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
-            ProductReader productReader = ProductIO.getProductReader(inputFormat);
+            ProductReader productReader = ProductIO.getProductReader(inputFormat != null ? inputFormat : "ENVISAT");
             if (productReader != null) {
                 product = productReader.readProductNodes(imageInputStream, null);
             } else {
@@ -207,9 +207,9 @@ public class ProductFactory {
     public static boolean isGlobalCoverageGeometry(Geometry geometry) {
         Envelope envelopeInternal = geometry.getEnvelopeInternal();
         return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
-                &&  eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
-                &&  eq(envelopeInternal.getMinY(), -90.0, 1E-8)
-                &&  eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
+                && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
+                && eq(envelopeInternal.getMinY(), -90.0, 1E-8)
+                && eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
     }
 
     private static boolean eq(double x1, double x2, double eps) {
