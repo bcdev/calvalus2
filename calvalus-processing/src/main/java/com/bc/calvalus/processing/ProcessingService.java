@@ -12,8 +12,7 @@ import java.io.IOException;
 public interface ProcessingService<JobId> {
 
     /**
-     * Gets the list of processors supported by the service.
-     *
+     * Gets the list of processor bundles available by the service.
      *
      * @param filter An optional filter expression (unused)
      * @return The list of processors supported by the service.
