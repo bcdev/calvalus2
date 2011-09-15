@@ -232,49 +232,14 @@
                                 <groupId>com.bc.calvalus</groupId>
                                 <artifactId>calvalus-portal</artifactId>
                                 <type>war</type>
-                                <!-- Use the following config to change the name of the deployed app. -->
-                                <!--<properties>-->
-                                    <!--<context>calvalus</context>-->
-                                <!--</properties>-->
+                                <properties>
+                                    <!-- Use 'context' to change the name of the deployed app. -->
+                                    <context>calvalus</context>
+                                </properties>
                             </deployable>
                         </deployables>
                     </deployer>
                 </configuration>
-                <executions>
-                    <!--<execution>-->
-                        <!--<id>start-container</id>-->
-                        <!--<phase>pre-integration-test</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>deployer-deploy</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                    <!--<execution>-->
-                        <!--<id>stop-container</id>-->
-                        <!--<phase>post-integration-test</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>deployer-undeploy</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-
-
-                    <!-- DISABLED AUTOMATIC DEPLOYMENT-->
-                    <!--<execution>-->
-                        <!--<id>deploy-to-tomcat</id>-->
-                        <!--<phase>deploy</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>redeploy</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-
-
-                    <!--<execution>-->
-                        <!--<id>clean-undeploy</id>-->
-                        <!--<phase>pre-clean</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>deployer-undeploy</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                </executions>
             </plugin>
 
         </plugins>
