@@ -45,6 +45,11 @@ class ProxyWorkflow extends AbstractWorkflowItem {
 
     @Override
     public void updateStatus() {
+        // If the status is already 'done', we are done (since it must not not change anymore)
+        if (getStatus().isDone()) {
+            return;
+        }
+
         ProcessStatus[] processStatuses = new ProcessStatus[jobIds.length];
         for (int i = 0; i < jobIds.length; i++) {
             Object jobId = jobIds[i];
