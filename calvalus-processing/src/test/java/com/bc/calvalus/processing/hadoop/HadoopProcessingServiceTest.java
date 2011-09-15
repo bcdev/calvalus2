@@ -17,7 +17,7 @@ public class HadoopProcessingServiceTest {
 
         processStatus = HadoopProcessingService.convertStatus(new JobStatus(org.apache.hadoop.mapred.JobID.downgrade(jobID), 0.8f, 0.1f, JobStatus.RUNNING));
         assertEquals(ProcessState.RUNNING, processStatus.getState());
-        assertEquals((0.8f + 0.1f) / 2, processStatus.getProgress(), 1e-5f);
+        assertEquals((9 * 0.8f + 0.1f) / 10, processStatus.getProgress(), 1e-5f);
 
         processStatus = HadoopProcessingService.convertStatus(new JobStatus(org.apache.hadoop.mapred.JobID.downgrade(jobID), 1f, 1f, JobStatus.SUCCEEDED));
         assertEquals(ProcessState.COMPLETED, processStatus.getState());
