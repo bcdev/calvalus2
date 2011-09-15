@@ -104,7 +104,7 @@ class L2Staging extends Staging {
                     String zipFileName = FileUtils.exchangeExtension(name, ".zip");
                     zip(tmpDir, new File(stagingDir, zipFileName));
                 } finally {
-                  FileUtils.deleteTree(tmpDir);
+                    FileUtils.deleteTree(tmpDir);
                 }
                 index++;
                 progress = (index + 1) / seqFiles.length;

@@ -1,22 +1,9 @@
 package com.bc.calvalus.staging;
 
 import com.bc.ceres.core.CanceledException;
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -46,8 +33,10 @@ public abstract class Staging implements Callable<Object> {
             throw new FileNotFoundException(sourceDir.getPath());
         }
 
+        // Important: First scan, ...
         DirScanner dirScanner = new DirScanner(sourceDir, true, true);
         String[] entryNames = dirScanner.scan();
+        //            ... then create new file (avoid including the new ZIP in the ZIP!)
         ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(targetZipFile)));
         zipOutputStream.setMethod(ZipEntry.DEFLATED);
 
