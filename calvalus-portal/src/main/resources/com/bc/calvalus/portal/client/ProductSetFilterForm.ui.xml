@@ -95,7 +95,7 @@
                 <g:Anchor ui:field="manageRegionsAnchor">Manage regions</g:Anchor>
             </g:HorizontalPanel>
 
-            <map:RegionMapWidget ui:field='regionMap' width="480px" height="240px"/>
+            <map:RegionMapWidget ui:field='regionMap' width="512px" height="240px"/>
 
         </g:VerticalPanel>
 
