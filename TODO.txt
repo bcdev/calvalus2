@@ -12,6 +12,8 @@ On Monday:
     Test, test, test
     Recognize prod. param. "autoDelete" (output params) or hide from UI
     ATD: incl L2 proc. description., describe MA input format,
+    Add metadata to L3 products
+    Check request: Say that it is valid, before showing request params.
     Missing portal features:
          Restart
          Request Templates
