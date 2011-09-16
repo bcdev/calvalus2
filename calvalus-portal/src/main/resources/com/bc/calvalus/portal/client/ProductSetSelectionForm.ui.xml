@@ -7,7 +7,7 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel width="100%">
+            <g:HTMLPanel>
                 <h3>Input File Set</h3>
                 <hr/>
             </g:HTMLPanel>
@@ -21,12 +21,12 @@
 
                 <g:VerticalPanel spacing="16"/>
 
-                <g:HorizontalPanel spacing="2">
+                <g:HorizontalPanel spacing="2" >
                     <g:VerticalPanel spacing="2">
                         <g:CheckBox ui:field="useAlternateInputPath" text="Use alternate input path"/>
                         <g:HorizontalPanel spacing="2">
                             <g:Label>Path pattern:</g:Label>
-                            <g:TextBox ui:field="alternateInputPath" visibleLength="48"/>
+                            <g:TextBox ui:field="alternateInputPath" width="32em"/>
                         </g:HorizontalPanel>
                         <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                             The common use is to specify the path of an output of a previous production here.
@@ -35,7 +35,6 @@
                             the year, month and day <b>${yyyy}</b>&nbsp;<b>${MM}</b>&nbsp;
                             <b>${dd}</b>
                             and the name of the selected region using <b>${region}</b>.
-                            <br/>
                         </g:HTML>
                     </g:VerticalPanel>
                 </g:HorizontalPanel>
