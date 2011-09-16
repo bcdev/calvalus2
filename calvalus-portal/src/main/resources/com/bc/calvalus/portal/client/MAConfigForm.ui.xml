@@ -13,10 +13,10 @@
                 <hr/>
             </g:HTMLPanel>
 
-            <g:HorizontalPanel width="100%" spacing="2">
+            <g:HorizontalPanel spacing="2">
 
                 <g:VerticalPanel spacing="2">
-                    <g:Label>In-situ and point data sources:</g:Label>
+                    <g:Label>In-situ and point data files:</g:Label>
 
                     <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8"/>
                     <g:HorizontalPanel spacing="2">
@@ -26,7 +26,7 @@
                 </g:VerticalPanel>
 
                 <g:HTMLPanel>
-                    <table cellspacing="2">
+                    <table cellspacing="2" style="width: 30em">
                         <tr>
                             <td>
                                 <g:Label>Macro pixel size:</g:Label>
@@ -55,18 +55,28 @@
                         </tr>
                         <tr>
                             <td>
-                                <g:Label>Output group name:</g:Label>
+                                <g:Label>Grouping column:</g:Label>
                             </td>
                             <td colspan="2">
                                 <g:TextBox ui:field='outputGroupName' visibleLength="12"/>
                             </td>
                         </tr>
+                        <tr>
+                        <td colspan="2">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" >
+                                The grouping column must be a name in the header of the selected in-situ / point data file.
+                                All records that have same values in this column will be grouped together for further analysis.
+                                Note that the column name identification is letter case sensitive.
+                                <p/>
+                            </g:HTML>
+                        </td>
+                    </tr>
                     </table>
                 </g:HTMLPanel>
             </g:HorizontalPanel>
 
-            <g:HTMLPanel width="100%">
-                <table width="100%" cellspacing="2">
+            <g:HTMLPanel>
+                <table cellspacing="2">
                     <tr>
                         <td>
                             <g:Label>Good-pixel expression:</g:Label>
@@ -77,7 +87,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="100%">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                                 The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
                                 that is evaluated
                                 for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
@@ -102,7 +112,7 @@
 
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="100%">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
                                 The good-record expression also is a BEAM band maths expression
                                 that is evaluated
                                 for each aggregated macro pixel (= record). For each geo-physical output variable
