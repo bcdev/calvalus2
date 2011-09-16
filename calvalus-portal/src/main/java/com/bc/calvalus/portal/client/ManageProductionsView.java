@@ -373,17 +373,17 @@ public class ManageProductionsView extends PortalView {
         DtoProcessState state = status.getState();
         String message = status.getMessage();
         if (state == DtoProcessState.UNKNOWN) {
-            return "";
+            return "UNKNOWN";
         } else if (state == DtoProcessState.SCHEDULED) {
-            return "Scheduled" + (message.isEmpty() ? "" : (": " + message));
+            return "SCHEDULED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.RUNNING) {
-            return "Running (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
+            return "RUNNING (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.COMPLETED) {
-            return "Completed" + (message.isEmpty() ? "" : (": " + message));
+            return "COMPLETED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.CANCELLED) {
-            return "Cancelled" + (message.isEmpty() ? "" : (": " + message));
+            return "CANCELLED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.ERROR) {
-            return "Error" + (message.isEmpty() ? "" : (": " + message));
+            return "ERROR" + (message.isEmpty() ? "" : (": " + message));
         }
         return "?";
     }
