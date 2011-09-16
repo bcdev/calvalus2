@@ -36,6 +36,33 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private BackendConfig backendConfig;
     private Timer statusObserver;
 
+    /**
+     * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
+     * We then get on Tomcat 7 in the logs
+     * <pre>
+     *   16-Sep-2011 10:57:08 org.apache.catalina.core.ApplicationContext log
+     *   SEVERE: Exception while dispatching incoming RPC call
+     *   java.lang.SecurityException: Blocked request without GWT permutation header (XSRF attack?)
+     *           at com.google.gwt.user.server.rpc.RemoteServiceServlet.checkPermutationStrongName(RemoteServiceServlet.java:272)
+     *           at com.google.gwt.user.server.rpc.RemoteServiceServlet.processCall(RemoteServiceServlet.java:203)
+     *           at com.google.gwt.user.server.rpc.RemoteServiceServlet.processPost(RemoteServiceServlet.java:248)
+     *           at com.google.gwt.user.server.rpc.AbstractRemoteServiceServlet.doPost(AbstractRemoteServiceServlet.java:62)
+     *           at javax.servlet.http.HttpServlet.service(HttpServlet.java:641)
+     *           at javax.servlet.http.HttpServlet.service(HttpServlet.java:722)
+     *           at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:304)
+     *           at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:210)
+     *           at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:240)
+     *           at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:164)
+     *   ...
+     * </pre>
+     *  See http://code.google.com/p/gwteventservice/issues/detail?id=30 and<br/> http://jectbd.com/?p=1351  and<br/>
+     * http://stackoverflow.com/questions/5429961/gwt-xsrf-sporadic-missing-x-gwt-permutation-header
+     *
+     */
+    @Override
+    protected void checkPermutationStrongName() {
+    }
+
     @Override
     public void init() throws ServletException {
         if (productionService == null) {
@@ -246,7 +273,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return new DtoProduction(production.getId(),
                                  production.getName(),
                                  production.getProductionRequest().getUserName(),
-                                 production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem)production.getWorkflow()).getOutputDir() : null,
+                                 production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
                                  backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
                                  production.isAutoStaging(),
                                  convert(production.getProcessingStatus(), production.getWorkflow()),
