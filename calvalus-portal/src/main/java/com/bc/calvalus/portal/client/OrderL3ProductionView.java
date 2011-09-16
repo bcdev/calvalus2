@@ -4,20 +4,11 @@ import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Demo view that lets users submit a new L3 production.
@@ -76,31 +67,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         outputParametersForm = new OutputParametersForm();
 
-        Button orderButton = new Button("Order Production");
-        orderButton.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                orderProduction();
-            }
-        });
-
-        Button checkButton = new Button("Check Request");
-        checkButton.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                checkRequest();
-            }
-        });
-
         updateTemporalParameters(productSetFilterForm.getValueMap());
-
-        HorizontalPanel buttonPanel = new HorizontalPanel();
-        buttonPanel.setSpacing(2);
-        buttonPanel.add(checkButton);
-        buttonPanel.add(orderButton);
-
-        HorizontalPanel orderPanel = new HorizontalPanel();
-        orderPanel.setWidth("100%");
-        orderPanel.add(buttonPanel);
-        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_RIGHT);
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -110,7 +77,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
-        panel.add(orderPanel);
+        panel.add(createOrderPanel());
 
         this.widget = panel;
     }

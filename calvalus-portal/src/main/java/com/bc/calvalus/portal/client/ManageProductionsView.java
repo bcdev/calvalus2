@@ -294,7 +294,7 @@ public class ManageProductionsView extends PortalView {
 
     private void restartProduction(DtoProduction production) {
         // todo - implement 'Restart'
-        Window.alert("Sorry, 'Restart' has not been implemented yet.");
+        Dialog.error("Not Implemented", "Sorry, 'Restart' has not been implemented yet.");
     }
 
     private void downloadProduction(DtoProduction production) {
@@ -310,7 +310,7 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Staging failed:\n" + caught.getMessage());
+                Dialog.error("Server-side Staging Error", caught.getMessage());
             }
         });
     }
@@ -332,14 +332,14 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Deletion failed:\n" + caught.getMessage());
+                Dialog.error("Server-side Cancellation Error", caught.getMessage());
             }
         });
     }
 
     private void deleteProductions(final List<DtoProduction> toDeleteList) {
         if (toDeleteList.isEmpty()) {
-            Window.alert("Nothing selected.");
+            Dialog.error("Warning", "No production selected.<br/>Please select one or more productions first.");
             return;
         }
 
@@ -364,7 +364,7 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Deletion failed:\n" + caught.getMessage());
+                Dialog.error("Server-side Deletion Error", caught.getMessage());
             }
         });
     }

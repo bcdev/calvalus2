@@ -291,7 +291,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
-            Window.alert("Error!\n" + caught.getMessage());
+            Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.regions = new ListDataProvider<Region>();
         }
     }
@@ -306,7 +306,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
-            Window.alert("Error!\n" + caught.getMessage());
+            Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.productSets = new DtoProductSet[0];
         }
     }
@@ -321,7 +321,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
-            Window.alert("Error!\n" + caught.getMessage());
+            Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.processors = new DtoProcessorDescriptor[0];
         }
     }
@@ -336,7 +336,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
-            Window.alert("Error!\n" + caught.getMessage());
+            Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.productions = new ListDataProvider<DtoProduction>();
         }
     }

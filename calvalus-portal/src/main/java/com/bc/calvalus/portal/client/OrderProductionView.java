@@ -2,10 +2,11 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.*;
 
 // todo: prefer composition over inheritance: make subclasses a component of OrderProductionView (which is then concrete) (nf)
 
@@ -50,7 +51,7 @@ public abstract class OrderProductionView extends PortalView {
      */
     protected void onOrderProductionFailure(Throwable failure) {
         failure.printStackTrace(System.err);
-        Window.alert("Failed to order production:\n" + failure.getMessage());
+        Dialog.error("Server-side Production Error", failure.getMessage());
     }
 
     /**
@@ -95,5 +96,33 @@ public abstract class OrderProductionView extends PortalView {
         if (validateForm()) {
             ShowProductionRequestAction.run(getTitle(), getProductionRequest());
         }
+    }
+
+    protected HorizontalPanel createOrderPanel() {
+        Button orderButton = new Button("Order Production");
+        orderButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                orderProduction();
+            }
+        });
+
+        Button checkButton = new Button("Check Request");
+        checkButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                checkRequest();
+            }
+        });
+
+        HorizontalPanel buttonPanel = new HorizontalPanel();
+        buttonPanel.setSpacing(4);
+        buttonPanel.add(checkButton);
+        buttonPanel.add(orderButton);
+
+        HorizontalPanel orderPanel = new HorizontalPanel();
+        orderPanel.setSpacing(4);
+        orderPanel.setWidth("100%");
+        orderPanel.add(buttonPanel);
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_CENTER);
+        return orderPanel;
     }
 }
