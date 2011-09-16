@@ -55,7 +55,7 @@ public class ProductionTool {
 
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
     private static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
-    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-201108";
+    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-201109";
 
     private static final String CALVALUS_SOFTWARE_HOME = "/calvalus/software/0.5";
     private static final String BUNDLE_SEPARATOR = "-->";
