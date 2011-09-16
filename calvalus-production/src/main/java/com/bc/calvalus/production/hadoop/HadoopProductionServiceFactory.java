@@ -40,11 +40,12 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             // todo - get the database connect info from configuration
             File databaseFile = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME);
+            boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME + ".properties").exists();
             ProductionStore productionStore = SqlProductionStore.create(processingService,
                                                                         "org.hsqldb.jdbcDriver",
-                                                                        "jdbc:hsqldb:file:" + databaseFile,
+                                                                        "jdbc:hsqldb:file:" + databaseFile.getPath(),
                                                                         "SA", "",
-                                                                        !databaseFile.exists());
+                                                                        !databaseExists);
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
