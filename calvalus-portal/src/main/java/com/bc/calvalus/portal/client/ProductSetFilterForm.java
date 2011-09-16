@@ -31,20 +31,11 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.RadioButton;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -243,17 +234,24 @@ public class ProductSetFilterForm extends Composite {
     public void validateForm() throws ValidationException {
 
         if (temporalFilterByDateRange.getValue()) {
-            Date min = minDate.getValue();
-            Date max = maxDate.getValue();
-            if (!min.before(max)) {
-                throw new ValidationException(minDate, "Start date must be before end date.");
+            Date startDate = minDate.getValue();
+            Date endDate = maxDate.getValue();
+            boolean datesValid = startDate.getTime() <= endDate.getTime();
+            if (!datesValid) {
+                throw new ValidationException(minDate, "Start date must be equal to or before end date.");
             }
             if (productSet != null) {
-                if (!min.after(productSet.getMinDate())) {
-                    throw new ValidationException(minDate, "Start date must be after start date of product set.");
+                if (productSet.getMinDate() != null) {
+                    boolean startDateValid = startDate.getTime() >= productSet.getMinDate().getTime();
+                    if (!startDateValid) {
+                        throw new ValidationException(minDate, "Start date must be must be equal to or after the product set's start date.");
+                    }
                 }
-                if (!max.before(productSet.getMaxDate())) {
-                    throw new ValidationException(minDate, "End date must be before end date of product set.");
+                if (productSet.getMaxDate() != null) {
+                    boolean endDateValid = endDate.getTime() <= productSet.getMaxDate().getTime();
+                    if (!endDateValid) {
+                        throw new ValidationException(minDate, "End date must be must be equal to or before the product set's end date.");
+                    }
                 }
             }
         } else if (temporalFilterByDateList.getValue()) {
@@ -267,7 +265,7 @@ public class ProductSetFilterForm extends Composite {
         if (spatialFilterByRegion.getValue()) {
             Region region = getSelectedRegion();
             if (region == null) {
-                throw new ValidationException(regionMap, "Please select a region.");
+                throw new ValidationException(regionMap, "Please select a region or select 'No filter (global)'.");
             }
         }
 
