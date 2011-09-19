@@ -45,7 +45,7 @@ public class AggregatorAverageML extends AbstractAggregator {
     @Override
     public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final double x = observationVector.get(varIndex);
-        final double logX = (float) Math.log(x > EPS ? x : EPS);
+        final double logX = Math.log(x > EPS ? x : EPS);
         spatialVector.set(0, spatialVector.get(0) + (float) logX);
         spatialVector.set(1, spatialVector.get(1) + (float) (logX * logX));
     }
