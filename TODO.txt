@@ -1,7 +1,6 @@
 Before FAT:
     Test, test, test
     Make sure Ewa uses BEAM-4.10-SNAPSHOT and gets all required Case2R files.
-    Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
     ATD: incl L2 proc. description., describe MA input format,
 
 After FAT:
@@ -11,6 +10,7 @@ After FAT:
     IMPORTANT: Production Request Template Management
     IMPORTANT: Logout
     IMPORTANT: Add function to show detailed error messages (e.g. logs) for failed productions!!!
+    IMPORTANT: FTP and inform users about production status via e-mail
     IMPORTANT: Add SUM/Help
     IMPORTANT: We need to address the situation where we can't retrieve status of jobs from Haddoop.
                We then can't determine if a production is complete and so it will remain in RUNNING state forever.
@@ -24,4 +24,7 @@ After FAT:
     Recognize prod. param. "autoDelete" (output params) or hide from UI
     All production outputs: Provide production statistics XML, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters,
                             provide WPS XML
+    Add regions to HSQL database
+    Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
+    New productions shall appear first in Manage Productions table
 
