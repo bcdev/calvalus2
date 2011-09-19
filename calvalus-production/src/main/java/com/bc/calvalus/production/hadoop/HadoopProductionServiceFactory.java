@@ -23,7 +23,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
-    private static final String DEFAULT_PRODUCTIONS_DB_FILENAME = "calvalus-database";
+    private static final String DEFAULT_PRODUCTIONS_DB_NAME = "calvalus-database";
 
     @Override
     public ProductionService create(Map<String, String> serviceConfiguration,
@@ -39,11 +39,11 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             HdfsInventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             // todo - get the database connect info from configuration
-            File databaseFile = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME);
-            boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_FILENAME + ".properties").exists();
+            String databaseUrl = "jdbc:hsqldb:file:" + new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME).getPath();
+            boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME + ".properties").exists();
             ProductionStore productionStore = SqlProductionStore.create(processingService,
                                                                         "org.hsqldb.jdbcDriver",
-                                                                        "jdbc:hsqldb:file:" + databaseFile.getPath(),
+                                                                        databaseUrl,
                                                                         "SA", "",
                                                                         !databaseExists);
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
