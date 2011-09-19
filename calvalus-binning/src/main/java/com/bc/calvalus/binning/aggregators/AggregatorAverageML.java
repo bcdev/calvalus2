@@ -1,24 +1,20 @@
 package com.bc.calvalus.binning.aggregators;
 
-import com.bc.calvalus.binning.AbstractAggregator;
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.AggregatorDescriptor;
-import com.bc.calvalus.binning.BinContext;
-import com.bc.calvalus.binning.VariableContext;
-import com.bc.calvalus.binning.Vector;
-import com.bc.calvalus.binning.WeightFn;
-import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.binning.*;
 import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 
 import java.util.Arrays;
 
-import static java.lang.Math.*;
+import static java.lang.Math.exp;
+import static java.lang.Math.sqrt;
 
 /**
  * An aggregator that computes a maximum-likelihood average.
  */
 public class AggregatorAverageML extends AbstractAggregator {
+
+    public final static double EPS = 0.000000001;
 
     private final int varIndex;
     private final WeightFn weightFn;
@@ -48,9 +44,10 @@ public class AggregatorAverageML extends AbstractAggregator {
 
     @Override
     public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
-        final float value = (float) Math.log(observationVector.get(varIndex));
-        spatialVector.set(0, spatialVector.get(0) + value);
-        spatialVector.set(1, spatialVector.get(1) + value * value);
+        final double x = observationVector.get(varIndex);
+        final double logX = (float) Math.log(x > EPS ? x : EPS);
+        spatialVector.set(0, spatialVector.get(0) + (float) logX);
+        spatialVector.set(1, spatialVector.get(1) + (float) (logX * logX));
     }
 
     @Override
@@ -73,19 +70,20 @@ public class AggregatorAverageML extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        final float sumX = temporalVector.get(0);
-        final float sumXX = temporalVector.get(1);
-        final float sumW = temporalVector.get(2);
-        final float avLogs = sumX / sumW;
-        final float vrLogs = sumXX / sumW - avLogs * avLogs;
-        final float mean = (float) exp(avLogs + 0.5 * vrLogs);
-        final float sigma = (float) (mean * sqrt(exp(vrLogs) - 1.0));
-        final float median = (float) exp(avLogs);
-        final float mode = (float) exp(avLogs - vrLogs);
-        outputVector.set(0, mean);
-        outputVector.set(1, sigma);
-        outputVector.set(2, median);
-        outputVector.set(3, mode);
+        final double sumX = temporalVector.get(0);
+        final double sumXX = temporalVector.get(1);
+        final double sumW = temporalVector.get(2);
+        final double avLogs = sumX / sumW;
+        final double vrLogs = sumXX / sumW - avLogs * avLogs;
+        final double mean = exp(avLogs + 0.5 * vrLogs);
+        final double expVrLogs = exp(vrLogs);
+        final double sigma = mean * (expVrLogs > 1.0 ? sqrt(expVrLogs - 1.0) : 0.0);
+        final double median = exp(avLogs);
+        final double mode = exp(avLogs - vrLogs);
+        outputVector.set(0, (float) mean);
+        outputVector.set(1, (float) sigma);
+        outputVector.set(2, (float) median);
+        outputVector.set(3, (float) mode);
     }
 
     @Override

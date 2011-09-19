@@ -1,13 +1,6 @@
 package com.bc.calvalus.binning.aggregators;
 
-import com.bc.calvalus.binning.AbstractAggregator;
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.AggregatorDescriptor;
-import com.bc.calvalus.binning.BinContext;
-import com.bc.calvalus.binning.VariableContext;
-import com.bc.calvalus.binning.Vector;
-import com.bc.calvalus.binning.WeightFn;
-import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.binning.*;
 import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 
@@ -79,13 +72,14 @@ public final class AggregatorAverage extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        float sumX = temporalVector.get(0);
-        float sumXX = temporalVector.get(1);
-        float sumW = temporalVector.get(2);
-        float mean = sumX / sumW;
-        float sigma = (float) Math.sqrt(sumXX / sumW - mean * mean);
-        outputVector.set(0, mean);
-        outputVector.set(1, sigma);
+        final double sumX = temporalVector.get(0);
+        final double sumXX = temporalVector.get(1);
+        final double sumW = temporalVector.get(2);
+        final double mean = sumX / sumW;
+        final double sigmaSqr = sumXX / sumW - mean * mean;
+        final double sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
+        outputVector.set(0, (float) mean);
+        outputVector.set(1, (float) sigma);
     }
 
     @Override
@@ -112,7 +106,7 @@ public final class AggregatorAverage extends AbstractAggregator {
         @Override
         public PropertyDescriptor[] getParameterDescriptors() {
 
-            return new PropertyDescriptor[] {
+            return new PropertyDescriptor[]{
                     new PropertyDescriptor("varName", String.class),
                     new PropertyDescriptor("weightCoeff", Double.class),
                     new PropertyDescriptor("fillValue", Float.class),
