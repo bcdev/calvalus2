@@ -7,6 +7,7 @@ import com.bc.ceres.binding.PropertySet;
 import java.util.Arrays;
 
 import static java.lang.Math.exp;
+import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
 /**
@@ -45,8 +46,8 @@ public class AggregatorAverageML extends AbstractAggregator {
     @Override
     public void aggregateSpatial(BinContext ctx, Vector observationVector, WritableVector spatialVector) {
         final double x = observationVector.get(varIndex);
-        final double logX = Math.log(x > EPS ? x : EPS);
-        spatialVector.set(0, spatialVector.get(0) + (float) logX);
+        final double logX = log(x > EPS ? x : EPS);
+        spatialVector.set(0, spatialVector.get(0) + (float) (logX));
         spatialVector.set(1, spatialVector.get(1) + (float) (logX * logX));
     }
 

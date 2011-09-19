@@ -98,17 +98,16 @@ public class AggregatorAverageMLTest {
         assertEquals(0.09f + 0.01f + 0.04f + 0.01f, tvec.get(1), 1e-5);
         assertEquals(sqrt(3f) + sqrt(2f) + sqrt(1f) + sqrt(7f), tvec.get(2), 1e-5);
 
-        /*
-        todo - add asserts for output  (nf)
-        float mean = ...;
-        float sigma = ...;
-        float median = ...;
-        float mode = ...;
+        agg.completeTemporal(ctx, 4, tvec);
+
+        float mean   = 1.114932F;
+        float sigma  = 0.119713F;
+        float median = 1.108560F;
+        float mode   = 1.095926F;
         agg.computeOutput(tvec, out);
         assertEquals(mean, out.get(0), 1e-5f);
         assertEquals(sigma, out.get(1), 1e-5f);
         assertEquals(median, out.get(2), 1e-5f);
         assertEquals(mode, out.get(3), 1e-5f);
-         */
     }
 }
