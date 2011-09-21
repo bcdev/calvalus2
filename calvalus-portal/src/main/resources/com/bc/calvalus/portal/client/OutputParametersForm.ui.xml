@@ -38,7 +38,7 @@
                         text="Perform staging step after successful production"
                         checked="true"/>
             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
-                Leave unchecked, leave unchecked if output is used as input
+                Leave unchecked, if output is used as input
                 for another production step.
                 <p/>
             </g:HTML>
@@ -48,7 +48,7 @@
                         checked="false"
                         visible="false"/>
             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" visible="false">
-                Leave unchecked, leave unchecked if output is used as input
+                Leave unchecked, if output is used as input
                 for another production step.
                 <p/>
             </g:HTML>
