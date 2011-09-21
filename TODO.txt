@@ -6,13 +6,20 @@ Before FAT:
 After FAT:
     IMPORTANT: Include in MA input product set, minDate, maxDate, region in report, need to cite in-situ dataset (!!!)
     IMPORTANT: All productions: users need to provide output name (= also used as job name & staging file name).
-    IMPORTANT: Add Restart
-    IMPORTANT: Production Request Template Management
-    IMPORTANT: Logout
+    IMPORTANT: Restart feature missing
+    IMPORTANT: Logout feature missing
+    IMPORTANT: SUM/Help missing
+    IMPORTANT: FTP staging and E-mail notification missing
+    IMPORTANT: Management of Production Request Template missing
+    IMPORTANT: The portal shall have a function that displays the number of files and sizes being processed. Input + output.
+               It shall check for productions requests that will create extraordinary long-running, CPU demanding or
+               space-consuming productions. Impl. hint.: processor descriptors shall provide a factor that, if
+               multiplied by the input file size results in an estimation of the output file.
+    IMPORTANT: If users provide an alternative input pattern, they can't now the actual file type pattern,
+               e.g. "home/ewa/test-3/*.seq". Note that the actual file type depends on the production type that created the
+               input file set. L2 proc generates *.seq files, while L3 proc. generates part-* files.
     IMPORTANT: Add function to show detailed error messages (e.g. logs) for failed productions!!!
-    IMPORTANT: FTP and inform users about production status via e-mail
-    IMPORTANT: Add SUM/Help
-    IMPORTANT: We need to address the situation where we can't retrieve status of jobs from Haddoop.
+    IMPORTANT: We need to address the situation where we can't retrieve status of jobs from Hadoop.
                We then can't determine if a production is complete and so it will remain in RUNNING state forever.
                1. Every production must have a unique output dir (also L3/TA where we create mult. output dirs per workflow item)
                2. Every Hadoop job writes a "done" status file (e.g. <job-id>-done.txt) into the output dir
@@ -24,7 +31,10 @@ After FAT:
     Recognize prod. param. "autoDelete" (output params) or hide from UI
     All production outputs: Provide production statistics XML, e.g. total time, #tasks, #bytes, #input/output records, hadoop counters,
                             provide WPS XML
-    Add regions to HSQL database
+    Add 'region' and 'user' tables to HSQL database
     Processor form: changes in the parameters field shall be kept instead of being overwritten, if proc. sel. changes
-    New productions shall appear first in Manage Productions table
+    Production manager:
+    - Only show user's production
+    - New productions shall appear first in Manage Productions table.
+    - Sorting does not work
 
