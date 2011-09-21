@@ -25,6 +25,7 @@ import com.bc.calvalus.binning.TemporalBinProcessor;
 import com.bc.calvalus.binning.TemporalBinReprojector;
 import com.bc.calvalus.binning.WritableVector;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -36,10 +37,8 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.util.StringUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -169,12 +168,117 @@ public class L3Formatter {
             parentFile.mkdirs();
         }
         if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile(formatterConfig.getStartTime(), formatterConfig.getEndTime());
+            writeProductFile(formatterConfig, l3Config);
         } else {
             writeImageFiles(formatterConfig);
         }
 
         return 0;
+    }
+
+    private void writeProductFile(L3FormatterConfig formatterConfig, L3Config l3Config) throws Exception {
+        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
+        if (productWriter == null) {
+            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
+        }
+
+        CrsGeoCoding geoCoding;
+        try {
+            geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                                         outputRegion.width,
+                                         outputRegion.height,
+                                         -180.0 + pixelSize * outputRegion.x,
+                                         90.0 - pixelSize * outputRegion.y,
+                                         pixelSize,
+                                         pixelSize,
+                                         0.0, 0.0);
+        } catch (FactoryException e) {
+            throw new IllegalStateException(e);
+        } catch (TransformException e) {
+            throw new IllegalStateException(e);
+        }
+        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", outputRegion.width, outputRegion.height);
+        product.setGeoCoding(geoCoding);
+        product.setStartTime(formatterConfig.getStartTime());
+        product.setEndTime(formatterConfig.getEndTime());
+
+        product.getMetadataRoot().addElement(createConfigurationMetadataElement());
+
+        // product.getMetadataRoot().addElement(createL3ConfigMetadata(l3Config));
+
+        final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
+        numObsBand.setNoDataValue(-1);
+        numObsBand.setNoDataValueUsed(true);
+        final ProductData numObsLine = numObsBand.createCompatibleRasterData(outputRegion.width, 1);
+
+        final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
+        numPassesBand.setNoDataValue(-1);
+        numPassesBand.setNoDataValueUsed(true);
+        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
+
+        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
+        final Band[] outputBands = new Band[outputFeatureNames.length];
+        final ProductData[] outputLines = new ProductData[outputFeatureNames.length];
+        for (int i = 0; i < outputFeatureNames.length; i++) {
+            String name = outputFeatureNames[i];
+            outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
+            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputFeatureFillValue(i));
+            outputBands[i].setNoDataValueUsed(true);
+            outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
+        }
+
+        productWriter.writeProductNodes(product, outputFile);
+        final ProductDataWriter dataWriter = new ProductDataWriter(productWriter,
+                                                                   numObsBand, numObsLine,
+                                                                   numPassesBand, numPassesLine,
+                                                                   outputBands, outputLines);
+        reproject(configuration, binningContext, outputRegion, l3OutputDir, dataWriter);
+        productWriter.close();
+    }
+
+    private MetadataElement createConfigurationMetadataElement() {
+        MetadataElement configurationElement = new MetadataElement("calvalus.configuration");
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT, ',');
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_FORMAT);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MIN_DATE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MAX_DATE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_NAME);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_BEAM_BUNDLE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_BUNDLE);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_OPERATOR);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_PARAMETERS);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L3_PARAMETERS);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MA_PARAMETERS);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_TA_PARAMETERS);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_FORMATTER_PARAMETERS);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_OUTPUT_DIR);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_USER);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REQUEST);
+        addConfigElementToMetadataElement(configurationElement, "mapred.job.classpath.files", ',');
+
+        return configurationElement;
+    }
+
+    private void addConfigElementToMetadataElement(MetadataElement parent, String name, char sep) {
+        String value = configuration.get(name);
+        if (value != null) {
+            String[] valueSplits = StringUtils.split(value, new char[]{sep}, true);
+            MetadataElement inputPathsElement = new MetadataElement(name);
+            for (int i = 0; i < valueSplits.length; i++) {
+                inputPathsElement.addAttribute(new MetadataAttribute(name + "." + i, ProductData.createInstance(valueSplits[i]), true));
+            }
+            parent.addElement(inputPathsElement);
+        }
+    }
+
+    private void addConfigElementToMetadataElement(MetadataElement parent, String name) {
+        String value = configuration.get(name);
+        if (value != null) {
+            parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
+        }
     }
 
     private void computeOutputRegion(Geometry roiGeometry) {
@@ -205,62 +309,6 @@ public class L3Formatter {
             outputRegion = unclippedOutputRegion.intersection(outputRegion);
         }
         LOG.info("outputRegion = " + outputRegion);
-    }
-
-    private void writeProductFile(ProductData.UTC startTime, ProductData.UTC endTime) throws Exception {
-        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
-        if (productWriter == null) {
-            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
-        }
-
-        CrsGeoCoding geoCoding;
-        try {
-            geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                         outputRegion.width,
-                                         outputRegion.height,
-                                         -180.0 + pixelSize * outputRegion.x,
-                                         90.0 - pixelSize * outputRegion.y,
-                                         pixelSize,
-                                         pixelSize,
-                                         0.0, 0.0);
-        } catch (FactoryException e) {
-            throw new IllegalStateException(e);
-        } catch (TransformException e) {
-            throw new IllegalStateException(e);
-        }
-        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", outputRegion.width, outputRegion.height);
-        product.setGeoCoding(geoCoding);
-        product.setStartTime(startTime);
-        product.setEndTime(endTime);
-
-        final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
-        numObsBand.setNoDataValue(-1);
-        numObsBand.setNoDataValueUsed(true);
-        final ProductData numObsLine = numObsBand.createCompatibleRasterData(outputRegion.width, 1);
-
-        final Band numPassesBand = product.addBand("num_passes", ProductData.TYPE_INT16);
-        numPassesBand.setNoDataValue(-1);
-        numPassesBand.setNoDataValueUsed(true);
-        final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
-
-        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
-        final Band[] outputBands = new Band[outputFeatureNames.length];
-        final ProductData[] outputLines = new ProductData[outputFeatureNames.length];
-        for (int i = 0; i < outputFeatureNames.length; i++) {
-            String name = outputFeatureNames[i];
-            outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
-            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputFeatureFillValue(i));
-            outputBands[i].setNoDataValueUsed(true);
-            outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
-        }
-
-        productWriter.writeProductNodes(product, outputFile);
-        final ProductDataWriter dataWriter = new ProductDataWriter(productWriter,
-                                                                   numObsBand, numObsLine,
-                                                                   numPassesBand, numPassesLine,
-                                                                   outputBands, outputLines);
-        reproject(configuration, binningContext, outputRegion, l3OutputDir, dataWriter);
-        productWriter.close();
     }
 
     private void writeImageFiles(L3FormatterConfig formatterConfig) throws Exception {
