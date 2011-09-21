@@ -144,6 +144,11 @@ class TAStaging extends ProductionStaging {
                     chart = taGraph.createTimeseriesGaph(regionName, featureIndex);
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
+
+                    pngFile = new File(stagingDir, "Anomaly-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    chart = taGraph.createAnomalyGraph(regionName, featureIndex);
+                    TAGraph.writeChart(chart, new FileOutputStream(pngFile));
+                    imgUrls.add(pngFile.getName());
                 }
             } catch (IOException e) {
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
