@@ -11,6 +11,8 @@ After FAT:
     IMPORTANT: SUM/Help missing
     IMPORTANT: FTP staging and E-mail notification missing
     IMPORTANT: Management of Production Request Template missing
+    IMPORTANT: Processor descriptors shall tell what input product type they NEED, product sets shall tell what
+               product types they HAVE.
     IMPORTANT: The portal shall have a function that displays the number of files and sizes being processed. Input + output.
                It shall check for productions requests that will create extraordinary long-running, CPU demanding or
                space-consuming productions. Impl. hint.: processor descriptors shall provide a factor that, if
