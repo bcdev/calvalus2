@@ -37,4 +37,5 @@ After FAT:
     - Only show user's production
     - New productions shall appear first in Manage Productions table.
     - Sorting does not work
+    - (OF) save production request(s) and start later 
 
