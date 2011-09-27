@@ -406,7 +406,7 @@ public class LcRequest {
                 String pathName = path.getName();
                 for (String day : dayList) {
                     String regex = "L2_of_MER_FSG_1[A-Z]{5}" + day + ".+";
-                    if (pathName.matches(regex)) {
+                    if (pathName.matches(regex) && pathName.endsWith("seq")) {
                         return true;
                     }
                 }
