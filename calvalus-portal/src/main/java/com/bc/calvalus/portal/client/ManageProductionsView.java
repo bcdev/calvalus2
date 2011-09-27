@@ -12,6 +12,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
@@ -22,6 +23,7 @@ import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -62,6 +64,11 @@ public class ManageProductionsView extends PortalView {
         CellTable<DtoProduction> productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
         productionTable.setSelectionModel(selectionModel);
+
+        // Attach a column sort handler to the ListDataProvider to sort the list.
+        List<DtoProduction> dtoProductionList = getPortal().getProductions().getList();
+        ColumnSortEvent.ListHandler<DtoProduction> sortHandler = new ColumnSortEvent.ListHandler<DtoProduction>(dtoProductionList);
+        productionTable.addColumnSortHandler(sortHandler);
 
         Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(new CheckboxCell(true, true)) {
             @Override
@@ -128,6 +135,11 @@ public class ManageProductionsView extends PortalView {
             }
         });
         idColumn.setSortable(true);
+        sortHandler.setComparator(idColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getId().compareTo(p2.getId());
+            }
+        });
 
         TextColumn<DtoProduction> userColumn = new TextColumn<DtoProduction>() {
             @Override
@@ -136,6 +148,11 @@ public class ManageProductionsView extends PortalView {
             }
         };
         userColumn.setSortable(true);
+        sortHandler.setComparator(userColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getUser().compareTo(p2.getUser());
+            }
+        });
 
         TextColumn<DtoProduction> productionStatusColumn = new TextColumn<DtoProduction>() {
             @Override
@@ -144,6 +161,11 @@ public class ManageProductionsView extends PortalView {
             }
         };
         productionStatusColumn.setSortable(true);
+        sortHandler.setComparator(productionStatusColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getProcessingStatus().getState().compareTo(p2.getProcessingStatus().getState());
+            }
+        });
 
         TextColumn<DtoProduction> productionTimeColumn = new TextColumn<DtoProduction>() {
             @Override
@@ -152,6 +174,13 @@ public class ManageProductionsView extends PortalView {
             }
         };
         productionTimeColumn.setSortable(true);
+        sortHandler.setComparator(productionTimeColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                Integer p1Sec = p1.getProcessingStatus().getProcessingSeconds();
+                Integer p2Sec = p2.getProcessingStatus().getProcessingSeconds();
+                return p1Sec.compareTo(p2Sec);
+            }
+        });
 
         TextColumn<DtoProduction> stagingStatusColumn = new TextColumn<DtoProduction>() {
             @Override
@@ -160,6 +189,11 @@ public class ManageProductionsView extends PortalView {
             }
         };
         stagingStatusColumn.setSortable(true);
+        sortHandler.setComparator(stagingStatusColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getStagingStatus().getState().compareTo(p2.getStagingStatus().getState());
+            }
+        });
 
         Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
