@@ -68,10 +68,16 @@ public class AggregatorSRTest {
         assertEquals("sdr_error_3_sum_xx", spatialFeatureNames[i++]);
 
         String[] temporalFeatureNames = agg.getTemporalFeatureNames();
-        assertEquals(10, temporalFeatureNames.length);
+        assertEquals(14, temporalFeatureNames.length);
         i = 0;
         assertEquals("status", temporalFeatureNames[i++]);
-        assertEquals("status_count", temporalFeatureNames[i++]);
+
+        assertEquals("land_count", temporalFeatureNames[i++]);
+        assertEquals("water_count", temporalFeatureNames[i++]);
+        assertEquals("snow_count", temporalFeatureNames[i++]);
+        assertEquals("cloud_count", temporalFeatureNames[i++]);
+        assertEquals("cloud_shadow_count", temporalFeatureNames[i++]);
+
         assertEquals("w_sum", temporalFeatureNames[i++]);
 
         assertEquals("sdr_1_sum_x", temporalFeatureNames[i++]);
@@ -83,10 +89,14 @@ public class AggregatorSRTest {
         assertEquals("sdr_error_3_sum_xx", temporalFeatureNames[i++]);
 
         String[] outputFeatureNames = agg.getOutputFeatureNames();
-        assertEquals(9, outputFeatureNames.length);
+        assertEquals(13, outputFeatureNames.length);
         i = 0;
         assertEquals("status", outputFeatureNames[i++]);
-        assertEquals("status_count", outputFeatureNames[i++]);
+        assertEquals("land_count", outputFeatureNames[i++]);
+        assertEquals("water_count", outputFeatureNames[i++]);
+        assertEquals("snow_count", outputFeatureNames[i++]);
+        assertEquals("cloud_count", outputFeatureNames[i++]);
+        assertEquals("cloud_shadow_count", outputFeatureNames[i++]);
 
         assertEquals("sr_1_mean", outputFeatureNames[i++]);
         assertEquals("sr_2_mean", outputFeatureNames[i++]);
@@ -194,12 +204,12 @@ public class AggregatorSRTest {
 
     @Test
     public void testTemporalBinning() {
-        VectorImpl tvec = vec(10, NaN);
+        VectorImpl tvec = vec(14, NaN);
         agg.initTemporal(ctx, tvec);
         assertEquals(0.0f, tvec.get(0), 0.0f);
+
         assertEquals(0.0f, tvec.get(1), 0.0f);
         assertEquals(0.0f, tvec.get(2), 0.0f);
-
         assertEquals(0.0f, tvec.get(3), 0.0f);
         assertEquals(0.0f, tvec.get(4), 0.0f);
         assertEquals(0.0f, tvec.get(5), 0.0f);
@@ -209,6 +219,12 @@ public class AggregatorSRTest {
         assertEquals(0.0f, tvec.get(7), 0.0f);
         assertEquals(0.0f, tvec.get(8), 0.0f);
         assertEquals(0.0f, tvec.get(9), 0.0f);
+
+        assertEquals(0.0f, tvec.get(10), 0.0f);
+
+        assertEquals(0.0f, tvec.get(11), 0.0f);
+        assertEquals(0.0f, tvec.get(12), 0.0f);
+        assertEquals(0.0f, tvec.get(13), 0.0f);
 
         // 2 land 1 snow
         agg.aggregateTemporal(ctx, vec(2f, 1f, 1f, 3f, 2f,
@@ -245,30 +261,36 @@ public class AggregatorSRTest {
         agg.completeTemporal(ctx, 999, tvec);
 
         assertEquals(1.0f, tvec.get(0), 0.0f);
-        assertEquals(2.0f, tvec.get(1), 0.0f);
-        assertEquals(1f / sqrt(2) + 1f / sqrt(3), tvec.get(2), 1e-5f);
 
-        assertEquals(1.1f / sqrt(2) / 2 + 1.1f / sqrt(3) / 3, tvec.get(3), 1e-5f);
-        assertEquals(1.3f / sqrt(2) / 2 + 1.3f / sqrt(3) / 3, tvec.get(4), 1e-5f);
-        assertEquals(1.5f / sqrt(2) / 2 + 1.5f / sqrt(3) / 3, tvec.get(5), 1e-5f);
+        assertEquals(5.0f, tvec.get(1), 0.0f);
+        assertEquals(2.0f, tvec.get(2), 0.0f);
+        assertEquals(4.0f, tvec.get(3), 0.0f);
+        assertEquals(6.0f, tvec.get(4), 0.0f);
+        assertEquals(4.0f, tvec.get(5), 0.0f);
 
-        assertEquals(0.5f / sqrt(2) / 2 + 0.5f / sqrt(3) / 3, tvec.get(6), 1e-5f);
+        assertEquals(1f / sqrt(2) + 1f / sqrt(3), tvec.get(6), 1e-5f);
 
-        assertEquals(0.1f / sqrt(2) / 2 + 0.1f / sqrt(3) / 3, tvec.get(7), 1e-5f);
-        assertEquals(0.3f / sqrt(2) / 2 + 0.3f / sqrt(3) / 3, tvec.get(8), 1e-5f);
-        assertEquals(0.5f / sqrt(2) / 2 + 0.5f / sqrt(3) / 3, tvec.get(9), 1e-5f);
+        assertEquals(1.1f / sqrt(2) / 2 + 1.1f / sqrt(3) / 3, tvec.get(7), 1e-5f);
+        assertEquals(1.3f / sqrt(2) / 2 + 1.3f / sqrt(3) / 3, tvec.get(8), 1e-5f);
+        assertEquals(1.5f / sqrt(2) / 2 + 1.5f / sqrt(3) / 3, tvec.get(9), 1e-5f);
+
+        assertEquals(0.5f / sqrt(2) / 2 + 0.5f / sqrt(3) / 3, tvec.get(10), 1e-5f);
+
+        assertEquals(0.1f / sqrt(2) / 2 + 0.1f / sqrt(3) / 3, tvec.get(11), 1e-5f);
+        assertEquals(0.3f / sqrt(2) / 2 + 0.3f / sqrt(3) / 3, tvec.get(12), 1e-5f);
+        assertEquals(0.5f / sqrt(2) / 2 + 0.5f / sqrt(3) / 3, tvec.get(13), 1e-5f);
 
     }
 
     @Test
     public void testTemporalBinning_startwWithSnow() {
-        VectorImpl tvec = vec(10, NaN);
+        VectorImpl tvec = vec(14, NaN);
         agg.initTemporal(ctx, tvec);
 
         assertEquals(0.0f, tvec.get(0), 0.0f);
+
         assertEquals(0.0f, tvec.get(1), 0.0f);
         assertEquals(0.0f, tvec.get(2), 0.0f);
-
         assertEquals(0.0f, tvec.get(3), 0.0f);
         assertEquals(0.0f, tvec.get(4), 0.0f);
         assertEquals(0.0f, tvec.get(5), 0.0f);
@@ -278,6 +300,12 @@ public class AggregatorSRTest {
         assertEquals(0.0f, tvec.get(7), 0.0f);
         assertEquals(0.0f, tvec.get(8), 0.0f);
         assertEquals(0.0f, tvec.get(9), 0.0f);
+
+        assertEquals(0.0f, tvec.get(10), 0.0f);
+
+        assertEquals(0.0f, tvec.get(11), 0.0f);
+        assertEquals(0.0f, tvec.get(12), 0.0f);
+        assertEquals(0.0f, tvec.get(13), 0.0f);
 
 
         // 0 land 1 snow
@@ -302,40 +330,51 @@ public class AggregatorSRTest {
         agg.completeTemporal(ctx, 999, tvec);
 
         assertEquals(1.0f, tvec.get(0), 0.0f);
+
         assertEquals(1.0f, tvec.get(1), 0.0f);
-        assertEquals(1f / sqrt(1), tvec.get(2), 1e-5f);
+        assertEquals(2.0f, tvec.get(2), 0.0f);
+        assertEquals(4.0f, tvec.get(3), 0.0f);
+        assertEquals(6.0f, tvec.get(4), 0.0f);
+        assertEquals(4.0f, tvec.get(5), 0.0f);
 
-        assertEquals(1.1f / sqrt(1) / 1, tvec.get(3), 1e-5f);
-        assertEquals(1.3f / sqrt(1) / 1, tvec.get(4), 1e-5f);
-        assertEquals(1.5f / sqrt(1) / 1, tvec.get(5), 1e-5f);
+        assertEquals(1f / sqrt(1), tvec.get(6), 1e-5f);
 
-        assertEquals(0.5f / sqrt(1) / 1, tvec.get(6), 1e-5f);
+        assertEquals(1.1f / sqrt(1) / 1, tvec.get(7), 1e-5f);
+        assertEquals(1.3f / sqrt(1) / 1, tvec.get(8), 1e-5f);
+        assertEquals(1.5f / sqrt(1) / 1, tvec.get(9), 1e-5f);
 
-        assertEquals(0.1f / sqrt(1) / 1, tvec.get(7), 1e-5f);
-        assertEquals(0.3f / sqrt(1) / 1, tvec.get(8), 1e-5f);
-        assertEquals(0.5f / sqrt(1) / 1, tvec.get(9), 1e-5f);
+        assertEquals(0.5f / sqrt(1) / 1, tvec.get(10), 1e-5f);
+
+        assertEquals(0.1f / sqrt(1) / 1, tvec.get(11), 1e-5f);
+        assertEquals(0.3f / sqrt(1) / 1, tvec.get(12), 1e-5f);
+        assertEquals(0.5f / sqrt(1) / 1, tvec.get(13), 1e-5f);
     }
 
     @Test
     public void testComputeOutput() throws Exception {
-        VectorImpl ovec = vec(9, NaN);
-        agg.computeOutput(vec(2f, 3f, 1f,
+        VectorImpl ovec = vec(13, NaN);
+        agg.computeOutput(vec(2f, 3f, 1f, 2f, 2f, 1f, 1f,
                               1.1f, 1.3f, 1.5f,
                               0.5f,
                               0.1f, 0.3f, 0.5f), ovec);
 
         assertEquals(2.0f, ovec.get(0), 0.0f);
+
         assertEquals(3.0f, ovec.get(1), 0.0f);
+        assertEquals(1.0f, ovec.get(2), 0.0f);
+        assertEquals(2.0f, ovec.get(3), 0.0f);
+        assertEquals(2.0f, ovec.get(4), 0.0f);
+        assertEquals(1.0f, ovec.get(5), 0.0f);
 
-        assertEquals(1.1f / 1f, ovec.get(2), 1e-5f);
-        assertEquals(1.3f / 1f, ovec.get(3), 1e-5f);
-        assertEquals(1.5f / 1f, ovec.get(4), 1e-5f);
+        assertEquals(1.1f / 1f, ovec.get(6), 1e-5f);
+        assertEquals(1.3f / 1f, ovec.get(7), 1e-5f);
+        assertEquals(1.5f / 1f, ovec.get(8), 1e-5f);
 
-        assertEquals(0.5f / 1f, ovec.get(5), 1e-5f);
+        assertEquals(0.5f / 1f, ovec.get(9), 1e-5f);
 
-        assertEquals(0.1f / 1f, ovec.get(6), 1e-5f);
-        assertEquals(0.3f / 1f, ovec.get(7), 1e-5f);
-        assertEquals(0.5f / 1f, ovec.get(8), 1e-5f);
+        assertEquals(0.1f / 1f, ovec.get(10), 1e-5f);
+        assertEquals(0.3f / 1f, ovec.get(11), 1e-5f);
+        assertEquals(0.5f / 1f, ovec.get(12), 1e-5f);
     }
 
     @Test
