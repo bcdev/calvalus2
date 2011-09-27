@@ -65,9 +65,9 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.set("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.set("calvalus.system.beam.reader.tileWidth", "*");
-        jobConfig.set("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);

@@ -68,13 +68,13 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
 
         Configuration jobConfig = job.getConfiguration();
 
-        // Note: the are used in ProductFactory.
-        jobConfig.set("calvalus.system.beam.reader.tileWidth", "32");
-        jobConfig.set("calvalus.system.beam.reader.tileHeight", "32");
-        jobConfig.set("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
-        jobConfig.set("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
-        jobConfig.set("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
-        jobConfig.set("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+        // Note: these are used in ProductFactory.
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "32");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "32");
+        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
 
         // Enable JVM reuse, to speedup processing.

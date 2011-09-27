@@ -88,9 +88,9 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.set("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.set("calvalus.system.beam.reader.tileWidth", "*");
-        jobConfig.set("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setNumReduceTasks(4);
