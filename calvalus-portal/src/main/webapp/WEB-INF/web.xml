@@ -15,7 +15,6 @@
         <param-value>config/calvalus.properties</param-value>
     </context-param>
 
-
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
@@ -81,7 +80,11 @@
         <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
 
-    <!-- Default page to serve -->
+    <!-- You can set the default session timeout (in minutes) for all newly   -->
+    <!-- created sessions by modifying the value below.                       -->
+    <session-config>
+        <session-timeout>120</session-timeout>
+    </session-config>
 
     <welcome-file-list>
         <welcome-file>calvalus.jsp</welcome-file>
@@ -129,6 +132,5 @@
     <security-role>
         <role-name>calvalus-user</role-name>
     </security-role>
-
 
 </web-app>
