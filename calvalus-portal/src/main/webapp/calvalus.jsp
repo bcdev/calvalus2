@@ -1,7 +1,8 @@
 <%@ taglib prefix="bean" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 
-<%@page language="java" import="java.security.Principal" %>
+<%@page language="java" import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
+<%@ page import="java.security.Principal" %>
 
 <html>
 <head>
@@ -44,6 +45,7 @@
             <% } else { %>
             Not logged in.
             <% } %>
+            &nbsp;<a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
             <br/>
             <a href="about.jsp" target="_blank">About Calvalus</a>
         </td>
@@ -58,7 +60,7 @@
     <img src="images/progress-bar.gif"/>
 </div>
 
-<p class="copyright">Calvalus - Version 0.3, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
+<p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
 </body>
 </html>

@@ -1,3 +1,4 @@
+<%@ page import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
 <html>
 <head>
     <title>Calvalus Login</title>
@@ -24,6 +25,8 @@
     Invalid user name and/or password,</br>
     please try <a href='<%= response.encodeURL("calvalus.jsp") %>'>again</a>.
 </div>
+
+<p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
 </body>
 </html>
