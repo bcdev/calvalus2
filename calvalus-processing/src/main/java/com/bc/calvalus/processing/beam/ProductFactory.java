@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -116,6 +117,10 @@ public class ProductFactory {
                               String processorParameters) throws IOException {
 
         Product sourceProduct = readProduct(inputPath, inputFormat, configuration);
+        if (sourceProductHasErrors(sourceProduct)) {
+            sourceProduct.dispose();
+            return null;
+        }
         Product targetProduct;
         try {
             targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, processorName, processorParameters);
@@ -127,6 +132,26 @@ public class ProductFactory {
             throw t;
         }
         return targetProduct;
+    }
+
+    private static boolean sourceProductHasErrors(Product sourceProduct) {
+        // "AMORGOS" can produce products that are corrupted.
+        // Until they are removed from the cluster, perform this fast check.
+        // All tie point grids contain only zeros, check the first one,
+        // if the product has one.
+        TiePointGrid[] tiePointGrids = sourceProduct.getTiePointGrids();
+        if (tiePointGrids != null && tiePointGrids.length > 0) {
+            TiePointGrid firstGrid = tiePointGrids[0];
+            float[] tiePoints = firstGrid.getTiePoints();
+            for (float tiePoint : tiePoints) {
+                if (tiePoint != 0.0f) {
+                    return false;
+                }
+            }
+            // all values are zero
+            return true;
+        }
+        return false;
     }
 
     /**
