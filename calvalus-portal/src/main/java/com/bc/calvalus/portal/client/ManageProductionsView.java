@@ -332,7 +332,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void downloadProduction(DtoProduction production) {
-        Window.open(production.getDownloadPath(), "_blank", "");
+        Window.open(GWT.getHostPageBaseURL() + production.getDownloadPath(), "_blank", "");
     }
 
     private void stageProduction(DtoProduction production) {
