@@ -45,7 +45,8 @@
             <% } else { %>
             Not logged in.
             <% } %>
-            &nbsp;<a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
+            <br/>
+            <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
             <br/>
             <a href="about.jsp" target="_blank">About Calvalus</a>
         </td>
