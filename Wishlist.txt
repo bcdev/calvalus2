@@ -14,6 +14,7 @@ Olga:
 - An info if production has already been downloaded
 - SELECT ALL checkbox.
 - cancel selected Jobs
-2) A possibility to create one or more requests ( e.g. L3 Processing, some MA, some TA.... ) and to start all jobs later, e.g. at night.
-
+2) A possibility to create one or more requests ( e.g. L3 Processing, some MA, some TA.... ) 
+   and to start all jobs later, e.g. at night.
+3) A possibility to give production name
 ------
