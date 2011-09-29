@@ -25,12 +25,13 @@
 
 <div class="loginPanel">
 
-    User '<%=request.getRemoteUser()%>' has been logged out.
+    User <b><%=request.getRemoteUser()%></b> has been logged out.
 
     <% session.invalidate(); %>
 
     <br/><br/>
     <a href='<%= response.encodeURL("calvalus.jsp") %>'>Click here to login again.</a>
+    <br/><br/>
 
 </div>
 
