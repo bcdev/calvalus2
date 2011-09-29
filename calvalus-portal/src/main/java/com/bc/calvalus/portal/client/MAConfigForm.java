@@ -192,13 +192,10 @@ public class MAConfigForm extends Composite {
 
         private Dialog fileUploadDialog;
         private Dialog monitorDialog;
-        private boolean cancelled;
-        private Label monitorLabel;
+        private FormPanel.SubmitEvent submitEvent;
 
         @Override
         public void onClick(ClickEvent event) {
-            cancelled = false;
-
             VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
                                                                       new HTML("Select in-situ or point data file:"),
                                                                       uploadForm,
@@ -219,12 +216,10 @@ public class MAConfigForm extends Composite {
                                     new HTML("Please specify a point data file."));
                         return;
                     }
-                    monitorLabel = new Label("Submitting '" + filename + "'...");
-                    monitorDialog = new Dialog("File Upload", monitorLabel, ButtonType.CANCEL) {
+                    monitorDialog = new Dialog("File Upload", new Label("Submitting '" + filename + "'..."), ButtonType.CANCEL) {
                         @Override
                         protected void onCancel() {
-                            closeDialogs();
-                            cancelled = true;
+                            cancelSubmit();
                         }
                     };
                     monitorDialog.show();
@@ -235,21 +230,21 @@ public class MAConfigForm extends Composite {
             fileUploadDialog.show();
         }
 
+        private void cancelSubmit() {
+            closeDialogs();
+            if (submitEvent != null) {
+                 submitEvent.cancel();
+            }
+        }
+
         @Override
         public void onSubmit(FormPanel.SubmitEvent event) {
-            if (cancelled) {
-                closeDialogs();
-                event.cancel();
-            } else {
-                monitorDialog.getButton(0).setEnabled(false);
-                monitorLabel.setText("File submitted...");
-            }
+            this.submitEvent = event;
         }
 
         @Override
         public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
             closeDialogs();
-            cancelled = false;
             updateRecordSources();
             Dialog.info("File Upload",
                         "File successfully uploaded.");
