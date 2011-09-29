@@ -23,6 +23,7 @@ public class Dialog {
     private ButtonType selectedButtonType;
     private int selectedButtonIndex;
     private DialogBox dialogBox;
+    private Button[] buttons;
 
     public enum ButtonType {
         OK("OK"),
@@ -82,6 +83,7 @@ public class Dialog {
 
     public void show() {
         if (dialogBox == null) {
+            initButtons();
             this.dialogBox = createDialogBox();
             dialogBox.setWidget(createMainPanel());
         }
@@ -100,6 +102,10 @@ public class Dialog {
 
     public ButtonType getSelectedButtonType() {
         return selectedButtonType;
+    }
+
+    public Button getButton(int buttonIndex) {
+        return buttons[buttonIndex];
     }
 
     private void onButtonClicked(ButtonType buttonType, int buttonIndex) {
@@ -169,6 +175,16 @@ public class Dialog {
     private HorizontalPanel createButtonRow() {
         final HorizontalPanel buttonRow = new HorizontalPanel();
         buttonRow.setSpacing(2);
+        for (int i = 0; i < buttons.length; i++) {
+            Button button = buttons[i];
+            buttonRow.add(button);
+            buttonRow.setCellHorizontalAlignment(button, HasHorizontalAlignment.ALIGN_RIGHT);
+        }
+        return buttonRow;
+    }
+
+    private void initButtons() {
+        buttons = new Button[buttonTypes.length];
         for (int i = 0; i < buttonTypes.length; i++) {
             final ButtonType buttonType = buttonTypes[i];
             final int buttonIndex = i;
@@ -178,10 +194,7 @@ public class Dialog {
                                                      onButtonClicked(buttonType, buttonIndex);
                                                  }
                                              });
-            buttonRow.add(button);
-            buttonRow.setCellHorizontalAlignment(button, HasHorizontalAlignment.ALIGN_RIGHT);
+            buttons[i] = button;
         }
-        return buttonRow;
     }
-
 }

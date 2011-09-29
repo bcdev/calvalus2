@@ -7,7 +7,18 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.FileUpload;
+import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +73,8 @@ public class MAConfigForm extends Composite {
         filteredMeanCoeff.setValue(1.5);
         outputGroupName.setValue("SITE");
 
-        addRecordSourceButton.addClickHandler(new AddRecordSourceAction());
+        AddRecordSourceAction addRecordSourceAction = new AddRecordSourceAction();
+        addRecordSourceButton.addClickHandler(addRecordSourceAction);
         removeRecordSourceButton.addClickHandler(new RemoveRecordSourceAction());
 
         fileUpload = new FileUpload();
@@ -72,20 +84,8 @@ public class MAConfigForm extends Composite {
 
         FileUploadManager.configureForm(uploadForm,
                                         "dir=" + POINT_DATA_DIR,
-                                        new FormPanel.SubmitHandler() {
-                                            public void onSubmit(FormPanel.SubmitEvent event) {
-                                                // we can check for valid input here
-                                            }
-                                        },
-                                        new FormPanel.SubmitCompleteHandler() {
-                                            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-                                                updateRecordSources();
-                                                Dialog.info("File Upload",
-                                                            "File successfully uploaded.");
-
-                                            }
-                                        }
-        );
+                                        addRecordSourceAction,
+                                        addRecordSourceAction);
 
         updateRecordSources();
     }
@@ -188,9 +188,17 @@ public class MAConfigForm extends Composite {
     }
 
 
-    private class AddRecordSourceAction implements ClickHandler {
+    private class AddRecordSourceAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
+
+        private Dialog fileUploadDialog;
+        private Dialog monitorDialog;
+        private boolean cancelled;
+        private Label monitorLabel;
+
         @Override
         public void onClick(ClickEvent event) {
+            cancelled = false;
+
             VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
                                                                       new HTML("Select in-situ or point data file:"),
                                                                       uploadForm,
@@ -201,7 +209,7 @@ public class MAConfigForm extends Composite {
                                                                                        "application of the max. time difference criterion. Other names will be<br/>" +
                                                                                        "matched against names in the resulting L2 products in order to generate<br/>" +
                                                                                        "the match-up scatter-plots and statistics, for example 'CONC_CHL'.</p>"));
-            Dialog dialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+            fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
                     String filename = fileUpload.getFilename();
@@ -211,11 +219,46 @@ public class MAConfigForm extends Composite {
                                     new HTML("Please specify a point data file."));
                         return;
                     }
+                    monitorLabel = new Label("Submitting '" + filename + "'...");
+                    monitorDialog = new Dialog("File Upload", monitorLabel, ButtonType.CANCEL) {
+                        @Override
+                        protected void onCancel() {
+                            closeDialogs();
+                            cancelled = true;
+                        }
+                    };
+                    monitorDialog.show();
                     uploadForm.submit();
-                    hide();
                 }
             };
-            dialog.show();
+
+            fileUploadDialog.show();
+        }
+
+        @Override
+        public void onSubmit(FormPanel.SubmitEvent event) {
+            if (cancelled) {
+                closeDialogs();
+                event.cancel();
+            } else {
+                monitorDialog.getButton(0).setEnabled(false);
+                monitorLabel.setText("File submitted...");
+            }
+        }
+
+        @Override
+        public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
+            closeDialogs();
+            cancelled = false;
+            updateRecordSources();
+            Dialog.info("File Upload",
+                        "File successfully uploaded.");
+
+        }
+
+        private void closeDialogs() {
+            monitorDialog.hide();
+            fileUploadDialog.hide();
         }
     }
 
