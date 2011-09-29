@@ -78,9 +78,7 @@
                         <td>
                             <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
                         </td>
-                        <td>
-                            <g:Label>days</g:Label>
-                        </td>
+                        <td>&nbsp;</td>
                         <td>&nbsp;&nbsp;</td>
                         <td>
                             <g:Label>Target width:</g:Label>
