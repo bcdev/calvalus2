@@ -142,10 +142,13 @@ public class SqlProductionStoreTest {
     @Test
     public void testThatProductionIsDeserialisedCorrectly() throws Exception {
 
-        SqlProductionStore store = openStore(true);
-        store.addProduction(createProduction1());
+        SqlProductionStore store1 = openStore(true);
+        SqlProductionStore store2 = openStore(false);
+        store1.addProduction(createProduction1());
+        store1.persist();
 
-        Production[] productions = store.getProductions();
+        store2.update();
+        Production[] productions = store2.getProductions();
         assertNotNull(productions);
         assertEquals(1, productions.length);
         Production production1 = productions[0];
@@ -160,12 +163,9 @@ public class SqlProductionStoreTest {
         assertEquals("X", production1.getProductionRequest().getProductionType());
         assertEquals("eva", production1.getProductionRequest().getUserName());
         assertNotNull(production1.getWorkflow());
-        /*
-        // todo - solve typical DB time locale problem (how to tell HSQLDB that we always use UTC?)
         assertEquals(new Date(1315153761000L), production1.getWorkflow().getSubmitTime());
         assertEquals(new Date(1315153764000L), production1.getWorkflow().getStartTime());
         assertEquals(null, production1.getWorkflow().getStopTime());
-        */
         assertNotNull(production1.getWorkflow().getSubmitTime());
         assertNotNull(production1.getWorkflow().getStartTime());
         assertNull(production1.getWorkflow().getStopTime());

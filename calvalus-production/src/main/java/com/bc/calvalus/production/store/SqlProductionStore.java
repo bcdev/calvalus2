@@ -10,13 +10,14 @@ import com.bc.calvalus.production.ProductionRequest;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -203,9 +204,9 @@ public class SqlProductionStore implements ProductionStore {
         String productionType = resultSet.getString("production_type");
         String userName = resultSet.getString("production_user");
         String jobIdList = resultSet.getString("job_id_list");
-        Date submitTime = resultSet.getDate("submit_time");
-        Date startTime = resultSet.getDate("start_time");
-        Date stopTime = resultSet.getDate("stop_time");
+        Timestamp submitTime = resultSet.getTimestamp("submit_time");
+        Timestamp startTime = resultSet.getTimestamp("start_time");
+        Timestamp stopTime = resultSet.getTimestamp("stop_time");
         String procState = resultSet.getString("processing_state");
         float procProgress = resultSet.getFloat("processing_progress");
         String procMessage = resultSet.getString("processing_message");
@@ -280,9 +281,9 @@ public class SqlProductionStore implements ProductionStore {
         insertProductionStmt.setString(3, production.getProductionRequest().getProductionType());
         insertProductionStmt.setString(4, production.getProductionRequest().getUserName());
         insertProductionStmt.setString(5, formatJobIds(processingService, production.getJobIds()));
-        insertProductionStmt.setDate(6, toSqlDate(production.getWorkflow().getSubmitTime()));
-        insertProductionStmt.setDate(7, toSqlDate(production.getWorkflow().getStartTime()));
-        insertProductionStmt.setDate(8, toSqlDate(production.getWorkflow().getStopTime()));
+        insertProductionStmt.setTimestamp(6, toSqlTimestamp(production.getWorkflow().getSubmitTime()));
+        insertProductionStmt.setTimestamp(7, toSqlTimestamp(production.getWorkflow().getStartTime()));
+        insertProductionStmt.setTimestamp(8, toSqlTimestamp(production.getWorkflow().getStopTime()));
         insertProductionStmt.setString(9, production.getProcessingStatus().getState().toString());
         insertProductionStmt.setFloat(10, production.getProcessingStatus().getProgress());
         insertProductionStmt.setString(11, production.getProcessingStatus().getMessage());
@@ -310,8 +311,8 @@ public class SqlProductionStore implements ProductionStore {
                                                                        " WHERE production_id=?");
         }
         updateProductionStmt.clearParameters();
-        updateProductionStmt.setDate(1, toSqlDate(production.getWorkflow().getStartTime()));
-        updateProductionStmt.setDate(2, toSqlDate(production.getWorkflow().getStopTime()));
+        updateProductionStmt.setTimestamp(1, toSqlTimestamp(production.getWorkflow().getStartTime()));
+        updateProductionStmt.setTimestamp(2, toSqlTimestamp(production.getWorkflow().getStopTime()));
         updateProductionStmt.setString(3, production.getProcessingStatus().getState().toString());
         updateProductionStmt.setFloat(4, production.getProcessingStatus().getProgress());
         updateProductionStmt.setString(5, production.getProcessingStatus().getMessage());
@@ -362,7 +363,7 @@ public class SqlProductionStore implements ProductionStore {
         return sb.toString();
     }
 
-    private static Date toSqlDate(java.util.Date date) {
-        return date != null ? new Date(date.getTime()) : null;
+    private static Timestamp toSqlTimestamp(Date date) {
+        return date != null ? new Timestamp(date.getTime()) : null;
     }
 }

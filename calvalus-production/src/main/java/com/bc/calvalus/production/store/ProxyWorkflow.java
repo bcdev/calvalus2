@@ -27,12 +27,9 @@ class ProxyWorkflow extends AbstractWorkflowItem {
                          Date startTime,
                          Date stopTime,
                          ProcessStatus status) {
+        super(status, submitTime, startTime, stopTime);
         this.processingService = processingService;
         this.jobIds = jobIds;
-        setSubmitTime(submitTime);
-        setStartTime(startTime);
-        setStopTime(stopTime);
-        setStatus(status);
     }
 
     @Override

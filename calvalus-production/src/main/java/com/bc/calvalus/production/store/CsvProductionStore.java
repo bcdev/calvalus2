@@ -289,11 +289,6 @@ public class CsvProductionStore implements ProductionStore {
      * @return The workflow.
      */
     protected WorkflowItem createWorkflow(Object[] jobIds, Date[] dates, ProcessStatus processStatus) {
-        ProxyWorkflow workflow = new ProxyWorkflow(processingService, jobIds, dates[0], dates[1], dates[2], processStatus);
-        workflow.setStatus(processStatus);
-        workflow.setSubmitTime(dates[0]);
-        workflow.setStartTime(dates[1]);
-        workflow.setStopTime(dates[2]);
-        return workflow;
+        return new ProxyWorkflow(processingService, jobIds, dates[0], dates[1], dates[2], processStatus);
     }
 }
