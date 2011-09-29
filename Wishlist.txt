@@ -8,4 +8,12 @@ http://www.brockmann-consult.de/jira/browse/CAVA
 
 
 Olga:
+
+1) Production Management:
+- A search mask after processing (L2, MA, ...), after staging status, after downloaded / not downloaded
+- An info if production has already been downloaded
+- SELECT ALL checkbox.
+- cancel selected Jobs
+2) A possibility to create one or more requests ( e.g. L3 Processing, some MA, some TA.... ) and to start all jobs later, e.g. at night.
+
 ------
