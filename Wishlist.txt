@@ -1,0 +1,11 @@
+Wishes from users
+=================
+
+These wishes will be discussed by the delevopers and
+transfered into JIRA entries afterwards.
+
+http://www.brockmann-consult.de/jira/browse/CAVA
+
+
+Olga:
+------
