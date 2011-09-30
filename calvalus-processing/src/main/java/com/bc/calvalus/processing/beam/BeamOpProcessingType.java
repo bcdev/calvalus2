@@ -30,8 +30,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -153,35 +151,6 @@ public class BeamOpProcessingType {
 
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-            if (configuration.getBoolean("calvalus.l3ta", false)) {
-
-                // todo - this doesn't work! Grrrr!
-                Job job2 = new Job(jobClient.getConf(), "calvalus.l3ta");
-                job2.setNumReduceTasks(4);
-
-                job2.setMapperClass(L3Mapper.class);
-                job2.setMapOutputKeyClass(LongWritable.class);
-                job2.setMapOutputValueClass(SpatialBin.class);
-
-                job2.setPartitionerClass(L3Partitioner.class);
-
-                job2.setReducerClass(L3Reducer.class);
-                job2.setOutputKeyClass(LongWritable.class);
-                job2.setOutputValueClass(TemporalBin.class);
-
-                job2.setOutputFormatClass(SequenceFileOutputFormat.class);
-
-                org.apache.hadoop.mapred.jobcontrol.Job jc1 = new org.apache.hadoop.mapred.jobcontrol.Job((JobConf) job.getConfiguration());
-                ArrayList<org.apache.hadoop.mapred.jobcontrol.Job> dependingJobs = new ArrayList<org.apache.hadoop.mapred.jobcontrol.Job>();
-                dependingJobs.add(jc1);
-                JobControl jobControl = new JobControl("calvalus.l3ta");
-                org.apache.hadoop.mapred.jobcontrol.Job jc2 = new org.apache.hadoop.mapred.jobcontrol.Job((JobConf) job2.getConfiguration(),
-                                                                                                          dependingJobs);
-                jobControl.addJob(jc1);
-                jobControl.addJob(jc2);
-                jobControl.run();
-
-            }
         } else {
             job.setMapperClass(BeamOperatorMapper.class);
             job.setNumReduceTasks(0);
