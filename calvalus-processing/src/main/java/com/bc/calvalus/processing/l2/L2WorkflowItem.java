@@ -19,11 +19,14 @@ package com.bc.calvalus.processing.l2;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.BeamOperatorMapper;
+import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
@@ -58,7 +61,8 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_L2_BUNDLE, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
-                {JobConfigNames.CALVALUS_REGION_GEOMETRY, null}
+                {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
+                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
         };
     }
 
@@ -72,8 +76,14 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setMapperClass(BeamOperatorMapper.class);
         job.setNumReduceTasks(0);
+        job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
+        if (resumeProcessing) {
+            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
+        } else {
+            JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        }
         if (getProcessorBundle() != null) {
             HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
         }

@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -57,8 +58,16 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
         try {
             // parse request
-
             Path inputPath = split.getPath();
+            String inputFilename = inputPath.getName();
+            String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+            if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
+                Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
+                if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                    LOG.info("resume: target product already exist, skip processing");
+                    return;
+                }
+            }
             String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
             Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
             String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
@@ -78,17 +87,14 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 LOG.warning("target product is empty, skip writing.");
             } else {
                 // process input and write target product
-                String inputFilename = inputPath.getName();
-                String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-                Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
-                final Path outputProductPath = new Path(workOutputPath, outputFilename);
+                Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
                 int tileHeight = DEFAULT_TILE_HEIGHT;
                 Dimension preferredTileSize = targetProduct.getPreferredTileSize();
                 if (preferredTileSize != null) {
                     tileHeight = preferredTileSize.height;
                 }
                 StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
-                streamingProductWriter.writeProduct(targetProduct, outputProductPath, tileHeight);
+                streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
             }
         } catch (Exception e) {

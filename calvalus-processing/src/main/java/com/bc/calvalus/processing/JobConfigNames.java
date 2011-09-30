@@ -40,6 +40,7 @@ public interface JobConfigNames {
     String CALVALUS_USER = "calvalus.user";
     String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";
     String CALVALUS_REQUEST = "calvalus.request";
+    String CALVALUS_RESUME_PROCESSING = "calvalus.resume";
 
     /**
      * @deprecated use following syntax to set (BEAM) system properties: calvalus.system.<system-property-name>
