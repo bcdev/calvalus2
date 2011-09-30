@@ -47,9 +47,4 @@ public interface JobConfigNames {
     @Deprecated
     String CALVALUS_BEAM_TILE_CACHE_SIZE = "calvalus.beam.tileCacheSize";
 
-    /**
-     * @deprecated use following syntax to set Hadoop properties: calvalus.hadoop.<hadoop-property-name>
-     */
-    @Deprecated
-    String CALVALUS_PRIORITY = "calvalus.priority";
 }

@@ -76,7 +76,7 @@ public class BeamOpProcessingType {
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_L3_PARAMETERS, wpsConfig.getLevel3Parameters());
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_REGION_GEOMETRY, wpsConfig.getGeometry());
         addIfNotEmpty(conf, JobConfigNames.CALVALUS_FORMATTER_PARAMETERS, wpsConfig.getFormatterParameters());
-        addIfNotEmpty(conf, JobConfigNames.CALVALUS_PRIORITY, priority);
+        conf.set("mapred.job.priority", priority);
 
         Map<String,String> propertiesMap = wpsConfig.getSystemProperties();
         if (!propertiesMap.containsKey("beam.reader.tileHeight")) {
