@@ -36,14 +36,11 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
     private Date stopTime;
 
     public AbstractWorkflowItem() {
-        this(ProcessStatus.UNKNOWN, null, null, null);
+        this(ProcessStatus.UNKNOWN);
     }
 
-    protected AbstractWorkflowItem(ProcessStatus status, Date submitTime, Date startTime, Date stopTime) {
+    protected AbstractWorkflowItem(ProcessStatus status) {
         this.status = status;
-        this.submitTime = submitTime;
-        this.startTime = startTime;
-        this.stopTime = stopTime;
         this.statusListeners = new ArrayList<WorkflowStatusListener>();
         this.statusListeners.add(this);
     }
