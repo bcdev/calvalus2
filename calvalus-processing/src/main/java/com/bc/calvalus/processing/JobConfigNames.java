@@ -22,16 +22,26 @@ package com.bc.calvalus.processing;
 public interface JobConfigNames {
     String CALVALUS_CALVALUS_BUNDLE = "calvalus.calvalus.bundle";
     String CALVALUS_BEAM_BUNDLE = "calvalus.beam.bundle";
+
     String CALVALUS_INPUT = "calvalus.input";
     String CALVALUS_INPUT_FORMAT = "calvalus.input.format";
+
     String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
+    String CALVALUS_OUTPUT_FORMAT = "calvalus.output.format";
+    String CALVALUS_OUTPUT_COMPRESSION = "calvalus.output.compression";
+    String CALVALUS_OUTPUT_REGEX = "calvalus.output.regex";
+    String CALVALUS_OUTPUT_REPLACEMENT = "calvalus.output.replacement";
+
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
+
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
+
     String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
+
     String CALVALUS_FAIL_FAST = "calvalus.failFast";
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";
