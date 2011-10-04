@@ -116,8 +116,8 @@ public class ProductFactory {
                               String processorName,
                               String processorParameters) throws IOException {
 
-        Product sourceProduct = readProduct(inputPath, inputFormat, configuration);
-        if (sourceProductHasErrors(sourceProduct)) {
+        Product sourceProduct = readProduct(inputPath, inputFormat);
+        if (productHasEmptyTiepoints(sourceProduct)) {
             sourceProduct.dispose();
             return null;
         }
@@ -134,7 +134,7 @@ public class ProductFactory {
         return targetProduct;
     }
 
-    private static boolean sourceProductHasErrors(Product sourceProduct) {
+    public static boolean productHasEmptyTiepoints(Product sourceProduct) {
         // "AMORGOS" can produce products that are corrupted.
         // Until they are removed from the cluster, perform this fast check.
         // All tie point grids contain only zeros, check the first one,
@@ -159,11 +159,10 @@ public class ProductFactory {
      *
      * @param inputPath     The input path
      * @param inputFormat   The input format, may be {@code null}. If {@code null}, the file format will be detected.
-     * @param configuration the configuration
      * @return The product The product read.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public static Product readProduct(Path inputPath, String inputFormat, Configuration configuration) throws IOException {
+    public Product readProduct(Path inputPath, String inputFormat) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
         final Product product;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {

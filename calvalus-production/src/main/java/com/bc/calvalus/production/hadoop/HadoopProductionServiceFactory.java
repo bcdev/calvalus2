@@ -51,6 +51,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
             ProductionType maProductionType = new MAProductionType(inventoryService, processingService, stagingService);
+            ProductionType pvProductionType = new PVProductionType(inventoryService, processingService, stagingService);
             return new ProductionServiceImpl(inventoryService,
                                              processingService,
                                              stagingService,
@@ -58,7 +59,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
                                              l2ProductionType,
                                              l3ProductionType,
                                              taProductionType,
-                                             maProductionType);
+                                             maProductionType,
+                                             pvProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
