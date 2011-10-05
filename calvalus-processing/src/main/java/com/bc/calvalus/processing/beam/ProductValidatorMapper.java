@@ -44,7 +44,7 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
 
         long length = split.getLength();
         if (length <= 12029L) {
-            context.write(new Text("Input file to small"), new Text(inputPath.toString()));
+            report(context, "Input file to small", inputPath);
             return;
         }
 
@@ -53,18 +53,23 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
             String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
             sourceProduct = productFactory.readProduct(inputPath, inputFormat);
         } catch (IOException ioe) {
-            context.write(new Text("Failed to read product: " + ioe.getMessage()), new Text(inputPath.toString()));
+            report(context, "Failed to read product: " + ioe.getMessage(), inputPath);
             return;
         }
 
         try {
             if (ProductFactory.productHasEmptyTiepoints(sourceProduct)) {
-                context.write(new Text("Product has empty tie-points"), new Text(inputPath.toString()));
+                report(context, "Product has empty tie-points", inputPath);
             } else {
-                context.write(new Text("OK"), new Text(inputPath.toString()));
+                report(context, "OK", inputPath);
             }
         } finally {
             sourceProduct.dispose();
         }
+    }
+
+    private static void report(Context context, String message, Path path) throws IOException, InterruptedException {
+        context.write(new Text(message), new Text(path.toString()));
+        context.getCounter("Products", message).increment(1);
     }
 }
