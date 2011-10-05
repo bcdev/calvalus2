@@ -87,11 +87,12 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         Product product = productFactory.readProduct(split.getPath(), inputFormat);
         String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, null);
         String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null);
-        String newProductName = split.getPath().getName();
+        String newProductName = FileUtils.getFilenameWithoutExtension(split.getPath().getName());
         if (regex != null && replacement != null) {
             String productName = product.getName();
             newProductName = productName.replaceAll(regex, replacement);
         }
+        LOG.info("New product name: " + newProductName);
         product.setName(newProductName);
 
         File tmpDir = new File(System.getProperty("java.io.tmpdir"), "tmpProductDir");
@@ -101,19 +102,26 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             }
             String targetProductName = product.getName();
             File productFile = new File(tmpDir, targetProductName + outputExtension);
+            LOG.info("Start writing product to file: " + productFile.getName());
             ProductIO.writeProduct(product, productFile, outputFormat, false, new ProgressMonitorAdapter(context));
+            LOG.info("Finished writing product.");
+
             if ("zip".equals(outputCompression)) {
+                LOG.info("Creating ZIP archive on HDFS.");
                 OutputStream outputStream = createOutputStream(context, targetProductName + ".zip");
                 zip(tmpDir, outputStream, context);
             } else if ("gz".equals(outputCompression)) {
+                LOG.info("Creating GZ file on HDFS.");
                 InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
                 OutputStream outputStream = new GZIPOutputStream(createOutputStream(context, targetProductName + ".gz"));
                 copyAndClose(inputStream, outputStream, context);
             } else {
+                LOG.info("Copying file to HDFS.");
                 InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
                 OutputStream outputStream = createOutputStream(context, targetProductName + outputExtension);
                 copyAndClose(inputStream, outputStream, context);
             }
+            LOG.info("Finished writing to HDFS.");
         } finally {
             FileUtils.deleteTree(tmpDir);
             if (product != null) {
