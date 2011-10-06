@@ -77,7 +77,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void kill() throws WorkflowException {
         try {
-            processingService.killJob(getJobId());
+            if (jobId != null) {
+                processingService.killJob(jobId);
+            }
         } catch (IOException e) {
             throw new WorkflowException("Failed to kill Hadoop job: " + e.getMessage(), e);
         }
