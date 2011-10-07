@@ -48,7 +48,7 @@
 LocalAddr = <%=request.getLocalAddr()%> <br/>
 RemoteAddr = <%=request.getRemoteAddr()%> <br/>
 
-<% if (request.getLocalAddr().startsWith("")) { %>
+<% if (request.getRemoteAddr().startsWith("10.")) { %>
 <h1>Calvalus Cluster</h1>
 
 <p>
