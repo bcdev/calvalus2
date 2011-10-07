@@ -38,7 +38,7 @@
 
 <h1>About Calvalus</h1>
 
-<p>ESA’s Earth Observation (EO) missions provide a unique dataset of observational data of our environment. Calibration
+<p>ESA&acute;s Earth Observation (EO) missions provide a unique dataset of observational data of our environment. Calibration
     of the measured signal and validation of the derived products is an extremely important task for efficient
     exploitation of EO data and the basis for reliable scientific conclusions. In spite of this importance, the cal/val
     work is often hindered by insufficient means to access data, time consuming work to identify suitable in-situ data
@@ -60,7 +60,7 @@
 </p>
 
 <p>The demonstration system, Calvalus, basically comprises a cluster of 20 commodity computers with a total disk
-    capacity of 112 TB. The processing system software is based on Apache Hadoop – an open-source implementation of MR
+    capacity of 112 TB. The processing system software is based on Apache Hadoop - an open-source implementation of MR
     and DSF in Java.
 </p>
 
