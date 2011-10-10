@@ -31,6 +31,9 @@ public class L2FormatingMapperTest {
         //cc
         assertEquals("MER_RR__CCL1P_20060708_1234567", newName("L2_of_MER_RR__1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
         assertEquals("MER_FSG_CCL1P_20060708_1234567", newName("L2_of_MER_FSG_1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
+
+        //lc sdr
+        assertEquals("MER_FSG_SDR_20050708_112233_042", newName("L2_of_MER_FSG_1PNUPA20050708_112233_042", "L2_of_(MER_FSG)_1.....(.+)", "$1_SDR_$2"));
     }
 
     private static String newName(String productName, String regex, String replacement) {
