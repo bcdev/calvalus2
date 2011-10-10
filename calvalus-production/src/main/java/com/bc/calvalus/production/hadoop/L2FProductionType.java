@@ -103,7 +103,6 @@ public class L2FProductionType extends HadoopProductionType {
         if (inputFiles.length == 0) {
             throw new ProductionException("No input files found for given time range.");
         }
-        System.out.println("inputFiles = " + Arrays.toString(inputFiles));
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String outputFormat = productionRequest.getString("outputFormat", "NetCDF");
