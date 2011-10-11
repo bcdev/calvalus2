@@ -137,7 +137,8 @@ public class L3PartitionerTest {
         assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8), null, numPartitions));
         assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 8 + 12 + 12 + 8 + 3 - 1), null, numPartitions));
     }
-@Test
+
+    @Test
     public void testLCCase() throws Exception {
         L3Partitioner l3Partitioner = createPartitioner(66792, "polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))");
         int numPartitions = 4;

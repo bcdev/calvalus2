@@ -62,7 +62,7 @@ public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWr
             minRowIndex = MathUtils.floorInt(minY);
             numRowsCovered = maxRowIndex - minRowIndex + 1;
         } else {
-            numRowsCovered = 360;
+            numRowsCovered = 180;
             minRowIndex = 0;
         }
     }
