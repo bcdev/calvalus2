@@ -117,7 +117,7 @@ public class L3ProductionType extends HadoopProductionType {
     static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
         return String.format("Level 3 production using input path '%s' and L2 processor '%s'",
                              productionRequest.getString("inputPath"),
-                             productionRequest.getString("processorName"));
+                             productionRequest.getString("processorName", "NONE"));
 
     }
 
