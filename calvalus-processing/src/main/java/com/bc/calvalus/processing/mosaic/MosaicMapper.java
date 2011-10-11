@@ -116,13 +116,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTiles));
     }
 
-    private int processProduct(Product product, VariableContext ctx, Context context) throws IOException, InterruptedException {
-        Geometry sourceGeometry = computeProductGeometry(product);
+    private int processProduct(Product sourceProduct, VariableContext ctx, Context context) throws IOException, InterruptedException {
+        Geometry sourceGeometry = computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
             return 0;
         }
-        Product gridProduct = toPlateCareGrid(product);
+        Product gridProduct = toPlateCareGrid(sourceProduct);
         for (int i = 0; i < ctx.getVariableCount(); i++) {
             String variableName = ctx.getVariableName(i);
             String variableExpr = ctx.getVariableExpr(i);
@@ -138,7 +138,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         }
 
         final String maskExpr = ctx.getMaskExpr();
-        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
+        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, gridProduct);
 
         final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableCount()];
         for (int i = 0; i < ctx.getVariableCount(); i++) {
@@ -305,7 +305,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             }
 
             for (int sample : byteBuffer) {
-                if (sample == 1) {
+                if (sample != 0) {
                     return true;
                 }
             }
