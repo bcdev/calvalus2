@@ -23,7 +23,9 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
@@ -66,11 +68,11 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         // TODO add resume processing
-//        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-//        if (resumeProcessing) {
-//            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-//        } else {
+        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
+        if (resumeProcessing) {
+            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
+        } else {
             JobUtils.clearAndSetOutputDir(job, getOutputDir());
-//        }
+        }
     }
 }

@@ -68,7 +68,6 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
         final long startTime = System.nanoTime();
 
-
         String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         String outputCompression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         String outputFormat = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
@@ -84,15 +83,35 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
 
-        Product product = productFactory.readProduct(split.getPath(), inputFormat);
         String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, null);
         String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null);
         String newProductName = FileUtils.getFilenameWithoutExtension(split.getPath().getName());
+        LOG.info("Product name: " + newProductName);
         if (regex != null && replacement != null) {
-            String productName = product.getName();
-            newProductName = productName.replaceAll(regex, replacement);
+            newProductName = newProductName.replaceAll(regex, replacement);
         }
         LOG.info("New product name: " + newProductName);
+
+        String outputFilename;
+        if ("zip".equals(outputCompression)) {
+            outputFilename = newProductName + ".zip";
+        } else if ("gz".equals(outputCompression)) {
+            outputFilename = newProductName + ".gz";
+        } else {
+            outputFilename = newProductName + outputExtension;
+        }
+
+        if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
+            Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
+            if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                LOG.info("resume: target product already exist, skip processing");
+                final long stopTime = System.nanoTime();
+                LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
+                return;
+            }
+        }
+
+        Product product = productFactory.readProduct(split.getPath(), inputFormat);
         product.setName(newProductName);
 
         File tmpDir = new File(System.getProperty("java.io.tmpdir"), "tmpProductDir");
@@ -100,25 +119,23 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             if (!tmpDir.mkdir()) {
                 throw new IOException("Failed to create tmp directory: " + tmpDir.getAbsolutePath());
             }
-            String targetProductName = product.getName();
-            File productFile = new File(tmpDir, targetProductName + outputExtension);
+            File productFile = new File(tmpDir, newProductName + outputExtension);
             LOG.info("Start writing product to file: " + productFile.getName());
             ProductIO.writeProduct(product, productFile, outputFormat, false, new ProgressMonitorAdapter(context));
             LOG.info("Finished writing product.");
 
+            OutputStream outputStream = createOutputStream(context, outputFilename);
             if ("zip".equals(outputCompression)) {
                 LOG.info("Creating ZIP archive on HDFS.");
-                OutputStream outputStream = createOutputStream(context, targetProductName + ".zip");
                 zip(tmpDir, outputStream, context);
             } else if ("gz".equals(outputCompression)) {
                 LOG.info("Creating GZ file on HDFS.");
                 InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
-                OutputStream outputStream = new GZIPOutputStream(createOutputStream(context, targetProductName + ".gz"));
-                copyAndClose(inputStream, outputStream, context);
+                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+                copyAndClose(inputStream, gzipOutputStream, context);
             } else {
                 LOG.info("Copying file to HDFS.");
                 InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
-                OutputStream outputStream = createOutputStream(context, targetProductName + outputExtension);
                 copyAndClose(inputStream, outputStream, context);
             }
             LOG.info("Finished writing to HDFS.");
@@ -191,9 +208,9 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
     }
 
     static OutputStream createOutputStream(TaskInputOutputContext<?,?,?,?> context, String filename) throws IOException, InterruptedException {
-        Path zipPath = new Path(FileOutputFormat.getWorkOutputPath(context), filename);
+        Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), filename);
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
-        return fileSystem.create(zipPath, (short) 1);
+        return fileSystem.create(workPath, (short) 1);
     }
 
     static String getNewProductname(String productName, String regex, String replacement) {
@@ -210,7 +227,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         }
 
         @Override
-        public void worked(int work) {
+        public void internalWorked(double work) {
             progressable.progress();
         }
     }
