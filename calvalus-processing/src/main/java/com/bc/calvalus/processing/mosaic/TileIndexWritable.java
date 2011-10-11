@@ -65,14 +65,14 @@ public class TileIndexWritable implements WritableComparable {
 
     public int compareTo(Object o) {
         TileIndexWritable that = (TileIndexWritable) o;
-        int result = compare(this.tileY, that.tileY);
+        int result = compareInts(this.tileY, that.tileY);
         if (result == 0) {
-            result = compare(this.tileX, that.tileX);
+            result = compareInts(this.tileX, that.tileX);
         }
         return result;
     }
 
-    private int compare(int thisInt, int thatInt) {
+    private static int compareInts(int thisInt, int thatInt) {
         if (thisInt < thatInt) {
             return -1;
         } else if (thisInt == thatInt) {
@@ -113,11 +113,11 @@ public class TileIndexWritable implements WritableComparable {
             int thisTileY = readInt(b1, s1);
             int thatTileY = readInt(b2, s2);
 
-            int result = compare(thisTileY, thatTileY);
+            int result = compareInts(thisTileY, thatTileY);
             if (result == 0) {
                 int thisTileX = readInt(b1, s1 + 4);
                 int thatTileX = readInt(b2, s2 + 4);
-                result = compare(thisTileX, thatTileX);
+                result = compareInts(thisTileX, thatTileX);
             }
             return result;
         }
