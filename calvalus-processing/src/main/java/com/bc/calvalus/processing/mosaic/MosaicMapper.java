@@ -27,7 +27,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -47,13 +46,10 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /**
@@ -117,7 +113,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     }
 
     private int processProduct(Product sourceProduct, VariableContext ctx, Context context) throws IOException, InterruptedException {
-        Geometry sourceGeometry = computeProductGeometry(sourceProduct);
+        Geometry sourceGeometry = MosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
             return 0;
@@ -147,7 +143,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             final MultiLevelImage varImage = node.getGeophysicalImage();
             varImages[i] = varImage;
         }
-        final Point[] tileIndices = maskImage.getTileIndices(null);
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        Rectangle geometryRegion = mosaicGrid.computeRegion(sourceGeometry);
+        Rectangle gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
+        Point[] tileIndices = maskImage.getTileIndices(gridRegion);
 
         int numTileTotal = 0;
         TileFactory tileFactory = new TileFactory(gridProduct, maskImage, varImages, sourceGeometry, context);
@@ -202,46 +201,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         return repro.getTargetProduct();
     }
 
-    static Geometry computeProductGeometry(Product product) {
-        try {
-            final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
-            final Polygon[] polygons = new Polygon[paths.length];
-            final GeometryFactory factory = new GeometryFactory();
-            for (int i = 0; i < paths.length; i++) {
-                polygons[i] = convertAwtPathToJtsPolygon(paths[i], factory);
-            }
-            final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
-                    polygons.length == 1 ? polygons[0] : factory.createMultiPolygon(polygons));
-            return peuckerSimplifier.getResultGeometry();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
-    static Polygon convertAwtPathToJtsPolygon(Path2D path, GeometryFactory factory) {
-        final PathIterator pathIterator = path.getPathIterator(null);
-        ArrayList<double[]> coordList = new ArrayList<double[]>();
-        int lastOpenIndex = 0;
-        while (!pathIterator.isDone()) {
-            final double[] coords = new double[6];
-            final int segType = pathIterator.currentSegment(coords);
-            if (segType == PathIterator.SEG_CLOSE) {
-                // we should only detect a single SEG_CLOSE
-                coordList.add(coordList.get(lastOpenIndex));
-                lastOpenIndex = coordList.size();
-            } else {
-                coordList.add(coords);
-            }
-            pathIterator.next();
-        }
-        final Coordinate[] coordinates = new Coordinate[coordList.size()];
-        for (int i1 = 0; i1 < coordinates.length; i1++) {
-            final double[] coord = coordList.get(i1);
-            coordinates[i1] = new Coordinate(coord[0], coord[1]);
-        }
-
-        return factory.createPolygon(factory.createLinearRing(coordinates), null);
-    }
 
     private static class TileFactory {
 
@@ -263,18 +223,11 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
         private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
             Rectangle tileRect = maskImage.getTileRect(tileIndex.x, tileIndex.y);
-            int step = Math.min(tileRect.width, tileRect.height) / 8;
-            step = step > 0 ? step : 1;
-            final GeoPos[] geoPoints = ProductUtils.createGeoBoundary(gridProduct, tileRect, step, true);
-            boolean intersects = false;
 
-            for (GeoPos geoPoint : geoPoints) {
-                if (geoPoint.isValid() && sourceGeometry.contains(factory.createPoint(new Coordinate(geoPoint.getLon(), geoPoint.getLat())))) {
-                    intersects = true;
-                    break;
-                }
-            }
-            if (intersects) {
+            GeneralPath generalPath = ProductUtils.convertToGeoPath(tileRect, gridProduct.getGeoCoding());
+            Polygon tileGeometry = MosaicGrid.convertToJtsPolygon(generalPath.getPathIterator(null), factory);
+
+            if (!tileGeometry.isEmpty() && tileGeometry.intersects(sourceGeometry)) {
                 LOG.info("tile intersects: " + tileIndex);
                 Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
 
