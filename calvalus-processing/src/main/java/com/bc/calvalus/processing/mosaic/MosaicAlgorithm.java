@@ -11,7 +11,5 @@ interface MosaicAlgorithm {
 
     void finish();
 
-    boolean hasResult();
-
     float[][] getResult();
 }

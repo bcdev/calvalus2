@@ -23,7 +23,6 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.glevel.MultiLevelImage;
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
@@ -32,7 +31,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -234,13 +232,21 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 LOG.info("tile intersects: " + tileIndex);
                 Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
 
-                boolean containsData = containsData(maskRaster);
+                byte[] byteBuffer = getRawMaskData(maskRaster);
+                boolean containsData = containsData(byteBuffer);
                 LOG.info("containsData = " + containsData);
+
                 if (containsData) {
                     float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                     for (int i = 0; i < varImages.length; i++) {
                         Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
-                        raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), sampleValues[i]);
+                        float[] samples = sampleValues[i];
+                        raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
+                        for (int j = 0; j < samples.length; j++) {
+                            if (byteBuffer[j] == 0) {
+                                samples[j] = Float.NaN;
+                            }
+                        }
                     }
 
                     TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
@@ -252,14 +258,17 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             return false;
         }
 
-        private static boolean containsData(Raster mask) {
+        private static byte[] getRawMaskData(Raster mask) {
             DataBuffer dataBuffer = mask.getDataBuffer();
             Object primitiveArray = ImageUtils.getPrimitiveArray(dataBuffer);
             byte[] byteBuffer = (primitiveArray instanceof byte[]) ? (byte[]) primitiveArray : null;
             if (byteBuffer == null) {
                 throw new IllegalStateException("mask is not of type byte");
             }
+            return byteBuffer;
+        }
 
+        private static boolean containsData(byte[] byteBuffer) {
             for (int sample : byteBuffer) {
                 if (sample != 0) {
                     return true;

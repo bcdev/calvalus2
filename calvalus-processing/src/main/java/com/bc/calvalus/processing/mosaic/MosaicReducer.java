@@ -36,12 +36,11 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
             algorithm.process(samples);
         }
         algorithm.finish();
-        if (algorithm.hasResult()) {
-            float[][] result = algorithm.getResult();
-            int tileSize = new MosaicGrid().getTileSize();
-            TileDataWritable value = new TileDataWritable(tileSize, tileSize, result);
-            context.write(tileIndex, value);
-        }
+
+        float[][] result = algorithm.getResult();
+        int tileSize = new MosaicGrid().getTileSize();
+        TileDataWritable value = new TileDataWritable(tileSize, tileSize, result);
+        context.write(tileIndex, value);
     }
 
 }
