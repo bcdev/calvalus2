@@ -16,9 +16,11 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,17 +42,53 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 
-/**
- * Created by IntelliJ IDEA.
- * User: marcoz
- * Date: 12.10.11
- * Time: 16:25
- * To change this template use File | Settings | File Templates.
- */
-public class MosaicFormatter {
 
-    private static Product createProduct(String outputName, Rectangle outputRegion, double pixelSize) {
+public class MosaicFormatter implements Configurable {
 
+    private static final String PART_FILE_PREFIX = "part-r-";
+    private MosaicGrid mosaicGrid;
+    private Rectangle gridRegion;
+    private Configuration jobConfig;
+
+    @Override
+    public void setConf(Configuration jobConfig) {
+        this.jobConfig = jobConfig;
+        mosaicGrid = new MosaicGrid();
+        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
+        gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
+    }
+
+    @Override
+    public Configuration getConf() {
+        return jobConfig;
+    }
+
+    public void run() throws IOException {
+        Product product = createProduct("mosaic-result", gridRegion, mosaicGrid.getPixelSize());
+
+        String outputFormat = "NetCDF-BEAM"; // TODO
+        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
+        if (productWriter == null) {
+            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
+        }
+        productWriter.writeProductNodes(product, "/tmp/mosaic.nc");
+
+        try {
+            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr-oneyear/test-L3-1/");
+
+            final FileStatus[] parts = getPartFiles(partsDir, FileSystem.get(jobConfig));
+            for (FileStatus part : parts) {
+                Path partFile = part.getPath();
+                System.out.println(MessageFormat.format("reading and handling part {0}", partFile));
+                handlePart(product, productWriter, partFile);
+            }
+        } finally {
+            productWriter.close();
+        }
+    }
+
+    private Product createProduct(String outputName, Rectangle outputRegion, double pixelSize) {
         CrsGeoCoding geoCoding;
         try {
             geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
@@ -68,80 +106,51 @@ public class MosaicFormatter {
         }
         final Product product = new Product(outputName, "CALVALUS-L3", outputRegion.width, outputRegion.height);
         product.setGeoCoding(geoCoding);
+
         //TODO
-//        product.setStartTime(formatterConfig.getStartTime());
-//        product.setEndTime(formatterConfig.getEndTime());
+        for (int i = 0; i < 42; i++) {
+            product.addBand("band_" + (i), ProductData.TYPE_FLOAT32);
+        }
+
+        //TODO
+        //product.setStartTime(formatterConfig.getStartTime());
+        //product.setEndTime(formatterConfig.getEndTime());
         return product;
     }
 
-    private static final String PART_FILE_PREFIX = "part-r-";
+    private static FileStatus[] getPartFiles(Path partsDir, FileSystem hdfs) throws IOException {
+        final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().startsWith(PART_FILE_PREFIX);
+            }
+        });
+        System.out.println(MessageFormat.format("collecting {0} parts", parts.length));
+        Arrays.sort(parts);
+        return parts;
+    }
 
-    public static void main(String[] args) throws IOException {
-
-//        Geometry geometry = JobUtils.createGeometry("polygon((-2 46, -2 40, 1 40, 1 46, -2 46))");
-        Geometry geometry = JobUtils.createGeometry("polygon((-2 43, -2 40, 1 40, 1 43, -2 43))");
-
-        MosaicGrid mosaicGrid = new MosaicGrid();
-        Rectangle geometryRegion = mosaicGrid.computeRegion(geometry);
-        System.out.println("geometryRegion = " + geometryRegion);
-        Rectangle gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
-        System.out.println("gridRegion = " + gridRegion);
-
-        Product product = createProduct("test", gridRegion, mosaicGrid.getPixelSize());
-        Band[] bands = new Band[3];
-        for (int i = 0; i < bands.length; i++) {
-            bands[i] = product.addBand("band_" + (i), ProductData.TYPE_FLOAT32);
-        }
-
-        String outputFormat = "NetCDF-BEAM"; // TODO
-        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
-        if (productWriter == null) {
-            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
-        }
-        productWriter.writeProductNodes(product, "/tmp/mosaic.nc");
+    private void handlePart(Product product, ProductWriter productWriter, Path partFile) throws IOException {
+        FileSystem hdfs = FileSystem.get(jobConfig);
+        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
         try {
-
-
-            Configuration configuration = new Configuration();
-            configuration.set("fs.default.name", "hdfs://cvmaster00:9000");
-
-            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr-oneyear/test-L3-1/");
-            final FileSystem hdfs = partsDir.getFileSystem(configuration);
-            final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return path.getName().startsWith(PART_FILE_PREFIX);
-                }
-            });
-            System.out.println(MessageFormat.format("collecting {0} parts", parts.length));
-            Arrays.sort(parts);
-
             Rectangle productBounds = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
-            for (FileStatus part : parts) {
-                Path partFile = part.getPath();
-                SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
-                System.out.println(MessageFormat.format("reading and handling part {0}", partFile));
-                try {
-                    TileIndexWritable key = new TileIndexWritable();
-                    TileDataWritable data = new TileDataWritable();
-                    while (reader.next(key)) {
-                        Rectangle tileRect = mosaicGrid.getTileRect(key.getTileX(), key.getTileY(), gridRegion);
-                        if (productBounds.contains(tileRect)) {
-                            reader.getCurrentValue(data);
-                            float[][] samples = data.getSamples();
-                            for (int i = 0; i < bands.length; i++) {
-                                ProductData productData = ProductData.createInstance(samples[i]);
-                                productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height, productData, ProgressMonitor.NULL);
-                            }
-                        }
+            Band[] bands = product.getBands();
+            TileIndexWritable key = new TileIndexWritable();
+            TileDataWritable data = new TileDataWritable();
+            while (reader.next(key)) {
+                Rectangle tileRect = mosaicGrid.getTileRect(key.getTileX(), key.getTileY(), gridRegion);
+                if (productBounds.contains(tileRect)) {
+                    reader.getCurrentValue(data);
+                    float[][] samples = data.getSamples();
+                    for (int i = 0; i < bands.length; i++) {
+                        ProductData productData = ProductData.createInstance(samples[i]);
+                        productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height, productData, ProgressMonitor.NULL);
                     }
-                } finally {
-                    reader.close();
                 }
             }
-
         } finally {
-            productWriter.close();
+            reader.close();
         }
     }
 }
