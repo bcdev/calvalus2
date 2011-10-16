@@ -27,34 +27,21 @@ import java.io.IOException;
  */
 public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, TileIndexWritable, TileDataWritable> {
 
-
     @Override
     protected void reduce(TileIndexWritable tileIndex, Iterable<TileDataWritable> spatialTiles, Context context) throws IOException, InterruptedException {
 
-        float[][] temporalSampleValues = null;
-        int counter = 0;
-
+        MosaicAlgorithm algorithm = new MeanMosaicAlgorithm();
         for (TileDataWritable spatialTile : spatialTiles) {
             float[][] samples = spatialTile.getSamples();
-            if (temporalSampleValues == null) {
-                temporalSampleValues = new float[samples.length][samples[0].length];
-            }
-            for (int i = 0; i < samples.length; i++) {
-                for (int j = 0; j < samples[i].length; j++) {
-                    temporalSampleValues[i][j] += samples[i][j];
-                }
-            }
-            counter++;
+            algorithm.process(samples);
         }
-        if (counter > 0) {
-            for (int i = 0; i < temporalSampleValues.length; i++) {
-                for (int j = 0; j < temporalSampleValues[i].length; j++) {
-                    temporalSampleValues[i][j] /= counter;
-                }
-            }
+        algorithm.finish();
+        if (algorithm.hasResult()) {
+            float[][] result = algorithm.getResult();
+            int tileSize = new MosaicGrid().getTileSize();
+            TileDataWritable value = new TileDataWritable(tileSize, tileSize, result);
+            context.write(tileIndex, value);
         }
-        int tileSize = new MosaicGrid().getTileSize();
-        TileDataWritable value = new TileDataWritable(tileSize, tileSize, temporalSampleValues);
-        context.write(tileIndex, value);
     }
+
 }
