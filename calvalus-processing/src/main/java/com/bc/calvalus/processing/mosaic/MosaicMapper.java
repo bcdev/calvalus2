@@ -171,24 +171,24 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     private static Product toPlateCareGrid(Product sourceProduct) {
         final ReprojectionOp repro = new ReprojectionOp();
 
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        double pixelSize = mosaicGrid.getPixelSize();
+        int tileSize = mosaicGrid.getTileSize();
+
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", true);
         repro.setParameter("orientation", 0.0);
-        repro.setParameter("pixelSizeX", 1.0 / 370.0);
-        repro.setParameter("pixelSizeY", 1.0 / 370.0);
-        repro.setParameter("tileSizeX", 370);
-        repro.setParameter("tileSizeY", 370);
+        repro.setParameter("pixelSizeX", pixelSize);
+        repro.setParameter("pixelSizeY", pixelSize);
+        repro.setParameter("tileSizeX", tileSize);
+        repro.setParameter("tileSizeY", tileSize);
         repro.setParameter("crs", DefaultGeographicCRS.WGS84.toString());
 
-        //TODO specify resolution
-        int width = 370 * 360;
-        int height = width / 2;
+        Rectangle rectangle = mosaicGrid.computeRegion(null);
+        int width = rectangle.width;
+        int height = rectangle.height;
         double x = width / 2.0;
         double y = height / 2;
-//        System.out.println("x = " + x);
-//        System.out.println("y = " + y);
-//        System.out.println("width = " + width);
-//        System.out.println("height = " + height);
 
         repro.setParameter("easting", 0.0);
         repro.setParameter("northing", 0.0);
@@ -211,6 +211,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         private final Geometry sourceGeometry;
         private final Context context;
         private final GeometryFactory factory;
+        private final MosaicGrid mosaicGrid;
 
         public TileFactory(Product gridProduct, MultiLevelImage maskImage, MultiLevelImage[] varImages, Geometry sourceGeometry, Context context) {
             this.gridProduct = gridProduct;
@@ -219,10 +220,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             this.sourceGeometry = sourceGeometry;
             this.context = context;
             factory = new GeometryFactory();
+            mosaicGrid = new MosaicGrid();
         }
 
         private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
             Rectangle tileRect = maskImage.getTileRect(tileIndex.x, tileIndex.y);
+            int tileSize = mosaicGrid.getTileSize();
 
             GeneralPath generalPath = ProductUtils.convertToGeoPath(tileRect, gridProduct.getGeoCoding());
             Polygon tileGeometry = MosaicGrid.convertToJtsPolygon(generalPath.getPathIterator(null), factory);
@@ -234,14 +237,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 boolean containsData = containsData(maskRaster);
                 LOG.info("containsData = " + containsData);
                 if (containsData) {
-                    float[][] sampleValues = new float[varImages.length][370 * 370];//TODO
+                    float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                     for (int i = 0; i < varImages.length; i++) {
                         Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
                         raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), sampleValues[i]);
                     }
 
                     TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
-                    TileDataWritable value = new TileDataWritable(370, 370, sampleValues);
+                    TileDataWritable value = new TileDataWritable(tileSize, tileSize, sampleValues);
                     context.write(key, value);
                     return true;
                 }

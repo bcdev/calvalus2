@@ -53,7 +53,8 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
                 }
             }
         }
-        TileDataWritable value = new TileDataWritable(370, 370, temporalSampleValues);
+        int tileSize = new MosaicGrid().getTileSize();
+        TileDataWritable value = new TileDataWritable(tileSize, tileSize, temporalSampleValues);
         context.write(tileIndex, value);
     }
 }
