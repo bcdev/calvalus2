@@ -170,9 +170,7 @@ public class MosaicGrid {
             for (int y = yStart; y < yStart + height; y++) {
                 for (int x = xStart; x < xStart + width; x++) {
                     Geometry tileGeometry = getTileGeometry(x, y);
-                    System.out.println("tileGeometry = " + tileGeometry);
                     Geometry intersection = geometry.intersection(tileGeometry);
-                    System.out.println("intersection = " + intersection);
                     if (!intersection.isEmpty() && intersection.getDimension() == 2) {
                         points.add(new Point(x, y));
                     }
