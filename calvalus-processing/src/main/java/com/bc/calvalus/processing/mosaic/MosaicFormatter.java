@@ -67,6 +67,14 @@ public class MosaicFormatter implements Configurable {
         return jobConfig;
     }
 
+    public static void main(String[] args) throws IOException {
+        Configuration configuration = new Configuration();
+        configuration.set("fs.default.name", "hdfs://cvmaster00:9000");
+        MosaicFormatter mosaicFormatter = new MosaicFormatter();
+        mosaicFormatter.setConf(configuration);
+        mosaicFormatter.run();
+    }
+
     public void run() throws IOException {
         MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
         Product product = createProduct("mosaic-result", algorithm, gridRegion, mosaicGrid.getPixelSize());
