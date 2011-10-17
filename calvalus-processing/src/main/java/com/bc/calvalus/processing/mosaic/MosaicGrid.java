@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.sun.org.apache.regexp.internal.RE;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -24,10 +23,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.math.MathUtils;
 
-import javax.media.jai.PlanarImage;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
