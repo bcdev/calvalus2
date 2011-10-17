@@ -56,11 +56,12 @@ public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWr
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {
             Envelope envelope = roiGeometry.getEnvelopeInternal();
-            double minY = envelope.getMinY();
-            double maxY = envelope.getMaxY();
-            int maxRowIndex = MathUtils.ceilInt(maxY);
-            minRowIndex = MathUtils.floorInt(minY);
-            numRowsCovered = maxRowIndex - minRowIndex + 1;
+            System.out.println("envelope = " + envelope);
+            int maxRowIndex = MathUtils.ceilInt(90.0 - envelope.getMinY());
+            minRowIndex = MathUtils.floorInt(90.0 - envelope.getMaxY());
+            System.out.println("minRowIndex = " + minRowIndex);
+            numRowsCovered = maxRowIndex - minRowIndex;
+            System.out.println("numRowsCovered = " + numRowsCovered);
         } else {
             numRowsCovered = 180;
             minRowIndex = 0;

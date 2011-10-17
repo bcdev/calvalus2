@@ -17,8 +17,11 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
+
+import java.awt.Point;
 
 import static org.junit.Assert.*;
 
@@ -52,19 +55,18 @@ public class MosaicPartitionerTest {
     @Test
     public void testRegion() {
         MosaicPartitioner partitioner = createPartitioner("polygon((-2 46, -2 40, 1 40, 1 46, -2 46))");
-        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 39), null, 4));
+        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 43), null, 3)); //lat = 47
 
-        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 40), null, 4));
-        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 41), null, 4));
+        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 44), null, 3)); //lat = 46
+        assertEquals(0, partitioner.getPartition(new TileIndexWritable(34, 45), null, 3)); //lat = 45
 
-        assertEquals(1, partitioner.getPartition(new TileIndexWritable(34, 42), null, 4));
-        assertEquals(1, partitioner.getPartition(new TileIndexWritable(34, 43), null, 4));
+        assertEquals(1, partitioner.getPartition(new TileIndexWritable(34, 46), null, 3)); //lat = 44
+        assertEquals(1, partitioner.getPartition(new TileIndexWritable(34, 47), null, 3)); //lat = 43
 
-        assertEquals(2, partitioner.getPartition(new TileIndexWritable(34, 44), null, 4));
-        assertEquals(2, partitioner.getPartition(new TileIndexWritable(34, 45), null, 4));
+        assertEquals(2, partitioner.getPartition(new TileIndexWritable(34, 48), null, 3)); //lat = 42
+        assertEquals(2, partitioner.getPartition(new TileIndexWritable(34, 49), null, 3)); //lat = 41
 
-        assertEquals(3, partitioner.getPartition(new TileIndexWritable(34, 46), null, 4));
-        assertEquals(3, partitioner.getPartition(new TileIndexWritable(34, 47), null, 4));
+        assertEquals(2, partitioner.getPartition(new TileIndexWritable(34, 50), null, 3)); //lat = 40
     }
 
     private static MosaicPartitioner createPartitioner(String wkt) {
