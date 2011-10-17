@@ -35,7 +35,7 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
 
     @Override
     protected void reduce(TileIndexWritable tileIndex, Iterable<TileDataWritable> spatialTiles, Context context) throws IOException, InterruptedException {
-        MosaicAlgorithm algorithm = createAlgorithm();
+        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
         for (TileDataWritable spatialTile : spatialTiles) {
             float[][] samples = spatialTile.getSamples();
             algorithm.process(samples);
@@ -45,25 +45,6 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
         int tileSize = new MosaicGrid().getTileSize();
         TileDataWritable value = new TileDataWritable(tileSize, tileSize, result);
         context.write(tileIndex, value);
-    }
-
-    private MosaicAlgorithm createAlgorithm() {
-        L3Config.AggregatorConfiguration[] aggregators = l3Config.getAggregators();
-        if (aggregators != null) {
-            L3Config.AggregatorConfiguration first = aggregators[0];
-            String type = first.getType();
-            try {
-                Class<?> algorithClass = Class.forName(type);
-                return (MosaicAlgorithm) algorithClass.newInstance();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return new MeanMosaicAlgorithm();
     }
 
     @Override

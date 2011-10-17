@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.binning.VariableContext;
+
 /**
 * An algorithm used for mosaicking.
  *
@@ -10,4 +12,8 @@ interface MosaicAlgorithm {
     void process(float[][] samples);
 
     float[][] getResult();
+
+    void setVariableContext(VariableContext variableContext);
+
+    String[] getOutputFeatures();
 }

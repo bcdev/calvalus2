@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
@@ -49,6 +50,7 @@ public class MosaicFormatter implements Configurable {
     private MosaicGrid mosaicGrid;
     private Rectangle gridRegion;
     private Configuration jobConfig;
+    private L3Config l3Config;
 
     @Override
     public void setConf(Configuration jobConfig) {
@@ -57,6 +59,7 @@ public class MosaicFormatter implements Configurable {
         Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
         gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
+        l3Config = L3Config.get(jobConfig);
     }
 
     @Override
@@ -65,7 +68,8 @@ public class MosaicFormatter implements Configurable {
     }
 
     public void run() throws IOException {
-        Product product = createProduct("mosaic-result", gridRegion, mosaicGrid.getPixelSize());
+        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
+        Product product = createProduct("mosaic-result", algorithm, gridRegion, mosaicGrid.getPixelSize());
 
         String outputFormat = "NetCDF-BEAM"; // TODO
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
@@ -88,7 +92,7 @@ public class MosaicFormatter implements Configurable {
         }
     }
 
-    private Product createProduct(String outputName, Rectangle outputRegion, double pixelSize) {
+    private Product createProduct(String outputName, MosaicAlgorithm algorithm, Rectangle outputRegion, double pixelSize) {
         CrsGeoCoding geoCoding;
         try {
             geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
@@ -107,9 +111,9 @@ public class MosaicFormatter implements Configurable {
         final Product product = new Product(outputName, "CALVALUS-L3", outputRegion.width, outputRegion.height);
         product.setGeoCoding(geoCoding);
 
-        //TODO
-        for (int i = 0; i < 42; i++) {
-            product.addBand("band_" + (i), ProductData.TYPE_FLOAT32);
+        String[] outputFeatures = algorithm.getOutputFeatures();
+        for (String outputFeature : outputFeatures) {
+            product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
         }
 
         //TODO

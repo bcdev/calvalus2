@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.binning.VariableContext;
+
 import java.util.Arrays;
 
 /**
@@ -10,6 +12,7 @@ import java.util.Arrays;
 public class MeanMosaicAlgorithm implements MosaicAlgorithm {
     private float[][] aggregatedSamples = null;
     private int[][] counters = null;
+    private String[] outputFeatures;
 
     @Override
     public void process(float[][] samples) {
@@ -28,7 +31,7 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
             int[] counter = counters[i];
             float[] sample = samples[i];
             for (int j = 0; j < sample.length; j++) {
-                float value = samples[i][j];
+                float value = sample[j];
                 if (!Float.isNaN(value)) {
                     aggregatedSample[j] += value;
                     counter[j]++;
@@ -50,5 +53,19 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
             }
         }
         return aggregatedSamples;
+    }
+
+    @Override
+    public void setVariableContext(VariableContext variableContext) {
+        int variableCount = variableContext.getVariableCount();
+        outputFeatures = new String[variableCount];
+        for (int i = 0; i < outputFeatures.length; i++) {
+            outputFeatures[i] = variableContext.getVariableName(i) + "_mean";
+        }
+    }
+
+    @Override
+    public String[] getOutputFeatures() {
+        return outputFeatures;
     }
 }
