@@ -13,20 +13,23 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
     private float[][] aggregatedSamples = null;
     private int[][] counters = null;
     private String[] outputFeatures;
+    private int variableCount;
+    private int tileSize;
+
+    @Override
+    public void init() {
+        int numElems = tileSize * tileSize;
+        aggregatedSamples = new float[variableCount][numElems];
+        counters = new int[variableCount][numElems];
+        for (int band = 0; band < variableCount; band++) {
+            Arrays.fill(aggregatedSamples[band], 0.0f);
+            Arrays.fill(counters[band], 0);
+        }
+    }
 
     @Override
     public void process(float[][] samples) {
-        int numBands = samples.length;
-        if (aggregatedSamples == null) {
-            int numElems = samples[0].length;
-            aggregatedSamples = new float[numBands][numElems];
-            counters = new int[numBands][numElems];
-            for (int band = 0; band < numBands; band++) {
-                Arrays.fill(aggregatedSamples[band], 0.0f);
-                Arrays.fill(counters[band], 0);
-            }
-        }
-        for (int band = 0; band < numBands; band++) {
+        for (int band = 0; band < variableCount; band++) {
             float[] aggregatedSample = aggregatedSamples[band];
             int[] counter = counters[band];
             float[] sample = samples[band];
@@ -57,11 +60,12 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
 
     @Override
     public void setVariableContext(VariableContext variableContext) {
-        int variableCount = variableContext.getVariableCount();
+        variableCount = variableContext.getVariableCount();
         outputFeatures = new String[variableCount];
         for (int i = 0; i < outputFeatures.length; i++) {
             outputFeatures[i] = variableContext.getVariableName(i) + "_mean";
         }
+        tileSize = new MosaicGrid().getTileSize();
     }
 
     @Override

@@ -36,6 +36,7 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
     @Override
     protected void reduce(TileIndexWritable tileIndex, Iterable<TileDataWritable> spatialTiles, Context context) throws IOException, InterruptedException {
         MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
+        algorithm.init();
         for (TileDataWritable spatialTile : spatialTiles) {
             float[][] samples = spatialTile.getSamples();
             algorithm.process(samples);

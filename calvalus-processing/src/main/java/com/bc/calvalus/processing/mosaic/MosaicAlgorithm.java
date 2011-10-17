@@ -9,6 +9,8 @@ import com.bc.calvalus.binning.VariableContext;
 */
 interface MosaicAlgorithm {
 
+    void init();
+
     void process(float[][] samples);
 
     float[][] getResult();
