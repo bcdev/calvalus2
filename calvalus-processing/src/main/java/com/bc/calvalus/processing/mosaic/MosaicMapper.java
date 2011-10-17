@@ -58,7 +58,6 @@ import java.util.logging.Logger;
 public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWritable, TileDataWritable> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
     private static final String COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS = "Product Tile Counts";
 
     @Override
@@ -92,7 +91,6 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 }
                 numTiles = processProduct(product, ctx, context);
                 if (numTiles > 0L) {
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, inputPath.getName()).increment(numTiles);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, "Total").increment(numTiles);
                 }
