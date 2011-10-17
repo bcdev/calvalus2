@@ -21,20 +21,20 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
             int numElems = samples[0].length;
             aggregatedSamples = new float[numBands][numElems];
             counters = new int[numBands][numElems];
-            for (int i = 0; i < numElems; i++) {
-                Arrays.fill(aggregatedSamples[i], 0.0f);
-                Arrays.fill(counters[i], 0);
+            for (int band = 0; band < numBands; band++) {
+                Arrays.fill(aggregatedSamples[band], 0.0f);
+                Arrays.fill(counters[band], 0);
             }
         }
-        for (int i = 0; i < numBands; i++) {
-            float[] aggregatedSample = aggregatedSamples[i];
-            int[] counter = counters[i];
-            float[] sample = samples[i];
-            for (int j = 0; j < sample.length; j++) {
-                float value = sample[j];
+        for (int band = 0; band < numBands; band++) {
+            float[] aggregatedSample = aggregatedSamples[band];
+            int[] counter = counters[band];
+            float[] sample = samples[band];
+            for (int i = 0; i < sample.length; i++) {
+                float value = sample[i];
                 if (!Float.isNaN(value)) {
-                    aggregatedSample[j] += value;
-                    counter[j]++;
+                    aggregatedSample[i] += value;
+                    counter[i]++;
                 }
             }
         }
@@ -42,13 +42,13 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
 
     @Override
     public float[][] getResult() {
-        for (int i = 0; i < aggregatedSamples.length; i++) {
-            float[] aggregatedSample = aggregatedSamples[i];
-            int[] counter = counters[i];
-            for (int j = 0; j < aggregatedSample.length; j++) {
-                int count = counter[j];
+        for (int band = 0; band < aggregatedSamples.length; band++) {
+            float[] aggregatedSample = aggregatedSamples[band];
+            int[] counter = counters[band];
+            for (int i = 0; i < aggregatedSample.length; i++) {
+                int count = counter[i];
                 if (count > 0) {
-                    aggregatedSample[j] /= count;
+                    aggregatedSample[i] /= count;
                 }
             }
         }
