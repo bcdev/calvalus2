@@ -103,8 +103,9 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
             aggregatedSamples[sdrOffset + j][i] += samples[varIndexes[sdrObservationOffset + j]][i];
         }
         sdrOffset += NUM_SDR_BANDS + 1;
-        for (int j = 0; j < NUM_SDR_BANDS + 1; j++) { // sdr_error
-            float sdrErrorMeasurement = samples[varIndexes[sdrObservationOffset + NUM_SDR_BANDS + 1 + j]][i];
+        for (int j = 0; j < NUM_SDR_BANDS; j++) { // sdr_error
+            final int varIndex = varIndexes[sdrObservationOffset + NUM_SDR_BANDS + 1 + j];
+            float sdrErrorMeasurement = samples[varIndex][i];
             aggregatedSamples[sdrOffset + j][i] += (sdrErrorMeasurement * sdrErrorMeasurement);
         }
     }
