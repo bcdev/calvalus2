@@ -9,7 +9,5 @@ interface MosaicAlgorithm {
 
     void process(float[][] samples);
 
-    void finish();
-
     float[][] getResult();
 }

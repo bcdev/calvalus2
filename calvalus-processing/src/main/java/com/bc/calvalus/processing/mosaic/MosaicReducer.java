@@ -35,7 +35,6 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
             float[][] samples = spatialTile.getSamples();
             algorithm.process(samples);
         }
-        algorithm.finish();
 
         float[][] result = algorithm.getResult();
         int tileSize = new MosaicGrid().getTileSize();

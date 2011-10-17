@@ -38,7 +38,7 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
     }
 
     @Override
-    public void finish() {
+    public float[][] getResult() {
         for (int i = 0; i < aggregatedSamples.length; i++) {
             float[] aggregatedSample = aggregatedSamples[i];
             int[] counter = counters[i];
@@ -49,10 +49,6 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
                 }
             }
         }
-    }
-
-    @Override
-    public float[][] getResult() {
         return aggregatedSamples;
     }
 }
