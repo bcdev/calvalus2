@@ -212,14 +212,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         }
 
         private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
-            LOG.info("processTile: " + tileIndex);
             int tileSize = mosaicGrid.getTileSize();
             Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
             byte[] byteBuffer = getRawMaskData(maskRaster);
             boolean containsData = containsData(byteBuffer);
-            LOG.info("containsData = " + containsData);
 
             if (containsData) {
+                LOG.info("processTile with data: " + tileIndex);
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
                     Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
@@ -235,7 +234,6 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
                 TileDataWritable value = new TileDataWritable(tileSize, tileSize, sampleValues);
                 context.write(key, value);
-                context.getCounter("Tiles", key.toString()).increment(1);
                 return true;
             }
             return false;
