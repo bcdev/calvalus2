@@ -89,7 +89,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 if (product.getGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
-                numTiles = processProduct(product, ctx, context);
+                numTiles = processProduct(product, regionGeometry, ctx, context);
                 if (numTiles > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, inputPath.getName()).increment(numTiles);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, "Total").increment(numTiles);
@@ -108,7 +108,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTiles));
     }
 
-    private int processProduct(Product sourceProduct, VariableContext ctx, Context context) throws IOException, InterruptedException {
+    private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context context) throws IOException, InterruptedException {
         Geometry sourceGeometry = MosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
@@ -140,7 +140,8 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         MosaicGrid mosaicGrid = new MosaicGrid();
-        Rectangle geometryRegion = mosaicGrid.computeRegion(sourceGeometry);
+        Geometry productGeometry = sourceGeometry.intersection(regionGeometry);
+        Rectangle geometryRegion = mosaicGrid.computeRegion(productGeometry);
         Rectangle gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
         Point[] tileIndices = maskImage.getTileIndices(gridRegion);
 
