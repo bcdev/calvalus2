@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
@@ -24,10 +25,12 @@ import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.ProductUtils;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Defines the Grid on which the mosaic-ing is happening.
@@ -42,6 +45,7 @@ public class MosaicGrid {
     private final double pixelSize;
     private final int numTileX;
     private final int numTileY;
+    private final GeometryFactory geometryFactory;
 
     public MosaicGrid() {
         numTileX = 360;
@@ -50,6 +54,7 @@ public class MosaicGrid {
         gridWidth = numTileX * tileSize;
         gridHeight = numTileY * tileSize;
         pixelSize = 180.0 / gridHeight;
+        geometryFactory = new GeometryFactory();
     }
 
 
@@ -94,30 +99,31 @@ public class MosaicGrid {
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
 
-    public Rectangle getTileRect(int tileX, int tileY, Rectangle outputRegion) {
-        return new Rectangle(tileX * tileSize - outputRegion.x,
-                                       tileY * tileSize - outputRegion.y,
-                                       tileSize,
-                                       tileSize);
+    public Geometry getTileGeometry(int tileX, int tileY) {
+        double x1 = tileX - 180.0;
+        double x2 = (tileX + 1) - 180.0;
+        double y1 = 90 - tileY;
+        double y2 = 90 - (tileY + 1);
+        return geometryFactory.toGeometry(new Envelope(x1, x2, y1, y2));
     }
 
-    static Geometry computeProductGeometry(Product product) {
+    public Geometry computeProductGeometry(Product product) {
         try {
             final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
             final Polygon[] polygons = new Polygon[paths.length];
-            final GeometryFactory factory = new GeometryFactory();
+
             for (int i = 0; i < paths.length; i++) {
-                polygons[i] = convertToJtsPolygon(paths[i].getPathIterator(null), factory);
+                polygons[i] = convertToJtsPolygon(paths[i].getPathIterator(null));
             }
             final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
-                    polygons.length == 1 ? polygons[0] : factory.createMultiPolygon(polygons));
+                    polygons.length == 1 ? polygons[0] : geometryFactory.createMultiPolygon(polygons));
             return peuckerSimplifier.getResultGeometry();
         } catch (Exception e) {
             return null;
         }
     }
 
-    static Polygon convertToJtsPolygon(PathIterator pathIterator, GeometryFactory factory) {
+    private Polygon convertToJtsPolygon(PathIterator pathIterator) {
         ArrayList<double[]> coordList = new ArrayList<double[]>();
         int lastOpenIndex = 0;
         while (!pathIterator.isDone()) {
@@ -138,6 +144,41 @@ public class MosaicGrid {
             coordinates[i1] = new Coordinate(coord[0], coord[1]);
         }
 
-        return factory.createPolygon(factory.createLinearRing(coordinates), null);
+        return geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+    }
+
+    public Point[] getTileIndices(Geometry geometry) {
+        if (geometry == null) {
+            Point[] points = new Point[numTileX * numTileY];
+
+            int index = 0;
+            for (int y = 0; y < numTileY; y++) {
+                for (int x = 0; x < numTileX; x++) {
+                    points[index++] = new Point(x, y);
+                }
+            }
+            return points;
+        } else {
+            Rectangle geometryRect = computeRegion(geometry);
+            Rectangle gridRect = alignToTileGrid(geometryRect);
+            final int xStart = gridRect.x / tileSize;
+            final int yStart = gridRect.y / tileSize;
+            final int width = gridRect.width / tileSize;
+            final int height = gridRect.height / tileSize;
+            List<Point> points = new ArrayList<Point>(width * height);
+
+            for (int y = yStart; y < yStart + height; y++) {
+                for (int x = xStart; x < xStart + width; x++) {
+                    Geometry tileGeometry = getTileGeometry(x, y);
+                    System.out.println("tileGeometry = " + tileGeometry);
+                    Geometry intersection = geometry.intersection(tileGeometry);
+                    System.out.println("intersection = " + intersection);
+                    if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+                        points.add(new Point(x, y));
+                    }
+                }
+            }
+            return points.toArray(new Point[points.size()]);
+        }
     }
 }

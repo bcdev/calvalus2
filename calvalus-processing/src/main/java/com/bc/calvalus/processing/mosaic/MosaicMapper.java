@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -38,12 +37,10 @@ import org.esa.beam.framework.datamodel.VirtualBand;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
-import org.esa.beam.util.ProductUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.GeneralPath;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.IOException;
@@ -109,7 +106,8 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     }
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context context) throws IOException, InterruptedException {
-        Geometry sourceGeometry = MosaicGrid.computeProductGeometry(sourceProduct);
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
             return 0;
@@ -139,14 +137,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             final MultiLevelImage varImage = node.getGeophysicalImage();
             varImages[i] = varImage;
         }
-        MosaicGrid mosaicGrid = new MosaicGrid();
-        Geometry productGeometry = sourceGeometry.intersection(regionGeometry);
-        Rectangle geometryRegion = mosaicGrid.computeRegion(productGeometry);
-        Rectangle gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
-        Point[] tileIndices = maskImage.getTileIndices(gridRegion);
 
+        Point[] tileIndices = mosaicGrid.getTileIndices(regionGeometry.intersection(sourceGeometry));
         int numTileTotal = 0;
-        TileFactory tileFactory = new TileFactory(gridProduct, maskImage, varImages, sourceGeometry, context);
+        TileFactory tileFactory = new TileFactory(gridProduct, maskImage, varImages, context);
         for (Point tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTileTotal++;
@@ -199,60 +193,50 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     }
 
 
-
     private static class TileFactory {
 
         private final Product gridProduct;
         private final MultiLevelImage maskImage;
         private final MultiLevelImage[] varImages;
-        private final Geometry sourceGeometry;
         private final Context context;
         private final GeometryFactory factory;
         private final MosaicGrid mosaicGrid;
 
-        public TileFactory(Product gridProduct, MultiLevelImage maskImage, MultiLevelImage[] varImages, Geometry sourceGeometry, Context context) {
+        public TileFactory(Product gridProduct, MultiLevelImage maskImage, MultiLevelImage[] varImages, Context context) {
             this.gridProduct = gridProduct;
             this.maskImage = maskImage;
             this.varImages = varImages;
-            this.sourceGeometry = sourceGeometry;
             this.context = context;
             factory = new GeometryFactory();
             mosaicGrid = new MosaicGrid();
         }
 
         private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
-            Rectangle tileRect = maskImage.getTileRect(tileIndex.x, tileIndex.y);
+            LOG.info("processTile: " + tileIndex);
             int tileSize = mosaicGrid.getTileSize();
+            Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
+            byte[] byteBuffer = getRawMaskData(maskRaster);
+            boolean containsData = containsData(byteBuffer);
+            LOG.info("containsData = " + containsData);
 
-            GeneralPath generalPath = ProductUtils.convertToGeoPath(tileRect, gridProduct.getGeoCoding());
-            Polygon tileGeometry = MosaicGrid.convertToJtsPolygon(generalPath.getPathIterator(null), factory);
-
-            if (!tileGeometry.isEmpty() && tileGeometry.intersects(sourceGeometry)) {
-                LOG.info("tile intersects: " + tileIndex);
-                Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
-
-                byte[] byteBuffer = getRawMaskData(maskRaster);
-                boolean containsData = containsData(byteBuffer);
-                LOG.info("containsData = " + containsData);
-
-                if (containsData) {
-                    float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
-                    for (int i = 0; i < varImages.length; i++) {
-                        Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
-                        float[] samples = sampleValues[i];
-                        raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
-                        for (int j = 0; j < samples.length; j++) {
-                            if (byteBuffer[j] == 0) {
-                                samples[j] = Float.NaN;
-                            }
+            if (containsData) {
+                float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
+                for (int i = 0; i < varImages.length; i++) {
+                    Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
+                    float[] samples = sampleValues[i];
+                    raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
+                    for (int j = 0; j < samples.length; j++) {
+                        if (byteBuffer[j] == 0) {
+                            samples[j] = Float.NaN;
                         }
                     }
-
-                    TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
-                    TileDataWritable value = new TileDataWritable(tileSize, tileSize, sampleValues);
-                    context.write(key, value);
-                    return true;
                 }
+
+                TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
+                TileDataWritable value = new TileDataWritable(tileSize, tileSize, sampleValues);
+                context.write(key, value);
+                context.getCounter("Tiles", key.toString()).increment(1);
+                return true;
             }
             return false;
         }
