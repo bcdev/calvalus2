@@ -15,8 +15,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
-import java.util.Date;
-
 /**
  * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
  * given regions.
