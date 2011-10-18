@@ -40,7 +40,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
     private static final int NUM_SDR_BANDS = 15;
 
-
     private int[] varIndexes;
 
     private float[][] aggregatedSamples = null;
@@ -64,39 +63,55 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
             final int status = (int) samples[varIndexes[0]][i];
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
-                int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
-                // If we haven't seen LAND so far, but we had SNOW, clear SDRs
-                if (landCount == 0 && snowCount > 0) {
-                    for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {
-                        aggregatedSamples[SDR_OFFSET + j][i] = 0.0f;
+                // If we haven't seen LAND so far, but we had SNOW or CLOUD clear SDRs
+                if (landCount == 0) {
+                    int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
+                    int cloudCount = (int) aggregatedSamples[STATUS_CLOUD][i];
+                    int cloudShadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+                    if (snowCount > 0 || cloudCount > 0 || cloudShadowCount > 0) {
+                        clearSDR(i, 0.0f);
                     }
                 }
-                // SSince we have seen LAND now, accumulate LAND SDRs
-                addSpatialSdrs(samples, i);
+                // Since we have seen LAND now, accumulate LAND SDRs
+                addSdrs(samples, i);
                 // Count LAND
                 aggregatedSamples[STATUS_LAND][i] = landCount + 1;
             } else if (status == STATUS_WATER) {
-                // Count WATER
+                // Count WATER, do not accumulate
                 aggregatedSamples[STATUS_WATER][i]++;
             } else if (status == STATUS_SNOW) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, accumulate SNOW SDRs
                 if (landCount == 0) {
-                    addSpatialSdrs(samples, i);
+                    int cloudCount = (int) aggregatedSamples[STATUS_CLOUD][i];
+                    int cloudShadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+                    if (cloudCount > 0 || cloudShadowCount > 0) {
+                        clearSDR(i, 0.0f);
+                    }
+                    addSdrs(samples, i);
                 }
                 // Count SNOW
                 aggregatedSamples[STATUS_SNOW][i]++;
-            } else if (status == STATUS_CLOUD) {
-                // Count CLOUD
-                aggregatedSamples[STATUS_CLOUD][i]++;
-            } else if (status == STATUS_CLOUD_SHADOW) {
-                // Count CLOUD_SHADOW
-                aggregatedSamples[STATUS_CLOUD_SHADOW][i]++;
+            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
+                // if we have nothing else count cloud spectra
+                int landCount = (int) aggregatedSamples[STATUS_LAND][i];
+                int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
+                if (landCount == 0 && snowCount == 0) {
+                    addSdrs(samples, i);
+                }
+                // Count CLOUD orCLOUD_SHADOW
+                aggregatedSamples[status][i]++;
             }
         }
     }
 
-    private void addSpatialSdrs(float[][] samples, int i) {
+    private void clearSDR(int i, float value) {
+        for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {
+            aggregatedSamples[SDR_OFFSET + j][i] = value;
+        }
+    }
+
+    private void addSdrs(float[][] samples, int i) {
         final int sdrObservationOffset = 1; // status
         int sdrOffset = SDR_OFFSET;
         for (int j = 0; j < NUM_SDR_BANDS + 1; j++) { // sdr + ndvi
@@ -114,21 +129,28 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
     public float[][] getResult() {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            aggregatedSamples[STATUS][i] = calculateStatus(aggregatedSamples[STATUS_LAND][i],
-                                                      aggregatedSamples[STATUS_WATER][i],
-                                                      aggregatedSamples[STATUS_SNOW][i],
-                                                      aggregatedSamples[STATUS_CLOUD][i],
-                                                      aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+            int status = calculateStatus(aggregatedSamples[STATUS_LAND][i],
+                                         aggregatedSamples[STATUS_WATER][i],
+                                         aggregatedSamples[STATUS_SNOW][i],
+                                         aggregatedSamples[STATUS_CLOUD][i],
+                                         aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+            aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
-            if (aggregatedSamples[STATUS][i] == STATUS_LAND) {
+            if (status == STATUS_LAND) {
                 wSum = aggregatedSamples[STATUS_LAND][i];
-            } else if (aggregatedSamples[STATUS][i] == STATUS_SNOW) {
+            } else if (status == STATUS_WATER) {
+                // do nothing
+            } else if (status == STATUS_SNOW) {
                 wSum = aggregatedSamples[STATUS_SNOW][i];
+            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
+                wSum = aggregatedSamples[STATUS_CLOUD][i] + aggregatedSamples[STATUS_CLOUD_SHADOW][i];
             }
             if (wSum != 0f) {
                 for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {  // sdr + ndvi + sdr_error
                     aggregatedSamples[SDR_OFFSET + j][i] /= wSum;
                 }
+            } else {
+                clearSDR(i, Float.NaN);
             }
         }
         return aggregatedSamples;
