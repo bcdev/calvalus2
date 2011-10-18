@@ -38,15 +38,10 @@ public class MAProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createTAProductionName(productionRequest);
 
-        String inputPath = productionRequest.getString("inputPath");
-        Date minDate = productionRequest.getDate("minDate", null);
-        Date maxDate = productionRequest.getDate("maxDate", null);
-        String regionName = productionRequest.getRegionName();
-        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
-        String[] l1InputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
-
+        String[] l1InputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String inputFormat = productionRequest.getString("calvalus.input.format", "ENVISAT");
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         String processorName = productionRequest.getString("processorName", null);
         String processorParameters = null;
@@ -56,10 +51,6 @@ public class MAProductionType extends HadoopProductionType {
             processorBundle = String.format("%s-%s",
                                             productionRequest.getString("processorBundleName"),
                                             productionRequest.getString("processorBundleVersion"));
-        }
-
-        if (l1InputFiles.length == 0) {
-            throw new ProductionException("No input products found for given time range.");
         }
 
         String outputDir = getOutputPath(productionRequest, productionId, "");

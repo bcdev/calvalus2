@@ -68,26 +68,7 @@ public class L2ProductionType extends HadoopProductionType {
     L2WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        String inputPath = productionRequest.getString("inputPath");
-        String regionName = productionRequest.getRegionName();
-        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
-
-        Date[] dateList = productionRequest.getDates("dateList", null);
-        String[] inputFiles;
-        if (dateList != null) {
-            List<String> inputFileAccumulator = new ArrayList<String>();
-            for (Date date : dateList) {
-                inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date, regionName)));
-            }
-            inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
-        } else {
-            Date minDate = productionRequest.getDate("minDate", null);
-            Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
-        }
-        if (inputFiles.length == 0) {
-            throw new ProductionException("No input files found for given time range.");
-        }
+        String[] inputFiles = getInputFiles(getInventoryService(), productionRequest);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
@@ -96,6 +77,8 @@ public class L2ProductionType extends HadoopProductionType {
         String processorBundle = String.format("%s-%s",
                                                productionRequest.getString("processorBundleName"),
                                                productionRequest.getString("processorBundleVersion"));
+
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
@@ -106,6 +89,28 @@ public class L2ProductionType extends HadoopProductionType {
         l2JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
         return new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
+    }
+
+    public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws ProductionException {
+        String inputPath = productionRequest.getString("inputPath");
+        String regionName = productionRequest.getRegionName();
+        Date[] dateList = productionRequest.getDates("dateList", null);
+        String[] inputFiles;
+        if (dateList != null) {
+            List<String> inputFileAccumulator = new ArrayList<String>();
+            for (Date date : dateList) {
+                inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inventoryService, inputPath, date, date, regionName)));
+            }
+            inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
+        } else {
+            Date minDate = productionRequest.getDate("minDate", null);
+            Date maxDate = productionRequest.getDate("maxDate", null);
+            inputFiles = getInputPaths(inventoryService, inputPath, minDate, maxDate, regionName);
+        }
+        if (inputFiles.length == 0) {
+            throw new ProductionException("No input files found for given time range.");
+        }
+        return inputFiles;
     }
 
 }

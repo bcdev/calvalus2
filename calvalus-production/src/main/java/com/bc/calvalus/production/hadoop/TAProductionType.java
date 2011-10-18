@@ -68,7 +68,7 @@ public class TAProductionType extends HadoopProductionType {
             String l3JobName = String.format("%s-L3-%d", productionId, (i + 1));
             String taJobName = String.format("%s-TA-%d", productionId, (i + 1));
 
-            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));

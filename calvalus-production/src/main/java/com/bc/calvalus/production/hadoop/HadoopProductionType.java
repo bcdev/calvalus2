@@ -102,7 +102,7 @@ public abstract class HadoopProductionType implements ProductionType {
         setJobConfig(jobConfig, request.getParameters());
     }
 
-    public String[] getInputPaths(String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {
+    public static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);

@@ -83,26 +83,7 @@ public class PVProductionType extends HadoopProductionType {
     WorkflowItem createWorkflowItem(String productionId,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        String inputPath = productionRequest.getString("inputPath");
-        String regionName = productionRequest.getRegionName();
-
-        Date[] dateList = productionRequest.getDates("dateList", null);
-        String[] inputFiles;
-        if (dateList != null) {
-            List<String> inputFileAccumulator = new ArrayList<String>();
-            for (Date date : dateList) {
-                inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inputPath, date, date, regionName)));
-            }
-            inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
-        } else {
-            Date minDate = productionRequest.getDate("minDate", null);
-            Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputPaths(inputPath, minDate, maxDate, regionName);
-        }
-        if (inputFiles.length == 0) {
-            throw new ProductionException("No input files found for given time range.");
-        }
-
+        String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
         Configuration jobConfig = createJobConfig(productionRequest);

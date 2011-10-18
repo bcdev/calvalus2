@@ -68,7 +68,7 @@ public class L3ProductionType extends HadoopProductionType {
             DatePair datePair = datePairList.get(i);
             String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
             String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
-            String[] l1InputFiles = getInputPaths(inputPath, datePair.date1, datePair.date2, regionName);
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, datePair.date1, datePair.date2, regionName);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
