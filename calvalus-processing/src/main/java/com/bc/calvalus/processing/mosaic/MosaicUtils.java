@@ -34,7 +34,6 @@ public class MosaicUtils {
             try {
                 Class<?> algorithClass = Class.forName(type);
                 mosaicAlgorithm = (MosaicAlgorithm) algorithClass.newInstance();
-                return mosaicAlgorithm;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             } catch (InstantiationException e) {
