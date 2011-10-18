@@ -39,7 +39,7 @@ public class TAProductionType extends HadoopProductionType {
         final String productionName = createTAProductionName(productionRequest);
 
         String inputPath = productionRequest.getString("inputPath");
-        List<L3ProductionType.DatePair> datePairList = L3ProductionType.getDatePairList(productionRequest, 32);
+        List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
 
         String processorName = productionRequest.getString("processorName", null);
         String processorParameters = null;
@@ -58,17 +58,17 @@ public class TAProductionType extends HadoopProductionType {
         TAConfig taConfig = getTAConfig(productionRequest);
 
         Workflow.Parallel parallel = new Workflow.Parallel();
-        for (int i = 0; i < datePairList.size(); i++) {
-            L3ProductionType.DatePair datePair = datePairList.get(i);
-            String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
-            String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
+        for (int i = 0; i < dateRanges.size(); i++) {
+            L3ProductionType.DateRange dateRange = dateRanges.get(i);
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.startDate);
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.stopDate);
 
             Workflow.Sequential sequential = new Workflow.Sequential();
 
             String l3JobName = String.format("%s-L3-%d", productionId, (i + 1));
             String taJobName = String.format("%s-TA-%d", productionId, (i + 1));
 
-            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, datePair.date1, datePair.date2, regionName);
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.startDate, dateRange.stopDate, regionName);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));

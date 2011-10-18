@@ -46,7 +46,7 @@ public class L3ProductionType extends HadoopProductionType {
         final String userName = productionRequest.getUserName();
 
         String inputPath = productionRequest.getString("inputPath");
-        List<DatePair> datePairList = getDatePairList(productionRequest, 10);
+        List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
 
         String processorName = productionRequest.getString("processorName", null);
         String processorParameters = null;
@@ -64,11 +64,11 @@ public class L3ProductionType extends HadoopProductionType {
         String l3ConfigXml = getL3ConfigXml(productionRequest);
 
         Workflow.Parallel workflow = new Workflow.Parallel();
-        for (int i = 0; i < datePairList.size(); i++) {
-            DatePair datePair = datePairList.get(i);
-            String date1Str = ProductionRequest.getDateFormat().format(datePair.date1);
-            String date2Str = ProductionRequest.getDateFormat().format(datePair.date2);
-            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, datePair.date1, datePair.date2, regionName);
+        for (int i = 0; i < dateRanges.size(); i++) {
+            DateRange dateRange = dateRanges.get(i);
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.startDate);
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.stopDate);
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.startDate, dateRange.stopDate, regionName);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
@@ -121,13 +121,13 @@ public class L3ProductionType extends HadoopProductionType {
 
     }
 
-    static List<DatePair> getDatePairList(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
-        List<DatePair> datePairList = new ArrayList<DatePair>();
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+        List<DateRange> dateRangeList = new ArrayList<DateRange>();
         Date[] dateList = productionRequest.getDates("dateList", null);
 
         if (dateList != null) {
             for (Date date : dateList) {
-                datePairList.add(new DatePair(date, date));
+                dateRangeList.add(new DateRange(date, date));
             }
         } else {
             Date minDate = productionRequest.getDate("minDate");
@@ -148,12 +148,12 @@ public class L3ProductionType extends HadoopProductionType {
                 if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
                     break;
                 }
-                datePairList.add(new DatePair(date1, date2));
+                dateRangeList.add(new DateRange(date1, date2));
                 time += periodLengthMillis;
             }
         }
 
-        return datePairList;
+        return dateRangeList;
     }
 
     public static String getL3ConfigXml(ProductionRequest productionRequest) throws ProductionException {
@@ -224,13 +224,13 @@ public class L3ProductionType extends HadoopProductionType {
         }
     }
 
-    static class DatePair {
-        final Date date1;
-        final Date date2;
+    static class DateRange {
+        final Date startDate;
+        final Date stopDate;
 
-        DatePair(Date date1, Date date2) {
-            this.date1 = date1;
-            this.date2 = date2;
+        DateRange(Date startDate, Date stopDate) {
+            this.startDate = startDate;
+            this.stopDate = stopDate;
         }
     }
 }
