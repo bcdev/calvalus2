@@ -24,7 +24,6 @@ import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -112,6 +111,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             LOG.info("Product geometry is empty");
             return 0;
         }
+        if (regionGeometry != null) {
+            sourceGeometry = regionGeometry.intersection(sourceGeometry);
+            if (sourceGeometry.isEmpty()) {
+                LOG.info("Product geometry does not intersect region");
+                return 0;
+            }
+        }
         Product gridProduct = toPlateCareGrid(sourceProduct);
         for (int i = 0; i < ctx.getVariableCount(); i++) {
             String variableName = ctx.getVariableName(i);
@@ -137,10 +143,9 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             final MultiLevelImage varImage = node.getGeophysicalImage();
             varImages[i] = varImage;
         }
-
-        Point[] tileIndices = mosaicGrid.getTileIndices(regionGeometry.intersection(sourceGeometry));
+        Point[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
         int numTileTotal = 0;
-        TileFactory tileFactory = new TileFactory(gridProduct, maskImage, varImages, context);
+        TileFactory tileFactory = new TileFactory(maskImage, varImages, context);
         for (Point tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTileTotal++;
@@ -195,19 +200,15 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
     private static class TileFactory {
 
-        private final Product gridProduct;
         private final MultiLevelImage maskImage;
         private final MultiLevelImage[] varImages;
         private final Context context;
-        private final GeometryFactory factory;
         private final MosaicGrid mosaicGrid;
 
-        public TileFactory(Product gridProduct, MultiLevelImage maskImage, MultiLevelImage[] varImages, Context context) {
-            this.gridProduct = gridProduct;
+        public TileFactory(MultiLevelImage maskImage, MultiLevelImage[] varImages, Context context) {
             this.maskImage = maskImage;
             this.varImages = varImages;
             this.context = context;
-            factory = new GeometryFactory();
             mosaicGrid = new MosaicGrid();
         }
 
