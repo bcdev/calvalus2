@@ -104,7 +104,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, but we had SNOW or CLOUD clear SDRs
                 if (landCount == 0) {
-                    int otherCount = (int) aggregatedSamples[STATUS_SNOW][i] *
+                    int otherCount = (int) aggregatedSamples[STATUS_SNOW][i] +
                             (int) aggregatedSamples[STATUS_CLOUD][i] +
                             (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i] +
                             (int) aggregatedSamples[STATUS_CLOUD_TEMPORAL][i];
