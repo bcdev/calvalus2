@@ -82,23 +82,23 @@ public class LcL3ProductionType extends HadoopProductionType {
         Workflow.Sequential sequence = new Workflow.Sequential();
         // TODO output path lc-sr-DATE-hxxvyy
 
-        String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-sdr8Mean-" + (0 + 1));
-        String mainOutputDir = getOutputPath(productionRequest, productionId, "lc-sr-" + (0 + 1));
+        String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-sdr8Mean");
+        String mainOutputDir = getOutputPath(productionRequest, productionId, "-lc-sr");
 
         Configuration jobConfig = createJobConfig(productionRequest);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(sdrMeanInputFiles, ","));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
         jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, sdrMeanL3ConfigXml);
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + (0 + 1), jobConfig));
+        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sdr8mean", jobConfig));
 
         jobConfig = createJobConfig(productionRequest);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
-        jobConfig.set("calvalus.lc.sdr8mean", meanOutputDir);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
         jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + (0 + 1), jobConfig));
+        jobConfig.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sr", jobConfig));
 
 
         String stagingDir = userName + "/" + productionId;
