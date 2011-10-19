@@ -34,6 +34,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -56,25 +57,22 @@ public class LcL3ProductionType extends HadoopProductionType {
         final String productionName = createL3ProductionName(productionRequest);
         final String userName = productionRequest.getUserName();
 
-        // TODO add wings parameter, for sdr8 computation
-        int wings = productionRequest.getInteger("wings", 10);
         String inputPath = productionRequest.getString("inputPath");
+        // only processing one time for the time
         List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
-        // only processing one time range at the time
-        L3ProductionType.DateRange firstRange = dateRanges.get(0);
+        L3ProductionType.DateRange mainRange = dateRanges.get(0);
+        L3ProductionType.DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         String regionName = productionRequest.getRegionName();
-
-        L3ProductionType.DateRange wingsRange = getWingsRange(firstRange);
-        String[] sdrMeanInputFiles = getInputPaths(getInventoryService(), inputPath, wingsRange.startDate, wingsRange.stopDate, regionName);
-        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, firstRange.startDate, firstRange.stopDate, regionName);
+        String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.startDate, cloudRange.stopDate, regionName);
+        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.startDate, mainRange.stopDate, regionName);
         if (mainInputFiles.length == 0) {
-            String date1Str = ProductionRequest.getDateFormat().format(firstRange.startDate);
-            String date2Str = ProductionRequest.getDateFormat().format(firstRange.stopDate);
+            String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
+            String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
             throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
         }
 
-        String sdrMeanL3ConfigXml = getSdr8MeanL3Config().toXml();
+        String cloudL3ConfigXml = getCloudL3Config().toXml();
         String mainL3ConfigXml = getMainL3Config().toXml();
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
@@ -82,15 +80,15 @@ public class LcL3ProductionType extends HadoopProductionType {
         Workflow.Sequential sequence = new Workflow.Sequential();
         // TODO output path lc-sr-DATE-hxxvyy
 
-        String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-sdr8Mean");
+        String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-cloud");
         String mainOutputDir = getOutputPath(productionRequest, productionId, "-lc-sr");
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(sdrMeanInputFiles, ","));
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, sdrMeanL3ConfigXml);
+        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sdr8mean", jobConfig));
+        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_cloud", jobConfig));
 
         jobConfig = createJobConfig(productionRequest);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
@@ -112,11 +110,15 @@ public class LcL3ProductionType extends HadoopProductionType {
                               sequence);
     }
 
-    static L3ProductionType.DateRange getWingsRange(L3ProductionType.DateRange firstRange) {
-        return firstRange;
+    static L3ProductionType.DateRange getWingsRange(ProductionRequest productionRequest, L3ProductionType.DateRange mainRange) throws ProductionException {
+        int wings = productionRequest.getInteger("wings", 10);
+        long wingMillis = L3ProductionType.MILLIS_PER_DAY * wings;
+        Date date1 = new Date(mainRange.startDate.getTime() - wingMillis - 1);
+        Date date2 = new Date(mainRange.stopDate.getTime() + wingMillis - 1);
+        return new L3ProductionType.DateRange(date1, date2);
     }
 
-    static L3Config getSdr8MeanL3Config() throws ProductionException {
+    static L3Config getCloudL3Config() throws ProductionException {
         String maskExpr = "status == 1";
         String[] varNames = new String[]{"status", "sdr_8"};
         String type = LcSDR8MosaicAlgorithm.class.getName();
