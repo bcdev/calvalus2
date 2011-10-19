@@ -28,7 +28,7 @@ import java.util.Arrays;
 public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
 
     private static final int STATUS_LAND = 1;
-    private static final int NUM_AGGREGATION_BANDS = 1;
+    private static final int NUM_AGGREGATION_BANDS = 3;
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
