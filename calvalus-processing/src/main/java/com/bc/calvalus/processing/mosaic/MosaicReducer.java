@@ -31,12 +31,11 @@ import java.io.IOException;
 public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, TileIndexWritable, TileDataWritable> implements Configurable {
 
     private Configuration jobConf;
-    private L3Config l3Config;
+    private MosaicAlgorithm algorithm;
 
     @Override
     protected void reduce(TileIndexWritable tileIndex, Iterable<TileDataWritable> spatialTiles, Context context) throws IOException, InterruptedException {
-        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
-        algorithm.init();
+        algorithm.init(tileIndex);
         for (TileDataWritable spatialTile : spatialTiles) {
             float[][] samples = spatialTile.getSamples();
             algorithm.process(samples);
@@ -51,7 +50,7 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
     @Override
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
-        l3Config = L3Config.get(jobConf);
+        algorithm = MosaicUtils.createAlgorithm(jobConf);
     }
 
     @Override

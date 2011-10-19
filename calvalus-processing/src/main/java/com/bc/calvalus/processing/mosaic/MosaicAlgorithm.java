@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.binning.VariableContext;
 
+import java.io.IOException;
+
 /**
 * An algorithm used for mosaicking.
  *
@@ -9,7 +11,7 @@ import com.bc.calvalus.binning.VariableContext;
 */
 interface MosaicAlgorithm {
 
-    void init();
+    void init(TileIndexWritable tileIndex) throws IOException;
 
     void process(float[][] samples);
 

@@ -17,6 +17,8 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.l3.L3Config;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * Utility methods for mosaic processing.
@@ -25,7 +27,8 @@ import com.bc.calvalus.processing.l3.L3Config;
  */
 public class MosaicUtils {
 
-    public static MosaicAlgorithm createAlgorithm(L3Config l3Config) {
+    public static MosaicAlgorithm createAlgorithm(Configuration jobConf) {
+        L3Config l3Config = L3Config.get(jobConf);
         L3Config.AggregatorConfiguration[] aggregators = l3Config.getAggregators();
         MosaicAlgorithm mosaicAlgorithm = null;
         if (aggregators != null) {
@@ -33,12 +36,8 @@ public class MosaicUtils {
             String type = first.getType();
             try {
                 Class<?> algorithClass = Class.forName(type);
-                mosaicAlgorithm = (MosaicAlgorithm) algorithClass.newInstance();
+                mosaicAlgorithm = (MosaicAlgorithm) ReflectionUtils.newInstance(algorithClass, jobConf);
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }

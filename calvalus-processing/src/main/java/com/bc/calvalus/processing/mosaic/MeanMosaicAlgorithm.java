@@ -17,7 +17,7 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
     private int tileSize;
 
     @Override
-    public void init() {
+    public void init(TileIndexWritable tileIndex) {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         counters = new int[variableCount][numElems];

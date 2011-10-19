@@ -36,7 +36,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
     private int variableCount;
 
     @Override
-    public void init() {
+    public void init(TileIndexWritable tileIndex) {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         for (int band = 0; band < variableCount; band++) {
@@ -112,10 +112,9 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
 
     private static String[] createOutputFeatureNames() {
         String[] featureNames = new String[3];
-        int j = 0;
-        featureNames[j++] = "land_count";
-        featureNames[j++] = "sdr_8_x";
-        featureNames[j++] = "sdr_8_xx";
+        featureNames[0] = "land_count";
+        featureNames[1] = "sdr_8_x";
+        featureNames[2] = "sdr_8_xx";
         return featureNames;
     }
 }

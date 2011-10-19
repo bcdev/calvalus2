@@ -17,7 +17,14 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.binning.VariableContext;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 
+import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.Arrays;
 
 /**
@@ -25,7 +32,7 @@ import java.util.Arrays;
  *
  * @author MarcoZ
  */
-public class LCMosaicAlgorithm implements MosaicAlgorithm {
+public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int STATUS = 0;
 
@@ -39,6 +46,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
 
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
     private static final int NUM_SDR_BANDS = 15;
+    public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
     private int[] varIndexes;
 
@@ -47,13 +55,37 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
     private int tileSize;
     private int variableCount;
 
+    private Configuration jobConf;
+    private SequenceFile.Reader reader;
+    private TileIndexWritable sdr8Key;
+    private TileDataWritable sdr8Data;
+
+
     @Override
-    public void init() {
+    public void init(TileIndexWritable tileIndex) throws IOException {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         for (int band = 0; band < variableCount; band++) {
             Arrays.fill(aggregatedSamples[band], 0.0f);
         }
+        if (reader == null && jobConf.get(CALVALUS_LC_SDR8_MEAN) != null) {
+            openSdr8MeanReader(getPartition(tileIndex));
+        }
+        if (reader != null) {
+            while (reader.next(sdr8Key)) {
+                if (sdr8Key.equals(tileIndex)) {
+                    reader.getCurrentValue(sdr8Data);
+                    break;
+                }
+            }
+        }
+    }
+
+    private int getPartition(TileIndexWritable tileIndex) {
+        MosaicPartitioner mosaicPartitioner = new MosaicPartitioner();
+        mosaicPartitioner.setConf(jobConf);
+        int numPartitions = jobConf.getInt("mapred.reduce.tasks", 1);
+        return mosaicPartitioner.getPartition(tileIndex, null, numPartitions);
     }
 
     @Override
@@ -105,26 +137,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
         }
     }
 
-    private void clearSDR(int i, float value) {
-        for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {
-            aggregatedSamples[SDR_OFFSET + j][i] = value;
-        }
-    }
-
-    private void addSdrs(float[][] samples, int i) {
-        final int sdrObservationOffset = 1; // status
-        int sdrOffset = SDR_OFFSET;
-        for (int j = 0; j < NUM_SDR_BANDS + 1; j++) { // sdr + ndvi
-            aggregatedSamples[sdrOffset + j][i] += samples[varIndexes[sdrObservationOffset + j]][i];
-        }
-        sdrOffset += NUM_SDR_BANDS + 1;
-        for (int j = 0; j < NUM_SDR_BANDS; j++) { // sdr_error
-            final int varIndex = varIndexes[sdrObservationOffset + NUM_SDR_BANDS + 1 + j];
-            float sdrErrorMeasurement = samples[varIndex][i];
-            aggregatedSamples[sdrOffset + j][i] += (sdrErrorMeasurement * sdrErrorMeasurement);
-        }
-    }
-
     @Override
     public float[][] getResult() {
         int numElems = tileSize * tileSize;
@@ -156,6 +168,67 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
         return aggregatedSamples;
     }
 
+    @Override
+    public void setVariableContext(VariableContext variableContext) {
+        varIndexes = createVariableIndexes(variableContext, NUM_SDR_BANDS);
+        outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
+        variableCount = outputFeatures.length;
+        tileSize = new MosaicGrid().getTileSize();
+    }
+
+    @Override
+    public String[] getOutputFeatures() {
+        return outputFeatures;
+    }
+
+    @Override
+    public void setConf(Configuration jobConf) {
+        this.jobConf = jobConf;
+    }
+
+    private void openSdr8MeanReader(int partition) {
+        String sdr8MeanDir = jobConf.get(CALVALUS_LC_SDR8_MEAN);
+        NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
+        NUMBER_FORMAT.setMinimumIntegerDigits(5);
+        NUMBER_FORMAT.setGroupingUsed(false);
+
+        String fileName = "part-r-" + NUMBER_FORMAT.format(partition);
+        Path path = new Path(sdr8MeanDir, fileName);
+        try {
+            FileSystem fs = path.getFileSystem(jobConf);
+            reader = new SequenceFile.Reader(fs, path, jobConf);
+            sdr8Key = new TileIndexWritable();
+            sdr8Data = new TileDataWritable();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Configuration getConf() {
+        return jobConf;
+    }
+
+    private void clearSDR(int i, float value) {
+        for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {
+            aggregatedSamples[SDR_OFFSET + j][i] = value;
+        }
+    }
+
+    private void addSdrs(float[][] samples, int i) {
+        final int sdrObservationOffset = 1; // status
+        int sdrOffset = SDR_OFFSET;
+        for (int j = 0; j < NUM_SDR_BANDS + 1; j++) { // sdr + ndvi
+            aggregatedSamples[sdrOffset + j][i] += samples[varIndexes[sdrObservationOffset + j]][i];
+        }
+        sdrOffset += NUM_SDR_BANDS + 1;
+        for (int j = 0; j < NUM_SDR_BANDS; j++) { // sdr_error
+            final int varIndex = varIndexes[sdrObservationOffset + NUM_SDR_BANDS + 1 + j];
+            float sdrErrorMeasurement = samples[varIndex][i];
+            aggregatedSamples[sdrOffset + j][i] += (sdrErrorMeasurement * sdrErrorMeasurement);
+        }
+    }
+
     static int calculateStatus(float land, float water, float snow, float cloud, float cloudShadow) {
         if (land > 0) {
             return STATUS_LAND;
@@ -174,19 +247,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm {
         } else {
             return STATUS_INVALID;
         }
-    }
-
-    @Override
-    public void setVariableContext(VariableContext variableContext) {
-        varIndexes = createVariableIndexes(variableContext, NUM_SDR_BANDS);
-        outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
-        variableCount = outputFeatures.length;
-        tileSize = new MosaicGrid().getTileSize();
-    }
-
-    @Override
-    public String[] getOutputFeatures() {
-        return outputFeatures;
     }
 
     private static int[] createVariableIndexes(VariableContext varCtx, int numBands) {
