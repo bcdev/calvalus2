@@ -41,8 +41,8 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int STATUS_SNOW = 3;
     private static final int STATUS_CLOUD = 4;
     private static final int STATUS_CLOUD_SHADOW = 5;
-    private static final int STATUS_INVALID = 6;
-    private static final int STATUS_CLOUD_TEMPORAL = 7;
+    private static final int STATUS_CLOUD_TEMPORAL = 6;
+    private static final int STATUS_INVALID = 7;
     private static final String[] COUNTER_NAMES = {"land", "water", "snow", "cloud", "cloud_shadow", "cloud_temporal"};
 
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
