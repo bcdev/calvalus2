@@ -67,16 +67,77 @@ public class MosaicFormatter implements Configurable {
         return jobConfig;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         Configuration configuration = new Configuration();
         configuration.set("fs.default.name", "hdfs://cvmaster00:9000");
+
+        configuration.set("calvalus.l3.parameters", "<parameters>\n" +
+                "                    <numRows>66792</numRows>\n" +
+                "                     <maskExpr>status == 1 or status == 3 or status == 4 or status == 5</maskExpr>\n" +
+                "                    <variables>\n" +
+                "\t\t              <variable><name>status</name></variable>\n" +
+                "            \t\t\t<variable><name>sdr_1</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_2</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_3</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_4</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_5</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_6</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_7</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_8</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_9</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_10</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_11</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_12</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_13</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_14</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_15</name></variable>\n" +
+                "\t\t\t            <variable><name>ndvi</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_1</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_2</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_3</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_4</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_5</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_6</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_7</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_8</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_9</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_10</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_11</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_12</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_13</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_14</name></variable>\n" +
+                "\t\t\t            <variable><name>sdr_error_15</name></variable>\n" +
+                "                    </variables>" +
+                "<aggregators>\n" +
+                "                        <aggregator>\n" +
+                "                            <type>com.bc.calvalus.processing.mosaic.LCMosaicAlgorithm</type>\n" +
+                "                        </aggregator>\n" +
+                "                    </aggregators>                    \n" +
+                "\t\t  </parameters>");
+
+//configuration.set("calvalus.l3.parameters", "<parameters>\n" +
+//                "                    <numRows>66792</numRows>\n" +
+//                "                     <maskExpr>status == 1</maskExpr>\n" +
+//                "                    <variables>\n" +
+//                "\t\t              <variable><name>status</name></variable>\n" +
+//                "\t\t\t            <variable><name>sdr_8</name></variable>\n" +
+//                "                    </variables>" +
+//                "<aggregators>\n" +
+//                "                        <aggregator>\n" +
+//                "                            <type>com.bc.calvalus.processing.mosaic.LcSDR8MosaicAlgorithm</type>\n" +
+//                "                        </aggregator>\n" +
+//                "                    </aggregators>                    \n" +
+//                "\t\t  </parameters>");
+
+        configuration.set("calvalus.regionGeometry", "polygon((-2 46, -2 43, 1 43, 1 46, -2 46))");
+
         MosaicFormatter mosaicFormatter = new MosaicFormatter();
         mosaicFormatter.setConf(configuration);
         mosaicFormatter.run();
     }
 
     public void run() throws IOException {
-        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(l3Config);
+        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(getConf());
         Product product = createProduct("mosaic-result", algorithm, gridRegion, mosaicGrid.getPixelSize());
 
         String outputFormat = "NetCDF-BEAM"; // TODO
@@ -84,10 +145,11 @@ public class MosaicFormatter implements Configurable {
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
         }
-        productWriter.writeProductNodes(product, "/tmp/mosaic.nc");
+        productWriter.writeProductNodes(product, "/tmp/mosaic_9_sr.nc");
 
         try {
-            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr-oneyear/test-L3-1/");
+//            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_7-lc-sdr8Mean/");
+            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_9-lc-sr/");
 
             final FileStatus[] parts = getPartFiles(partsDir, FileSystem.get(jobConfig));
             for (FileStatus part : parts) {
@@ -121,7 +183,9 @@ public class MosaicFormatter implements Configurable {
 
         String[] outputFeatures = algorithm.getOutputFeatures();
         for (String outputFeature : outputFeatures) {
-            product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
+            Band band = product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
         }
 
         //TODO
@@ -151,8 +215,9 @@ public class MosaicFormatter implements Configurable {
             TileIndexWritable key = new TileIndexWritable();
             TileDataWritable data = new TileDataWritable();
             while (reader.next(key)) {
-                Rectangle tileRect = mosaicGrid.getTileRect(key.getTileX(), key.getTileY(), gridRegion);
+                Rectangle tileRect = createTileRectangle(key);
                 if (productBounds.contains(tileRect)) {
+                    System.out.println("tileRect = " + tileRect);
                     reader.getCurrentValue(data);
                     float[][] samples = data.getSamples();
                     for (int i = 0; i < bands.length; i++) {
@@ -164,5 +229,12 @@ public class MosaicFormatter implements Configurable {
         } finally {
             reader.close();
         }
+    }
+
+    private Rectangle createTileRectangle(TileIndexWritable key) {
+        final int tileSize = mosaicGrid.getTileSize();
+        return new Rectangle(key.getTileX() * tileSize - gridRegion.x,
+                             key.getTileY() * tileSize - gridRegion.y,
+                             tileSize, tileSize);
     }
 }
