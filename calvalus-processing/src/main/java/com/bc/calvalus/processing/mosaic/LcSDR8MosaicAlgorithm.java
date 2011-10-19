@@ -28,18 +28,18 @@ import java.util.Arrays;
 public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
 
     private static final int STATUS_LAND = 1;
+    private static final int NUM_AGGREGATION_BANDS = 1;
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
     private String[] outputFeatures;
     private int tileSize;
-    private int variableCount;
 
     @Override
     public void init(TileIndexWritable tileIndex) {
         int numElems = tileSize * tileSize;
-        aggregatedSamples = new float[variableCount][numElems];
-        for (int band = 0; band < variableCount; band++) {
+        aggregatedSamples = new float[NUM_AGGREGATION_BANDS][numElems];
+        for (int band = 0; band < NUM_AGGREGATION_BANDS; band++) {
             Arrays.fill(aggregatedSamples[band], 0.0f);
         }
     }
@@ -62,31 +62,30 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
     @Override
     public float[][] getResult() {
         int numElems = tileSize * tileSize;
+        float[][] result = new float[1][numElems];
         for (int i = 0; i < numElems; i++) {
+            result[0][i] = Float.NaN;
             float count = aggregatedSamples[0][i];
-            if (count > 0) {
+            if (count >= 2) {
                 float sdr8Sum = aggregatedSamples[1][i];
                 float sdr8SqrSum = aggregatedSamples[2][i];
 
                 float sdr8Mean = sdr8Sum / count;
                 float sdr8Sigma = (float) Math.sqrt(sdr8SqrSum / count - sdr8Mean * sdr8Mean);
-
-                aggregatedSamples[1][i] = sdr8Mean;
-                aggregatedSamples[2][i] = sdr8Sigma;
-            } else {
-                aggregatedSamples[0][i] = Float.NaN;
-                aggregatedSamples[1][i] = Float.NaN;
-                aggregatedSamples[2][i] = Float.NaN;
+                float cloudValue2 = sdr8Sigma / sdr8Mean;
+                if (cloudValue2 > 0.2f) {
+                    float sdr8CloudDetector = sdr8Mean + sdr8Sigma;
+                    result[0][i] = sdr8CloudDetector;
+                }
             }
         }
-        return aggregatedSamples;
+        return result;
     }
 
     @Override
     public void setVariableContext(VariableContext variableContext) {
         varIndexes = createVariableIndexes(variableContext);
         outputFeatures = createOutputFeatureNames();
-        variableCount = outputFeatures.length;
         tileSize = new MosaicGrid().getTileSize();
     }
 
@@ -111,10 +110,6 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
     }
 
     private static String[] createOutputFeatureNames() {
-        String[] featureNames = new String[3];
-        featureNames[0] = "land_count";
-        featureNames[1] = "sdr_8_x";
-        featureNames[2] = "sdr_8_xx";
-        return featureNames;
+        return new String[]{"sdr_8_cloud_detector"};
     }
 }

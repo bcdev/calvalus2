@@ -42,7 +42,8 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int STATUS_CLOUD = 4;
     private static final int STATUS_CLOUD_SHADOW = 5;
     private static final int STATUS_INVALID = 6;
-    private static final String[] COUNTER_NAMES = {"land", "water", "snow", "cloud", "cloud_shadow"};
+    private static final int STATUS_CLOUD_TEMPORAL = 7;
+    private static final String[] COUNTER_NAMES = {"land", "water", "snow", "cloud", "cloud_shadow", "cloud_temporal"};
 
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
     private static final int NUM_SDR_BANDS = 15;
@@ -59,6 +60,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private SequenceFile.Reader reader;
     private TileIndexWritable sdr8Key;
     private TileDataWritable sdr8Data;
+    private float[][] sdr8DataSamples;
 
 
     @Override
@@ -75,6 +77,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             while (reader.next(sdr8Key)) {
                 if (sdr8Key.equals(tileIndex)) {
                     reader.getCurrentValue(sdr8Data);
+                    sdr8DataSamples = sdr8Data.getSamples();
                     break;
                 }
             }
@@ -92,15 +95,20 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public void process(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            final int status = (int) samples[varIndexes[0]][i];
+            int status = (int) samples[varIndexes[0]][i];
+
+            if (status == STATUS_LAND && sdr8DataSamples != null) {
+                status = temporalCloudCheck(samples[varIndexes[8]][i], sdr8DataSamples[0][i]);
+            }
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, but we had SNOW or CLOUD clear SDRs
                 if (landCount == 0) {
-                    int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
-                    int cloudCount = (int) aggregatedSamples[STATUS_CLOUD][i];
-                    int cloudShadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
-                    if (snowCount > 0 || cloudCount > 0 || cloudShadowCount > 0) {
+                    int otherCount = (int) aggregatedSamples[STATUS_SNOW][i] *
+                            (int) aggregatedSamples[STATUS_CLOUD][i] +
+                            (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i] +
+                            (int) aggregatedSamples[STATUS_CLOUD_TEMPORAL][i];
+                    if (otherCount > 0) {
                         clearSDR(i, 0.0f);
                     }
                 }
@@ -115,16 +123,17 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, accumulate SNOW SDRs
                 if (landCount == 0) {
-                    int cloudCount = (int) aggregatedSamples[STATUS_CLOUD][i];
-                    int cloudShadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
-                    if (cloudCount > 0 || cloudShadowCount > 0) {
+                    int otherCount = (int) aggregatedSamples[STATUS_CLOUD][i] +
+                            (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i] +
+                            (int) aggregatedSamples[STATUS_CLOUD_TEMPORAL][i];
+                    if (otherCount > 0) {
                         clearSDR(i, 0.0f);
                     }
                     addSdrs(samples, i);
                 }
                 // Count SNOW
                 aggregatedSamples[STATUS_SNOW][i]++;
-            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
+            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW || status == STATUS_CLOUD_TEMPORAL) {
                 // if we have nothing else count cloud spectra
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
@@ -137,6 +146,15 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         }
     }
 
+    private int temporalCloudCheck(float sdr8, float sdr8CloudThreshold) {
+        if (sdr8 > sdr8CloudThreshold) {
+            // treat this as cloud
+            return STATUS_CLOUD_TEMPORAL;
+        } else {
+            return STATUS_LAND;
+        }
+    }
+
     @Override
     public float[][] getResult() {
         int numElems = tileSize * tileSize;
@@ -145,7 +163,8 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                                          aggregatedSamples[STATUS_WATER][i],
                                          aggregatedSamples[STATUS_SNOW][i],
                                          aggregatedSamples[STATUS_CLOUD][i],
-                                         aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+                                         aggregatedSamples[STATUS_CLOUD_SHADOW][i],
+                                         aggregatedSamples[STATUS_CLOUD_TEMPORAL][i]);
             aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
             if (status == STATUS_LAND) {
@@ -154,8 +173,10 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 // do nothing
             } else if (status == STATUS_SNOW) {
                 wSum = aggregatedSamples[STATUS_SNOW][i];
-            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
-                wSum = aggregatedSamples[STATUS_CLOUD][i] + aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW || status == STATUS_CLOUD_TEMPORAL) {
+                wSum = aggregatedSamples[STATUS_CLOUD][i] +
+                        aggregatedSamples[STATUS_CLOUD_SHADOW][i] +
+                        aggregatedSamples[STATUS_CLOUD_TEMPORAL][i];
             }
             if (wSum != 0f) {
                 for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {  // sdr + ndvi + sdr_error
@@ -229,7 +250,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         }
     }
 
-    static int calculateStatus(float land, float water, float snow, float cloud, float cloudShadow) {
+    static int calculateStatus(float land, float water, float snow, float cloud, float cloudShadow, float cloudTemp) {
         if (land > 0) {
             return STATUS_LAND;
         } else if (water > 0 || snow > 0) {
@@ -238,9 +259,13 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             } else {
                 return STATUS_SNOW;
             }
-        } else if (cloud > 0 || cloudShadow > 0) {
-            if (cloud > cloudShadow) {
-                return STATUS_CLOUD;
+        } else if (cloud > 0 || cloudShadow > 0 || cloudTemp > 0) {
+            if (cloud > cloudShadow || cloudTemp > cloudShadow) {
+                if (cloud > cloudTemp) {
+                    return STATUS_CLOUD;
+                } else {
+                    return STATUS_CLOUD_TEMPORAL;
+                }
             } else {
                 return STATUS_CLOUD_SHADOW;
             }
