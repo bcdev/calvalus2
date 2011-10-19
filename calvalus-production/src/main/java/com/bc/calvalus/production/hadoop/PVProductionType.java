@@ -31,10 +31,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 /**
- * A production type used for generating one or more Level-2 products.
+ * A production type used for checking one or more products for validity.
  *
  * @author MarcoZ
- * @author Norman
  */
 public class PVProductionType extends HadoopProductionType {
 
