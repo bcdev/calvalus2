@@ -56,11 +56,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS = "Product Tile Counts";
 
+    private MosaicGrid mosaicGrid;
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
         final L3Config l3Config = L3Config.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
+        mosaicGrid = new MosaicGrid();
         final VariableContext ctx = l3Config.getVariableContext();
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -105,7 +108,6 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     }
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context context) throws IOException, InterruptedException {
-        MosaicGrid mosaicGrid = new MosaicGrid();
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
@@ -145,7 +147,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         }
         Point[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
         int numTileTotal = 0;
-        TileFactory tileFactory = new TileFactory(maskImage, varImages, context);
+        TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
         for (Point tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTileTotal++;
@@ -164,10 +166,9 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         return node;
     }
 
-    private static Product toPlateCareGrid(Product sourceProduct) {
+    private Product toPlateCareGrid(Product sourceProduct) {
         final ReprojectionOp repro = new ReprojectionOp();
 
-        MosaicGrid mosaicGrid = new MosaicGrid();
         double pixelSize = mosaicGrid.getPixelSize();
         int tileSize = mosaicGrid.getTileSize();
 
@@ -203,17 +204,16 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         private final MultiLevelImage maskImage;
         private final MultiLevelImage[] varImages;
         private final Context context;
-        private final MosaicGrid mosaicGrid;
+        private final int tileSize;
 
-        public TileFactory(MultiLevelImage maskImage, MultiLevelImage[] varImages, Context context) {
+        public TileFactory(MultiLevelImage maskImage, MultiLevelImage[] varImages, Context context, int tileSize) {
             this.maskImage = maskImage;
             this.varImages = varImages;
             this.context = context;
-            mosaicGrid = new MosaicGrid();
+            this.tileSize = tileSize;
         }
 
         private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
-            int tileSize = mosaicGrid.getTileSize();
             Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
             byte[] byteBuffer = getRawMaskData(maskRaster);
             boolean containsData = containsData(byteBuffer);
@@ -233,7 +233,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 }
 
                 TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
-                TileDataWritable value = new TileDataWritable(tileSize, tileSize, sampleValues);
+                TileDataWritable value = new TileDataWritable(sampleValues);
                 context.write(key, value);
                 return true;
             }

@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -42,8 +41,7 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
         }
 
         float[][] result = algorithm.getResult();
-        int tileSize = new MosaicGrid().getTileSize();
-        TileDataWritable value = new TileDataWritable(tileSize, tileSize, result);
+        TileDataWritable value = new TileDataWritable(result);
         context.write(tileIndex, value);
     }
 
