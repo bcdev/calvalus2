@@ -225,11 +225,6 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                     Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
                     float[] samples = sampleValues[i];
                     raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
-                    for (int j = 0; j < samples.length; j++) {
-                        if (byteBuffer[j] == 0) {
-                            samples[j] = Float.NaN;
-                        }
-                    }
                 }
 
                 TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
