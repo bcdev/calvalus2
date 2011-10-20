@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
@@ -50,7 +49,6 @@ public class MosaicFormatter implements Configurable {
     private MosaicGrid mosaicGrid;
     private Rectangle gridRegion;
     private Configuration jobConfig;
-    private L3Config l3Config;
 
     @Override
     public void setConf(Configuration jobConfig) {
@@ -59,7 +57,6 @@ public class MosaicFormatter implements Configurable {
         Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
         gridRegion = mosaicGrid.alignToTileGrid(geometryRegion);
-        l3Config = L3Config.get(jobConfig);
     }
 
     @Override
@@ -129,7 +126,8 @@ public class MosaicFormatter implements Configurable {
 //                "                    </aggregators>                    \n" +
 //                "\t\t  </parameters>");
 
-        configuration.set("calvalus.regionGeometry", "polygon((-2 46, -2 43, 1 43, 1 46, -2 46))");
+//        configuration.set("calvalus.regionGeometry", "polygon((-2 46, -2 43, 1 43, 1 46, -2 46))");
+        configuration.set("calvalus.regionGeometry", "POLYGON ((-7 54, -7 39, 6 39, 6 54, -7 54))");
 
         MosaicFormatter mosaicFormatter = new MosaicFormatter();
         mosaicFormatter.setConf(configuration);
@@ -141,15 +139,18 @@ public class MosaicFormatter implements Configurable {
         Product product = createProduct("mosaic-result", algorithm, gridRegion, mosaicGrid.getPixelSize());
 
         String outputFormat = "NetCDF-BEAM"; // TODO
-        final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
+//        String outputFormat = ProductIO.DEFAULT_FORMAT_NAME;
+        ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
         }
-        productWriter.writeProductNodes(product, "/tmp/mosaic_9_sr.nc");
+        productWriter = new BufferedProductWriter(productWriter);
+        productWriter.writeProductNodes(product, "/tmp/mosaic_we_sr_4.nc");
+
 
         try {
 //            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_7-lc-sdr8Mean/");
-            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_9-lc-sr/");
+            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_we-lc-sr/");
 
             final FileStatus[] parts = getPartFiles(partsDir, FileSystem.get(jobConfig));
             for (FileStatus part : parts) {
@@ -217,7 +218,6 @@ public class MosaicFormatter implements Configurable {
             while (reader.next(key)) {
                 Rectangle tileRect = createTileRectangle(key);
                 if (productBounds.contains(tileRect)) {
-                    System.out.println("tileRect = " + tileRect);
                     reader.getCurrentValue(data);
                     float[][] samples = data.getSamples();
                     for (int i = 0; i < bands.length; i++) {
