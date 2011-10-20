@@ -74,6 +74,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             openSdr8MeanReader(getPartition(tileIndex));
         }
         if (reader != null) {
+            sdr8DataSamples = null;
             while (reader.next(sdr8Key)) {
                 if (sdr8Key.equals(tileIndex)) {
                     reader.getCurrentValue(sdr8Data);
