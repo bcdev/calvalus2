@@ -127,7 +127,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     static L3Config getMainL3Config() throws ProductionException {
-        String maskExpr = "status == 1 or status == 2 or status == 3 or status == 4 or status == 5";
+        String maskExpr = "status == 1 or status == 3";
         String[] varNames = new String[]{"status",
                 "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
                 "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
