@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.mosaic;
 
 
 import com.bc.calvalus.processing.JobUtils;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
@@ -10,6 +11,7 @@ import java.awt.Rectangle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class MosaicGridTest {
 
@@ -106,6 +108,25 @@ public class MosaicGridTest {
         assertEquals(new Point(180, (90-43)), tileIndices[5]);
         assertEquals(new Point(180, (90-42)), tileIndices[6]);
         assertEquals(new Point(180, (90-41)), tileIndices[7]);
+    }
 
+    @Test
+    public void testGetTileGeometry() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+
+        assertTileGeometry(mosaicGrid, 0, 0, -180.0, -179.0, 89.0, 90.0);
+        assertTileGeometry(mosaicGrid, 180, 90, 0.0, 1.0, -1.0, 0.0);
+        assertTileGeometry(mosaicGrid, 10, 10, -170.0, -169.0, 79.0, 80.0);
+    }
+
+    private void assertTileGeometry(MosaicGrid mosaicGrid, int tileX, int tileY, double minX, double maxX, double minY, double maxY) {
+        Geometry tileGeometry = mosaicGrid.getTileGeometry(tileX, tileY);
+        assertNotNull(tileGeometry);
+        assertTrue(tileGeometry.isRectangle());
+        Envelope envelope = tileGeometry.getEnvelopeInternal();
+        assertEquals(minX, envelope.getMinX(), 1e-5);
+        assertEquals(maxX, envelope.getMaxX(), 1e-5);
+        assertEquals(minY, envelope.getMinY(), 1e-5);
+        assertEquals(maxY, envelope.getMaxY(), 1e-5);
     }
 }
