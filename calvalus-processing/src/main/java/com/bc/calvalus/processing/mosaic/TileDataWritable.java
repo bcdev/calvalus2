@@ -16,8 +16,8 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.processing.hadoop.WritableUtils;
 import org.apache.hadoop.io.CompressedWritable;
-import org.apache.hadoop.io.WritableComparator;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -55,14 +55,7 @@ public class TileDataWritable extends CompressedWritable {
         out.writeInt(numElems);
         byte[] byteBuffer = new byte[numElems * 4];
         for (float[] array1D : array2D) {
-            int bufferIndex = 0;
-            for (int j = 0; j < array1D.length; j++) {
-                int intBits = Float.floatToIntBits(array1D[j]);
-                byteBuffer[bufferIndex++] = (byte) ((intBits >>> 24) & 0xFF);
-                byteBuffer[bufferIndex++] = (byte) ((intBits >>> 16) & 0xFF);
-                byteBuffer[bufferIndex++] = (byte) ((intBits >>> 8) & 0xFF);
-                byteBuffer[bufferIndex++] = (byte) ((intBits >>> 0) & 0xFF);
-            }
+            WritableUtils.convertFloatToByte(array1D, byteBuffer);
             out.write(byteBuffer);
         }
     }
@@ -78,9 +71,7 @@ public class TileDataWritable extends CompressedWritable {
         byte[] byteBuffer = new byte[numElems * 4];
         for (float[] array1D : array2D) {
             in.readFully(byteBuffer);
-            for (int j = 0; j < array1D.length; j++) {
-                array1D[j] = WritableComparator.readFloat(byteBuffer, j*4);
-            }
+            WritableUtils.convertByteToFloat(byteBuffer, array1D);
         }
         this.sampleValues = array2D;
     }
