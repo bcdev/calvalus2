@@ -80,13 +80,6 @@ public class TileDataWritable extends CompressedWritable {
             in.readFully(byteBuffer);
             for (int j = 0; j < array1D.length; j++) {
                 array1D[j] = WritableComparator.readFloat(byteBuffer, j*4);
-//                int ch1 = byteBuffer[bufferIndex++];
-//                int ch2 = byteBuffer[bufferIndex++];
-//                int ch3 = byteBuffer[bufferIndex++];
-//                int ch4 = byteBuffer[bufferIndex++];
-//                int intBits =  ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-//                float asFloat = Float.intBitsToFloat(intBits);
-//                array1D[j] = asFloat;
             }
         }
         this.sampleValues = array2D;
