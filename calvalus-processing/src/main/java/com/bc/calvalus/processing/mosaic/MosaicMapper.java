@@ -146,7 +146,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         Point[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
-        LOG.info("Mosaic tiles to process: " + tileIndices.length);
+        LOG.info("Product covers #tiles : " + tileIndices.length);
         int numTileTotal = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
         for (Point tileIndex : tileIndices) {
