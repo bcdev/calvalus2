@@ -111,6 +111,17 @@ public class MosaicGridTest {
     }
 
     @Test
+    public void testGetTileIndices_5degrees() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid(180 / 5, 370 * 5);
+        Geometry geometry = null;
+        Point[] tileIndices = mosaicGrid.getTileIndices(geometry);
+        assertNotNull(tileIndices);
+        assertEquals(72 * 36, tileIndices.length);
+        assertEquals(new Point(0, 0), tileIndices[0]);
+        assertEquals(new Point(1, 0), tileIndices[1]);
+    }
+
+    @Test
     public void testTileXToDegree() throws Exception {
         MosaicGrid mosaicGrid = new MosaicGrid();
         assertEquals(-180.0, mosaicGrid.tileXToDegree(0), 1e-5);
@@ -137,14 +148,23 @@ public class MosaicGridTest {
         assertTileGeometry(mosaicGrid, 10, 10, -170.0, -169.0, 79.0, 80.0);
     }
 
+    @Test
+    public void testGetTileGeometry_5degree() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid(180 / 5, 370 * 5);
+
+        assertTileGeometry(mosaicGrid, 0, 0, -180.0, -175.0, 85.0, 90.0);
+        assertTileGeometry(mosaicGrid, 36, 18, 0.0, 5.0, -5.0, 0.0);
+        assertTileGeometry(mosaicGrid, 10, 10, -130.0, -125.0, 35.0, 40.0);
+    }
+
     private void assertTileGeometry(MosaicGrid mosaicGrid, int tileX, int tileY, double minX, double maxX, double minY, double maxY) {
         Geometry tileGeometry = mosaicGrid.getTileGeometry(tileX, tileY);
         assertNotNull(tileGeometry);
         assertTrue(tileGeometry.isRectangle());
         Envelope envelope = tileGeometry.getEnvelopeInternal();
-        assertEquals(minX, envelope.getMinX(), 1e-5);
-        assertEquals(maxX, envelope.getMaxX(), 1e-5);
-        assertEquals(minY, envelope.getMinY(), 1e-5);
-        assertEquals(maxY, envelope.getMaxY(), 1e-5);
+        assertEquals("minX", minX, envelope.getMinX(), 1e-5);
+        assertEquals("maxX", maxX, envelope.getMaxX(), 1e-5);
+        assertEquals("minY", minY, envelope.getMinY(), 1e-5);
+        assertEquals("maxY", maxY, envelope.getMaxY(), 1e-5);
     }
 }

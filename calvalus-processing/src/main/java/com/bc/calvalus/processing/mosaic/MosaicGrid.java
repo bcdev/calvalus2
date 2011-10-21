@@ -45,16 +45,25 @@ public class MosaicGrid {
     private final double pixelSize;
     private final int numTileX;
     private final int numTileY;
-    private final GeometryFactory geometryFactory;
+    private GeometryFactory geometryFactory;
 
     public MosaicGrid() {
-        numTileX = 360;
-        numTileY = 180;
-        tileSize = 370;
-        gridWidth = numTileX * tileSize;
-        gridHeight = numTileY * tileSize;
-        pixelSize = 180.0 / gridHeight;
-        geometryFactory = new GeometryFactory();
+        this(180, 370);
+    }
+    public MosaicGrid(int numTileY, int tileSize) {
+        this.numTileY = numTileY;
+        this.numTileX = numTileY * 2;
+        this.tileSize = tileSize;
+        this.gridWidth = numTileX * tileSize;
+        this.gridHeight = numTileY * tileSize;
+        this.pixelSize = 180.0 / gridHeight;
+    }
+
+    private GeometryFactory getGeometryFactory() {
+        if (geometryFactory == null) {
+            geometryFactory = new GeometryFactory();
+        }
+        return geometryFactory;
     }
 
 
@@ -104,7 +113,7 @@ public class MosaicGrid {
         double x2 = tileXToDegree(tileX + 1);
         double y1 = tileYToDegree(tileY);
         double y2 = tileYToDegree(tileY + 1);
-        return geometryFactory.toGeometry(new Envelope(x1, x2, y1, y2));
+        return getGeometryFactory().toGeometry(new Envelope(x1, x2, y1, y2));
     }
 
     double tileXToDegree(int tileX) {
@@ -126,7 +135,7 @@ public class MosaicGrid {
                 polygons[i] = convertToJtsPolygon(paths[i].getPathIterator(null));
             }
             final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
-                    polygons.length == 1 ? polygons[0] : geometryFactory.createMultiPolygon(polygons));
+                    polygons.length == 1 ? polygons[0] : getGeometryFactory().createMultiPolygon(polygons));
             return peuckerSimplifier.getResultGeometry();
         } catch (Exception e) {
             return null;
@@ -154,7 +163,8 @@ public class MosaicGrid {
             coordinates[i1] = new Coordinate(coord[0], coord[1]);
         }
 
-        return geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+        GeometryFactory factory = getGeometryFactory();
+        return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
     public Point[] getTileIndices(Geometry geometry) {
