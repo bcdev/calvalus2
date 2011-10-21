@@ -77,7 +77,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setNumReduceTasks(4);
+        job.setNumReduceTasks(18);
 
         job.setMapperClass(MosaicMapper.class);
         job.setMapOutputKeyClass(TileIndexWritable.class);

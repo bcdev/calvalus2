@@ -146,9 +146,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         Point[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
+        LOG.info("Mosaic tiles to process: " + tileIndices.length);
         int numTileTotal = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
         for (Point tileIndex : tileIndices) {
+            LOG.info("Processing tile: " + tileIndex);
+            context.progress();
             if (tileFactory.processTile(tileIndex)) {
                 numTileTotal++;
             }
@@ -219,7 +222,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             boolean containsData = containsData(byteBuffer);
 
             if (containsData) {
-                LOG.info("processTile with data: " + tileIndex);
+                LOG.info("Tile contains data: " + tileIndex);
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
                     Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);

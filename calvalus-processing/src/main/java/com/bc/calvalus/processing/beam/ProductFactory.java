@@ -32,7 +32,6 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -117,10 +116,6 @@ public class ProductFactory {
                               String processorParameters) throws IOException {
 
         Product sourceProduct = readProduct(inputPath, inputFormat);
-        if (productHasEmptyTiepoints(sourceProduct)) {
-            sourceProduct.dispose();
-            return null;
-        }
         Product targetProduct;
         try {
             targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, processorName, processorParameters);
@@ -132,26 +127,6 @@ public class ProductFactory {
             throw t;
         }
         return targetProduct;
-    }
-
-    public static boolean productHasEmptyTiepoints(Product sourceProduct) {
-        // "AMORGOS" can produce products that are corrupted.
-        // Until they are removed from the cluster, perform this fast check.
-        // All tie point grids contain only zeros, check the first one,
-        // if the product has one.
-        TiePointGrid[] tiePointGrids = sourceProduct.getTiePointGrids();
-        if (tiePointGrids != null && tiePointGrids.length > 0) {
-            TiePointGrid firstGrid = tiePointGrids[0];
-            float[] tiePoints = firstGrid.getTiePoints();
-            for (float tiePoint : tiePoints) {
-                if (tiePoint != 0.0f) {
-                    return false;
-                }
-            }
-            // all values are zero
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -182,6 +157,9 @@ public class ProductFactory {
         if (product == null) {
             throw new IOException(MessageFormat.format("No reader found for product '{0}' using input format '{1}'", inputPath, inputFormat));
         }
+        LOG.info(String.format("Opened product width = %d height = %d",
+                               product.getSceneRasterWidth(),
+                               product.getSceneRasterHeight()));
         return product;
     }
 
@@ -225,7 +203,11 @@ public class ProductFactory {
         op.setSourceProduct(product);
         op.setRegion(pixelRegion);
         op.setCopyMetadata(false);
-        return op.getTargetProduct();
+        Product subsetProduct = op.getTargetProduct();
+        LOG.info(String.format("Created Subset product width = %d height = %d",
+                               subsetProduct.getSceneRasterWidth(),
+                               subsetProduct.getSceneRasterHeight()));
+        return subsetProduct;
     }
 
     public static boolean isGlobalCoverageGeometry(Geometry geometry) {
@@ -266,16 +248,19 @@ public class ProductFactory {
         if (subsetProduct == null) {
             return null;
         }
-        Product targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
-        if (targetProduct != null && targetProduct != subsetProduct) {
-            if (targetProduct.getStartTime() == null) {
-                targetProduct.setStartTime(subsetProduct.getStartTime());
+        Product processedProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+        if (processedProduct != null && processedProduct != subsetProduct) {
+            if (processedProduct.getStartTime() == null) {
+                processedProduct.setStartTime(subsetProduct.getStartTime());
             }
-            if (targetProduct.getEndTime() == null) {
-                targetProduct.setEndTime(subsetProduct.getEndTime());
+            if (processedProduct.getEndTime() == null) {
+                processedProduct.setEndTime(subsetProduct.getEndTime());
             }
+            LOG.info(String.format("Processed product width = %d height = %d",
+                                   processedProduct.getSceneRasterWidth(),
+                                   processedProduct.getSceneRasterHeight()));
         }
-        return targetProduct;
+        return processedProduct;
     }
 
 

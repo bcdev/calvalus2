@@ -25,6 +25,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 
 import java.io.IOException;
 
@@ -58,7 +59,7 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
         }
 
         try {
-            if (ProductFactory.productHasEmptyTiepoints(sourceProduct)) {
+            if (productHasEmptyTiepoints(sourceProduct)) {
                 report(context, "Product has empty tie-points", inputPath);
             } else {
                 report(context, "OK", inputPath);
@@ -72,4 +73,24 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
         context.write(new Text(message), new Text(path.toString()));
         context.getCounter("Products", message).increment(1);
     }
+
+    private static boolean productHasEmptyTiepoints(Product sourceProduct) {
+         // "AMORGOS" can produce products that are corrupted.
+         // All tie point grids contain only zeros, check the first one,
+         // if the product has one.
+         TiePointGrid[] tiePointGrids = sourceProduct.getTiePointGrids();
+         if (tiePointGrids != null && tiePointGrids.length > 0) {
+             TiePointGrid firstGrid = tiePointGrids[0];
+             float[] tiePoints = firstGrid.getTiePoints();
+             for (float tiePoint : tiePoints) {
+                 if (tiePoint != 0.0f) {
+                     return false;
+                 }
+             }
+             // all values are zero
+             return true;
+         }
+         return false;
+     }
+
 }
