@@ -50,6 +50,7 @@ public class MosaicGrid {
     public MosaicGrid() {
         this(180, 370);
     }
+
     public MosaicGrid(int numTileY, int tileSize) {
         this.numTileY = numTileY;
         this.numTileX = numTileY * 2;
@@ -199,4 +200,9 @@ public class MosaicGrid {
             return points.toArray(new Point[points.size()]);
         }
     }
+
+    public Rectangle getTileRectangle(int tileX, int tileY) {
+        return new Rectangle(tileX * tileSize, tileY * tileSize, tileSize, tileSize);
+    }
+
 }
