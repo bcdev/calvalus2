@@ -86,28 +86,46 @@ public class MosaicGridTest {
         assertNotNull(tileIndices);
         assertEquals(3 * 6, tileIndices.length);
 
-        assertEquals(new Point(178, (90-46)), tileIndices[0]);
-        assertEquals(new Point(179, (90-46)), tileIndices[1]);
-        assertEquals(new Point(180, (90-46)), tileIndices[2]);
+        assertEquals(new Point(178, (90 - 46)), tileIndices[0]);
+        assertEquals(new Point(179, (90 - 46)), tileIndices[1]);
+        assertEquals(new Point(180, (90 - 46)), tileIndices[2]);
 
-        assertEquals(new Point(178, (90-45)), tileIndices[3]);
-        assertEquals(new Point(179, (90-45)), tileIndices[4]);
-        assertEquals(new Point(180, (90-45)), tileIndices[5]);
+        assertEquals(new Point(178, (90 - 45)), tileIndices[3]);
+        assertEquals(new Point(179, (90 - 45)), tileIndices[4]);
+        assertEquals(new Point(180, (90 - 45)), tileIndices[5]);
 
 
         geometry = JobUtils.createGeometry("polygon((-2 46, -2 45, 0 45, 0 40, 1 40, 1 46, -2 46))");
         tileIndices = mosaicGrid.getTileIndices(geometry);
         assertNotNull(tileIndices);
         assertEquals(8, tileIndices.length);
-        assertEquals(new Point(178, (90-46)), tileIndices[0]);
-        assertEquals(new Point(179, (90-46)), tileIndices[1]);
-        assertEquals(new Point(180, (90-46)), tileIndices[2]);
+        assertEquals(new Point(178, (90 - 46)), tileIndices[0]);
+        assertEquals(new Point(179, (90 - 46)), tileIndices[1]);
+        assertEquals(new Point(180, (90 - 46)), tileIndices[2]);
 
-        assertEquals(new Point(180, (90-45)), tileIndices[3]);
-        assertEquals(new Point(180, (90-44)), tileIndices[4]);
-        assertEquals(new Point(180, (90-43)), tileIndices[5]);
-        assertEquals(new Point(180, (90-42)), tileIndices[6]);
-        assertEquals(new Point(180, (90-41)), tileIndices[7]);
+        assertEquals(new Point(180, (90 - 45)), tileIndices[3]);
+        assertEquals(new Point(180, (90 - 44)), tileIndices[4]);
+        assertEquals(new Point(180, (90 - 43)), tileIndices[5]);
+        assertEquals(new Point(180, (90 - 42)), tileIndices[6]);
+        assertEquals(new Point(180, (90 - 41)), tileIndices[7]);
+    }
+
+    @Test
+    public void testTileXToDegree() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        assertEquals(-180.0, mosaicGrid.tileXToDegree(0), 1e-5);
+        assertEquals(-179.0, mosaicGrid.tileXToDegree(1), 1e-5);
+        assertEquals(0.0, mosaicGrid.tileXToDegree(180), 1e-5);
+        assertEquals(180.0, mosaicGrid.tileXToDegree(360), 1e-5);
+    }
+
+    @Test
+    public void testTileYToDegree() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        assertEquals(90.0, mosaicGrid.tileYToDegree(0), 1e-5);
+        assertEquals(89.0, mosaicGrid.tileYToDegree(1), 1e-5);
+        assertEquals(0.0, mosaicGrid.tileYToDegree(90), 1e-5);
+        assertEquals(-90.0, mosaicGrid.tileYToDegree(180), 1e-5);
     }
 
     @Test

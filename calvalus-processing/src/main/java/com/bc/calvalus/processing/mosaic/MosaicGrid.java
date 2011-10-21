@@ -100,11 +100,21 @@ public class MosaicGrid {
     }
 
     public Geometry getTileGeometry(int tileX, int tileY) {
-        double x1 = tileX - 180.0;
-        double x2 = (tileX + 1) - 180.0;
-        double y1 = 90 - tileY;
-        double y2 = 90 - (tileY + 1);
+        double x1 = tileXToDegree(tileX);
+        double x2 = tileXToDegree(tileX + 1);
+        double y1 = tileYToDegree(tileY);
+        double y2 = tileYToDegree(tileY + 1);
         return geometryFactory.toGeometry(new Envelope(x1, x2, y1, y2));
+    }
+
+    double tileXToDegree(int tileX) {
+        double degreePerTile = (double) 360 / numTileX;
+        return tileX * degreePerTile - 180.0;
+    }
+
+    double tileYToDegree(int tileY) {
+        double degreePerTile = (double) 180 / numTileY;
+        return 90 - tileY * degreePerTile;
     }
 
     public Geometry computeProductGeometry(Product product) {
