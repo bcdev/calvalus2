@@ -101,7 +101,17 @@ class BufferedProductWriter extends AbstractProductWriter {
                 int width = tileData.sourceWidth;
                 int srcPos = (y - offsetY) * width;
                 int targetPos = tileData.sourceOffsetX;
-                System.arraycopy(tileData.data.getElems(), srcPos, line.getElems(), targetPos, width);
+                try {
+                    System.arraycopy(tileData.data.getElems(), srcPos, line.getElems(), targetPos, width);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("width = " + width);
+                    System.out.println("srcPos = " + srcPos);
+                    System.out.println("targetPos = " + targetPos);
+                    System.out.println("tileData.data.getElems() = " + tileData.data.getElems());
+                    System.out.println("line.getElems() = " + line.getElems());
+                    throw  e;
+                }
+
             }
             productWriter.writeBandRasterData(band, 0, y, sceneWidth, 1, line, ProgressMonitor.NULL);
         }

@@ -23,6 +23,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.mosaic.LCMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.LcSDR8MosaicAlgorithm;
+import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -45,6 +46,7 @@ import java.util.List;
 public class LcL3ProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3";
+    private static final int PERIOD_LENGTH_DEFAULT = 10;
 
     public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -59,18 +61,19 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String inputPath = productionRequest.getString("inputPath");
         // only processing one time for the time
-        List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
         L3ProductionType.DateRange mainRange = dateRanges.get(0);
+        String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
+        String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
         L3ProductionType.DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         String regionName = productionRequest.getRegionName();
         String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.startDate, cloudRange.stopDate, regionName);
         String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.startDate, mainRange.stopDate, regionName);
         if (mainInputFiles.length == 0) {
-            String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
-            String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
             throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
         }
+        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
 
         String cloudL3ConfigXml = getCloudL3Config().toXml();
         String mainL3ConfigXml = getMainL3Config().toXml();
@@ -82,21 +85,32 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-cloud");
         String mainOutputDir = getOutputPath(productionRequest, productionId, "-lc-sr");
+        String ncOutputDir   = getOutputPath(productionRequest, productionId, "-lc-nc");
 
-        Configuration jobConfig = createJobConfig(productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
-        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_cloud", jobConfig));
+//        Configuration jobConfigCloud = createJobConfig(productionRequest);
+//        jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
+//        jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
+//        jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
+//        jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+//        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_cloud", jobConfigCloud));
+//
+//        Configuration jobConfigSr = createJobConfig(productionRequest);
+//        jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+//        jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
+//        jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+//        jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+//        jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+//        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sr", jobConfigSr));
 
-        jobConfig = createJobConfig(productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        jobConfig.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sr", jobConfig));
+        String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s-%dd", date1Str, periodLength);
+        Configuration jobConfigFormat = createJobConfig(productionRequest);
+        jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+        jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
+        jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+        jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+        // TODO add support for local formatting
+//        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+        sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_nc", jobConfigFormat));
 
 
         String stagingDir = userName + "/" + productionId;

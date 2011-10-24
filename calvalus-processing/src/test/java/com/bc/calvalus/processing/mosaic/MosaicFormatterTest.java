@@ -17,9 +17,13 @@
 package com.bc.calvalus.processing.mosaic;
 
 
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class MosaicFormatterTest {
 
@@ -27,5 +31,42 @@ public class MosaicFormatterTest {
     public void testGetTileProductName() throws Exception {
         assertEquals("foo_v00h00", MosaicFormatter.getTileProductName("foo", 0, 0));
         assertEquals("foo_v13h45", MosaicFormatter.getTileProductName("foo", 13, 45));
+    }
+
+    @Test
+    public void testGetPartitionNumber() throws Exception {
+        assertEquals(0, MosaicFormatter.getPartitionNumber("part-r-00000"));
+        assertEquals(1, MosaicFormatter.getPartitionNumber("part-r-00001"));
+        assertEquals(15, MosaicFormatter.getPartitionNumber("part-r-00015"));
+    }
+
+    @Test
+    public void testGetPartGeometry() throws Exception {
+        Geometry partGeometry = MosaicFormatter.getPartGeometry(0, 18);
+        assertNotNull(partGeometry);
+        assertTrue(partGeometry.isRectangle());
+        Envelope envelope = partGeometry.getEnvelopeInternal();
+        assertEquals("minX", -180.0, envelope.getMinX(), 1e-5);
+        assertEquals("maxX", +180.0, envelope.getMaxX(), 1e-5);
+        assertEquals("minY", 80.0, envelope.getMinY(), 1e-5);
+        assertEquals("maxY", 90.0, envelope.getMaxY(), 1e-5);
+
+        partGeometry = MosaicFormatter.getPartGeometry(9, 18);
+        assertNotNull(partGeometry);
+        assertTrue(partGeometry.isRectangle());
+        envelope = partGeometry.getEnvelopeInternal();
+        assertEquals("minX", -180.0, envelope.getMinX(), 1e-5);
+        assertEquals("maxX", +180.0, envelope.getMaxX(), 1e-5);
+        assertEquals("minY", -10.0, envelope.getMinY(), 1e-5);
+        assertEquals("maxY", 0.0, envelope.getMaxY(), 1e-5);
+
+        partGeometry = MosaicFormatter.getPartGeometry(17, 18);
+        assertNotNull(partGeometry);
+        assertTrue(partGeometry.isRectangle());
+        envelope = partGeometry.getEnvelopeInternal();
+        assertEquals("minX", -180.0, envelope.getMinX(), 1e-5);
+        assertEquals("maxX", +180.0, envelope.getMaxX(), 1e-5);
+        assertEquals("minY", -90.0, envelope.getMinY(), 1e-5);
+        assertEquals("maxY", -80.0, envelope.getMaxY(), 1e-5);
     }
 }

@@ -37,6 +37,6 @@ public class L2FormatingMapperTest {
     }
 
     private static String newName(String productName, String regex, String replacement) {
-        return L2FormatingMapper.getNewProductname(productName, regex, replacement);
+        return L2FormatingMapper.getNewProductName(productName, regex, replacement);
     }
 }

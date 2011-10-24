@@ -16,7 +16,9 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Created by IntelliJ IDEA.
@@ -90,10 +92,15 @@ public class MosaicFormatterMain {
 //                "\t\t  </parameters>");
 
 //        configuration.set("calvalus.regionGeometry", "polygon((-2 46, -2 43, 1 43, 1 46, -2 46))");
-        configuration.set("calvalus.regionGeometry", "POLYGON ((-7 54, -7 39, 6 39, 6 54, -7 54))");
+//        configuration.set("calvalus.regionGeometry", "POLYGON ((-7 54, -7 39, 6 39, 6 54, -7 54))");
+        configuration.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF");
+        configuration.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz");
+        configuration.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "mosaic");
 
         MosaicFormatter mosaicFormatter = new MosaicFormatter();
-        mosaicFormatter.setConf(configuration);
-        mosaicFormatter.processAllPartsToOneProduct();
+        mosaicFormatter.jobConfig = configuration;
+//        mosaicFormatter.setConf(configuration);
+        Path part = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/2005-07-01-10d-lc-sr/part-r-00002");
+        mosaicFormatter.process5by5degreeProducts(null, part);
     }
 }
