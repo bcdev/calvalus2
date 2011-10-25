@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -33,8 +34,11 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -47,6 +51,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3";
     private static final int PERIOD_LENGTH_DEFAULT = 10;
+    static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
     public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -61,56 +66,66 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String inputPath = productionRequest.getString("inputPath");
         // only processing one time for the time
-        List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
-        L3ProductionType.DateRange mainRange = dateRanges.get(0);
-        String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
-        String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
-        L3ProductionType.DateRange cloudRange = getWingsRange(productionRequest, mainRange);
+        List<L3ProductionType.DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
 
-        String regionName = productionRequest.getRegionName();
-        String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.startDate, cloudRange.stopDate, regionName);
-        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.startDate, mainRange.stopDate, regionName);
-        if (mainInputFiles.length == 0) {
-            throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
+        Workflow parallel = new Workflow.Parallel();
+        for (L3ProductionType.DateRange mainRange : dateRanges) {
+
+            String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
+            String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
+            L3ProductionType.DateRange cloudRange = getWingsRange(productionRequest, mainRange);
+
+            String regionName = productionRequest.getRegionName();
+            String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.startDate, cloudRange.stopDate, regionName);
+            String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.startDate, mainRange.stopDate, regionName);
+            if (mainInputFiles.length == 0) {
+                throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
+            }
+            int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
+
+            String cloudL3ConfigXml = getCloudL3Config().toXml();
+            String mainL3ConfigXml = getMainL3Config().toXml();
+
+            String period = String.format("%s-%dd", date1Str, periodLength);
+            String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
+            String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-sr");
+            String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc");
+
+            Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+            String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
+
+            Workflow.Sequential sequence = new Workflow.Sequential();
+
+            Configuration jobConfigCloud = createJobConfig(productionRequest);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
+            jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            jobConfigCloud.set("mapred.job.priority", "VERY_LOW");
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" +period + "_cloud", jobConfigCloud));
+
+            Configuration jobConfigSr = createJobConfig(productionRequest);
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+            jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
+            jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+            jobConfigSr.set("mapred.job.priority", "LOW");
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" +period + "_sr", jobConfigSr));
+
+            String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s", period);
+            Configuration jobConfigFormat = createJobConfig(productionRequest);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigFormat.set("mapred.job.priority", "NORMAL");
+            // TODO add support for local formatting
+//        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_" +period + "_nc", jobConfigFormat));
+
+            parallel.add(sequence);
         }
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-
-        String cloudL3ConfigXml = getCloudL3Config().toXml();
-        String mainL3ConfigXml = getMainL3Config().toXml();
-
-        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
-
-        Workflow.Sequential sequence = new Workflow.Sequential();
-        // TODO output path lc-sr-DATE-hxxvyy
-
-        String meanOutputDir = getOutputPath(productionRequest, productionId, "-lc-cloud");
-        String mainOutputDir = getOutputPath(productionRequest, productionId, "-lc-sr");
-        String ncOutputDir   = getOutputPath(productionRequest, productionId, "-lc-nc");
-
-//        Configuration jobConfigCloud = createJobConfig(productionRequest);
-//        jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
-//        jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-//        jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
-//        jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-//        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_cloud", jobConfigCloud));
-//
-//        Configuration jobConfigSr = createJobConfig(productionRequest);
-//        jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
-//        jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-//        jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-//        jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-//        jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-//        sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_sr", jobConfigSr));
-
-        String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s-%dd", date1Str, periodLength);
-        Configuration jobConfigFormat = createJobConfig(productionRequest);
-        jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
-        jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-        jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
-        jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-        // TODO add support for local formatting
-//        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_nc", jobConfigFormat));
 
 
         String stagingDir = userName + "/" + productionId;
@@ -121,14 +136,57 @@ public class LcL3ProductionType extends HadoopProductionType {
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              sequence);
+                              parallel);
     }
+
+    static List<L3ProductionType.DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+        List<L3ProductionType.DateRange> dateRangeList = new ArrayList<L3ProductionType.DateRange>();
+
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");
+        int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
+
+        Calendar calendarMax = ProductData.UTC.createCalendar();
+        calendarMax.setTime(maxDate);
+
+        long time = minDate.getTime();
+        for (int i = 0; ; i++) {
+            Calendar calendar1 = ProductData.UTC.createCalendar();
+            Calendar calendar2 = ProductData.UTC.createCalendar();
+            calendar1.setTimeInMillis(time);
+            calendar2.setTimeInMillis(time);
+            calendar2.add(Calendar.DAY_OF_MONTH, periodLength - 1);
+
+            if (calendar2.after(calendarMax)) {
+                break;
+            }
+            // check if next period wraps into the next month
+            Calendar calendar3 = ProductData.UTC.createCalendar();
+            calendar3.setTimeInMillis(time);
+            calendar3.add(Calendar.DAY_OF_MONTH, periodLength + periodLength - 1);
+            if (calendar3.get(Calendar.MONTH) != calendar2.get(Calendar.MONTH)) {
+                calendar2.set(Calendar.DAY_OF_MONTH, calendar2.getActualMaximum(Calendar.DAY_OF_MONTH));
+            }
+
+            dateRangeList.add(new L3ProductionType.DateRange(calendar1.getTime(), calendar2.getTime()));
+            calendar2.add(Calendar.DAY_OF_MONTH, 1);
+            time = calendar2.getTimeInMillis();
+        }
+
+        return dateRangeList;
+    }
+
 
     static L3ProductionType.DateRange getWingsRange(ProductionRequest productionRequest, L3ProductionType.DateRange mainRange) throws ProductionException {
         int wings = productionRequest.getInteger("wings", 10);
-        long wingMillis = L3ProductionType.MILLIS_PER_DAY * wings;
-        Date date1 = new Date(mainRange.startDate.getTime() - wingMillis - 1);
-        Date date2 = new Date(mainRange.stopDate.getTime() + wingMillis - 1);
+
+        Calendar calendar = ProductData.UTC.createCalendar();
+        calendar.setTime(mainRange.startDate);
+        calendar.add(Calendar.DAY_OF_MONTH, -wings);
+        Date date1 = calendar.getTime();
+        calendar.setTime(mainRange.stopDate);
+        calendar.add(Calendar.DAY_OF_MONTH, wings);
+        Date date2 = calendar.getTime();
         return new L3ProductionType.DateRange(date1, date2);
     }
 
