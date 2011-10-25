@@ -51,9 +51,7 @@ class BufferedProductWriter extends AbstractProductWriter {
 
     @Override
     public void writeBandRasterData(Band band, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData sourceBuffer, ProgressMonitor pm) throws IOException {
-        ProductData copy = ProductData.createInstance(sourceBuffer.getType(), sourceBuffer.getNumElems());
-        System.arraycopy(sourceBuffer.getElems(), 0, copy.getElems(), 0, sourceBuffer.getNumElems());
-        TileData tileData = new TileData(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, copy);
+        TileData tileData = new TileData(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, sourceBuffer);
         List<TileData> tileDatas = buffer.get(band);
         if (tileDatas == null) {
             tileDatas = new ArrayList<TileData>();
@@ -101,17 +99,7 @@ class BufferedProductWriter extends AbstractProductWriter {
                 int width = tileData.sourceWidth;
                 int srcPos = (y - offsetY) * width;
                 int targetPos = tileData.sourceOffsetX;
-                try {
-                    System.arraycopy(tileData.data.getElems(), srcPos, line.getElems(), targetPos, width);
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println("width = " + width);
-                    System.out.println("srcPos = " + srcPos);
-                    System.out.println("targetPos = " + targetPos);
-                    System.out.println("tileData.data.getElems() = " + tileData.data.getElems());
-                    System.out.println("line.getElems() = " + line.getElems());
-                    throw  e;
-                }
-
+                System.arraycopy(tileData.data.getElems(), srcPos, line.getElems(), targetPos, width);
             }
             productWriter.writeBandRasterData(band, 0, y, sceneWidth, 1, line, ProgressMonitor.NULL);
         }

@@ -54,7 +54,9 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 
@@ -71,8 +73,6 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
     private static final String PART_FILE_PREFIX = "part-r-";
     Configuration jobConfig;
     private boolean create5by5DegreeProducts = true; //TODO configure
-    List<Point> tileIndexPoints = null;
-//    List<Long> tileIndexOffsets = null;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -109,7 +109,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
             for (FileStatus part : parts) {
                 Path partFile = part.getPath();
                 System.out.println(MessageFormat.format("reading and handling part {0}", partFile));
-                handlePart(context, product, productWriter, partFile, mosaicGrid, productRegion);
+//                handlePart(context, product, productWriter, partFile, mosaicGrid, productRegion);
             }
         } finally {
             productWriter.close();
@@ -135,15 +135,21 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
         LOG.info("partGeometry = " + partGeometry);
         Point[] tileIndices = productGrid.getTileIndices(partGeometry);
 
+        FileSystem hdfs = FileSystem.get(jobConfig);
+        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
+        DefaultTileProvider tileProvider = new DefaultTileProvider(reader, mosaicGrid, context);
+
         for (Point tile : tileIndices) {
+            context.getCounter("Product-Tiles tried", Integer.toString(tile.y)).increment(1);
+
             context.progress();
             Rectangle productRegion = productGrid.getTileRectangle(tile.x, tile.y);
-            if (tileIndexPoints != null) {
-               boolean containsData = checkCacheForTiles(productRegion, mosaicGrid);
-               if (!containsData) {
-                   LOG.info("Cache-has not data");
-                   continue;
-               }
+            if (tileProvider.isCacheFilled()) {
+                boolean containsData = tileProvider.checkCacheForTiles(productRegion, mosaicGrid);
+                if (!containsData) {
+                    LOG.info("Cache-has no data");
+                    continue;
+                }
             }
             String productName = getTileProductName(outputPrefix, tile.x, tile.y);
             LOG.info("productName = " + productName);
@@ -158,13 +164,27 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
                 ProductWriter productWriter = createProductWriter(product, productFile, productFormatter.getOutputFormat());
                 boolean containsData = false;
                 try {
-                    LOG.info("Writing product");
-                    containsData = handlePart(context, product, productWriter, partFile, mosaicGrid, productRegion);
+                    LOG.info("Writing product " + productRegion);
+                    tileProvider.setProductRegion(productRegion);
+
+                    Band[] bands = product.getBands();
+                    while (tileProvider.hasNext()) {
+                        MosaicTile mosaicTile = tileProvider.next();
+                        Rectangle tileRect = makeRelativeTo(mosaicTile.tileRect, productRegion);
+                        containsData = true;
+                        float[][] samples = mosaicTile.data;
+                        for (int i = 0; i < bands.length; i++) {
+                            context.progress();
+                            ProductData productData = ProductData.createInstance(samples[i]);
+                            productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height, productData, ProgressMonitor.NULL);
+                        }
+                    }
+                    tileProvider.setCacheFilled(true);
                 } finally {
                     productWriter.close();
                 }
                 if (containsData) {
-                    context.getCounter("Tile-Lines", Integer.toString(tile.y)).increment(1);
+                    context.getCounter("Product-Tiles written", Integer.toString(tile.y)).increment(1);
                     LOG.info("Copying to HDFS");
                     productFormatter.compressToHDFS(context, productFile);
                 } else {
@@ -175,6 +195,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
                 product.dispose();
             }
         }
+        reader.close();
     }
 
     static Geometry getPartGeometry(int partitionNumber, int numPartitions) {
@@ -258,62 +279,153 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
         return parts;
     }
 
-    private boolean handlePart(Progressable progressable, Product product, ProductWriter productWriter, Path partFile, MosaicGrid mosaicGrid, Rectangle productRegion) throws IOException {
-        LOG.info("productRegion " + productRegion);
-        boolean containsData = false;
-        FileSystem hdfs = FileSystem.get(jobConfig);
-        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
-        try {
-            boolean buildCache = false;
-            if (tileIndexPoints == null) {
-                tileIndexPoints = new ArrayList<Point>(360 * 10);
-//                tileIndexOffsets = new ArrayList<Long>(360 * 10);
-                buildCache = true;
-            }
-
-            Band[] bands = product.getBands();
-            TileIndexWritable key = new TileIndexWritable();
-            TileDataWritable data = new TileDataWritable();
-//            long currentPos = reader.getPosition();
-            while (reader.next(key)) {
-                progressable.progress();
-                if (buildCache) {
-                    tileIndexPoints.add(new Point(key.getTileX(), key.getTileY()));
-//                    tileIndexOffsets.add(currentPos);
-                }
-                Rectangle tileRect = mosaicGrid.getTileRectangle(key.getTileX(), key.getTileY());
-                if (productRegion.contains(tileRect)) {
-                    tileRect = makeRelativeTo(tileRect, productRegion);
-                    containsData = true;
-                    reader.getCurrentValue(data);
-                    float[][] samples = data.getSamples();
-                    for (int i = 0; i < bands.length; i++) {
-                        progressable.progress();
-                        ProductData productData = ProductData.createInstance(samples[i]);
-                        productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height, productData, ProgressMonitor.NULL);
-                    }
-                }
-//                currentPos = reader.getPosition();
-            }
-        } finally {
-            reader.close();
-        }
-        return containsData;
-    }
-
     private Rectangle makeRelativeTo(Rectangle tileRect, Rectangle productRegion) {
         return new Rectangle(tileRect.x - productRegion.x, tileRect.y - productRegion.y, tileRect.width, tileRect.height);
     }
 
-    private boolean checkCacheForTiles(Rectangle productRegion, MosaicGrid mosaicGrid) {
-        LOG.info("cache has " + tileIndexPoints.size() + " elems");
-        for (Point point : tileIndexPoints) {
-            Rectangle tileRect = mosaicGrid.getTileRectangle(point.x, point.y);
-            if (productRegion.contains(tileRect)) {
-                return true;
+    private static class DefaultTileProvider implements Iterator<MosaicTile> {
+
+        private final SequenceFile.Reader reader;
+        private final Progressable progressable;
+        private final MosaicGrid mosaicGrid;
+        private final List<Point> tileIndexPoints = new ArrayList<Point>(360 * 10);
+        private final List<Long> tileIndexOffsets = new ArrayList<Long>(360 * 10);
+        private int tileIndexPos;
+
+        private Rectangle productRegion;
+
+        private boolean mustRead;
+        private boolean lastItemValid;
+        private MosaicTile mosaicTile;
+        private boolean cacheFilled;
+        private long initialPos;
+
+
+        private DefaultTileProvider(SequenceFile.Reader reader, MosaicGrid mosaicGrid, Progressable progressable) throws IOException {
+            this.reader = reader;
+            this.mosaicGrid = mosaicGrid;
+            this.progressable = progressable;
+            this.mustRead = true;
+            this.lastItemValid = true;
+            this.cacheFilled = false;
+            initialPos = reader.getPosition();
+        }
+
+        public void setProductRegion(Rectangle productRegion) throws IOException {
+            this.productRegion = productRegion;
+            this.tileIndexPos = 0;
+            this.mustRead = true;
+            this.lastItemValid = true;
+            if (cacheFilled)
+                reader.seek(initialPos);
+        }
+
+        @Override
+        public boolean hasNext() {
+            maybeReadNext();
+            return lastItemValid;
+        }
+
+        @Override
+        public MosaicTile next() {
+            maybeReadNext();
+            if (!lastItemValid) {
+                throw new NoSuchElementException();
+            }
+            mustRead = true;
+            return mosaicTile;
+        }
+
+        private void maybeReadNext() {
+            if (mustRead && lastItemValid) {
+                mustRead = false;
+                try {
+                    TileIndexWritable key = new TileIndexWritable();
+                    TileDataWritable data = new TileDataWritable();
+                    if (cacheFilled) {
+                        while (tileIndexPos < tileIndexOffsets.size()) {
+                            int currentCacheIndex = tileIndexPos;
+                            tileIndexPos++;
+
+                            Point point = tileIndexPoints.get(currentCacheIndex);
+                            Rectangle tileRect = mosaicGrid.getTileRectangle(point.x, point.y);
+                            if (productRegion.contains(tileRect)) {
+                                long offset = tileIndexOffsets.get(currentCacheIndex);
+                                reader.seek(offset);
+                                reader.next(key, data);
+                                if (key.getTileX() == point.x && key.getTileY() == point.y) {
+                                    lastItemValid = true;
+                                    mosaicTile = new MosaicTile(tileRect, data.getSamples());
+                                    return;
+                                } else {
+                                    throw new IllegalStateException("invalid cache");
+                                }
+                            }
+                        }
+                        lastItemValid = false;
+                    } else {
+                        long currentPos = reader.getPosition();
+                        while (reader.next(key)) {
+                            progressable.progress();
+                            tileIndexOffsets.add(currentPos);
+                            tileIndexPoints.add(new Point(key.getTileX(), key.getTileY()));
+                            currentPos = reader.getPosition();
+                            Rectangle tileRect = mosaicGrid.getTileRectangle(key.getTileX(), key.getTileY());
+                            if (productRegion.contains(tileRect)) {
+                                lastItemValid = true;
+                                reader.getCurrentValue(data);
+                                mosaicTile = new MosaicTile(tileRect, data.getSamples());
+                                return;
+                            }
+                        }
+                        lastItemValid = false;
+                    }
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
             }
         }
-        return false;
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove() not supported");
+        }
+
+        public void setCacheFilled(boolean cacheFilled) {
+            this.cacheFilled = cacheFilled;
+        }
+
+        public boolean isCacheFilled() {
+            return cacheFilled;
+        }
+
+        public boolean checkCacheForTiles(Rectangle productRegion, MosaicGrid mosaicGrid) {
+            for (Point point : tileIndexPoints) {
+                Rectangle tileRect = mosaicGrid.getTileRectangle(point.x, point.y);
+                if (productRegion.contains(tileRect)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private static class MosaicTile {
+        Rectangle tileRect;
+        float[][] data;
+
+        public MosaicTile(Rectangle tileRect, float[][] data) {
+            this.tileRect = tileRect;
+            this.data = data;
+        }
+
+        @Override
+        public String toString() {
+            return "MosaicTile{" +
+                    "tileRect=" + tileRect +
+                    ", data=" + (data == null ? null : "floats.....") +
+                    '}';
+        }
     }
 
 }
