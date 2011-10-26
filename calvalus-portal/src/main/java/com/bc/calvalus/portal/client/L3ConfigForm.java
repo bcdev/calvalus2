@@ -27,7 +27,8 @@ import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.*;
 
-import static java.lang.Math.PI;
+import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
+import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -196,10 +197,10 @@ public class L3ConfigForm extends Composite {
 
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
-            long millisPerDay = 24L * 60L * 60L * 1000L;
-            long deltaMillis = maxDate.getTime() - minDate.getTime();
-            int deltaDays = (int) ((millisPerDay + deltaMillis) / millisPerDay);
-            periodCount.setValue(deltaDays / steppingPeriodLength.getValue());
+            periodCount.setValue(getPeriodCount(minDate,
+                                                maxDate,
+                                                steppingPeriodLength.getValue(),
+                                                compositingPeriodLength.getValue()));
         } else {
             periodCount.setValue(0);
         }
@@ -209,25 +210,16 @@ public class L3ConfigForm extends Composite {
         if (selectedRegion != null) {
             regionBounds = selectedRegion.createPolygon().getBounds();
         } else {
-            regionBounds = LatLngBounds.newInstance(
-                    LatLng.newInstance(-90, -180),
-                    LatLng.newInstance(90, 180)
-            );
+            regionBounds = LatLngBounds.newInstance(LatLng.newInstance(-90, -180),
+                                                    LatLng.newInstance(90, 180));
         }
         updateTargetSize();
     }
 
     private void updateTargetSize() {
-        // see: SeaWiFS Technical Report Series Vol. 32;
-        final double RE = 6378.145;
-        double dx = regionBounds.getNorthEast().getLongitude() - regionBounds.getSouthWest().getLongitude();
-        double dy = regionBounds.getNorthEast().getLatitude() - regionBounds.getSouthWest().getLatitude();
-        double res = resolution.getValue();
-        int width = 1 + (int) Math.floor((RE * PI * dx / 180.0) / res);
-        int height = 1 + (int) Math.floor((RE * PI * dy / 180.0) / res);
-
-        targetWidth.setValue(width);
-        targetHeight.setValue(height);
+        int[] targetSize = getTargetSizeEstimation(regionBounds, resolution.getValue());
+        targetWidth.setValue(targetSize[0]);
+        targetHeight.setValue(targetSize[1]);
     }
 
     public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
@@ -294,7 +286,7 @@ public class L3ConfigForm extends Composite {
         }
 
         List<Variable> variableList = variableProvider.getList();
-        if(variableList.size() == 0) {
+        if (variableList.size() == 0) {
             throw new ValidationException(variableTable, "At least one binning variable must be defined.");
         }
 
