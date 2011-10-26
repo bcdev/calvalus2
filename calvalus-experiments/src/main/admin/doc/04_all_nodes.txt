@@ -6,6 +6,9 @@
       netmask 255.255.255.0
 
 
+#!!! changes from 2011-10-26: netmask is now 255.255.0.0
+
+
 # Fix the "/etc/hots" entry to enable correct binding and name lookup
 # see http://ria101.wordpress.com/2010/01/28/setup-hbase-in-pseudo-distributed-mode-and-connect-java-client/
 
