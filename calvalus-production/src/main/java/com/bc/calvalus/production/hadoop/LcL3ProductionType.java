@@ -17,7 +17,6 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -96,37 +95,39 @@ public class LcL3ProductionType extends HadoopProductionType {
 
             Workflow.Sequential sequence = new Workflow.Sequential();
 
-            Configuration jobConfigCloud = createJobConfig(productionRequest);
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
-            jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-            jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
-            jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-            jobConfigCloud.set("mapred.job.priority", "VERY_LOW");
-            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" +period + "_cloud", jobConfigCloud));
-
-            Configuration jobConfigSr = createJobConfig(productionRequest);
-            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
-            jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-            jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-            jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-            jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-            jobConfigSr.set("mapred.job.priority", "LOW");
-            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" +period + "_sr", jobConfigSr));
-
-            String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s", period);
-            Configuration jobConfigFormat = createJobConfig(productionRequest);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-            jobConfigFormat.set("mapred.job.priority", "NORMAL");
-            // TODO add support for local formatting
+            if (productionRequest.getBoolean("lcl3.cloud", true)) {
+                Configuration jobConfigCloud = createJobConfig(productionRequest);
+                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
+                jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
+                jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
+                jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+                jobConfigCloud.set("mapred.job.priority", "VERY_LOW");
+                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + period + "_cloud", jobConfigCloud));
+            }
+            if (productionRequest.getBoolean("lcl3.sr", true)) {
+                Configuration jobConfigSr = createJobConfig(productionRequest);
+                jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+                jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
+                jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+                jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+                jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+                jobConfigSr.set("mapred.job.priority", "LOW");
+                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + period + "_sr", jobConfigSr));
+            }
+            if (productionRequest.getBoolean("lcl3.nc", true)) {
+                String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s", period);
+                Configuration jobConfigFormat = createJobConfig(productionRequest);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+                jobConfigFormat.set("mapred.job.priority", "NORMAL");
+                // TODO add support for local formatting
 //        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_" +period + "_nc", jobConfigFormat));
-
+                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_" + period + "_nc", jobConfigFormat));
+            }
             parallel.add(sequence);
         }
-
 
         String stagingDir = userName + "/" + productionId;
         boolean autoStaging = productionRequest.isAutoStaging();
