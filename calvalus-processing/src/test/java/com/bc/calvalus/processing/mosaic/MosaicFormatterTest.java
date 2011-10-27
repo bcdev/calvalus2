@@ -29,8 +29,8 @@ public class MosaicFormatterTest {
 
     @Test
     public void testGetTileProductName() throws Exception {
-        assertEquals("foo_v00h00", MosaicFormatter.getTileProductName("foo", 0, 0));
-        assertEquals("foo_v13h45", MosaicFormatter.getTileProductName("foo", 13, 45));
+        assertEquals("foo-v00h00", MosaicFormatter.getTileProductName("foo", 0, 0));
+        assertEquals("foo-v13h45", MosaicFormatter.getTileProductName("foo", 13, 45));
     }
 
     @Test
