@@ -17,6 +17,9 @@
 
             <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
         </td>
+        <td class="userName">
+            <a href="about.jsp" target="_blank">About Calvalus</a>
+        </td>
     </tr>
 </table>
 <hr/>
