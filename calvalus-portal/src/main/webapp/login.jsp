@@ -25,7 +25,8 @@
 <hr/>
 
 
-<div class="loginPanel">
+<div class="loginPanelWrapper">
+  <div class="loginPanel">
     <form method="POST" action='<%= response.encodeURL("j_security_check") %>'>
         <table border="0" cellspacing="5">
             <tr>
@@ -42,6 +43,7 @@
             </tr>
         </table>
     </form>
+  </div>
 </div>
 
 <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>

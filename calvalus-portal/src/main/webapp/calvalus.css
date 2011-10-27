@@ -49,6 +49,10 @@
     color: #AAA;
     text-align: center;
     vertical-align: bottom;
+    width: 816px
+}
+.loginPanelWrapper {
+    width: 816px;
 }
 
 .loginPanel {
