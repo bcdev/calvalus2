@@ -114,7 +114,7 @@ public class SqlProductionStore implements ProductionStore {
     @Override
     public synchronized Production[] getProductions() {
         Collection<Production> values = cachedProductions.values();
-        return values.toArray(new Production[0]);
+        return values.toArray(new Production[values.size()]);
     }
 
     @Override
