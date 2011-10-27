@@ -135,14 +135,25 @@ public class L3ConfigForm extends Composite {
             }
         });
 
-        steppingPeriodLength.setValue(10);
-        steppingPeriodLength.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+        ValueChangeHandler<Integer> periodCountUpdater = new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
                 updatePeriodCount();
             }
-        });
+        };
 
+        steppingPeriodLength.setValue(10);
+        steppingPeriodLength.addValueChangeHandler(periodCountUpdater);
+
+        compositingPeriodLength.setValue(10);
+        compositingPeriodLength.addValueChangeHandler(periodCountUpdater);
+
+        periodCount.setValue(0);
+        periodCount.setEnabled(false);
+
+        superSampling.setValue(1);
+
+        resolution.setValue(9.28);
         resolution.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
@@ -150,13 +161,6 @@ public class L3ConfigForm extends Composite {
             }
         });
 
-        compositingPeriodLength.setValue(10);
-
-        periodCount.setValue(0);
-        periodCount.setEnabled(false);
-
-        superSampling.setValue(1);
-        resolution.setValue(9.28);
 
         targetWidth.setEnabled(false);
         targetHeight.setEnabled(false);
