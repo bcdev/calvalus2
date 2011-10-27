@@ -93,7 +93,7 @@ public abstract class OrderProductionView extends PortalView {
      */
     protected void checkRequest() {
         if (validateForm()) {
-            ShowProductionRequestAction.run(getTitle(), getProductionRequest());
+            ShowProductionRequestAction.run("Valid " + getTitle() + " Request", getProductionRequest());
         }
     }
 
