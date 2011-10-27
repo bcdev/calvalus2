@@ -13,7 +13,8 @@ import com.google.gwt.user.client.ui.FormPanel;
  * <p/>
  * The action is {@code "/calvalus/upload[?<parameters>]"}, where parameters are
  * <ul>
- * <li>{@code echo=1} The file contents will be echoed in the response.</li>
+ * <li>{@code echo=text} The file contents will be echoed in the response.</li>
+ * <li>{@code echo=xml} The file contents will be echoed in the response, but XML entities will be encoded..</li>
  * <li>{@code local=1} The file will be stored locally.</li>
  * <li>{@code dir=<rel-path>} The relative path to the directory into which the file(s) will be written.</li>
  * </ul>
@@ -55,6 +56,10 @@ public class FileUploadManager {
         uploadForm.setMethod(FormPanel.METHOD_POST);
         uploadForm.addSubmitHandler(submitHandler);
         uploadForm.addSubmitCompleteHandler(submitCompleteHandler);
+    }
+
+    public static String decodeXML(String xmlContent) {
+        return xmlContent.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
     }
 
 }

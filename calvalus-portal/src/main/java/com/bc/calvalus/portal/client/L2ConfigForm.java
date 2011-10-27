@@ -55,7 +55,7 @@ public class L2ConfigForm extends Composite {
         processorDescriptors = portalContext.getProcessors();
 
 
-        FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=1",
+        FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=xml",
                                          new FormPanel.SubmitHandler() {
                                              @Override
                                              public void onSubmit(FormPanel.SubmitEvent event) {
@@ -66,7 +66,11 @@ public class L2ConfigForm extends Composite {
                                              @Override
                                              public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
                                                  String results = event.getResults();
-                                                 processorParametersArea.setText(results != null ? results : "");
+                                                 String text = "";
+                                                 if (results != null) {
+                                                     text = FileUploadManager.decodeXML(results);
+                                                 }
+                                                 processorParametersArea.setText(text);
                                              }
                                          }
         );

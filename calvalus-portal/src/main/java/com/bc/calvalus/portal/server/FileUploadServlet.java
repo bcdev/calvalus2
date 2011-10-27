@@ -52,8 +52,10 @@ public class FileUploadServlet extends HttpServlet {
         }
         BackendConfig backendConfig = new BackendConfig(getServletContext());
         final FileHandler fileHandler;
-        if ("1".equals(req.getParameter("echo"))) {
+        if ("text".equals(req.getParameter("echo"))) {
             fileHandler = new EchoFileHandler();
+        } else if ("xml".equals(req.getParameter("echo"))) {
+            fileHandler = new EchoXMLFileHandler();
         } else if ("1".equals(req.getParameter("local"))) {
             fileHandler = new LocalFileHandler(backendConfig.getLocalUploadDir());
         } else {
@@ -88,6 +90,22 @@ public class FileUploadServlet extends HttpServlet {
             resp.getWriter().print(item.getString());
             log("Echoed file " + item);
         }
+    }
+
+    private class EchoXMLFileHandler implements FileHandler {
+
+        @Override
+        public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
+            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+            resp.setHeader("content-type", "text/html");
+            resp.getWriter().print(encodeXML(item.getString()));
+            log("Echoed file " + item);
+        }
+
+    }
+
+    public static String encodeXML(String xml) {
+        return xml.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     }
 
     private class LocalFileHandler implements FileHandler {
