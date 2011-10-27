@@ -35,8 +35,11 @@ public class L3ConfigUtils  {
     static int[] getTargetSizeEstimation(double deltaLat, double deltaLon, double res) {
         // see: SeaWiFS Technical Report Series Vol. 32;
         final double RE = 6378.145;
-        int width = 1 + (int) Math.round((RE * PI * deltaLon / 180.0) / res);
-        int height = 1 + (int) Math.round((RE * PI * deltaLat / 180.0) / res);
-        return new int[]{width, height};
+        int numRows = (int) Math.round(1.0 + (RE * PI * deltaLat / 180.0) / res);
+        if (numRows % 2 != 0) {
+            numRows++;
+        }
+        int width = (int) Math.round(deltaLon * numRows / deltaLat);
+        return new int[]{width, numRows};
     }
 }

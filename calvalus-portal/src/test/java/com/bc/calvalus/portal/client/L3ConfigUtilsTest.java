@@ -40,8 +40,20 @@ public class L3ConfigUtilsTest  extends TestCase {
     public void testTargetSize() throws Exception {
         int[] targetSize;
 
-        targetSize = L3ConfigUtils.getTargetSizeEstimation(180, 360, 9.28);
-        assertEquals(4319, targetSize[0]);
+        targetSize = L3ConfigUtils.getTargetSizeEstimation(1.0, 1.0, 1.0);
+        assertEquals(112, targetSize[0]);
+        assertEquals(112, targetSize[1]);
+
+        targetSize = L3ConfigUtils.getTargetSizeEstimation(1.0, 1.0, 9.28);
+        assertEquals(14, targetSize[0]);
+        assertEquals(14, targetSize[1]);
+
+        targetSize = L3ConfigUtils.getTargetSizeEstimation(180.0, 360.0, 1.0);
+        assertEquals(40080, targetSize[0]);
+        assertEquals(20040, targetSize[1]);
+
+        targetSize = L3ConfigUtils.getTargetSizeEstimation(180.0, 360.0, 9.28);
+        assertEquals(4320, targetSize[0]);
         assertEquals(2160, targetSize[1]);
     }
 }
