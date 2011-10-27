@@ -31,6 +31,10 @@ public class L3ConfigUtilsTest  extends TestCase {
         assertEquals(3, getPeriodCount(new Date(2008, 5, 1),
                                        new Date(2008, 7, 30),
                                        30, 10));
+
+        assertEquals(1, getPeriodCount(new Date(2008, 12, 1),
+                                       new Date(2008, 12, 31),
+                                       31, 31));
     }
 
     public void testTargetSize() throws Exception {

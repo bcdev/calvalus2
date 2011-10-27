@@ -13,16 +13,16 @@ import static java.lang.Math.PI;
  */
 public class L3ConfigUtils  {
 
-    public static int getPeriodCount(Date minDate, Date maxDate, int steppingPeriodLengthValue, int compositingPeriodLengthValue) {
+    public static int getPeriodCount(Date minDate, Date maxDate, int steppingPeriodDays, int compositingPeriodDays) {
         long millisPerDay = 24L * 60L * 60L * 1000L;
         long deltaMillis = maxDate.getTime() - minDate.getTime() + millisPerDay;
         int deltaDays = (int) (deltaMillis / millisPerDay);
-        int value = deltaDays / steppingPeriodLengthValue;
-        int rest = deltaDays % steppingPeriodLengthValue;
-        if (compositingPeriodLengthValue <= rest) {
-            value++;
+        int periodCount = deltaDays / steppingPeriodDays;
+        int remainingDays = deltaDays % steppingPeriodDays;
+        if (compositingPeriodDays <= remainingDays) {
+            periodCount++;
         }
-        return value;
+        return periodCount;
     }
 
     public static int[] getTargetSizeEstimation(LatLngBounds regionBounds, double res) {
