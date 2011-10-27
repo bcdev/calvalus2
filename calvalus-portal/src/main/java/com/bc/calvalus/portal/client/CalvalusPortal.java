@@ -21,7 +21,6 @@ import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -59,6 +58,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     // A timer that periodically retrieves production statuses from server
     private Timer productionsUpdateTimer;
     private RegionMapModel regionMapModel;
+    private ManageProductionsView manageProductionsView;
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
@@ -142,13 +142,14 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         regionMapModel = new RegionMapModelImpl(getRegions());
 
+        manageProductionsView = new ManageProductionsView(this);
         views = new PortalView[]{
                 new OrderL2ProductionView(this),
                 new OrderMAProductionView(this),
                 new OrderL3ProductionView(this),
                 new OrderTAProductionView(this),
                 new ManageRegionsView(this),
-                new ManageProductionsView(this),
+                manageProductionsView,
         };
 
         viewTabIndices = new HashMap<String, Integer>();
@@ -249,6 +250,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
         // GWT.log("Updated productions: got " + productions.getList().size() + ",  listChange = " + listChange + ", propertyChange = " + propertyChange);
         if (listChange) {
+            if (manageProductionsView != null) {
+                manageProductionsView.fireSortListEvent();
+            }
             productions.flush();
         }
         if (propertyChange) {

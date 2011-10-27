@@ -13,6 +13,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent;
+import com.google.gwt.user.cellview.client.ColumnSortList;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
@@ -49,6 +50,7 @@ public class ManageProductionsView extends PortalView {
 
     private FlexTable widget;
     private SelectionModel<DtoProduction> selectionModel;
+    private CellTable<DtoProduction> productionTable;
 
     public ManageProductionsView(PortalContext portalContext) {
         super(portalContext);
@@ -61,7 +63,7 @@ public class ManageProductionsView extends PortalView {
 
         selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
 
-        CellTable<DtoProduction> productionTable = new CellTable<DtoProduction>(keyProvider);
+        productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
         productionTable.setSelectionModel(selectionModel);
 
@@ -246,6 +248,8 @@ public class ManageProductionsView extends PortalView {
 
         // Connect the table to the data provider.
         getPortal().getProductions().addDataDisplay(productionTable);
+        ColumnSortList.ColumnSortInfo sortInfo = new ColumnSortList.ColumnSortInfo(idColumn, false);
+        productionTable.getColumnSortList().push(sortInfo);
 
         // Create a Pager to control the table.
         SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
@@ -262,6 +266,14 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(1, 0, pager);
         widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
         widget.setWidget(3, 0, new HTML(BEAM_HTML));
+
+        fireSortListEvent();
+    }
+
+    void fireSortListEvent() {
+        if (productionTable != null) {
+            ColumnSortEvent.fire(productionTable, productionTable.getColumnSortList());
+        }
     }
 
     static String getResult(DtoProduction production) {
