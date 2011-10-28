@@ -16,7 +16,6 @@ import com.google.gwt.user.cellview.client.*;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
-import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
@@ -58,19 +57,20 @@ public class ManageProductionsView extends PortalView {
             }
         };
 
-        selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
+        // selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
         selectedProductions = new HashSet<DtoProduction>();
 
         productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
-        productionTable.setSelectionModel(selectionModel);
+        //productionTable.setSelectionModel(selectionModel);
 
         // Attach a column sort handler to the ListDataProvider to sort the list.
         List<DtoProduction> dtoProductionList = getPortal().getProductions().getList();
         ColumnSortEvent.ListHandler<DtoProduction> sortHandler = new ColumnSortEvent.ListHandler<DtoProduction>(dtoProductionList);
         productionTable.addColumnSortHandler(sortHandler);
 
-        Header<Boolean> checkAllHeader = new Header<Boolean>(new CheckboxCell(false, false)) {
+        CheckboxCell cell = new CheckboxCell(true, true);
+        Header<Boolean> checkAllHeader = new Header<Boolean>(cell) {
             @Override
             public Boolean getValue() {
                 GWT.log("checkAllHeader.getValue() = " + selectAll);
@@ -81,11 +81,12 @@ public class ManageProductionsView extends PortalView {
             @Override
             public void update(Boolean value) {
                 GWT.log("checkAllHeader.update(" + value + ")");
-                selectAll = value;
                 final List<DtoProduction> productions = getPortal().getProductions().getList();
                 if (Boolean.TRUE.equals(value)) {
+                    selectAll = true;
                     selectedProductions.addAll(productions);
                 } else {
+                    selectAll = false;
                     selectedProductions.clear();
                 }
                 productionTable.redraw();
