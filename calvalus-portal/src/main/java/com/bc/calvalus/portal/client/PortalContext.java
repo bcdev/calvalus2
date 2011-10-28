@@ -34,4 +34,8 @@ public interface PortalContext {
     void showView(String id);
 
     Timer getProductionsUpdateTimer();
+
+    boolean isProductionListFiltered();
+
+    void setProductionListFiltered(boolean filter);
 }

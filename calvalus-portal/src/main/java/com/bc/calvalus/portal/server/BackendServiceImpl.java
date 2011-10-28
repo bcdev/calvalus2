@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    public static final String VERSION = "Calvalus version 1.1-b01 (built on 2011-10-27)";
+    public static final String VERSION = "Calvalus version 1.1-b02 (built on 2011-10-28)";
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
@@ -57,9 +57,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
      *           at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:164)
      *   ...
      * </pre>
-     *  See http://code.google.com/p/gwteventservice/issues/detail?id=30 and<br/> http://jectbd.com/?p=1351  and<br/>
+     * See http://code.google.com/p/gwteventservice/issues/detail?id=30 and<br/> http://jectbd.com/?p=1351  and<br/>
      * http://stackoverflow.com/questions/5429961/gwt-xsrf-sporadic-missing-x-gwt-permutation-header
-     *
      */
     @Override
     protected void checkPermutationStrongName() {
@@ -155,13 +154,20 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoProduction[] getProductions(String filter) throws BackendServiceException {
+        boolean currentUserFilter = (PARAM_NAME_CURRENT_USER_ONLY + "=true").equals(filter);
         try {
             Production[] productions = productionService.getProductions(filter);
-            DtoProduction[] dtoProductions = new DtoProduction[productions.length];
-            for (int i = 0; i < productions.length; i++) {
-                dtoProductions[i] = convert(productions[i]);
+            ArrayList<DtoProduction> dtoProductions = new ArrayList<DtoProduction>(productions.length);
+            for (Production production : productions) {
+                if (currentUserFilter) {
+                    if (getUserName().equalsIgnoreCase(production.getProductionRequest().getUserName())) {
+                        dtoProductions.add(convert(production));
+                    }
+                } else {
+                    dtoProductions.add(convert(production));
+                }
             }
-            return dtoProductions;
+            return dtoProductions.toArray(new DtoProduction[dtoProductions.size()]);
         } catch (ProductionException e) {
             throw convert(e);
         }

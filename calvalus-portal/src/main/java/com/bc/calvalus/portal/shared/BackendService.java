@@ -9,6 +9,9 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("backend")
 public interface BackendService extends RemoteService {
 
+    String PARAM_NAME_CURRENT_USER_ONLY = "currentUserOnly";
+
+
     /**
      * Gets all known regions.
      *

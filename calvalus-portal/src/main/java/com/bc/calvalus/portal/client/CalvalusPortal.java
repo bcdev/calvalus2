@@ -4,12 +4,7 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.*;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -59,9 +54,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private Timer productionsUpdateTimer;
     private RegionMapModel regionMapModel;
     private ManageProductionsView manageProductionsView;
+    private boolean productionListFiltered;
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
+        productionListFiltered = true;
     }
 
     /**
@@ -85,7 +82,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
                 backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
-                backendService.getProductions(NO_FILTER, new InitProductionsCallback());
+                backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }
         });
     }
@@ -129,6 +126,19 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public Timer getProductionsUpdateTimer() {
         return productionsUpdateTimer;
+    }
+
+    @Override
+    public boolean isProductionListFiltered() {
+        return productionListFiltered;
+    }
+
+    @Override
+    public void setProductionListFiltered(boolean productionListFiltered) {
+        if (productionListFiltered != this.productionListFiltered) {
+            this.productionListFiltered = productionListFiltered;
+            updateProductionList();
+        }
     }
 
     private void maybeInitFrontend() {
@@ -195,7 +205,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         productionsUpdateTimer = new Timer() {
             @Override
             public void run() {
-                backendService.getProductions(NO_FILTER, new UpdateProductionsCallback());
+                updateProductionList();
             }
         };
     }
@@ -282,6 +292,14 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     }
                 });
         return mainMenu;
+    }
+
+    private void updateProductionList() {
+        backendService.getProductions(getProductionFilterString(), new UpdateProductionsCallback());
+    }
+
+    private String getProductionFilterString() {
+        return BackendService.PARAM_NAME_CURRENT_USER_ONLY + "=" + isProductionListFiltered();
     }
 
     private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {

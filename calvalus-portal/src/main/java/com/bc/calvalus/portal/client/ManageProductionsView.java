@@ -8,14 +8,11 @@ import com.google.gwt.cell.client.*;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.cellview.client.CellTable;
-import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.ColumnSortEvent;
-import com.google.gwt.user.cellview.client.ColumnSortList;
-import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.cellview.client.*;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
@@ -23,9 +20,7 @@ import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Demo view that shows the list of productions taking place
@@ -51,6 +46,8 @@ public class ManageProductionsView extends PortalView {
     private FlexTable widget;
     private SelectionModel<DtoProduction> selectionModel;
     private CellTable<DtoProduction> productionTable;
+    private boolean selectAll;
+    private Set<DtoProduction> selectedProductions;
 
     public ManageProductionsView(PortalContext portalContext) {
         super(portalContext);
@@ -62,6 +59,7 @@ public class ManageProductionsView extends PortalView {
         };
 
         selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
+        selectedProductions = new HashSet<DtoProduction>();
 
         productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
@@ -72,16 +70,42 @@ public class ManageProductionsView extends PortalView {
         ColumnSortEvent.ListHandler<DtoProduction> sortHandler = new ColumnSortEvent.ListHandler<DtoProduction>(dtoProductionList);
         productionTable.addColumnSortHandler(sortHandler);
 
-        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(new CheckboxCell(true, true)) {
+        Header<Boolean> checkAllHeader = new Header<Boolean>(new CheckboxCell(false, false)) {
+            @Override
+            public Boolean getValue() {
+                GWT.log("checkAllHeader.getValue() = " + selectAll);
+                return selectAll;
+            }
+        };
+        checkAllHeader.setUpdater(new ValueUpdater<Boolean>() {
+            @Override
+            public void update(Boolean value) {
+                GWT.log("checkAllHeader.update(" + value + ")");
+                selectAll = value;
+                final List<DtoProduction> productions = getPortal().getProductions().getList();
+                if (Boolean.TRUE.equals(value)) {
+                    selectedProductions.addAll(productions);
+                } else {
+                    selectedProductions.clear();
+                }
+                productionTable.redraw();
+            }
+        });
+
+        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(new CheckboxCell(false, false)) {
             @Override
             public Boolean getValue(DtoProduction production) {
-                return selectionModel.isSelected(production);
+                return selectedProductions.contains(production);
             }
         };
         checkColumn.setFieldUpdater(new FieldUpdater<DtoProduction, Boolean>() {
             @Override
-            public void update(int index, DtoProduction object, Boolean value) {
-                selectionModel.setSelected(object, value);
+            public void update(int index, DtoProduction production, Boolean value) {
+                if (Boolean.TRUE.equals(value)) {
+                    selectedProductions.add(production);
+                } else {
+                    selectedProductions.remove(production);
+                }
             }
         });
 
@@ -237,7 +261,7 @@ public class ManageProductionsView extends PortalView {
         };
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
 
-        productionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(checkColumn, checkAllHeader);
         productionTable.addColumn(idColumn, "Production");
         productionTable.addColumn(userColumn, "User");
         productionTable.addColumn(productionStatusColumn, "Processing Status");
@@ -256,16 +280,28 @@ public class ManageProductionsView extends PortalView {
         SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, false, 0, true);
         pager.setDisplay(productionTable);
 
+        final CheckBox allUsers = new CheckBox("Show productions of all users");
+        allUsers.setValue(!getPortal().isProductionListFiltered());
+        allUsers.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                getPortal().setProductionListFiltered(!allUsers.getValue());
+            }
+        });
+
         widget = new FlexTable();
         widget.setWidth("100%");
-        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        widget.getFlexCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
         widget.setCellSpacing(4);
-        widget.setWidget(0, 0, productionTable);
-        widget.setWidget(1, 0, pager);
-        widget.setWidget(2, 0, new Button("Delete Selected", new DeleteProductionsAction()));
-        widget.setWidget(3, 0, new HTML(BEAM_HTML));
+        widget.setWidget(0, 0, allUsers);
+        widget.setWidget(1, 0, productionTable);
+        widget.setWidget(2, 0, pager);
+        widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
+        widget.setWidget(4, 0, new HTML(BEAM_HTML));
 
         fireSortListEvent();
     }
@@ -472,15 +508,8 @@ public class ManageProductionsView extends PortalView {
     private class DeleteProductionsAction implements ClickHandler {
         @Override
         public void onClick(ClickEvent event) {
-            final List<DtoProduction> availableList = getPortal().getProductions().getList();
-            final List<DtoProduction> toDeleteList = new ArrayList<DtoProduction>();
-            for (DtoProduction production : availableList) {
-                // todo - check, this doesn't work?!?
-                if (selectionModel.isSelected(production)) {
-                    toDeleteList.add(production);
-                }
-            }
-            deleteProductions(toDeleteList);
+            deleteProductions(new ArrayList<DtoProduction>(selectedProductions));
+            selectedProductions.clear();
         }
     }
 }
