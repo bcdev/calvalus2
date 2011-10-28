@@ -51,6 +51,7 @@
     vertical-align: bottom;
     width: 816px
 }
+
 .loginPanelWrapper {
     width: 816px;
 }
@@ -74,7 +75,10 @@
     padding: 5px;
 }
 
-
+p,li {
+    font-family: Georgia, Times, serif;
+    font-size: 10pt;
+}
 
 
 

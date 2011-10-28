@@ -42,11 +42,11 @@
             <% final Principal userPrincipal = request.getUserPrincipal(); %>
             <% if (userPrincipal != null) { %>
             User <b><%=userPrincipal.getName()%></b>
+            <br/>
+            <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
             <% } else { %>
             Not logged in.
             <% } %>
-            <br/>
-            <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
             <br/>
             <a href="about.jsp" target="_blank">About Calvalus</a>
         </td>

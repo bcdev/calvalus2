@@ -87,15 +87,16 @@
     </session-config>
 
     <welcome-file-list>
-        <welcome-file>calvalus.jsp</welcome-file>
+        <!--<welcome-file>calvalus.jsp</welcome-file>-->
+        <welcome-file>about.jsp</welcome-file>
     </welcome-file-list>
 
 
     <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
     <security-constraint>
-        <display-name>Calvalus Security Constraint</display-name>
+        <display-name>Calvalus Protected</display-name>
         <web-resource-collection>
-            <web-resource-name>Calvalus Protected Area</web-resource-name>
+            <web-resource-name>calvalus-protected</web-resource-name>
             <!-- Define the context-relative URL(s) to be protected -->
             <url-pattern>/calvalus.jsp</url-pattern>
             <url-pattern>/staging</url-pattern>
@@ -116,6 +117,15 @@
             <!-- Anyone with one of the listed roles may access this area -->
             <role-name>calvalus-user</role-name>
         </auth-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <display-name>Calvalus Public</display-name>
+        <web-resource-collection>
+            <web-resource-name>calvalus-public</web-resource-name>
+            <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/about.jsp</url-pattern>
+        </web-resource-collection>
     </security-constraint>
 
     <!-- Default login configuration uses form-based authentication -->
