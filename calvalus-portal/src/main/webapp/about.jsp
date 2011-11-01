@@ -10,12 +10,13 @@
     <link type="text/css" rel="stylesheet" href="calvalus.css">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <style>
-        h1,h2,h3 {
+        h1, h2, h3 {
             font-family: Calibri, Verdana, Arial, sans-serif;
             color: #7b8f88;
             font-weight: bold;
         }
-        p,li,td {
+
+        p, li, td {
             font-family: Georgia, Times, serif;
             font-size: 10pt;
         }
@@ -67,17 +68,20 @@
 <p>The announcement of opportunities EO Cal/Val and User Services is a technology study of the ESA LET-SME 2009 call,
     investigating into an existing leading edge technology (LET) for their applicability in the EO domain. Specifically,
     LET-SME is a spin-in instrument encouraging the participation of SMEs to ESA technology. The LET-SME focuses on
-    early stage development of <b>Leading Edge Technologies</b>, i.e. the ones likely to become the reference technologies
+    early stage development of <b>Leading Edge Technologies</b>, i.e. the ones likely to become the reference
+    technologies
     for the near future, and have good chances of being infused into ESA projects and missions. </p>
 
-<p>In accordance with the study's statement of work, Calvalus is a system that has been proposed to fully support the idea of LET-SME, thus
+<p>In accordance with the study's statement of work, Calvalus is a system that has been proposed to fully support the
+    idea of LET-SME, thus
     with a strong focus on a selected LET which is described in this report.</p>
 
 <h2>Approach</h2>
 
 <p><a href="http://www.brockmann-consult.de">Brockmann Consult GmbH</a> proposed to develop a <b>demonstration
     processing system</b> based the <b>MapReduce programming model</b>
-    (MR) combined with a <b>Distributed File System (DSF)</b>. The basic approach was first published in 2004 by the two Google
+    (MR) combined with a <b>Distributed File System (DSF)</b>. The basic approach was first published in 2004 by the two
+    Google
     computer scientists J. Dean and S. Ghemawat
     (<i><a href="http://labs.google.com/papers/mapreduce.html">MapReduce: Simplified Data Processing on Large
         Clusters</a></i>).
@@ -90,12 +94,13 @@
     study demonstrate that the processing of large amounts of EO data using MR and a DSF is efficient and advantageous.
     The demonstration system, Calvalus, basically comprises a <b>cluster of 20 commodity computers</b> with a total disk
     capacity
-    of <b>112 TB</b> at a total cost of <b>30 k€</b>. The processing system software is based on
+    of <b>112 TB</b> at a total cost of <b>30 k&euro;</b>. The processing system software is based on
     <a href="http://hadoop.apache.org/">Apache Hadoop</a>, an open-source
-    implementation of MR and DSF in Java and <a href="www.brockmann-consult.de/beam/">BEAM</a>,
+    implementation of MR and DSF in Java and <a href="http://www.brockmann-consult.de/beam/">BEAM</a>,
     an ESA Earth Observation Toolbox and Development Platform.</p>
 
-<p>Calvalus gains its performance from <b>massive parallelisation of tasks</b> and the <b>data-local execution</b> of code. Usual
+<p>Calvalus gains its performance from <b>massive parallelisation of tasks</b> and the <b>data-local execution</b> of
+    code. Usual
     processing clusters or grids first copy input data from storage nodes to compute nodes, thereby introducing I/O
     overheads and network transfer bottlenecks. In Calvalus, processing code is executed on cluster nodes where the
     input data are stored. Executable code can be easily deployed; the code distribution and installation on all cluster
@@ -130,25 +135,30 @@
 
 <p>The Calvalus team is</p>
 <ul>
-    <li>Dr Martin Boettcher, Brockmann Consult GmbH – Developer</li>
-    <li>Olga Faber, Brockmann Consult GmbH – Tester</li>
-    <li>Norman Fomferra, Brockmann Consult GmbH – Project manager / Developer</li>
-    <li>Dr Ewa Kwiatkowska, ESA – Technical ESA representative</li>
-    <li>Marco Zuehlke, Brockmann Consult GmbH – Developer</li>
+    <li>Dr Martin B&ouml;ttcher, Brockmann Consult GmbH - Developer</li>
+    <li>Olga Faber, Brockmann Consult GmbH - Tester</li>
+    <li>Norman Fomferra, Brockmann Consult GmbH - Project manager / Developer</li>
+    <li>Dr Ewa Kwiatkowska, ESA - Project initiator / Technical ESA representative</li>
+    <li>Marco Z&uuml;hlke, Brockmann Consult GmbH - Developer</li>
 </ul>
 
-<h2>Documentation</h2>
+<h2>Contact</h2>
 
-<p>All deliverables documents of the Calvalus study can be downloaded from the Calvalus web page
-    www.brockmann-consult.de/calvalus. The documents are:
-<ul>
-    <li><a href="pub/docs/rb.pdf">Requirements Baseline</a></li>
-    <li><a href="pub/docs/ts.pdf">Technical Specification</a></li>
-    <li><a href="pub/docs/atp.pdf">Acceptance Test Plan</a></li>
-    <li><a href="pub/docs/fr.pdf">Final Report</a></li>
-</ul>
+<p>
+    <b>Brockmann Consult GmbH</b> <br/>
+    Max-Planck-Str 2, 21502 Geesthacht, Germany<br/>
+    <a href="http://www.brockmann-consult.de">www.brockmann-consult.de</a><br/>
+    info (a) brockmann-consult (d) de<br/>
+    Tel +49 4152 889300<br/>
+    Fax +49 4152 889333<br/>
+</p>
 
-<p>Calvalus has been developed in the time from September 2009 to October 2011.
+<p>Calvalus has been developed in the time from September 2009 to October 2011. More information about the study and its
+    results can be found in the <a href="pub/docs/Calvalus-Final_Report-Public-1.0-20111031.pdf">Final Report</a>.
+</p>
+
+<p>
+    <br/>
 </p>
 
 

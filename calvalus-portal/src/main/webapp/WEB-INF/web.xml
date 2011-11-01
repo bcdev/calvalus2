@@ -125,6 +125,7 @@
             <web-resource-name>calvalus-public</web-resource-name>
             <!-- Define the context-relative URL(s) to be protected -->
             <url-pattern>/about.jsp</url-pattern>
+            <url-pattern>/pub/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 
