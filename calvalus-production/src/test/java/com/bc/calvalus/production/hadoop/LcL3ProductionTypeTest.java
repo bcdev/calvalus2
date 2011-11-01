@@ -31,7 +31,30 @@ import static org.junit.Assert.assertNotNull;
 public class LcL3ProductionTypeTest {
 
     @Test
-    public void testGetDatePairList_MinMax_10() throws ProductionException, ParseException {
+    public void testGetDatePairList_period7() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+                                                                    "minDate", "2010-06-01",
+                                                                    "maxDate", "2010-06-30",
+                                                                    "periodLength", "7");
+
+        List<L3ProductionType.DateRange> dateRangeList = LcL3ProductionType.getDateRanges(productionRequest, 7);
+        assertEquals(4, dateRangeList.size());
+        assertEquals("2010-06-01", asString(dateRangeList.get(0).startDate));
+        assertEquals("2010-06-07", asString(dateRangeList.get(0).stopDate));
+
+        assertEquals("2010-06-08", asString(dateRangeList.get(1).startDate));
+        assertEquals("2010-06-14", asString(dateRangeList.get(1).stopDate));
+
+        assertEquals("2010-06-15", asString(dateRangeList.get(2).startDate));
+        assertEquals("2010-06-21", asString(dateRangeList.get(2).stopDate));
+
+        assertEquals("2010-06-22", asString(dateRangeList.get(3).startDate));
+        assertEquals("2010-06-30", asString(dateRangeList.get(3).stopDate));
+    }
+
+
+    @Test
+    public void testGetDatePairList_period10() throws ProductionException, ParseException {
         ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
                                                                     "minDate", "2010-06-01",
                                                                     "maxDate", "2010-08-31",
@@ -65,11 +88,10 @@ public class LcL3ProductionTypeTest {
 
         assertEquals("2010-08-21", asString(dateRangeList.get(8).startDate));
         assertEquals("2010-08-31", asString(dateRangeList.get(8).stopDate));
-
     }
 
     @Test
-    public void testGetDatePairList_MinMax_15() throws ProductionException, ParseException {
+    public void testGetDatePairList_period15() throws ProductionException, ParseException {
         ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
                                                                     "minDate", "2010-07-01",
                                                                     "maxDate", "2010-07-31",
