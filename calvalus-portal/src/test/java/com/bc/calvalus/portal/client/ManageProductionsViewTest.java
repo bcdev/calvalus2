@@ -9,6 +9,8 @@ import static com.bc.calvalus.portal.shared.DtoProcessState.*;
 
 public class ManageProductionsViewTest  extends TestCase {
 
+
+
     public void testGetAction() {
         assertEquals(null, getAction(UNKNOWN, UNKNOWN));
         assertEquals("Cancel", getAction(SCHEDULED, UNKNOWN));
@@ -60,6 +62,16 @@ public class ManageProductionsViewTest  extends TestCase {
         assertEquals("100:00:00", ManageProductionsView.getTimeText(360000));
     }
 
+    public void testGetProgressText() throws Exception {
+        assertEquals("0.0%", ManageProductionsView.getProgressText(0.0F));
+        assertEquals("50.0%", ManageProductionsView.getProgressText(0.5F));
+        assertEquals("57.5%", ManageProductionsView.getProgressText(0.5752F));
+        assertEquals("57.5%", ManageProductionsView.getProgressText(0.5758F));  // no rounding!
+        assertEquals("99.9%", ManageProductionsView.getProgressText(0.9999F));
+        assertEquals("100.0%", ManageProductionsView.getProgressText(1F));
+
+    }
+
     private String getAction(DtoProcessState productionState, DtoProcessState stagingState) {
         return ManageProductionsView.getAction(createProduction(productionState, stagingState, false));
     }
@@ -77,4 +89,7 @@ public class ManageProductionsViewTest  extends TestCase {
                                 new DtoProcessStatus(productionState),
                                 new DtoProcessStatus(stagingState));
     }
+
+
+
 }

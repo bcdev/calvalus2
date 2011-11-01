@@ -307,6 +307,12 @@ public class ManageProductionsView extends PortalView {
         fireSortListEvent();
     }
 
+    public static String getProgressText(float progress) {
+        int integer = (int) Math.floor(progress * 100);
+        int fract = (int) Math.floor(10 * (progress * 100 - integer));
+        return integer + "." + fract + "%";
+    }
+
     void fireSortListEvent() {
         if (productionTable != null) {
             ColumnSortEvent.fire(productionTable, productionTable.getColumnSortList());
@@ -460,7 +466,7 @@ public class ManageProductionsView extends PortalView {
         } else if (state == DtoProcessState.SCHEDULED) {
             return "SCHEDULED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.RUNNING) {
-            return "RUNNING (" + (int) (0.5 + status.getProgress() * 100) + "%)" + (message.isEmpty() ? "" : (": " + message));
+            return "RUNNING (" + getProgressText(status.getProgress()) + ")" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.COMPLETED) {
             return "COMPLETED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.CANCELLED) {
