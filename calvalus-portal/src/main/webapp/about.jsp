@@ -153,8 +153,11 @@
     Fax +49 4152 889333<br/>
 </p>
 
-<p>Calvalus has been developed in the time from September 2009 to October 2011. More information about the study and its
+<p>Calvalus has been developed in the time from September 2009 to October 2011.
+    <!--
+    More information about the study and its
     results can be found in the <a href="pub/docs/Calvalus-Final_Report-Public-1.0-20111031.pdf">Final Report</a>.
+    -->
 </p>
 
 <p>
