@@ -16,21 +16,12 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
-import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.l3.L3Mapper;
-import com.bc.calvalus.processing.l3.L3Partitioner;
-import com.bc.calvalus.processing.l3.L3Reducer;
-import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
@@ -75,6 +66,11 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+
+        // because the size of the value objects can get very big
+        // it is better to report progress more often
+        // to prevent timeouts (Hadoop default is 10000)
+        jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         job.setNumReduceTasks(18);
