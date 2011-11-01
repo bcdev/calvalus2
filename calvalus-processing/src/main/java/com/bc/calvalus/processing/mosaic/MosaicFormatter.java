@@ -120,7 +120,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
         MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(jobConfig);
         MosaicGrid productGrid = new MosaicGrid(180 / 5, 370 * 5);
         MosaicGrid mosaicGrid = new MosaicGrid();
-
+         // TODO
 //        Geometry regionGeometry = null;//JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 //        Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
 //        Rectangle globalRegion = mosaicGrid.alignToTileGrid(geometryRegion);
@@ -141,6 +141,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
 
         for (Point tile : tileIndices) {
             context.getCounter("Product-Tiles tried", Integer.toString(tile.y)).increment(1);
+            context.getCounter("Product-Tiles tried", "Total").increment(1);
 
             context.progress();
             Rectangle productRegion = productGrid.getTileRectangle(tile.x, tile.y);
@@ -185,6 +186,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
                 }
                 if (containsData) {
                     context.getCounter("Product-Tiles written", Integer.toString(tile.y)).increment(1);
+                    context.getCounter("Product-Tiles written", "Total").increment(1);
                     LOG.info("Copying to HDFS");
                     productFormatter.compressToHDFS(context, productFile);
                 } else {
