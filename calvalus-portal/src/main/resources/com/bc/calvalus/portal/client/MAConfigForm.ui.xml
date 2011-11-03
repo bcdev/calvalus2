@@ -18,7 +18,7 @@
                 <g:VerticalPanel spacing="2">
                     <g:Label>In-situ and point data files:</g:Label>
 
-                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8"/>
+                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8" width="20em" />
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
                         <g:Button ui:field='removeRecordSourceButton' text="Remove"/>
@@ -87,7 +87,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="63em">
                                 The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
                                 that is evaluated
                                 for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
@@ -112,7 +112,7 @@
 
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="63em">
                                 The good-record expression also is a BEAM band maths expression
                                 that is evaluated
                                 for each aggregated macro pixel (= record). For each geo-physical output variable

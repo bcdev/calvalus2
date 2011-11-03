@@ -28,7 +28,7 @@
                             <g:Label>Path pattern:</g:Label>
                             <g:TextBox ui:field="alternateInputPath" width="32em"/>
                         </g:HorizontalPanel>
-                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="39em">
                             The common use is to specify the path of an output of a previous production here.
                             The path pattern is a <i>regular expression</i> any may contain
                             and references to the settings in the temporal and spatial filters:
