@@ -92,6 +92,51 @@ public class ProcessStatusTest {
         }
     }
 
+    @Test
+    public void testAggregateUnsustainable() {
+        // the same result as #aggregate()
+        assertEquals(ProcessStatus.UNKNOWN,
+                     ProcessStatus.aggregateUnsustainable());
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Hello!")));
+        assertEquals(new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "Starting"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "Starting"),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, ""),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "")));
+        assertEquals(new ProcessStatus(ProcessState.SCHEDULED, 0.0f, "Waiting"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.SCHEDULED, 0.0f, "Waiting"),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, ""),
+                                             new ProcessStatus(ProcessState.UNKNOWN, 0.0f, "")));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.3f, ""),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.4f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.3f, "")));
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.8f, "Wait"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.4f, "Wait"),
+                                             new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
+                                             new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
+        assertEquals(new ProcessStatus(ProcessState.COMPLETED, 1.0f, "This was hard"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
+                                             new ProcessStatus(ProcessState.COMPLETED, 1.0f, "This was hard"),
+                                             new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
+
+        // different result as #aggregate()
+        // 'ERROR' is not taken into accout --> 'COMPLETED'
+        assertEquals(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""),
+                                             new ProcessStatus(ProcessState.ERROR, 0.4f, "I/O problem"),
+                                             new ProcessStatus(ProcessState.COMPLETED, 1.0f, "")));
+        // 'CANCELLED' is not taken into accout --> 'RUNNING'
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, (0.2f + 0.6f) / 2f, ""),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.RUNNING, 0.6f, ""),
+                                             new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
+        // 'CANCELLED' and 'ERROR' are not taken into accout --> 'RUNNING'
+        assertEquals(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
+                                             new ProcessStatus(ProcessState.ERROR, 0.6f, ""),
+                                             new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
+    }
 
     @Test
     public void testIsDone() {

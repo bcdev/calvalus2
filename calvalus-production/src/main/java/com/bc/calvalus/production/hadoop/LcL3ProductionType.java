@@ -50,7 +50,6 @@ public class LcL3ProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3";
     private static final int PERIOD_LENGTH_DEFAULT = 10;
-    static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
     public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -68,6 +67,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         List<L3ProductionType.DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
 
         Workflow parallel = new Workflow.Parallel();
+        parallel.setSustainable(false);
         for (L3ProductionType.DateRange mainRange : dateRanges) {
 
             String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);

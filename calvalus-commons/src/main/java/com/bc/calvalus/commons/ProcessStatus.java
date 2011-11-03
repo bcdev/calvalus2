@@ -1,6 +1,8 @@
 package com.bc.calvalus.commons;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,11 +63,7 @@ public class ProcessStatus {
      * @throws NullPointerException if any of the given {@code statuses} is {@code null}.
      */
     public static ProcessStatus aggregate(ProcessStatus... statuses) {
-        for (int i = 0; i < statuses.length; i++) {
-            if (statuses[i] == null) {
-                throw new NullPointerException("statuses[" + i + "]");
-            }
-        }
+        assertStatusesNotNull(statuses);
 
         if (statuses.length == 0) {
             return UNKNOWN;
@@ -98,6 +96,14 @@ public class ProcessStatus {
         final ProcessState state = getCummulativeState(statuses);
 
         return new ProcessStatus(state, averageProgress, message);
+    }
+
+    private static void assertStatusesNotNull(ProcessStatus[] statuses) {
+        for (int i = 0; i < statuses.length; i++) {
+            if (statuses[i] == null) {
+                throw new NullPointerException("statuses[" + i + "]");
+            }
+        }
     }
 
     private static float getAverageProgress(ProcessStatus[] statuses) {
@@ -191,5 +197,16 @@ public class ProcessStatus {
                 ", message='" + message + '\'' +
                 ", progress=" + progress +
                 '}';
+    }
+
+    public static ProcessStatus aggregateUnsustainable(ProcessStatus... statuses) {
+        assertStatusesNotNull(statuses);
+        List<ProcessStatus> usable = new ArrayList<ProcessStatus>(statuses.length);
+        for (ProcessStatus status : statuses) {
+            if (status.getState() !=  ProcessState.ERROR && status.getState() !=  ProcessState.CANCELLED) {
+                usable.add(status);
+            }
+        }
+        return aggregate(usable.toArray(new ProcessStatus[usable.size()]));
     }
 }

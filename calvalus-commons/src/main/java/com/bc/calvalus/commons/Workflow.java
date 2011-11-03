@@ -29,10 +29,12 @@ import java.util.List;
  */
 public abstract class Workflow extends AbstractWorkflowItem implements WorkflowStatusListener {
     protected final List<WorkflowItem> itemList;
+    private boolean sustainable;
 
     protected Workflow(WorkflowItem... items) {
         super();
         this.itemList = new ArrayList<WorkflowItem>();
+        this.sustainable = true;
         add(items);
     }
 
@@ -44,6 +46,14 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
         if (!itemList.isEmpty()) {
             aggregateChildInformation();
         }
+    }
+
+    public boolean isSustainable() {
+        return sustainable;
+    }
+
+    public void setSustainable(boolean sustainable) {
+        this.sustainable = sustainable;
     }
 
     @Override
@@ -73,6 +83,17 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
         if (itemList.contains(event.getSource())) {
             aggregateChildInformation();
         }
+        // When sustainable, kill all running item when its own status changes to ERROR or CANCELED
+        if (sustainable && this.equals(event.getSource())) {
+            ProcessState newState = event.getNewStatus().getState();
+            ProcessState oldState = event.getOldStatus().getState();
+            if (oldState != newState && (newState.equals(ProcessState.ERROR) || newState.equals(ProcessState.CANCELLED))) {
+                try {
+                    kill();
+                } catch (WorkflowException ignore) {
+                }
+            }
+        }
     }
 
     private void aggregateChildInformation() {
@@ -96,8 +117,11 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
             if (stopTime == null || itemStopTime != null && itemStopTime.after(stopTime)) {
                 stopTime = itemStopTime;
             }
+        }if (sustainable) {
+            setStatus(ProcessStatus.aggregate(statuses));
+        } else {
+            setStatus(ProcessStatus.aggregateUnsustainable(statuses));
         }
-        setStatus(ProcessStatus.aggregate(statuses));
         setSubmitTime(submitTime);
         setStartTime(startTime);
         if (getStatus().getState().isDone()) {
@@ -141,10 +165,12 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
         @Override
         public void handleStatusChanged(WorkflowStatusEvent event) {
             super.handleStatusChanged(event);
-            if (currentItemIndex >= 0
-                    && event.getSource() == itemList.get(currentItemIndex)
-                    && event.getNewStatus().getState() == ProcessState.COMPLETED) {
-                submitNext();
+            if (currentItemIndex >= 0 && event.getSource() == itemList.get(currentItemIndex)) {
+                boolean sustainable = isSustainable();
+                ProcessStatus newStatus = event.getNewStatus();
+                if (sustainable && newStatus.getState() == ProcessState.COMPLETED || !sustainable && newStatus.isDone()) {
+                    submitNext();
+                }
             }
         }
 

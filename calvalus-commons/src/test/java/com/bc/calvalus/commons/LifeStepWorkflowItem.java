@@ -30,6 +30,15 @@ import java.util.Date;
 public class LifeStepWorkflowItem extends AbstractWorkflowItem {
     private int submitCount;
     private Date time;
+    private int lifeSteps;
+
+    public LifeStepWorkflowItem() {
+        this(1);
+    }
+
+    public LifeStepWorkflowItem(int lifeSteps) {
+        this.lifeSteps = lifeSteps;
+    }
 
     public boolean isSubmitted() {
         return submitCount > 0;
@@ -50,7 +59,10 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
                 setStatus(new ProcessStatus(ProcessState.SCHEDULED));
             } else if (status.equals(ProcessStatus.SCHEDULED)) {
                 setStatus(new ProcessStatus(ProcessState.RUNNING, 0.5f));
-            } else if (status.equals(new ProcessStatus(ProcessState.RUNNING, 0.5f))) {
+                lifeSteps--;
+            } else if (status.getState().equals(ProcessState.RUNNING) && lifeSteps > 0) {
+                lifeSteps--;
+            } else if (status.getState().equals(ProcessState.RUNNING)) {
                 setStatus(new ProcessStatus(ProcessState.COMPLETED));
             } else if (status.equals(new ProcessStatus(ProcessState.COMPLETED))) {
                 setStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Completed, but message changed. Submit count: " + getSubmitCount()));
@@ -66,6 +78,7 @@ public class LifeStepWorkflowItem extends AbstractWorkflowItem {
 
     @Override
     public void kill() throws WorkflowException {
+        setStatus(new ProcessStatus(ProcessState.ERROR));
     }
 
     @Override
