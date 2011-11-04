@@ -2,8 +2,8 @@
 #### Commands, first become root using
 sudo su -
 
-parted /dev/sdb --script -- mklabel msdos mkpart primary 0 -1
-parted /dev/sdc --script -- mklabel msdos mkpart primary 0 -1
+parted /dev/sdb --script -- mklabel msdos mkpart primary 1 -1
+parted /dev/sdc --script -- mklabel msdos mkpart primary 1 -1
 
 mkfs.ext4 /dev/sdb1
 mkfs.ext4 /dev/sdc1
@@ -42,7 +42,7 @@ mkdir /hd1/hadoop && chown hadoop:hadoop /hd1/hadoop && chmod 777 /hd1/hadoop &&
 sudo su -
 hadoop4u
 mkdir /hd3
-parted /dev/sdd --script -- mklabel bsd mkpart primary 0 -1
+parted /dev/sdd --script -- mklabel bsd mkpart primary 1 -1
 mkfs.ext4 /dev/sdd1
 UUID=`blkid -o value -s UUID /dev/sdd1` && echo "UUID=${UUID} /hd3            ext4    noatime,errors=remount-ro    0     2" >> /etc/fstab
 mount /hd3
