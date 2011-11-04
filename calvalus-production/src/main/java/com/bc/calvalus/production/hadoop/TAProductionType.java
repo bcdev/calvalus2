@@ -106,8 +106,7 @@ public class TAProductionType extends HadoopProductionType {
             throw new ProductionException("No input products found for given time range.");
         }
 
-
-        String stagingDir = String.format("%s/%s", productionRequest.getUserName(), productionId);
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,

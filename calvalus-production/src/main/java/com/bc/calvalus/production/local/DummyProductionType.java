@@ -67,9 +67,8 @@ class DummyProductionType implements ProductionType {
             }
         });
 
-        String userName = productionRequest.getUserName();
         String productionId = Production.createId(productionRequest.getProductionType());
-        String stagingDir = userName + "/" + productionId;
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               name,

@@ -291,6 +291,10 @@ public class ProductionRequest implements XmlConvertible {
         return getBoolean("autoStaging", false);
     }
 
+    public String getStagingDirectory(String productionId) {
+        return userName + "/" + productionId;
+    }
+
     public String getRegionName() {
         return getString("regionName", null);
     }

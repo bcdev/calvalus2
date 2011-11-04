@@ -60,7 +60,6 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createL3ProductionName(productionRequest);
-        final String userName = productionRequest.getUserName();
 
         String inputPath = productionRequest.getString("inputPath");
         // only processing one time for the time
@@ -129,7 +128,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             parallel.add(sequence);
         }
 
-        String stagingDir = userName + "/" + productionId;
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,

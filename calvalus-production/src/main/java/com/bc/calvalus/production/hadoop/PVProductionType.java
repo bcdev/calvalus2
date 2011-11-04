@@ -47,14 +47,13 @@ public class PVProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createProductionName(productionRequest);
-        final String userName = productionRequest.getUserName();
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
-        String stagingDir = userName + "/" + productionId;
-        boolean autoStaging = productionRequest.isAutoStaging(); //TODO
-        autoStaging = false;
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
+        //boolean autoStaging = productionRequest.isAutoStaging(); //TODO
+        boolean autoStaging = false;
         return new Production(productionId,
                               productionName,
                               "",

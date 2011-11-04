@@ -43,7 +43,6 @@ public class L3ProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createL3ProductionName(productionRequest);
-        final String userName = productionRequest.getUserName();
 
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
@@ -92,7 +91,7 @@ public class L3ProductionType extends HadoopProductionType {
             throw new ProductionException("No input products found for given time range.");
         }
 
-        String stagingDir = userName + "/" + productionId;
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,

@@ -36,12 +36,11 @@ public class L2ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = createL2ProductionName(productionRequest);
-        final String userName = productionRequest.getUserName();
 
         L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
-        String stagingDir = userName + "/" + productionId;
+        String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
