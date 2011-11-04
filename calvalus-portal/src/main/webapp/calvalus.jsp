@@ -27,32 +27,39 @@
     </div>
 </noscript>
 
-
-<table class="headerPanel">
+<table style="width: 99%; border: 0;" align="center">
     <tr>
         <td>
-            <img src="images/esa-logo.jpg" alt="ESA logo"/>
-        </td>
-        <td>
-            <h1 class="title">Calvalus</h1>
+            <hr/>
+            <table style="width: 100%;">
+                <tr>
+                    <td>
+                        <img src="images/esa-logo.jpg" alt="ESA logo"/>
+                    </td>
+                    <td>
+                        <h1 class="title">Calvalus</h1>
 
-            <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
-        </td>
-        <td class="userName">
-            <% final Principal userPrincipal = request.getUserPrincipal(); %>
-            <% if (userPrincipal != null) { %>
-            User <b><%=userPrincipal.getName()%></b>
-            <br/>
-            <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
-            <% } else { %>
-            Not logged in.
-            <% } %>
-            <br/>
-            <a href="about.jsp" target="_blank">About</a>
+                        <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+                    </td>
+                    <td class="userName">
+                        <% final Principal userPrincipal = request.getUserPrincipal(); %>
+                        <% if (userPrincipal != null) { %>
+                        User <b><%=userPrincipal.getName()%>
+                    </b>
+                        <br/>
+                        <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
+                        <% } else { %>
+                        Not logged in.
+                        <% } %>
+                        <br/>
+                        <a href="about.jsp" target="_blank">About</a>
+                    </td>
+                </tr>
+            </table>
+            <hr/>
         </td>
     </tr>
 </table>
-<hr/>
 
 <div id="mainPanel"></div>
 
@@ -61,7 +68,15 @@
     <img src="images/progress-bar.gif"/>
 </div>
 
-<p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
+<table style="width: 99%; border: 0;" align="center">
+    <tr>
+        <td>
+            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH
+                &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html"
+                                target="_blank">Impressum</a></p>
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>
