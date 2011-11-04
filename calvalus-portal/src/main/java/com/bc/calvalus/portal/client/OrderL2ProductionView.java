@@ -1,7 +1,6 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -68,6 +67,11 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     @Override
+    protected String getProductionType() {
+        return "L2";
+    }
+
+    @Override
     public void onShowing() {
         // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
         productSetFilterForm.getRegionMap().getMapWidget().checkResizeAndCenter();
@@ -88,11 +92,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     @Override
-    protected DtoProductionRequest getProductionRequest() {
-        return new DtoProductionRequest("L2", getProductionParameters());
-    }
-
-    private HashMap<String, String> getProductionParameters() {
+    protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());

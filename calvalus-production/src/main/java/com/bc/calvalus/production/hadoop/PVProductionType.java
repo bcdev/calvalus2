@@ -46,7 +46,7 @@ public class PVProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = createProductionName(productionRequest);
+        final String productionName = productionRequest.getProdcutionName(createProductionName(productionRequest));
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
 

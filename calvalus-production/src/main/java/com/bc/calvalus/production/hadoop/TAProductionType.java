@@ -36,7 +36,7 @@ public class TAProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = createTAProductionName(productionRequest);
+        final String productionName = productionRequest.getProdcutionName(createTAProductionName(productionRequest));
 
         String inputPath = productionRequest.getString("inputPath");
         List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);

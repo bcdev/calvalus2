@@ -42,7 +42,7 @@ public class L3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = createL3ProductionName(productionRequest);
+        final String productionName = productionRequest.getProdcutionName(createL3ProductionName(productionRequest));
 
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = getDateRanges(productionRequest, 10);

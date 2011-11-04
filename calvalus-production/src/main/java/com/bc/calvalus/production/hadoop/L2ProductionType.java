@@ -35,7 +35,7 @@ public class L2ProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = createL2ProductionName(productionRequest);
+        final String productionName = productionRequest.getProdcutionName(createL2ProductionName(productionRequest));
 
         L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
 

@@ -7,6 +7,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 
+import java.util.Map;
+
 // todo: prefer composition over inheritance: make subclasses a component of OrderProductionView (which is then concrete) (nf)
 
 /**
@@ -16,16 +18,41 @@ import com.google.gwt.user.client.ui.*;
  */
 public abstract class OrderProductionView extends PortalView {
 
+    private TextBox productionName;
+
     protected OrderProductionView(PortalContext portalContext) {
         super(portalContext);
+        productionName = new TextBox();
+        productionName.setVisibleLength(32);
     }
 
     /**
-     * Called by {@link #orderProduction}.
+     * Called by {@link #orderProduction} and {@link #checkRequest()}.
      *
      * @return The production request.
      */
-    protected abstract DtoProductionRequest getProductionRequest();
+    protected DtoProductionRequest getProductionRequest() {
+        Map<String, String> productionParameters = getProductionParameters();
+        String prodName = productionName.getValue().trim();
+        if (!prodName.isEmpty()) {
+            productionParameters.put("productionName", prodName);
+        }
+        return new DtoProductionRequest(getProductionType(), productionParameters);
+    }
+
+    /**
+     * Called by {@link #getProductionRequest()}.
+     *
+     * @return The production type.
+     */
+    protected abstract String getProductionType();
+
+    /**
+     * Called by {@link #getProductionRequest()}.
+     *
+     * @return The parameter map.
+     */
+    protected abstract Map<String,String> getProductionParameters();
 
     /**
      * Called by {@link #orderProduction}.
@@ -98,6 +125,11 @@ public abstract class OrderProductionView extends PortalView {
     }
 
     protected HorizontalPanel createOrderPanel() {
+        HorizontalPanel productionNamePanel = new HorizontalPanel();
+        productionNamePanel.setSpacing(4);
+        productionNamePanel.add(new Label("Production name:"));
+        productionNamePanel.add(productionName);
+
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
@@ -120,8 +152,10 @@ public abstract class OrderProductionView extends PortalView {
         HorizontalPanel orderPanel = new HorizontalPanel();
         orderPanel.setSpacing(4);
         orderPanel.setWidth("100%");
+        orderPanel.add(productionNamePanel);
         orderPanel.add(buttonPanel);
-        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_CENTER);
+        orderPanel.setCellHorizontalAlignment(productionNamePanel, HasHorizontalAlignment.ALIGN_RIGHT);
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_LEFT);
         return orderPanel;
     }
 }

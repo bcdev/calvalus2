@@ -248,7 +248,7 @@ public class ProductionRequest implements XmlConvertible {
         String[] splits = text.trim().split("\\s");
         Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
         dateSet.remove("");
-        splits = dateSet.toArray(new String[0]);
+        splits = dateSet.toArray(new String[dateSet.size()]);
         Arrays.sort(splits);
 
         Date[] dates = new Date[splits.length];
@@ -286,6 +286,10 @@ public class ProductionRequest implements XmlConvertible {
 
     /////////////////////////////////////////////////////////////////////////
     // Support for specific parameters
+
+    public String getProdcutionName(String defaultProductionName) {
+        return getString("productionName", defaultProductionName);
+    }
 
     public boolean isAutoStaging() throws ProductionException {
         return getBoolean("autoStaging", false);
