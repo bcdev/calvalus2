@@ -48,7 +48,7 @@
             Not logged in.
             <% } %>
             <br/>
-            <a href="about.jsp" target="_blank">About Calvalus</a>
+            <a href="about.jsp" target="_blank">About</a>
         </td>
     </tr>
 </table>

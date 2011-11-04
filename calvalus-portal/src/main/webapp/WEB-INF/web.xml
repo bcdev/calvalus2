@@ -107,26 +107,11 @@
             <url-pattern>/calvalus/backend/*</url-pattern>
             <url-pattern>/calvalus/upload/*</url-pattern>
             <url-pattern>/calvalus/download/*</url-pattern>
-            <!-- If you list http methods, only those methods are protected -->
-            <http-method>DELETE</http-method>
-            <http-method>GET</http-method>
-            <http-method>POST</http-method>
-            <http-method>PUT</http-method>
         </web-resource-collection>
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
             <role-name>calvalus-user</role-name>
         </auth-constraint>
-    </security-constraint>
-
-    <security-constraint>
-        <display-name>Calvalus Public</display-name>
-        <web-resource-collection>
-            <web-resource-name>calvalus-public</web-resource-name>
-            <!-- Define the context-relative URL(s) to be protected -->
-            <url-pattern>/about.jsp</url-pattern>
-            <url-pattern>/pub/*</url-pattern>
-        </web-resource-collection>
     </security-constraint>
 
     <!-- Default login configuration uses form-based authentication -->

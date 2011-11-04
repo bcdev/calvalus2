@@ -7,35 +7,48 @@
 </head>
 <body>
 
-<table class="headerPanel">
+<table style="width: 820px; border: 0;" align="center">
     <tr>
         <td>
-            <img src="images/esa-logo.jpg" alt="ESA logo"/>
-        </td>
-        <td>
-            <h1 class="title">Calvalus</h1>
+            <hr/>
+            <table class="headerPanel">
+                <tr>
+                    <td>
+                        <img src="images/esa-logo.jpg" alt="ESA logo"/>
+                    </td>
+                    <td>
+                        <h1 class="title">Calvalus</h1>
 
-            <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+                        <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+                    </td>
+                    <td class="userName">
+                        <a href="about.jsp">About</a>
+                    </td>
+                </tr>
+            </table>
+            <hr/>
+
+            <%@ page session="true" %>
+
+            <div class="loginPanel">
+
+                User <strong><%=request.getRemoteUser()%></strong> has been logged out.
+
+                <% session.invalidate(); %>
+
+                <br/><br/>
+                <a href='<%= response.encodeURL("calvalus.jsp") %>'>Click here to login again.</a>
+                <br/><br/>
+
+            </div>
+
+            <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a
+                    href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
+
         </td>
     </tr>
 </table>
-<hr/>
 
-<%@ page session="true" %>
-
-<div class="loginPanel">
-
-    User <b><%=request.getRemoteUser()%></b> has been logged out.
-
-    <% session.invalidate(); %>
-
-    <br/><br/>
-    <a href='<%= response.encodeURL("calvalus.jsp") %>'>Click here to login again.</a>
-    <br/><br/>
-
-</div>
-
-<p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2011 Brockmann Consult GmbH &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
 </body>
 </html>

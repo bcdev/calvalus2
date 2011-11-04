@@ -44,9 +44,20 @@
 }
 
 .copyright {
+	background-color:#7b8fae;
     font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 9pt;
-    color: #AAA;
+    color: #FFF;
+    text-align: center;
+    vertical-align: bottom;
+    width: 816px
+}
+
+.copyright2.copyright {
+	background-color:#7b8fae;
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 9pt;
+    color: #FFF;
     text-align: center;
     vertical-align: bottom;
     width: 816px
