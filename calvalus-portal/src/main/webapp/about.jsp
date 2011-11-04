@@ -79,8 +79,8 @@
                 backbone is
                 required to maintain the ability of ensuring data quality and algorithm performance.</p>
 
-            <p>The announcement of opportunities EO Cal/Val and User Services is a technology study of the ESA LET-SME
-                2009 call,
+            <p>The announcement of opportunities EO Cal/Val and User Services is a technology study of the
+                <a href="http://smeprojects.esa.int/TechnologyforSMEs.asp">ESA LET-SME</a> 2009 call,
                 investigating into an existing leading edge technology (LET) for their applicability in the EO domain.
                 Specifically,
                 LET-SME is a spin-in instrument encouraging the participation of SMEs to ESA technology. The LET-SME
@@ -173,18 +173,21 @@
                 Level-2
                 processors and their required versions, processing parameters and LUTs. The Calvalus demonstration
                 system currently
-                holds the full mission Envisat MERIS Level-1b RR data as well as all MERIS Level-1b FR product subsets
+                holds the <strong>full mission <a href="http://envisat.esa.int/instruments/meris/">Envisat MERIS</a>
+                    Level-1b RR data</strong> as well as all MERIS Level-1b FR product subsets
                 required by
                 the CoastColour project.</p>
 
-            <p>Calvalus provides <a href="calvalus.jsp">web portal</a> that allows users to order and monitor
-                productions according
+            <p>Calvalus provides an <strong>easily operated <a href="calvalus.jsp">web interface</a></strong>
+                that allows users to order and monitor productions according
                 the to four production scenarios, and to finally download the results. It also offers a Java production
-                API,
-                allowing developers to write new production scenarios.
+                API, allowing developers to write new production scenarios.
             </p>
 
-            <h2>Team</h2>
+            <h2>Project</h2>
+
+            <p>The Calvalus study has been performed in the time from September 2009 to October 2011. The Calvalus
+                system is now being actively further developed.</p>
 
             <p>The Calvalus team is</p>
             <ul>
@@ -195,23 +198,23 @@
                 <li>Marco Z&uuml;hlke, Brockmann Consult GmbH - Developer</li>
             </ul>
 
-            <h2>Contact</h2>
+            <h2>Information</h2>
+
+            <p>Please contact us for more information!
+                <!--
+                More information about the study and its
+                results can be found in the <a href="">Final Report</a>.
+                -->
+            </p>
 
             <p>
                 <strong><img src="images/bc-logo.png" style="float:left; margin-right:12px;" alt="BC-logo">Brockmann
                     Consult GmbH</strong> <br>
                 Max-Planck-Str 2, 21502 Geesthacht, Germany<br/>
-                <a href="http://www.brockmann-consult.de">www.brockmann-consult.de</a><br/>
+                <a href="http://www.brockmann-consult.de/">www.brockmann-consult.de</a><br/>
                 info (a) brockmann-consult (d) de<br/>
                 Tel +49 4152 889300<br/>
                 Fax +49 4152 889333<br/>
-            </p>
-
-            <p>Calvalus has been developed in the time from September 2009 to October 2011.
-                <!--
-                More information about the study and its
-                results can be found in the <a href="pub/docs/Calvalus-Final_Report-Public-1.0-20111031.pdf">Final Report</a>.
-                -->
             </p>
 
             <p>
