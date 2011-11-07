@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
+import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -65,9 +66,9 @@ public class L3ProductionType extends HadoopProductionType {
         Workflow.Parallel workflow = new Workflow.Parallel();
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
-            String date1Str = ProductionRequest.getDateFormat().format(dateRange.startDate);
-            String date2Str = ProductionRequest.getDateFormat().format(dateRange.stopDate);
-            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.startDate, dateRange.stopDate, regionName);
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
             if (l1InputFiles.length > 0) {
                 String outputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
@@ -223,13 +224,4 @@ public class L3ProductionType extends HadoopProductionType {
         }
     }
 
-    static class DateRange {
-        final Date startDate;
-        final Date stopDate;
-
-        DateRange(Date startDate, Date stopDate) {
-            this.startDate = startDate;
-            this.stopDate = stopDate;
-        }
-    }
 }

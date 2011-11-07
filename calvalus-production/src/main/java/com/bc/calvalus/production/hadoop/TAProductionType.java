@@ -7,6 +7,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
+import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -39,7 +40,7 @@ public class TAProductionType extends HadoopProductionType {
         final String productionName = productionRequest.getProdcutionName(createTAProductionName(productionRequest));
 
         String inputPath = productionRequest.getString("inputPath");
-        List<L3ProductionType.DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
 
         String processorName = productionRequest.getString("processorName", null);
         String processorParameters = null;
@@ -59,16 +60,16 @@ public class TAProductionType extends HadoopProductionType {
 
         Workflow.Parallel parallel = new Workflow.Parallel();
         for (int i = 0; i < dateRanges.size(); i++) {
-            L3ProductionType.DateRange dateRange = dateRanges.get(i);
-            String date1Str = ProductionRequest.getDateFormat().format(dateRange.startDate);
-            String date2Str = ProductionRequest.getDateFormat().format(dateRange.stopDate);
+            DateRange dateRange = dateRanges.get(i);
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
 
             Workflow.Sequential sequential = new Workflow.Sequential();
 
             String l3JobName = String.format("%s-L3-%d", productionId, (i + 1));
             String taJobName = String.format("%s-TA-%d", productionId, (i + 1));
 
-            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.startDate, dateRange.stopDate, regionName);
+            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
             if (l1InputFiles.length > 0) {
                 String l3OutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));

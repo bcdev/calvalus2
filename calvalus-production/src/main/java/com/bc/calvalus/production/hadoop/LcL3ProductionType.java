@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.mosaic.LCMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.LcSDR8MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
+import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -63,19 +64,19 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String inputPath = productionRequest.getString("inputPath");
         // only processing one time for the time
-        List<L3ProductionType.DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
+        List<DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
 
         Workflow parallel = new Workflow.Parallel();
         parallel.setSustainable(false);
-        for (L3ProductionType.DateRange mainRange : dateRanges) {
+        for (DateRange mainRange : dateRanges) {
 
-            String date1Str = ProductionRequest.getDateFormat().format(mainRange.startDate);
-            String date2Str = ProductionRequest.getDateFormat().format(mainRange.stopDate);
-            L3ProductionType.DateRange cloudRange = getWingsRange(productionRequest, mainRange);
+            String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
+            DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
             String regionName = productionRequest.getRegionName();
-            String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.startDate, cloudRange.stopDate, regionName);
-            String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.startDate, mainRange.stopDate, regionName);
+            String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.getStartDate(), cloudRange.getStopDate(), regionName);
+            String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
             if (mainInputFiles.length == 0) {
                 throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
             }
@@ -139,8 +140,8 @@ public class LcL3ProductionType extends HadoopProductionType {
                               parallel);
     }
 
-    static List<L3ProductionType.DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
-        List<L3ProductionType.DateRange> dateRangeList = new ArrayList<L3ProductionType.DateRange>();
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+        List<DateRange> dateRangeList = new ArrayList<DateRange>();
 
         Date minDate = productionRequest.getDate("minDate");
         Date maxDate = productionRequest.getDate("maxDate");
@@ -168,7 +169,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 calendar2.set(Calendar.DAY_OF_MONTH, calendar2.getActualMaximum(Calendar.DAY_OF_MONTH));
             }
 
-            dateRangeList.add(new L3ProductionType.DateRange(calendar1.getTime(), calendar2.getTime()));
+            dateRangeList.add(new DateRange(calendar1.getTime(), calendar2.getTime()));
             calendar2.add(Calendar.DAY_OF_MONTH, 1);
             time = calendar2.getTimeInMillis();
         }
@@ -177,17 +178,17 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
 
-    static L3ProductionType.DateRange getWingsRange(ProductionRequest productionRequest, L3ProductionType.DateRange mainRange) throws ProductionException {
+    static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws ProductionException {
         int wings = productionRequest.getInteger("wings", 10);
 
         Calendar calendar = ProductData.UTC.createCalendar();
-        calendar.setTime(mainRange.startDate);
+        calendar.setTime(mainRange.getStartDate());
         calendar.add(Calendar.DAY_OF_MONTH, -wings);
         Date date1 = calendar.getTime();
-        calendar.setTime(mainRange.stopDate);
+        calendar.setTime(mainRange.getStopDate());
         calendar.add(Calendar.DAY_OF_MONTH, wings);
         Date date2 = calendar.getTime();
-        return new L3ProductionType.DateRange(date1, date2);
+        return new DateRange(date1, date2);
     }
 
     static L3Config getCloudL3Config() throws ProductionException {
