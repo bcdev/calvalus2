@@ -19,13 +19,13 @@ public class ProductSet {
     private final String regionWKT;
 
     public ProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName, String regionWKT) {
+        this.productType = productType;
         this.name = name;
         this.path = path;
         this.minDate = minDate;
         this.maxDate = maxDate;
         this.regionName = regionName;
         this.regionWKT = regionWKT;
-        this.productType = productType;
     }
 
     public String getProductType() {
