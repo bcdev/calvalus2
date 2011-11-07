@@ -17,6 +17,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.RangeChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 
 import java.util.*;
@@ -81,15 +82,20 @@ public class ManageProductionsView extends PortalView {
             @Override
             public void update(Boolean value) {
                 GWT.log("checkAllHeader.update(" + value + ")");
-                final List<DtoProduction> productions = getPortal().getProductions().getList();
                 if (Boolean.TRUE.equals(value)) {
                     selectAll = true;
-                    selectedProductions.addAll(productions);
+                    selectedProductions.addAll(productionTable.getVisibleItems());
                 } else {
                     selectAll = false;
                     selectedProductions.clear();
                 }
                 productionTable.redraw();
+            }
+        });
+        productionTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
+            public void onRangeChange(RangeChangeEvent event) {
+                selectAll = false;
+                selectedProductions.clear();
             }
         });
 
