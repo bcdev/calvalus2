@@ -4,6 +4,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
+import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -91,25 +92,33 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws ProductionException {
+        List<DateRange> dateRanges = getDateRanges(productionRequest);
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
+        List<String> inputFileAccumulator = new ArrayList<String>();
+        for (DateRange dateRange : dateRanges) {
+            String[] inputPaths = getInputPaths(inventoryService, inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
+            inputFileAccumulator.addAll(Arrays.asList(inputPaths));
+        }
+        if (inputFileAccumulator.size() == 0) {
+            throw new ProductionException("No input files found for given time range.");
+        }
+        return inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
+    }
+
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest) throws ProductionException {
+        List<DateRange> dateRangeList = new ArrayList<DateRange>();
         Date[] dateList = productionRequest.getDates("dateList", null);
-        String[] inputFiles;
         if (dateList != null) {
-            List<String> inputFileAccumulator = new ArrayList<String>();
             for (Date date : dateList) {
-                inputFileAccumulator.addAll(Arrays.asList(getInputPaths(inventoryService, inputPath, date, date, regionName)));
+                 dateRangeList.add(new DateRange(date, date));
             }
-            inputFiles = inputFileAccumulator.toArray(new String[inputFileAccumulator.size()]);
         } else {
             Date minDate = productionRequest.getDate("minDate", null);
             Date maxDate = productionRequest.getDate("maxDate", null);
-            inputFiles = getInputPaths(inventoryService, inputPath, minDate, maxDate, regionName);
+            dateRangeList.add(new DateRange(minDate, maxDate));
         }
-        if (inputFiles.length == 0) {
-            throw new ProductionException("No input files found for given time range.");
-        }
-        return inputFiles;
+        return dateRangeList;
     }
 
 }
