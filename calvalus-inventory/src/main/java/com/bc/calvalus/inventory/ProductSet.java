@@ -9,16 +9,27 @@ import java.util.Date;
  * @author Norman
  */
 public class ProductSet {
+
+    private final String productType;
     private final String name;
     private final String path;
     private final Date minDate;
     private final Date maxDate;
+    private final String regionName;
+    private final String regionWKT;
 
-    public ProductSet(String name, String path, Date minDate, Date maxDate) {
+    public ProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName, String regionWKT) {
         this.name = name;
         this.path = path;
         this.minDate = minDate;
         this.maxDate = maxDate;
+        this.regionName = regionName;
+        this.regionWKT = regionWKT;
+        this.productType = productType;
+    }
+
+    public String getProductType() {
+        return productType;
     }
 
     public String getName() {
@@ -35,5 +46,13 @@ public class ProductSet {
 
     public Date getMaxDate() {
         return maxDate;
+    }
+
+    public String getRegionName() {
+        return regionName;
+    }
+
+    public String getRegionWKT() {
+        return regionWKT;
     }
 }

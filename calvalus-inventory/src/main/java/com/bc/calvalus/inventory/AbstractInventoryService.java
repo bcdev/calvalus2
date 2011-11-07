@@ -67,7 +67,7 @@ public abstract class AbstractInventoryService implements InventoryService {
                 String path = record[1];
                 Date date1 = DATE_FORMAT.parse(record[2]);
                 Date date2 = DATE_FORMAT.parse(record[3]);
-                productSets.add(new ProductSet(name, path, date1, date2));
+                productSets.add(new ProductSet(null, name, path, date1, date2, null, null));
             }
         }
         return productSets.toArray(new ProductSet[productSets.size()]);

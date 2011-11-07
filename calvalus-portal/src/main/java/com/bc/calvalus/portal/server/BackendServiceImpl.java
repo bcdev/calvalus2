@@ -243,10 +243,13 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private DtoProductSet convert(ProductSet productSet) {
-        return new DtoProductSet(productSet.getName(),
+        return new DtoProductSet(productSet.getProductType(),
+                                 productSet.getName(),
                                  productSet.getPath(),
                                  productSet.getMinDate(),
-                                 productSet.getMaxDate());
+                                 productSet.getMaxDate(),
+                                 productSet.getRegionName(),
+                                 productSet.getRegionWKT());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion,
