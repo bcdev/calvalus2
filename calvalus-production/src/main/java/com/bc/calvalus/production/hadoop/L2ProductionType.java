@@ -1,6 +1,11 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.WorkflowStatusEvent;
+import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.inventory.ProductSetPersistable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
@@ -12,8 +17,12 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -38,7 +47,7 @@ public class L2ProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = productionRequest.getProdcutionName(createL2ProductionName(productionRequest));
 
-        L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
+        L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionName,  productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -66,9 +75,12 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
-                                      ProductionRequest productionRequest) throws ProductionException {
+                                      String productionName, ProductionRequest productionRequest) throws ProductionException {
 
-        String[] inputFiles = getInputFiles(getInventoryService(), productionRequest);
+         List<DateRange> dateRanges = getDateRanges(productionRequest);
+        String inputPath = productionRequest.getString("inputPath");
+        String regionName = productionRequest.getRegionName();
+        String[] inputFiles = getInputFiles(getInventoryService(), inputPath, regionName, dateRanges);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
@@ -88,13 +100,26 @@ public class L2ProductionType extends HadoopProductionType {
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
         l2JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
 
-        return new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
+        Date startDate = dateRanges.get(0).getStartDate();
+        Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
+        String pathPattern = outputDir + "/.*.seq$";
+        String regionWKT = regionGeometry != null ? regionGeometry.toString() : null;
+        String productType = "L2"; // TODO get from processor
+        ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate, regionName, regionWKT);
+
+        L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
+        l2WorkflowItem.addWorkflowStatusListener(new ProductSetSaver(l2WorkflowItem, productSet, outputDir));
+        return l2WorkflowItem;
     }
 
     public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws ProductionException {
         List<DateRange> dateRanges = getDateRanges(productionRequest);
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
+        return getInputFiles(inventoryService, inputPath, regionName, dateRanges);
+    }
+
+    private static String[] getInputFiles(InventoryService inventoryService, String inputPath, String regionName, List<DateRange> dateRanges) throws ProductionException {
         List<String> inputFileAccumulator = new ArrayList<String>();
         for (DateRange dateRange : dateRanges) {
             String[] inputPaths = getInputPaths(inventoryService, inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
@@ -110,8 +135,9 @@ public class L2ProductionType extends HadoopProductionType {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
         Date[] dateList = productionRequest.getDates("dateList", null);
         if (dateList != null) {
+            Arrays.sort(dateList);
             for (Date date : dateList) {
-                 dateRangeList.add(new DateRange(date, date));
+                dateRangeList.add(new DateRange(date, date));
             }
         } else {
             Date minDate = productionRequest.getDate("minDate", null);
@@ -119,6 +145,51 @@ public class L2ProductionType extends HadoopProductionType {
             dateRangeList.add(new DateRange(minDate, maxDate));
         }
         return dateRangeList;
+    }
+
+    class ProductSetSaver implements WorkflowStatusListener {
+
+        private final L2WorkflowItem l2WorkflowItem;
+        private final ProductSet productSet;
+        private final String outputDir;
+
+        public ProductSetSaver(L2WorkflowItem l2WorkflowItem, ProductSet productSet, String outputDir) {
+            this.l2WorkflowItem = l2WorkflowItem;
+            this.productSet = productSet;
+            this.outputDir = outputDir;
+        }
+
+        public ProductSet getProductSet() {
+            return productSet;
+        }
+
+        @Override
+        public void handleStatusChanged(WorkflowStatusEvent event) {
+            if (event.getSource() == l2WorkflowItem && event.getNewStatus().getState() == ProcessState.COMPLETED) {
+                String productSetDefinition = ProductSetPersistable.convertToCSV(productSet);
+                writeProductSetFile(productSetDefinition);
+            }
+        }
+
+        private void writeProductSetFile(String text) {
+            Path productSetsFile = new Path(outputDir, ProductSetPersistable.FILENAME);
+            FSDataOutputStream fsDataOutputStream = null;
+            try {
+                FileSystem fileSystem = FileSystem.get(l2WorkflowItem.getJobConfig());
+                fsDataOutputStream = fileSystem.create(productSetsFile);
+                fsDataOutputStream.writeUTF(text);
+            } catch (IOException e) {
+                // TODO, mz 2011-11-07 log error
+                e.printStackTrace();
+            } finally {
+                if (fsDataOutputStream != null) {
+                    try {
+                        fsDataOutputStream.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+        }
     }
 
 }

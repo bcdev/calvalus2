@@ -170,4 +170,13 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
     public void setStopTime(Date stopTime) {
         this.stopTime = stopTime;
     }
+
+    /**
+     * Returns an array of all registered {@link WorkflowStatusListener}s.
+     *
+     * @return All listeners.
+     */
+    public WorkflowStatusListener[] getWorkflowStatusListeners() {
+        return statusListeners.toArray(new WorkflowStatusListener[statusListeners.size()]);
+    }
 }

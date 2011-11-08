@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
@@ -73,13 +74,13 @@ public class AbstractInventoryServiceTest {
         String csv = "MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31\n" +
                 "MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31\n" +
                 "MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31\n";
-        ProductSet[] productSets = AbstractInventoryService.readProductSetFromCsv(new ByteArrayInputStream(csv.getBytes()));
+        List<ProductSet> productSets = AbstractInventoryService.readProductSetFromCsv(new ByteArrayInputStream(csv.getBytes()));
         assertNotNull(productSets);
-        assertEquals(3, productSets.length);
-        assertEquals("MERIS RR L1b 2004", productSets[1].getName());
-        assertEquals("eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1", productSets[1].getPath());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"), productSets[1].getMinDate());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"), productSets[1].getMaxDate());
+        assertEquals(3, productSets.size());
+        assertEquals("MERIS RR L1b 2004", productSets.get(1).getName());
+        assertEquals("eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1", productSets.get(1).getPath());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"), productSets.get(1).getMinDate());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"), productSets.get(1).getMaxDate());
     }
 
     @Test

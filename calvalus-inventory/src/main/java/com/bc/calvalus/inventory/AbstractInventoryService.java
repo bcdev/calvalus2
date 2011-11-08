@@ -2,18 +2,15 @@ package com.bc.calvalus.inventory;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.io.CsvReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,8 +23,7 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractInventoryService implements InventoryService {
 
-    public static final String DATE_PATTERN = "yyyy-MM-dd";
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
+    private static final String USER_FILTER = "user=";
     private final FileSystem fileSystem;
 
     public AbstractInventoryService(FileSystem fileSystem) {
@@ -41,36 +37,58 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public ProductSet[] getProductSets(String filter) throws Exception {
-        InputStream is = getInputStream("eodata/product-sets.csv");
-        try {
-            return readProductSetFromCsv(is);
-        } catch (Exception e) {
-            throw new Exception("Failed to load list of product sets.", e);
-        } finally {
-            is.close();
-        }
-    }
-
-    private InputStream getInputStream(String path) throws IOException {
-        Path databasePath = new Path(getQualifiedPath(path));
-        return getFileSystem().open(databasePath);
-    }
-
-    static ProductSet[] readProductSetFromCsv(InputStream is) throws IOException, ParseException {
-        InputStreamReader reader = new InputStreamReader(is);
-        CsvReader csvReader = new CsvReader(reader, new char[]{';'});
-        ArrayList<ProductSet> productSets = new ArrayList<ProductSet>();
-        List<String[]> stringRecords = csvReader.readStringRecords();
-        for (String[] record : stringRecords) {
-            if (record.length == 4) {
-                String name = record[0];
-                String path = record[1];
-                Date date1 = DATE_FORMAT.parse(record[2]);
-                Date date2 = DATE_FORMAT.parse(record[3]);
-                productSets.add(new ProductSet(null, name, path, date1, date2, null, null));
+        if (filter != null && filter.startsWith(USER_FILTER)) {
+            String userName = filter.substring(USER_FILTER.length());
+            if (userName.equals("all")) {
+                return loadProcessed("*");
+            } else {
+                return loadProcessed(userName);
             }
+        } else {
+            return loadPredefined();
         }
-        return productSets.toArray(new ProductSet[productSets.size()]);
+    }
+
+    private ProductSet[] loadPredefined() throws IOException {
+        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
+        return readProductSets(new Path[]{databasePath});
+    }
+
+    private ProductSet[] loadProcessed(String username) throws IOException {
+        String path = String.format("home/%s/*/%s", username, ProductSetPersistable.FILENAME);
+        Path pathPattern = new Path(getQualifiedPath(path));
+        FileStatus[] fileStatuses = getFileSystem().globStatus(pathPattern);
+        Path[] paths = FileUtil.stat2Paths(fileStatuses);
+        return readProductSets(paths);
+    }
+
+    private ProductSet[] readProductSets(Path[] paths) throws IOException {
+        if (paths == null || paths.length == 0) {
+            return new ProductSet[0];
+        } else {
+            List<ProductSet> productSetList = new ArrayList<ProductSet>();
+            for (Path path : paths) {
+                productSetList.addAll(readProductSetFile(path));
+            }
+            return productSetList.toArray(new ProductSet[productSetList.size()]);
+        }
+    }
+
+    private List<ProductSet> readProductSetFile(Path path) throws IOException {
+        return readProductSetFromCsv(getFileSystem().open(path));
+    }
+
+    static List<ProductSet> readProductSetFromCsv(InputStream is) throws IOException {
+        InputStreamReader reader = new InputStreamReader(is);
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        List<ProductSet> productSets = new ArrayList<ProductSet>();
+
+        String line = bufferedReader.readLine();
+        while (line != null) {
+            productSets.add(ProductSetPersistable.convertFromCSV(line));
+            line = bufferedReader.readLine();
+        }
+        return productSets;
     }
 
     /**
@@ -93,7 +111,7 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public OutputStream addFile(String path) throws IOException {
-        return getFileSystem().create(makeQualified(path)) ;
+        return getFileSystem().create(makeQualified(path));
     }
 
     @Override

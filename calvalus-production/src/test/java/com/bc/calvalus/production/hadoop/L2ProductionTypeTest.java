@@ -17,6 +17,8 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.WorkflowStatusListener;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
@@ -79,12 +81,25 @@ public class L2ProductionTypeTest {
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03", inputFiles);
+
+        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        assertNotNull(productSetSaver);
+        ProductSet productSet = productSetSaver.getProductSet();
+        assertNotNull(productSet);
+        assertEquals("L2", productSet.getProductType());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", productSet.getName());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertNull(productSet.getMinDate());
+        assertNull(productSet.getMaxDate());
+        assertNull(productSet.getRegionName());
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", productSet.getRegionWKT());
     }
 
     @Test
     public void testCreateProductionWithMinMaxDates() throws ProductionException, IOException {
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
                                                                     "inputPath", "MER_RR__1P/r03/${yyyy}/${MM}/${dd}",
+                                                                    "productionName", "My Math Production",
                                                                     "minDate", "2005-01-01",
                                                                     "maxDate", "2005-01-31",
                                                                     "outputFormat", "NetCDF",
@@ -101,7 +116,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("My Math Production", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -147,6 +162,19 @@ public class L2ProductionTypeTest {
                              "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
                              "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
+
+        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        assertNotNull(productSetSaver);
+        ProductSet productSet = productSetSaver.getProductSet();
+        assertNotNull(productSet);
+        assertEquals("L2", productSet.getProductType());
+        assertEquals("My Math Production", productSet.getName());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
+        assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
+        assertNull(productSet.getRegionName());
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", productSet.getRegionWKT());
+
     }
 
     @Test
@@ -160,6 +188,7 @@ public class L2ProductionTypeTest {
                                                                     "processorBundleVersion", "4.9-SNAPSHOT",
                                                                     "processorName", "BandMaths",
                                                                     "processorParameters", "<!-- no params -->",
+                                                                    "regionName", "Island In The Sun",
                                                                     "regionWKT", "POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))"
         );
 
@@ -183,6 +212,29 @@ public class L2ProductionTypeTest {
                              "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
                              "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
+
+        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        assertNotNull(productSetSaver);
+        ProductSet productSet = productSetSaver.getProductSet();
+        assertNotNull(productSet);
+        assertEquals("L2", productSet.getProductType());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", productSet.getName());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
+        assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
+        assertEquals("Island In The Sun", productSet.getRegionName());
+        assertEquals("POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))", productSet.getRegionWKT());
+
+    }
+
+    private L2ProductionType.ProductSetSaver getProductSetSaver(L2WorkflowItem l2WorkflowItem) {
+        WorkflowStatusListener[] workflowStatusListeners = l2WorkflowItem.getWorkflowStatusListeners();
+        for (WorkflowStatusListener workflowStatusListener : workflowStatusListeners) {
+            if (workflowStatusListener instanceof L2ProductionType.ProductSetSaver) {
+                return (L2ProductionType.ProductSetSaver) workflowStatusListener;
+            }
+        }
+        return null;
     }
 
 }

@@ -16,9 +16,6 @@
 
 package com.bc.calvalus.processing.l2;
 
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.WorkflowStatusEvent;
-import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.BeamOperatorMapper;
@@ -27,8 +24,6 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -91,62 +86,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         }
         if (getProcessorBundle() != null) {
             HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
-        }
-        addWorkflowStatusListener(new ProductSetSaver(jobConfig));
-    }
-
-    private class ProductSetSaver implements WorkflowStatusListener {
-
-        private final Configuration jobConfig;
-
-        public ProductSetSaver(Configuration jobConfig) {
-            this.jobConfig = jobConfig;
-        }
-
-        @Override
-        public void handleStatusChanged(WorkflowStatusEvent event) {
-            if (event.getSource() == L2WorkflowItem.this && event.getNewStatus().getState() == ProcessState.COMPLETED) {
-                String productSetDefinition = createDefinition();
-                writeProductSetFile(productSetDefinition);
-            }
-        }
-
-        private String createDefinition() {
-            StringBuilder sb = new StringBuilder();
-//            sb.append(productType);
-//            sb.append(';');
-//            sb.append(productionName);
-//            sb.append(';');
-//            sb.append(path);
-//            sb.append(';');
-//            sb.append(startDate);
-//            sb.append(';');
-//            sb.append(stopDate);
-//            sb.append(';');
-//            sb.append(regionName);
-//            sb.append(';');
-//            sb.append(regionWKT);
-            return sb.toString();
-        }
-
-        private void writeProductSetFile(String text) {
-            Path productSetsFile = new Path(getOutputDir(), "product-sets.csv");
-            FSDataOutputStream fsDataOutputStream = null;
-            try {
-                FileSystem fileSystem = FileSystem.get(jobConfig);
-                fsDataOutputStream = fileSystem.create(productSetsFile);
-                fsDataOutputStream.writeUTF(text);
-            } catch (IOException e) {
-                // TODO, mz 2011-11-07 log error
-                e.printStackTrace();
-            } finally {
-                if (fsDataOutputStream != null) {
-                    try {
-                        fsDataOutputStream.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
         }
     }
 }
