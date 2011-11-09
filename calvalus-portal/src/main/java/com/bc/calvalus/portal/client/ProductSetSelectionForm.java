@@ -12,10 +12,11 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,10 +47,17 @@ public class ProductSetSelectionForm extends Composite {
 
     @UiField
     ListBox productSetListBox;
+
     @UiField
-    CheckBox useAlternateInputPath;
+    Label productSetName;
     @UiField
-    TextBox alternateInputPath;
+    Label productSetType;
+    @UiField
+    Label productSetStartDate;
+    @UiField
+    Label productSetEndDate;
+    @UiField
+    Label productSetRegionName;
 
     public ProductSetSelectionForm(PortalContext portal) {
         this.portal = portal;
@@ -60,7 +68,7 @@ public class ProductSetSelectionForm extends Composite {
         productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                updateAlternateInputPath();
+                updateDetailsView();
             }
         });
 
@@ -81,7 +89,7 @@ public class ProductSetSelectionForm extends Composite {
         });
 
         updateListBox(portal.getProductSets());
-        updateAlternateInputPath();
+        updateDetailsView();
     }
 
     private void updateInputProductSets() {
@@ -131,12 +139,30 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    private void updateAlternateInputPath() {
-        if (!useAlternateInputPath.getValue()) {
-            DtoProductSet productSet = getProductSet();
-            if (productSet != null) {
-                alternateInputPath.setValue(productSet.getPath());
+    private void updateDetailsView() {
+        DtoProductSet productSet = getProductSet();
+        if (productSet != null) {
+            productSetName.setText(productSet.getName());
+            productSetType.setText(productSet.getProductType());
+            Date minDate = productSet.getMinDate();
+            if (minDate != null) {
+                productSetStartDate.setText(ProductSetFilterForm.DATE_FORMAT.format(minDate));
+            } else {
+                productSetStartDate.setText("");
             }
+            Date maxDate = productSet.getMaxDate();
+            if (maxDate != null) {
+                productSetEndDate.setText(ProductSetFilterForm.DATE_FORMAT.format(maxDate));
+            } else {
+                productSetEndDate.setText("");
+            }
+            productSetRegionName.setText(productSet.getRegionName());
+        } else {
+            productSetName.setText("");
+            productSetType.setText("");
+            productSetStartDate.setText("");
+            productSetEndDate.setText("");
+            productSetRegionName.setText("");
         }
     }
 
@@ -159,17 +185,10 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        if (useAlternateInputPath.getValue()) {
-            boolean alternateInputPathValid = !alternateInputPath.getValue().trim().isEmpty();
-            if (!alternateInputPathValid) {
-                throw new ValidationException(alternateInputPath, "Please enter an alternative input path.");
-            }
-        } else {
-            DtoProductSet productSet = getProductSet();
-            boolean productSetValid = productSet != null;
-            if (!productSetValid) {
-                throw new ValidationException(productSetListBox, "An input product set must be selected.");
-            }
+        DtoProductSet productSet = getProductSet();
+        boolean productSetValid = productSet != null;
+        if (!productSetValid) {
+            throw new ValidationException(productSetListBox, "An input product set must be selected.");
         }
     }
 
@@ -180,11 +199,7 @@ public class ProductSetSelectionForm extends Composite {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        if (useAlternateInputPath.getValue()) {
-            parameters.put("inputPath", alternateInputPath.getValue().trim());
-        } else {
-            parameters.put("inputPath", getProductSet().getPath());
-        }
+        parameters.put("inputPath", getProductSet().getPath());
         return parameters;
     }
 

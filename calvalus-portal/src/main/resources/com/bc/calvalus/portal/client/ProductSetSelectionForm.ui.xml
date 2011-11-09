@@ -12,38 +12,67 @@
                 <hr/>
             </g:HTMLPanel>
 
-            <g:HorizontalPanel spacing="0">
 
-                <g:VerticalPanel spacing="2">
-                    <g:CheckBox ui:field="predefinedProductSets" text="Predefined file sets" checked="true"/>
-                    <g:HorizontalPanel spacing="2">
-                        <g:CheckBox ui:field="userProductionProductSets" text="Show Productions" checked="false"/>
-                        <g:CheckBox ui:field="allProductionProductSets" text="All Users" checked="false"/>
-                    </g:HorizontalPanel>
-                    <g:ListBox ui:field="productSetListBox" width="24em" visibleItemCount="8" name="inputProductSet"/>
-                </g:VerticalPanel>
-
-                <g:VerticalPanel spacing="16"/>
-
-                <g:HorizontalPanel spacing="2" >
-                    <g:VerticalPanel spacing="2">
-                        <g:CheckBox ui:field="useAlternateInputPath" text="Use alternate input path"/>
-                        <g:HorizontalPanel spacing="2">
-                            <g:Label>Path pattern:</g:Label>
-                            <g:TextBox ui:field="alternateInputPath" width="32em"/>
-                        </g:HorizontalPanel>
-                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="39em">
-                            The common use is to specify the path of an output of a previous production here.
-                            The path pattern is a <i>regular expression</i> any may contain
-                            and references to the settings in the temporal and spatial filters:
-                            the year, month and day <b>${yyyy}</b>&nbsp;<b>${MM}</b>&nbsp;
-                            <b>${dd}</b>
-                            and the name of the selected region using <b>${region}</b>.
-                        </g:HTML>
-                    </g:VerticalPanel>
+            <g:VerticalPanel spacing="2">
+                <g:CheckBox ui:field="predefinedProductSets" text="Predefined file sets" checked="true"/>
+                <g:HorizontalPanel spacing="2">
+                    <g:CheckBox ui:field="userProductionProductSets" text="Show Productions" checked="false"/>
+                    <g:CheckBox ui:field="allProductionProductSets" text="All Users" checked="false"/>
                 </g:HorizontalPanel>
 
-            </g:HorizontalPanel>
+                <g:HorizontalPanel spacing="0">
+                    <g:ListBox ui:field="productSetListBox" width="24em" visibleItemCount="8" name="inputProductSet"/>
+
+                    <g:VerticalPanel width="1em"/>
+
+                    <g:HTMLPanel width="37em">
+                        <table>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryText}">Name:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label ui:field="productSetName"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryText}">Type:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label ui:field="productSetType"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryText}">Start Date:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label ui:field="productSetStartDate"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryText}">End Date:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label ui:field="productSetEndDate"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryText}">Region name:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label ui:field="productSetRegionName"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </g:HTMLPanel>
+                </g:HorizontalPanel>
+
+            </g:VerticalPanel>
+
         </g:VerticalPanel>
     </g:HorizontalPanel>
 
