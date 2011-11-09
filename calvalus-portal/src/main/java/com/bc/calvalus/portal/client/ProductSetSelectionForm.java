@@ -27,16 +27,15 @@ import java.util.Map;
  */
 public class ProductSetSelectionForm extends Composite {
 
+    interface TheUiBinder extends UiBinder<Widget, ProductSetSelectionForm> {
+    }
+    private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
+
+
     private static final DtoProductSet[] EMPTY_PRODUCT_SETS = new DtoProductSet[0];
     private final PortalContext portal;
     private DtoProductSet[] currentProductSets;
     private ProductSetSelectionForm.UpdateProductSetsCallback callback;
-
-
-    interface TheUiBinder extends UiBinder<Widget, ProductSetSelectionForm> {
-    }
-
-    private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
     CheckBox predefinedProductSets;
@@ -75,7 +74,7 @@ public class ProductSetSelectionForm extends Composite {
         ValueChangeHandler<Boolean> valueChangeHandler = new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                updateInputProductSets();
+                updateProductSetsListBox();
             }
         };
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
@@ -92,7 +91,7 @@ public class ProductSetSelectionForm extends Composite {
         updateDetailsView();
     }
 
-    private void updateInputProductSets() {
+    private void updateProductSetsListBox() {
         String filter = getFilter();
         if (filter.isEmpty()) {
             if (predefinedProductSets.getValue()) {
@@ -194,7 +193,6 @@ public class ProductSetSelectionForm extends Composite {
 
     public static interface ChangeHandler {
         void onProductSetChanged(DtoProductSet productSet);
-
     }
 
     public Map<String, String> getValueMap() {
@@ -224,7 +222,5 @@ public class ProductSetSelectionForm extends Composite {
             Dialog.error("Server-side Error", caught.getMessage());
             updateListBox(EMPTY_PRODUCT_SETS);
         }
-
     }
-
 }
