@@ -117,16 +117,16 @@ public class ProductSetSelectionForm extends Composite {
         currentProductSets = newProductSets;
         productSetListBox.clear();
         int newSelectionIndex = 0;
-        boolean itemChanged = true;
+        boolean productSetChanged = true;
         for (DtoProductSet productSet : currentProductSets) {
             productSetListBox.addItem(productSet.getName());
-            if (oldSelection != null && oldSelection.getName().equals(productSet.getName())) {
+            if (oldSelection != null && oldSelection.equals(productSet)) {
                 newSelectionIndex = productSetListBox.getItemCount() - 1;
-                itemChanged = false;
+                productSetChanged = false;
             }
         }
         productSetListBox.setSelectedIndex(newSelectionIndex);
-        if (itemChanged) {
+        if (productSetChanged) {
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
         }
     }
