@@ -7,7 +7,7 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel width="100%">
+            <g:HTMLPanel  width="62em">
                 <h3>Output Parameters</h3>
                 <hr/>
             </g:HTMLPanel>
@@ -16,7 +16,7 @@
                 <g:Label>Directory:</g:Label>
                 <g:TextBox ui:field="outputDir" visibleLength="48"/>
             </g:HorizontalPanel>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="63em">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="60em">
                 Provide a directory name only if you want to use the output as input to another production later.
                 Note that the directory will be cleaned,
                 before production outputs are written. If left empty, a temporary output directory will
@@ -24,34 +24,36 @@
                 <p/>
             </g:HTML>
 
-            <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
-                <g:Label>Product file format:</g:Label>
-                <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
-            </g:HorizontalPanel>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
-                Note that the available product file formats
-                may depend on the selected processor.
-                <p/>
-            </g:HTML>
+            <g:FlowPanel ui:field="productPanel">
+                <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                    <g:Label>Product file format:</g:Label>
+                    <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
+                </g:HorizontalPanel>
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                    Note that the available product file formats
+                    may depend on the selected processor.
+                    <p/>
+                </g:HTML>
 
-            <g:CheckBox ui:field="autoStaging"
-                        text="Perform staging step after successful production"
-                        checked="true"/>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
-                Leave unchecked, if output is used as input
-                for another production step.
-                <p/>
-            </g:HTML>
+                <g:CheckBox ui:field="autoStaging"
+                            text="Perform staging step after successful production"
+                            checked="true"/>
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                    Leave unchecked, if output is used as input
+                    for another production step.
+                    <p/>
+                </g:HTML>
 
-            <g:CheckBox ui:field="autoDelete"
-                        text="Delete production output after successful staging"
-                        checked="false"
-                        visible="false"/>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" visible="false">
-                Leave unchecked, if output is used as input
-                for another production step.
-                <p/>
-            </g:HTML>
+                <g:CheckBox ui:field="autoDelete"
+                            text="Delete production output after successful staging"
+                            checked="false"
+                            visible="false"/>
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" visible="false">
+                    Leave unchecked, if output is used as input
+                    for another production step.
+                    <p/>
+                </g:HTML>
+            </g:FlowPanel>
         </g:VerticalPanel>
     </g:HorizontalPanel>
 

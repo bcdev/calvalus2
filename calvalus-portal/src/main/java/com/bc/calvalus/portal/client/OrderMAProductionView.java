@@ -22,6 +22,7 @@ public class OrderMAProductionView extends OrderProductionView {
     private ProductSetFilterForm productSetFilterForm;
     private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
+    private OutputParametersForm outputParametersForm;
 
     private Widget widget;
 
@@ -61,12 +62,15 @@ public class OrderMAProductionView extends OrderProductionView {
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
 
+        outputParametersForm = new OutputParametersForm(false);
+
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
+        panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
         panel.add(createOrderPanel());
 

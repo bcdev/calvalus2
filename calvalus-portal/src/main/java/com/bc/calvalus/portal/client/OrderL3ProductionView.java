@@ -64,7 +64,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(30);
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(true);
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 

@@ -6,6 +6,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -32,11 +33,17 @@ public class OutputParametersForm extends Composite {
     CheckBox autoStaging;
     @UiField
     CheckBox autoDelete;
+    @UiField
+    Panel productPanel;
 
-    public OutputParametersForm() {
+    public OutputParametersForm(boolean showProductSettings) {
         initWidget(uiBinder.createAndBindUi(this));
-        // todo - get the available output formats from
-        setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
+        if (showProductSettings) {
+            // todo - get the available output formats from
+            setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
+        } else {
+            productPanel.setVisible(false);
+        }
     }
 
     public void setAvailableOutputFormats(String... formatNames) {
