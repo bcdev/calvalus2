@@ -30,7 +30,7 @@ public class OrderTAProductionView extends OrderProductionView {
     public OrderTAProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        productSetSelectionForm = new ProductSetSelectionForm(getPortal().getProductSets());
+        productSetSelectionForm = new ProductSetSelectionForm(getPortal());
         productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {

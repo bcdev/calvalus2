@@ -2,9 +2,14 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
@@ -21,7 +26,11 @@ import java.util.Map;
  */
 public class ProductSetSelectionForm extends Composite {
 
-    private final DtoProductSet[] productSets;
+    private static final DtoProductSet[] EMPTY_PRODUCT_SETS = new DtoProductSet[0];
+    private final PortalContext portal;
+    private DtoProductSet[] currentProductSets;
+    private ProductSetSelectionForm.UpdateProductSetsCallback callback;
+
 
     interface TheUiBinder extends UiBinder<Widget, ProductSetSelectionForm> {
     }
@@ -29,32 +38,97 @@ public class ProductSetSelectionForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
-    ListBox inputProductSet;
+    CheckBox predefinedProductSets;
+    @UiField
+    CheckBox userProductionProductSets;
+    @UiField
+    CheckBox allProductionProductSets;
+
+    @UiField
+    ListBox productSetListBox;
     @UiField
     CheckBox useAlternateInputPath;
     @UiField
     TextBox alternateInputPath;
 
-    public ProductSetSelectionForm(DtoProductSet[] productSets) {
-        this.productSets = productSets;
+    public ProductSetSelectionForm(PortalContext portal) {
+        this.portal = portal;
         initWidget(uiBinder.createAndBindUi(this));
 
-        inputProductSet.setName("inputProductSet");
-        for (DtoProductSet productSet : productSets) {
-            inputProductSet.addItem(productSet.getName());
-        }
-        if (inputProductSet.getItemCount() > 0) {
-            inputProductSet.setSelectedIndex(0);
-        }
+        callback = new UpdateProductSetsCallback();
 
-        inputProductSet.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
+        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
                 updateAlternateInputPath();
             }
         });
 
+        ValueChangeHandler<Boolean> valueChangeHandler = new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                updateInputProductSets();
+            }
+        };
+        predefinedProductSets.addValueChangeHandler(valueChangeHandler);
+        userProductionProductSets.addValueChangeHandler(valueChangeHandler);
+        allProductionProductSets.addValueChangeHandler(valueChangeHandler);
+        userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
+            }
+        });
+
+        updateListBox(portal.getProductSets());
         updateAlternateInputPath();
+    }
+
+    private void updateInputProductSets() {
+        String filter = getFilter();
+        if (filter.isEmpty()) {
+            if (predefinedProductSets.getValue()) {
+                updateListBox(portal.getProductSets());
+            } else {
+                updateListBox(EMPTY_PRODUCT_SETS);
+            }
+        } else {
+            portal.getBackendService().getProductSets(filter, callback);
+        }
+    }
+
+    private String getFilter() {
+        if (userProductionProductSets.getValue() && allProductionProductSets.getValue()) {
+            return "user=all";
+        } else if (userProductionProductSets.getValue()) {
+            return "user=dummy";
+        }
+        return "";
+    }
+
+    private void updateListBox(DtoProductSet[] newProductSets) {
+        DtoProductSet oldSelection = null;
+        if (currentProductSets != null) {
+            int selectedIndex = productSetListBox.getSelectedIndex();
+            if (selectedIndex != -1) {
+                oldSelection = currentProductSets[selectedIndex];
+            }
+        }
+        currentProductSets = newProductSets;
+        productSetListBox.clear();
+        int newSelectionIndex = 0;
+        boolean itemChanged = true;
+        for (DtoProductSet productSet : currentProductSets) {
+            productSetListBox.addItem(productSet.getName());
+            if (oldSelection != null && oldSelection.getName().equals(productSet.getName())) {
+                newSelectionIndex = productSetListBox.getItemCount() - 1;
+                itemChanged = false;
+            }
+        }
+        productSetListBox.setSelectedIndex(newSelectionIndex);
+        if (itemChanged) {
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
+        }
     }
 
     private void updateAlternateInputPath() {
@@ -67,7 +141,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
-        inputProductSet.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
+        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
                 changeHandler.onProductSetChanged(getProductSet());
@@ -76,9 +150,9 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public DtoProductSet getProductSet() {
-        int selectedIndex = inputProductSet.getSelectedIndex();
+        int selectedIndex = productSetListBox.getSelectedIndex();
         if (selectedIndex >= 0) {
-            return productSets[selectedIndex];
+            return currentProductSets[selectedIndex];
         } else {
             return null;
         }
@@ -94,13 +168,14 @@ public class ProductSetSelectionForm extends Composite {
             DtoProductSet productSet = getProductSet();
             boolean productSetValid = productSet != null;
             if (!productSetValid) {
-                throw new ValidationException(inputProductSet, "An input product set must be selected.");
+                throw new ValidationException(productSetListBox, "An input product set must be selected.");
             }
         }
     }
 
     public static interface ChangeHandler {
         void onProductSetChanged(DtoProductSet productSet);
+
     }
 
     public Map<String, String> getValueMap() {
@@ -111,6 +186,30 @@ public class ProductSetSelectionForm extends Composite {
             parameters.put("inputPath", getProductSet().getPath());
         }
         return parameters;
+    }
+
+    private class UpdateProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
+
+        @Override
+        public void onSuccess(DtoProductSet[] userProductSets) {
+            if (predefinedProductSets.getValue()) {
+                DtoProductSet[] predefined = portal.getProductSets();
+                DtoProductSet[] combinedProductSets = new DtoProductSet[predefined.length + userProductSets.length];
+                System.arraycopy(userProductSets, 0, combinedProductSets, 0, userProductSets.length);
+                System.arraycopy(predefined, 0, combinedProductSets, userProductSets.length, predefined.length);
+                updateListBox(combinedProductSets);
+            } else {
+                updateListBox(userProductSets);
+            }
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Dialog.error("Server-side Error", caught.getMessage());
+            updateListBox(EMPTY_PRODUCT_SETS);
+        }
+
     }
 
 }

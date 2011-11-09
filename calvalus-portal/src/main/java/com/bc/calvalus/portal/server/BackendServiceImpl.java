@@ -115,6 +115,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoProductSet[] getProductSets(String filter) throws BackendServiceException {
+        if (filter.contains("dummy")) {
+            filter = filter.replace("dummy", getUserName());
+        }
         try {
             ProductSet[] productSets = productionService.getProductSets(filter);
             DtoProductSet[] dtoProductSets = new DtoProductSet[productSets.length];

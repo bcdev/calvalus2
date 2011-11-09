@@ -15,8 +15,12 @@
             <g:HorizontalPanel spacing="0">
 
                 <g:VerticalPanel spacing="2">
-                    <g:Label>Predefined file sets:</g:Label>
-                    <g:ListBox ui:field="inputProductSet" width="24em" visibleItemCount="8"/>
+                    <g:CheckBox ui:field="predefinedProductSets" text="Predefined file sets" checked="true"/>
+                    <g:HorizontalPanel spacing="2">
+                        <g:CheckBox ui:field="userProductionProductSets" text="Show Productions" checked="false"/>
+                        <g:CheckBox ui:field="allProductionProductSets" text="All Users" checked="false"/>
+                    </g:HorizontalPanel>
+                    <g:ListBox ui:field="productSetListBox" width="24em" visibleItemCount="8" name="inputProductSet"/>
                 </g:VerticalPanel>
 
                 <g:VerticalPanel spacing="16"/>
