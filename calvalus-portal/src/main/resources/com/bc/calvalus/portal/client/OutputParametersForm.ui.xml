@@ -13,7 +13,7 @@
             </g:HTMLPanel>
 
             <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                <g:Label>Production Name:</g:Label>
+                <g:Label>Production name:</g:Label>
                 <g:TextBox ui:field="productionName" visibleLength="48"/>
             </g:HorizontalPanel>
             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="60em">
