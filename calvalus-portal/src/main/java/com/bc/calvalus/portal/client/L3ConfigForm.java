@@ -43,6 +43,13 @@ public class L3ConfigForm extends Composite {
     private LatLngBounds regionBounds;
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
+    private static final DtoProcessorVariable[] MER_L1B;
+    static {
+        MER_L1B = new DtoProcessorVariable[15];
+        for (int i = 0; i < MER_L1B.length; i++) {
+            MER_L1B[i] = new DtoProcessorVariable("radiance_" + (i+1), "AVG", "1.0");
+        }
+    }
 
     interface TheUiBinder extends UiBinder<Widget, L3ConfigForm> {
     }
@@ -227,17 +234,25 @@ public class L3ConfigForm extends Composite {
     }
 
     public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
-        if (selectedProcessor == null) {
-            return;
-        }
         processorVariableDefaults.clear();
         variableNames.clear();
-        DtoProcessorVariable[] processorVariables = selectedProcessor.getProcessorVariables();
+        variableNameCell.removeAllOptions();
+
+        String defaultValidMask = null;
+        DtoProcessorVariable[] processorVariables;
+        if (selectedProcessor != null) {
+            processorVariables = selectedProcessor.getProcessorVariables();
+            defaultValidMask = selectedProcessor.getDefaultMaskExpr();
+        } else {
+            processorVariables = MER_L1B;
+        }
+
         for (DtoProcessorVariable processorVariable : processorVariables) {
             String processorVariableName = processorVariable.getName();
             processorVariableDefaults.put(processorVariableName, processorVariable);
             variableNames.add(processorVariableName);
         }
+
         List<Variable> variableList = variableProvider.getList();
         Iterator<Variable> iterator = variableList.iterator();
         while (iterator.hasNext()) {
@@ -247,20 +262,19 @@ public class L3ConfigForm extends Composite {
                 iterator.remove();
             }
         }
-        variableNameCell.removeAllOptions();
+
         variableNameCell.addOptions(variableNames);
         if (variableList.size() == 0) {
             variableList.add(createDefaultVariable());
         }
-        variableProvider.refresh();
 
-        String defaultValidMask = selectedProcessor.getDefaultMaskExpr();
         if (defaultValidMask != null) {
             maskExpr.setValue(defaultValidMask);
         } else {
             maskExpr.setValue("");
         }
 
+        variableProvider.refresh();
     }
 
     public void validateForm() throws ValidationException {
