@@ -14,9 +14,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo view that lets users submit a new L2 production.
+ * This form show setting related to production in general and output.
  *
  * @author Norman
+ * @author MarcoZ
  */
 public class OutputParametersForm extends Composite {
 
@@ -25,28 +26,49 @@ public class OutputParametersForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
+
+    private final boolean showProductRelatedSettings;
+
     @UiField
     ListBox outputFormat;
     @UiField
-    TextBox outputDir;
+    TextBox productionName;
     @UiField
     CheckBox autoStaging;
     @UiField
     CheckBox autoDelete;
     @UiField
-    Panel productPanel;
+    Panel productRelatedPanel;
 
-    public OutputParametersForm(boolean showProductSettings) {
+    public OutputParametersForm(boolean showProductRelatedSettings) {
+        this.showProductRelatedSettings = showProductRelatedSettings;
         initWidget(uiBinder.createAndBindUi(this));
-        if (showProductSettings) {
+        if (showProductRelatedSettings) {
             // todo - get the available output formats from
             setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
         } else {
-            productPanel.setVisible(false);
+            productRelatedPanel.setVisible(false);
         }
     }
 
-    public void setAvailableOutputFormats(String... formatNames) {
+    public void validateForm() throws ValidationException {
+    }
+
+    public Map<String, String> getValueMap() {
+        Map<String, String> parameters = new HashMap<String, String>();
+        String prodName = getProductionName();
+        if (!prodName.isEmpty()) {
+            parameters.put("productionName", prodName);
+        }
+        if (showProductRelatedSettings) {
+            parameters.put("outputFormat", getOutputFormat());
+            parameters.put("autoStaging", autoStaging.getValue() + "");
+            parameters.put("autoDelete", autoDelete.getValue() + "");
+        }
+        return parameters;
+    }
+
+    private void setAvailableOutputFormats(String... formatNames) {
         int selectedIndex = outputFormat.getSelectedIndex();
         outputFormat.clear();
         for (String formatName : formatNames) {
@@ -59,32 +81,12 @@ public class OutputParametersForm extends Composite {
         }
     }
 
-    public String getOutputFormat() {
+    private String getOutputFormat() {
         int index = outputFormat.getSelectedIndex();
         return outputFormat.getValue(index);
     }
 
-    public void validateForm() throws ValidationException {
-        String value = outputDir.getText().trim();
-        boolean outputDirValid = !value.startsWith("/");
-        if (!outputDirValid) {
-             throw new ValidationException(outputDir, "The output directory must not be an absolute path.");
-        }
+    private String getProductionName() {
+        return productionName.getValue().trim();
     }
-
-    public Map<String, String> getValueMap() {
-        Map<String, String> parameters = new HashMap<String, String>();
-        if (!getOutputDir().isEmpty()) {
-            parameters.put("outputDir", getOutputDir());
-        }
-        parameters.put("outputFormat", getOutputFormat());
-        parameters.put("autoStaging", autoStaging.getValue() + "");
-        parameters.put("autoDelete", autoDelete.getValue() + "");
-        return parameters;
-    }
-
-    private String getOutputDir() {
-        return outputDir.getValue().trim();
-    }
-
 }

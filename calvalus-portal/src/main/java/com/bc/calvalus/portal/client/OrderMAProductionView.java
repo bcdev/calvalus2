@@ -125,6 +125,7 @@ public class OrderMAProductionView extends OrderProductionView {
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
     }

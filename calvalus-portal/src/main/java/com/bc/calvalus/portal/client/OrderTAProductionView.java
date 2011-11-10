@@ -134,7 +134,7 @@ public class OrderTAProductionView extends OrderProductionView {
             productSetFilterForm.validateForm();
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
-            //outputParametersForm.validateForm();
+            outputParametersForm.validateForm();
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -151,6 +151,7 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
+        parameters.put("autoStaging", "true");
         return parameters;
     }
 }

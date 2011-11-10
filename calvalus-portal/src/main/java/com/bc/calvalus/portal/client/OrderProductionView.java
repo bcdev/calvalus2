@@ -18,12 +18,8 @@ import java.util.Map;
  */
 public abstract class OrderProductionView extends PortalView {
 
-    private TextBox productionName;
-
     protected OrderProductionView(PortalContext portalContext) {
         super(portalContext);
-        productionName = new TextBox();
-        productionName.setVisibleLength(32);
     }
 
     /**
@@ -32,12 +28,7 @@ public abstract class OrderProductionView extends PortalView {
      * @return The production request.
      */
     protected DtoProductionRequest getProductionRequest() {
-        Map<String, String> productionParameters = getProductionParameters();
-        String prodName = productionName.getValue().trim();
-        if (!prodName.isEmpty()) {
-            productionParameters.put("productionName", prodName);
-        }
-        return new DtoProductionRequest(getProductionType(), productionParameters);
+        return new DtoProductionRequest(getProductionType(), getProductionParameters());
     }
 
     /**
@@ -125,11 +116,6 @@ public abstract class OrderProductionView extends PortalView {
     }
 
     protected HorizontalPanel createOrderPanel() {
-        HorizontalPanel productionNamePanel = new HorizontalPanel();
-        productionNamePanel.setSpacing(4);
-        productionNamePanel.add(new Label("Production name:"));
-        productionNamePanel.add(productionName);
-
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
@@ -152,10 +138,8 @@ public abstract class OrderProductionView extends PortalView {
         HorizontalPanel orderPanel = new HorizontalPanel();
         orderPanel.setSpacing(4);
         orderPanel.setWidth("100%");
-        orderPanel.add(productionNamePanel);
         orderPanel.add(buttonPanel);
-        orderPanel.setCellHorizontalAlignment(productionNamePanel, HasHorizontalAlignment.ALIGN_RIGHT);
-        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_LEFT);
+        orderPanel.setCellHorizontalAlignment(buttonPanel, HasHorizontalAlignment.ALIGN_CENTER);
         return orderPanel;
     }
 }

@@ -13,18 +13,16 @@
             </g:HTMLPanel>
 
             <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                <g:Label>Directory:</g:Label>
-                <g:TextBox ui:field="outputDir" visibleLength="48"/>
+                <g:Label>Production Name:</g:Label>
+                <g:TextBox ui:field="productionName" visibleLength="48"/>
             </g:HorizontalPanel>
             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="60em">
-                Provide a directory name only if you want to use the output as input to another production later.
-                Note that the directory will be cleaned,
-                before production outputs are written. If left empty, a temporary output directory will
-                be used.
+                Provide a name for the production to identify it later on. If left empty,
+                a name will be generated from the given parameters.
                 <p/>
             </g:HTML>
 
-            <g:FlowPanel ui:field="productPanel">
+            <g:FlowPanel ui:field="productRelatedPanel">
                 <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
                     <g:Label>Product file format:</g:Label>
                     <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
