@@ -34,13 +34,12 @@ import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
-import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.*;
 
 /**
- * Demo view that lets users submit a new L2 production.
+ * A form that lets users filter a selected product set by time and region.
  *
  * @author Norman
  */
