@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo view that lets users submit a new L2 production.
+ * A form that lets users select a product set.
  *
  * @author Norman
  */
