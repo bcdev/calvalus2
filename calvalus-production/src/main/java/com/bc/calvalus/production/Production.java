@@ -22,7 +22,7 @@ public class Production {
     private final ProductionRequest productionRequest;
     private final String outputPath;
     private final String stagingPath;
-    private ProcessStatus stagingStatus;
+    private volatile ProcessStatus stagingStatus; // must be volatile, because staging is performed in separate threads
 
     public Production(String id,
                       String name,
