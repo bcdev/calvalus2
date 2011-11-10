@@ -26,6 +26,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.LatLngBounds;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -33,6 +34,7 @@ import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
+import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.*;
@@ -158,8 +160,27 @@ public class ProductSetFilterForm extends Composite {
 
     public void setProductSet(DtoProductSet productSet) {
         this.productSet = productSet;
+        if (this.productSet != null) {
+            if (productSet.getRegionName() == null ||
+                    productSet.getRegionName().equalsIgnoreCase("global") ||
+                    productSet.getRegionWKT() == null) {
+                // global
+                regionMap.getMapWidget().setZoomLevel(0);
+                regionMap.getMapWidget().panTo(LatLng.newInstance(0.0, 0.0));
+            } else {
+                String regionName = productSet.getRegionName();
+                if (regionName != null) {
+                    List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
+                    for (Region region : regionList) {
+                        if (region.getName().equalsIgnoreCase(regionName)) {
+                            regionMap.getRegionMapSelectionModel().setSelected(region, true);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
     }
-
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
         ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
