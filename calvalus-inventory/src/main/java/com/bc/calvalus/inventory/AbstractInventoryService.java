@@ -50,7 +50,10 @@ public abstract class AbstractInventoryService implements InventoryService {
     }
 
     private ProductSet[] loadPredefined() throws IOException {
-        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
+        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME +".new"));
+        if (!getFileSystem().exists(databasePath)) {
+            databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
+        }
         return readProductSets(new Path[]{databasePath});
     }
 
