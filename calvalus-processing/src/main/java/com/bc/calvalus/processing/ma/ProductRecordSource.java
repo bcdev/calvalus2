@@ -110,11 +110,13 @@ public class ProductRecordSource implements RecordSource {
     }
 
     private static boolean shallApplyGoodRecordExpression(MAConfig config) {
-        return config.getGoodRecordExpression() != null && !config.getGoodRecordExpression().isEmpty();
+        String goodRecordExpression = config.getGoodRecordExpression();
+        return goodRecordExpression != null && !goodRecordExpression.isEmpty();
     }
 
     private static boolean shallApplyTimeCriterion(MAConfig config) {
-        return config.getMaxTimeDifference() != null;
+        Double maxTimeDifference = config.getMaxTimeDifference();
+        return maxTimeDifference != null && maxTimeDifference > 0;
     }
 
     private static boolean canApplyTimeCriterion(RecordSource input) {
