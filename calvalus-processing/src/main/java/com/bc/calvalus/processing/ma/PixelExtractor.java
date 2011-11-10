@@ -35,7 +35,7 @@ public class PixelExtractor {
                           Double maxTimeDifference,
                           boolean copyInput) {
         this.product = product;
-        if (goodPixelMaskExpression != null && !goodPixelMaskExpression.isEmpty()) {
+        if (goodPixelMaskExpression != null && !goodPixelMaskExpression.trim().isEmpty()) {
             this.pixelMask = createGoodPixelMask(product, goodPixelMaskExpression);
         } else {
             this.pixelMask = null;
