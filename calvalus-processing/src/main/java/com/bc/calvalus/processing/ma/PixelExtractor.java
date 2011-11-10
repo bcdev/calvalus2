@@ -293,7 +293,7 @@ public class PixelExtractor {
     }
 
     private boolean testTime() {
-        return maxTimeDifference != 0 && pixelTimeProvider != null;
+        return maxTimeDifference > 0 && pixelTimeProvider != null;
     }
 
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
