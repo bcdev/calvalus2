@@ -161,11 +161,6 @@ public class MAConfigForm extends Composite {
             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables time criterion)");
         }
 
-        boolean outputGroupNameValid = !outputGroupName.getText().trim().isEmpty();
-        if (!outputGroupNameValid) {
-            throw new ValidationException(maxTimeDifference, "Output group name must be given.");
-        }
-
         boolean recordSourceValid = recordSources.getSelectedIndex() >= 0;
         if (!recordSourceValid) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
