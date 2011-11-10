@@ -63,7 +63,7 @@
                         </tr>
                         <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" >
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" >
                                 The grouping column must be a name in the header of the selected in-situ / point data file.
                                 All records that have same values in this column will be grouped together for further analysis.
                                 Note that the column name identification is letter case sensitive.
@@ -87,7 +87,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="63em">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="63em">
                                 The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
                                 that is evaluated
                                 for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
@@ -112,7 +112,7 @@
 
                     <tr>
                         <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="63em">
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="63em">
                                 The good-record expression also is a BEAM band maths expression
                                 that is evaluated
                                 for each aggregated macro pixel (= record). For each geo-physical output variable

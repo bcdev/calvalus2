@@ -29,42 +29,42 @@
                         <table>
                             <tr>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText}">Name:</g:Label>
+                                    <g:Label addStyleNames="{style.explanatoryLabel}">Name:</g:Label>
                                 </td>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText2}" ui:field="productSetName"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <g:Label addStyleNames="{style.explanatoryText}">Type:</g:Label>
-                                </td>
-                                <td>
-                                    <g:Label addStyleNames="{style.explanatoryText2}" ui:field="productSetType"/>
+                                    <g:Label addStyleNames="{style.explanatoryValue}" ui:field="productSetName"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText}">Start Date:</g:Label>
+                                    <g:Label addStyleNames="{style.explanatoryLabel}">Type:</g:Label>
                                 </td>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText2}" ui:field="productSetStartDate"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <g:Label addStyleNames="{style.explanatoryText}">End Date:</g:Label>
-                                </td>
-                                <td>
-                                    <g:Label addStyleNames="{style.explanatoryText2}" ui:field="productSetEndDate"/>
+                                    <g:Label addStyleNames="{style.explanatoryValue}" ui:field="productSetType"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText}">Region name:</g:Label>
+                                    <g:Label addStyleNames="{style.explanatoryLabel}">Start Date:</g:Label>
                                 </td>
                                 <td>
-                                    <g:Label addStyleNames="{style.explanatoryText2}" ui:field="productSetRegionName"/>
+                                    <g:Label addStyleNames="{style.explanatoryValue}" ui:field="productSetStartDate"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryLabel}">End Date:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryValue}" ui:field="productSetEndDate"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryLabel}">Region name:</g:Label>
+                                </td>
+                                <td>
+                                    <g:Label addStyleNames="{style.explanatoryValue}" ui:field="productSetRegionName"/>
                                 </td>
                             </tr>
                         </table>

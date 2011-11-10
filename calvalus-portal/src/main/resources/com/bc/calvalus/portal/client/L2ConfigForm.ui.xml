@@ -17,7 +17,7 @@
                 </g:HTMLPanel>
 
                 <g:ListBox ui:field="processorList" width="20em" visibleItemCount="8"/>
-                <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryText}"/>
+                <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryLabel}"/>
 
             </g:VerticalPanel>
 

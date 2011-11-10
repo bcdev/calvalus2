@@ -16,7 +16,7 @@
                 <g:Label>Production name:</g:Label>
                 <g:TextBox ui:field="productionName" visibleLength="48"/>
             </g:HorizontalPanel>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" width="60em">
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
                 Provide a name for the production to identify it later on. If left empty,
                 a name will be generated from the given parameters.
                 <p/>
@@ -27,7 +27,7 @@
                     <g:Label>Product file format:</g:Label>
                     <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
                 </g:HorizontalPanel>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
                     Note that the available product file formats
                     may depend on the selected processor.
                     <p/>
@@ -36,7 +36,7 @@
                 <g:CheckBox ui:field="autoStaging"
                             text="Perform staging step after successful production"
                             checked="true"/>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}">
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
                     Leave unchecked, if output is used as input
                     for another production step.
                     <p/>
@@ -46,7 +46,7 @@
                             text="Delete production output after successful staging"
                             checked="false"
                             visible="false"/>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryText}" visible="false">
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
                     Leave unchecked, if output is used as input
                     for another production step.
                     <p/>
