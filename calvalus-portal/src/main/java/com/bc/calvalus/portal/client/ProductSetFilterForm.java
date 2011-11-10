@@ -61,11 +61,6 @@ public class ProductSetFilterForm extends Composite {
     RadioButton temporalFilterByDateRange;
 
     @UiField
-    DateBox minDateProductSet;
-    @UiField
-    DateBox maxDateProductSet;
-
-    @UiField
     DateBox minDate;
     @UiField
     DateBox maxDate;
@@ -99,9 +94,6 @@ public class ProductSetFilterForm extends Composite {
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
         maxDate.setValue(DATE_FORMAT.parse("2008-07-31"));
-
-        minDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        maxDateProductSet.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
 
         dateList.setEnabled(false);
         dateList.setValue("2008-06-01\n" +
@@ -166,13 +158,6 @@ public class ProductSetFilterForm extends Composite {
 
     public void setProductSet(DtoProductSet productSet) {
         this.productSet = productSet;
-        if (productSet != null) {
-            minDateProductSet.setValue(productSet.getMinDate());
-            maxDateProductSet.setValue(productSet.getMaxDate());
-        } else {
-            minDateProductSet.setValue(null);
-            maxDateProductSet.setValue(null);
-        }
     }
 
 
@@ -250,7 +235,7 @@ public class ProductSetFilterForm extends Composite {
                 if (productSet.getMaxDate() != null) {
                     boolean endDateValid = endDate.getTime() <= productSet.getMaxDate().getTime();
                     if (!endDateValid) {
-                        throw new ValidationException(minDate, "End date must be equal to or before the product set's end date.");
+                        throw new ValidationException(maxDate, "End date must be equal to or before the product set's end date.");
                     }
                 }
             }

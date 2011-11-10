@@ -24,20 +24,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>&nbsp;&nbsp;&nbsp;</td>
-                        <td>Start date:</td>
-                        <td align="right">
-                            <date:DateBox ui:field='minDateProductSet' width="6em" enabled="false"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;&nbsp;&nbsp;</td>
-                        <td>End date:</td>
-                        <td align="right">
-                            <date:DateBox ui:field='maxDateProductSet' width="6em" enabled="false"/>
-                        </td>
-                    </tr>
-                    <tr>
                         <td colspan="3">
                             <g:RadioButton ui:field='temporalFilterByDateRange' name="temporalFilter"
                                            text="By date range"/>
