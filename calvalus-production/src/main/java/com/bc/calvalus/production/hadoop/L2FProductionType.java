@@ -63,7 +63,7 @@ public class L2FProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-   // TODO, at the moment no staging implemented
+    // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
         throw new NotImplementedException("Staging currently not implemented for product validation.");
@@ -76,14 +76,31 @@ public class L2FProductionType extends HadoopProductionType {
     }
 
     HadoopWorkflowItem createWorkflowItem(String productionId,
-                                      ProductionRequest productionRequest) throws ProductionException {
+                                          ProductionRequest productionRequest) throws ProductionException {
+
+        Configuration l2JobConfig = createJobConfig(productionRequest);
 
         String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String outputFormat = productionRequest.getString("outputFormat", "NetCDF");
 
-        Configuration l2JobConfig = createJobConfig(productionRequest);
+        String processorName = productionRequest.getString("processorName", null);
+        if (processorName != null) {
+            String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+            l2JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+            l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+        }
+
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+
+        String processorBundleName = productionRequest.getString("processorBundleName", null);
+        String processorBundleVersion = productionRequest.getString("processorBundleVersion", null);
+        if (processorBundleName != null && processorBundleVersion != null) {
+            String processorBundle = String.format("%s-%s",
+                                                   processorBundleName,
+                                                   processorBundleVersion);
+            l2JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+        }
 
         l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);

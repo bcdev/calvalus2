@@ -74,7 +74,16 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         }
 
         String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-        Product product = productFactory.readProduct(inputPath, inputFormat);
+        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        Product product = productFactory.getProduct(inputPath,
+                                                    inputFormat,
+                                                    null,
+                                                    true,
+                                                    level2OperatorName,
+                                                    level2Parameters);
+
+
         product.setName(productName);
 
         try {

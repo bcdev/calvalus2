@@ -43,11 +43,17 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
 
+    public String getProcessorBundle() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
+    }
 
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
+                {JobConfigNames.CALVALUS_L2_OPERATOR, null},
+                {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
                 {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
@@ -73,6 +79,10 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         } else {
             JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        }
+
+        if (getProcessorBundle() != null) {
+            HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
         }
     }
 }
