@@ -239,23 +239,25 @@ public class ProductSetFilterForm extends Composite {
     public void validateForm() throws ValidationException {
 
         if (temporalFilterByDateRange.getValue()) {
-            Date startDate = minDate.getValue();
-            Date endDate = maxDate.getValue();
-            boolean datesValid = startDate.getTime() <= endDate.getTime();
+            String startDate = minDate.getTextBox().getText();
+            String endDate = maxDate.getTextBox().getText();
+            boolean datesValid = (startDate.compareTo(endDate) <= 0);
             if (!datesValid) {
                 throw new ValidationException(minDate, "Start date must be equal to or before end date.");
             }
             if (productSet != null) {
                 if (productSet.getMinDate() != null) {
-                    boolean startDateValid = startDate.getTime() >= productSet.getMinDate().getTime();
+                    String minDate = DATE_FORMAT.format(productSet.getMinDate());
+                    boolean startDateValid = (minDate.compareTo(startDate) <= 0) ;
                     if (!startDateValid) {
-                        throw new ValidationException(minDate, "Start date must be equal to or after the product set's start date.");
+                        throw new ValidationException(this.minDate, "Start date must be equal to or after the product set's start date.");
                     }
                 }
                 if (productSet.getMaxDate() != null) {
-                    boolean endDateValid = endDate.getTime() <= productSet.getMaxDate().getTime();
+                    String maxDate = DATE_FORMAT.format(productSet.getMaxDate());
+                    boolean endDateValid = (maxDate.compareTo(endDate) <= 0) ;//endDate.getTime() <= productSet.getMaxDate().getTime();
                     if (!endDateValid) {
-                        throw new ValidationException(maxDate, "End date must be equal to or before the product set's end date.");
+                        throw new ValidationException(this.maxDate, "End date must be equal to or before the product set's end date.");
                     }
                 }
             }
