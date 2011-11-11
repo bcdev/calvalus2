@@ -255,7 +255,7 @@ public class ProductSetFilterForm extends Composite {
                 }
                 if (productSet.getMaxDate() != null) {
                     String maxDate = DATE_FORMAT.format(productSet.getMaxDate());
-                    boolean endDateValid = (maxDate.compareTo(endDate) <= 0) ;//endDate.getTime() <= productSet.getMaxDate().getTime();
+                    boolean endDateValid = (endDate.compareTo(maxDate) <= 0) ;
                     if (!endDateValid) {
                         throw new ValidationException(this.maxDate, "End date must be equal to or before the product set's end date.");
                     }
