@@ -201,10 +201,13 @@
             <h2>Information</h2>
 
             <p>Please contact us for more information!
-                <!--
-                More information about the study and its
-                results can be found in the <a href="">Final Report</a>.
-                -->
+                More information about the study and its results can be found in the
+                <a href="pub/docs/Calvalus-Final_Report-1.0-20111031.pdf">Final Report</a>.
+                Other public documents you might be interested in are the
+                <a href="pub/docs/Calvados-RB-1.2.1-20100716.pdf">Baseline Requirements</a> and the
+                <a href="pub/docs/Calvalus-ATP-1.2-20111031.pdf">Acceptance Test Plan</a>. The
+                <a href="pub/docs/Calvalus-TS-1.2-20110321.pdf">Technical Specification</a> is available for
+                registered users.
             </p>
 
             <p>
