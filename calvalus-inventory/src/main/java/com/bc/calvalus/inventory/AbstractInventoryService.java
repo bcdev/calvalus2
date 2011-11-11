@@ -50,7 +50,7 @@ public abstract class AbstractInventoryService implements InventoryService {
     }
 
     private ProductSet[] loadPredefined() throws IOException {
-        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME +".new"));
+        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME + ".new"));
         if (!getFileSystem().exists(databasePath)) {
             databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
         }
@@ -84,14 +84,18 @@ public abstract class AbstractInventoryService implements InventoryService {
     static List<ProductSet> readProductSetFromCsv(InputStream is) throws IOException {
         InputStreamReader reader = new InputStreamReader(is);
         BufferedReader bufferedReader = new BufferedReader(reader);
-        List<ProductSet> productSets = new ArrayList<ProductSet>();
+        try {
+            List<ProductSet> productSets = new ArrayList<ProductSet>();
 
-        String line = bufferedReader.readLine();
-        while (line != null) {
-            productSets.add(ProductSetPersistable.convertFromCSV(line));
-            line = bufferedReader.readLine();
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                productSets.add(ProductSetPersistable.convertFromCSV(line));
+                line = bufferedReader.readLine();
+            }
+            return productSets;
+        } finally {
+            bufferedReader.close();
         }
-        return productSets;
     }
 
     /**

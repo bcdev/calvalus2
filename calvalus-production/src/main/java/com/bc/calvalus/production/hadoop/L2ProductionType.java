@@ -17,12 +17,13 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -173,18 +174,19 @@ public class L2ProductionType extends HadoopProductionType {
 
         private void writeProductSetFile(String text) {
             Path productSetsFile = new Path(outputDir, ProductSetPersistable.FILENAME);
-            FSDataOutputStream fsDataOutputStream = null;
+            OutputStreamWriter outputStreamWriter = null;
             try {
                 FileSystem fileSystem = FileSystem.get(l2WorkflowItem.getJobConfig());
-                fsDataOutputStream = fileSystem.create(productSetsFile);
-                fsDataOutputStream.writeChars(text);
+                OutputStream fsDataOutputStream = fileSystem.create(productSetsFile);
+                outputStreamWriter = new OutputStreamWriter(fsDataOutputStream);
+                outputStreamWriter.write(text);
             } catch (IOException e) {
                 // TODO, mz 2011-11-07 log error
                 e.printStackTrace();
             } finally {
-                if (fsDataOutputStream != null) {
+                if (outputStreamWriter != null) {
                     try {
-                        fsDataOutputStream.close();
+                        outputStreamWriter.close();
                     } catch (IOException ignore) {
                     }
                 }
