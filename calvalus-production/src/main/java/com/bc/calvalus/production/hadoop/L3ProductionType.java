@@ -204,8 +204,15 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
-        // todo - implement L3 variables
-        return new L3Config.VariableConfiguration[0];
+        int expressionCount = request.getInteger("expression.count");
+        L3Config.VariableConfiguration[] variableConfigurations = new L3Config.VariableConfiguration[expressionCount];
+        for (int i = 0; i < expressionCount; i++) {
+            String prefix = "expression." + i;
+            String name = request.getString(prefix + ".variable");
+            String exp = request.getString(prefix + ".expression");
+            variableConfigurations[i] = new L3Config.VariableConfiguration(name, exp);
+        }
+        return variableConfigurations;
     }
 
     static int getNumRows(ProductionRequest request) throws ProductionException {

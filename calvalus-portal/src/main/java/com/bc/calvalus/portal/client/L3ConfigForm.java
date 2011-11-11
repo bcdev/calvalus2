@@ -3,10 +3,13 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -43,6 +46,7 @@ public class L3ConfigForm extends Composite {
     private LatLngBounds regionBounds;
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
+    private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
     private static final DtoProcessorVariable[] MER_L1B;
     static {
         MER_L1B = new DtoProcessorVariable[15];
@@ -58,7 +62,7 @@ public class L3ConfigForm extends Composite {
         static int lastId = 0;
         Integer id = ++lastId;
         String name = "";
-
+        String expression = "";
         String aggregator = "AVG";
         Double fillValue = Double.NaN;
         Double weightCoeff = 1.0;
@@ -238,14 +242,20 @@ public class L3ConfigForm extends Composite {
         variableNames.clear();
         variableNameCell.removeAllOptions();
 
-        String defaultValidMask = null;
+        String defaultValidMask = "";
         DtoProcessorVariable[] processorVariables;
         if (selectedProcessor != null) {
             processorVariables = selectedProcessor.getProcessorVariables();
-            defaultValidMask = selectedProcessor.getDefaultMaskExpression();
+            String defaultMaskExpression = selectedProcessor.getDefaultMaskExpression();
+            if (defaultMaskExpression != null) {
+                defaultValidMask = defaultMaskExpression;
+            }
         } else {
             processorVariables = MER_L1B;
         }
+
+        processorVariableDefaults.put(EXPRESSION.getName(), EXPRESSION);
+        variableNames.add(EXPRESSION.getName());
 
         for (DtoProcessorVariable processorVariable : processorVariables) {
             String processorVariableName = processorVariable.getName();
@@ -267,12 +277,7 @@ public class L3ConfigForm extends Composite {
         if (variableList.size() == 0) {
             variableList.add(createDefaultVariable());
         }
-
-        if (defaultValidMask != null) {
-            maskExpr.setValue(defaultValidMask);
-        } else {
-            maskExpr.setValue("");
-        }
+        maskExpr.setValue(defaultValidMask);
 
         variableProvider.refresh();
     }
@@ -314,6 +319,12 @@ public class L3ConfigForm extends Composite {
                 String message = "Weight coefficient for '" + variable.name + "' must be >= 0 and <= 1";
                 throw new ValidationException(variableTable, message);
             }
+            if (variable.name.equals(EXPRESSION.getName())) {
+                if (variable.expression.trim().isEmpty()) {
+                    String message = "Expression must not be empty";
+                    throw new ValidationException(variableTable, message);
+                }
+            }
         }
     }
 
@@ -321,14 +332,32 @@ public class L3ConfigForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
         List<Variable> variables = variableProvider.getList();
         int variablesLength = variables.size();
+        int expressionCount = 0;
         parameters.put("variables.count", variables.size() + "");
         for (int i = 0; i < variablesLength; i++) {
             Variable variable = variables.get(i);
             String prefix = "variables." + i;
-            parameters.put(prefix + ".name", variable.name);
+            if (variable.name.equals(EXPRESSION.getName())) {
+                if (variable.expression.contains("=")) {
+                    String[] split = variable.expression.split("=");
+                    String variableName = split[0].trim();
+                    String expression = split[1].trim();
+                    parameters.put("expression." + expressionCount + ".variable", variableName);
+                    parameters.put("expression." + expressionCount + ".expression", expression);
+                    parameters.put(prefix + ".name", variableName);
+                    expressionCount++;
+                } else {
+                    parameters.put(prefix + ".name", variable.expression);
+                }
+            } else {
+                parameters.put(prefix + ".name", variable.name);
+            }
             parameters.put(prefix + ".aggregator", variable.aggregator);
             parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
             parameters.put(prefix + ".fillValue", variable.fillValue + "");
+        }
+        if (expressionCount > 0) {
+            parameters.put("expression.count", expressionCount + "");
         }
         parameters.put("maskExpr", maskExpr.getText());
         parameters.put("periodLength", steppingPeriodLength.getText());
@@ -343,6 +372,10 @@ public class L3ConfigForm extends Composite {
         Column<Variable, String> nameColumn = createNameColumn();
         variableTable.addColumn(nameColumn, "Variable");
         variableTable.setColumnWidth(nameColumn, 14, Style.Unit.EM);
+
+        Column<Variable, String> expressionColumn = createExpressionColumn();
+        variableTable.addColumn(expressionColumn, "Expression");
+        variableTable.setColumnWidth(expressionColumn, 14, Style.Unit.EM);
 
         Column<Variable, String> aggregatorColumn = createAggregatorColumn();
         variableTable.addColumn(aggregatorColumn, "Aggregator");
@@ -372,10 +405,41 @@ public class L3ConfigForm extends Composite {
                 if (dtoProcessorVariable != null) {
                     applyDefaultToVariable(dtoProcessorVariable, variable);
                 }
+                if (!value.equals(EXPRESSION.getName())) {
+                    variable.expression = "";
+                }
                 variableProvider.refresh();
             }
         });
         return nameColumn;
+    }
+
+    private Column<Variable, String> createExpressionColumn() {
+        Column<Variable, String> expressionColumn = new Column<Variable, String>(new EditTextCell()) {
+            @Override
+            public String getValue(Variable variable) {
+                return variable.expression;
+            }
+
+            @Override
+            public void onBrowserEvent(Cell.Context context, Element elem, Variable variable, NativeEvent event) {
+                if (isEditable(variable)) {
+                    super.onBrowserEvent(context, elem, variable, event);
+                }
+            }
+
+            private boolean isEditable(Variable variable) {
+                return variable.name.equals(EXPRESSION.getName());
+            }
+
+        };
+        expressionColumn.setFieldUpdater(new FieldUpdater<Variable, String>() {
+            public void update(int index, Variable variable, String value) {
+                variable.expression = value;
+                variableProvider.refresh();
+            }
+        });
+        return expressionColumn;
     }
 
     private Column<Variable, String> createAggregatorColumn() {
