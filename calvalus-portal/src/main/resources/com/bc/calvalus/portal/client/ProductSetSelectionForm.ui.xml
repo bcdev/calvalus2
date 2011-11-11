@@ -14,10 +14,10 @@
 
 
             <g:VerticalPanel spacing="2">
-                <g:CheckBox ui:field="predefinedProductSets" text="Predefined file sets" checked="true"/>
+                <g:CheckBox ui:field="predefinedProductSets" text="Show predefined file sets" checked="true"/>
                 <g:HorizontalPanel spacing="2">
-                    <g:CheckBox ui:field="userProductionProductSets" text="Show production outputs" checked="false"/>
-                    <g:CheckBox ui:field="allProductionProductSets" text="of other users" checked="false"/>
+                    <g:CheckBox ui:field="userProductionProductSets" text="Show my outputs" checked="false"/>
+                    <g:CheckBox ui:field="allProductionProductSets" text="and of other users" checked="false"/>
                 </g:HorizontalPanel>
 
                 <g:HorizontalPanel spacing="0">
