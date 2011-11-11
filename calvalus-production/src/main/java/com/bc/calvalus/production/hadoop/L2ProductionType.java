@@ -177,7 +177,7 @@ public class L2ProductionType extends HadoopProductionType {
             try {
                 FileSystem fileSystem = FileSystem.get(l2WorkflowItem.getJobConfig());
                 fsDataOutputStream = fileSystem.create(productSetsFile);
-                fsDataOutputStream.writeUTF(text);
+                fsDataOutputStream.writeChars(text);
             } catch (IOException e) {
                 // TODO, mz 2011-11-07 log error
                 e.printStackTrace();
