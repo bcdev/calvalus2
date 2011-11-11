@@ -58,7 +58,7 @@
             </table>
             <hr/>
 
-            <h1>The ESA Calvalus Study - Executive Summary</h1>
+            <h1>The ESA Calvalus Study</h1>
 
 
             <h2>Objective</h2>
