@@ -326,6 +326,11 @@ public class L3ConfigForm extends Composite {
                 }
             }
         }
+
+        boolean maskExprValid = !maskExpr.getValue().trim().isEmpty();
+        if (!maskExprValid) {
+            throw new ValidationException(maskExpr, "Good-pixel expression must not be empty ");
+        }
     }
 
     public Map<String, String> getValueMap() {
