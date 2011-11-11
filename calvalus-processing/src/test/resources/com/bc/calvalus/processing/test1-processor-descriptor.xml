@@ -19,7 +19,8 @@ done by the cool folks at Brockmann-Consult.
 </p>
       ]]>
     </descriptionHtml>
-    <inputProductTypes>MER_RR__1P,MER_FR__1P,MER_FSG_1P</inputProductTypes>
+    <inputProductTypes>MERIS_L1B,MERIS_CC_L1P</inputProductTypes>
+    <outputProductType>MERIS_CC_L2R</outputProductType>
     <outputVariableDefaultMaskExpr>!l1_flags.INVALID</outputVariableDefaultMaskExpr>
     <outputVariables>
         <outputVariable>

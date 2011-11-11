@@ -62,6 +62,9 @@ public class ProcessorDescriptor {
     @Parameter
     private String[] inputProductTypes;
 
+    @Parameter
+    private String outputProductType;
+
     // empty constructor for XML serialization
     public ProcessorDescriptor() {
     }
@@ -118,4 +121,9 @@ public class ProcessorDescriptor {
     public String[] getInputProductTypes() {
         return inputProductTypes;
     }
+
+    public String getOutputProductType() {
+        return outputProductType;
+    }
+
 }

@@ -68,10 +68,12 @@ public class ProcessorDescriptorTest {
 
         String[] inputProductTypes = processorDescriptor.getInputProductTypes();
         assertNotNull(inputProductTypes);
-        assertEquals(3, inputProductTypes.length);
-        assertEquals("MER_RR__1P", inputProductTypes[0]);
-        assertEquals("MER_FR__1P", inputProductTypes[1]);
-        assertEquals("MER_FSG_1P", inputProductTypes[2]);
+        assertEquals(2, inputProductTypes.length);
+        assertEquals("MERIS_L1B", inputProductTypes[0]);
+        assertEquals("MERIS_CC_L1P", inputProductTypes[1]);
+
+        String outputProductType = processorDescriptor.getOutputProductType();
+        assertEquals("MERIS_CC_L2R", outputProductType);
 
         ProcessorDescriptor.Variable[] outputVariables = processorDescriptor.getOutputVariables();
         assertNotNull(outputVariables);

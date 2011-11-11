@@ -242,7 +242,7 @@ public class L3ConfigForm extends Composite {
         DtoProcessorVariable[] processorVariables;
         if (selectedProcessor != null) {
             processorVariables = selectedProcessor.getProcessorVariables();
-            defaultValidMask = selectedProcessor.getDefaultMaskExpr();
+            defaultValidMask = selectedProcessor.getDefaultMaskExpression();
         } else {
             processorVariables = MER_L1B;
         }
