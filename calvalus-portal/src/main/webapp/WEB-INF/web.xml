@@ -107,7 +107,7 @@
             <url-pattern>/calvalus/backend/*</url-pattern>
             <url-pattern>/calvalus/upload/*</url-pattern>
             <url-pattern>/calvalus/download/*</url-pattern>
-            <url-pattern>/pub/docs/Calvalus-TS-*.pdf</url-pattern>
+            <url-pattern>/pub/docs/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
