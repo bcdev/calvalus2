@@ -204,7 +204,7 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
-        int expressionCount = request.getInteger("expression.count");
+        int expressionCount = request.getInteger("expression.count", 0);
         L3Config.VariableConfiguration[] variableConfigurations = new L3Config.VariableConfiguration[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
