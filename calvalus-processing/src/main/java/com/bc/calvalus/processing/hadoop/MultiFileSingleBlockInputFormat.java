@@ -71,7 +71,9 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                     BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
                     if (blocks != null && blocks.length > 0) {
                         BlockLocation block = blocks[0];
-                        if (blocks.length == 1 && block.getLength() >= fileLength || inputFormat.equals("HADOOP-STREAMING")) {
+                        if (blocks.length == 1 && block.getLength() >= fileLength ||
+                                inputFormat.equals("HADOOP-STREAMING") ||
+                                inputPath.getName().toLowerCase().endsWith(".seq")) {
                             // create file split for the input
                             FileSplit split = new FileSplit(inputPath, 0, fileLength, block.getHosts());
                             splits.add(split);
