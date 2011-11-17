@@ -6,7 +6,9 @@ import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.inventory.ProductSetPersistable;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.DateRange;
@@ -48,7 +50,7 @@ public class L2ProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = productionRequest.getProdcutionName(createL2ProductionName(productionRequest));
 
-        L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionName,  productionRequest);
+        L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -78,7 +80,7 @@ public class L2ProductionType extends HadoopProductionType {
     L2WorkflowItem createWorkflowItem(String productionId,
                                       String productionName, ProductionRequest productionRequest) throws ProductionException {
 
-         List<DateRange> dateRanges = getDateRanges(productionRequest);
+        List<DateRange> dateRanges = getDateRanges(productionRequest);
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
         String[] inputFiles = getInputFiles(getInventoryService(), inputPath, regionName, dateRanges);
@@ -87,9 +89,9 @@ public class L2ProductionType extends HadoopProductionType {
 
         String processorName = productionRequest.getString("processorName");
         String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-        String processorBundle = String.format("%s-%s",
-                                               productionRequest.getString("processorBundleName"),
-                                               productionRequest.getString("processorBundleVersion"));
+        String processorBundleName = productionRequest.getString("processorBundleName");
+        String processorBundleVersion = productionRequest.getString("processorBundleVersion");
+        String processorBundle = String.format("%s-%s", processorBundleName, processorBundleVersion);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
@@ -105,12 +107,30 @@ public class L2ProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String pathPattern = outputDir + "/.*.seq$";
         String regionWKT = regionGeometry != null ? regionGeometry.toString() : null;
-        String productType = "L2"; // TODO get from processor
+        String productType = getResultingProductionType(processorBundleName, processorBundleVersion, processorName);
         ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate, regionName, regionWKT);
 
         L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
         l2WorkflowItem.addWorkflowStatusListener(new ProductSetSaver(l2WorkflowItem, productSet, outputDir));
         return l2WorkflowItem;
+    }
+
+    String getResultingProductionType(String bundleName, String bundleVersion, String executableName) {
+        try {
+            BundleDescriptor[] bundles = getProcessingService().getBundles("");
+            for (BundleDescriptor bundle : bundles) {
+                if (bundle.getBundleName().equals(bundleName) && bundle.getBundleVersion().equals(bundleVersion)) {
+                    ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
+                    for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                        if (processorDescriptor.getExecutableName().equals(executableName)) {
+                            return processorDescriptor.getOutputProductType();
+                        }
+                    }
+                }
+            }
+        } catch (IOException ignore) {
+        }
+        return "L2";
     }
 
     public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws ProductionException {

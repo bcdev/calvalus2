@@ -126,4 +126,7 @@ public class ProcessorDescriptor {
         return outputProductType;
     }
 
+    public void setOutputProductType(String outputProductType) {
+        this.outputProductType = outputProductType;
+    }
 }

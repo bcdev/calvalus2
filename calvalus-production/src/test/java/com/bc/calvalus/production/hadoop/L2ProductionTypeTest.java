@@ -19,7 +19,9 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -43,8 +45,18 @@ public class L2ProductionTypeTest {
     @Before
     public void setUp() throws Exception {
         JobClient jobClient = new JobClient(new JobConf());
+        HadoopProcessingService processingService = new HadoopProcessingService(jobClient) {
+            @Override
+            public BundleDescriptor[] getBundles(String filter) throws IOException {
+                ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
+                processorDescriptor.setOutputProductType("Generic-L2");
+                return new BundleDescriptor[]{
+                        new BundleDescriptor("beam", "4.9-SNAPSHOT",
+                                             processorDescriptor)};
+            }
+        };
         productionType = new L2ProductionType(new TestInventoryService(),
-                                              new HadoopProcessingService(jobClient),
+                                              processingService,
                                               new TestStagingService());
     }
 
@@ -86,7 +98,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
-        assertEquals("L2", productSet.getProductType());
+        assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", productSet.getName());
         assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
         assertNull(productSet.getMinDate());
@@ -167,7 +179,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
-        assertEquals("L2", productSet.getProductType());
+        assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("My Math Production", productSet.getName());
         assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
@@ -217,7 +229,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
-        assertEquals("L2", productSet.getProductType());
+        assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", productSet.getName());
         assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
