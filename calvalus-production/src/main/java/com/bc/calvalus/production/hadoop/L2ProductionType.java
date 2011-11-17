@@ -105,7 +105,7 @@ public class L2ProductionType extends HadoopProductionType {
 
         Date startDate = dateRanges.get(0).getStartDate();
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
-        String pathPattern = outputDir + "/.*.seq$";
+        String pathPattern = outputDir + "/.*${yyyy}${MM}${dd}.*.seq$";
         String regionWKT = regionGeometry != null ? regionGeometry.toString() : null;
         String productType = getResultingProductionType(processorBundleName, processorBundleVersion, processorName);
         ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate, regionName, regionWKT);

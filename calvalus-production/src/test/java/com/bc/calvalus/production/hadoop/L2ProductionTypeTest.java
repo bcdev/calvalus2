@@ -100,7 +100,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
         assertNull(productSet.getRegionName());
@@ -181,7 +181,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("My Math Production", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
         assertNull(productSet.getRegionName());
@@ -231,7 +231,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*.seq$", productSet.getPath());
+        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
         assertEquals("Island In The Sun", productSet.getRegionName());
