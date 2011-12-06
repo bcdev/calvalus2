@@ -73,7 +73,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setNumReduceTasks(18);
+        job.setNumReduceTasks(36);
 
         job.setMapperClass(MosaicMapper.class);
         job.setMapOutputKeyClass(TileIndexWritable.class);

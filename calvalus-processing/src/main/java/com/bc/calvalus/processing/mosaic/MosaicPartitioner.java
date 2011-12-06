@@ -31,43 +31,17 @@ import org.esa.beam.util.math.MathUtils;
  *
  * @author Marco Zuehlke
  */
-public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWritable> implements Configurable {
-
-    private Configuration conf;
-    private int minRowIndex;
-    private int numRowsCovered;
+public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWritable> {
 
     @Override
     public int getPartition(TileIndexWritable tileIndex, TileDataWritable tileData, int numPartitions) {
-        int row = tileIndex.getTileY();
-        int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
+        int partition = tileIndex.getMacroTileY();
         if (partition < 0) {
             partition = 0;
         } else if (partition >= numPartitions) {
             partition = numPartitions - 1;
         }
         return partition;
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-        String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
-        if (roiGeometry != null && !roiGeometry.isEmpty()) {
-            Envelope envelope = roiGeometry.getEnvelopeInternal();
-            int maxRowIndex = MathUtils.ceilInt(90.0 - envelope.getMinY());
-            minRowIndex = MathUtils.floorInt(90.0 - envelope.getMaxY());
-            numRowsCovered = maxRowIndex - minRowIndex;
-        } else {
-            numRowsCovered = 180;
-            minRowIndex = 0;
-        }
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
     }
 
 }

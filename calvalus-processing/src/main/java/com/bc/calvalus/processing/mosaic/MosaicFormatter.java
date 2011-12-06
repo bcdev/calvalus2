@@ -17,46 +17,21 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
-import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.util.Progressable;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductWriter;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 
@@ -72,134 +47,44 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
 
     private static final String PART_FILE_PREFIX = "part-r-";
     Configuration jobConfig;
-    private boolean create5by5DegreeProducts = true; //TODO configure
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         jobConfig = context.getConfiguration();
-        new ProductFactory(jobConfig);
+        ProductFactory.initGpf(jobConfig, this.getClass().getClassLoader());
+
         final FileSplit split = (FileSplit) context.getInputSplit();
-        Path path = split.getPath();
-        if (create5by5DegreeProducts) {
-            process5by5degreeProducts(context, path);
-        } else {
-            processAllPartsToOneProduct(context, path);
-        }
-    }
-
-    public void processAllPartsToOneProduct(Context context, Path partsDir) throws IOException {
-        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(jobConfig);
-        MosaicGrid mosaicGrid = new MosaicGrid();
-
-        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
-        Rectangle productRegion = mosaicGrid.alignToTileGrid(geometryRegion);
-
-        Product product = createProduct("mosaic-result", productRegion, algorithm.getOutputFeatures());
-        CrsGeoCoding geoCoding = createCRS(productRegion, mosaicGrid.getPixelSize());
-        product.setGeoCoding(geoCoding);
+        Path partFile = split.getPath();
 
         // TODO
-        ProductWriter productWriter = createProductWriter(product, new File("/tmp/mosaic_we_sr_4.nc"), "NetCDF-BEAM");
-
-        try {
-//            Path partsDir = new Path("hdfs://cvmaster00:9000/calvalus/outputs/lc-production/abc_we-lc-sr/");
-
-            final FileStatus[] parts = getPartFiles(partsDir, FileSystem.get(jobConfig));
-            for (FileStatus part : parts) {
-                Path partFile = part.getPath();
-                System.out.println(MessageFormat.format("reading and handling part {0}", partFile));
-//                handlePart(context, product, productWriter, partFile, mosaicGrid, productRegion);
-            }
-        } finally {
-            productWriter.close();
-        }
-    }
-
-    public void process5by5degreeProducts(Context context, Path partFile) throws IOException, InterruptedException {
-        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(jobConfig);
-        MosaicGrid productGrid = new MosaicGrid(180 / 5, 370 * 5);
-        MosaicGrid mosaicGrid = new MosaicGrid();
-         // TODO
-//        Geometry regionGeometry = null;//JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+//        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 //        Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
 //        Rectangle globalRegion = mosaicGrid.alignToTileGrid(geometryRegion);
 
-        String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-        String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
-        String outputPrefix = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, null);
-
-        final int numPartitions = 18; // TODO config
-        int partitionNumber = getPartitionNumber(partFile.getName());
-        Geometry partGeometry = getPartGeometry(partitionNumber, numPartitions);
-        LOG.info("partGeometry = " + partGeometry);
-        Point[] tileIndices = productGrid.getTileIndices(partGeometry);
-
         FileSystem hdfs = FileSystem.get(jobConfig);
         SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
-        DefaultTileProvider tileProvider = new DefaultTileProvider(reader, mosaicGrid, context);
 
-        for (Point tile : tileIndices) {
-            context.getCounter("Product-Tiles tried", Integer.toString(tile.y)).increment(1);
-            context.getCounter("Product-Tiles tried", "Total").increment(1);
+        MosaicTileHandler mosaicProductTileHandler = MosaicProductTileHandler.createHandler(context);
 
+        TileIndexWritable key = new TileIndexWritable();
+        TileDataWritable data = new TileDataWritable();
+        while (reader.next(key, data)) {
             context.progress();
-            Rectangle productRegion = productGrid.getTileRectangle(tile.x, tile.y);
-            if (tileProvider.isCacheFilled()) {
-                boolean containsData = tileProvider.checkCacheForTiles(productRegion, mosaicGrid);
-                if (!containsData) {
-                    LOG.info("Cache-has no data");
-                    continue;
-                }
-            }
-            String productName = getTileProductName(outputPrefix, tile.x, tile.y);
-            LOG.info("productName = " + productName);
-            Product product = createProduct(productName, productRegion, algorithm.getOutputFeatures());
-            CrsGeoCoding geoCoding = createCRS(productRegion, productGrid.getPixelSize());
-            product.setGeoCoding(geoCoding);
-
-            ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
-            File productFile = productFormatter.createTemporaryProductFile();
-
-            try {
-                ProductWriter productWriter = createProductWriter(product, productFile, productFormatter.getOutputFormat());
-                boolean containsData = false;
-                try {
-                    LOG.info("Writing product " + productRegion);
-                    tileProvider.setProductRegion(productRegion);
-
-                    Band[] bands = product.getBands();
-                    while (tileProvider.hasNext()) {
-                        MosaicTile mosaicTile = tileProvider.next();
-                        Rectangle tileRect = makeRelativeTo(mosaicTile.tileRect, productRegion);
-                        containsData = true;
-                        float[][] samples = mosaicTile.data;
-                        for (int i = 0; i < bands.length; i++) {
-                            context.progress();
-                            ProductData productData = ProductData.createInstance(samples[i]);
-                            productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height, productData, ProgressMonitor.NULL);
-                        }
-                    }
-                    tileProvider.setCacheFilled(true);
-                } finally {
-                    productWriter.close();
-                }
-                if (containsData) {
-                    context.getCounter("Product-Tiles written", Integer.toString(tile.y)).increment(1);
-                    context.getCounter("Product-Tiles written", "Total").increment(1);
-                    LOG.info("Copying to HDFS");
-                    productFormatter.compressToHDFS(context, productFile);
-                } else {
-                    LOG.info("product is empty");
-                }
-            } finally {
-                productFormatter.cleanupTempDir();
-                product.dispose();
-            }
+            mosaicProductTileHandler.handleTile(key, data);
         }
+        mosaicProductTileHandler.close();
         reader.close();
+
+        // TODO
+//        context.getCounter("Product-Tiles tried", Integer.toString(tile.getMacroTileY())).increment(1);
+//        context.getCounter("Product-Tiles tried", "Total").increment(1);
+
+//        context.getCounter("Product-Tiles written", Integer.toString(tile.getMacroTileY())).increment(1);
+//        context.getCounter("Product-Tiles written", "Total").increment(1);
     }
 
+
+    // TODO remove ??? --- test only
     static Geometry getPartGeometry(int partitionNumber, int numPartitions) {
         double x1 = -180.0;
         double x2 = 180.0;
@@ -209,6 +94,7 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
         return new GeometryFactory().toGeometry(new Envelope(x1, x2, y1, y2));
     }
 
+    // TODO remove ??? --- test only
     static int getPartitionNumber(String partFilename) {
         if (!partFilename.startsWith(PART_FILE_PREFIX)) {
             throw new IllegalArgumentException("part file name is not-conforming.");
@@ -221,213 +107,4 @@ public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWrit
             throw new IllegalArgumentException("part file number can not be parsed.");
         }
     }
-
-    static String getTileProductName(String prefix, int tileX, int tileY) {
-        return String.format("%s-v%02dh%02d", prefix, tileX, tileY);
-    }
-
-    private ProductWriter createProductWriter(Product product, File outputFile, String outputFormat) throws IOException {
-
-        ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
-        if (productWriter == null) {
-            throw new IllegalArgumentException("No writer found for output format " + outputFormat);
-        }
-        productWriter = new BufferedProductWriter(productWriter);
-        productWriter.writeProductNodes(product, outputFile);
-        return productWriter;
-    }
-
-    private Product createProduct(String productName, Rectangle outputRegion, String[] outputFeatures) {
-        final Product product = new Product(productName, "CALVALUS-Mosaic", outputRegion.width, outputRegion.height);
-        for (String outputFeature : outputFeatures) {
-            Band band = product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-        }
-        //TODO
-        //product.setStartTime(formatterConfig.getStartTime());
-        //product.setEndTime(formatterConfig.getEndTime());
-        return product;
-    }
-
-    private CrsGeoCoding createCRS(Rectangle outputRegion, double pixelSize) {
-        CrsGeoCoding geoCoding;
-        try {
-            geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                         outputRegion.width,
-                                         outputRegion.height,
-                                         -180.0 + pixelSize * outputRegion.x,
-                                         90.0 - pixelSize * outputRegion.y,
-                                         pixelSize,
-                                         pixelSize,
-                                         0.0, 0.0);
-        } catch (FactoryException e) {
-            throw new IllegalStateException(e);
-        } catch (TransformException e) {
-            throw new IllegalStateException(e);
-        }
-        return geoCoding;
-    }
-
-    private static FileStatus[] getPartFiles(Path partsDir, FileSystem hdfs) throws IOException {
-        final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().startsWith(PART_FILE_PREFIX);
-            }
-        });
-        System.out.println(MessageFormat.format("collecting {0} parts", parts.length));
-        Arrays.sort(parts);
-        return parts;
-    }
-
-    private Rectangle makeRelativeTo(Rectangle tileRect, Rectangle productRegion) {
-        return new Rectangle(tileRect.x - productRegion.x, tileRect.y - productRegion.y, tileRect.width, tileRect.height);
-    }
-
-    private static class DefaultTileProvider implements Iterator<MosaicTile> {
-
-        private final SequenceFile.Reader reader;
-        private final Progressable progressable;
-        private final MosaicGrid mosaicGrid;
-        private final List<Point> tileIndexPoints = new ArrayList<Point>(360 * 10);
-        private final List<Long> tileIndexOffsets = new ArrayList<Long>(360 * 10);
-        private int tileIndexPos;
-
-        private Rectangle productRegion;
-
-        private boolean mustRead;
-        private boolean lastItemValid;
-        private MosaicTile mosaicTile;
-        private boolean cacheFilled;
-        private long initialPos;
-
-
-        private DefaultTileProvider(SequenceFile.Reader reader, MosaicGrid mosaicGrid, Progressable progressable) throws IOException {
-            this.reader = reader;
-            this.mosaicGrid = mosaicGrid;
-            this.progressable = progressable;
-            this.mustRead = true;
-            this.lastItemValid = true;
-            this.cacheFilled = false;
-            initialPos = reader.getPosition();
-        }
-
-        public void setProductRegion(Rectangle productRegion) throws IOException {
-            this.productRegion = productRegion;
-            this.tileIndexPos = 0;
-            this.mustRead = true;
-            this.lastItemValid = true;
-            if (cacheFilled)
-                reader.seek(initialPos);
-        }
-
-        @Override
-        public boolean hasNext() {
-            maybeReadNext();
-            return lastItemValid;
-        }
-
-        @Override
-        public MosaicTile next() {
-            maybeReadNext();
-            if (!lastItemValid) {
-                throw new NoSuchElementException();
-            }
-            mustRead = true;
-            return mosaicTile;
-        }
-
-        private void maybeReadNext() {
-            if (mustRead && lastItemValid) {
-                mustRead = false;
-                try {
-                    TileIndexWritable key = new TileIndexWritable();
-                    TileDataWritable data = new TileDataWritable();
-                    if (cacheFilled) {
-                        while (tileIndexPos < tileIndexOffsets.size()) {
-                            int currentCacheIndex = tileIndexPos;
-                            tileIndexPos++;
-
-                            Point point = tileIndexPoints.get(currentCacheIndex);
-                            Rectangle tileRect = mosaicGrid.getTileRectangle(point.x, point.y);
-                            if (productRegion.contains(tileRect)) {
-                                long offset = tileIndexOffsets.get(currentCacheIndex);
-                                reader.seek(offset);
-                                reader.next(key, data);
-                                if (key.getTileX() == point.x && key.getTileY() == point.y) {
-                                    lastItemValid = true;
-                                    mosaicTile = new MosaicTile(tileRect, data.getSamples());
-                                    return;
-                                } else {
-                                    throw new IllegalStateException("invalid cache");
-                                }
-                            }
-                        }
-                        lastItemValid = false;
-                    } else {
-                        long currentPos = reader.getPosition();
-                        while (reader.next(key)) {
-                            progressable.progress();
-                            tileIndexOffsets.add(currentPos);
-                            tileIndexPoints.add(new Point(key.getTileX(), key.getTileY()));
-                            currentPos = reader.getPosition();
-                            Rectangle tileRect = mosaicGrid.getTileRectangle(key.getTileX(), key.getTileY());
-                            if (productRegion.contains(tileRect)) {
-                                lastItemValid = true;
-                                reader.getCurrentValue(data);
-                                mosaicTile = new MosaicTile(tileRect, data.getSamples());
-                                return;
-                            }
-                        }
-                        lastItemValid = false;
-                    }
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove() not supported");
-        }
-
-        public void setCacheFilled(boolean cacheFilled) {
-            this.cacheFilled = cacheFilled;
-        }
-
-        public boolean isCacheFilled() {
-            return cacheFilled;
-        }
-
-        public boolean checkCacheForTiles(Rectangle productRegion, MosaicGrid mosaicGrid) {
-            for (Point point : tileIndexPoints) {
-                Rectangle tileRect = mosaicGrid.getTileRectangle(point.x, point.y);
-                if (productRegion.contains(tileRect)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    private static class MosaicTile {
-        Rectangle tileRect;
-        float[][] data;
-
-        public MosaicTile(Rectangle tileRect, float[][] data) {
-            this.tileRect = tileRect;
-            this.data = data;
-        }
-
-        @Override
-        public String toString() {
-            return "MosaicTile{" +
-                    "tileRect=" + tileRect +
-                    ", data=" + (data == null ? null : "floats.....") +
-                    '}';
-        }
-    }
-
 }

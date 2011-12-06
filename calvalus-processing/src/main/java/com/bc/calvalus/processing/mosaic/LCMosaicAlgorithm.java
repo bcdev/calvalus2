@@ -87,7 +87,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private int getPartition(TileIndexWritable tileIndex) {
         MosaicPartitioner mosaicPartitioner = new MosaicPartitioner();
-        mosaicPartitioner.setConf(jobConf);
         int numPartitions = jobConf.getInt("mapred.reduce.tasks", 1);
         return mosaicPartitioner.getPartition(tileIndex, null, numPartitions);
     }
@@ -195,7 +194,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         varIndexes = createVariableIndexes(variableContext, NUM_SDR_BANDS);
         outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
         variableCount = outputFeatures.length;
-        tileSize = new MosaicGrid().getTileSize();
+        tileSize = MosaicGrid.create(jobConf).getTileSize();
     }
 
     @Override

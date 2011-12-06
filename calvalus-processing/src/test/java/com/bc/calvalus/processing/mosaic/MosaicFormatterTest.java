@@ -28,12 +28,6 @@ import static org.junit.Assert.assertTrue;
 public class MosaicFormatterTest {
 
     @Test
-    public void testGetTileProductName() throws Exception {
-        assertEquals("foo-v00h00", MosaicFormatter.getTileProductName("foo", 0, 0));
-        assertEquals("foo-v13h45", MosaicFormatter.getTileProductName("foo", 13, 45));
-    }
-
-    @Test
     public void testGetPartitionNumber() throws Exception {
         assertEquals(0, MosaicFormatter.getPartitionNumber("part-r-00000"));
         assertEquals(1, MosaicFormatter.getPartitionNumber("part-r-00001"));

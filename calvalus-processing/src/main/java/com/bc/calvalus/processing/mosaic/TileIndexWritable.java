@@ -31,16 +31,27 @@ import java.io.IOException;
  */
 public class TileIndexWritable implements WritableComparable {
 
+    private int macroTileX;
+    private int macroTileY;
     private int tileX;
-
     private int tileY;
 
     public TileIndexWritable() {
     }
 
-    public TileIndexWritable(int tileX, int tileY) {
+    public TileIndexWritable(int macroTileX, int macroTileY, int tileX, int tileY) {
+        this.macroTileX = macroTileX;
+        this.macroTileY = macroTileY;
         this.tileX = tileX;
         this.tileY = tileY;
+    }
+
+    public int getMacroTileX() {
+        return macroTileX;
+    }
+
+    public int getMacroTileY() {
+        return macroTileY;
     }
 
     public int getTileX() {
@@ -53,21 +64,31 @@ public class TileIndexWritable implements WritableComparable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeInt(macroTileY);
+        out.writeInt(macroTileX);
         out.writeInt(tileY);
         out.writeInt(tileX);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        macroTileY = in.readInt();
+        macroTileX = in.readInt();
         tileY = in.readInt();
         tileX = in.readInt();
     }
 
     public int compareTo(Object o) {
         TileIndexWritable that = (TileIndexWritable) o;
-        int result = compareInts(this.tileY, that.tileY);
+        int result = compareInts(this.macroTileY, that.macroTileY);
         if (result == 0) {
-            result = compareInts(this.tileX, that.tileX);
+            result = compareInts(this.macroTileX, that.macroTileX);
+            if (result == 0) {
+                result = compareInts(this.tileY, that.tileY);
+                if (result == 0) {
+                    result = compareInts(this.tileX, that.tileX);
+                }
+            }
         }
         return result;
     }
@@ -88,16 +109,25 @@ public class TileIndexWritable implements WritableComparable {
             return false;
         }
         TileIndexWritable other = (TileIndexWritable) obj;
-        return this.tileX == other.tileX && this.tileY == other.tileY;
+        return this.tileX == other.tileX &&
+                this.tileY == other.tileY &&
+                this.macroTileX == other.macroTileX &&
+                this.macroTileY == other.macroTileY;
     }
 
 
     public int hashCode() {
-        return tileX + tileY * 1000;
+        int hash = 31 + macroTileX;
+        hash = (31 * hash) + macroTileY;
+        hash = (31 * hash) + tileX;
+        hash = (31 * hash) + tileY;
+        return hash;
     }
 
     public String toString() {
-        return new StringBuilder().append(tileX).append(",").append(tileY).toString();
+        return new StringBuilder().
+                append("[").append(macroTileX).append(",").append(macroTileY).append("]").
+                append("(").append(tileX).append(",").append(tileY).append(")").toString();
     }
 
     /**
@@ -110,14 +140,23 @@ public class TileIndexWritable implements WritableComparable {
 
         public int compare(byte[] b1, int s1, int l1,
                            byte[] b2, int s2, int l2) {
-            int thisTileY = readInt(b1, s1);
-            int thatTileY = readInt(b2, s2);
-
-            int result = compareInts(thisTileY, thatTileY);
+            int thisMacroTileY = readInt(b1, s1);
+            int thatMacroTileY = readInt(b2, s2);
+            int result = compareInts(thisMacroTileY, thatMacroTileY);
             if (result == 0) {
-                int thisTileX = readInt(b1, s1 + 4);
-                int thatTileX = readInt(b2, s2 + 4);
-                result = compareInts(thisTileX, thatTileX);
+                int thisMacroTileX = readInt(b1, s1 + 4);
+                int thatMacroTileX = readInt(b2, s2 + 4);
+                result = compareInts(thisMacroTileX, thatMacroTileX);
+                if (result == 0) {
+                    int thisTileY = readInt(b1, s1 + 8);
+                    int thatTileY = readInt(b2, s2 + 8);
+                    result = compareInts(thisTileY, thatTileY);
+                    if (result == 0) {
+                        int thisTileX = readInt(b1, s1 + 12);
+                        int thatTileX = readInt(b2, s2 + 12);
+                        result = compareInts(thisTileX, thatTileX);
+                    }
+                }
             }
             return result;
         }

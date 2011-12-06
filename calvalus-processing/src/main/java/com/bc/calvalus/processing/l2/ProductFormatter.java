@@ -22,7 +22,6 @@ import com.bc.ceres.core.ProgressMonitorWrapper;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Progressable;
@@ -114,7 +113,7 @@ public class ProductFormatter {
         }
     }
 
-    public void compressToHDFS(TaskInputOutputContext<?, ?, ?, ?> context, File productFile) throws IOException, InterruptedException {
+    public void compressToHDFS(TaskInputOutputContext<?, ?, ?, ?> context, File productFile) throws IOException {
         OutputStream outputStream = createOutputStream(context, outputFilename);
         if ("zip".equals(outputCompression)) {
             LOG.info("Creating ZIP archive on HDFS.");
@@ -190,8 +189,14 @@ public class ProductFormatter {
         }
     }
 
-    static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws IOException, InterruptedException {
-        Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), filename);
+    static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws IOException {
+        Path workOutputPath;
+        try {
+            workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+        Path workPath = new Path(workOutputPath, filename);
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
         return fileSystem.create(workPath, (short) 1);
     }

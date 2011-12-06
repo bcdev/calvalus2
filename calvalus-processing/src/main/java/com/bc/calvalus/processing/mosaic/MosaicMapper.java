@@ -38,7 +38,6 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -54,7 +53,7 @@ import java.util.logging.Logger;
 public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWritable, TileDataWritable> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS = "Product Tile Counts";
+    private static final String COUNTER_GROUP_NAME = "Mosaic";
 
     private MosaicGrid mosaicGrid;
 
@@ -63,7 +62,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         final Configuration jobConfig = context.getConfiguration();
         final L3Config l3Config = L3Config.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
-        mosaicGrid = new MosaicGrid();
+        mosaicGrid = MosaicGrid.create(jobConfig);
         final VariableContext ctx = l3Config.getVariableContext();
         final FileSplit split = (FileSplit) context.getInputSplit();
 
@@ -90,13 +89,16 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 }
                 numTiles = processProduct(product, regionGeometry, ctx, context);
                 if (numTiles > 0L) {
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, inputPath.getName()).increment(numTiles);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_TILE_COUNTS, "Total").increment(numTiles);
+                    context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
+                    context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTiles);
+                } else {
+                    context.getCounter(COUNTER_GROUP_NAME, "Input products without tiles").increment(1);
                 }
             } finally {
                 product.dispose();
             }
         } else {
+            context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
             LOG.info("Product not used");
         }
 
@@ -145,11 +147,11 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             final MultiLevelImage varImage = node.getGeophysicalImage();
             varImages[i] = varImage;
         }
-        Point[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
+        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
         LOG.info("Product covers #tiles : " + tileIndices.length);
         int numTileTotal = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
-        for (Point tileIndex : tileIndices) {
+        for (TileIndexWritable tileIndex : tileIndices) {
             LOG.info("Processing tile: " + tileIndex);
             context.progress();
             if (tileFactory.processTile(tileIndex)) {
@@ -184,7 +186,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         repro.setParameter("tileSizeY", tileSize);
         repro.setParameter("crs", DefaultGeographicCRS.WGS84.toString());
 
-        Rectangle rectangle = mosaicGrid.computeRegion(null);
+        Rectangle rectangle = mosaicGrid.computeBounds(null);
         int width = rectangle.width;
         int height = rectangle.height;
         double x = width / 2.0;
@@ -216,8 +218,8 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             this.tileSize = tileSize;
         }
 
-        private boolean processTile(Point tileIndex) throws IOException, InterruptedException {
-            Raster maskRaster = maskImage.getTile(tileIndex.x, tileIndex.y);
+        private boolean processTile(TileIndexWritable tileIndex) throws IOException, InterruptedException {
+            Raster maskRaster = maskImage.getTile(tileIndex.getTileX(), tileIndex.getTileY());
             byte[] byteBuffer = getRawMaskData(maskRaster);
             boolean containsData = containsData(byteBuffer);
 
@@ -225,14 +227,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 LOG.info("Tile contains data: " + tileIndex);
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
-                    Raster raster = varImages[i].getTile(tileIndex.x, tileIndex.y);
+                    Raster raster = varImages[i].getTile(tileIndex.getTileX(), tileIndex.getTileY());
                     float[] samples = sampleValues[i];
                     raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
                 }
 
-                TileIndexWritable key = new TileIndexWritable(tileIndex.x, tileIndex.y);
                 TileDataWritable value = new TileDataWritable(sampleValues);
-                context.write(key, value);
+                context.write(tileIndex, value);
                 return true;
             }
             return false;

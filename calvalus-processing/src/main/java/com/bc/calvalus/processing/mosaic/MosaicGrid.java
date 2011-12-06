@@ -22,8 +22,13 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.ProductUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -44,14 +49,23 @@ public class MosaicGrid {
     private final int tileSize;
     private final double pixelSize;
     private final int numTileX;
+    private final int macroTileSize;
     private final int numTileY;
     private GeometryFactory geometryFactory;
 
-    public MosaicGrid() {
-        this(180, 370);
+    public static MosaicGrid create(Configuration jobConfig) {
+        int macroTileSize = jobConfig.getInt("calvalus.mosaic.macroTileSize", 5);
+        int numTileY = jobConfig.getInt("calvalus.mosaic.numTileY", 180);
+        int tileSize = jobConfig.getInt("calvalus.mosaic.tileSize", 370);
+        return new MosaicGrid(macroTileSize, numTileY, tileSize);
     }
 
-    public MosaicGrid(int numTileY, int tileSize) {
+    MosaicGrid() {
+        this(5, 180, 370);
+    }
+
+    MosaicGrid(int macroTileSize, int numTileY, int tileSize) {
+        this.macroTileSize = macroTileSize;
         this.numTileY = numTileY;
         this.numTileX = numTileY * 2;
         this.tileSize = tileSize;
@@ -67,16 +81,19 @@ public class MosaicGrid {
         return geometryFactory;
     }
 
-
-    public double getPixelSize() {
-        return pixelSize;
+    public int getMacroTileSize() {
+        return macroTileSize;
     }
 
     public int getTileSize() {
         return tileSize;
     }
 
-    public Rectangle computeRegion(Geometry roiGeometry) {
+    public double getPixelSize() {
+        return pixelSize;
+    }
+
+    public Rectangle computeBounds(Geometry roiGeometry) {
         Rectangle region = new Rectangle(gridWidth, gridHeight);
         if (roiGeometry != null) {
             final Coordinate[] coordinates = roiGeometry.getBoundary().getCoordinates();
@@ -100,16 +117,16 @@ public class MosaicGrid {
         return region;
     }
 
-    public Rectangle alignToTileGrid(Rectangle region) {
-        int minX = region.x / tileSize * tileSize;
-        int maxX = (region.x + region.width + tileSize - 1) / tileSize * tileSize;
-        int minY = (region.y / tileSize) * tileSize;
-        int maxY = (region.y + region.height + tileSize - 1) / tileSize * tileSize;
+    public Rectangle alignToTileGrid(Rectangle rectangle) {
+        int minX = rectangle.x / tileSize * tileSize;
+        int maxX = (rectangle.x + rectangle.width + tileSize - 1) / tileSize * tileSize;
+        int minY = (rectangle.y / tileSize) * tileSize;
+        int maxY = (rectangle.y + rectangle.height + tileSize - 1) / tileSize * tileSize;
 
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
 
-    public Geometry getTileGeometry(int tileX, int tileY) {
+    Geometry getTileGeometry(int tileX, int tileY) {
         double x1 = tileXToDegree(tileX);
         double x2 = tileXToDegree(tileX + 1);
         double y1 = tileYToDegree(tileY);
@@ -168,7 +185,19 @@ public class MosaicGrid {
         return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
-    public Point[] getTileIndices(Geometry geometry) {
+    public TileIndexWritable[] getTileIndices(Geometry geometry) {
+        Point[] tilePointIndices = getTilePointIndices(geometry);
+        TileIndexWritable[] tileIndices = new TileIndexWritable[tilePointIndices.length];
+        for (int i = 0; i < tilePointIndices.length; i++) {
+            Point point = tilePointIndices[i];
+            int macroX = point.x / macroTileSize;
+            int macroY = point.y / macroTileSize;
+            tileIndices[i] = new TileIndexWritable(macroX, macroY, point.x, point.y);
+        }
+        return tileIndices;
+    }
+
+    Point[] getTilePointIndices(Geometry geometry) {
         if (geometry == null) {
             Point[] points = new Point[numTileX * numTileY];
 
@@ -180,8 +209,8 @@ public class MosaicGrid {
             }
             return points;
         } else {
-            Rectangle geometryRect = computeRegion(geometry);
-            Rectangle gridRect = alignToTileGrid(geometryRect);
+            Rectangle geometryBounds = computeBounds(geometry);
+            Rectangle gridRect = alignToTileGrid(geometryBounds);
             final int xStart = gridRect.x / tileSize;
             final int yStart = gridRect.y / tileSize;
             final int width = gridRect.width / tileSize;
@@ -205,4 +234,28 @@ public class MosaicGrid {
         return new Rectangle(tileX * tileSize, tileY * tileSize, tileSize, tileSize);
     }
 
+    public Rectangle getMacroTileRectangle(int tileX, int tileY) {
+        int pixelPerTile = tileSize * macroTileSize;
+        return new Rectangle(tileX * pixelPerTile, tileY * pixelPerTile, pixelPerTile, pixelPerTile);
+    }
+
+    public CrsGeoCoding createMacroCRS(Point macroTile) {
+        CrsGeoCoding geoCoding;
+        try {
+            Rectangle productRegion = getMacroTileRectangle(macroTile.x, macroTile.y);
+            geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                                         productRegion.width,
+                                         productRegion.height,
+                                         -180.0 + pixelSize * productRegion.x,
+                                         90.0 - pixelSize * productRegion.y,
+                                         pixelSize,
+                                         pixelSize,
+                                         0.0, 0.0);
+        } catch (FactoryException e) {
+            throw new IllegalStateException(e);
+        } catch (TransformException e) {
+            throw new IllegalStateException(e);
+        }
+        return geoCoding;
+    }
 }

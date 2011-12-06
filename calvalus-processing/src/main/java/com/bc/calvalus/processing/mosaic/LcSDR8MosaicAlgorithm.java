@@ -17,6 +17,8 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.binning.VariableContext;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.Arrays;
 
@@ -25,7 +27,7 @@ import java.util.Arrays;
  *
  * @author MarcoZ
  */
-public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
+public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int STATUS_LAND = 1;
     private static final int NUM_AGGREGATION_BANDS = 3;
@@ -34,6 +36,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
     private float[][] aggregatedSamples = null;
     private String[] outputFeatures;
     private int tileSize;
+    private Configuration jobConf;
 
     @Override
     public void init(TileIndexWritable tileIndex) {
@@ -83,10 +86,20 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm {
     }
 
     @Override
+    public void setConf(Configuration jobConf) {
+        this.jobConf = jobConf;
+    }
+
+    @Override
+    public Configuration getConf() {
+        return jobConf;
+    }
+
+    @Override
     public void setVariableContext(VariableContext variableContext) {
         varIndexes = createVariableIndexes(variableContext);
         outputFeatures = createOutputFeatureNames();
-        tileSize = new MosaicGrid().getTileSize();
+        tileSize = MosaicGrid.create(jobConf).getTileSize();
     }
 
     @Override

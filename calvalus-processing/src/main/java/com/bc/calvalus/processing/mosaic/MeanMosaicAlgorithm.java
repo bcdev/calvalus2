@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.binning.VariableContext;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.Arrays;
 
@@ -9,12 +11,13 @@ import java.util.Arrays;
  *
  * @author MarcoZ
  */
-public class MeanMosaicAlgorithm implements MosaicAlgorithm {
+public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private float[][] aggregatedSamples = null;
     private int[][] counters = null;
     private String[] outputFeatures;
     private int variableCount;
     private int tileSize;
+    private Configuration jobConf;
 
     @Override
     public void init(TileIndexWritable tileIndex) {
@@ -65,11 +68,21 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm {
         for (int i = 0; i < outputFeatures.length; i++) {
             outputFeatures[i] = variableContext.getVariableName(i) + "_mean";
         }
-        tileSize = new MosaicGrid().getTileSize();
+        tileSize = MosaicGrid.create(jobConf).getTileSize();
     }
 
     @Override
     public String[] getOutputFeatures() {
         return outputFeatures;
+    }
+
+    @Override
+    public void setConf(Configuration conf) {
+        this.jobConf = conf;
+    }
+
+    @Override
+    public Configuration getConf() {
+        return jobConf;
     }
 }
