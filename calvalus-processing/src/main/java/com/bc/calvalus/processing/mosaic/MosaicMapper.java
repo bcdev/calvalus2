@@ -162,6 +162,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             numTilesHandled++;
             context.setStatus(numTilesHandled + " of " + numTilesTotal);
         }
+        context.setStatus("");
         return numTilesProcessed;
     }
 

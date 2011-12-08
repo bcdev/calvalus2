@@ -100,6 +100,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             final long stopTime = System.nanoTime();
             LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
         }
+        context.setStatus("");
     }
 
     private String getProductName(String fileName) {

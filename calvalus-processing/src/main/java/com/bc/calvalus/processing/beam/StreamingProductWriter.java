@@ -97,6 +97,9 @@ public class StreamingProductWriter {
         Path indexPath = StreamingProductIndex.getIndexPath(outputPath);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         streamingProductIndex.writeIndex(indexMap);
+        if (context != null) {
+            context.setStatus("");
+        }
     }
 
     private SequenceFile.Writer writeHeader(Product product, Path outputPath, int tile_height) throws IOException {
