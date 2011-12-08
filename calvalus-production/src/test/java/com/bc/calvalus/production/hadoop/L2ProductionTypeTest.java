@@ -47,12 +47,11 @@ public class L2ProductionTypeTest {
         JobClient jobClient = new JobClient(new JobConf());
         HadoopProcessingService processingService = new HadoopProcessingService(jobClient) {
             @Override
-            public BundleDescriptor[] getBundles(String filter) throws IOException {
-                ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
+            public BundleDescriptor[] getBundles(String filter) {
+                ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0",
+                                                                                  "");
                 processorDescriptor.setOutputProductType("Generic-L2");
-                return new BundleDescriptor[]{
-                        new BundleDescriptor("beam", "4.9-SNAPSHOT",
-                                             processorDescriptor)};
+                return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", processorDescriptor)};
             }
         };
         productionType = new L2ProductionType(new TestInventoryService(),
@@ -78,7 +77,8 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
+                     production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -89,8 +89,10 @@ public class L2ProductionTypeTest {
         assertTrue(workflow instanceof L2WorkflowItem);
 
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
-        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        assertEquals(true,
+                     l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))",
+                     l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03", inputFiles);
 
@@ -99,12 +101,33 @@ public class L2ProductionTypeTest {
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
+                     productSet.getName());
+        assertEquals(
+                "hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
         assertNull(productSet.getRegionName());
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", productSet.getRegionWKT());
+    }
+
+    @Test
+    public void testCalvalusJobNameIsUsedForProductionId() throws Exception {
+        String nameForProductionId = "my_own_name";
+        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "marcop",
+                                                                    "inputPath", "MER_RR__1P/r03",
+                                                                    "calvalus.hadoop.mapred.job.name",
+                                                                    nameForProductionId,
+                                                                    "processorBundleName", "beam",
+                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
+                                                                    "processorName", "BandMaths");
+
+        Production production = productionType.createProduction(productionRequest);
+        assertNotNull(production);
+        assertTrue(production.getId().contains(nameForProductionId));
+        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
+                     production.getName());
     }
 
     @Test
@@ -138,41 +161,43 @@ public class L2ProductionTypeTest {
         assertEquals(0, workflowItems.length);
         assertTrue(workflow instanceof L2WorkflowItem);
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
-        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        assertEquals(true,
+                     l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))",
+                     l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/03," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/04," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/05," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/06," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/07," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/08," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/09," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/10," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/11," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/12," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/13," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/14," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/16," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/17," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/18," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/19," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/20," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/21," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/22," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/23," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/24," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/25," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/26," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/27," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/28," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/29," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/03," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/04," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/05," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/06," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/07," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/08," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/09," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/10," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/11," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/12," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/13," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/14," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/16," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/17," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/18," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/19," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/20," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/21," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/22," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/23," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/24," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/25," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/26," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/27," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/28," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/29," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
 
         L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
@@ -181,7 +206,9 @@ public class L2ProductionTypeTest {
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("My Math Production", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
+        assertEquals(
+                "hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
         assertNull(productSet.getRegionName());
@@ -201,12 +228,15 @@ public class L2ProductionTypeTest {
                                                                     "processorName", "BandMaths",
                                                                     "processorParameters", "<!-- no params -->",
                                                                     "regionName", "Island In The Sun",
-                                                                    "regionWKT", "POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))"
+                                                                    "regionWKT",
+                                                                    "POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))"
         );
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", production.getName());
+        assertEquals(
+                "Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'",
+                production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
         WorkflowItem workflow = production.getWorkflow();
@@ -216,13 +246,15 @@ public class L2ProductionTypeTest {
         assertEquals(0, workflowItems.length);
         assertTrue(workflow instanceof L2WorkflowItem);
         L2WorkflowItem l2WorkflowItem = (L2WorkflowItem) workflow;
-        assertEquals(true, l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
-        assertEquals("POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        assertEquals(true,
+                     l2WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals("POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))",
+                     l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
+                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
 
         L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
@@ -230,8 +262,12 @@ public class L2ProductionTypeTest {
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'", productSet.getName());
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$", productSet.getPath());
+        assertEquals(
+                "Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'",
+                productSet.getName());
+        assertEquals(
+                "hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
         assertEquals("Island In The Sun", productSet.getRegionName());

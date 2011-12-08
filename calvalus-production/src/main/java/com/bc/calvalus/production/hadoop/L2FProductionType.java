@@ -40,13 +40,16 @@ public class L2FProductionType extends HadoopProductionType {
 
     static final String NAME = "L2F";
 
-    public L2FProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
+    public L2FProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                             StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String jobName = productionRequest.getString("calvalus.hadoop.mapred.job.name",
+                                                           productionRequest.getProductionType());
+        final String productionId = Production.createId(jobName);
         final String productionName = productionRequest.getProdcutionName(createProductionName(productionRequest));
 
         HadoopWorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);

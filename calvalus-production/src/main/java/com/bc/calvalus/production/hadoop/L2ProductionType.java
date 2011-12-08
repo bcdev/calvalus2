@@ -41,13 +41,16 @@ public class L2ProductionType extends HadoopProductionType {
 
     static final String NAME = "L2";
 
-    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
+    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String jobName = productionRequest.getString("calvalus.hadoop.mapred.job.name",
+                                                           productionRequest.getProductionType());
+        final String productionId = Production.createId(jobName);
         final String productionName = productionRequest.getProdcutionName(createL2ProductionName(productionRequest));
 
         L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
@@ -78,7 +81,8 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
-                                      String productionName, ProductionRequest productionRequest) throws ProductionException {
+                                      String productionName, ProductionRequest productionRequest) throws
+                                                                                                  ProductionException {
 
         List<DateRange> dateRanges = getDateRanges(productionRequest);
         String inputPath = productionRequest.getString("inputPath");
@@ -101,14 +105,16 @@ public class L2ProductionType extends HadoopProductionType {
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
         l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        l2JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+        l2JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                        regionGeometry != null ? regionGeometry.toString() : "");
 
         Date startDate = dateRanges.get(0).getStartDate();
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String pathPattern = outputDir + "/.*${yyyy}${MM}${dd}.*.seq$";
         String regionWKT = regionGeometry != null ? regionGeometry.toString() : null;
         String productType = getResultingProductionType(processorBundleName, processorBundleVersion, processorName);
-        ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate, regionName, regionWKT);
+        ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate,
+                                               regionName, regionWKT);
 
         L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
         l2WorkflowItem.addWorkflowStatusListener(new ProductSetSaver(l2WorkflowItem, productSet, outputDir));
@@ -133,17 +139,20 @@ public class L2ProductionType extends HadoopProductionType {
         return "L2";
     }
 
-    public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws ProductionException {
+    public static String[] getInputFiles(InventoryService inventoryService, ProductionRequest productionRequest) throws
+                                                                                                                 ProductionException {
         List<DateRange> dateRanges = getDateRanges(productionRequest);
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
         return getInputFiles(inventoryService, inputPath, regionName, dateRanges);
     }
 
-    private static String[] getInputFiles(InventoryService inventoryService, String inputPath, String regionName, List<DateRange> dateRanges) throws ProductionException {
+    private static String[] getInputFiles(InventoryService inventoryService, String inputPath, String regionName,
+                                          List<DateRange> dateRanges) throws ProductionException {
         List<String> inputFileAccumulator = new ArrayList<String>();
         for (DateRange dateRange : dateRanges) {
-            String[] inputPaths = getInputPaths(inventoryService, inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
+            String[] inputPaths = getInputPaths(inventoryService, inputPath, dateRange.getStartDate(),
+                                                dateRange.getStopDate(), regionName);
             inputFileAccumulator.addAll(Arrays.asList(inputPaths));
         }
         if (inputFileAccumulator.size() == 0) {
