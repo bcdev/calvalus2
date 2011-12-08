@@ -81,16 +81,16 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                                                     true,
                                                     level2OperatorName,
                                                     level2Parameters);
-        int numTiles = 0;
+        int numTilesProcessed = 0;
         if (product != null) {
             try {
                 if (product.getGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
-                numTiles = processProduct(product, regionGeometry, ctx, context);
-                if (numTiles > 0L) {
+                numTilesProcessed = processProduct(product, regionGeometry, ctx, context);
+                if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
-                    context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTiles);
+                    context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTilesProcessed);
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products without tiles").increment(1);
                 }
@@ -106,7 +106,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
         // write final log entry for runtime measurements
         LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} tiless produced)",
-                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTiles));
+                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTilesProcessed));
     }
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context context) throws IOException, InterruptedException {
@@ -148,17 +148,21 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
-        LOG.info("Product covers #tiles : " + tileIndices.length);
-        int numTileTotal = 0;
+        int numTilesTotal = tileIndices.length;
+        LOG.info("Product covers #tiles : " + numTilesTotal);
+        int numTilesProcessed = 0;
+        int numTilesHandled = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
         for (TileIndexWritable tileIndex : tileIndices) {
             LOG.info("Processing tile: " + tileIndex);
             context.progress();
             if (tileFactory.processTile(tileIndex)) {
-                numTileTotal++;
+                numTilesProcessed++;
             }
+            numTilesHandled++;
+            context.setStatus(numTilesHandled + " of " + numTilesTotal);
         }
-        return numTileTotal;
+        return numTilesProcessed;
     }
 
 

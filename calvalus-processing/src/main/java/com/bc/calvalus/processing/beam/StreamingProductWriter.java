@@ -23,7 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.util.Progressable;
+import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -48,11 +48,11 @@ public class StreamingProductWriter {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Configuration configuration;
-    private final Progressable progressable;
+    private final TaskInputOutputContext context;
 
-    public StreamingProductWriter(Configuration configuration, Progressable progressable) {
+    public StreamingProductWriter(Configuration configuration, TaskInputOutputContext context) {
         this.configuration = configuration;
-        this.progressable = progressable;
+        this.context = context;
     }
 
     public void writeProduct(Product product, Path outputPath, int tileHeight) throws IOException {
@@ -88,6 +88,9 @@ public class StreamingProductWriter {
                 writeProductData(writer, key, productData);
             }
             LOG.info(" written y=" + y + " h=" + h);
+            if (context != null) {
+                context.setStatus(y + " of " + h);
+            }
         }
         writer.close();
 
@@ -109,7 +112,7 @@ public class StreamingProductWriter {
                                          fileSystem.getDefaultBlockSize(),
                                          SequenceFile.CompressionType.NONE,
                                          null, // new DefaultCodec(),
-                                         progressable,
+                                         context,
                                          metadata);
     }
 

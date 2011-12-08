@@ -89,9 +89,10 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         try {
             File productFile = productFormatter.createTemporaryProductFile();
             LOG.info("Start writing product to file: " + productFile.getName());
+            context.setStatus("writing");
             ProductIO.writeProduct(product, productFile, outputFormat, false, new ProductFormatter.ProgressMonitorAdapter(context));
             LOG.info("Finished writing product.");
-
+            context.setStatus("copying");
             productFormatter.compressToHDFS(context, productFile);
         } finally {
             productFormatter.cleanupTempDir();
