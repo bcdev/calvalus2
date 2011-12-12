@@ -24,6 +24,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
+import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -35,6 +36,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -57,6 +60,46 @@ public class L2ProductionTypeTest {
         productionType = new L2ProductionType(new TestInventoryService(),
                                               processingService,
                                               new TestStagingService());
+    }
+
+    @Test
+    public void testGetDateRanges() throws Exception {
+        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+                                                                    "minDate", "2005-01-01",
+                                                                    "maxDate", "2005-01-31");
+
+        List<DateRange> dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        assertNotNull(dateRanges);
+        assertEquals(1, dateRanges.size());
+        DateRange dateRange = dateRanges.get(0);
+        assertNotNull(dateRange);
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-01-01"), dateRange.getStartDate());
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-01-31"), dateRange.getStopDate());
+
+        productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+                                                  "minDate", "2005-01-01",
+                                                  "maxDate", "2005-02-00");
+
+        dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        assertNotNull(dateRanges);
+        assertEquals(1, dateRanges.size());
+        dateRange = dateRanges.get(0);
+        assertNotNull(dateRange);
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-01-01"), dateRange.getStartDate());
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-01-31"), dateRange.getStopDate());
+
+        productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+                                                  "minDate", "2005-02-01",
+                                                  "maxDate", "2005-03-00");
+
+        dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        assertNotNull(dateRanges);
+        assertEquals(1, dateRanges.size());
+        dateRange = dateRanges.get(0);
+        assertNotNull(dateRange);
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-02-01"), dateRange.getStartDate());
+        assertEquals(ProductionRequest.getDateFormat().parse("2005-02-28"), dateRange.getStopDate());
+
     }
 
     @Test
@@ -167,37 +210,37 @@ public class L2ProductionTypeTest {
                      l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/03," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/04," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/05," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/06," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/07," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/08," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/09," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/10," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/11," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/12," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/13," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/14," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/16," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/17," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/18," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/19," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/20," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/21," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/22," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/23," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/24," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/25," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/26," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/27," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/28," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/29," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/03," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/04," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/05," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/06," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/07," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/08," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/09," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/10," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/11," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/12," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/13," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/14," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/16," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/17," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/18," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/19," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/20," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/21," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/22," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/23," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/24," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/25," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/26," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/27," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/28," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/29," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
 
         L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
@@ -252,9 +295,9 @@ public class L2ProductionTypeTest {
                      l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String inputFiles = l2WorkflowItem.getInputFiles();
         assertEquals("" +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                     "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
+                             "hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
                      inputFiles);
 
         L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
