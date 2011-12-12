@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  */
 public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
-    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final int DEFAULT_TILE_HEIGHT = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -85,6 +85,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             LOG.info(context.getTaskAttemptID() + " target product created");
             if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products not-used").increment(1);
             } else {
                 // process input and write target product
                 Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
@@ -95,7 +96,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 }
                 StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
                 streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products used").increment(1);
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
