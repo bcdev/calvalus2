@@ -120,7 +120,7 @@ public class L2ProductionTypeTest {
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
+        assertEquals("Level 2 BandMaths",
                      production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
@@ -144,7 +144,7 @@ public class L2ProductionTypeTest {
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
+        assertEquals("Level 2 BandMaths",
                      productSet.getName());
         assertEquals(
                 "hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
@@ -157,20 +157,18 @@ public class L2ProductionTypeTest {
 
     @Test
     public void testCalvalusJobNameIsUsedForProductionId() throws Exception {
-        String nameForProductionId = "my_own_name";
+        String nameForProduction = "my own name";
         ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "marcop",
                                                                     "inputPath", "MER_RR__1P/r03",
-                                                                    "calvalus.hadoop.mapred.job.name",
-                                                                    nameForProductionId,
+                                                                    "productionName",
+                                                                    nameForProduction,
                                                                     "processorBundleName", "beam",
                                                                     "processorBundleVersion", "4.9-SNAPSHOT",
                                                                     "processorName", "BandMaths");
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertTrue(production.getId().contains(nameForProductionId));
-        assertEquals("Level 2 production using input path 'MER_RR__1P/r03' and L2 processor 'BandMaths'",
-                     production.getName());
+        assertEquals(nameForProduction, production.getName());
     }
 
     @Test
@@ -278,7 +276,7 @@ public class L2ProductionTypeTest {
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
         assertEquals(
-                "Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'",
+                "Level 2 BandMaths 2005-01-01 to 2005-01-31 (Island In The Sun)",
                 production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L2ProductionType.NAME + "_"));
@@ -306,7 +304,7 @@ public class L2ProductionTypeTest {
         assertNotNull(productSet);
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals(
-                "Level 2 production using input path 'MER_RR__1P/r03/${yyyy}/${MM}/${dd}' and L2 processor 'BandMaths'",
+                "Level 2 BandMaths 2005-01-01 to 2005-01-31 (Island In The Sun)",
                 productSet.getName());
         assertEquals(
                 "hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",

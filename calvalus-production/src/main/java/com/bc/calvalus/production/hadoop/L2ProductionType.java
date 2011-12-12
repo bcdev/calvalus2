@@ -26,6 +26,7 @@ import org.esa.beam.util.StringUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -48,10 +49,8 @@ public class L2ProductionType extends HadoopProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        final String jobName = productionRequest.getString("calvalus.hadoop.mapred.job.name",
-                                                           productionRequest.getProductionType());
-        final String productionId = Production.createId(jobName);
-        final String productionName = productionRequest.getProdcutionName(createL2ProductionName(productionRequest));
+        final String productionId = Production.createId(productionRequest.getProductionType());
+        final String productionName = productionRequest.getProdcutionName(createProductionName("Level 2 ", productionRequest));
 
         L2WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 
@@ -74,10 +73,24 @@ public class L2ProductionType extends HadoopProductionType {
                              getStagingService().getStagingDir());
     }
 
-    static String createL2ProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Level 2 production using input path '%s' and L2 processor '%s'",
-                             productionRequest.getString("inputPath"),
-                             productionRequest.getString("processorName"));
+    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
+        StringBuilder sb = new StringBuilder(prefix);
+        String processorName = productionRequest.getString("processorName", null);
+        if (processorName != null) {
+            sb.append(processorName).append(" ");
+        }
+        List<DateRange> dateRanges = getDateRanges(productionRequest);
+        if (dateRanges.size() > 0 && dateRanges.get(0).getStartDate() != null && dateRanges.get(0).getStopDate() != null) {
+            DateFormat dateFormat = ProductionRequest.getDateFormat();
+            String start = dateFormat.format(dateRanges.get(0).getStartDate());
+            String stop = dateFormat.format(dateRanges.get(dateRanges.size() - 1).getStopDate());
+            sb.append(start).append(" to ").append(stop).append(" ");
+        }
+        String regionName = productionRequest.getRegionName();
+        if (regionName != null) {
+            sb.append("(").append(regionName).append(") ");
+        }
+        return sb.toString().trim();
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
@@ -116,7 +129,7 @@ public class L2ProductionType extends HadoopProductionType {
         ProductSet productSet = new ProductSet(productType, productionName, pathPattern, startDate, stopDate,
                                                regionName, regionWKT);
 
-        L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionId, l2JobConfig);
+        L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionName, l2JobConfig);
         l2WorkflowItem.addWorkflowStatusListener(new ProductSetSaver(l2WorkflowItem, productSet, outputDir));
         return l2WorkflowItem;
     }

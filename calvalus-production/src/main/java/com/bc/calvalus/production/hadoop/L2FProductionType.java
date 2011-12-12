@@ -30,6 +30,8 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.util.List;
+
 /**
  * A production type used for formatting one or more Level-2 products.
  *
@@ -47,12 +49,10 @@ public class L2FProductionType extends HadoopProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
-        final String jobName = productionRequest.getString("calvalus.hadoop.mapred.job.name",
-                                                           productionRequest.getProductionType());
-        final String productionId = Production.createId(jobName);
+        final String productionId = Production.createId(productionRequest.getProductionType());
         final String productionName = productionRequest.getProdcutionName(createProductionName(productionRequest));
 
-        HadoopWorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
+        HadoopWorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -73,12 +73,12 @@ public class L2FProductionType extends HadoopProductionType {
     }
 
     static String createProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Level 2 formatting using input path '%s' and output format'%s'",
-                             productionRequest.getString("inputPath"),
-                             productionRequest.getString("outputFormat", "NetCDF"));
+        String prefix = String.format("Level 2 Format %s ", productionRequest.getString("outputFormat", "NetCDF"));
+        return L2ProductionType.createProductionName(prefix, productionRequest);
     }
 
     HadoopWorkflowItem createWorkflowItem(String productionId,
+                                          String productionName,
                                           ProductionRequest productionRequest) throws ProductionException {
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
@@ -108,7 +108,7 @@ public class L2FProductionType extends HadoopProductionType {
         l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
-        return new L2FormattingWorkflowItem(getProcessingService(), productionId, l2JobConfig);
+        return new L2FormattingWorkflowItem(getProcessingService(), productionName, l2JobConfig);
     }
 
 }

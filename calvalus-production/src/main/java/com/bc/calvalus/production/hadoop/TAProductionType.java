@@ -37,7 +37,8 @@ public class TAProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(createTAProductionName(productionRequest));
+        String defaultProductionName = L2ProductionType.createProductionName("Trend analysis ", productionRequest);
+        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
@@ -66,8 +67,8 @@ public class TAProductionType extends HadoopProductionType {
 
             Workflow.Sequential sequential = new Workflow.Sequential();
 
-            String l3JobName = String.format("%s-L3-%d", productionId, (i + 1));
-            String taJobName = String.format("%s-TA-%d", productionId, (i + 1));
+            String l3JobName = String.format("%s L3-%s", productionName, date1Str);
+            String taJobName = String.format("%s TA-%s", productionName, date1Str);
 
             String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
             if (l1InputFiles.length > 0) {
@@ -123,13 +124,6 @@ public class TAProductionType extends HadoopProductionType {
         return new TAStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    static String createTAProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Trend analysis using input path '%s' and L2 processor '%s'",
-                             productionRequest.getString("inputPath"),
-                             productionRequest.getString("processorName"));
-
     }
 
     static TAConfig getTAConfig(ProductionRequest productionRequest) throws ProductionException {

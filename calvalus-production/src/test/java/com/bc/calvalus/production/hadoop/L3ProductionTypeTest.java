@@ -42,7 +42,7 @@ public class L3ProductionTypeTest {
         Production production = productionType.createProduction(productionRequest);
 
         assertNotNull(production);
-        assertEquals("Level 3 production using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Level 3 BandMaths 2010-06-15 to 2010-08-15", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + L3ProductionType.NAME + "_"));
         assertNotNull(production.getWorkflow());

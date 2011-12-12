@@ -43,7 +43,8 @@ public class L3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(createL3ProductionName(productionRequest));
+        String defaultProductionName = L2ProductionType.createProductionName("Level 3 ", productionRequest);
+        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
@@ -84,7 +85,7 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
                 L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                                   productionId + "_" + (i + 1), jobConfig);
+                                                                   productionId + " " + date1Str, jobConfig);
                 workflow.add(l3WorkflowItem);
             }
         }
@@ -112,13 +113,6 @@ public class L3ProductionType extends HadoopProductionType {
         return new L3Staging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Level 3 production using input path '%s' and L2 processor '%s'",
-                             productionRequest.getString("inputPath"),
-                             productionRequest.getString("processorName", "NONE"));
-
     }
 
     static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {

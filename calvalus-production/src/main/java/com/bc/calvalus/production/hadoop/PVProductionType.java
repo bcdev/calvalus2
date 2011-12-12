@@ -46,9 +46,10 @@ public class PVProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(createProductionName(productionRequest));
+        String defaultProductionName = L2ProductionType.createProductionName("Product validation ", productionRequest);
+        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        WorkflowItem workflowItem = createWorkflowItem(productionId, productionRequest);
+        WorkflowItem workflowItem = createWorkflowItem(productionId, productionName,  productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -69,12 +70,9 @@ public class PVProductionType extends HadoopProductionType {
         throw new NotImplementedException("Staging currently not implemented for product validation.");
     }
 
-    static String createProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Product validation using input path '%s'", productionRequest.getString("inputPath"));
-    }
-
     WorkflowItem createWorkflowItem(String productionId,
-                                      ProductionRequest productionRequest) throws ProductionException {
+                                    String productionName,
+                                    ProductionRequest productionRequest) throws ProductionException {
 
         String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String outputDir = getOutputPath(productionRequest, productionId, "");
@@ -83,7 +81,7 @@ public class PVProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new ProductValidatorWorkflowItem(getProcessingService(), productionId, jobConfig);
+        return new ProductValidatorWorkflowItem(getProcessingService(), productionName, jobConfig);
     }
 
 }

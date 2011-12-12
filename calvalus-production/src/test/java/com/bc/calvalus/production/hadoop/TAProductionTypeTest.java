@@ -36,7 +36,7 @@ public class TAProductionTypeTest {
         ProductionRequest productionRequest = createValidTAProductionRequest();
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
-        assertEquals("Trend analysis using input path 'MER_RR__1P/r03/2010' and L2 processor 'BandMaths'", production.getName());
+        assertEquals("Trend analysis BandMaths 2010-06-01 to 2010-06-15 (wonderland)", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + TAProductionType.NAME + "_"));
         assertNotNull(production.getWorkflow());

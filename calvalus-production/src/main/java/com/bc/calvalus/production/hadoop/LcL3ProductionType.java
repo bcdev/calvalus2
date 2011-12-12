@@ -60,11 +60,12 @@ public class LcL3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(createL3ProductionName(productionRequest));
+        String defaultProductionName = L2ProductionType.createProductionName("Level 3 LC ", productionRequest);
+        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        String inputPath = productionRequest.getString("inputPath");
-        // only processing one time for the time
+
         List<DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
+        String inputPath = productionRequest.getString("inputPath");
 
         Workflow parallel = new Workflow.Parallel();
         parallel.setSustainable(false);
@@ -102,7 +103,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
                 jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigCloud.set("mapred.job.priority", "VERY_LOW");
-                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + period + "_cloud", jobConfigCloud));
+                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " Cloud", jobConfigCloud));
             }
             if (productionRequest.getBoolean("lcl3.sr", true)) {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
@@ -112,7 +113,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
                 jobConfigSr.set("mapred.job.priority", "LOW");
-                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionId + "_" + period + "_sr", jobConfigSr));
+                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " SR", jobConfigSr));
             }
             if (productionRequest.getBoolean("lcl3.nc", true)) {
                 String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s", period);
@@ -124,7 +125,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigFormat.set("mapred.job.priority", "NORMAL");
                 // TODO add support for local formatting
 //        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionId + "_" + period + "_nc", jobConfigFormat));
+                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " " + period + " Format", jobConfigFormat));
             }
             parallel.add(sequence);
         }
@@ -230,7 +231,4 @@ public class LcL3ProductionType extends HadoopProductionType {
         throw new NotImplementedException("Staging currently not implemented for lc_cci Level3.");
     }
 
-    static String createL3ProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("lc_cci Level 3 production using input path '%s'", productionRequest.getString("inputPath"));
-    }
 }

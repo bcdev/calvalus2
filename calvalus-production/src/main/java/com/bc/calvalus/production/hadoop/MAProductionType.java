@@ -34,7 +34,8 @@ public class MAProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(createMAProductionName(productionRequest));
+        String defaultProductionName = L2ProductionType.createProductionName("Match-up extraction ", productionRequest);
+        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
 
         String[] l1InputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
@@ -83,12 +84,6 @@ public class MAProductionType extends HadoopProductionType {
         return new MAStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
-    }
-
-    static String createMAProductionName(ProductionRequest productionRequest) throws ProductionException {
-        return String.format("Match-up extraction using input path '%s'",
-                             productionRequest.getString("inputPath"));
-
     }
 
     static String getMAConfigXml(ProductionRequest productionRequest) throws ProductionException {
