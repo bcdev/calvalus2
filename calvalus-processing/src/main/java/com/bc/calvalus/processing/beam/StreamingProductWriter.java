@@ -63,13 +63,14 @@ public class StreamingProductWriter {
         LOG.info(" written header");
 
         Band[] bands = product.getBands();
+        int sceneHeight = product.getSceneRasterHeight();
         int x = 0;
         int w = product.getSceneRasterWidth();
         int h = tileHeight;
         int sliceIndex = 0;
-        for (int y = 0; y < product.getSceneRasterHeight(); y += tileHeight, sliceIndex++) {
-            if (y + h > product.getSceneRasterHeight()) {
-                h = product.getSceneRasterHeight() - y;
+        for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
+            if (y + h > sceneHeight) {
+                h = sceneHeight - y;
             }
             for (Band band : bands) {
                 Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
@@ -87,9 +88,9 @@ public class StreamingProductWriter {
                 updateIndex(indexMap, key, writer.getLength());
                 writeProductData(writer, key, productData);
             }
-            LOG.info(" written y=" + y + " h=" + h);
+            LOG.info(" written y=" + y + " h=" + h + " sceneHeight=" + sceneHeight);
             if (context != null) {
-                context.setStatus(y + " of " + h);
+                context.setStatus(String.format("%d of %d", y, sceneHeight));
             }
         }
         writer.close();
@@ -98,8 +99,8 @@ public class StreamingProductWriter {
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         streamingProductIndex.writeIndex(indexMap);
         if (context != null) {
-            context.setStatus("");
-        }
+            context.setStatus(Integer.toString(sceneHeight));
+         }
     }
 
     private SequenceFile.Writer writeHeader(Product product, Path outputPath, int tile_height) throws IOException {
