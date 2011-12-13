@@ -136,6 +136,10 @@ public class ProcessStatusTest {
                      ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.RUNNING, 0.2f, ""),
                                              new ProcessStatus(ProcessState.ERROR, 0.6f, ""),
                                              new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
+        // 'CANCELLED' and 'ERROR' are not taken into accout --> 'ERROR'
+        assertEquals(new ProcessStatus(ProcessState.ERROR, 1f, "bad error"),
+                     ProcessStatus.aggregateUnsustainable(new ProcessStatus(ProcessState.ERROR, 0.6f, "bad error"),
+                                             new ProcessStatus(ProcessState.CANCELLED, 0.1f, "Go away")));
     }
 
     @Test

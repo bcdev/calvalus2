@@ -207,6 +207,9 @@ public class ProcessStatus {
                 usable.add(status);
             }
         }
+        if (statuses.length > 0 && usable.size() == 0) {
+            return new ProcessStatus(ProcessState.ERROR, 1f, statuses[0].message);
+        }
         return aggregate(usable.toArray(new ProcessStatus[usable.size()]));
     }
 }
