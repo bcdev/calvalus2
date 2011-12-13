@@ -61,6 +61,9 @@ public class ProductFormatter {
         } else if (outputFormat.equals("NetCDF")) {
             outputExtension = ".nc";
             outputFormat = "NetCDF-BEAM"; // use NetCDF with BEAM extensions
+        } else if (outputFormat.equals("NetCDF4")) {
+            outputExtension = ".nc";
+            outputFormat = "NetCDF4-BEAM"; // use NetCDF with BEAM extensions
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
         } else {
