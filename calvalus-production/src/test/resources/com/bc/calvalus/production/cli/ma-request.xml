@@ -87,6 +87,13 @@
                 <wps:LiteralData>POLYGON((23.0 42.0, 11.0 42.0, 11.0 22.0, 23.0 22.0, 23.0 42.0)</wps:LiteralData>
             </wps:Data>
         </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.output.compression</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData></wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
     </wps:DataInputs>
 
     <wps:ResponseForm>

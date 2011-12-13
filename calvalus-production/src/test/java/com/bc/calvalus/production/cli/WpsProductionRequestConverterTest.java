@@ -23,7 +23,7 @@ public class WpsProductionRequestConverterTest {
         assertEquals("testuser", productionRequest.getUserName());
         Map<String, String> parameters = productionRequest.getParameters();
         assertNotNull(parameters);
-        assertEquals(8, parameters.size());
+        assertEquals(9, parameters.size());
 
         assertTrue(parameters.containsKey("calvalus.processor.package"));
         assertEquals("beam-meris-radiometry", parameters.get("calvalus.processor.package"));
@@ -43,6 +43,10 @@ public class WpsProductionRequestConverterTest {
         assertTrue(l2Parameters.endsWith("</parameters>"));
         assertTrue(l2Parameters.contains("<doSmile>true</doSmile>"));
         assertTrue(l2Parameters.contains("<reproVersion>AUTO_DETECT</reproVersion>"));
+
+        assertTrue(parameters.containsKey("calvalus.output.compression"));
+        assertNotNull(parameters.get("calvalus.output.compression"));
+        assertEquals("", parameters.get("calvalus.output.compression"));
     }
 
 }
