@@ -36,7 +36,8 @@ public class MosaicTileHandlerTest {
         mosaicGrid = new MosaicGrid(3, 9, 2);
         tileHandler = new DummyMosaicTileHandler(mosaicGrid);
     }
-        @Test
+
+    @Test
     public void testCreateTileIndices() throws Exception {
         Point[] tileIndices = tileHandler.createTileIndices(mosaicGrid.getMacroTileSize());
         assertNotNull(tileIndices);
@@ -50,6 +51,7 @@ public class MosaicTileHandlerTest {
         assertEquals(new Point(2, 2), tileIndices[8]);
 
     }
+
     @Test
     public void testGetMissingTileIndices() throws Exception {
         Point[] missingIndices = tileHandler.getMissingTileIndices(new Point(0, 0), new Point(2, 0));
@@ -143,6 +145,59 @@ public class MosaicTileHandlerTest {
         assertEquals(0, tileHandler.nanTiles.size());
         assertEquals(9, tileHandler.dataTiles.size());
         assertEquals(new Point(0, 0), tileHandler.dataTiles.get(0));
+    }
+
+    @Test
+    public void testProductWriting_SomeTilesPresent_2_MacroTiles() throws Exception {
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        assertNull(tileHandler.createProduct);
+        assertEquals(0, tileHandler.closeProduct);
+        assertEquals(0, tileHandler.nanTiles.size());
+        assertEquals(0, tileHandler.dataTiles.size());
+
+        tileHandler.handleTile(createKey(0, 0, 1, 0), new TileDataWritable(new float[][]{}));
+        assertEquals(new Point(0, 0), tileHandler.createProduct);
+        assertEquals(1, tileHandler.nanTiles.size());
+        assertEquals(1, tileHandler.dataTiles.size());
+        assertEquals(new Point(1, 0), tileHandler.dataTiles.get(0));
+
+        tileHandler.handleTile(createKey(0, 0, 2, 0), new TileDataWritable(new float[][]{}));
+        tileHandler.handleTile(createKey(0, 0, 2, 1), new TileDataWritable(new float[][]{}));
+        tileHandler.handleTile(createKey(0, 0, 0, 2), new TileDataWritable(new float[][]{}));
+
+        assertEquals(0, tileHandler.closeProduct);
+
+        tileHandler.handleTile(createKey(1, 0, 1, 1), new TileDataWritable(new float[][]{}));
+
+        assertEquals(new Point(1, 0), tileHandler.createProduct);
+        assertEquals(1, tileHandler.closeProduct);
+        assertEquals(5 + 4, tileHandler.nanTiles.size());
+        assertEquals(4 + 1, tileHandler.dataTiles.size());
+        assertEquals(new Point(1, 0), tileHandler.dataTiles.get(0));
+
+        tileHandler.close();
+
+        assertEquals(new Point(1, 0), tileHandler.createProduct);
+        assertEquals(2, tileHandler.closeProduct);
+        assertEquals(5 + 8, tileHandler.nanTiles.size());
+        assertEquals(4 + 1, tileHandler.dataTiles.size());
+        assertEquals(new Point(1, 0), tileHandler.dataTiles.get(0));
+    }
+
+    @Test
+    public void testProductWriting_NoTilesPresent_MacroTile_0_0() throws Exception {
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        assertNull(tileHandler.createProduct);
+        assertEquals(0, tileHandler.closeProduct);
+        assertEquals(0, tileHandler.nanTiles.size());
+        assertEquals(0, tileHandler.dataTiles.size());
+
+        tileHandler.close();
+
+        assertNull(tileHandler.createProduct);
+        assertEquals(0, tileHandler.closeProduct);
+        assertEquals(0, tileHandler.nanTiles.size());
+        assertEquals(0, tileHandler.dataTiles.size());
     }
 
     @Test

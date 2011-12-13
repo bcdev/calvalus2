@@ -46,8 +46,7 @@ abstract class MosaicTileHandler {
                 key.getMacroTileX() != currentMacroTile.x) {
             Point macroTile = new Point(key.getMacroTileX(), key.getMacroTileY());
             if (currentMacroTile != null) {
-                writeNaNTiles(currentTile, null);
-                closeProduct();
+                close();
             }
             currentMacroTile = macroTile;
             createProduct(currentMacroTile);
@@ -58,10 +57,13 @@ abstract class MosaicTileHandler {
     }
 
     public void close() throws IOException {
-        writeNaNTiles(currentTile, null);
-        closeProduct();
+        if (currentMacroTile != null) {
+            writeNaNTiles(currentTile, null);
+            closeProduct();
+        }
+        currentTile = null;
+        currentMacroTile = null;
     }
-
     private void writeNaNTiles(Point start, Point stop) throws IOException {
         Point[] missingTileIndices = getMissingTileIndices(start, stop);
         for (Point tile : missingTileIndices) {
