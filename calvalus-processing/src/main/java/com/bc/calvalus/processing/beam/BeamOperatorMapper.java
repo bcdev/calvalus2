@@ -65,6 +65,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
                 if (FileSystem.get(jobConfig).exists(outputProductPath)) {
                     LOG.info("resume: target product already exist, skip processing");
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
                     return;
                 }
             }
@@ -81,7 +82,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
 
             if (targetProduct == null || targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products not-used").increment(1);
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 LOG.info(context.getTaskAttemptID() + " target product created");
                 // process input and write target product
@@ -93,7 +94,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 }
                 StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
                 streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products used").increment(1);
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
