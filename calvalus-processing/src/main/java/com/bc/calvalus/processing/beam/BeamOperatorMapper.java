@@ -78,15 +78,12 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                                                               true,
                                                               level2OperatorName,
                                                               level2Parameters);
-            if (targetProduct == null) {
-                LOG.info("Product not used");
-                return;
-            }
-            LOG.info(context.getTaskAttemptID() + " target product created");
-            if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
+
+            if (targetProduct == null || targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products not-used").increment(1);
             } else {
+                LOG.info(context.getTaskAttemptID() + " target product created");
                 // process input and write target product
                 Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
                 int tileHeight = DEFAULT_TILE_HEIGHT;
