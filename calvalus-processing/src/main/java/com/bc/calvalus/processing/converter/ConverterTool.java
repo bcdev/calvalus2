@@ -42,6 +42,7 @@ import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.addBundl
  *
  * @author Boe
  */
+@Deprecated
 public class ConverterTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

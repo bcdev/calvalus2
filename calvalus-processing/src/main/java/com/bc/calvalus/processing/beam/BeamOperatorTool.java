@@ -53,6 +53,7 @@ import java.util.logging.Logger;
  * @author Norman Fomferra
  * @author Marco Zuehlke
  */
+@Deprecated
 public class BeamOperatorTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

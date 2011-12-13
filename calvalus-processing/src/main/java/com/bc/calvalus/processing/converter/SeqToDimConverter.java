@@ -16,6 +16,7 @@ import java.io.IOException;
  *
  * @author Boe
  */
+@Deprecated
 public class SeqToDimConverter implements FormatConverter {
 
     private static final String TMP_DIR = "/home/hadoop/tmp";

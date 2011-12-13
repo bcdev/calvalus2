@@ -41,6 +41,7 @@ import java.util.logging.Logger;
  *
  * @author Boe
  */
+@Deprecated
 public class BeamOutputConverterTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

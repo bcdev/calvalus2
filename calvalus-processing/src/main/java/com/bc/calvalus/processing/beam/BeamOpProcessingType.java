@@ -46,6 +46,7 @@ import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 /**
  * Creates a beam hadoop job
  */
+@Deprecated
 public class BeamOpProcessingType {
 
     private JobClient jobClient;

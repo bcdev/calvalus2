@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path;
  *
  * @author Martin Boettcher
  */
+@Deprecated
 public interface FormatConverter {
 
     void convert(String taskId, Path inputPath, String outputDir, String targetFormat, Configuration configuration)

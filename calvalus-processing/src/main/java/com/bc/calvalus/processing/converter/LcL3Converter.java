@@ -24,6 +24,7 @@ import java.io.InputStream;
  *
  * @author Boe
  */
+@Deprecated
 public class LcL3Converter implements FormatConverter {
 
     private static final String TMP_DIR = "/home/hadoop/tmp";
