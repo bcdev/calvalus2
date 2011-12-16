@@ -87,6 +87,13 @@ public class LcL3ProductionType extends HadoopProductionType {
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
 
+        String resolution = productionRequest.getString("resolution", "FR");
+        int mosaicTileSize = 360;
+        String groundResultion = "300m";
+        if (resolution.equals("RR")) {
+            mosaicTileSize = 90;
+            groundResultion = "1000m";
+        }
         Workflow.Sequential sequence = new Workflow.Sequential();
         if (productionRequest.getBoolean("lcl3.cloud", true)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
@@ -94,7 +101,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
             jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-            jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", "360");
+            jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " Cloud", jobConfigCloud));
@@ -106,13 +113,13 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-            jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", "360");
+            jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR", jobConfigSr));
         }
         if (productionRequest.getBoolean("lcl3.nc", true)) {
-            String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v4.0--%s", period);
+            String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
@@ -120,7 +127,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
             jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-            jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", "360");
+            jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfigFormat));
         }
@@ -145,7 +152,8 @@ public class LcL3ProductionType extends HadoopProductionType {
     static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
         String minDate = productionRequest.getString("minDate");
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        return String.format("%s-%dd", minDate, periodLength);
+        String resolution = productionRequest.getString("resolution", "FR");
+        return String.format("%s-%s-%dd", resolution, minDate, periodLength);
     }
 
 
