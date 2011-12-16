@@ -55,9 +55,11 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             if (status == STATUS_LAND) {
                 // Since we have seen LAND now, accumulate LAND SDRs
                 float sdr8 = samples[varIndexes[1]][i];
-                aggregatedSamples[0][i]++;
-                aggregatedSamples[1][i] += sdr8;
-                aggregatedSamples[2][i] += sdr8 * sdr8;
+                if (!Float.isNaN(sdr8)) {
+                    aggregatedSamples[0][i]++;
+                    aggregatedSamples[1][i] += sdr8;
+                    aggregatedSamples[2][i] += sdr8 * sdr8;
+                }
             }
         }
     }

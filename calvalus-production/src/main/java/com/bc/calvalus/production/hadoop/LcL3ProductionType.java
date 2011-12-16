@@ -102,7 +102,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
                 jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
                 jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-                jobConfigCloud.set("mapred.job.priority", "VERY_LOW");
+                jobConfigCloud.set("mapred.job.priority", "LOW");
                 sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " Cloud", jobConfigCloud));
             }
             if (productionRequest.getBoolean("lcl3.sr", true)) {
@@ -112,7 +112,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-                jobConfigSr.set("mapred.job.priority", "LOW");
+                jobConfigSr.set("mapred.job.priority", "NORMAL");
                 sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " SR", jobConfigSr));
             }
             if (productionRequest.getBoolean("lcl3.nc", true)) {
@@ -121,8 +121,10 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-                jobConfigFormat.set("mapred.job.priority", "NORMAL");
+                jobConfigFormat.set("mapred.job.priority", "HIGH");
                 // TODO add support for local formatting
 //        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " " + period + " Format", jobConfigFormat));
@@ -193,7 +195,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     static L3Config getCloudL3Config() throws ProductionException {
-        String maskExpr = "status == 1";
+        String maskExpr = "status == 1 and not nan(sdr_8)";
         String[] varNames = new String[]{"status", "sdr_8"};
         String type = LcSDR8MosaicAlgorithm.class.getName();
 
@@ -201,7 +203,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     static L3Config getMainL3Config() throws ProductionException {
-        String maskExpr = "status == 1 or status == 3";
+        String maskExpr = "(status == 1 or status == 3) and not nan(sdr_1)";
         String[] varNames = new String[]{"status",
                 "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
                 "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
