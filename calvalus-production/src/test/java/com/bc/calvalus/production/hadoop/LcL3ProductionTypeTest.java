@@ -120,6 +120,18 @@ public class LcL3ProductionTypeTest {
         assertEquals("2010-06-20", asString(wingsRange.getStopDate()));
     }
 
+    @Test
+    public void testgetDateRange() throws Exception {
+        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+                                                                    "minDate", "2010-07-01",
+                                                                    "periodLength", "15");
+
+        DateRange dateRange = LcL3ProductionType.getDateRange(productionRequest);
+        assertNotNull(dateRange);
+        assertEquals("2010-07-01", asString(dateRange.getStartDate()));
+        assertEquals("2010-07-15", asString(dateRange.getStopDate()));
+    }
+
     private static String asString(Date date) {
         return ProductionRequest.getDateFormat().format(date);
     }

@@ -50,7 +50,7 @@ import java.util.List;
 public class LcL3ProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3";
-    private static final int PERIOD_LENGTH_DEFAULT = 10;
+    private static final int PERIOD_LENGTH_DEFAULT = 7;
 
     public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -60,76 +60,65 @@ public class LcL3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Level 3 LC ", productionRequest);
+        String defaultProductionName = createProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
+        DateRange mainRange = getDateRange(productionRequest);
+        DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
-        List<DateRange> dateRanges = getDateRanges(productionRequest, PERIOD_LENGTH_DEFAULT);
         String inputPath = productionRequest.getString("inputPath");
-
-        Workflow parallel = new Workflow.Parallel();
-        parallel.setSustainable(false);
-        for (DateRange mainRange : dateRanges) {
-
+        String regionName = productionRequest.getRegionName();
+        String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.getStartDate(), cloudRange.getStopDate(), regionName);
+        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
+        if (mainInputFiles.length == 0) {
             String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
-            DateRange cloudRange = getWingsRange(productionRequest, mainRange);
+            throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
+        }
 
-            String regionName = productionRequest.getRegionName();
-            String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.getStartDate(), cloudRange.getStopDate(), regionName);
-            String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
-            if (mainInputFiles.length == 0) {
-                throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
-            }
-            int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
+        String cloudL3ConfigXml = getCloudL3Config().toXml();
+        String mainL3ConfigXml = getMainL3Config().toXml();
 
-            String cloudL3ConfigXml = getCloudL3Config().toXml();
-            String mainL3ConfigXml = getMainL3Config().toXml();
+        String period = getPeriodName(productionRequest);
+        String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
+        String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-sr");
+        String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc");
 
-            String period = String.format("%s-%dd", date1Str, periodLength);
-            String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
-            String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-sr");
-            String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc");
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+        String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
 
-            Geometry regionGeometry = productionRequest.getRegionGeometry(null);
-            String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
+        Workflow.Sequential sequence = new Workflow.Sequential();
 
-            Workflow.Sequential sequence = new Workflow.Sequential();
-
-            if (productionRequest.getBoolean("lcl3.cloud", true)) {
-                Configuration jobConfigCloud = createJobConfig(productionRequest);
-                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
-                jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-                jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
-                jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-                jobConfigCloud.set("mapred.job.priority", "LOW");
-                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " Cloud", jobConfigCloud));
-            }
-            if (productionRequest.getBoolean("lcl3.sr", true)) {
-                Configuration jobConfigSr = createJobConfig(productionRequest);
-                jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
-                jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-                jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-                jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-                jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
-                jobConfigSr.set("mapred.job.priority", "NORMAL");
-                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " " + period + " SR", jobConfigSr));
-            }
-            if (productionRequest.getBoolean("lcl3.nc", true)) {
-                String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v3.0--%s", period);
-                Configuration jobConfigFormat = createJobConfig(productionRequest);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
-                jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
-                jobConfigFormat.set("mapred.job.priority", "HIGH");
-                // TODO add support for local formatting
-//        jobConfigFormat.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
-                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " " + period + " Format", jobConfigFormat));
-            }
-            parallel.add(sequence);
+        if (productionRequest.getBoolean("lcl3.cloud", true)) {
+            Configuration jobConfigCloud = createJobConfig(productionRequest);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
+            jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            jobConfigCloud.set("mapred.job.priority", "LOW");
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " Cloud", jobConfigCloud));
+        }
+        if (productionRequest.getBoolean("lcl3.sr", true)) {
+            Configuration jobConfigSr = createJobConfig(productionRequest);
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+            jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
+            jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+            jobConfigSr.set("mapred.job.priority", "NORMAL");
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR", jobConfigSr));
+        }
+        if (productionRequest.getBoolean("lcl3.nc", true)) {
+            String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-300m-v4.0--%s", period);
+            Configuration jobConfigFormat = createJobConfig(productionRequest);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
+            jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigFormat.set("mapred.job.priority", "HIGH");
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfigFormat));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -140,9 +129,33 @@ public class LcL3ProductionType extends HadoopProductionType {
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              parallel);
+                              sequence);
     }
 
+    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
+        StringBuilder sb = new StringBuilder(prefix);
+        sb.append(getPeriodName(productionRequest));
+        return sb.toString().trim();
+    }
+
+    static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
+        String minDate = productionRequest.getString("minDate");
+        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
+        return String.format("%s-%dd", minDate, periodLength);
+    }
+
+
+    static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
+        Date minDate = productionRequest.getDate("minDate");
+        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
+        Calendar calendar = ProductData.UTC.createCalendar();
+        calendar.setTimeInMillis(minDate.getTime());
+        calendar.add(Calendar.DAY_OF_MONTH, periodLength - 1);
+
+        return new DateRange(minDate, calendar.getTime());
+    }
+
+    // 7, or 10 days periods, that are adjusted to full month
     static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
 
