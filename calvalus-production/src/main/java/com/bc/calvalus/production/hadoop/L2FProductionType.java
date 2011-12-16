@@ -26,6 +26,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
@@ -79,20 +80,19 @@ public class L2FProductionType extends HadoopProductionType {
                                           String productionName,
                                           ProductionRequest productionRequest) throws ProductionException {
 
-        Configuration l2JobConfig = createJobConfig(productionRequest);
+        Configuration jobConfig = createJobConfig(productionRequest);
 
         String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String outputDir = getOutputPath(productionRequest, productionId, "");
-        String outputFormat = productionRequest.getString("outputFormat", "NetCDF");
 
         String processorName = productionRequest.getString("processorName", null);
         if (processorName != null) {
             String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-            l2JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-            l2JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
         }
 
-        l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
 
         String processorBundleName = productionRequest.getString("processorBundleName", null);
         String processorBundleVersion = productionRequest.getString("processorBundleVersion", null);
@@ -100,13 +100,24 @@ public class L2FProductionType extends HadoopProductionType {
             String processorBundle = String.format("%s-%s",
                                                    processorBundleName,
                                                    processorBundleVersion);
-            l2JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         }
 
-        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+        if (regionGeometry != null) {
+            jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry.toString());
+        }
 
-        return new L2FormattingWorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT,"NetCDF"));
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
+
+        // is in fact dependent on the outputFormat TODO unify
+        String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION,"gz"));
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
+
+        return new L2FormattingWorkflowItem(getProcessingService(), productionName, jobConfig);
     }
 
 }

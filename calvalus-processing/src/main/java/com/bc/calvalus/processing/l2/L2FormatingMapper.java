@@ -18,8 +18,10 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,6 +43,7 @@ import java.util.logging.Logger;
  */
 public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     private Configuration jobConfig;
 
@@ -66,6 +69,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
             Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
             if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
                 LOG.info("resume: target product already exist, skip processing");
                 final long stopTime = System.nanoTime();
                 LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
@@ -74,16 +78,21 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         }
 
         String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
+        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         Product product = productFactory.getProduct(inputPath,
                                                     inputFormat,
-                                                    null,
+                                                    regionGeometry,
                                                     true,
                                                     level2OperatorName,
                                                     level2Parameters);
 
-
+        if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
+            LOG.warning("target product is empty, skip writing.");
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
+            return;
+        }
         product.setName(productName);
 
         try {
@@ -94,6 +103,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             LOG.info("Finished writing product.");
             context.setStatus("copying");
             productFormatter.compressToHDFS(context, productFile);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
         } finally {
             productFormatter.cleanupTempDir();
             product.dispose();
