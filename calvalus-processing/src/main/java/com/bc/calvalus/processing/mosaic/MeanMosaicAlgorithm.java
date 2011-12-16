@@ -85,4 +85,9 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public Configuration getConf() {
         return jobConf;
     }
+
+    @Override
+    public MosaicProductFactory getProductFactory() {
+        return new DefaultMosaicProductFactory(getOutputFeatures());
+    }
 }

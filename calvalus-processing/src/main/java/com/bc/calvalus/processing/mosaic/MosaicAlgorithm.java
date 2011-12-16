@@ -20,4 +20,6 @@ interface MosaicAlgorithm {
     void setVariableContext(VariableContext variableContext);
 
     String[] getOutputFeatures();
+
+    MosaicProductFactory getProductFactory();
 }

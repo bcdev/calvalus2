@@ -109,6 +109,11 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         return outputFeatures;
     }
 
+    @Override
+    public MosaicProductFactory getProductFactory() {
+        return new DefaultMosaicProductFactory(getOutputFeatures());
+    }
+
     private static int[] createVariableIndexes(VariableContext varCtx) {
         int[] varIndexes = new int[2];
         varIndexes[0] = getVariableIndex(varCtx, "status");

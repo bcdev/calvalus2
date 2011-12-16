@@ -133,7 +133,8 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     protected void createProduct(Point macroTile) throws IOException {
         Rectangle productRect = getMosaicGrid().getMacroTileRectangle(macroTile.x, macroTile.y);
         String productName = getTileProductName(outputPrefix, macroTile.x, macroTile.y);
-        product = createProduct(productName, productRect, algorithm.getOutputFeatures());
+        MosaicProductFactory productFactory = algorithm.getProductFactory();
+        product = productFactory.createProduct(productName, productRect);
         CrsGeoCoding geoCoding = getMosaicGrid().createMacroCRS(macroTile);
         product.setGeoCoding(geoCoding);
 
@@ -144,19 +145,6 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
 
     static String getTileProductName(String prefix, int tileX, int tileY) {
         return String.format("%s-v%02dh%02d", prefix, tileX, tileY);
-    }
-
-    static Product createProduct(String productName, Rectangle outputRegion, String[] outputFeatures) {
-        final Product product = new Product(productName, "CALVALUS-Mosaic", outputRegion.width, outputRegion.height);
-        for (String outputFeature : outputFeatures) {
-            Band band = product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-        }
-        //TODO
-        //product.setStartTime(formatterConfig.getStartTime());
-        //product.setEndTime(formatterConfig.getEndTime());
-        return product;
     }
 
     static ProductWriter createProductWriter(Product product, File outputFile, String outputFormat) throws IOException {
