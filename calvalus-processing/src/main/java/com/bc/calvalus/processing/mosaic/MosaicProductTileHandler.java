@@ -49,7 +49,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     private ProductWriter productWriter;
     private ProductFormatter productFormatter;
     private Product product;
-    private float[][] NO_DATA_SAMPLES;
+    private ProductData[] NO_DATA_SAMPLES;
     private File productFile;
 
     public static MosaicTileHandler createHandler(TaskInputOutputContext<?, ?, ?, ?> context) {
@@ -77,7 +77,25 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
 
     @Override
     protected void writeDataTile(Point tile, TileDataWritable data) throws IOException {
-        write(tile, data.getSamples());
+        if (product != null) {
+            float[][] samples = data.getSamples();
+            Band[] bands = product.getBands();
+            ProductData[] productData = new ProductData[bands.length];
+            for (int bandIndex = 0; bandIndex < bands.length; bandIndex++) {
+                int dataType = bands[bandIndex].getDataType();
+                float[] floatSamples = samples[bandIndex];
+                if (dataType == ProductData.TYPE_FLOAT32) {
+                    productData[bandIndex] = ProductData.createInstance(floatSamples);
+                } else {
+                    ProductData pdata = ProductData.createInstance(dataType, floatSamples.length);
+                    for (int i = 0; i < floatSamples.length; i++) {
+                        pdata.setElemFloatAt(i, floatSamples[i]);
+                    }
+                    productData[bandIndex] = pdata;
+                }
+            }
+            write(tile, productData);
+        }
     }
 
     @Override
@@ -85,29 +103,31 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
         write(tile, getNoDataSamples());
     }
 
-    private void write(Point tile, float[][] samples) throws IOException {
-        if (product != null) {
-            Band[] bands = product.getBands();
-            Rectangle tileRect = getMosaicGrid().getTileRectangle(tile.x, tile.y);
-            for (int i = 0; i < bands.length; i++) {
-                context.progress();
-                ProductData productData = ProductData.createInstance(samples[i]);
-                productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height,
-                                                  productData, ProgressMonitor.NULL);
-            }
+    private void write(Point tile, ProductData[] samples) throws IOException {
+        Band[] bands = product.getBands();
+        Rectangle tileRect = getMosaicGrid().getTileRectangle(tile.x, tile.y);
+        for (int i = 0; i < bands.length; i++) {
+            context.progress();
+            ProductData productData = samples[i];
+            productWriter.writeBandRasterData(bands[i], tileRect.x, tileRect.y, tileRect.width, tileRect.height,
+                                              productData, ProgressMonitor.NULL);
         }
     }
 
-    private float[][] getNoDataSamples() {
+    private ProductData[] getNoDataSamples() {
         if (NO_DATA_SAMPLES == null && product != null) {
             int tileSize = getMosaicGrid().getTileSize();
-            NO_DATA_SAMPLES = new float[product.getNumBands()][tileSize * tileSize];
+            int numElems = tileSize * tileSize;
+            NO_DATA_SAMPLES = new ProductData[product.getNumBands()];//[tileSize * tileSize];
             for (int bandIndex = 0; bandIndex < NO_DATA_SAMPLES.length; bandIndex++) {
-                float[] floats = NO_DATA_SAMPLES[bandIndex];
-                float noDataValue = (float) product.getBandAt(bandIndex).getNoDataValue();
-                for (int i = 0; i < floats.length; i++) {
-                    floats[i] = noDataValue;
+                Band band = product.getBandAt(bandIndex);
+                float noDataValue = (float) band.getNoDataValue();
+                int dataType = band.getDataType();
+                ProductData pdata = ProductData.createInstance(dataType, numElems);
+                for (int i = 0; i < numElems; i++) {
+                    pdata.setElemFloatAt(i, noDataValue);
                 }
+                NO_DATA_SAMPLES[bandIndex] = pdata;
             }
         }
         return NO_DATA_SAMPLES;
