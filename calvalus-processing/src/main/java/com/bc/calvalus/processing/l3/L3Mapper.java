@@ -94,6 +94,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         } else {
             LOG.info("Product not used");
         }
+        productFactory.dispose();
 
         long stopTime = System.nanoTime();
 
