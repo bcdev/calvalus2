@@ -150,15 +150,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s stops processing of split %s after %s sec",
                                context.getTaskAttemptID(), split, mapperTotalTime / 1E3));
 
-        // per-host counters
-        String hostGroupName = "MAMapper on " + InetAddress.getLocalHost().getHostName();
-        context.getCounter(hostGroupName, "MAMapper runs").increment(1);
-        context.getCounter(hostGroupName, "Product open time (ms)").increment(productOpenTime);
-        context.getCounter(hostGroupName, "Record read time (ms)").increment(recordReadTime);
-        context.getCounter(hostGroupName, "Record processing time (ms)").increment(recordWriteTime);
-        context.getCounter(hostGroupName, "Product close time (ms)").increment(productCloseTime);
-        context.getCounter(hostGroupName, "MAMapper total time (ms)").increment(mapperTotalTime);
-
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
