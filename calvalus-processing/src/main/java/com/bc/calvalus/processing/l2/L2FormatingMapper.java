@@ -89,6 +89,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                                                     level2Parameters);
 
         if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
+            productFactory.dispose();
             LOG.warning("target product is empty, skip writing.");
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             return;
@@ -105,8 +106,10 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             productFormatter.compressToHDFS(context, productFile);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
         } finally {
-            productFormatter.cleanupTempDir();
             product.dispose();
+            productFactory.dispose();
+            productFormatter.cleanupTempDir();
+
             final long stopTime = System.nanoTime();
             LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
         }

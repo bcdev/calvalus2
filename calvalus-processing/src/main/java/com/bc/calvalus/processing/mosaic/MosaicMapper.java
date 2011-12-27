@@ -85,6 +85,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         if (product != null) {
             try {
                 if (product.getGeoCoding() == null) {
+                    productFactory.dispose();
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 numTilesProcessed = processProduct(product, regionGeometry, ctx, context);
@@ -101,6 +102,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
             LOG.info("Product not used");
         }
+        productFactory.dispose();
 
         long stopTime = System.nanoTime();
 

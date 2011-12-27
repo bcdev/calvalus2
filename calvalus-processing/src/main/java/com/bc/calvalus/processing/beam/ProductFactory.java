@@ -28,9 +28,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
+import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -40,10 +42,14 @@ import org.esa.beam.util.SystemUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
-import java.awt.*;
+
+import java.awt.Rectangle;
+import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -61,6 +67,7 @@ public class ProductFactory {
 
 
     private final Configuration configuration;
+    private List<File> productCaches;
 
     /**
      * Constructor.
@@ -69,6 +76,7 @@ public class ProductFactory {
      */
     public ProductFactory(Configuration configuration) {
         this.configuration = configuration;
+        this.productCaches = new ArrayList<File>();
         initGpf(configuration, this.getClass().getClassLoader());
     }
 
@@ -132,26 +140,38 @@ public class ProductFactory {
     /**
      * Reads a product from the distributed file system.
      *
-     * @param inputPath     The input path
-     * @param inputFormat   The input format, may be {@code null}. If {@code null}, the file format will be detected.
+     * @param inputPath   The input path
+     * @param inputFormat The input format, may be {@code null}. If {@code null}, the file format will be detected.
      * @return The product The product read.
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product readProduct(Path inputPath, String inputFormat) throws IOException {
         final FileSystem fs = inputPath.getFileSystem(configuration);
-        final Product product;
+        Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
         } else {
-            final FileStatus status = fs.getFileStatus(inputPath);
-            final FSDataInputStream in = fs.open(inputPath);
-            final ImageInputStream imageInputStream = new FSImageInputStream(in, status.getLen());
             ProductReader productReader = ProductIO.getProductReader(inputFormat != null ? inputFormat : "ENVISAT");
             if (productReader != null) {
-                product = productReader.readProductNodes(imageInputStream, null);
-            } else {
-                product = null;
+                ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
+                Object input = null;
+                if (canHandle(readerPlugIn, ImageInputStream.class)) {
+                    final FileStatus status = fs.getFileStatus(inputPath);
+                    final FSDataInputStream in = fs.open(inputPath);
+                    input = new FSImageInputStream(in, status.getLen());
+                } else if (canHandle(readerPlugIn, File.class)) {
+                    String tmpDirName = String.format("product-cache-%d", productCaches.size());
+                    File tmpDir = File.createTempFile(tmpDirName, null);
+                    productCaches.add(tmpDir);
+                    File tmpFile = new File(tmpDir, inputPath.getName());
+                    FileUtil.copy(fs, inputPath, tmpFile, false, configuration);
+                    input = tmpFile;
+                }
+
+                if (input != null) {
+                    product = productReader.readProductNodes(input, null);
+                }
             }
         }
         if (product == null) {
@@ -161,6 +181,28 @@ public class ProductFactory {
                                product.getSceneRasterWidth(),
                                product.getSceneRasterHeight()));
         return product;
+    }
+
+    private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
+        if (readerPlugIn != null) {
+            Class[] inputTypes = readerPlugIn.getInputTypes();
+            for (Class inputType : inputTypes) {
+                if (inputType.isAssignableFrom(inputClass)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    public void dispose() throws IOException {
+        if (productCaches != null) {
+            for (File cacheDir : productCaches) {
+                FileUtil.fullyDelete(cacheDir);
+            }
+            productCaches = null;
+        }
     }
 
     public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws BindingException {

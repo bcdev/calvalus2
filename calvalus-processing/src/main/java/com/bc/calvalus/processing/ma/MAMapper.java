@@ -83,6 +83,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                     level2OperatorName,
                                                     level2Parameters);
         if (product == null) {
+            productFactory.dispose();
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
             return;
         }
@@ -103,6 +104,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             extractedRecords = productRecordSource.getRecords();
             context.progress();
         } catch (Exception e) {
+            product.dispose();
+            productFactory.dispose();
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
 
@@ -140,6 +143,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         t0 = now();
         product.dispose();
+        productFactory.dispose();
         context.progress();
         long productCloseTime = (now() - t0);
         LOG.info(String.format("%s closed input product, took %s sec",

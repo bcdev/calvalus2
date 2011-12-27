@@ -100,6 +100,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
             throw new ProcessorException("BeamOperatorMapper exception: " + e.toString(), e);
         } finally {
+            productFactory.dispose();
             // write final log entry for runtime measurements
             final long stopTime = System.nanoTime();
             LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");

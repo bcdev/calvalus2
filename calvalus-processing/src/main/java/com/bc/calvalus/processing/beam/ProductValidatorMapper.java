@@ -55,6 +55,7 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
             sourceProduct = productFactory.readProduct(inputPath, inputFormat);
         } catch (IOException ioe) {
             report(context, "Failed to read product: " + ioe.getMessage(), inputPath);
+            productFactory.dispose();
             return;
         }
 
@@ -66,6 +67,7 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
             }
         } finally {
             sourceProduct.dispose();
+            productFactory.dispose();
         }
     }
 
