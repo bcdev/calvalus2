@@ -161,10 +161,10 @@ public class ProductFactory {
                     final FSDataInputStream in = fs.open(inputPath);
                     input = new FSImageInputStream(in, status.getLen());
                 } else if (canHandle(readerPlugIn, File.class)) {
-                    String tmpDirName = String.format("product-cache-%d", productCaches.size());
-                    File tmpDir = File.createTempFile(tmpDirName, null);
-                    productCaches.add(tmpDir);
-                    File tmpFile = new File(tmpDir, inputPath.getName());
+                    File productCacheDir = new File(System.getProperty("java.io.tmpdir"), String.format("product-cache-%d", productCaches.size()));
+                    productCacheDir.mkdirs();
+                    productCaches.add(productCacheDir);
+                    File tmpFile = new File(productCacheDir, inputPath.getName());
                     FileUtil.copy(fs, inputPath, tmpFile, false, configuration);
                     input = tmpFile;
                 }
