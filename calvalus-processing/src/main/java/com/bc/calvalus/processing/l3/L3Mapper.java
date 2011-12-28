@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.jai.ImageManager;
+import org.esa.beam.util.math.MathUtils;
 
 import java.awt.*;
 import java.awt.image.Raster;
@@ -50,8 +51,7 @@ import java.util.logging.Logger;
 public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, SpatialBin> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Product Counts";
-    private static final String COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS = "Product Pixel Counts";
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -84,14 +84,16 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
                 if (numObs > 0L) {
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, inputPath.getName()).increment(1);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, inputPath.getName()).increment(numObs);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCT_PIXEL_COUNTS, "Total").increment(numObs);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
+                } else {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
                 }
             } finally {
                 product.dispose();
             }
         } else {
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
             LOG.info("Product not used");
         }
         productFactory.dispose();
@@ -134,31 +136,53 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final String maskExpr = ctx.getVariableContext().getMaskExpr();
         final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
         final int sliceHeight = maskImage.getTileHeight();
-        checkImageTileSize(MessageFormat.format("Mask image for expr ''{0}''", maskExpr),
-                           maskImage, sliceWidth, sliceHeight);
+        boolean compatibleTileSizes = areTileSizesCompatible(maskImage, sliceWidth, sliceHeight);
+//        checkImageTileSize(MessageFormat.format("Mask image for expr ''{0}''", maskExpr),
+//                           maskImage, sliceWidth, sliceHeight);
 
         final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             final String nodeName = ctx.getVariableContext().getVariableName(i);
             final RasterDataNode node = getRasterDataNode(product, nodeName);
             final MultiLevelImage varImage = node.getGeophysicalImage();
-            checkImageTileSize(MessageFormat.format("Geophysical image for node ''{0}''", node.getName()),
-                               varImage, sliceWidth, sliceHeight);
+            compatibleTileSizes = compatibleTileSizes && areTileSizesCompatible(varImage, sliceWidth, sliceHeight);
+//            checkImageTileSize(MessageFormat.format("Geophysical image for node ''{0}''", node.getName()),
+//                               varImage, sliceWidth, sliceHeight);
             varImages[i] = varImage;
         }
 
         final GeoCoding geoCoding = product.getGeoCoding();
-        final Point[] tileIndices = maskImage.getTileIndices(null);
 
         long numObsTotal = 0;
-        ObservationSlice observationSlice;
-        for (Point tileIndex : tileIndices) {
-            observationSlice = createObservationSlice(geoCoding,
-                                                      maskImage, varImages,
-                                                      tileIndex,
-                                                      superSamplingSteps);
-            spatialBinner.processObservationSlice(observationSlice);
-            numObsTotal += observationSlice.getSize();
+        if (compatibleTileSizes) {
+            final Point[] tileIndices = maskImage.getTileIndices(null);
+            for (Point tileIndex : tileIndices) {
+                final ObservationSlice observationSlice = createObservationSlice(geoCoding,
+                                                          maskImage, varImages,
+                                                          tileIndex,
+                                                          superSamplingSteps);
+                spatialBinner.processObservationSlice(observationSlice);
+                numObsTotal += observationSlice.getSize();
+            }
+        } else {
+            int sceneHeight = maskImage.getHeight();
+            int numSlices = MathUtils.ceilInt(sceneHeight / (double) sliceHeight);
+            int currentSliceHeight = sliceHeight;
+            for (int sliceIndex = 0; sliceIndex < numSlices; sliceIndex++) {
+                int sliceY = sliceIndex * sliceHeight;
+                if (sliceY + sliceHeight > sceneHeight) {
+                    currentSliceHeight = sceneHeight - sliceY;
+                }
+                Rectangle sliceRect = new Rectangle(0, sliceIndex * sliceHeight, sliceWidth, currentSliceHeight);
+                final Raster maskTile = maskImage.getData(sliceRect);
+                final Raster[] varTiles = new Raster[varImages.length];
+                for (int i = 0; i < varImages.length; i++) {
+                    varTiles[i] = varImages[i].getData(sliceRect);
+                }
+                final ObservationSlice observationSlice = createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
+                spatialBinner.processObservationSlice(observationSlice);
+                numObsTotal += observationSlice.getSize();
+            }
         }
 
         spatialBinner.complete();
@@ -175,7 +199,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         for (int i = 0; i < varImages.length; i++) {
             varTiles[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
         }
+        return createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
+    }
 
+    private static ObservationSlice createObservationSlice(GeoCoding geoCoding, Raster maskTile, Raster[] varTiles, float[] superSamplingSteps) {
         final ObservationSlice observationSlice = new ObservationSlice(varTiles, maskTile.getWidth() * maskTile.getHeight());
         final int y1 = maskTile.getMinY();
         final int y2 = y1 + maskTile.getHeight();
@@ -197,7 +224,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                 }
             }
         }
-
         return observationSlice;
     }
 
@@ -211,8 +237,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     }
 
     private static void checkImageTileSize(String msg, MultiLevelImage image, int sliceWidth, int sliceHeight) {
-        if (image.getTileWidth() != sliceWidth
-                || image.getTileHeight() != sliceHeight) {
+        if (!areTileSizesCompatible(image, sliceWidth, sliceHeight)) {
             throw new IllegalStateException(MessageFormat.format(
                     "{0}: unexpected slice size detected: " +
                             "expected {1} x {2}, " +
@@ -223,6 +248,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                     image.getTileWidth(),
                     image.getTileHeight()));
         }
+    }
+
+    private static boolean areTileSizesCompatible(MultiLevelImage image, int sliceWidth, int sliceHeight) {
+        return image.getTileWidth() == sliceWidth && image.getTileHeight() == sliceHeight;
     }
 
     private static class SpatialBinEmitter implements SpatialBinProcessor {
