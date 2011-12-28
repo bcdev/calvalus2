@@ -85,7 +85,7 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
                 L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                                   productionId + " " + date1Str, jobConfig);
+                                                                   productionName + " " + date1Str, jobConfig);
                 workflow.add(l3WorkflowItem);
             }
         }
