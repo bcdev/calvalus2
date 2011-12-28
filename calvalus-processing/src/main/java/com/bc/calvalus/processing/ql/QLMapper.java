@@ -21,7 +21,9 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -37,6 +39,7 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -83,7 +86,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
     }
 
-    private void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws IOException {
+    private static void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws IOException {
 
         Map<String, Object> subsetParams = new HashMap<String, Object>();
         subsetParams.put("subSamplingX", qlConfig.subSamplingX);
@@ -100,8 +103,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             band.setNoDataValueUsed(true);
         }
         final ImageLayer imageLayer = new ImageLayer(BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL));
-//        CollectionLayer collectionLayer = new CollectionLayer();
-//        collectionLayer.getChildren().add(imageLayer);
+
+        CollectionLayer collectionLayer = new CollectionLayer();
+        collectionLayer.getChildren().add(imageLayer);
 //        Layer landMask = MaskLayerType.createLayer(rgbBands[0], product.getMaskGroup().get("l1p_cc_land"));
 //        landMask.setVisible(true);
 //        Layer coastlineMask = MaskLayerType.createLayer(rgbBands[0], product.getMaskGroup().get("l1p_cc_coastline"));
@@ -110,9 +114,19 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        collectionLayer.getChildren().add(1, coastlineMask);
         BufferedImageRendering rendering = new BufferedImageRendering(product.getSceneRasterWidth(),
                                                                       product.getSceneRasterHeight());
-        imageLayer.render(rendering);
-        ImageIO.write(rendering.getImage(), "png", outputStream);
+        Viewport viewport = rendering.getViewport();
+        viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
+        viewport.zoom(collectionLayer.getModelBounds());
+
+        collectionLayer.render(rendering);
+        BufferedImage image = rendering.getImage();
+        ImageIO.write(image, "png", outputStream);
     }
+
+    private static boolean isModelYAxisDown(ImageLayer imageLayer) {
+        return imageLayer.getImageToModelTransform().getDeterminant() > 0.0;
+    }
+
 
     private static class QLConfig {
         int subSamplingX = 4;
@@ -120,5 +134,34 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         String[] RGBAExpressions = {"sr_7_mean", "sr_5_mean", "sr_3_mean", ""};
         String imageType = "png";
     }
+
+//    public static void main(String[] args) throws IOException {
+//
+//        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
+//        JAI.enableDefaultTileCache();
+//        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1014);
+//        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+//
+//        File arg = new File(args[0]);
+//        Product product = null;
+//        try {
+//            product = ProductIO.readProduct(arg, "NetCDF4-BEAM");
+//            if (product != null) {
+//                QLConfig qlConfig = new QLConfig();
+//                String qlName = "TEST." + qlConfig.imageType;
+//                OutputStream quickLookOutputStream = new FileOutputStream(new File(arg.getParentFile(), qlName));
+//
+//                try {
+//                    createQuicklookImage(product, quickLookOutputStream, qlConfig);
+//                } finally {
+//                    quickLookOutputStream.close();
+//                }
+//            }
+//        } finally {
+//            if (product != null) {
+//                product.dispose();
+//            }
+//        }
+//    }
 
 }
