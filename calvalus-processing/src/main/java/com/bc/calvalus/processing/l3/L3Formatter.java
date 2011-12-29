@@ -136,7 +136,7 @@ public class L3Formatter {
         if (outputFormat == null) {
             throw new IllegalArgumentException("No output format given");
         }
-        if (!outputFormat.equalsIgnoreCase("NetCDF")
+        if (!outputFormat.startsWith("NetCDF")
                 && !outputFormat.equalsIgnoreCase("BEAM-DIMAP")
                 && !outputFormat.equalsIgnoreCase("GeoTIFF")
                 && !outputFormat.equalsIgnoreCase("PNG")
