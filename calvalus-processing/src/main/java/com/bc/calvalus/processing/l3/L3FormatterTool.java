@@ -51,6 +51,7 @@ import java.util.logging.Logger;
  *
  * @author Norman Fomferra
  */
+@Deprecated
 public class L3FormatterTool extends Configured implements Tool {
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static Options options = new Options();
