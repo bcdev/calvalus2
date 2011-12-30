@@ -175,7 +175,7 @@ public class ProductFactory {
             }
         }
         if (product == null) {
-            throw new IOException(MessageFormat.format("No reader found for product '{0}' using input format '{1}'", inputPath, inputFormat));
+            throw new IOException(String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(), inputFormat));
         }
         LOG.info(String.format("Opened product width = %d height = %d",
                                product.getSceneRasterWidth(),
