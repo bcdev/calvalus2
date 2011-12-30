@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.mosaic;
+package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.fs.BlockLocation;
@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -31,27 +32,37 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * A input format that generate a input for each part file.
+ * A input format that generate a single input split for the l3 job.
+ * All hosts holding data will be added to a single split.
+ * these resulting single map task will use all parts files from this directory.
  */
-public class PartFileInputFormat extends FileInputFormat {
+public class L3FormatterInputFormat extends FileInputFormat {
 
     /**
-     * Generate the list of files and make them into FileSplits.
+     * Generate the list of files and make them into a FileSplit.
      */
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
         List<FileStatus> fileStatuses = listStatus(job);
-        List<InputSplit> splits = new ArrayList<InputSplit>(fileStatuses.size());
+        List<InputSplit> splits = new ArrayList<InputSplit>(1);
+        Set<String> allHosts = new HashSet<String>();
         for (FileStatus file : fileStatuses) {
             Path path = file.getPath();
             FileSystem fs = path.getFileSystem(job.getConfiguration());
             long length = file.getLen();
             BlockLocation[] blkLocations = fs.getFileBlockLocations(file, 0, length);
-            splits.add(new FileSplit(path, 0, length, blkLocations[0].getHosts()));
+            String[] hosts = blkLocations[0].getHosts();
+            allHosts.addAll(Arrays.asList(hosts));
         }
+        Path[] inputPaths = FileInputFormat.getInputPaths(job);
+        // length has no meaning
+        splits.add(new FileSplit(inputPaths[0], 0, 42, allHosts.toArray(new String[allHosts.size()])));
         return splits;
     }
 

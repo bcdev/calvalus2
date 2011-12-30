@@ -14,27 +14,33 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.mosaic;
+package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.binning.SpatialBin;
+import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
 
 /**
- * A workflow item creating a Hadoop job for formatting a mosaic into many output products.
+ * A workflow item creating a Hadoop job for formatting the result of an L3 job into a single L3 product.
  */
-public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
+public class L3FWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public L3FWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -47,37 +53,32 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
 
-
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3"},
+                {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "mosaic"},
-                {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
-                {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
+                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_REGION_GEOMETRY, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}
         };
     }
 
+    @Override
     protected void configureJob(Job job) throws IOException {
+
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
-
-        job.setInputFormatClass(DirectoryFileInputFormat.class);
+        job.setInputFormatClass(L3FormatterInputFormat.class);
         FileInputFormat.addInputPath(job, new Path(getInputDir()));
-
-        job.setMapperClass(MosaicFormatter.class);
+        job.setMapperClass(L3FormatterMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        // TODO add resume processing
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        if (resumeProcessing) {
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        } else {
-            JobUtils.clearAndSetOutputDir(job, getOutputDir());
-        }
+        JobUtils.clearAndSetOutputDir(job, getOutputDir());
     }
+
 }

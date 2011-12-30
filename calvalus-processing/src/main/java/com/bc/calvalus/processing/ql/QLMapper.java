@@ -33,7 +33,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RGBImageProfile;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
@@ -67,7 +69,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                                                     null);
         try {
             if (product != null) {
-                QLConfig qlConfig = new QLConfig();
+                QLConfig qlConfig = QLConfig.get(jobConfig);
                 String qlName = product.getName() + "." + qlConfig.imageType;
                 Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
                 OutputStream quickLookOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
@@ -83,16 +85,27 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             }
             productFactory.dispose();
         }
-
     }
 
     private static void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws IOException {
 
-        Map<String, Object> subsetParams = new HashMap<String, Object>();
-        subsetParams.put("subSamplingX", qlConfig.subSamplingX);
-        subsetParams.put("subSamplingY", qlConfig.subSamplingY);
-        product = GPF.createProduct("Subset", subsetParams, product);
-        RGBImageProfile.storeRgbaExpressions(product, qlConfig.RGBAExpressions);
+        if (qlConfig.subSamplingX > 0 || qlConfig.subSamplingY > 0) {
+            Map<String, Object> subsetParams = new HashMap<String, Object>();
+            subsetParams.put("subSamplingX", qlConfig.subSamplingX);
+            subsetParams.put("subSamplingY", qlConfig.subSamplingY);
+            product = GPF.createProduct("Subset", subsetParams, product);
+        }
+        String[] rgbaExpressions;
+        if (qlConfig.RGBAExpressions.length == 4) {
+            rgbaExpressions = qlConfig.RGBAExpressions;
+        } else if (qlConfig.RGBAExpressions.length == 3) {
+            rgbaExpressions = new String[4];
+            System.arraycopy(qlConfig.RGBAExpressions, 0, rgbaExpressions, 0, qlConfig.RGBAExpressions.length);
+            rgbaExpressions[3] = "";
+        } else {
+            throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
+        }
+        RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
         final Band[] rgbBands = {
                 product.getBand(RGBImageProfile.RED_BAND_NAME),
                 product.getBand(RGBImageProfile.GREEN_BAND_NAME),
@@ -102,7 +115,16 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-        final ImageLayer imageLayer = new ImageLayer(BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL));
+        BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
+        if (qlConfig.v1 != null && qlConfig.v2 != null && qlConfig.v1.length == qlConfig.v2.length) {
+            ImageInfo imageInfo = multiLevelSource.getImageInfo();
+            RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
+            for (int i = 0; i < qlConfig.v1.length; i++) {
+                rgbChannelDef.setMinDisplaySample(i, qlConfig.v1[i]);
+                rgbChannelDef.setMaxDisplaySample(i, qlConfig.v2[i]);
+            }
+        }
+        final ImageLayer imageLayer = new ImageLayer(multiLevelSource);
 
         CollectionLayer collectionLayer = new CollectionLayer();
         collectionLayer.getChildren().add(imageLayer);
@@ -120,22 +142,14 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         collectionLayer.render(rendering);
         BufferedImage image = rendering.getImage();
-        ImageIO.write(image, "png", outputStream);
+        ImageIO.write(image, qlConfig.imageType, outputStream);
     }
 
     private static boolean isModelYAxisDown(ImageLayer imageLayer) {
         return imageLayer.getImageToModelTransform().getDeterminant() > 0.0;
     }
 
-
-    private static class QLConfig {
-        int subSamplingX = 4;
-        int subSamplingY = 4;
-        String[] RGBAExpressions = {"sr_7_mean", "sr_5_mean", "sr_3_mean", ""};
-        String imageType = "png";
-    }
-
-//    public static void main(String[] args) throws IOException {
+    //    public static void main(String[] args) throws IOException {
 //
 //        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
 //        JAI.enableDefaultTileCache();

@@ -451,7 +451,7 @@ public class L3Formatter {
         private final Band numObsBand;
         private final Band numPassesBand;
         private final float[] fillValues;
-        int yLast;
+        private int yLast;
 
         public ProductDataWriter(ProductWriter productWriter,
                                  Band numObsBand,

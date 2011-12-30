@@ -1,11 +1,14 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3FWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
+import com.bc.calvalus.processing.ql.QLWorkflowItem;
 import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -84,9 +87,41 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-                L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(),
-                                                                   productionName + " " + date1Str, jobConfig);
-                workflow.add(l3WorkflowItem);
+
+                WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
+
+                if (productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
+                    jobConfig = createJobConfig(productionRequest);
+                    jobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
+                    outputDir = getOutputPath(productionRequest, productionId, "-L3F-" + (i + 1));
+                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+                    String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"));
+                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
+
+                    // is in fact dependent on the outputFormat TODO unify
+                    String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
+                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
+
+                    jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+                    jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+                    jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+                    jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+
+                    WorkflowItem formatItem = new L3FWorkflowItem(getProcessingService(), productionName + " Format " + date1Str, jobConfig);
+
+                    //////////////////////////////////
+                    jobConfig = createJobConfig(productionRequest);
+                    jobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
+                    jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
+                    outputDir = getOutputPath(productionRequest, productionId, "-L3rgb-" + (i + 1));
+                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+                    WorkflowItem rgbItem = new QLWorkflowItem(getProcessingService(), productionName + " RGB " + date1Str, jobConfig);
+
+                    item = new Workflow.Sequential(item, formatItem, rgbItem);
+                }
+                workflow.add(item);
             }
         }
         if (workflow.getItems().length == 0) {

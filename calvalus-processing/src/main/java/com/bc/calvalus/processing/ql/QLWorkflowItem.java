@@ -18,16 +18,14 @@ package com.bc.calvalus.processing.ql;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.BeamOperatorMapper;
-import com.bc.calvalus.processing.beam.ProductValidatorMapper;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.mosaic.DirectoryFileInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import java.io.IOException;
 
@@ -40,6 +38,10 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         super(processingService, jobName, jobConfig);
     }
 
+    public String getInputDir() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
+    }
+
     @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
@@ -50,12 +52,15 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
         };
     }
 
     protected void configureJob(Job job) throws IOException {
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(DirectoryFileInputFormat.class);
+        FileInputFormat.addInputPath(job, new Path(getInputDir()));
         job.setMapperClass(QLMapper.class);
 
         job.setNumReduceTasks(0);
