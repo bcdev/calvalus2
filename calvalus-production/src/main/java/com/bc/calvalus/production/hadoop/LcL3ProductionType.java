@@ -37,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -95,7 +96,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             groundResultion = "1000m";
         }
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (productionRequest.getBoolean("lcl3.cloud", true)) {
+        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(getInventoryService(), meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
             jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
@@ -106,7 +107,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " Cloud", jobConfigCloud));
         }
-        if (productionRequest.getBoolean("lcl3.sr", true)) {
+        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(getInventoryService(), mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
             jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
@@ -118,7 +119,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR", jobConfigSr));
         }
-        if (productionRequest.getBoolean("lcl3.nc", true)) {
+        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(getInventoryService(), ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
@@ -141,6 +142,17 @@ public class LcL3ProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               sequence);
+    }
+
+    static boolean successfullyCompleted(InventoryService inventoryService, String outputDir) {
+        ArrayList<String> globs = new ArrayList<String>();
+        globs.add(outputDir + "/_SUCCESS");
+        try {
+            String[] pathes = inventoryService.globPaths(globs);
+            return pathes.length == 1;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
