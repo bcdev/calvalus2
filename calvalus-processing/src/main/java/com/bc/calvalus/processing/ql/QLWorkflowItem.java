@@ -60,7 +60,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
 
         job.setInputFormatClass(DirectoryFileInputFormat.class);
-        FileInputFormat.addInputPath(job, new Path(getInputDir()));
+        FileInputFormat.setInputPaths(job, getInputDir());
         job.setMapperClass(QLMapper.class);
 
         job.setNumReduceTasks(0);

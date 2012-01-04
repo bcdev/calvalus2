@@ -16,22 +16,14 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
-import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
 
@@ -70,10 +62,8 @@ public class L3FWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected void configureJob(Job job) throws IOException {
 
-        Configuration jobConfig = job.getConfiguration();
-
         job.setInputFormatClass(L3FormatterInputFormat.class);
-        FileInputFormat.addInputPath(job, new Path(getInputDir()));
+        FileInputFormat.setInputPaths(job, getInputDir());
         job.setMapperClass(L3FormatterMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

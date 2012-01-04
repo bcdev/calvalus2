@@ -66,7 +66,7 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(DirectoryFileInputFormat.class);
-        FileInputFormat.addInputPath(job, new Path(getInputDir()));
+        FileInputFormat.setInputPaths(job, new Path(getInputDir()));
 
         job.setMapperClass(MosaicFormatter.class);
         job.setNumReduceTasks(0);
