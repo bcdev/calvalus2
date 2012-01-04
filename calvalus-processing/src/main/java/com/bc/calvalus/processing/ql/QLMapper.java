@@ -41,6 +41,7 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -62,11 +63,11 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    regionGeometry,
-                                                    true,
-                                                    null,
-                                                    null);
+                inputFormat,
+                regionGeometry,
+                true,
+                null,
+                null);
         try {
             if (product != null) {
                 QLConfig qlConfig = QLConfig.get(jobConfig);
@@ -134,22 +135,35 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        coastlineMask.setVisible(true);
 //        collectionLayer.getChildren().add(0, landMask);
 //        collectionLayer.getChildren().add(1, coastlineMask);
-        BufferedImageRendering rendering = new BufferedImageRendering(product.getSceneRasterWidth(),
-                                                                      product.getSceneRasterHeight());
+
+        boolean useAlpha = useAlpha(qlConfig);
+        int imageType = useAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
+        BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(), imageType);
+        BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
         Viewport viewport = rendering.getViewport();
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
         viewport.zoom(collectionLayer.getModelBounds());
+
+        if (!useAlpha) {
+            final Graphics2D graphics = rendering.getGraphics();
+            graphics.setColor(Color.BLACK);
+            graphics.fillRect(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
+        }
 
         collectionLayer.render(rendering);
         BufferedImage image = rendering.getImage();
         ImageIO.write(image, qlConfig.imageType, outputStream);
     }
 
+    private static boolean useAlpha(QLConfig qlConfig) {
+        return !"bmp".equals(qlConfig.imageType) && !"jpeg".equals(qlConfig.imageType);
+    }
+
     private static boolean isModelYAxisDown(ImageLayer imageLayer) {
         return imageLayer.getImageToModelTransform().getDeterminant() > 0.0;
     }
 
-    //    public static void main(String[] args) throws IOException {
+//    public static void main(String[] args) throws IOException {
 //
 //        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
 //        JAI.enableDefaultTileCache();
@@ -162,6 +176,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //            product = ProductIO.readProduct(arg, "NetCDF4-BEAM");
 //            if (product != null) {
 //                QLConfig qlConfig = new QLConfig();
+//                qlConfig.imageType = "jpeg";
+//                qlConfig.RGBAExpressions = new String[]{"radiance_7_mean", "radiance_5_mean", "radiance_3_mean"};
+//
 //                String qlName = "TEST." + qlConfig.imageType;
 //                OutputStream quickLookOutputStream = new FileOutputStream(new File(arg.getParentFile(), qlName));
 //
