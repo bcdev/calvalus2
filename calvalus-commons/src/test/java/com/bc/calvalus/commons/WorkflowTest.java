@@ -57,6 +57,24 @@ public class WorkflowTest {
     }
 
     @Test
+    public void testSequential_empty() throws Exception {
+
+        Workflow.Sequential wf = new Workflow.Sequential();
+        assertEquals(ProcessState.UNKNOWN, wf.getStatus().getState());
+        wf.submit();
+        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+    }
+
+    @Test
+    public void testParallel_empty() throws Exception {
+
+        Workflow.Parallel wf = new Workflow.Parallel();
+        assertEquals(ProcessState.UNKNOWN, wf.getStatus().getState());
+        wf.submit();
+        assertEquals(ProcessState.COMPLETED, wf.getStatus().getState());
+    }
+
+    @Test
     public void testParallel() throws Exception {
 
         Workflow.Parallel wf = new Workflow.Parallel();

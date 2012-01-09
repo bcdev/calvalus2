@@ -117,7 +117,8 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
             if (stopTime == null || itemStopTime != null && itemStopTime.after(stopTime)) {
                 stopTime = itemStopTime;
             }
-        }if (sustainable) {
+        }
+        if (sustainable) {
             setStatus(ProcessStatus.aggregate(statuses));
         } else {
             setStatus(ProcessStatus.aggregateUnsustainable(statuses));
@@ -159,7 +160,11 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
          */
         @Override
         public void submit() throws WorkflowException {
-            submitNext();
+            if (itemList.size() == 0) {
+                setStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
+            } else {
+                submitNext();
+            }
         }
 
         @Override
@@ -200,8 +205,12 @@ public abstract class Workflow extends AbstractWorkflowItem implements WorkflowS
          */
         @Override
         public void submit() throws WorkflowException {
-            for (WorkflowItem item : itemList) {
-                item.submit();
+            if (itemList.size() == 0) {
+                setStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
+            } else {
+                for (WorkflowItem item : itemList) {
+                    item.submit();
+                }
             }
         }
     }
