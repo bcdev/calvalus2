@@ -42,10 +42,10 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             String databaseUrl = "jdbc:hsqldb:file:" + new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME).getPath();
             boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME + ".properties").exists();
             ProductionStore productionStore = SqlProductionStore.create(processingService,
-                    "org.hsqldb.jdbcDriver",
-                    databaseUrl,
-                    "SA", "",
-                    !databaseExists);
+                                                                        "org.hsqldb.jdbcDriver",
+                                                                        databaseUrl,
+                                                                        "SA", "",
+                                                                        !databaseExists);
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
             ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService, stagingService);
@@ -56,6 +56,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService, stagingService);
             ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService, stagingService);
             ProductionType qlProductionType = new QLProductionType(inventoryService, processingService, stagingService);
+            ProductionType prevueProductionType = new PrevueProductionType(inventoryService, processingService, stagingService);
             return new ProductionServiceImpl(inventoryService,
                                              processingService,
                                              stagingService,
@@ -68,7 +69,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
                                              pvProductionType,
                                              lcl3ProductionType,
                                              lcl3frrrProductionType,
-                                             qlProductionType);
+                                             qlProductionType,
+                                             prevueProductionType);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
