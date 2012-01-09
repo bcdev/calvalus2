@@ -67,6 +67,7 @@ public class L3ProductionType extends HadoopProductionType {
 
         String l3ConfigXml = getL3ConfigXml(productionRequest);
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
+        boolean formatOnCluster = productionRequest.getBoolean("formatOnCluster", false);
 
         Workflow workflow = new Workflow.Parallel();
         List<String> rgbInputDirs = new ArrayList<String>(dateRanges.size());
@@ -91,7 +92,7 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
                 WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
 
-                if (outputFormat != null) {
+                if (formatOnCluster && outputFormat != null) {
                     jobConfig = createJobConfig(productionRequest);
                     jobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
                     String productOutputDir = getOutputPath(productionRequest, productionId, "-L3F-" + (i + 1));
