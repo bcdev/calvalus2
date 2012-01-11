@@ -122,9 +122,11 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
 
                     ReprojectionOp reprojectionOp = new ReprojectionOp();
                     reprojectionOp.setSourceProduct(product);
-                    reprojectionOp.setParameter("crs", crsUtmAutomatic);
+                    reprojectionOp.setParameter("crs", crsUtmAutomatic.toWKT());
                     reprojectionOp.setParameter("referencePixelX", 25.5);
                     reprojectionOp.setParameter("referencePixelY", 25.5);
+                    reprojectionOp.setParameter("pixelSizeX", 260.0);
+                    reprojectionOp.setParameter("pixelSizeY", 260.0);
                     reprojectionOp.setParameter("width", 49);
                     reprojectionOp.setParameter("height", 49);
                     reprojectionOp.setParameter("easting", centerUTM.getOrdinate(0));
