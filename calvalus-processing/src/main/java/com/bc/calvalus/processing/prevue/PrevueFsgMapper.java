@@ -157,6 +157,7 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Failed products").increment(1);
             throw new IOException(e);
         } finally {
+            context.setStatus("");
             productFactory.dispose();
             product.dispose();
         }
