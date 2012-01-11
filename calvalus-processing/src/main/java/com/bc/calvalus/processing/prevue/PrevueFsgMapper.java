@@ -32,18 +32,39 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.io.FileUtils;
+import org.esa.beam.util.math.MathUtils;
+import org.geotools.geometry.DirectPosition2D;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.ReferencingFactoryFinder;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.cs.DefaultEllipsoidalCS;
+import org.geotools.referencing.datum.DefaultGeodeticDatum;
+import org.geotools.referencing.operation.projection.MapProjection;
+import org.geotools.referencing.operation.projection.TransverseMercator;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.parameter.ParameterDescriptor;
+import org.opengis.parameter.ParameterDescriptorGroup;
+import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CRSFactory;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.operation.Conversion;
+import org.opengis.referencing.operation.CoordinateOperationFactory;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.OperationMethod;
 
-import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 
 /**
  * For "Prevue", does data extraction in a special way...
@@ -79,41 +100,37 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
         // Actually wrong name for processed products, but we need the field "source_name" in the export data table
         product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
-        context.progress();
+
 
         DecimalFormat decimalFormat = new DecimalFormat("000");
         try {
             for (Record record : recordSource.getRecords()) {
+                context.progress();
                 GeoPos location = record.getLocation();
                 PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
                 if (product.containsPixel(pixelPos)) {
                     Double id = (Double) record.getAttributeValues()[0];
                     String idAsString = decimalFormat.format(id);
+                    context.setStatus("ID " + idAsString);
 
-                    SubsetOp subsetOp = new SubsetOp();
-                    subsetOp.setCopyMetadata(false);
-                    Rectangle pixelRect = new Rectangle((int) pixelPos.x - 50, (int) pixelPos.y - 50, 100, 100);
-                    Rectangle productRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
-                    pixelRect = pixelRect.intersection(productRect);
-                    subsetOp.setRegion(pixelRect);
-                    subsetOp.setSourceProduct(product);
-                    Product subsetProduct = subsetOp.getTargetProduct();
+                    CoordinateReferenceSystem crsUtmAutomatic = getCRSUtmAutomatic(location);
+
+                    DefaultGeographicCRS wgs84 = DefaultGeographicCRS.WGS84;
+                    MathTransform transform = CRS.findMathTransform(wgs84, crsUtmAutomatic);
+                    DirectPosition centerWgs84 = new DirectPosition2D(wgs84, location.getLon(), location.getLat());
+                    DirectPosition centerUTM = transform.transform(centerWgs84, null);
 
                     ReprojectionOp reprojectionOp = new ReprojectionOp();
-                    reprojectionOp.setSourceProduct(subsetProduct);
-                    reprojectionOp.setParameter("crs", "AUTO:42001"); // UTM automatic
-                    Product utmProduct = reprojectionOp.getTargetProduct();
+                    reprojectionOp.setSourceProduct(product);
+                    reprojectionOp.setParameter("crs", crsUtmAutomatic);
+                    reprojectionOp.setParameter("referencePixelX", 25.5);
+                    reprojectionOp.setParameter("referencePixelY", 25.5);
+                    reprojectionOp.setParameter("width", 49);
+                    reprojectionOp.setParameter("height", 49);
+                    reprojectionOp.setParameter("easting", centerUTM.getOrdinate(0));
+                    reprojectionOp.setParameter("northing", centerUTM.getOrdinate(1));
 
-                    PixelPos utmPixelPos = utmProduct.getGeoCoding().getPixelPos(location, null);
-
-                    SubsetOp subsetOp2 = new SubsetOp();
-                    subsetOp2.setCopyMetadata(false);
-                    Rectangle utmPixelRect = new Rectangle((int) utmPixelPos.x - 24, (int) utmPixelPos.y - 24, 49, 49);
-                    Rectangle utmProductRect = new Rectangle(utmProduct.getSceneRasterWidth(), utmProduct.getSceneRasterHeight());
-                    utmPixelRect = utmPixelRect.intersection(utmProductRect);
-                    subsetOp2.setRegion(utmPixelRect);
-                    subsetOp2.setSourceProduct(utmProduct);
-                    Product targetProduct = subsetOp2.getTargetProduct();
+                    Product targetProduct = reprojectionOp.getTargetProduct();
 
                     // NO metadata
                     targetProduct.getMetadataRoot().getElementGroup().removeAll();
@@ -131,9 +148,7 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
 
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Written ASCII products").increment(1);
 
-                    subsetOp2.dispose();
                     reprojectionOp.dispose();
-                    subsetOp.dispose();
                 }
             }
         } catch (Exception e) {
@@ -145,6 +160,65 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
         }
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
 
+    }
+
+    static CoordinateReferenceSystem getCRSUtmAutomatic(final GeoPos referencePos) throws FactoryException {
+        GeodeticDatum datum = DefaultGeodeticDatum.WGS84;
+        int zoneIndex = getZoneIndex(referencePos.getLon());
+        final boolean south = referencePos.getLat() < 0.0;
+        ParameterValueGroup tmParameters = createTransverseMercatorParameters(zoneIndex, south, datum);
+        final String projName = getProjectionName(zoneIndex, south);
+
+        return createCrs(projName, new TransverseMercator.Provider(), tmParameters, datum);
+    }
+
+    static int getZoneIndex(float longitude) {
+        final float zoneIndex = ((longitude + 180.0f) / 6.0f - 0.5f) + 1;
+        return MathUtils.roundAndCrop(zoneIndex, 1, 60);
+    }
+
+    static ParameterValueGroup createTransverseMercatorParameters(int zoneIndex, boolean south, GeodeticDatum datum) {
+        ParameterDescriptorGroup tmParameters = new TransverseMercator.Provider().getParameters();
+        ParameterValueGroup tmValues = tmParameters.createValue();
+
+        setValue(tmValues, MapProjection.AbstractProvider.SEMI_MAJOR, datum.getEllipsoid().getSemiMajorAxis());
+        setValue(tmValues, MapProjection.AbstractProvider.SEMI_MINOR, datum.getEllipsoid().getSemiMinorAxis());
+        setValue(tmValues, MapProjection.AbstractProvider.LATITUDE_OF_ORIGIN, 0.0);
+        setValue(tmValues, MapProjection.AbstractProvider.CENTRAL_MERIDIAN, getCentralMeridian(zoneIndex));
+        setValue(tmValues, MapProjection.AbstractProvider.SCALE_FACTOR, 0.9996);
+        setValue(tmValues, MapProjection.AbstractProvider.FALSE_EASTING, 500000.0);
+        setValue(tmValues, MapProjection.AbstractProvider.FALSE_NORTHING, south ? 10000000.0 : 0.0);
+        return tmValues;
+    }
+
+    static double getCentralMeridian(int zoneIndex) {
+        return (zoneIndex - 0.5) * 6.0 - 180.0;
+    }
+
+    static CoordinateReferenceSystem createCrs(String crsName,
+                                               OperationMethod method,
+                                               ParameterValueGroup parameters,
+                                               GeodeticDatum datum) throws FactoryException {
+        final CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+        final CoordinateOperationFactory coFactory = ReferencingFactoryFinder.getCoordinateOperationFactory(null);
+        final HashMap<String, Object> projProperties = new HashMap<String, Object>();
+        projProperties.put("name", crsName + " / " + datum.getName().getCode());
+        final Conversion conversion = coFactory.createDefiningConversion(projProperties,
+                                                                         method,
+                                                                         parameters);
+        final HashMap<String, Object> baseCrsProperties = new HashMap<String, Object>();
+        baseCrsProperties.put("name", datum.getName().getCode());
+        final GeographicCRS baseCrs = crsFactory.createGeographicCRS(baseCrsProperties, datum,
+                                                                     DefaultEllipsoidalCS.GEODETIC_2D);
+        return crsFactory.createProjectedCRS(projProperties, baseCrs, conversion, DefaultCartesianCS.PROJECTED);
+    }
+
+    private static void setValue(ParameterValueGroup values, ParameterDescriptor descriptor, double value) {
+        values.parameter(descriptor.getName().getCode()).setValue(value);
+    }
+
+    static String getProjectionName(int zoneIndex, boolean south) {
+        return "UTM Zone " + zoneIndex + (south ? ", South" : "");
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig) {
