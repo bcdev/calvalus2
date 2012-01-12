@@ -48,7 +48,7 @@ import java.util.Map;
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-0.3-201109'
+ *                         the production. Defaults to 'calvalus-1.2-201201'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
@@ -66,7 +66,7 @@ public class ProductionTool {
 
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
     private static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
-    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-0.3-201111";
+    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.2-201201";
 
     private static final String CALVALUS_SOFTWARE_HOME = "/calvalus/software/0.5";
     private static final String BUNDLE_SEPARATOR = "-->";
@@ -115,9 +115,10 @@ public class ProductionTool {
         }
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
-        defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://cvmaster00:9000");
-        defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "cvmaster00:9001");
+        defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://master00:9000");
+        defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "master00:9001");
         defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");
+        defaultConfig.put("calvalus.hadoop.io.file.buffer.size", "131072");
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
         defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", DEFAULT_BEAM_BUNDLE));
 

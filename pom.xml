@@ -4,15 +4,15 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>0.20.2</hadoop.version>
-        <calvalus.version>0.3-SNAPSHOT</calvalus.version>
+        <hadoop.version>0.20.205.0</hadoop.version>
+        <calvalus.version>1.2-SNAPSHOT</calvalus.version>
         <beam.version>4.10-SNAPSHOT</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -37,7 +37,7 @@
 
         <!-- Landcover_cci -->
         <!-- todo - please rename to calvalus-lccci, ideally move code to another repo on github (nf) -->
-        <module>calvalus-lc</module>
+        <!--<module>calvalus-lc</module>-->
     </modules>
 
     <repositories>
@@ -200,7 +200,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.4</version>
+                <version>1.5-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -246,6 +246,12 @@
             </dependency>
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
+
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+                <version>1.0.1</version>
+            </dependency>
 
             <dependency>
                 <groupId>commons-logging</groupId>
