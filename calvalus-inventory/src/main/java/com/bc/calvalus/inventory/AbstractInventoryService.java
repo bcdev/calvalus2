@@ -89,7 +89,10 @@ public abstract class AbstractInventoryService implements InventoryService {
 
             String line = bufferedReader.readLine();
             while (line != null) {
-                productSets.add(ProductSetPersistable.convertFromCSV(line));
+                ProductSet productSet = ProductSetPersistable.convertFromCSV(line);
+                if (productSet != null) {
+                    productSets.add(productSet);
+                }
                 line = bufferedReader.readLine();
             }
             return productSets;

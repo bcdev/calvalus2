@@ -55,7 +55,11 @@ public class ProductSetPersistable {
     }
 
     public static ProductSet convertFromCSV(String text) {
-        String[] splits = text.split(";");
+        String trimmedText = text.trim();
+        if (trimmedText.startsWith("#") || trimmedText.isEmpty()) {
+            return null; //comments are ignored
+        }
+        String[] splits = trimmedText.split(";");
         if (splits.length == 4) {
             String name = nullAware(splits[0]);
             String path = nullAware(splits[1]);
