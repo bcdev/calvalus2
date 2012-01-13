@@ -62,6 +62,8 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
         try {
             if (productHasEmptyTiepoints(sourceProduct)) {
                 report(context, "Product has empty tie-points", inputPath);
+            } else if (productHasEmptyLatLonLines(sourceProduct)) {
+                report(context, "Product has empty lat/lon lines", inputPath);
             } else {
                 report(context, "OK", inputPath);
             }
@@ -94,5 +96,32 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
          }
          return false;
      }
+
+    private static boolean productHasEmptyLatLonLines(Product sourceProduct) {
+        TiePointGrid latitude = sourceProduct.getTiePointGrid("latitude");
+        float[] latData = (float[]) latitude.getDataElems();
+        TiePointGrid longitude = sourceProduct.getTiePointGrid("longitude");
+        float[] lonData = (float[]) longitude.getDataElems();
+
+        int width = latitude.getRasterWidth();
+        int height = latitude.getRasterHeight();
+
+        for (int y = 0; y < height; y++) {
+            if (isLineZero(latData, width, y)  && isLineZero(lonData, width, y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLineZero(float[] floatData, int width, int y) {
+        for (int x = 0; x < width; x++) {
+            if (floatData[(y * width + x)] != 0) {
+               return false;
+            }
+        }
+        return true;
+    }
+
 
 }
