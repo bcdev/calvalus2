@@ -46,7 +46,6 @@ import javax.media.jai.JAI;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -252,7 +251,7 @@ public class ProductFactory {
         return subsetProduct;
     }
 
-    public static boolean isGlobalCoverageGeometry(Geometry geometry) {
+    static boolean isGlobalCoverageGeometry(Geometry geometry) {
         Envelope envelopeInternal = geometry.getEnvelopeInternal();
         return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
                 && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
