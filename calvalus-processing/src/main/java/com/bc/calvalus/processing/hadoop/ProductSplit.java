@@ -35,6 +35,13 @@ public class ProductSplit extends FileSplit {
     private int stopLine;
 
     /**
+     * For deserialize only!
+     */
+    ProductSplit() {
+        super(null, 0, 0, null);
+    }
+
+    /**
      * Constructs a split with host information
      *
      * @param file      the file name
