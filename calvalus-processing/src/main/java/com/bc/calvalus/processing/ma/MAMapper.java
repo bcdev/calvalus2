@@ -58,11 +58,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
-        final String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
         final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        final String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        final String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
         // write initial log entry for runtime measurements
@@ -74,13 +71,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         long t0;
 
         t0 = now();
-
-        Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    regionGeometry,
-                                                    false, // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
-                                                    level2OperatorName,
-                                                    level2Parameters);
+        productFactory.setAllowSpatialSubset(false); // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
+        Product product = productFactory.getProcessedProduct(context.getInputSplit());
         if (product == null) {
             productFactory.dispose();
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);

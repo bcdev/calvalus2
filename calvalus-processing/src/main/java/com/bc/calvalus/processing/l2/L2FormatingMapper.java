@@ -18,10 +18,8 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -77,16 +75,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             }
         }
 
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
-        Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    regionGeometry,
-                                                    true,
-                                                    level2OperatorName,
-                                                    level2Parameters);
+        Product product = productFactory.getProcessedProduct(context.getInputSplit());
 
         if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
             productFactory.dispose();

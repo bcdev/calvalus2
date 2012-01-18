@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -70,17 +69,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
         final long startTime = System.nanoTime();
 
-        Path inputPath = split.getPath();
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
-        Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    regionGeometry,
-                                                    true,
-                                                    level2OperatorName,
-                                                    level2Parameters);
+        Product product = productFactory.getProcessedProduct(context.getInputSplit());
         int numTilesProcessed = 0;
         if (product != null) {
             try {
@@ -88,6 +77,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                     productFactory.dispose();
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
+                Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
                 numTilesProcessed = processProduct(product, regionGeometry, ctx, context);
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);

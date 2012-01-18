@@ -57,18 +57,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
         Configuration jobConfig = context.getConfiguration();
         ProductFactory productFactory = new ProductFactory(jobConfig);
-
-        final FileSplit split = (FileSplit) context.getInputSplit();
-        Path inputPath = split.getPath();
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        Product product = productFactory.getProduct(inputPath,
-                inputFormat,
-                regionGeometry,
-                true,
-                null,
-                null);
+        Product product = null;
         try {
+            product = productFactory.getProcessedProduct(context.getInputSplit());
             if (product != null) {
                 QLConfig qlConfig = QLConfig.get(jobConfig);
                 String qlName = product.getName() + "." + qlConfig.imageType;

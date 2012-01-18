@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.productinventory.ProductInventory;
+import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -13,7 +15,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
      * be a comma-separated list of file paths (HDFS URLs).
      */
     @Override
-    public List<FileSplit> getSplits(JobContext job) throws IOException {
+    public List<ProductSplit> getSplits(JobContext job) throws IOException {
 
         try {
             // parse request
@@ -56,9 +57,10 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
             String[] inputUrls = configuration.get(JobConfigNames.CALVALUS_INPUT).split(",");
             boolean failFast = Boolean.parseBoolean(configuration.get(JobConfigNames.CALVALUS_FAIL_FAST, "false"));
             String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, "ENVISAT");
-
+            ProductInventory inventory = ProductInventory.createInventory(configuration);
+                    
             // create splits for each calvalus.input in request
-            List<FileSplit> splits = new ArrayList<FileSplit>(inputUrls.length);
+            List<ProductSplit> splits = new ArrayList<ProductSplit>(inputUrls.length);
             for (String inputUrl : inputUrls) {
                 // get input out of request
                 // inquire "status" of file from HDFS
@@ -74,9 +76,19 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                         if (blocks.length == 1 && block.getLength() >= fileLength ||
                                 inputFormat.equals("HADOOP-STREAMING") ||
                                 inputPath.getName().toLowerCase().endsWith(".seq")) {
-                            // create file split for the input
-                            FileSplit split = new FileSplit(inputPath, 0, fileLength, block.getHosts());
-                            splits.add(split);
+                            // create a split for the input
+                            if (inventory == null) {
+                                // no inventory, process whole product
+                                splits.add(new ProductSplit(inputPath, fileLength, block.getHosts(), -1, -1));
+                            } else {
+                                // process only when it is listed in the inventory and only the given subset
+                                ProductInventoryEntry entry = inventory.getEntry(inputPath.toString());
+                                if (entry != null) {
+                                    int startLine = entry.getStartLine();
+                                    int stopLine = entry.getStopLine();
+                                    splits.add(new ProductSplit(inputPath, fileLength, block.getHosts(), startLine, stopLine));
+                                }
+                            }
                         } else {
                             reportIOProblem(failFast, String.format("Multiple blocks detected for file '%s'.", inputUrl));
                         }

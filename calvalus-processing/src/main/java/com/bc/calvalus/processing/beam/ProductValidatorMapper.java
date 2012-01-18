@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -25,7 +26,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 
 import java.io.IOException;
@@ -75,16 +75,16 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
     }
 
     private void report(Context context, String message, Path path) throws IOException, InterruptedException {
-        report(context, new ProductInventoryEntry(message), path);
+        report(context, ProductInventoryEntry.createEmpty(message), path);
     }
 
     private void report(Context context, Product product, String message, Path path) throws IOException, InterruptedException {
-        report(context, new ProductInventoryEntry(product, message), path);
+        report(context, ProductInventoryEntry.createForProduct(product, message), path);
     }
 
     private void report(Context context, ProductInventoryEntry entry, Path path) throws IOException, InterruptedException {
         context.write(new Text(path.toString()), new Text(entry.toCSVString()));
-        context.getCounter("Products", entry.message).increment(1);
+        context.getCounter("Products", entry.getMessage()).increment(1);
     }
 
     private static boolean productHasEmptyTiepoints(Product sourceProduct) {
@@ -132,58 +132,4 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
         return true;
     }
 
-    private static class ProductInventoryEntry {
-        final ProductData.UTC startTime;
-        final ProductData.UTC stopTime;
-        final int startLine;
-        final int stopLine;
-        final String message;
-
-        ProductInventoryEntry(String message) {
-            this(null,
-                 null,
-                 0,
-                 0,
-                 message);
-        }
-
-        ProductInventoryEntry(Product product, String message) {
-            this(product.getStartTime(),
-                 product.getEndTime(),
-                 0,
-                 product.getSceneRasterHeight() - 1,
-                 message);
-        }
-
-        private ProductInventoryEntry(ProductData.UTC startTime, ProductData.UTC stopTime, int startLine, int stopLine, String message) {
-            this.startTime = startTime;
-            this.stopTime = stopTime;
-            this.startLine = startLine;
-            this.stopLine = stopLine;
-            this.message = message;
-        }
-
-        public String toCSVString() {
-            StringBuilder sb = new StringBuilder();
-            appendDate(sb, startTime);
-            sb.append("\t");
-            appendDate(sb, stopTime);
-            sb.append("\t");
-            sb.append(startLine);
-            sb.append("\t");
-            sb.append(stopLine);
-            sb.append("\t");
-            sb.append(message);
-            sb.append("\t");
-            return sb.toString();
-        }
-
-        private static void appendDate(StringBuilder sb, ProductData.UTC date) {
-            if (date != null) {
-                sb.append(date.format());
-            } else {
-                sb.append("null");
-            }
-        }
-    }
 }

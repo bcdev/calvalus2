@@ -18,13 +18,9 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.*;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.ceres.glevel.MultiLevelImage;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -69,17 +65,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
         final long startTime = System.nanoTime();
 
-        Path inputPath = split.getPath();
-        String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-        Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
-        Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    regionGeometry,
-                                                    true,
-                                                    level2OperatorName,
-                                                    level2Parameters);
+        Product product = productFactory.getProcessedProduct(context.getInputSplit());
         if (product != null) {
             try {
                 long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());

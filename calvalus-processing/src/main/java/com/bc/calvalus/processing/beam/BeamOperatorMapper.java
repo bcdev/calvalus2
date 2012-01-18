@@ -2,9 +2,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,16 +67,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                     return;
                 }
             }
-            String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-            Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            String level2OperatorName = jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-            String level2Parameters = jobConfig.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
-            Product targetProduct = productFactory.getProduct(inputPath,
-                                                              inputFormat,
-                                                              regionGeometry,
-                                                              true,
-                                                              level2OperatorName,
-                                                              level2Parameters);
+            Product targetProduct = productFactory.getProcessedProduct(context.getInputSplit());
 
             if (targetProduct == null || targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");

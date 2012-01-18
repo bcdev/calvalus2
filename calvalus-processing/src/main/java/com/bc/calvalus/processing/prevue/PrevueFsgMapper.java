@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.prevue;
 
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.Record;
@@ -27,7 +26,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
@@ -35,7 +33,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.util.io.FileUtils;
 import org.esa.beam.util.math.MathUtils;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
@@ -75,20 +72,10 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final FileSplit split = (FileSplit) context.getInputSplit();
-        final Path inputPath = split.getPath();
-
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
-        final String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
-
-        Product product = productFactory.getProduct(inputPath,
-                                                    inputFormat,
-                                                    null,
-                                                    false, // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
-                                                    null,
-                                                    null);
+        Product product = productFactory.getProcessedProduct(context.getInputSplit());
         if (product == null) {
             productFactory.dispose();
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);
@@ -96,10 +83,6 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
         }
 
         RecordSource recordSource = getReferenceRecordSource(maConfig);
-
-        // Actually wrong name for processed products, but we need the field "source_name" in the export data table
-        product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
-
 
 
         DecimalFormat decimalFormat = new DecimalFormat("000");
@@ -113,25 +96,7 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
                     String idAsString = decimalFormat.format(id);
                     context.setStatus("ID " + idAsString);
 
-                    CoordinateReferenceSystem crsUtmAutomatic = getCRSUtmAutomatic(location);
-
-                    DefaultGeographicCRS wgs84 = DefaultGeographicCRS.WGS84;
-                    MathTransform transform = CRS.findMathTransform(wgs84, crsUtmAutomatic);
-                    DirectPosition centerWgs84 = new DirectPosition2D(wgs84, location.getLon(), location.getLat());
-                    DirectPosition centerUTM = transform.transform(centerWgs84, null);
-
-                    ReprojectionOp reprojectionOp = new ReprojectionOp();
-                    reprojectionOp.setSourceProduct(product);
-                    reprojectionOp.setParameter("crs", crsUtmAutomatic.toWKT());
-                    reprojectionOp.setParameter("referencePixelX", 25.5);
-                    reprojectionOp.setParameter("referencePixelY", 25.5);
-                    reprojectionOp.setParameter("pixelSizeX", 260.0);
-                    reprojectionOp.setParameter("pixelSizeY", 260.0);
-                    reprojectionOp.setParameter("width", 49);
-                    reprojectionOp.setParameter("height", 49);
-                    reprojectionOp.setParameter("easting", centerUTM.getOrdinate(0));
-                    reprojectionOp.setParameter("northing", centerUTM.getOrdinate(1));
-
+                    ReprojectionOp reprojectionOp = getUtmReprojectionOp(product, location);
                     Product targetProduct = reprojectionOp.getTargetProduct();
 
                     // NO metadata
@@ -163,6 +128,28 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
         }
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
 
+    }
+
+    private ReprojectionOp getUtmReprojectionOp(Product product, GeoPos location) throws Exception {
+        CoordinateReferenceSystem crsUtmAutomatic = getCRSUtmAutomatic(location);
+
+        DefaultGeographicCRS wgs84 = DefaultGeographicCRS.WGS84;
+        MathTransform transform = CRS.findMathTransform(wgs84, crsUtmAutomatic);
+        DirectPosition centerWgs84 = new DirectPosition2D(wgs84, location.getLon(), location.getLat());
+        DirectPosition centerUTM = transform.transform(centerWgs84, null);
+
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct(product);
+        reprojectionOp.setParameter("crs", crsUtmAutomatic.toWKT());
+        reprojectionOp.setParameter("referencePixelX", 25.5);
+        reprojectionOp.setParameter("referencePixelY", 25.5);
+        reprojectionOp.setParameter("pixelSizeX", 260.0);
+        reprojectionOp.setParameter("pixelSizeY", 260.0);
+        reprojectionOp.setParameter("width", 49);
+        reprojectionOp.setParameter("height", 49);
+        reprojectionOp.setParameter("easting", centerUTM.getOrdinate(0));
+        reprojectionOp.setParameter("northing", centerUTM.getOrdinate(1));
+        return reprojectionOp;
     }
 
     static CoordinateReferenceSystem getCRSUtmAutomatic(final GeoPos referencePos) throws FactoryException {

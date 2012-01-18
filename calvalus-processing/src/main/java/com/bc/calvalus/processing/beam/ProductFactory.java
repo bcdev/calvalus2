@@ -19,7 +19,9 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Envelope;
@@ -30,6 +32,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
@@ -67,6 +71,7 @@ public class ProductFactory {
 
     private final Configuration configuration;
     private List<File> productCaches;
+    private boolean allowSpatialSubset = true;
 
     /**
      * Constructor.
@@ -99,33 +104,52 @@ public class ProductFactory {
         }
     }
 
+    public void setAllowSpatialSubset(boolean allowSpatialSubset) {
+        this.allowSpatialSubset = allowSpatialSubset;
+    }
+
     // todo - nf/nf 19.04.2011: generalise following L2 processor call, so that we can also call 'l2gen'
 
     /**
-     * Reads a source product and generates a target product using the given parameters.
-     * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
-     * Currently only GPG operator names are supported.
+     * Reads and processed a product from the given input split:
+     * <ul>
+     * <li>read the products</li>
+     * <li>creates a subset taking the geometry and processing lines into account (optional)</li>
+     * <li>performs a "L2" operation (optional)</li>
+     * </ul>
+     * finally the resulting product is returned.
+     * <p/>
+     * Currently only GPF operator names are supported.
      *
-     * @param inputPath           The input path
-     * @param inputFormat         The input format, may be {@code null}. If {@code null}, the file format will be detected.
-     * @param regionGeometry      The geometry of the region of interest. May be {@code null} or empty.
-     * @param allowSpatialSubset  If true, and the geometry intersects the product's boundary, a subset of the source product will be created.
-     * @param processorName       The name of a processor. May be {@code null} or empty.
-     * @param processorParameters The text-encoded parameters for the processor.   @return The target product.
+     * @param inputSplit The input split, must be either a FileSplit or a ProductSplit.
      * @return The product corresponding to the given input path, region geometry and processor.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public Product getProduct(Path inputPath,
-                              String inputFormat,
-                              Geometry regionGeometry,
-                              boolean allowSpatialSubset,
-                              String processorName,
-                              String processorParameters) throws IOException {
+    public Product getProcessedProduct(InputSplit inputSplit) throws IOException {
+        final Path inputPath;
+        int startLine = 0;
+        int stopLine = 0;
+        if (inputSplit instanceof ProductSplit) {
+            ProductSplit productSplit = (ProductSplit) inputSplit;
+            inputPath = productSplit.getPath();
+            startLine = productSplit.getStartLine();
+            stopLine = productSplit.getStopLine();
+        } else if (inputSplit instanceof FileSplit) {
+            FileSplit fileSplit = (FileSplit) inputSplit;
+            inputPath = fileSplit.getPath();
+        } else {
+            throw new IllegalArgumentException("input split is neither a FileSplit nor a ProductSplit");
+        }
+
+        String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
+        Geometry regionGeometry = JobUtils.createGeometry(configuration.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        String processorName = configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String processorParameters = configuration.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
         Product sourceProduct = readProduct(inputPath, inputFormat);
         Product targetProduct;
         try {
-            targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, processorName, processorParameters);
+            targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, startLine, stopLine, processorName, processorParameters);
             if (targetProduct == null) {
                 sourceProduct.dispose();
             }
@@ -220,23 +244,30 @@ public class ProductFactory {
         return operatorSpi.getOperatorClass();
     }
 
-    private static Product getSubsetProduct(Product product, Geometry regionGeometry, boolean allowSpatialSubset) {
-        if (regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry)) {
-            return product;
+    static Product getSubsetProduct(Product product, Geometry regionGeometry,
+                                    boolean allowSpatialSubset, int startLine, int stopLine) {
+        Rectangle pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+        if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
+            try {
+                pixelRegion = SubsetOp.computePixelRegion(product, regionGeometry, 1);
+            } catch (Exception e) {
+                // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
+                // in this case ignore this product
+                return null;
+            }
         }
-        final Rectangle pixelRegion;
-        try {
-            pixelRegion = SubsetOp.computePixelRegion(product, regionGeometry, 1);
-        } catch (Exception e) {
-            // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
-            // in this case ignore this product
-            return null;
+        // adjust region to start/stop line
+        if (startLine != -1 && stopLine != -1) {
+            final int width = product.getSceneRasterWidth();
+            final int height = stopLine - startLine + 1;
+            pixelRegion = pixelRegion.intersection(new Rectangle(0, startLine, width, height));
         }
         //  SubsetOp throws an OperatorException if pixelRegion.isEmpty(), we don't want this
         if (pixelRegion.isEmpty()) {
             return null;
         }
-        if (!allowSpatialSubset) {
+        // full region
+        if (!allowSpatialSubset || (pixelRegion.width == product.getSceneRasterWidth() && pixelRegion.height == product.getSceneRasterHeight())) {
             return product;
         }
 
@@ -280,12 +311,19 @@ public class ProductFactory {
         return product;
     }
 
+    /**
+     * Generates a target product using the given parameters.
+     * {@code processorName} may be the name of a Unix executable, a BEAM GPF operator or GPF XML processing graph.
+     * Currently only GPF operator names are supported.
+     */
     static Product getProcessedProduct(Product sourceProduct,
                                        Geometry regionGeometry,
                                        boolean allowSpatialSubset,
+                                       int startLine,
+                                       int stopLine,
                                        String processorName,
                                        String processorParameters) {
-        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometry, allowSpatialSubset);
+        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometry, allowSpatialSubset, startLine, stopLine);
         if (subsetProduct == null) {
             return null;
         }

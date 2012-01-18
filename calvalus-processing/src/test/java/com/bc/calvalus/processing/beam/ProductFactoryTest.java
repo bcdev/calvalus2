@@ -20,9 +20,30 @@ public class ProductFactoryTest {
         sourceProduct.addBand("b1", "1.0");
         sourceProduct.addBand("b2", "2.0");
 
-        Product targetProduct = ProductFactory.getProcessedProduct(sourceProduct, null, false, "PassThrough", "<parameters/>");
+        Product targetProduct = ProductFactory.getProcessedProduct(sourceProduct, null, false, -1, -1, "PassThrough", "<parameters/>");
         assertSame(sourceProduct, targetProduct);
     }
+
+    @Test
+    public void testGetSubsetProduct() throws Exception {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
+        Product sourceProduct = new Product("N", "T", 100, 100);
+        sourceProduct.addBand("b1", "1.0");
+        sourceProduct.addBand("b2", "2.0");
+
+        Product targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, true, -1, -1);
+        assertSame(sourceProduct, targetProduct);
+
+        targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, false, -1, -1);
+        assertSame(sourceProduct, targetProduct);
+
+        targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, true, 10, 20);
+        assertNotSame(sourceProduct, targetProduct);
+        assertEquals(100, targetProduct.getSceneRasterWidth());
+        assertEquals(11, targetProduct.getSceneRasterHeight());
+    }
+
 
     @Test
     public void testIsGlobeCoverageGeometry() throws Exception {
