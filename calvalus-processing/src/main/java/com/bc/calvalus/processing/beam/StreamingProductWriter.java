@@ -18,12 +18,13 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.TaskInputOutputContext;
+import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -48,14 +49,16 @@ public class StreamingProductWriter {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Configuration configuration;
-    private final TaskInputOutputContext context;
+    private final MapContext context;
+    private final ProductSplit productSplit;
 
-    public StreamingProductWriter(Configuration configuration, TaskInputOutputContext context) {
+    public StreamingProductWriter(Configuration configuration, MapContext context) {
         this.configuration = configuration;
         this.context = context;
+        productSplit = (ProductSplit) context.getInputSplit();
     }
 
-    public void writeProduct(Product product, Path outputPath, int tileHeight) throws IOException {
+    public void writeProduct(Product product, Path outputPath, int tileHeight) throws Exception {
         Map<String, Long> indexMap = new HashMap<String, Long>();
 
         SequenceFile.Writer writer = writeHeader(product, outputPath, tileHeight);
@@ -90,6 +93,8 @@ public class StreamingProductWriter {
             }
             LOG.info(" written y=" + y + " h=" + h + " sceneHeight=" + sceneHeight);
             if (context != null) {
+                productSplit.setProgress(Math.min(1.0f, y / sceneHeight));
+                context.nextKeyValue(); // trigger progress propagation
                 context.setStatus(String.format("%d of %d", y, sceneHeight));
             }
         }

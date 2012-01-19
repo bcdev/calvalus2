@@ -33,6 +33,7 @@ public class ProductSplit extends FileSplit {
 
     private int processStartLine;
     private int processLength;
+    private float progress; // not serialized
 
     /**
      * For deserialize only!
@@ -87,5 +88,13 @@ public class ProductSplit extends FileSplit {
         super.readFields(in);
         processStartLine = in.readInt();
         processLength = in.readInt();
+    }
+
+    public void setProgress(float progress) {
+        this.progress = progress;
+    }
+
+    public float getProgress() {
+        return progress;
     }
 }

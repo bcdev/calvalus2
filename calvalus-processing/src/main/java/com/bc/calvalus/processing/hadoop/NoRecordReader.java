@@ -8,14 +8,19 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 
 /**
-* Does nothing by intention.
-*
-* @author Martin Boettcher
-*/
+ * Does nothing by intention.
+ *
+ * @author Martin Boettcher
+ */
 public class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
+
+    private ProductSplit productSplit;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+        if (split instanceof ProductSplit) {
+            productSplit = (ProductSplit) split;
+        }
     }
 
     @Override
@@ -35,7 +40,11 @@ public class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
 
     @Override
     public float getProgress() throws IOException, InterruptedException {
-        return 0;
+        if (productSplit != null) {
+            return productSplit.getProgress();
+        } else {
+            return 0;
+        }
     }
 
     @Override
