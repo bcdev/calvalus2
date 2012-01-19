@@ -127,13 +127,13 @@ public class ProductFactory {
      */
     public Product getProcessedProduct(InputSplit inputSplit) throws IOException {
         final Path inputPath;
-        int startLine = 0;
-        int stopLine = 0;
+        int processStart = 0;
+        int processLength = 0;
         if (inputSplit instanceof ProductSplit) {
             ProductSplit productSplit = (ProductSplit) inputSplit;
             inputPath = productSplit.getPath();
-            startLine = productSplit.getStartLine();
-            stopLine = productSplit.getStopLine();
+            processStart = productSplit.getProcessStartLine();
+            processLength = productSplit.getProcessLength();
         } else if (inputSplit instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) inputSplit;
             inputPath = fileSplit.getPath();
@@ -149,7 +149,7 @@ public class ProductFactory {
         Product sourceProduct = readProduct(inputPath, inputFormat);
         Product targetProduct;
         try {
-            targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, startLine, stopLine, processorName, processorParameters);
+            targetProduct = getProcessedProduct(sourceProduct, regionGeometry, allowSpatialSubset, processStart, processLength, processorName, processorParameters);
             if (targetProduct == null) {
                 sourceProduct.dispose();
             }
@@ -245,7 +245,7 @@ public class ProductFactory {
     }
 
     static Product getSubsetProduct(Product product, Geometry regionGeometry,
-                                    boolean allowSpatialSubset, int startLine, int stopLine) {
+                                    boolean allowSpatialSubset, int processStart, int processLength) {
         Rectangle pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
             try {
@@ -257,10 +257,9 @@ public class ProductFactory {
             }
         }
         // adjust region to start/stop line
-        if (startLine != -1 && stopLine != -1) {
+        if (processLength > 0) {
             final int width = product.getSceneRasterWidth();
-            final int height = stopLine - startLine + 1;
-            pixelRegion = pixelRegion.intersection(new Rectangle(0, startLine, width, height));
+            pixelRegion = pixelRegion.intersection(new Rectangle(0, processStart, width, processLength));
         }
         //  SubsetOp throws an OperatorException if pixelRegion.isEmpty(), we don't want this
         if (pixelRegion.isEmpty()) {
@@ -319,11 +318,11 @@ public class ProductFactory {
     static Product getProcessedProduct(Product sourceProduct,
                                        Geometry regionGeometry,
                                        boolean allowSpatialSubset,
-                                       int startLine,
-                                       int stopLine,
+                                       int processStart,
+                                       int processLength,
                                        String processorName,
                                        String processorParameters) {
-        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometry, allowSpatialSubset, startLine, stopLine);
+        Product subsetProduct = getSubsetProduct(sourceProduct, regionGeometry, allowSpatialSubset, processStart, processLength);
         if (subsetProduct == null) {
             return null;
         }

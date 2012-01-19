@@ -33,37 +33,50 @@ public class ProductInventoryEntry {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd-HH-mm-ss";
 
-    public static ProductInventoryEntry create(String startTime, String stopTime, String startLine, String stopLine, String message) throws ParseException {
+    public static ProductInventoryEntry create(String startTime, String stopTime, String length, String processStartLine, String processLength, String message) throws ParseException {
         ProductData.UTC startTimeUTC = ProductData.UTC.parse(startTime, DATE_PATTERN);
         ProductData.UTC stopTimeUTC = ProductData.UTC.parse(stopTime, DATE_PATTERN);
-        int startLineInt = Integer.parseInt(startLine);
-        int stopLineInt = Integer.parseInt(stopLine);
-        return new ProductInventoryEntry(startTimeUTC, stopTimeUTC, startLineInt, stopLineInt, message);
+        int lengthInt = Integer.parseInt(length);
+        int processStartLineInt = Integer.parseInt(processStartLine);
+        int processLengthInt = Integer.parseInt(processLength);
+        return new ProductInventoryEntry(startTimeUTC, stopTimeUTC, lengthInt, processStartLineInt, processLengthInt, message);
     }
 
     public static ProductInventoryEntry createEmpty(String message) {
-        return new ProductInventoryEntry(null, null, -1, -1, message);
+        return new ProductInventoryEntry(null, null, 0, 0, 0, message);
     }
 
-    public static ProductInventoryEntry createForProduct(Product product, String message) {
+    public static ProductInventoryEntry createForGoodProduct(Product product, String message) {
         return new ProductInventoryEntry(product.getStartTime(),
                                          product.getEndTime(),
+                                         product.getSceneRasterHeight(),
                                          0,
-                                         product.getSceneRasterHeight() - 1,
+                                         product.getSceneRasterHeight(),
+                                         message);
+    }
+
+    public static ProductInventoryEntry createForBadProduct(Product product, String message) {
+        return new ProductInventoryEntry(product.getStartTime(),
+                                         product.getEndTime(),
+                                         product.getSceneRasterHeight(),
+                                         0,
+                                         0,
                                          message);
     }
 
     final ProductData.UTC startTime;
     final ProductData.UTC stopTime;
-    final int startLine;
-    final int stopLine;
+    final int length;
+    final int processStartLine;
+    final int processLength;
     final String message;
 
-    private ProductInventoryEntry(ProductData.UTC startTime, ProductData.UTC stopTime, int startLine, int stopLine, String message) {
+    private ProductInventoryEntry(ProductData.UTC startTime, ProductData.UTC stopTime, int length, int processStartLine, int processLength, String message) {
         this.startTime = startTime;
         this.stopTime = stopTime;
-        this.startLine = startLine;
-        this.stopLine = stopLine;
+        this.length = length;
+        this.processStartLine = processStartLine;
+        this.processLength = processLength;
         this.message = message;
     }
 
@@ -75,12 +88,16 @@ public class ProductInventoryEntry {
         return stopTime;
     }
 
-    public int getStartLine() {
-        return startLine;
+    public int getLength() {
+        return length;
     }
 
-    public int getStopLine() {
-        return stopLine;
+    public int getProcessStartLine() {
+        return processStartLine;
+    }
+
+    public int getProcessLength() {
+        return processLength;
     }
 
     public String getMessage() {
@@ -93,10 +110,12 @@ public class ProductInventoryEntry {
         sb.append("\t");
         appendDate(sb, stopTime);
         sb.append("\t");
-        sb.append(startLine);
+        sb.append(length);
         sb.append("\t");
-        sb.append(stopLine);
+        sb.append(processStartLine);
         sb.append("\t");
+        sb.append(processLength);
+        sb.append("\t");        
         sb.append(message);
         return sb.toString();
     }

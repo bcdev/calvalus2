@@ -26,7 +26,7 @@ public class ProductInventoryTest {
 
     @Test
     public void testCreateInventory() throws Exception {
-        String content = "the/path\t2001-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t0\t44\tbar";
+        String content = "the/path\t2001-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t45\t3\t42\tbar";
 
         StringReader reader = new StringReader(content);
         ProductInventory inventory = ProductInventory.createInventory(reader);
@@ -40,7 +40,8 @@ public class ProductInventoryTest {
         entry = inventory.getEntry("the/path");
         assertNotNull(entry);
         assertEquals("bar", entry.getMessage());
-        assertEquals(0, entry.getStartLine());
-        assertEquals(44, entry.getStopLine());
+        assertEquals(45, entry.getLength());
+        assertEquals(3, entry.getProcessStartLine());
+        assertEquals(42, entry.getProcessLength());
     }
 }

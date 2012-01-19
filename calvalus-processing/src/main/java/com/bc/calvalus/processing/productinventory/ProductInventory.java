@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class ProductInventory {
 
-    private static final int NUM_ENTRIES = 6;
+    private static final int NUM_ENTRIES = 7;
     private final Map<String, ProductInventoryEntry> map;
 
     public static ProductInventory createInventory(Configuration conf) throws IOException {
@@ -76,7 +76,7 @@ public class ProductInventory {
         if (strings.length == NUM_ENTRIES) {
             String path = strings[0];
             try {
-                ProductInventoryEntry entry = ProductInventoryEntry.create(strings[1], strings[2], strings[3], strings[4], strings[5]);
+                ProductInventoryEntry entry = ProductInventoryEntry.create(strings[1], strings[2], strings[3], strings[4], strings[5], strings[6]);
                 if (entry != null) {
                     map.put(path, entry);
                 }

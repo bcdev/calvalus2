@@ -31,8 +31,8 @@ import java.io.IOException;
  */
 public class ProductSplit extends FileSplit {
 
-    private int startLine;
-    private int stopLine;
+    private int processStartLine;
+    private int processLength;
 
     /**
      * For deserialize only!
@@ -42,40 +42,50 @@ public class ProductSplit extends FileSplit {
     }
 
     /**
-     * Constructs a split with host information
+     * Constructs a split with host information for the whole product
      *
      * @param file      the file name
      * @param length    the number of bytes in the file to process
      * @param hosts     the list of hosts containing the block, possibly null
-     * @param startLine the first line that should be processed
-     * @param stopLine  the last line that should be processed
      */
-    public ProductSplit(Path file, long length, String[] hosts, int startLine, int stopLine) {
+    public ProductSplit(Path file, long length, String[] hosts) {
+        this(file, length, hosts, -1, -1);
+    }
+
+    /**
+     * Constructs a split with host information for a part of the product
+     *
+     * @param file      the file name
+     * @param length    the number of bytes in the file to process
+     * @param hosts     the list of hosts containing the block, possibly null
+     * @param processStart the first line that should be processed
+     * @param processLength  the last line that should be processed
+     */
+    public ProductSplit(Path file, long length, String[] hosts, int processStart, int processLength) {
         super(file, 0, length, hosts);
-        this.startLine = startLine;
-        this.stopLine = stopLine;
+        this.processStartLine = processStart;
+        this.processLength = processLength;
     }
 
-    public int getStartLine() {
-        return startLine;
+    public int getProcessStartLine() {
+        return processStartLine;
     }
 
-    public int getStopLine() {
-        return stopLine;
+    public int getProcessLength() {
+        return processLength;
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeInt(startLine);
-        out.writeInt(stopLine);
+        out.writeInt(processStartLine);
+        out.writeInt(processLength);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        startLine = in.readInt();
-        stopLine = in.readInt();
+        processStartLine = in.readInt();
+        processLength = in.readInt();
     }
-
 }

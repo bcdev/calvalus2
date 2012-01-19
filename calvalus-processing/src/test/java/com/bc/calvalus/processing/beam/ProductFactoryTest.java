@@ -32,18 +32,17 @@ public class ProductFactoryTest {
         sourceProduct.addBand("b1", "1.0");
         sourceProduct.addBand("b2", "2.0");
 
-        Product targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, true, -1, -1);
+        Product targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, true, 0, 0);
         assertSame(sourceProduct, targetProduct);
 
-        targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, false, -1, -1);
+        targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, false, 0, 0);
         assertSame(sourceProduct, targetProduct);
 
         targetProduct = ProductFactory.getSubsetProduct(sourceProduct, null, true, 10, 20);
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(100, targetProduct.getSceneRasterWidth());
-        assertEquals(11, targetProduct.getSceneRasterHeight());
+        assertEquals(20, targetProduct.getSceneRasterHeight());
     }
-
 
     @Test
     public void testIsGlobeCoverageGeometry() throws Exception {
@@ -52,6 +51,4 @@ public class ProductFactoryTest {
         assertFalse(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, 180 -90, 180 89, -180 89, -180 -90))")));
         assertFalse(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, 80 -90, 80 89, -180 89, -180 -90))")));
     }
-
-
 }

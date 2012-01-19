@@ -62,11 +62,11 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
 
         try {
             if (productHasEmptyTiepoints(product)) {
-                report(context, product, "Product has empty tie-points", inputPath);
+                report(context, product, false, "Product has empty tie-points", inputPath);
             } else if (productHasEmptyLatLonLines(product)) {
-                report(context, product, "Product has empty lat/lon lines", inputPath);
+                report(context, product, false, "Product has empty lat/lon lines", inputPath);
             } else {
-                report(context, product, "Good", inputPath);
+                report(context, product, true, "Good", inputPath);
             }
         } finally {
             product.dispose();
@@ -78,12 +78,18 @@ public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, T
         report(context, ProductInventoryEntry.createEmpty(message), path);
     }
 
-    private void report(Context context, Product product, String message, Path path) throws IOException, InterruptedException {
-        report(context, ProductInventoryEntry.createForProduct(product, message), path);
+    private void report(Context context, Product product, boolean good, String message, Path path) throws IOException, InterruptedException {
+        ProductInventoryEntry entry;
+        if (good) {
+            entry = ProductInventoryEntry.createForGoodProduct(product, message);
+        } else {
+            entry = ProductInventoryEntry.createForBadProduct(product, message);
+        }
+        report(context, entry, path);
     }
 
     private void report(Context context, ProductInventoryEntry entry, Path path) throws IOException, InterruptedException {
-        context.write(new Text(path.toString()), new Text(entry.toCSVString()));
+        context.write(new Text(path.getName()), new Text(entry.toCSVString()));
         context.getCounter("Products", entry.getMessage()).increment(1);
     }
 

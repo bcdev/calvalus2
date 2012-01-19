@@ -79,14 +79,14 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                             // create a split for the input
                             if (inventory == null) {
                                 // no inventory, process whole product
-                                splits.add(new ProductSplit(inputPath, fileLength, block.getHosts(), -1, -1));
+                                splits.add(new ProductSplit(inputPath, fileLength, block.getHosts()));
                             } else {
                                 // process only when it is listed in the inventory and only the given subset
                                 ProductInventoryEntry entry = inventory.getEntry(inputPath.toString());
-                                if (entry != null) {
-                                    int startLine = entry.getStartLine();
-                                    int stopLine = entry.getStopLine();
-                                    splits.add(new ProductSplit(inputPath, fileLength, block.getHosts(), startLine, stopLine));
+                                if (entry != null && entry.getProcessLength() > 0) {
+                                    int start = entry.getProcessStartLine();
+                                    int length = entry.getProcessLength();
+                                    splits.add(new ProductSplit(inputPath, fileLength, block.getHosts(), start, length));
                                 }
                             }
                         } else {

@@ -29,12 +29,13 @@ public class ProductInventoryEntryTest {
     public void testCreate() throws Exception {
         ProductInventoryEntry entry = ProductInventoryEntry.create("2001-10-02-13-10-11.123400",
                                                                    "2001-12-02-13-12-14.456789",
-                                                                   "3", "44", "bar");
+                                                                   "65", "3", "44", "bar");
         assertNotNull(entry);
         assertEquals("bar", entry.getMessage());
 
-        assertEquals(3, entry.getStartLine());
-        assertEquals(44, entry.getStopLine());
+        assertEquals(65, entry.getLength());
+        assertEquals(3, entry.getProcessStartLine());
+        assertEquals(44, entry.getProcessLength());
         assertNotNull(entry.getStartTime());
         assertTrue(ProductData.UTC.parse("02-Oct-2001 13:10:11.1234").equalElems(entry.getStartTime()));
         assertNotNull(entry.getStopTime());
@@ -46,19 +47,21 @@ public class ProductInventoryEntryTest {
         ProductInventoryEntry entry = ProductInventoryEntry.createEmpty("foo");
         assertNotNull(entry);
         assertEquals("foo", entry.getMessage());
-        assertEquals(-1, entry.getStartLine());
-        assertEquals(-1, entry.getStopLine());
+        assertEquals(0, entry.getLength());
+        assertEquals(0, entry.getProcessStartLine());
+        assertEquals(0, entry.getProcessLength());
     }
 
     @Test
     public void testCreateForProduct() throws Exception {
         Product product = new Product("name", "desc", 23, 45);
 
-        ProductInventoryEntry entry = ProductInventoryEntry.createForProduct(product, "foo");
+        ProductInventoryEntry entry = ProductInventoryEntry.createForGoodProduct(product, "foo");
         assertNotNull(entry);
         assertEquals("foo", entry.getMessage());
-        assertEquals(0, entry.getStartLine());
-        assertEquals(44, entry.getStopLine());
+        assertEquals(45, entry.getLength());
+        assertEquals(0, entry.getProcessStartLine());
+        assertEquals(45, entry.getProcessLength());
         assertNull(entry.getStartTime());
         assertNull(entry.getStopTime());
 
@@ -66,11 +69,12 @@ public class ProductInventoryEntryTest {
         product.setStartTime(startTime);
         ProductData.UTC endTime = ProductData.UTC.parse("02-Jul-2001 13:12:14.456789");
         product.setEndTime(endTime);
-        entry = ProductInventoryEntry.createForProduct(product, "foo");
+        entry = ProductInventoryEntry.createForGoodProduct(product, "foo");
         assertNotNull(entry);
         assertEquals("foo", entry.getMessage());
-        assertEquals(0, entry.getStartLine());
-        assertEquals(44, entry.getStopLine());
+        assertEquals(45, entry.getLength());
+        assertEquals(0, entry.getProcessStartLine());
+        assertEquals(45, entry.getProcessLength());
         assertNotNull(entry.getStartTime());
         assertTrue(startTime.equalElems(entry.getStartTime()));
         assertNotNull(entry.getStopTime());
@@ -80,16 +84,16 @@ public class ProductInventoryEntryTest {
     @Test
     public void testToCsvString() throws Exception {
         Product product = new Product("name", "desc", 23, 45);
-        ProductInventoryEntry entry = ProductInventoryEntry.createForProduct(product, "foo");
+        ProductInventoryEntry entry = ProductInventoryEntry.createForGoodProduct(product, "foo");
 
-        assertEquals("null\tnull\t0\t44\tfoo", entry.toCSVString());
+        assertEquals("null\tnull\t45\t0\t45\tfoo", entry.toCSVString());
 
         ProductData.UTC startTime = ProductData.UTC.parse("02-Jul-2001 13:10:11.1234");
         product.setStartTime(startTime);
         ProductData.UTC endTime = ProductData.UTC.parse("02-Jul-2001 13:12:14.5678");
         product.setEndTime(endTime);
-        entry = ProductInventoryEntry.createForProduct(product, "bar");
+        entry = ProductInventoryEntry.createForGoodProduct(product, "bar");
 
-        assertEquals("2001-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t0\t44\tbar", entry.toCSVString());
+        assertEquals("2001-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t45\t0\t45\tbar", entry.toCSVString());
     }
 }
