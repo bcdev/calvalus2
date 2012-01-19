@@ -49,7 +49,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
      * be a comma-separated list of file paths (HDFS URLs).
      */
     @Override
-    public List<ProductSplit> getSplits(JobContext job) throws IOException {
+    public List<InputSplit> getSplits(JobContext job) throws IOException {
 
         try {
             // parse request
@@ -60,7 +60,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
             ProductInventory inventory = ProductInventory.createInventory(configuration);
                     
             // create splits for each calvalus.input in request
-            List<ProductSplit> splits = new ArrayList<ProductSplit>(inputUrls.length);
+            List<InputSplit> splits = new ArrayList<InputSplit>(inputUrls.length);
             for (String inputUrl : inputUrls) {
                 // get input out of request
                 // inquire "status" of file from HDFS
