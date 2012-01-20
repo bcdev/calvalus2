@@ -38,8 +38,8 @@ public class ProductInventoryReducer extends Reducer<Text, Text, Text, Text> {
         for (Text value : values) {
             String[] splits = value.toString().split("\t");
             try {
-                ProductInventoryEntry entry = ProductInventoryEntry.create(splits[1], splits[2], splits[3], splits[4], splits[5], splits[6]);
-                entry.setProductName(splits[0]);
+                ProductInventoryEntry entry = ProductInventoryEntry.create(splits[0], splits[1], splits[2], splits[3], splits[4], splits[5]);
+                entry.setProductName(key.toString());
                 inventory.add(entry);
             } catch (ParseException ignore) {
             }
@@ -50,6 +50,7 @@ public class ProductInventoryReducer extends Reducer<Text, Text, Text, Text> {
     protected void cleanup(Context context) throws IOException, InterruptedException {
         ProductDeDuplicator.sort(inventory);
         ProductDeDuplicator.deduplicate(inventory);
+
         for (ProductInventoryEntry entry : inventory) {
             context.write(new Text(entry.getProductName()), new Text(entry.toCSVString()));
         }
