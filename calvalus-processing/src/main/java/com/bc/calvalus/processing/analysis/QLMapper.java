@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.ql;
+package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;

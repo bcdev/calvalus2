@@ -26,7 +26,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +40,6 @@ import java.util.Map;
  */
 public class ProductInventory {
 
-    private static final int NUM_ENTRIES = 7;
     private final Map<String, ProductInventoryEntry> map;
 
     public static ProductInventory createInventory(Configuration conf) throws IOException {
@@ -73,20 +76,23 @@ public class ProductInventory {
     }
 
     void addEntry(String[] strings) {
-        if (strings.length == NUM_ENTRIES) {
-            String path = strings[0];
+        if (strings.length == ProductInventoryEntry.NUM_ENTRIES) {
+            String productName = strings[0];
             try {
                 ProductInventoryEntry entry = ProductInventoryEntry.create(strings[1], strings[2], strings[3], strings[4], strings[5], strings[6]);
-                if (entry != null) {
-                    map.put(path, entry);
-                }
+                entry.setProductName(productName);
+                map.put(productName, entry);
             } catch (ParseException ignore) {
             }
         }
     }
 
-    public ProductInventoryEntry getEntry(String path) {
-        return map.get(path);
+    public ProductInventoryEntry getEntry(String productName) {
+        return map.get(productName);
+    }
+
+    public List<ProductInventoryEntry> getAll() {
+        return new ArrayList<ProductInventoryEntry>(map.values());
     }
 
     public int size() {

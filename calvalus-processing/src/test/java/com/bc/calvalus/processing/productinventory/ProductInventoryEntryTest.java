@@ -62,8 +62,11 @@ public class ProductInventoryEntryTest {
         assertEquals(45, entry.getLength());
         assertEquals(0, entry.getProcessStartLine());
         assertEquals(45, entry.getProcessLength());
-        assertNull(entry.getStartTime());
-        assertNull(entry.getStopTime());
+        assertNotNull(entry.getStartTime());
+        ProductData.UTC utcZero = new ProductData.UTC();
+        assertTrue(utcZero.equalElems(entry.getStartTime()));
+        assertNotNull(entry.getStopTime());
+        assertTrue(utcZero.equalElems(entry.getStopTime()));
 
         ProductData.UTC startTime = ProductData.UTC.parse("02-Jul-2001 13:10:11.123456");
         product.setStartTime(startTime);
@@ -86,7 +89,7 @@ public class ProductInventoryEntryTest {
         Product product = new Product("name", "desc", 23, 45);
         ProductInventoryEntry entry = ProductInventoryEntry.createForGoodProduct(product, "foo");
 
-        assertEquals("null\tnull\t45\t0\t45\tfoo", entry.toCSVString());
+        assertEquals("2000-01-01-00-00-00.000000\t2000-01-01-00-00-00.000000\t45\t0\t45\tfoo", entry.toCSVString());
 
         ProductData.UTC startTime = ProductData.UTC.parse("02-Jul-2001 13:10:11.1234");
         product.setStartTime(startTime);

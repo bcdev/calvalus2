@@ -82,7 +82,7 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                                 splits.add(new ProductSplit(inputPath, fileLength, block.getHosts()));
                             } else {
                                 // process only when it is listed in the inventory and only the given subset
-                                ProductInventoryEntry entry = inventory.getEntry(inputPath.toString());
+                                ProductInventoryEntry entry = inventory.getEntry(inputPath.getName());
                                 if (entry != null && entry.getProcessLength() > 0) {
                                     int start = entry.getProcessStartLine();
                                     int length = entry.getProcessLength();

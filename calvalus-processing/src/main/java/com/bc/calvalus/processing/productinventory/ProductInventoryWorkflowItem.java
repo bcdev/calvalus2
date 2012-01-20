@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.productinventory;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
@@ -31,9 +31,9 @@ import java.io.IOException;
 /**
  * A workflow item creating a Hadoop job validating n input products.
  */
-public class ProductValidatorWorkflowItem extends HadoopWorkflowItem {
+public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
 
-    public ProductValidatorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public ProductInventoryWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -57,7 +57,7 @@ public class ProductValidatorWorkflowItem extends HadoopWorkflowItem {
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
 
-        job.setMapperClass(ProductValidatorMapper.class);
+        job.setMapperClass(ProductInventoryMapper.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 

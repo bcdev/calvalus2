@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.productinventory;
 
+import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -31,7 +32,17 @@ import java.util.Date;
  */
 public class ProductInventoryEntry {
 
+    public static final int NUM_ENTRIES = 7;
     public static final String DATE_PATTERN = "yyyy-MM-dd-HH-mm-ss";
+
+    private final ProductData.UTC startTime;
+    private final ProductData.UTC stopTime;
+    private final int length;
+    private final String message;
+
+    private int processStartLine;
+    private int processLength;
+    private String productName;
 
     public static ProductInventoryEntry create(String startTime, String stopTime, String length, String processStartLine, String processLength, String message) throws ParseException {
         ProductData.UTC startTimeUTC = ProductData.UTC.parse(startTime, DATE_PATTERN);
@@ -64,16 +75,10 @@ public class ProductInventoryEntry {
                                          message);
     }
 
-    final ProductData.UTC startTime;
-    final ProductData.UTC stopTime;
-    final int length;
-    final int processStartLine;
-    final int processLength;
-    final String message;
 
     private ProductInventoryEntry(ProductData.UTC startTime, ProductData.UTC stopTime, int length, int processStartLine, int processLength, String message) {
-        this.startTime = startTime;
-        this.stopTime = stopTime;
+        this.startTime = startTime != null ? startTime : new ProductData.UTC();
+        this.stopTime = stopTime != null ? stopTime : new ProductData.UTC();
         this.length = length;
         this.processStartLine = processStartLine;
         this.processLength = processLength;
@@ -92,8 +97,17 @@ public class ProductInventoryEntry {
         return length;
     }
 
+    public void setProcessStartLine(int processStartLine) {
+        this.processStartLine = processStartLine;
+    }
+
     public int getProcessStartLine() {
         return processStartLine;
+    }
+
+    public void setProcessLength(int processLength) {
+        Assert.argument(processLength >= 0);
+        this.processLength = processLength;
     }
 
     public int getProcessLength() {
@@ -104,11 +118,19 @@ public class ProductInventoryEntry {
         return message;
     }
 
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     public String toCSVString() {
         StringBuilder sb = new StringBuilder();
-        appendDate(sb, startTime);
+        sb.append(formatUTCDate(startTime));
         sb.append("\t");
-        appendDate(sb, stopTime);
+        sb.append(formatUTCDate(stopTime));
         sb.append("\t");
         sb.append(length);
         sb.append("\t");
@@ -120,15 +142,7 @@ public class ProductInventoryEntry {
         return sb.toString();
     }
 
-    private static void appendDate(StringBuilder sb, ProductData.UTC utc) {
-        if (utc != null) {
-            sb.append(format(utc));
-        } else {
-            sb.append("null");
-        }
-    }
-
-    private static String format(ProductData.UTC utc) {
+    private static String formatUTCDate(ProductData.UTC utc) {
         final Calendar calendar = ProductData.UTC.createCalendar();
         calendar.add(Calendar.DATE, utc.getDaysFraction());
         calendar.add(Calendar.SECOND, (int) utc.getSecondsFraction());

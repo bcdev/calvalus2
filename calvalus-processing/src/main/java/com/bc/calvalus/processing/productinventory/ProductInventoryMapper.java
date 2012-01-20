@@ -14,9 +14,10 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.productinventory;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
@@ -31,9 +32,11 @@ import org.esa.beam.framework.datamodel.TiePointGrid;
 import java.io.IOException;
 
 /**
- * A mapper that checks products for validity.
+ * A mapper that checks products for validity and generates an inventory entry.
+ *
+ * @author MarcoZ
  */
-public class ProductValidatorMapper extends Mapper<NullWritable, NullWritable, Text /*error message*/, Text /*N1 input path name*/> {
+public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, Text /*product name*/, Text /*inventory entry CSV*/> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
