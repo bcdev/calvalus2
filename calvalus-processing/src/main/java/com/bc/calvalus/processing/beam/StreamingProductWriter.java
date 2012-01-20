@@ -55,7 +55,11 @@ public class StreamingProductWriter {
     public StreamingProductWriter(Configuration configuration, MapContext context) {
         this.configuration = configuration;
         this.context = context;
-        productSplit = (ProductSplit) context.getInputSplit();
+        if (context != null) {
+            this.productSplit = (ProductSplit) context.getInputSplit();
+        } else {
+            this.productSplit = null;
+        }
     }
 
     public void writeProduct(Product product, Path outputPath, int tileHeight) throws Exception {
