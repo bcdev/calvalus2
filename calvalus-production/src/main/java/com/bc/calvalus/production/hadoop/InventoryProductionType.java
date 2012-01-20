@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.ProductValidatorWorkflowItem;
+import com.bc.calvalus.processing.productinventory.ProductInventoryWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -31,22 +31,22 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 /**
- * A production type used for checking one or more products for validity.
+ * A production type used for checking one or more products for validity and generating an inventory.
  *
  * @author MarcoZ
  */
-public class PVProductionType extends HadoopProductionType {
+public class InventoryProductionType extends HadoopProductionType {
 
-    static final String NAME = "PV";
+    static final String NAME = "Inventory";
 
-    public PVProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
+    public InventoryProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Product validation ", productionRequest);
+        String defaultProductionName = L2ProductionType.createProductionName("Inventory ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionName,  productionRequest);
@@ -67,7 +67,7 @@ public class PVProductionType extends HadoopProductionType {
     // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for product validation.");
+        throw new NotImplementedException("Staging currently not implemented for product inventory.");
     }
 
     WorkflowItem createWorkflowItem(String productionId,
@@ -81,7 +81,7 @@ public class PVProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new ProductValidatorWorkflowItem(getProcessingService(), productionName, jobConfig);
+        return new ProductInventoryWorkflowItem(getProcessingService(), productionName, jobConfig);
     }
 
 }

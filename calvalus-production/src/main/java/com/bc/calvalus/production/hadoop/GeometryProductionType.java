@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class GeometryProductionType extends HadoopProductionType {
 
-    static final String NAME = "PG";
+    static final String NAME = "Geometry";
 
     public GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);

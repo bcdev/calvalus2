@@ -52,7 +52,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
             ProductionType maProductionType = new MAProductionType(inventoryService, processingService, stagingService);
-            ProductionType pvProductionType = new PVProductionType(inventoryService, processingService, stagingService);
+            ProductionType pvProductionType = new InventoryProductionType(inventoryService, processingService, stagingService);
             ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService, stagingService);
             ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService, stagingService);
             ProductionType qlProductionType = new QLProductionType(inventoryService, processingService, stagingService);
