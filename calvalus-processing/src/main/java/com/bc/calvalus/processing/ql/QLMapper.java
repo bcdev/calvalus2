@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.processing.ql;
 
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
@@ -25,12 +23,10 @@ import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -41,7 +37,8 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
