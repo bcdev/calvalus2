@@ -21,6 +21,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
@@ -101,7 +102,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                                       context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTilesProcessed));
     }
 
-    private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context context) throws IOException, InterruptedException {
+    private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext) throws IOException, InterruptedException {
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
@@ -144,17 +145,20 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
         int numTilesHandled = 0;
-        TileFactory tileFactory = new TileFactory(maskImage, varImages, context, mosaicGrid.getTileSize());
+        TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
         for (TileIndexWritable tileIndex : tileIndices) {
             LOG.info("Processing tile: " + tileIndex);
-            context.progress();
+            mapContext.progress();
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
             numTilesHandled++;
-            context.setStatus(numTilesHandled + " of " + numTilesTotal);
+            mapContext.setStatus(numTilesHandled + " of " + numTilesTotal);
+            ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
+            productSplit.setProgress(Math.min(1.0f, (float)numTilesHandled / tileIndices.length));
+            mapContext.nextKeyValue(); // trigger progress propagation
         }
-        context.setStatus(Integer.toString(numTilesHandled));
+        mapContext.setStatus(Integer.toString(numTilesHandled));
         return numTilesProcessed;
     }
 

@@ -97,7 +97,7 @@ public class StreamingProductWriter {
             }
             LOG.info(" written y=" + y + " h=" + h + " sceneHeight=" + sceneHeight);
             if (context != null) {
-                productSplit.setProgress(Math.min(1.0f, y / sceneHeight));
+                productSplit.setProgress(Math.min(1.0f, (float)y / sceneHeight));
                 context.nextKeyValue(); // trigger progress propagation
                 context.setStatus(String.format("%d of %d", y, sceneHeight));
             }

@@ -150,7 +150,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                 numObsTotal += observationSlice.getSize();
                 if (mapContext != null) {
                     ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
-                    productSplit.setProgress(Math.min(1.0f, tileIndexCounter / tileIndices.length));
+                    productSplit.setProgress(Math.min(1.0f, (float)tileIndexCounter / tileIndices.length));
                     mapContext.nextKeyValue(); // trigger progress propagation
                 }
             }
