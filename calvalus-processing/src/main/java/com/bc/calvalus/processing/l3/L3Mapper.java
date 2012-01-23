@@ -123,8 +123,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
         final int sliceHeight = maskImage.getTileHeight();
         boolean compatibleTileSizes = areTileSizesCompatible(maskImage, sliceWidth, sliceHeight);
-//        checkImageTileSize(MessageFormat.format("Mask image for expr ''{0}''", maskExpr),
-//                           maskImage, sliceWidth, sliceHeight);
 
         final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
@@ -132,8 +130,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
             final RasterDataNode node = getRasterDataNode(product, nodeName);
             final MultiLevelImage varImage = node.getGeophysicalImage();
             compatibleTileSizes = compatibleTileSizes && areTileSizesCompatible(varImage, sliceWidth, sliceHeight);
-//            checkImageTileSize(MessageFormat.format("Geophysical image for node ''{0}''", node.getName()),
-//                               varImage, sliceWidth, sliceHeight);
             varImages[i] = varImage;
         }
 
@@ -220,20 +216,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
                                                           nodeName, product.getName()));
         }
         return node;
-    }
-
-    private static void checkImageTileSize(String msg, MultiLevelImage image, int sliceWidth, int sliceHeight) {
-        if (!areTileSizesCompatible(image, sliceWidth, sliceHeight)) {
-            throw new IllegalStateException(MessageFormat.format(
-                    "{0}: unexpected slice size detected: " +
-                            "expected {1} x {2}, " +
-                            "but was image tile size was {3} x {4} pixels (BEAM reader problem?)",
-                    msg,
-                    sliceWidth,
-                    sliceHeight,
-                    image.getTileWidth(),
-                    image.getTileHeight()));
-        }
     }
 
     private static boolean areTileSizesCompatible(MultiLevelImage image, int sliceWidth, int sliceHeight) {
