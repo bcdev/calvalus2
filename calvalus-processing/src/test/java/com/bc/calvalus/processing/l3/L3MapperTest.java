@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.aggregators.AggregatorAverage;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinManagerImpl;
 import com.bc.calvalus.binning.BinningContext;
@@ -26,6 +25,7 @@ import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.binning.VariableContextImpl;
+import com.bc.calvalus.binning.aggregators.AggregatorAverage;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
@@ -33,17 +33,16 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class L3MapperTest {
     @Test
-    public void testThatProductMustHaveAGeoCoding() {
+    public void testThatProductMustHaveAGeoCoding() throws Exception {
         BinningContext ctx = createValidCtx();
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-            L3Mapper.processProduct(new Product("p", "t", 32, 256), ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f});
+            L3Mapper.processProduct(new Product("p", "t", 32, 256), ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f}, null);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // ok
@@ -51,7 +50,7 @@ public class L3MapperTest {
     }
 
     @Test
-    public void testProcessProduct() {
+    public void testProcessProduct() throws Exception {
 
         BinningContext ctx = createValidCtx();
         Product product = new Product("p", "t", 32, 256);
@@ -65,7 +64,7 @@ public class L3MapperTest {
         product.setPreferredTileSize(32, 16);
 
         MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-        L3Mapper.processProduct(product, ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f});
+        L3Mapper.processProduct(product, ctx, new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f}, null);
         assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
 

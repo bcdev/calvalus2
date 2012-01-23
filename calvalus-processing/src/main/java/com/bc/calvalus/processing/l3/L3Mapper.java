@@ -19,10 +19,12 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.binning.*;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.*;
@@ -68,7 +70,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         Product product = productFactory.getProcessedProduct(context.getInputSplit());
         if (product != null) {
             try {
-                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps());
+                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps(), context);
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
@@ -99,7 +101,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
     static long processProduct(Product product,
                                BinningContext ctx,
                                SpatialBinner spatialBinner,
-                               float[] superSamplingSteps) {
+                               float[] superSamplingSteps, MapContext mapContext) throws IOException, InterruptedException {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
@@ -138,13 +140,19 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         long numObsTotal = 0;
         if (compatibleTileSizes) {
             final Point[] tileIndices = maskImage.getTileIndices(null);
+            int tileIndexCounter = 0;
             for (Point tileIndex : tileIndices) {
                 final ObservationSlice observationSlice = createObservationSlice(geoCoding,
-                                                          maskImage, varImages,
-                                                          tileIndex,
-                                                          superSamplingSteps);
+                                                                                 maskImage, varImages,
+                                                                                 tileIndex,
+                                                                                 superSamplingSteps);
                 spatialBinner.processObservationSlice(observationSlice);
                 numObsTotal += observationSlice.getSize();
+                if (mapContext != null) {
+                    ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
+                    productSplit.setProgress(Math.min(1.0f, tileIndexCounter / tileIndices.length));
+                    mapContext.nextKeyValue(); // trigger progress propagation
+                }
             }
         } else {
             int sceneHeight = maskImage.getHeight();
