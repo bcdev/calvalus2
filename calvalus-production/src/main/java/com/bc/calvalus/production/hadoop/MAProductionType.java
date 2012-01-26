@@ -66,7 +66,7 @@ public class MAProductionType extends HadoopProductionType {
         }
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionId, maJobConfig);
+        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionName, maJobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
