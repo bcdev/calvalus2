@@ -70,6 +70,7 @@ public class L3ProductionType extends HadoopProductionType {
         boolean formatOnCluster = productionRequest.getBoolean("formatOnCluster", false);
 
         Workflow workflow = new Workflow.Parallel();
+        workflow.setSustainable(false);
         List<String> rgbInputDirs = new ArrayList<String>(dateRanges.size());
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
