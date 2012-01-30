@@ -46,32 +46,35 @@ public class ProductDeDuplicator {
 
     public static void deduplicate(List<ProductInventoryEntry> inventory) {
         long cursorMicros = 0;
-        for (int i = 0; i < inventory.size(); i++) {
-            ProductInventoryEntry entry = inventory.get(i);
+        ProductInventoryEntry cursorEntry = null;
 
-            if (entry.getLength() <= 1 || !entry.getMessage().equalsIgnoreCase("Good")) {
+        for (ProductInventoryEntry entry : inventory) {
+            long startMicros = getMJDMicros(entry.getStartTime());
+            if (entry.getLength() <= 1 ||
+                    !entry.getMessage().equalsIgnoreCase("Good") ||
+                    startMicros == 0) {
                 entry.setProcessLength(0);
             } else {
-                long startMicros = getMJDMicros(entry.getStartTime());
                 long endMicros = getMJDMicros(entry.getStopTime());
                 if (cursorMicros == 0 || startMicros > cursorMicros) {
                     cursorMicros = endMicros;
+                    cursorEntry = entry;
                 } else if (endMicros <= cursorMicros) {
                     entry.setProcessLength(0);
                 } else if (startMicros <= cursorMicros) {
                     long perLineMicros = (endMicros - startMicros) / (entry.getLength() - 1);
-                    double microDelta = cursorMicros - startMicros;
-                    int overlap = (int) Math.round((microDelta / perLineMicros) + 1);
-                    int firstPart = overlap / 2;
-                    int secondPart = overlap - firstPart;
+                    double microOverlap = cursorMicros - startMicros;
+                    int overlapLines = (int) Math.round((microOverlap / perLineMicros) + 1);
+                    int firstPartLines = overlapLines / 2;
+                    int secondPartLines = overlapLines - firstPartLines;
 
-                    ProductInventoryEntry lastEntry = inventory.get(i - 1);
-                    lastEntry.setProcessLength(lastEntry.getProcessLength() - firstPart);
+                    cursorEntry.setProcessLength(cursorEntry.getProcessLength() - firstPartLines);
 
-                    entry.setProcessStartLine(secondPart);
-                    entry.setProcessLength(entry.getLength() - secondPart);
+                    entry.setProcessStartLine(secondPartLines);
+                    entry.setProcessLength(entry.getLength() - secondPartLines);
 
                     cursorMicros = endMicros;
+                    cursorEntry = entry;
                 }
             }
         }
@@ -96,4 +99,36 @@ public class ProductDeDuplicator {
         System.out.println(Arrays.toString(histo));
     }
 
+    public static DeduplicationStatistics getStatistics(List<ProductInventoryEntry> inventory) {
+        int linesTotal = 0;
+        int linesToProcess = 0;
+        for (ProductInventoryEntry entry : inventory) {
+            linesTotal += entry.getLength();
+            linesToProcess += entry.getProcessLength();
+        }
+        return new DeduplicationStatistics(linesTotal, linesToProcess);
+    }
+
+    public static class DeduplicationStatistics {
+
+        private final int linesTotal;
+        private final int linesToProcess;
+
+        public DeduplicationStatistics(int linesTotal, int linesToProcess) {
+            this.linesTotal = linesTotal;
+            this.linesToProcess = linesToProcess;
+        }
+
+        public int getLinesTotal() {
+            return linesTotal;
+        }
+
+        public int getLinesToProcess() {
+            return linesToProcess;
+        }
+        
+        public int getLinesDuplicated() {
+            return linesTotal - linesToProcess;
+        }
+    }
 }
