@@ -49,10 +49,17 @@ public class ProductInventoryReducer extends Reducer<Text, Text, Text, Text> {
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         ProductDeDuplicator.sort(inventory);
+        context.progress();
         ProductDeDuplicator.deduplicate(inventory);
+        context.progress();
 
         for (ProductInventoryEntry entry : inventory) {
             context.write(new Text(entry.getProductName()), new Text(entry.toCSVString()));
         }
+
+        ProductDeDuplicator.DeduplicationStatistics statistics = ProductDeDuplicator.getStatistics(inventory);
+        context.getCounter("ProductLines", "Total").setValue(statistics.getLinesTotal());
+        context.getCounter("ProductLines", "Unique").setValue(statistics.getLinesToProcess());
+        context.getCounter("ProductLines", "Duplicated").setValue(statistics.getLinesDuplicated());
     }
 }
