@@ -164,7 +164,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     }
 
     static String getTileProductName(String prefix, int tileX, int tileY) {
-        return String.format("%s-v%02dh%02d", prefix, tileX, tileY);
+        return String.format("%s-v%02dh%02d", prefix, tileY, tileX);
     }
 
     static ProductWriter createProductWriter(Product product, File outputFile, String outputFormat) throws IOException {

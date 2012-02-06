@@ -25,6 +25,6 @@ public class MosaicProductTileHandlerTest {
     @Test
     public void testGetTileProductName() throws Exception {
         assertEquals("foo-v00h00", MosaicProductTileHandler.getTileProductName("foo", 0, 0));
-        assertEquals("foo-v13h45", MosaicProductTileHandler.getTileProductName("foo", 13, 45));
+        assertEquals("foo-v45h13", MosaicProductTileHandler.getTileProductName("foo", 13, 45));
     }
 }
