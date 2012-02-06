@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.productinventory;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.ProductFactory;
-import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -26,8 +25,11 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
 
 import java.io.IOException;
 
@@ -47,32 +49,35 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         // parse request
         Path inputPath = split.getPath();
 
-        long length = split.getLength();
-        if (length <= 12029L) {
-            report(context, "Input file to small", inputPath);
+        if (inputPath.getName().endsWith("N1") && split.getLength() <= 12029L) {
+            report(context, "Input N1 file to small", inputPath);
             return;
         }
 
-        Product product;
+        Product product = null;
         try {
             String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
             product = productFactory.readProduct(inputPath, inputFormat);
-        } catch (IOException ioe) {
-            report(context, "Failed to read product: " + ioe.getMessage(), inputPath);
-            productFactory.dispose();
-            return;
-        }
-
-        try {
             if (productHasEmptyTiepoints(product)) {
                 report(context, product, false, "Product has empty tie-points", inputPath);
             } else if (productHasEmptyLatLonLines(product)) {
                 report(context, product, false, "Product has empty lat/lon lines", inputPath);
+// disabled does produce a lot of false positives
+//            } else if (productHasSuspectLines(product)) {
+//                report(context, product, false, "Product has suspect lines", inputPath);
             } else {
                 report(context, product, true, "Good", inputPath);
             }
+        } catch (Exception exception) {
+            if (product != null) {
+                report(context, product, false, "Failed to read product: " + exception.getMessage(), inputPath);
+            } else {
+                report(context, "Failed to read product: " + exception.getMessage(), inputPath);
+            }
         } finally {
-            product.dispose();
+            if (product != null) {
+                product.dispose();
+            }
             productFactory.dispose();
         }
     }
@@ -96,6 +101,61 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         context.getCounter("Products", entry.getMessage()).increment(1);
     }
 
+    private static boolean productHasSuspectLines(Product product) throws IOException {
+        BandMathsOp mathop1 = null;
+        BandMathsOp mathop2 = null;
+        try {
+            mathop1 = BandMathsOp.createBooleanExpressionBand("l1_flags.INVALID", product);
+            Band invalid = mathop1.getTargetProduct().getBandAt(0);
+
+            mathop2 = BandMathsOp.createBooleanExpressionBand("l1_flags.SUSPECT", product);
+            Band suspect = mathop2.getTargetProduct().getBandAt(0);
+
+            int width = product.getSceneRasterWidth();
+            int height = product.getSceneRasterHeight();
+
+            int[] invalidFlags = new int[width];
+            int[] suspectFlags = new int[width];
+            for (int y = 0; y < height; y++) {
+                invalid.readPixels(0, y, width, 1, invalidFlags);
+                suspect.readPixels(0, y, width, 1, suspectFlags);
+                if (isWholeLineSuspect(invalidFlags, suspectFlags)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (OperatorException ignore) {
+            return false;
+        } finally {
+            if (mathop1 != null) {
+                mathop1.dispose();
+            }
+            if (mathop2 != null) {
+                mathop2.dispose();
+            }
+        }
+    }
+
+    static boolean isWholeLineSuspect(int[] invalidFlags, int[] suspectFlags) {
+        int state = 0;
+        for (int i = 0; i < invalidFlags.length; i++) {
+            boolean isInvalid = invalidFlags[i] != 0;
+            boolean isSuspect = suspectFlags[i] != 0;
+            if ((state == 0 || state == 1) && isInvalid && !isSuspect) {
+                state = 1;
+            } else if ((state == 1 || state == 2) && !isInvalid && isSuspect) {
+                state = 2;
+            } else if (state == 3 && i == (invalidFlags.length-1)) {
+                return true;
+            } else if ((state == 2 || state == 3) && isInvalid && !isSuspect) {
+                state = 3;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
     private static boolean productHasEmptyTiepoints(Product sourceProduct) {
         // "AMORGOS" can produce products that are corrupted.
         // All tie point grids contain only zeros, check the first one,
@@ -117,8 +177,11 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
 
     private static boolean productHasEmptyLatLonLines(Product sourceProduct) {
         TiePointGrid latitude = sourceProduct.getTiePointGrid("latitude");
-        float[] latData = (float[]) latitude.getDataElems();
         TiePointGrid longitude = sourceProduct.getTiePointGrid("longitude");
+        if (latitude == null || longitude == null) {
+            return false;
+        }
+        float[] latData = (float[]) latitude.getDataElems();
         float[] lonData = (float[]) longitude.getDataElems();
 
         int width = latitude.getRasterWidth();
@@ -140,5 +203,4 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         }
         return true;
     }
-
 }
