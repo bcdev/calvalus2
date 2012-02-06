@@ -117,8 +117,12 @@ public class ProductionTool {
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://master00:9000");
         defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "master00:9001");
+
+        // TODO (mz, 2012-02-06) get these defaults from the server
         defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");
         defaultConfig.put("calvalus.hadoop.io.file.buffer.size", "131072");
+        defaultConfig.put("calvalus.hadoop.dfs.replication", "1");
+
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
         defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", DEFAULT_BEAM_BUNDLE));
 
