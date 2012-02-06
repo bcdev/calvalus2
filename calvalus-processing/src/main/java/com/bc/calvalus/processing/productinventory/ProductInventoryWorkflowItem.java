@@ -55,6 +55,10 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         Configuration jobConfig = job.getConfiguration();
         jobConfig.setInt("mapred.job.reuse.jvm.num.tasks", 10);
 
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
 
         job.setMapperClass(ProductInventoryMapper.class);
