@@ -20,7 +20,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.prevue.PrevueFsgWorkflowItem;
+import com.bc.calvalus.processing.prevue.PrevueWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -81,6 +81,6 @@ public class PrevueProductionType extends HadoopProductionType {
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new PrevueFsgWorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        return new PrevueWorkflowItem(getProcessingService(), productionName, l2JobConfig);
     }
 }

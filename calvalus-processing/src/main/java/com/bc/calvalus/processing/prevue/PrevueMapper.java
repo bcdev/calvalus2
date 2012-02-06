@@ -66,7 +66,7 @@ import java.util.HashMap;
 /**
  * For "Prevue", does data extraction in a special way...
  */
-public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
+public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
 
@@ -96,7 +96,12 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
                     String idAsString = decimalFormat.format(id);
                     context.setStatus("ID " + idAsString);
 
-                    ReprojectionOp reprojectionOp = getUtmReprojectionOp(product, location);
+                    ReprojectionOp reprojectionOp;
+                    if (product.getProductType().contains("_FSG_")) {
+                        reprojectionOp = getUtmReprojectionOp(product, location);
+                    } else {
+                        reprojectionOp = getLatLonReprojectionOp(product, location);
+                    }
                     Product targetProduct = reprojectionOp.getTargetProduct();
 
                     // NO metadata
@@ -128,6 +133,21 @@ public class PrevueFsgMapper extends Mapper<NullWritable, NullWritable, NullWrit
         }
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
 
+    }
+
+    private ReprojectionOp getLatLonReprojectionOp(Product product, GeoPos location) throws Exception {
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct(product);
+        reprojectionOp.setParameter("crs", DefaultGeographicCRS.WGS84.toWKT());
+        reprojectionOp.setParameter("referencePixelX", 25.5);
+        reprojectionOp.setParameter("referencePixelY", 25.5);
+        reprojectionOp.setParameter("pixelSizeX", 1.0F / 112.0F);
+        reprojectionOp.setParameter("pixelSizeY", 1.0F / 112.0F);
+        reprojectionOp.setParameter("width", 49);
+        reprojectionOp.setParameter("height", 49);
+        reprojectionOp.setParameter("easting", location.getLat());
+        reprojectionOp.setParameter("northing", location.getLon());
+        return reprojectionOp;
     }
 
     private ReprojectionOp getUtmReprojectionOp(Product product, GeoPos location) throws Exception {

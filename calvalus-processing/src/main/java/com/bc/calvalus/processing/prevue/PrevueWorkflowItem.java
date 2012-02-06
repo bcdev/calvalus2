@@ -29,14 +29,13 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * A workflow item creating a Hadoop job for "Prevue"-FSG extraction on n input products.
+ * A workflow item creating a Hadoop job for "Prevue"-FSG and RR extraction on n input products.
  *
  * @author MarcoZ
- * @author Norman
  */
-public class PrevueFsgWorkflowItem extends HadoopWorkflowItem {
+public class PrevueWorkflowItem extends HadoopWorkflowItem {
 
-    public PrevueFsgWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public PrevueWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -69,7 +68,7 @@ public class PrevueFsgWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setMapperClass(PrevueFsgMapper.class);
+        job.setMapperClass(PrevueMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
