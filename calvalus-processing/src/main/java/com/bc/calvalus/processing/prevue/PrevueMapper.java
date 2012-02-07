@@ -141,12 +141,12 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         reprojectionOp.setParameter("crs", DefaultGeographicCRS.WGS84.toWKT());
         reprojectionOp.setParameter("referencePixelX", 25.5);
         reprojectionOp.setParameter("referencePixelY", 25.5);
-        reprojectionOp.setParameter("pixelSizeX", 1.0F / 112.0F);
-        reprojectionOp.setParameter("pixelSizeY", 1.0F / 112.0F);
+        reprojectionOp.setParameter("pixelSizeX", 1.0 / 112.0);
+        reprojectionOp.setParameter("pixelSizeY", 1.0 / 112.0);
         reprojectionOp.setParameter("width", 49);
         reprojectionOp.setParameter("height", 49);
-        reprojectionOp.setParameter("easting", location.getLat());
-        reprojectionOp.setParameter("northing", location.getLon());
+        reprojectionOp.setParameter("easting", (double)location.getLat());
+        reprojectionOp.setParameter("northing", (double)location.getLon());
         return reprojectionOp;
     }
 
