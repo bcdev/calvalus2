@@ -12,6 +12,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import javax.security.auth.login.FailedLoginException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -125,6 +126,7 @@ public class IngestionTool extends Configured implements Tool {
                 if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
                     int attempt = 1;
                     boolean finished = false;
+                    IOException exception = null;
                     System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
                     while (attempt <= 3 && !finished) {
                         OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
@@ -132,14 +134,18 @@ public class IngestionTool extends Configured implements Tool {
                         try  {
                             IOUtils.copyBytes(in, out, getConf(), true);
                             finished = true;
-                        }catch (IOException ignore){
+                        }catch (IOException ioe){
                             System.err.print("copying attempt " + attempt + " failed.");
-                            ignore.printStackTrace();
+                            ioe.printStackTrace();
+                            exception = ioe;
                         } finally {
                             out.close();
                             in.close();
                         }
                         attempt++;
+                    }
+                    if (!finished) {
+                        throw new IOException("Failed to copy: " + sourceFile, exception);
                     }
                 } else {
                     System.out.println(MessageFormat.format("skipping {0} existing in {1}", sourceFile, archivePath));
