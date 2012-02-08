@@ -58,7 +58,6 @@ public class IngestionTool extends Configured implements Tool {
             String productType = DEFAULT_PRODUCT_TYPE;
             String revision = DEFAULT_REVISION;
             long blockSizeParameter = -1;
-            boolean verify = false;
 
             // parse command line arguments
             CommandLineParser commandLineParser = new PosixParser();
@@ -89,7 +88,7 @@ public class IngestionTool extends Configured implements Tool {
                 replication = hdfs.getDefaultReplication();
             }
 
-            verify = commandLine.hasOption("verify");
+            boolean verify = commandLine.hasOption("verify");
 
             // determine input files
             List<File> sourceFiles = new ArrayList<File>();
@@ -123,15 +122,25 @@ public class IngestionTool extends Configured implements Tool {
                 // construct HDFS output stream
                 Path destPath = new Path(archivePath, sourceFile.getName());
                 // copy if either verification is off or target does not exist or target has different size
-//                System.out.println("destPath=" + destPath);
-//                System.out.println("! verify=" + (! verify));
-//                System.out.println("! hdfs.exists(destPath) " + (! hdfs.exists(destPath)));
-//                System.out.println("hdfs.listStatus(destPath) " + hdfs.listStatus(destPath));
-//                if (hdfs.listStatus(destPath) != null) System.out.format("hdfs.listStatus(destPath)[0].getLen(%d) >= fileSize(%d)\n", hdfs.listStatus(destPath)[0].getLen(), fileSize);
                 if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
+                    int attempt = 1;
+                    boolean finished = false;
                     System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
-                    OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
-                    IOUtils.copyBytes(new FileInputStream(sourceFile), out, getConf(), true);
+                    while (attempt <= 3 && !finished) {
+                        OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
+                        FileInputStream in = new FileInputStream(sourceFile);
+                        try  {
+                            IOUtils.copyBytes(in, out, getConf(), true);
+                            finished = true;
+                        }catch (IOException ignore){
+                            System.err.print("copying attempt " + attempt + " failed.");
+                            ignore.printStackTrace();
+                        } finally {
+                            out.close();
+                            in.close();
+                        }
+                        attempt++;
+                    }
                 } else {
                     System.out.println(MessageFormat.format("skipping {0} existing in {1}", sourceFile, archivePath));
                 }
