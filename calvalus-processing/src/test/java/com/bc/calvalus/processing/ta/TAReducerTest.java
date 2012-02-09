@@ -20,6 +20,7 @@ package com.bc.calvalus.processing.ta;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +49,7 @@ public class TAReducerTest {
 
     @Test
     public void testReduce() throws Exception {
-        List<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
+        List<L3TemporalBin> temporalBins = new ArrayList<L3TemporalBin>();
         temporalBins.add(createTBin(1, 10, 0.2f, 0.15f, 0.3f));
         temporalBins.add(createTBin(2, 7, 0.4f, 0.25f, 0.3f));
         temporalBins.add(createTBin(4, 6, 0.6f, 0.35f, 0.3f));
@@ -71,11 +72,11 @@ public class TAReducerTest {
         assertEquals(0.15f + 0.25f + 0.35f, featureValues[1], 1e-5f);
         assertEquals(sqrt(10) + sqrt(7) + sqrt(6), featureValues[2], 1e-5f);
 
-        assertEquals("TAPoint{regionName=northsea, startDate=2010-01-01, stopDate=2010-01-10, temporalBin=TemporalBin{index=-1, numObs=23, numPasses=7, featureValues=[1.2, 0.75, 8.257519]}}", taPoint.toString());
+        assertEquals("TAPoint{regionName=northsea, startDate=2010-01-01, stopDate=2010-01-10, temporalBin=L3TemporalBin{index=-1, numObs=23, numPasses=7, featureValues=[1.2, 0.75, 8.257519]}}", taPoint.toString());
     }
 
-    private TemporalBin createTBin(int numPasses, int numObs, float... values) {
-        TemporalBin tBin = new TemporalBin(-1, values.length);
+    private L3TemporalBin createTBin(int numPasses, int numObs, float... values) {
+        L3TemporalBin tBin = new L3TemporalBin(-1, values.length);
         tBin.setNumPasses(numPasses);
         tBin.setNumObs(numObs);
         System.arraycopy(values, 0, tBin.getFeatureValues(), 0, values.length);
@@ -83,7 +84,7 @@ public class TAReducerTest {
     }
 
     private Configuration createConfiguration() {
-        Configuration configuration = null;
+        Configuration configuration;
         configuration = new Configuration();
         L3Config l3Config = createL3Config();
         configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());

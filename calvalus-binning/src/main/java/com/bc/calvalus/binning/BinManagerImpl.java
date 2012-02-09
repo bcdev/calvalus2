@@ -49,28 +49,36 @@ public class BinManagerImpl implements BinManager {
         }
     }
 
-     @Override
-    public String[] getOutputFeatureNames() {
+    public final int getSpatialFeatureCount() {
+        return spatialFeatureCount;
+    }
+
+    public final int getTemporalFeatureCount() {
+        return temporalFeatureCount;
+    }
+
+    @Override
+    public final String[] getOutputFeatureNames() {
         return outputFeatureNames;
     }
 
     @Override
-    public double getOutputFeatureFillValue(int i) {
+    public final double getOutputFeatureFillValue(int i) {
         return outputFeatureFillValues[i];
     }
 
     @Override
-    public int getAggregatorCount() {
+    public final int getAggregatorCount() {
         return aggregators.length;
     }
 
     @Override
-    public Aggregator getAggregator(int aggIndex) {
+    public final Aggregator getAggregator(int aggIndex) {
         return aggregators[aggIndex];
     }
 
     @Override
-    public Vector getSpatialVector(SpatialBin bin, int aggIndex) {
+    public final Vector getSpatialVector(SpatialBin bin, int aggIndex) {
         final VectorImpl vector = new VectorImpl(bin.featureValues);
         final Aggregator aggregator = aggregators[aggIndex];
         vector.setOffsetAndSize(spatialFeatureOffsets[aggIndex], aggregator.getSpatialFeatureNames().length);
@@ -78,7 +86,7 @@ public class BinManagerImpl implements BinManager {
     }
 
     @Override
-    public Vector getTemporalVector(TemporalBin bin, int aggIndex) {
+    public final Vector getTemporalVector(TemporalBin bin, int aggIndex) {
         final VectorImpl vector = new VectorImpl(bin.featureValues);
         final Aggregator aggregator = aggregators[aggIndex];
         vector.setOffsetAndSize(temporalFeatureOffsets[aggIndex], aggregator.getTemporalFeatureNames().length);
@@ -172,7 +180,7 @@ public class BinManagerImpl implements BinManager {
         outputVectorImpl.setOffsetAndSize(0, outputFeatureCount);
     }
 
-    private void initSpatialBin(SpatialBin bin) {
+    protected void initSpatialBin(SpatialBin bin) {
         final VectorImpl vector = new VectorImpl(bin.featureValues);
         for (int i = 0; i < aggregators.length; i++) {
             final Aggregator aggregator = aggregators[i];
@@ -181,7 +189,7 @@ public class BinManagerImpl implements BinManager {
         }
     }
 
-    private void initTemporalBin(TemporalBin bin) {
+    protected void initTemporalBin(TemporalBin bin) {
         final VectorImpl vector = new VectorImpl(bin.featureValues);
         for (int i = 0; i < aggregators.length; i++) {
             final Aggregator aggregator = aggregators[i];

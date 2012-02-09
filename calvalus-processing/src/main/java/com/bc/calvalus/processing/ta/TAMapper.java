@@ -1,8 +1,8 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -19,13 +19,13 @@ import java.io.IOException;
  *
  * @author Norman
  */
-public class TAMapper extends Mapper<LongWritable, TemporalBin, Text, TemporalBin> implements Configurable {
+public class TAMapper extends Mapper<LongWritable, L3TemporalBin, Text, L3TemporalBin> implements Configurable {
     private Configuration conf;
     private BinningGrid binningGrid;
     private TAConfig taConfig;
 
     @Override
-    protected void map(LongWritable binIndex, TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
+    protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
         GeometryFactory geometryFactory = new GeometryFactory();
         double[] centerLonLat = binningGrid.getCenterLonLat(binIndex.get());
         Point point = geometryFactory.createPoint(new Coordinate(centerLonLat[0], centerLonLat[1]));

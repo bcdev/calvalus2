@@ -17,9 +17,9 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -32,20 +32,20 @@ import java.io.IOException;
  *
  * @author Norman Fomferra
  */
-public class TAReducer extends Reducer<Text, TemporalBin, Text, TAPoint> implements Configurable {
+public class TAReducer extends Reducer<Text, L3TemporalBin, Text, TAPoint> implements Configurable {
     private Configuration conf;
     private BinManager binManager;
     private String minDate;
     private String maxDate;
 
     @Override
-    protected void reduce(Text regionName, Iterable<TemporalBin> bins, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text regionName, Iterable<L3TemporalBin> bins, Context context) throws IOException, InterruptedException {
         context.write(regionName, computeTaPoint(regionName.toString(), bins));
     }
 
-    TAPoint computeTaPoint(String regionName, Iterable<TemporalBin> bins) {
-        TemporalBin outputBin = binManager.createTemporalBin(-1);
-        for (TemporalBin bin : bins) {
+    TAPoint computeTaPoint(String regionName, Iterable<L3TemporalBin> bins) {
+        L3TemporalBin outputBin = (L3TemporalBin) binManager.createTemporalBin(-1);
+        for (L3TemporalBin bin : bins) {
             binManager.aggregateTemporalBin(bin, outputBin);
         }
         return new TAPoint(regionName, minDate, maxDate, outputBin);

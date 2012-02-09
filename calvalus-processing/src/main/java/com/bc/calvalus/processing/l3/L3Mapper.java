@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * @author Marco Zuehlke
  * @author Norman Fomferra
  */
-public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, SpatialBin> {
+public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L3SpatialBin> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
@@ -242,7 +242,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, S
         @Override
         public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
-                context.write(new LongWritable(spatialBin.getIndex()), spatialBin);
+                context.write(new LongWritable(spatialBin.getIndex()), (L3SpatialBin) spatialBin);
                 numObsTotal += spatialBin.getNumObs();
                 numBinsTotal++;
             }

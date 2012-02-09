@@ -17,17 +17,7 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.AggregatorDescriptor;
-import com.bc.calvalus.binning.AggregatorDescriptorRegistry;
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinManagerImpl;
-import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.BinningContextImpl;
-import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.IsinBinningGrid;
-import com.bc.calvalus.binning.VariableContext;
-import com.bc.calvalus.binning.VariableContextImpl;
+import com.bc.calvalus.binning.*;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
@@ -172,7 +162,7 @@ public class L3Config implements XmlConvertible {
                 throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfiguration.type);
             }
         }
-        return new BinManagerImpl(aggs);
+        return new L3BinManagerImpl(aggs);
     }
 
     public VariableContext getVariableContext() {

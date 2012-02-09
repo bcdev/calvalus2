@@ -4,25 +4,15 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.UnixTestRunner;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.InMemoryFileSystem;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.util.Progressable;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
@@ -63,7 +53,7 @@ public class SequenceFileBinIteratorTest {
         writer.close();
 
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, PATH, conf);
-        Iterator<TemporalBin> it = new SequenceFileBinIterator(reader);
+        Iterator<L3TemporalBin> it = new SequenceFileBinIterator(reader);
 
         assertTrue(it.hasNext());
         TemporalBin bin = it.next();

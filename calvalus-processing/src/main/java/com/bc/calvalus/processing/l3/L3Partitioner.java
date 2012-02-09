@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Envelope;
@@ -34,7 +33,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
  * @author Marco Zuehlke
  * @author Norman Fomferra
  */
-public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> implements Configurable {
+public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> implements Configurable {
 
     private Configuration conf;
     private BinningGrid binningGrid;
@@ -42,7 +41,7 @@ public class L3Partitioner extends Partitioner<LongWritable, SpatialBin> impleme
     private int numRowsCovered;
 
     @Override
-    public int getPartition(LongWritable binIndex, SpatialBin spatialBin, int numPartitions) {
+    public int getPartition(LongWritable binIndex, L3SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
         int row = binningGrid.getRowIndex(idx);
         int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;

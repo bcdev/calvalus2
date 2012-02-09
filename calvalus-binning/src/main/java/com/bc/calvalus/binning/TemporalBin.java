@@ -1,7 +1,5 @@
 package com.bc.calvalus.binning;
 
-import org.apache.hadoop.io.Writable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -9,12 +7,11 @@ import java.util.Arrays;
 
 
 /**
- * A Hadoop-serializable, temporal bin.
- * The class is final for allowing method in-lining.
+ * A temporal bin.
  *
  * @author Norman Fomferra
  */
-public final class TemporalBin extends Bin implements Writable {
+public class TemporalBin extends Bin {
 
     int numPasses;
 
@@ -34,7 +31,6 @@ public final class TemporalBin extends Bin implements Writable {
         this.numPasses = numPasses;
     }
 
-    @Override
     public void write(DataOutput dataOutput) throws IOException {
         // Note, we don't serialise the index, because it is usually the MapReduce key
         dataOutput.writeInt(numObs);
@@ -45,7 +41,6 @@ public final class TemporalBin extends Bin implements Writable {
         }
     }
 
-    @Override
     public void readFields(DataInput dataInput) throws IOException {
         // Note, we don't serialise the index, because it is usually the MapReduce key
         numObs = dataInput.readInt();

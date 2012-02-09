@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Used to reproject temporal bins onto a rectangular grid.
+ * Used to re-project temporal bins onto a rectangular grid.
  *
  * @author MarcoZ
  * @author Norman
@@ -43,7 +43,7 @@ public class TemporalBinReprojector {
         temporalBinProcessor.end(binningContext);
     }
 
-    public void processBins(Iterator<TemporalBin> temporalBins) throws Exception {
+    public void processBins(Iterator<? extends TemporalBin> temporalBins) throws Exception {
         final int x1 = pixelRegion.x;
         final int x2 = x1 + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;

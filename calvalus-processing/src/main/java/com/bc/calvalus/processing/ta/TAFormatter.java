@@ -19,9 +19,9 @@ package com.bc.calvalus.processing.ta;
 import com.bc.calvalus.binning.Aggregator;
 import com.bc.calvalus.binning.BinManager;
 import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -100,7 +100,7 @@ public class TAFormatter {
             try {
                 while (true) {
                     LongWritable binIndex = new LongWritable();
-                    TemporalBin temporalBin = new TemporalBin();
+                    L3TemporalBin temporalBin = new L3TemporalBin();
                     if (!reader.next(binIndex, temporalBin)) {
                         break;
                     }

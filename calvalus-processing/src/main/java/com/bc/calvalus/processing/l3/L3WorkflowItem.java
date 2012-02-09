@@ -96,11 +96,11 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(4);
         job.setMapperClass(L3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
-        job.setMapOutputValueClass(SpatialBin.class);
+        job.setMapOutputValueClass(L3SpatialBin.class);
         job.setPartitionerClass(L3Partitioner.class);
         job.setReducerClass(L3Reducer.class);
         job.setOutputKeyClass(LongWritable.class);
-        job.setOutputValueClass(TemporalBin.class);
+        job.setOutputValueClass(L3TemporalBin.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(job, getOutputDir());

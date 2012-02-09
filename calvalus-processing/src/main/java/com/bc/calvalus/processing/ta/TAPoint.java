@@ -18,12 +18,12 @@ package com.bc.calvalus.processing.ta;
 
 
 import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * A {@code TAPoint} represents the L3 processing output of the trend analysis. It comprises a region name,
@@ -36,12 +36,12 @@ public class TAPoint implements Writable {
     String regionName;
     String startDate;
     String stopDate;
-    TemporalBin temporalBin;
+    L3TemporalBin temporalBin;
 
     public TAPoint() {
     }
 
-    public TAPoint(String regionName, String startDate, String stopDate, TemporalBin temporalBin) {
+    public TAPoint(String regionName, String startDate, String stopDate, L3TemporalBin temporalBin) {
         this.regionName = regionName;
         this.startDate = startDate;
         this.stopDate = stopDate;
@@ -75,7 +75,7 @@ public class TAPoint implements Writable {
         regionName = in.readUTF();
         startDate = in.readUTF();
         stopDate = in.readUTF();
-        temporalBin = new TemporalBin();
+        temporalBin = new L3TemporalBin();
         temporalBin.readFields(in);
     }
 

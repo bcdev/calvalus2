@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowStatusEvent;
 import com.bc.calvalus.commons.WorkflowStatusListener;
@@ -24,6 +23,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -84,7 +84,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
         job.setMapperClass(TAMapper.class);
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(TemporalBin.class);
+        job.setMapOutputValueClass(L3TemporalBin.class);
         job.setReducerClass(TAReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(TAPoint.class);
