@@ -15,7 +15,10 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 
 /**
+ * Utility class which performs a spatial binning of single input products.
+ *
  * @author Norman Fomferra
+ * @author Marco Zühlke
  */
 public class SpatialProductBinner {
 

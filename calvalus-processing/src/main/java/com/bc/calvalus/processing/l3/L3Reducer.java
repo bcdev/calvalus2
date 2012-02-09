@@ -16,8 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.TemporalBin;
+import com.bc.calvalus.binning.*;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -34,22 +33,18 @@ import java.io.IOException;
 public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable, L3TemporalBin> implements Configurable {
 
     private Configuration conf;
-    private BinManager binManager;
+    private TemporalBinner temporalBinner;
 
     @Override
     protected void reduce(LongWritable binIndex, Iterable<L3SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
-        L3TemporalBin temporalBin = (L3TemporalBin) binManager.createTemporalBin(binIndex.get());
-        for (L3SpatialBin spatialBin : spatialBins) {
-            binManager.aggregateTemporalBin(spatialBin, temporalBin);
-        }
-        binManager.completeTemporalBin(temporalBin);
-        context.write(binIndex, temporalBin);
+        TemporalBin temporalBin = temporalBinner.processSpatialBins(binIndex.get(), spatialBins);
+        context.write(binIndex, (L3TemporalBin) temporalBin);
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binManager = L3Config.get(conf).getBinningContext().getBinManager();
+        temporalBinner = new TemporalBinner(L3Config.get(conf).getBinningContext());
     }
 
     @Override

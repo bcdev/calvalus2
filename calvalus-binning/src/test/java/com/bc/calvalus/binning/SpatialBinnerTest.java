@@ -29,9 +29,9 @@ public class SpatialBinnerTest {
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
         BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
-        TemporalBinner temporalBinner = new TemporalBinner(binManager);
+        com.bc.calvalus.binning.MySpatialBinProcessor mySpatialBinProcessor = new com.bc.calvalus.binning.MySpatialBinProcessor(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext,
-                                                        temporalBinner);
+                                                        mySpatialBinProcessor);
 
         spatialBinner.processObservationSlice(new ObservationImpl(0, 1.1, 1.1f),
                                               new ObservationImpl(0, 1.1, 1.2f),
@@ -46,7 +46,7 @@ public class SpatialBinnerTest {
 
         spatialBinner.complete();
 
-        Map<Long,TemporalBin> binMap = temporalBinner.binMap;
+        Map<Long,TemporalBin> binMap = mySpatialBinProcessor.binMap;
         assertEquals(3, binMap.size());
 
         TemporalBin tbin1 = binMap.get(1L);

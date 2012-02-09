@@ -16,14 +16,8 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.binning.TemporalBinProcessor;
-import com.bc.calvalus.binning.TemporalBinReprojector;
-import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.binning.*;
+import com.bc.calvalus.binning.TemporalBinRasterizer;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
@@ -80,7 +74,7 @@ public class L3Formatter {
                                  BinningContext binningContext,
                                  Rectangle pixelRegion,
                                  Path partsDir,
-                                 TemporalBinProcessor temporalBinProcessor) throws Exception {
+                                 TemporalBinRasterizer temporalBinRasterizer) throws Exception {
 
         long startTime = System.nanoTime();
 
@@ -96,7 +90,7 @@ public class L3Formatter {
 
         Arrays.sort(parts);
 
-        TemporalBinReprojector reprojector = new TemporalBinReprojector(binningContext, temporalBinProcessor, pixelRegion);
+        TemporalBinReprojector reprojector = new TemporalBinReprojector(binningContext, temporalBinRasterizer, pixelRegion);
 
         reprojector.begin();
         for (FileStatus part : parts) {
@@ -400,7 +394,7 @@ public class L3Formatter {
         return (byte) sample;
     }
 
-    private final static class ImageRaster extends TemporalBinProcessor {
+    private final static class ImageRaster extends TemporalBinRasterizer {
         private final int rasterWidth;
         private final int[] bandIndices;
         private final float[][] bandData;
@@ -441,7 +435,7 @@ public class L3Formatter {
         }
     }
 
-    private final static class ProductDataWriter extends TemporalBinProcessor {
+    private final static class ProductDataWriter extends TemporalBinRasterizer {
         private final int width;
         private final ProductData numObsLine;
         private final ProductData numPassesLine;

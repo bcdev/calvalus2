@@ -16,19 +16,9 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinManagerImpl;
-import com.bc.calvalus.binning.BinningContextImpl;
-import com.bc.calvalus.binning.IsinBinningGrid;
-import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.binning.TemporalBinProcessor;
-import com.bc.calvalus.binning.TemporalBinReprojector;
-import com.bc.calvalus.binning.VariableContextImpl;
-import com.bc.calvalus.binning.WritableVector;
+import com.bc.calvalus.binning.*;
+import com.bc.calvalus.binning.TemporalBinRasterizer;
 import org.junit.Test;
-
-import java.awt.Rectangle;
-import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
@@ -48,7 +38,7 @@ public class L3ReprojectorTest {
         return temporalBin;
     }
 
-    private static class NobsRaster extends TemporalBinProcessor {
+    private static class NobsRaster extends TemporalBinRasterizer {
         int[] nobsData;
         private final int w;
 

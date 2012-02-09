@@ -7,11 +7,11 @@ import java.util.Map;
 /**
  * An implementation of the {@link com.bc.calvalus.binning.SpatialBinProcessor} interface that performs a temporal binning.
  */
-class TemporalBinner implements SpatialBinProcessor {
+class MySpatialBinProcessor implements SpatialBinProcessor {
     private final BinManager binManager;
     final Map<Long, TemporalBin> binMap ;
 
-    TemporalBinner(BinManager binManager) {
+    MySpatialBinProcessor(BinManager binManager) {
         this.binManager = binManager;
         this.binMap = new HashMap<Long, TemporalBin>();
     }

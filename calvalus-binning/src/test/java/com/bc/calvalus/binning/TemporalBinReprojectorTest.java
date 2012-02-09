@@ -57,7 +57,7 @@ public class TemporalBinReprojectorTest {
     @Test
     public void testSubPixelRegion() throws Exception {
         Rectangle rectangle = new Rectangle(2, 2, 6, 3);
-        TemporalBinProcessor raster = new NobsRaster(6, 3);
+        TemporalBinRasterizer raster = new NobsRaster(6, 3);
         assertEquals("" +
                              "------\n" +
                              "------\n" +
@@ -419,7 +419,7 @@ public class TemporalBinReprojectorTest {
         return new BinningContextImpl(binningGrid, new VariableContextImpl(), binManager);
     }
 
-    private static class NobsRaster extends TemporalBinProcessor {
+    private static class NobsRaster extends TemporalBinRasterizer {
         int[] nobsData;
         private final int w;
 

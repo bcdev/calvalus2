@@ -12,7 +12,7 @@ package com.bc.calvalus.binning;
  * </pre>
 
  */
-public abstract class TemporalBinProcessor {
+public abstract class TemporalBinRasterizer {
     /**
      * Called before the processing of bins begins.
      *

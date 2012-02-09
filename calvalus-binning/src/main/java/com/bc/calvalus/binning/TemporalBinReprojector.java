@@ -16,22 +16,22 @@ import java.util.List;
 public class TemporalBinReprojector {
 
     private final BinningContext binningContext;
-    private final TemporalBinProcessor temporalBinProcessor;
+    private final TemporalBinRasterizer temporalBinRasterizer;
     private final Rectangle pixelRegion;
     private int yGlobalUltimate;
 
-    public TemporalBinReprojector(BinningContext binningContext, TemporalBinProcessor temporalBinProcessor, Rectangle pixelRegion) {
+    public TemporalBinReprojector(BinningContext binningContext, TemporalBinRasterizer temporalBinRasterizer, Rectangle pixelRegion) {
         Assert.notNull(binningContext, "binningContext");
-        Assert.notNull(temporalBinProcessor, "temporalBinProcessor");
+        Assert.notNull(temporalBinRasterizer, "temporalBinProcessor");
         Assert.notNull(pixelRegion, "pixelRegion");
         this.binningContext = binningContext;
-        this.temporalBinProcessor = temporalBinProcessor;
+        this.temporalBinRasterizer = temporalBinRasterizer;
         this.pixelRegion = pixelRegion;
     }
 
     public void begin() throws Exception {
         yGlobalUltimate = pixelRegion.y - 1;
-        temporalBinProcessor.begin(binningContext);
+        temporalBinRasterizer.begin(binningContext);
     }
 
     public void end() throws Exception {
@@ -40,7 +40,7 @@ public class TemporalBinReprojector {
         final int y1 = pixelRegion.y;
         final int y2 = y1 + pixelRegion.height - 1;
         processRowsWithoutBins(x1, x2, yGlobalUltimate + 1, y2);
-        temporalBinProcessor.end(binningContext);
+        temporalBinRasterizer.end(binningContext);
     }
 
     public void processBins(Iterator<? extends TemporalBin> temporalBins) throws Exception {
@@ -115,9 +115,9 @@ public class TemporalBinReprojector {
                 }
             }
             if (temporalBin != null) {
-                temporalBinProcessor.processBin(x - x1, y - y1, temporalBin, outputVector);
+                temporalBinRasterizer.processBin(x - x1, y - y1, temporalBin, outputVector);
             } else {
-                temporalBinProcessor.processMissingBin(x - x1, y - y1);
+                temporalBinRasterizer.processMissingBin(x - x1, y - y1);
             }
         }
     }
@@ -130,7 +130,7 @@ public class TemporalBinReprojector {
 
     private void processRowWithoutBins(int x1, int x2, int y) throws Exception {
         for (int x = x1; x <= x2; x++) {
-            temporalBinProcessor.processMissingBin(x - x1, y);
+            temporalBinRasterizer.processMissingBin(x - x1, y);
         }
     }
 }
