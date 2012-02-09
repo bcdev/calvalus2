@@ -1,5 +1,7 @@
 package com.bc.calvalus.binning;
 
+import org.apache.hadoop.io.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.Arrays;
  *
  * @author Norman Fomferra
  */
-public final class SpatialBin extends Bin {
+public final class SpatialBin extends Bin implements Writable {
 
     public SpatialBin() {
         super();

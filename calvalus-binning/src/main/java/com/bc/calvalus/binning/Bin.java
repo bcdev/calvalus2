@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.binning;
 
-import org.apache.hadoop.io.Writable;
-
 import java.util.HashMap;
 
 
@@ -26,7 +24,7 @@ import java.util.HashMap;
  *
  * @author Norman Fomferra
  */
-public abstract class Bin implements BinContext, Writable {
+public abstract class Bin implements BinContext {
 
     long index;
     int numObs;
