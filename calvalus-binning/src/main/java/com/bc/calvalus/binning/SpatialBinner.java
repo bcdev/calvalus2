@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class SpatialBinner {
 
-    private final BinningContext ctx;
+    private final BinningContext binningContext;
     private final BinningGrid binningGrid;
     private final BinManager binManager;
     private final SpatialBinProcessor processor;
@@ -27,17 +27,24 @@ public class SpatialBinner {
     /**
      * Constructs a spatial binner.
      *
-     * @param ctx       The binning context.
+     * @param binningContext       The binning context.
      * @param processor The processor that recieves the spatial bins processed from observations.
      */
-    public SpatialBinner(BinningContext ctx, SpatialBinProcessor processor) {
-        this.ctx = ctx;
-        this.binningGrid = ctx.getBinningGrid();
-        this.binManager = ctx.getBinManager();
+    public SpatialBinner(BinningContext binningContext, SpatialBinProcessor processor) {
+        this.binningContext = binningContext;
+        this.binningGrid = binningContext.getBinningGrid();
+        this.binManager = binningContext.getBinManager();
         this.processor = processor;
         this.activeBinMap = new HashMap<Long, SpatialBin>();
         this.finalizedBinMap = new HashMap<Long, SpatialBin>();
         this.exceptions = new ArrayList<Exception>();
+    }
+
+    /**
+     * @return The binning context that will also be passed to {@link  SpatialBinProcessor#processSpatialBinSlice(BinningContext, java.util.List)}.
+     */
+    public BinningContext getBinningContext() {
+        return binningContext;
     }
 
     /**
@@ -105,7 +112,7 @@ public class SpatialBinner {
             binManager.completeSpatialBin(bin);
         }
         try {
-            processor.processSpatialBinSlice(ctx, bins);
+            processor.processSpatialBinSlice(binningContext, bins);
         } catch (Exception e) {
             exceptions.add(e);
         }

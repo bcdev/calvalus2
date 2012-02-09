@@ -16,24 +16,23 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.*;
+import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.SpatialBin;
+import com.bc.calvalus.binning.SpatialBinProcessor;
+import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.ceres.glevel.MultiLevelImage;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.jai.ImageManager;
-import org.esa.beam.util.math.MathUtils;
+import org.esa.beam.binning.SpatialProductBinner;
+import org.esa.beam.framework.datamodel.Product;
 
-import java.awt.*;
-import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
@@ -101,134 +100,12 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     static long processProduct(Product product,
                                BinningContext ctx,
                                SpatialBinner spatialBinner,
-                               float[] superSamplingSteps, MapContext mapContext) throws IOException, InterruptedException {
-        if (product.getGeoCoding() == null) {
-            throw new IllegalArgumentException("product.getGeoCoding() == null");
-        }
-
-        final int sliceWidth = product.getSceneRasterWidth();
-        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
-            String variableName = ctx.getVariableContext().getVariableName(i);
-            String variableExpr = ctx.getVariableContext().getVariableExpr(i);
-            if (variableExpr != null) {
-                VirtualBand band = new VirtualBand(variableName,
-                                                   ProductData.TYPE_FLOAT32,
-                                                   product.getSceneRasterWidth(),
-                                                   product.getSceneRasterHeight(),
-                                                   variableExpr);
-                band.setValidPixelExpression(ctx.getVariableContext().getMaskExpr());
-                product.addBand(band);
-            }
-        }
-
-        final String maskExpr = ctx.getVariableContext().getMaskExpr();
-        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
-        final int sliceHeight = maskImage.getTileHeight();
-        boolean compatibleTileSizes = areTileSizesCompatible(maskImage, sliceWidth, sliceHeight);
-
-        final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
-        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
-            final String nodeName = ctx.getVariableContext().getVariableName(i);
-            final RasterDataNode node = getRasterDataNode(product, nodeName);
-            final MultiLevelImage varImage = node.getGeophysicalImage();
-            compatibleTileSizes = compatibleTileSizes && areTileSizesCompatible(varImage, sliceWidth, sliceHeight);
-            varImages[i] = varImage;
-        }
-
-        final GeoCoding geoCoding = product.getGeoCoding();
-
-        long numObsTotal = 0;
-        if (compatibleTileSizes) {
-            final Point[] tileIndices = maskImage.getTileIndices(null);
-            int tileIndexCounter = 0;
-            for (Point tileIndex : tileIndices) {
-                final ObservationSlice observationSlice = createObservationSlice(geoCoding,
-                                                                                 maskImage, varImages,
-                                                                                 tileIndex,
-                                                                                 superSamplingSteps);
-                spatialBinner.processObservationSlice(observationSlice);
-                numObsTotal += observationSlice.getSize();
-                if (mapContext != null) {
-                    ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
-                    productSplit.setProgress(Math.min(1.0f, (float)tileIndexCounter / tileIndices.length));
-                    mapContext.nextKeyValue(); // trigger progress propagation
-                }
-            }
-        } else {
-            int sceneHeight = maskImage.getHeight();
-            int numSlices = MathUtils.ceilInt(sceneHeight / (double) sliceHeight);
-            int currentSliceHeight = sliceHeight;
-            for (int sliceIndex = 0; sliceIndex < numSlices; sliceIndex++) {
-                int sliceY = sliceIndex * sliceHeight;
-                if (sliceY + sliceHeight > sceneHeight) {
-                    currentSliceHeight = sceneHeight - sliceY;
-                }
-                Rectangle sliceRect = new Rectangle(0, sliceIndex * sliceHeight, sliceWidth, currentSliceHeight);
-                final Raster maskTile = maskImage.getData(sliceRect);
-                final Raster[] varTiles = new Raster[varImages.length];
-                for (int i = 0; i < varImages.length; i++) {
-                    varTiles[i] = varImages[i].getData(sliceRect);
-                }
-                final ObservationSlice observationSlice = createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
-                spatialBinner.processObservationSlice(observationSlice);
-                numObsTotal += observationSlice.getSize();
-            }
-        }
-
-        spatialBinner.complete();
-        return numObsTotal;
+                               float[] superSamplingSteps,
+                               MapContext mapContext) throws IOException, InterruptedException {
+        return SpatialProductBinner.processProduct(product, spatialBinner, superSamplingSteps,
+                                                   new ProductSplitProgressMonitor(mapContext));
     }
 
-    private static ObservationSlice createObservationSlice(GeoCoding geoCoding,
-                                                           RenderedImage maskImage,
-                                                           RenderedImage[] varImages,
-                                                           Point tileIndex,
-                                                           float[] superSamplingSteps) {
-        final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
-        final Raster[] varTiles = new Raster[varImages.length];
-        for (int i = 0; i < varImages.length; i++) {
-            varTiles[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
-        }
-        return createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
-    }
-
-    private static ObservationSlice createObservationSlice(GeoCoding geoCoding, Raster maskTile, Raster[] varTiles, float[] superSamplingSteps) {
-        final ObservationSlice observationSlice = new ObservationSlice(varTiles, maskTile.getWidth() * maskTile.getHeight());
-        final int y1 = maskTile.getMinY();
-        final int y2 = y1 + maskTile.getHeight();
-        final int x1 = maskTile.getMinX();
-        final int x2 = x1 + maskTile.getWidth();
-        final PixelPos pixelPos = new PixelPos();
-        final GeoPos geoPos = new GeoPos();
-        for (int y = y1; y < y2; y++) {
-            for (int x = x1; x < x2; x++) {
-                if (maskTile.getSample(x, y, 0) != 0) {
-                    final float[] samples = observationSlice.createObservationSamples(x, y);
-                    for (float dy : superSamplingSteps) {
-                        for (float dx : superSamplingSteps) {
-                            pixelPos.setLocation(x + dx, y + dy);
-                            geoCoding.getGeoPos(pixelPos, geoPos);
-                            observationSlice.addObservation(geoPos.lat, geoPos.lon, samples);
-                        }
-                    }
-                }
-            }
-        }
-        return observationSlice;
-    }
-
-    private static RasterDataNode getRasterDataNode(Product product, String nodeName) {
-        final RasterDataNode node = product.getRasterDataNode(nodeName);
-        if (node == null) {
-            throw new IllegalStateException(String.format("Can't find raster data node '%s' in product '%s'",
-                                                          nodeName, product.getName()));
-        }
-        return node;
-    }
-
-    private static boolean areTileSizesCompatible(MultiLevelImage image, int sliceWidth, int sliceHeight) {
-        return image.getTileWidth() == sliceWidth && image.getTileHeight() == sliceHeight;
-    }
 
     private static class SpatialBinEmitter implements SpatialBinProcessor {
         private Context context;
@@ -249,4 +126,60 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         }
     }
 
+    private static class ProductSplitProgressMonitor implements ProgressMonitor {
+        private float totalWork;
+        private final MapContext mapContext;
+        private float work;
+
+        public ProductSplitProgressMonitor(MapContext mapContext) {
+            this.mapContext = mapContext;
+        }
+
+        @Override
+        public void beginTask(String taskName, int totalWork) {
+            this.totalWork = totalWork;
+        }
+
+        @Override
+        public void worked(int ammount) {
+            work += ammount;
+            ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
+            productSplit.setProgress(Math.min(1.0f,  work / totalWork));
+            try {
+                // trigger progress propagation (yes, that's weird but we don't use true input formats
+                // that are responsible for read progress)
+                mapContext.nextKeyValue();
+            } catch (IOException e) {
+                // ignore
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+
+
+        @Override
+        public void done() {
+        }
+
+        @Override
+        public void internalWorked(double work) {
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void setCanceled(boolean canceled) {
+        }
+
+        @Override
+        public void setTaskName(String taskName) {
+        }
+
+        @Override
+        public void setSubTaskName(String subTaskName) {
+        }
+    }
 }

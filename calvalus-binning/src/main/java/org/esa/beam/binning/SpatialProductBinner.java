@@ -1,0 +1,154 @@
+package org.esa.beam.binning;
+
+import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.ObservationSlice;
+import com.bc.calvalus.binning.SpatialBinner;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.MultiLevelImage;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.jai.ImageManager;
+import org.esa.beam.util.math.MathUtils;
+
+import java.awt.*;
+import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
+import java.io.IOException;
+
+/**
+ * @author Norman Fomferra
+ */
+public class SpatialProductBinner {
+
+    public static long processProduct(Product product,
+                                      SpatialBinner spatialBinner,
+                                      float[] superSamplingSteps, // todo - use superSampling:int
+                                      ProgressMonitor progressMonitor) throws IOException, InterruptedException {
+        if (product.getGeoCoding() == null) {
+            throw new IllegalArgumentException("product.getGeoCoding() == null");
+        }
+
+        final BinningContext ctx = spatialBinner.getBinningContext();
+        final int sliceWidth = product.getSceneRasterWidth();
+        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
+            String variableName = ctx.getVariableContext().getVariableName(i);
+            String variableExpr = ctx.getVariableContext().getVariableExpr(i);
+            if (variableExpr != null) {
+                VirtualBand band = new VirtualBand(variableName,
+                                                   ProductData.TYPE_FLOAT32,
+                                                   product.getSceneRasterWidth(),
+                                                   product.getSceneRasterHeight(),
+                                                   variableExpr);
+                band.setValidPixelExpression(ctx.getVariableContext().getMaskExpr());
+                product.addBand(band);
+            }
+        }
+
+        final String maskExpr = ctx.getVariableContext().getMaskExpr();
+        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
+        final int sliceHeight = maskImage.getTileHeight();
+        boolean compatibleTileSizes = areTileSizesCompatible(maskImage, sliceWidth, sliceHeight);
+
+        final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
+        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
+            final String nodeName = ctx.getVariableContext().getVariableName(i);
+            final RasterDataNode node = getRasterDataNode(product, nodeName);
+            final MultiLevelImage varImage = node.getGeophysicalImage();
+            compatibleTileSizes = compatibleTileSizes && areTileSizesCompatible(varImage, sliceWidth, sliceHeight);
+            varImages[i] = varImage;
+        }
+
+        final GeoCoding geoCoding = product.getGeoCoding();
+
+        long numObsTotal = 0;
+        if (compatibleTileSizes) {
+            final Point[] tileIndices = maskImage.getTileIndices(null);
+            progressMonitor.beginTask("Spatially binning of " + product.getName(), tileIndices.length);
+            for (Point tileIndex : tileIndices) {
+                final ObservationSlice observationSlice = createObservationSlice(geoCoding,
+                                                                                 maskImage, varImages,
+                                                                                 tileIndex,
+                                                                                 superSamplingSteps);
+                spatialBinner.processObservationSlice(observationSlice);
+                numObsTotal += observationSlice.getSize();
+                progressMonitor.worked(1);
+            }
+            progressMonitor.done();
+        } else {
+            int sceneHeight = maskImage.getHeight();
+            int numSlices = MathUtils.ceilInt(sceneHeight / (double) sliceHeight);
+            int currentSliceHeight = sliceHeight;
+            progressMonitor.beginTask("Spatially binning of " + product.getName(), numSlices);
+            for (int sliceIndex = 0; sliceIndex < numSlices; sliceIndex++) {
+                int sliceY = sliceIndex * sliceHeight;
+                if (sliceY + sliceHeight > sceneHeight) {
+                    currentSliceHeight = sceneHeight - sliceY;
+                }
+                Rectangle sliceRect = new Rectangle(0, sliceIndex * sliceHeight, sliceWidth, currentSliceHeight);
+                final Raster maskTile = maskImage.getData(sliceRect);
+                final Raster[] varTiles = new Raster[varImages.length];
+                for (int i = 0; i < varImages.length; i++) {
+                    varTiles[i] = varImages[i].getData(sliceRect);
+                }
+                final ObservationSlice observationSlice = createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
+                spatialBinner.processObservationSlice(observationSlice);
+                numObsTotal += observationSlice.getSize();
+                progressMonitor.worked(1);
+            }
+            progressMonitor.done();
+        }
+
+        spatialBinner.complete();
+        return numObsTotal;
+    }
+
+    private static ObservationSlice createObservationSlice(GeoCoding geoCoding,
+                                                           RenderedImage maskImage,
+                                                           RenderedImage[] varImages,
+                                                           Point tileIndex,
+                                                           float[] superSamplingSteps) {
+        final Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
+        final Raster[] varTiles = new Raster[varImages.length];
+        for (int i = 0; i < varImages.length; i++) {
+            varTiles[i] = varImages[i].getTile(tileIndex.x, tileIndex.y);
+        }
+        return createObservationSlice(geoCoding, maskTile, varTiles, superSamplingSteps);
+    }
+
+    private static ObservationSlice createObservationSlice(GeoCoding geoCoding, Raster maskTile, Raster[] varTiles, float[] superSamplingSteps) {
+        final ObservationSlice observationSlice = new ObservationSlice(varTiles, maskTile.getWidth() * maskTile.getHeight());
+        final int y1 = maskTile.getMinY();
+        final int y2 = y1 + maskTile.getHeight();
+        final int x1 = maskTile.getMinX();
+        final int x2 = x1 + maskTile.getWidth();
+        final PixelPos pixelPos = new PixelPos();
+        final GeoPos geoPos = new GeoPos();
+        for (int y = y1; y < y2; y++) {
+            for (int x = x1; x < x2; x++) {
+                if (maskTile.getSample(x, y, 0) != 0) {
+                    final float[] samples = observationSlice.createObservationSamples(x, y);
+                    for (float dy : superSamplingSteps) {
+                        for (float dx : superSamplingSteps) {
+                            pixelPos.setLocation(x + dx, y + dy);
+                            geoCoding.getGeoPos(pixelPos, geoPos);
+                            observationSlice.addObservation(geoPos.lat, geoPos.lon, samples);
+                        }
+                    }
+                }
+            }
+        }
+        return observationSlice;
+    }
+
+    private static RasterDataNode getRasterDataNode(Product product, String nodeName) {
+        final RasterDataNode node = product.getRasterDataNode(nodeName);
+        if (node == null) {
+            throw new IllegalStateException(String.format("Can't find raster data node '%s' in product '%s'",
+                                                          nodeName, product.getName()));
+        }
+        return node;
+    }
+
+    private static boolean areTileSizesCompatible(MultiLevelImage image, int sliceWidth, int sliceHeight) {
+        return image.getTileWidth() == sliceWidth && image.getTileHeight() == sliceHeight;
+    }
+}
