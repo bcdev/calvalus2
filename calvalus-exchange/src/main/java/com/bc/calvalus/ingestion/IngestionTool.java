@@ -129,11 +129,15 @@ public class IngestionTool extends Configured implements Tool {
                     IOException exception = null;
                     System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
                     while (attempt <= 3 && !finished) {
-                        OutputStream out = hdfs.create(destPath, true, bufferSize, replication, blockSize);
+                        short actualReplication = attempt == 1 ? replication : 3;
+                        OutputStream out = hdfs.create(destPath, true, bufferSize, actualReplication, blockSize);
                         FileInputStream in = new FileInputStream(sourceFile);
                         try  {
                             IOUtils.copyBytes(in, out, getConf(), true);
                             finished = true;
+                            if (actualReplication != replication) {
+                                hdfs.setReplication(destPath, replication);
+                            }
                         }catch (IOException ioe){
                             System.err.print("copying attempt " + attempt + " failed.");
                             ioe.printStackTrace();
