@@ -89,10 +89,6 @@ public class L3Config implements XmlConvertible {
         return numRows;
     }
 
-    public Integer getSuperSampling() {
-        return superSampling;
-    }
-
     public String getMaskExpr() {
         return maskExpr;
     }
@@ -109,6 +105,10 @@ public class L3Config implements XmlConvertible {
         this.numRows = numRows;
     }
 
+    public Integer getSuperSampling() {
+        return superSampling;
+    }
+
     public void setSuperSampling(Integer superSampling) {
         this.superSampling = superSampling;
     }
@@ -123,18 +123,6 @@ public class L3Config implements XmlConvertible {
 
     public void setAggregators(AggregatorConfiguration... aggregators) {
         this.aggregators = aggregators;
-    }
-
-    public float[] getSuperSamplingSteps() {
-        if (superSampling == null || superSampling < 1) {
-            return new float[]{0.5f};
-        } else {
-            float[] samplingStep = new float[superSampling];
-            for (int i = 0; i < samplingStep.length; i++) {
-                samplingStep[i] = (i * 2 + 1f) / (2f * superSampling);
-            }
-            return samplingStep;
-        }
     }
 
     public BinningContext getBinningContext() {

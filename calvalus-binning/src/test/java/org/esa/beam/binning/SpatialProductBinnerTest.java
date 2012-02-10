@@ -27,6 +27,9 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 public class SpatialProductBinnerTest {
     @Test
     public void testThatProductMustHaveAGeoCoding() throws Exception {
@@ -34,7 +37,7 @@ public class SpatialProductBinnerTest {
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-            SpatialProductBinner.processProduct(new Product("p", "t", 32, 256), new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f}, null);
+            SpatialProductBinner.processProduct(new Product("p", "t", 32, 256), new SpatialBinner(ctx, mySpatialBinProcessor), 1, null);
             Assert.fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // ok
@@ -56,9 +59,31 @@ public class SpatialProductBinnerTest {
         product.setPreferredTileSize(32, 16);
 
         MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
-        SpatialProductBinner.processProduct(product, new SpatialBinner(ctx, mySpatialBinProcessor), new float[]{0.5f}, ProgressMonitor.NULL);
+        SpatialProductBinner.processProduct(product, new SpatialBinner(ctx, mySpatialBinProcessor), 1, ProgressMonitor.NULL);
         Assert.assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
+
+    @Test
+    public void testGetSuperSamplingSteps() {
+        float[] superSamplingSteps = SpatialProductBinner.getSuperSamplingSteps(1);
+        assertNotNull(superSamplingSteps);
+        assertEquals(1, superSamplingSteps.length);
+        assertEquals(0.5f, superSamplingSteps[0], 0.0001);
+
+        superSamplingSteps = SpatialProductBinner.getSuperSamplingSteps(2);
+        assertNotNull(superSamplingSteps);
+        assertEquals(2, superSamplingSteps.length);
+        assertEquals(0.25f, superSamplingSteps[0], 0.0001);
+        assertEquals(0.75f, superSamplingSteps[1], 0.0001);
+
+        superSamplingSteps = SpatialProductBinner.getSuperSamplingSteps(3);
+        assertNotNull(superSamplingSteps);
+        assertEquals(3, superSamplingSteps.length);
+        assertEquals(1f / 6, superSamplingSteps[0], 0.0001);
+        assertEquals(3f / 6, superSamplingSteps[1], 0.0001);
+        assertEquals(5f / 6, superSamplingSteps[2], 0.0001);
+    }
+
 
     private static BinningContext createValidCtx() {
         VariableContextImpl variableContext = new VariableContextImpl();

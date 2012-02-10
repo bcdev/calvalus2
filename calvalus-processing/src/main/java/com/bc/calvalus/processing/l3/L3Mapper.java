@@ -69,7 +69,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         Product product = productFactory.getProcessedProduct(context.getInputSplit());
         if (product != null) {
             try {
-                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSamplingSteps(), context);
+                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSampling(), context);
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
@@ -100,9 +100,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     static long processProduct(Product product,
                                BinningContext ctx,
                                SpatialBinner spatialBinner,
-                               float[] superSamplingSteps,
+                               Integer superSampling,
                                MapContext mapContext) throws IOException, InterruptedException {
-        return SpatialProductBinner.processProduct(product, spatialBinner, superSamplingSteps,
+        return SpatialProductBinner.processProduct(product, spatialBinner, superSampling,
                                                    new ProductSplitProgressMonitor(mapContext));
     }
 
@@ -141,8 +141,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         }
 
         @Override
-        public void worked(int ammount) {
-            work += ammount;
+        public void worked(int delta) {
+            work += delta;
             ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
             productSplit.setProgress(Math.min(1.0f,  work / totalWork));
             try {

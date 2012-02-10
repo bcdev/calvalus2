@@ -24,11 +24,13 @@ public class SpatialProductBinner {
 
     public static long processProduct(Product product,
                                       SpatialBinner spatialBinner,
-                                      float[] superSamplingSteps, // todo - use superSampling:int
+                                      Integer superSampling,
                                       ProgressMonitor progressMonitor) throws IOException, InterruptedException {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
+
+        final float[] superSamplingSteps = getSuperSamplingSteps(superSampling);
 
         final BinningContext ctx = spatialBinner.getBinningContext();
         final int sliceWidth = product.getSceneRasterWidth();
@@ -103,6 +105,19 @@ public class SpatialProductBinner {
         spatialBinner.complete();
         return numObsTotal;
     }
+
+    static float[] getSuperSamplingSteps(Integer superSampling) {
+        if (superSampling == null || superSampling <= 1) {
+            return new float[]{0.5f};
+        } else {
+            float[] samplingStep = new float[superSampling];
+            for (int i = 0; i < samplingStep.length; i++) {
+                samplingStep[i] = (i * 2.0F + 1.0F) / (2.0F * superSampling);
+            }
+            return samplingStep;
+        }
+    }
+
 
     private static ObservationSlice createObservationSlice(GeoCoding geoCoding,
                                                            RenderedImage maskImage,

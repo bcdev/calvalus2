@@ -48,36 +48,6 @@ public class L3ConfigTest {
     }
 
     @Test
-    public void testSuperSampling() {
-        L3Config config = new L3Config();
-        float[] superSamplingSteps = config.getSuperSamplingSteps();
-        assertNotNull(superSamplingSteps);
-        assertEquals(1, superSamplingSteps.length);
-        assertEquals(0.5f, superSamplingSteps[0], 0.0001);
-
-        config.superSampling = 1;
-        superSamplingSteps = config.getSuperSamplingSteps();
-        assertNotNull(superSamplingSteps);
-        assertEquals(1, superSamplingSteps.length);
-        assertEquals(0.5f, superSamplingSteps[0], 0.0001);
-
-        config.superSampling = 2;
-        superSamplingSteps = config.getSuperSamplingSteps();
-        assertNotNull(superSamplingSteps);
-        assertEquals(2, superSamplingSteps.length);
-        assertEquals(0.25f, superSamplingSteps[0], 0.0001);
-        assertEquals(0.75f, superSamplingSteps[1], 0.0001);
-
-        config.superSampling = 3;
-        superSamplingSteps = config.getSuperSamplingSteps();
-        assertNotNull(superSamplingSteps);
-        assertEquals(3, superSamplingSteps.length);
-        assertEquals(1f / 6, superSamplingSteps[0], 0.0001);
-        assertEquals(3f / 6, superSamplingSteps[1], 0.0001);
-        assertEquals(5f / 6, superSamplingSteps[2], 0.0001);
-    }
-
-    @Test
     public void testBinningGrid() {
         BinningGrid grid = new L3Config().getBinningGrid();
         assertEquals(2160, grid.getNumRows());
