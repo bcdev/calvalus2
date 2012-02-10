@@ -6,7 +6,6 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -19,12 +18,12 @@ import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
@@ -62,7 +61,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     if (subPath.getPath().toString().endsWith("bundle-descriptor.xml")) {
                         try {
                             BundleDescriptor bd = new BundleDescriptor();
-                            new XmlBinding().convertXmlToObject(readFile(subPath), bd);
+                            new ParameterBlockConverter().convertXmlToObject(readFile(subPath), bd);
                             descriptors.add(bd);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());

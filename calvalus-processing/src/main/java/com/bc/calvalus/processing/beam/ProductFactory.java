@@ -22,7 +22,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -41,6 +40,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.SystemUtils;
 
@@ -233,7 +233,7 @@ public class ProductFactory {
             return Collections.emptyMap();
         }
         Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
-        return new XmlBinding().convertXmlToMap(level2Parameters, operatorClass);
+        return new ParameterBlockConverter().convertXmlToMap(level2Parameters, operatorClass);
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {

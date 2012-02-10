@@ -19,12 +19,12 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.*;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertyContainer;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class L3Config implements XmlConvertible {
@@ -73,13 +73,13 @@ public class L3Config implements XmlConvertible {
     }
 
     public static L3Config fromXml(String xml) throws BindingException {
-        return new XmlBinding().convertXmlToObject(xml, new L3Config());
+        return new ParameterBlockConverter().convertXmlToObject(xml, new L3Config());
     }
 
     @Override
     public String toXml() {
         try {
-            return new XmlBinding().convertObjectToXml(this);
+            return new ParameterBlockConverter().convertObjectToXml(this);
         } catch (BindingException e) {
             throw new RuntimeException(e);
         }

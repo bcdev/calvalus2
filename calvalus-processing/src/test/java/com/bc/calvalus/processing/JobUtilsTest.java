@@ -17,9 +17,9 @@
 package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.beam.ProductFactory;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-import static com.bc.calvalus.processing.JobUtils.*;
 import static org.junit.Assert.*;
 
 /**
@@ -55,7 +54,7 @@ public class JobUtilsTest {
         String level2OperatorName = "BandMaths";
         String level2Parameters = readFromResource("bandmaths.xml");
 
-        DomElement element = new XmlBinding().convertXmlToDomElement(level2Parameters);
+        DomElement element = new ParameterBlockConverter().convertXmlToDomElement(level2Parameters);
         assertNotNull(element);
         assertEquals("parameters", element.getName());
         assertEquals(2, element.getChildCount());

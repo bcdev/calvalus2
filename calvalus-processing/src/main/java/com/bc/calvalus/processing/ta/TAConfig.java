@@ -18,13 +18,13 @@ package com.bc.calvalus.processing.ta;
 
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 
 /**
@@ -58,13 +58,13 @@ public class TAConfig implements XmlConvertible {
     }
 
     public static TAConfig fromXml(String xml) throws BindingException {
-        return new XmlBinding().convertXmlToObject(xml, new TAConfig());
+        return new ParameterBlockConverter().convertXmlToObject(xml, new TAConfig());
     }
 
     @Override
     public String toXml() {
         try {
-            return new XmlBinding().convertObjectToXml(this);
+            return new ParameterBlockConverter().convertObjectToXml(this);
         } catch (ConversionException e) {
             throw new RuntimeException(e);
         }

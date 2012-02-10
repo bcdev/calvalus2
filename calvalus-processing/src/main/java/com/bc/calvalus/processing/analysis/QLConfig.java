@@ -17,10 +17,10 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 /**
  * Configuration for quick look generation
@@ -52,6 +52,6 @@ class QLConfig {
     }
 
     public static QLConfig fromXml(String xml) throws BindingException {
-        return new XmlBinding().convertXmlToObject(xml, new QLConfig());
+        return new ParameterBlockConverter().convertXmlToObject(xml, new QLConfig());
     }
 }

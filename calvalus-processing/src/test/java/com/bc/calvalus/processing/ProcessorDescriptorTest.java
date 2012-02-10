@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing;
 
 
-import com.bc.calvalus.processing.xml.XmlBinding;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class ProcessorDescriptorTest {
 
         assertNull(processorDescriptor.getExecutableName());
 
-        new XmlBinding().convertXmlToObject(xml, processorDescriptor);
+        new ParameterBlockConverter().convertXmlToObject(xml, processorDescriptor);
 
         assertNotNull(processorDescriptor.getExecutableName());
         assertEquals("CoastColour.L2W", processorDescriptor.getExecutableName());

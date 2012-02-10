@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.xml.XmlBinding;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Test;
 
@@ -19,7 +19,7 @@ public class BundleDescriptorTest {
 
         assertNull(bundleDescriptor.getBundleName());
 
-        new XmlBinding().convertXmlToObject(xml, bundleDescriptor);
+        new ParameterBlockConverter().convertXmlToObject(xml, bundleDescriptor);
         assertEquals("bundle-test-name", bundleDescriptor.getBundleName());
         assertEquals("1.1-SNAPSHOT", bundleDescriptor.getBundleVersion());
 

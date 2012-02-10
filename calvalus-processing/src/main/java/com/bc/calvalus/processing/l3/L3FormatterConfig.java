@@ -16,12 +16,12 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -78,13 +78,13 @@ public class L3FormatterConfig implements XmlConvertible {
      *          If the XML cannot be converted to a new formatter configuration object
      */
     public static L3FormatterConfig fromXml(String xml) throws BindingException {
-        return new XmlBinding().convertXmlToObject(xml, new L3FormatterConfig());
+        return new ParameterBlockConverter().convertXmlToObject(xml, new L3FormatterConfig());
     }
 
     @Override
     public String toXml() {
         try {
-            return new XmlBinding().convertObjectToXml(this);
+            return new ParameterBlockConverter().convertObjectToXml(this);
         } catch (ConversionException e) {
             throw new RuntimeException(e);
         }

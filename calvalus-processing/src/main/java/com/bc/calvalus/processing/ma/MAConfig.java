@@ -18,12 +18,12 @@ package com.bc.calvalus.processing.ma;
 
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.xml.XmlBinding;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 /**
  * The configuration for the match-up analysis.
@@ -165,13 +165,13 @@ public class MAConfig implements XmlConvertible {
     }
 
     public static MAConfig fromXml(String xml) throws BindingException {
-        return new XmlBinding().convertXmlToObject(xml, new MAConfig());
+        return new ParameterBlockConverter().convertXmlToObject(xml, new MAConfig());
     }
 
     @Override
     public String toXml() {
         try {
-            return new XmlBinding().convertObjectToXml(this);
+            return new ParameterBlockConverter().convertObjectToXml(this);
         } catch (ConversionException e) {
             throw new RuntimeException(e);
         }
