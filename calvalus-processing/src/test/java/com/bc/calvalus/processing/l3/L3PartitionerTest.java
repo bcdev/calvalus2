@@ -123,7 +123,7 @@ public class L3PartitionerTest {
         assertEquals(1, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13 - 1), null, numPartitions));
 
         assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13), null, numPartitions));
-        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13 + 9 + 3 -1), null, numPartitions));
+        assertEquals(2, l3Partitioner.getPartition(new LongWritable(3 + 9 + 13 + 16 + 16 + 13 + 9 + 3 - 1), null, numPartitions));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class L3PartitionerTest {
         Configuration configuration = new Configuration();
 
         L3Config l3Config = new L3Config();
-        l3Config.numRows = numRows;
+        l3Config.setNumRows(numRows);
         configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
 
         configuration.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, wkt);

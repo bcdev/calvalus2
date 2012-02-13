@@ -22,7 +22,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.mosaic.LCMosaicAlgorithm;
-import com.bc.calvalus.processing.mosaic.LcSDR8MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.production.DateRange;
@@ -34,6 +33,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.BinningConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
@@ -218,9 +218,9 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
     private static L3Config createL3Config(String type, String maskExpr, String[] varNames) {
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr(maskExpr);
-        L3Config.AggregatorConfiguration conf = new L3Config.AggregatorConfiguration(type);
+        BinningConfig.AggregatorConfiguration conf = new BinningConfig.AggregatorConfiguration(type);
         conf.setVarNames(varNames);
-        l3Config.setAggregators(conf);
+        l3Config.setAggregatorConfigurations(conf);
         return l3Config;
     }
 

@@ -18,13 +18,12 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.BinningConfig;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static java.lang.Math.PI;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -141,10 +140,6 @@ public class L3ProductionType extends HadoopProductionType {
                 workflow);
     }
 
-    public static int computeDefaultPeriodLength(Date minDate, Date maxDate, int periodCount) {
-        return (int) ((maxDate.getTime() - minDate.getTime() + MILLIS_PER_DAY - 1) / (MILLIS_PER_DAY * periodCount));
-    }
-
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
         return new L3Staging(production,
@@ -170,7 +165,7 @@ public class L3ProductionType extends HadoopProductionType {
             final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
 
             long time = minDate.getTime();
-            for (int i = 0; ; i++) {
+            while (true) {
 
                 // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
                 Date date1 = new Date(time);
@@ -208,14 +203,14 @@ public class L3ProductionType extends HadoopProductionType {
         l3Config.setNumRows(getNumRows(productionRequest));
         l3Config.setSuperSampling(productionRequest.getInteger("superSampling", 1));
         l3Config.setMaskExpr(productionRequest.getString("maskExpr", ""));
-        l3Config.setVariables(getVariables(productionRequest));
-        l3Config.setAggregators(getAggregators(productionRequest));
+        l3Config.setVariableConfigurations(getVariables(productionRequest));
+        l3Config.setAggregatorConfigurations(getAggregators(productionRequest));
         return l3Config;
     }
 
-    static L3Config.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+    static BinningConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         int variableCount = request.getInteger("variables.count");
-        L3Config.AggregatorConfiguration[] aggregatorConfigurations = new L3Config.AggregatorConfiguration[variableCount];
+        BinningConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinningConfig.AggregatorConfiguration[variableCount];
         for (int i = 0; i < variableCount; i++) {
             String prefix = "variables." + i;
             String variableName = request.getString(prefix + ".name");
@@ -224,7 +219,7 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            L3Config.AggregatorConfiguration aggregatorConfiguration = new L3Config.AggregatorConfiguration(aggregatorName);
+            BinningConfig.AggregatorConfiguration aggregatorConfiguration = new BinningConfig.AggregatorConfiguration(aggregatorName);
             aggregatorConfiguration.setVarName(variableName);
             aggregatorConfiguration.setPercentage(percentage);
             aggregatorConfiguration.setWeightCoeff(weightCoeff);
@@ -234,14 +229,14 @@ public class L3ProductionType extends HadoopProductionType {
         return aggregatorConfigurations;
     }
 
-    static L3Config.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+    static BinningConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
         int expressionCount = request.getInteger("expression.count", 0);
-        L3Config.VariableConfiguration[] variableConfigurations = new L3Config.VariableConfiguration[expressionCount];
+        BinningConfig.VariableConfiguration[] variableConfigurations = new BinningConfig.VariableConfiguration[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
             String exp = request.getString(prefix + ".expression");
-            variableConfigurations[i] = new L3Config.VariableConfiguration(name, exp);
+            variableConfigurations[i] = new BinningConfig.VariableConfiguration(name, exp);
         }
         return variableConfigurations;
     }
@@ -254,12 +249,11 @@ public class L3ProductionType extends HadoopProductionType {
     static int computeBinningGridRowCount(double res) {
         // see: SeaWiFS Technical Report Series Vol. 32;
         final double RE = 6378.145;
-        int numRows = 1 + (int) Math.floor(0.5 * (2 * PI * RE) / res);
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * Math.PI * RE) / res);
         if (numRows % 2 == 0) {
             return numRows;
         } else {
             return numRows + 1;
         }
     }
-
 }

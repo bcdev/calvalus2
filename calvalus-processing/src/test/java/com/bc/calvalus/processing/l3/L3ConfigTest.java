@@ -125,7 +125,7 @@ public class L3ConfigTest {
 
     @Test
     public void testNumRows() {
-        assertEquals(4320, l3Config.numRows);
+        assertEquals(4320, l3Config.getNumRows());
     }
 
     private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException, BindingException {

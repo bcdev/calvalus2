@@ -17,48 +17,20 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.*;
+import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.BinningContextImpl;
+import com.bc.calvalus.binning.BinningGrid;
+import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
-import com.bc.ceres.binding.PropertyContainer;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.beam.binning.BinningConfig;
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class L3Config implements XmlConvertible {
 
-    /**
-     * Number of rows in the binning grid.
-     */
-    @Parameter
-    int numRows;
-
-    /**
-     * The number of pixels used for super-sampling an input pixel into sub-pixel.
-     */
-    @Parameter
-    Integer superSampling;
-
-    /**
-     * The band maths expression used to filter input pixels.
-     */
-    @Parameter
-    String maskExpr;
-
-    /**
-     * List of variables. A variable will generate a {@link org.esa.beam.framework.datamodel.VirtualBand VirtualBand}
-     * in the input data product to be binned, so that it can be used for binning.
-     */
-    @Parameter(itemAlias = "variable")
-    VariableConfiguration[] variables;
-
-    /**
-     * List of aggregators. Aggregators generate the bands in the binned output products.
-     */
-    @Parameter(itemAlias = "aggregator")
-    AggregatorConfiguration[] aggregators;
+    private BinningConfig binningConfig;
 
     public static L3Config get(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
@@ -72,212 +44,80 @@ public class L3Config implements XmlConvertible {
         }
     }
 
+    public L3Config() {
+        this(new BinningConfig());
+    }
+
+    private L3Config(BinningConfig binningConfig) {
+        this.binningConfig = binningConfig;
+    }
+
+    public BinningConfig getBinningConfig() {
+        return binningConfig;
+    }
+
     public static L3Config fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new L3Config());
+        return new L3Config(BinningConfig.fromXml(xml));
     }
 
     @Override
     public String toXml() {
-        try {
-            return new ParameterBlockConverter().convertObjectToXml(this);
-        } catch (BindingException e) {
-            throw new RuntimeException(e);
-        }
+        return binningConfig.toXml();
     }
 
     public int getNumRows() {
-        return numRows;
-    }
-
-    public String getMaskExpr() {
-        return maskExpr;
-    }
-
-    public VariableConfiguration[] getVariables() {
-        return variables;
-    }
-
-    public AggregatorConfiguration[] getAggregators() {
-        return aggregators;
+        return binningConfig.getNumRows();
     }
 
     public void setNumRows(int numRows) {
-        this.numRows = numRows;
+        binningConfig.setNumRows(numRows);
     }
 
     public Integer getSuperSampling() {
-        return superSampling;
+        return binningConfig.getSuperSampling();
     }
 
     public void setSuperSampling(Integer superSampling) {
-        this.superSampling = superSampling;
+        binningConfig.setSuperSampling(superSampling);
+    }
+
+    public String getMaskExpr() {
+        return binningConfig.getMaskExpr();
     }
 
     public void setMaskExpr(String maskExpr) {
-        this.maskExpr = maskExpr;
+        binningConfig.setMaskExpr(maskExpr);
     }
 
-    public void setVariables(VariableConfiguration... variables) {
-        this.variables = variables;
+    public BinningConfig.VariableConfiguration[] getVariableConfigurations() {
+        return binningConfig.getVariableConfigurations();
     }
 
-    public void setAggregators(AggregatorConfiguration... aggregators) {
-        this.aggregators = aggregators;
+    public void setVariableConfigurations(BinningConfig.VariableConfiguration... variables) {
+        binningConfig.setVariableConfigurations(variables);
+    }
+
+    public BinningConfig.AggregatorConfiguration[] getAggregatorConfigurations() {
+        return binningConfig.getAggregatorConfigurations();
+    }
+
+    public void setAggregatorConfigurations(BinningConfig.AggregatorConfiguration... aggregators) {
+        binningConfig.setAggregatorConfigurations(aggregators);
     }
 
     public BinningContext getBinningContext() {
         VariableContext varCtx = getVariableContext();
         return new BinningContextImpl(getBinningGrid(),
                                       varCtx,
-                                      getBinManager(varCtx));
+                                      new L3BinManagerImpl(binningConfig.getAggregators(varCtx)));
     }
 
     public BinningGrid getBinningGrid() {
-        if (numRows == 0) {
-            numRows = IsinBinningGrid.DEFAULT_NUM_ROWS;
-        }
-        return new IsinBinningGrid(numRows);
-    }
-
-    private BinManager getBinManager(VariableContext varCtx) {
-        Aggregator[] aggs = new Aggregator[aggregators.length];
-        for (int i = 0; i < aggs.length; i++) {
-            AggregatorConfiguration aggregatorConfiguration = aggregators[i];
-            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfiguration.type);
-            if (descriptor != null) {
-                aggs[i] = descriptor.createAggregator(varCtx, PropertyContainer.createObjectBacked(aggregatorConfiguration));
-            } else {
-                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfiguration.type);
-            }
-        }
-        return new L3BinManagerImpl(aggs);
+        return binningConfig.getBinningGrid();
     }
 
     public VariableContext getVariableContext() {
-        VariableContextImpl variableContext = new VariableContextImpl();
-        if (maskExpr == null) {
-            maskExpr = "";
-        }
-        variableContext.setMaskExpr(maskExpr);
-
-        // define declared variables
-        //
-        if (variables != null) {
-            for (VariableConfiguration variable : variables) {
-                variableContext.defineVariable(variable.name, variable.expr);
-            }
-        }
-
-        // define variables of all aggregators
-        //
-        if (aggregators != null) {
-            for (AggregatorConfiguration aggregator : aggregators) {
-                String varName = aggregator.varName;
-                if (varName != null) {
-                    variableContext.defineVariable(varName);
-                } else {
-                    String[] varNames = aggregator.varNames;
-                    if (varNames != null) {
-                        for (String varName1 : varNames) {
-                            variableContext.defineVariable(varName1);
-                        }
-                    }
-                }
-            }
-        }
-        return variableContext;
-    }
-
-    public static class VariableConfiguration {
-        String name;
-
-        String expr;
-
-        public VariableConfiguration() {
-        }
-
-        public VariableConfiguration(String name, String expr) {
-            this.name = name;
-            this.expr = expr;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getExpr() {
-            return expr;
-        }
-    }
-
-    public static class AggregatorConfiguration {
-        String type;
-
-        String varName;
-
-        String[] varNames;
-
-        Integer percentage;
-
-        Double weightCoeff;
-
-        Float fillValue;
-
-        public AggregatorConfiguration() {
-        }
-
-        public AggregatorConfiguration(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public String getVarName() {
-            return varName;
-        }
-
-        public String[] getVarNames() {
-            return varNames;
-        }
-
-        public Integer getPercentage() {
-            return percentage;
-        }
-
-        public Double getWeightCoeff() {
-            return weightCoeff;
-        }
-
-        public Float getFillValue() {
-            return fillValue;
-
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public void setVarName(String varName) {
-            this.varName = varName;
-        }
-
-        public void setVarNames(String[] varNames) {
-            this.varNames = varNames;
-        }
-
-        public void setPercentage(Integer percentage) {
-            this.percentage = percentage;
-        }
-
-        public void setWeightCoeff(Double weightCoeff) {
-            this.weightCoeff = weightCoeff;
-        }
-
-        public void setFillValue(Float fillValue) {
-            this.fillValue = fillValue;
-        }
+        return binningConfig.getVariableContext();
     }
 
 }
