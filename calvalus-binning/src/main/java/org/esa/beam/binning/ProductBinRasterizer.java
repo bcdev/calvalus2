@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
 * @author Norman Fomferra
 */
-public final class ProductDataWriter extends BinRasterizer {
+public final class ProductBinRasterizer extends BinRasterizer {
     private final int width;
     private final ProductData numObsLine;
     private final ProductData numPassesLine;
@@ -26,13 +26,13 @@ public final class ProductDataWriter extends BinRasterizer {
     private final float[] fillValues;
     private int yLast;
 
-    public ProductDataWriter(ProductWriter productWriter,
-                             Band numObsBand,
-                             ProductData numObsLine,
-                             Band numPassesBand,
-                             ProductData numPassesLine,
-                             Band[] outputBands,
-                             ProductData[] outputLines) {
+    public ProductBinRasterizer(ProductWriter productWriter,
+                                Band numObsBand,
+                                ProductData numObsLine,
+                                Band numPassesBand,
+                                ProductData numPassesLine,
+                                Band[] outputBands,
+                                ProductData[] outputLines) {
         this.numObsLine = numObsLine;
         this.numPassesLine = numPassesLine;
         this.outputBands = outputBands;
