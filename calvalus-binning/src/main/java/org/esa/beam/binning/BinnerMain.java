@@ -33,7 +33,7 @@ public class BinnerMain {
     }
 
     private static void doFormatting(BinnerContext binnerContext, List<TemporalBin> temporalBins) throws Exception {
-        final BinReprojector binReprojector = new BinReprojector(binnerContext, new ProductDataWriter(null, null, null, null, null, null, null), new Rectangle(0, 0, 0, 0));
+        final BinReprojector binReprojector = new BinReprojector(binnerContext, new ProductBinRasterizer(null, null, null, null, null, null, null), new Rectangle(0, 0, 0, 0));
         binReprojector.begin();
         try {
             binReprojector.processBins(temporalBins.iterator());
