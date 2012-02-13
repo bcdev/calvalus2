@@ -14,25 +14,17 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.l3;
+package org.esa.beam.binning;
 
 import com.bc.calvalus.binning.*;
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.SequenceFile;
-import org.esa.beam.binning.OutputterConfig;
-import org.esa.beam.binning.ProductBinRasterizer;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
-import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.util.StringUtils;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -43,83 +35,40 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.logging.Logger;
+import java.util.Iterator;
 
 /**
  * For formatting the results of a BEAM Level 3 Hadoop Job.
  */
-public class L3Formatter {
+public class Outputter {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String PART_FILE_PREFIX = "part-r-";
     private String outputType;
     private String outputFormat;
-    private Path l3OutputDir;
     private BinnerContext binnerContext;
     private File outputFile;
     private String outputFileNameBase;
     private String outputFileNameExt;
     private double pixelSize;
     private Rectangle outputRegion;
+    private Geometry roiGeometry;
+    private TemporalBinSource temporalBinSource;
 
-    private final Configuration configuration;
+    public Outputter(OutputterConfig outputterConfig,
+                     BinnerConfig binnerConfig,
+                     Geometry roiGeometry,
+                     TemporalBinSource temporalBinSource) throws Exception {
+        this.roiGeometry = roiGeometry;
+        this.temporalBinSource = temporalBinSource;
+        outputType = outputterConfig.getOutputType();
 
-    public L3Formatter(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public static void reproject(Configuration configuration,
-                                 BinnerContext binnerContext,
-                                 Rectangle pixelRegion,
-                                 Path partsDir,
-                                 BinRasterizer binRasterizer) throws Exception {
-
-        long startTime = System.nanoTime();
-
-        final FileSystem hdfs = partsDir.getFileSystem(configuration);
-        final FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().startsWith(PART_FILE_PREFIX);
-            }
-        });
-
-        LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", parts.length));
-
-        Arrays.sort(parts);
-
-        BinReprojector reprojector = new BinReprojector(binnerContext, binRasterizer, pixelRegion);
-
-        reprojector.begin();
-        for (FileStatus part : parts) {
-            Path partFile = part.getPath();
-            SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
-            LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
-            try {
-                reprojector.processBins(new SequenceFileBinIterator(reader));
-            } finally {
-                reader.close();
-            }
-        }
-        reprojector.end();
-
-        long stopTime = System.nanoTime();
-        LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
-    }
-
-    public int format(L3FormatterConfig formatterConfig, L3Config l3Config, String hadoopJobOutputDir, Geometry roiGeometry) throws Exception {
-        outputType = formatterConfig.getOutputType();
-
-        outputFile = new File(formatterConfig.getOutputFile());
+        outputFile = new File(outputterConfig.getOutputFile());
 
         final String fileName = outputFile.getName();
         final int extPos = fileName.lastIndexOf(".");
         outputFileNameBase = fileName.substring(0, extPos);
         outputFileNameExt = fileName.substring(extPos + 1);
 
-        outputFormat = formatterConfig.getOutputFormat();
+        outputFormat = outputterConfig.getOutputFormat();
         if (outputFormat == null) {
             outputFormat = outputFileNameExt.equalsIgnoreCase("nc") ? "NetCDF"
                     : outputFileNameExt.equalsIgnoreCase("dim") ? "BEAM-DIMAP"
@@ -141,41 +90,45 @@ public class L3Formatter {
             outputFormat = "NetCDF-BEAM"; // use NetCDF with beam extensions
         }
 
-        l3OutputDir = new Path(hadoopJobOutputDir);
-        binnerContext = l3Config.getBinningContext();
+        binnerContext = binnerConfig.createBinningContext();
         final BinManager binManager = binnerContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {
             throw new IllegalArgumentException("Illegal binning context: aggregatorCount == 0");
         }
 
-        LOG.info("aggregators.length = " + aggregatorCount);
-        for (int i = 0; i < aggregatorCount; i++) {
-            Aggregator aggregator = binManager.getAggregator(i);
-            LOG.info("aggregators." + i + " = " + aggregator);
-        }
-
-        computeOutputRegion(roiGeometry);
+        initOutputRegion(roiGeometry);
 
         File parentFile = outputFile.getParentFile();
         if (parentFile != null) {
             parentFile.mkdirs();
         }
         if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile(formatterConfig);
+            writeProductFile(outputterConfig, temporalBinSource);
         } else {
-            writeImageFiles(formatterConfig);
+            writeImageFiles(outputterConfig, temporalBinSource);
         }
-
-        return 0;
     }
 
-    private void writeProductFile(L3FormatterConfig formatterConfig) throws Exception {
-        final ProductBinRasterizer dataWriter = createProductDataWriter(formatterConfig);
-        reproject(configuration, binnerContext, outputRegion, l3OutputDir, dataWriter);
+    private void writeProductFile(OutputterConfig formatterConfig, TemporalBinSource temporalBinSource) throws Exception {
+        final ProductBinRasterizer binRasterizer = createProductBinRasterizer(formatterConfig);
+        output(binnerContext, outputRegion, binRasterizer, temporalBinSource);
     }
 
-    private ProductBinRasterizer createProductDataWriter(L3FormatterConfig formatterConfig) throws IOException {
+    protected void output(BinnerContext binnerContext, Rectangle outputRegion, BinRasterizer binRasterizer, TemporalBinSource temporalBinSource) throws Exception {
+        BinReprojector reprojector = new BinReprojector(binnerContext, binRasterizer, outputRegion);
+        final int partCount = temporalBinSource.open(this);
+        reprojector.begin();
+        for (int i = 0; i < partCount; i++) {
+            final Iterator<? extends TemporalBin> part = temporalBinSource.getPart(i);
+            reprojector.processBins(part);
+            temporalBinSource.partProcessed(i, part);
+        }
+        reprojector.end();
+        temporalBinSource.close();
+    }
+
+    private ProductBinRasterizer createProductBinRasterizer(OutputterConfig formatterConfig) throws IOException {
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
@@ -196,14 +149,16 @@ public class L3Formatter {
         } catch (TransformException e) {
             throw new IllegalStateException(e);
         }
-        final Product product = new Product(outputFile.getName(), "CALVALUS-L3", outputRegion.width, outputRegion.height);
+
+        // todo - make parameter
+        final String productType = "CALVALUS-L3";
+        final Product product = new Product(outputFile.getName(), productType, outputRegion.width, outputRegion.height);
         product.setGeoCoding(geoCoding);
         product.setStartTime(formatterConfig.getStartTime());
         product.setEndTime(formatterConfig.getEndTime());
 
-        product.getMetadataRoot().addElement(createConfigurationMetadataElement());
-
-        // product.getMetadataRoot().addElement(createL3ConfigMetadata(l3Config));
+        // todo - add metadata
+        // product.getMetadataRoot().addElement(createConfigurationMetadataElement());
 
         final Band numObsBand = product.addBand("num_obs", ProductData.TYPE_INT16);
         numObsBand.setNoDataValue(-1);
@@ -233,52 +188,7 @@ public class L3Formatter {
                                         outputBands, outputLines);
     }
 
-    private MetadataElement createConfigurationMetadataElement() {
-        MetadataElement configurationElement = new MetadataElement("calvalus.configuration");
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT, ',');
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_FORMAT);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MIN_DATE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MAX_DATE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_NAME);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_BEAM_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_OPERATOR);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L3_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MA_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_TA_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_FORMATTER_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_OUTPUT_DIR);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_USER);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REQUEST);
-        addConfigElementToMetadataElement(configurationElement, "mapred.job.classpath.files", ',');
-
-        return configurationElement;
-    }
-
-    private void addConfigElementToMetadataElement(MetadataElement parent, String name, char sep) {
-        String value = configuration.get(name);
-        if (value != null) {
-            String[] valueSplits = StringUtils.split(value, new char[]{sep}, true);
-            MetadataElement inputPathsElement = new MetadataElement(name);
-            for (int i = 0; i < valueSplits.length; i++) {
-                inputPathsElement.addAttribute(new MetadataAttribute(name + "." + i, ProductData.createInstance(valueSplits[i]), true));
-            }
-            parent.addElement(inputPathsElement);
-        }
-    }
-
-    private void addConfigElementToMetadataElement(MetadataElement parent, String name) {
-        String value = configuration.get(name);
-        if (value != null) {
-            parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
-        }
-    }
-
-    private void computeOutputRegion(Geometry roiGeometry) {
+    private void initOutputRegion(Geometry roiGeometry) {
         final BinningGrid binningGrid = binnerContext.getBinningGrid();
 
         final int gridWidth = binningGrid.getNumRows() * 2;
@@ -302,14 +212,12 @@ public class L3Formatter {
             final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
             final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
             final Rectangle unclippedOutputRegion = new Rectangle(x, y, width, height);
-            LOG.info("unclippedOutputRegion = " + unclippedOutputRegion);
             outputRegion = unclippedOutputRegion.intersection(outputRegion);
         }
-        LOG.info("outputRegion = " + outputRegion);
     }
 
-    private void writeImageFiles(L3FormatterConfig formatterConfig) throws Exception {
-        OutputterConfig.BandConfiguration[] bandConfigurations = formatterConfig.getBands();
+    private void writeImageFiles(OutputterConfig outputterConfig, TemporalBinSource temporalBinSource) throws Exception {
+        OutputterConfig.BandConfiguration[] bandConfigurations = outputterConfig.getBands();
         int numBands = bandConfigurations.length;
         if (numBands == 0) {
             throw new IllegalArgumentException("No output band given.");
@@ -329,7 +237,7 @@ public class L3Formatter {
         }
 
         final ImageBinRasterizer binRasterizer = new ImageBinRasterizer(outputRegion.width, outputRegion.height, indices);
-        reproject(configuration, binnerContext, outputRegion, l3OutputDir, binRasterizer);
+        output(binnerContext, outputRegion, binRasterizer, temporalBinSource);
 
         if (outputType.equalsIgnoreCase("RGB")) {
             writeRgbImage(outputRegion.width, outputRegion.height, binRasterizer.getBandData(), v1s, v2s, outputFormat, outputFile);
@@ -342,15 +250,14 @@ public class L3Formatter {
         }
     }
 
-
     private static void writeGrayScaleImage(int width, int height,
                                             float[] rawData,
                                             float rawValue1, float rawValue2,
                                             String outputFormat, File outputImageFile) throws IOException {
 
-        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
+        @SuppressWarnings("MismatchedReadAndWriteOfArray")
         final byte[] data = dataBuffer.getData();
         final float a = 255f / (rawValue2 - rawValue1);
         final float b = -255f * rawValue1 / (rawValue2 - rawValue1);
@@ -364,9 +271,9 @@ public class L3Formatter {
                                       float[][] rawData,
                                       float[] rawValue1, float[] rawValue2,
                                       String outputFormat, File outputImageFile) throws IOException {
-        LOG.info(MessageFormat.format("writing image {0}", outputImageFile));
         final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
+        @SuppressWarnings("MismatchedReadAndWriteOfArray")
         final byte[] data = dataBuffer.getData();
         final float[] rawDataR = rawData[0];
         final float[] rawDataG = rawData[1];
@@ -394,47 +301,6 @@ public class L3Formatter {
             sample = 255;
         }
         return (byte) sample;
-    }
-
-    public final static class ImageBinRasterizer extends BinRasterizer {
-        private final int rasterWidth;
-        private final int[] bandIndices;
-        private final float[][] bandData;
-
-        private final int bandCount;
-
-
-        public ImageBinRasterizer(int rasterWidth, int rasterHeight, int[] bandIndices) {
-            this.rasterWidth = rasterWidth;
-            this.bandIndices = bandIndices.clone();
-            this.bandCount = bandIndices.length;
-            this.bandData = new float[bandCount][rasterWidth * rasterHeight];
-            for (int i = 0; i < bandCount; i++) {
-                Arrays.fill(bandData[i], Float.NaN);
-            }
-        }
-
-        public float[][] getBandData() {
-            return bandData;
-        }
-
-        public float[] getBandData(int bandIndex) {
-            return this.bandData[bandIndex];
-        }
-
-        @Override
-        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
-            for (int i = 0; i < bandCount; i++) {
-                bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
-            }
-        }
-
-        @Override
-        public void processMissingBin(int x, int y) throws Exception {
-            for (int i = 0; i < bandCount; i++) {
-                bandData[i][rasterWidth * y + x] = Float.NaN;
-            }
-        }
     }
 
 }

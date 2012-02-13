@@ -25,6 +25,10 @@ public final class SequenceFileBinIterator implements Iterator<L3TemporalBin> {
         lastItemValid = true;
     }
 
+    public SequenceFile.Reader getReader() {
+        return reader;
+    }
+
     public IOException getIOException() {
         return ioException;
     }

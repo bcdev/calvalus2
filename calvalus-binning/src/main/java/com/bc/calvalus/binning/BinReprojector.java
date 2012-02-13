@@ -9,9 +9,10 @@ import java.util.List;
 
 /**
  * Used to re-project temporal bins onto a rectangular grid.
+ * Uses a {@link BinRasterizer} to convert bin values into raster data.
  *
- * @author MarcoZ
- * @author Norman
+ * @author Marco Zühlke
+ * @author Norman Fomferra
  */
 public class BinReprojector {
 

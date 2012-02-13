@@ -1,7 +1,7 @@
 package com.bc.calvalus.binning;
 
 /**
- * Processes temporal bins to a rectangular output raster.
+ * Processes temporal bins to a rectangular output raster. Used by {@link BinReprojector}.
  * <p/>
  * The processor assumes that an output raster is generated
  * with the following size:
@@ -10,6 +10,8 @@ package com.bc.calvalus.binning;
  *     int rasterWidth = binningGrid.getNumRows() * 2;
  *     int rasterHeight = binningGrid.getNumRows();
  * </pre>
+ *
+ * @author Norman Fomferra
  */
 public abstract class BinRasterizer {
     /**
