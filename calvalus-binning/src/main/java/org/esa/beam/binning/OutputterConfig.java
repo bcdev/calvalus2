@@ -45,8 +45,10 @@ public class OutputterConfig {
     private String outputFormat;
     @Parameter(itemAlias = "band")
     private BandConfiguration[] bands;
+    // todo - remove
     @Parameter
     private String startTime;
+    // todo - remove
     @Parameter
     private String endTime;
 
@@ -58,7 +60,9 @@ public class OutputterConfig {
                            String outputFile,
                            String outputFormat,
                            BandConfiguration[] bands,
+                           // todo - remove
                            String startTime,
+                           // todo - remove
                            String endTime) {
         this.outputType = outputType;
         this.outputFile = outputFile;
@@ -112,16 +116,14 @@ public class OutputterConfig {
         return bands;
     }
 
+    // todo - remove
     public ProductData.UTC getStartTime() {
         return parseTime(startTime, "startTime");
     }
 
+    // todo - remove
     public ProductData.UTC getEndTime() {
         return parseTime(endTime, "endTime");
-    }
-
-    public void setOutputFile(String outputFile) {
-        this.outputFile = outputFile;
     }
 
     private static ProductData.UTC parseTime(String timeString, String timeName) {
