@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.binning.IsinBinningGrid;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
@@ -243,17 +244,7 @@ public class L3ProductionType extends HadoopProductionType {
 
     static int getNumRows(ProductionRequest request) throws ProductionException {
         double resolution = request.getDouble("resolution");
-        return computeBinningGridRowCount(resolution);
+        return IsinBinningGrid.computeRowCount(resolution);
     }
 
-    static int computeBinningGridRowCount(double res) {
-        // see: SeaWiFS Technical Report Series Vol. 32;
-        final double RE = 6378.145;
-        int numRows = 1 + (int) Math.floor(0.5 * (2 * Math.PI * RE) / res);
-        if (numRows % 2 == 0) {
-            return numRows;
-        } else {
-            return numRows + 1;
-        }
-    }
 }

@@ -158,4 +158,18 @@ public class IsinBinningGridTest {
         } catch (ArrayIndexOutOfBoundsException e) {
         }
     }
+
+    @Test
+    public void testComputeRowCount() {
+        // Test "standard" 9.28km grid
+        assertEquals(2160, IsinBinningGrid.computeRowCount(9.28));
+        assertEquals(2160 * 2, IsinBinningGrid.computeRowCount(9.28 / 2));
+        assertEquals(2160 / 2, IsinBinningGrid.computeRowCount(9.28 * 2));
+
+        // Test MERIS FR equivalent at 300m
+        assertEquals(66792, IsinBinningGrid.computeRowCount(0.300));
+
+        // And at 400m
+        assertEquals(50094, IsinBinningGrid.computeRowCount(0.400));
+    }
 }

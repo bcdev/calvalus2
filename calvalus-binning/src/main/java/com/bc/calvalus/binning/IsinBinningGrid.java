@@ -51,6 +51,17 @@ public final class IsinBinningGrid implements BinningGrid {
         numBins = baseBin[numRows - 1] + numBin[numRows - 1];
     }
 
+    public static int computeRowCount(double res) {
+        // see: SeaWiFS Technical Report Series Vol. 32;
+        final double RE = 6378.145;
+        int numRows = 1 + (int) Math.floor(0.5 * (2 * Math.PI * RE) / res);
+        if (numRows % 2 == 0) {
+            return numRows;
+        } else {
+            return numRows + 1;
+        }
+    }
+
     @Override
     public int getNumRows() {
         return numRows;

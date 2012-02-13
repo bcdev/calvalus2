@@ -101,15 +101,6 @@ public class L3ProductionTypeTest {
     */
 
     @Test
-    public void testComputeBinningGridRowCount() {
-        assertEquals(2160, L3ProductionType.computeBinningGridRowCount(9.28));
-        assertEquals(2160 * 2, L3ProductionType.computeBinningGridRowCount(9.28 / 2));
-        assertEquals(2160 / 2, L3ProductionType.computeBinningGridRowCount(9.28 * 2));
-        assertEquals(66792, L3ProductionType.computeBinningGridRowCount(0.300)); //MERIS FR equivalent (300m)
-        assertEquals(50094, L3ProductionType.computeBinningGridRowCount(0.400)); //400 m
-    }
-
-    @Test
     public void testGetDatePairList_MinMax() throws ProductionException, ParseException {
         ProductionRequest productionRequest = new ProductionRequest(L3ProductionType.NAME, "ewa",
                                                                     "minDate", "2010-06-15",
