@@ -20,12 +20,12 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.binning.OutputterConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
             // todo - make 'outputType' a production request parameter (mz)
             String outputType = "Product";
             // todo - make 'bandConfiguration' a production request parameter (mz)
-            L3FormatterConfig.BandConfiguration[] rgbBandConfig = new L3FormatterConfig.BandConfiguration[0];
+            OutputterConfig.BandConfiguration[] rgbBandConfig = new OutputterConfig.BandConfiguration[0];
 
             L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
                                                                       productFile.getAbsolutePath(),

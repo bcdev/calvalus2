@@ -1,11 +1,11 @@
 package com.bc.calvalus.binning;
 
-public class BinningContextImpl implements BinningContext {
+public class BinnerContextImpl implements BinnerContext {
     private final BinningGrid binningGrid;
     private final VariableContext variableContext;
     private final BinManager binManager;
 
-    public BinningContextImpl(BinningGrid binningGrid, VariableContext variableContext, BinManager binManager) {
+    public BinnerContextImpl(BinningGrid binningGrid, VariableContext variableContext, BinManager binManager) {
         this.binningGrid = binningGrid;
         this.variableContext = variableContext;
         this.binManager = binManager;

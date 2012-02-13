@@ -1,6 +1,6 @@
 package org.esa.beam.binning;
 
-import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.BinnerContext;
 import com.bc.calvalus.binning.ObservationSlice;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.ceres.core.ProgressMonitor;
@@ -22,17 +22,27 @@ import java.io.IOException;
  */
 public class SpatialProductBinner {
 
+    /**
+     * Processes a source product and generated spatial bins.
+     *
+     * @param product         The source product.
+     * @param spatialBinner   The spatial binner to be used.
+     * @param superSampling   The super-sampling rate.
+     * @param progressMonitor A progress monitor.
+     * @return The total number of observations processed.
+     * @throws IOException If an I/O error occurs.
+     */
     public static long processProduct(Product product,
                                       SpatialBinner spatialBinner,
                                       Integer superSampling,
-                                      ProgressMonitor progressMonitor) throws IOException, InterruptedException {
+                                      ProgressMonitor progressMonitor) throws IOException {
         if (product.getGeoCoding() == null) {
             throw new IllegalArgumentException("product.getGeoCoding() == null");
         }
 
         final float[] superSamplingSteps = getSuperSamplingSteps(superSampling);
 
-        final BinningContext ctx = spatialBinner.getBinningContext();
+        final BinnerContext ctx = spatialBinner.getBinnerContext();
         final int sliceWidth = product.getSceneRasterWidth();
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);

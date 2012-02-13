@@ -5,7 +5,7 @@ package com.bc.calvalus.binning;
  *
  * @author Norman Fomferra
  */
-public interface BinningContext {
+public interface BinnerContext {
 
     BinningGrid getBinningGrid();
 

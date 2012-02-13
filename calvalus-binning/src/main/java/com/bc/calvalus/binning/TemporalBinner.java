@@ -9,21 +9,21 @@ import java.io.IOException;
  */
 public class TemporalBinner {
 
-    private final BinningContext binningContext;
+    private final BinnerContext binnerContext;
 
-    public TemporalBinner(BinningContext binningContext) {
-        this.binningContext = binningContext;
+    public TemporalBinner(BinnerContext binnerContext) {
+        this.binnerContext = binnerContext;
     }
 
     /**
-     * @return The binning context that will also be passed to {@link SpatialBinProcessor#processSpatialBinSlice(BinningContext, java.util.List)}.
+     * @return The binning context that will also be passed to {@link SpatialBinProcessor#processSpatialBinSlice(BinnerContext, java.util.List)}.
      */
-    public BinningContext getBinningContext() {
-        return binningContext;
+    public BinnerContext getBinnerContext() {
+        return binnerContext;
     }
 
     public TemporalBin processSpatialBins(long binIndex, Iterable<? extends SpatialBin> spatialBins) throws IOException {
-        final BinManager binManager = binningContext.getBinManager();
+        final BinManager binManager = binnerContext.getBinManager();
         TemporalBin temporalBin = binManager.createTemporalBin(binIndex);
         for (SpatialBin spatialBin : spatialBins) {
             binManager.aggregateTemporalBin(spatialBin, temporalBin);

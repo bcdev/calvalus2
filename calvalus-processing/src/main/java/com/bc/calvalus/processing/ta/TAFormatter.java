@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.binning.Aggregator;
 import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.BinnerContext;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
@@ -45,7 +45,7 @@ public class TAFormatter {
     private static final String PART_FILE_PREFIX = "part-r-";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private BinningContext binningContext;
+    private BinnerContext binnerContext;
     private File outputFile;
 
     private final Logger logger;
@@ -62,8 +62,8 @@ public class TAFormatter {
         this.outputFile = outputFile;
 
         partsDir = new Path(hadoopJobOutputDir);
-        binningContext = l3Config.getBinningContext();
-        final BinManager binManager = binningContext.getBinManager();
+        binnerContext = l3Config.getBinningContext();
+        final BinManager binManager = binnerContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {
             throw new IllegalArgumentException("Illegal binning context: aggregatorCount == 0");

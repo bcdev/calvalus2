@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.*;
-import com.bc.calvalus.binning.TemporalBinRasterizer;
+import com.bc.calvalus.binning.BinRasterizer;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -38,7 +38,7 @@ public class L3ReprojectorTest {
         return temporalBin;
     }
 
-    private static class NobsRaster extends TemporalBinRasterizer {
+    private static class NobsRaster extends BinRasterizer {
         int[] nobsData;
         private final int w;
 

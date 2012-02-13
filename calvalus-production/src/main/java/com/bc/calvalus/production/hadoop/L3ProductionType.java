@@ -19,7 +19,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinningConfig;
+import org.esa.beam.binning.BinnerConfig;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
@@ -209,9 +209,9 @@ public class L3ProductionType extends HadoopProductionType {
         return l3Config;
     }
 
-    static BinningConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+    static BinnerConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         int variableCount = request.getInteger("variables.count");
-        BinningConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinningConfig.AggregatorConfiguration[variableCount];
+        BinnerConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinnerConfig.AggregatorConfiguration[variableCount];
         for (int i = 0; i < variableCount; i++) {
             String prefix = "variables." + i;
             String variableName = request.getString(prefix + ".name");
@@ -220,7 +220,7 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            BinningConfig.AggregatorConfiguration aggregatorConfiguration = new BinningConfig.AggregatorConfiguration(aggregatorName);
+            BinnerConfig.AggregatorConfiguration aggregatorConfiguration = new BinnerConfig.AggregatorConfiguration(aggregatorName);
             aggregatorConfiguration.setVarName(variableName);
             aggregatorConfiguration.setPercentage(percentage);
             aggregatorConfiguration.setWeightCoeff(weightCoeff);
@@ -230,14 +230,14 @@ public class L3ProductionType extends HadoopProductionType {
         return aggregatorConfigurations;
     }
 
-    static BinningConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+    static BinnerConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
         int expressionCount = request.getInteger("expression.count", 0);
-        BinningConfig.VariableConfiguration[] variableConfigurations = new BinningConfig.VariableConfiguration[expressionCount];
+        BinnerConfig.VariableConfiguration[] variableConfigurations = new BinnerConfig.VariableConfiguration[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
             String exp = request.getString(prefix + ".expression");
-            variableConfigurations[i] = new BinningConfig.VariableConfiguration(name, exp);
+            variableConfigurations[i] = new BinnerConfig.VariableConfiguration(name, exp);
         }
         return variableConfigurations;
     }

@@ -18,55 +18,37 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
-import com.bc.ceres.binding.ConversionException;
+import org.esa.beam.binning.OutputterConfig;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
-
-import java.text.MessageFormat;
-import java.text.ParseException;
 
 /**
  * The configuration of the L3 formatter
  */
 public class L3FormatterConfig implements XmlConvertible {
 
-    public static class BandConfiguration {
-        String index;
-        String name;
-        String v1;
-        String v2;
-    }
-
-    @Parameter
-    private String outputType;
-    @Parameter
-    private String outputFile;
-    @Parameter
-    private String outputFormat;
-    @Parameter(itemAlias = "band")
-    private BandConfiguration[] bands;
-    @Parameter
-    private String startTime;
-    @Parameter
-    private String endTime;
+    private OutputterConfig outputterConfig;
 
     public L3FormatterConfig() {
-        // used by DOM converter
+        this(new OutputterConfig());
     }
 
     public L3FormatterConfig(String outputType,
                              String outputFile,
                              String outputFormat,
-                             BandConfiguration[] bands,
+                             OutputterConfig.BandConfiguration[] bands,
                              String startTime,
                              String endTime) {
-        this.outputType = outputType;
-        this.outputFile = outputFile;
-        this.outputFormat = outputFormat;
-        this.bands = bands;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this(new OutputterConfig(outputType,
+                              outputFile,
+                              outputFormat,
+                              bands,
+                              startTime,
+                              endTime));
+    }
+
+
+    private L3FormatterConfig(OutputterConfig outputterConfig) {
+        this.outputterConfig = outputterConfig;
     }
 
     /**
@@ -78,63 +60,35 @@ public class L3FormatterConfig implements XmlConvertible {
      *          If the XML cannot be converted to a new formatter configuration object
      */
     public static L3FormatterConfig fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new L3FormatterConfig());
+        return new L3FormatterConfig(OutputterConfig.fromXml(xml));
     }
 
     @Override
     public String toXml() {
-        try {
-            return new ParameterBlockConverter().convertObjectToXml(this);
-        } catch (ConversionException e) {
-            throw new RuntimeException(e);
-        }
+        return outputterConfig.toXml();
     }
 
     public String getOutputType() {
-        if (outputType == null) {
-            throw new IllegalArgumentException("No output type given");
-        }
-        if (!outputType.equalsIgnoreCase("Product")
-                && !outputType.equalsIgnoreCase("RGB")
-                && !outputType.equalsIgnoreCase("Grey")) {
-            throw new IllegalArgumentException("Unknown output type: " + outputType);
-        }
-        return outputType;
+        return outputterConfig.getOutputType();
     }
 
     public String getOutputFile() {
-        return outputFile;
+        return outputterConfig.getOutputFile();
     }
 
     public String getOutputFormat() {
-        return outputFormat;
+        return outputterConfig.getOutputFormat();
     }
 
-    public BandConfiguration[] getBands() {
-        return bands;
+    public OutputterConfig.BandConfiguration[] getBands() {
+        return outputterConfig.getBands();
     }
 
     public ProductData.UTC getStartTime() {
-        return parseTime(startTime, "startTime");
+        return outputterConfig.getStartTime();
     }
 
     public ProductData.UTC getEndTime() {
-        return parseTime(endTime, "endTime");
-    }
-
-    public void setOutputFile(String outputFile) {
-        this.outputFile = outputFile;
-    }
-
-    private static ProductData.UTC parseTime(String timeString, String timeName) {
-        if (timeString == null) {
-            throw new IllegalArgumentException(MessageFormat.format("Parameter: {0} not given.", timeName));
-        }
-        try {
-            return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Illegal start date format.", e);
-        }
-
+        return outputterConfig.getEndTime();
     }
 }

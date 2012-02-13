@@ -28,7 +28,7 @@ public class SpatialBinnerTest {
         MyBinningGrid binningGrid = new MyBinningGrid();
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
-        BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
+        BinnerContextImpl binningContext = new BinnerContextImpl(binningGrid, variableContext, binManager);
         com.bc.calvalus.binning.MySpatialBinProcessor mySpatialBinProcessor = new com.bc.calvalus.binning.MySpatialBinProcessor(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext,
                                                         mySpatialBinProcessor);
@@ -119,7 +119,7 @@ public class SpatialBinnerTest {
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
         MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
-        BinningContextImpl binningContext = new BinningContextImpl(binningGrid, variableContext, binManager);
+        BinnerContextImpl binningContext = new BinnerContextImpl(binningGrid, variableContext, binManager);
 
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
 
@@ -157,7 +157,7 @@ public class SpatialBinnerTest {
         int sliceIndex;
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> sliceBins) {
+        public void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> sliceBins) {
             if (verbous) {
                 // Sort for better readability
                 Collections.sort(sliceBins, new BinComparator());

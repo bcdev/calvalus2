@@ -13,25 +13,25 @@ import java.util.List;
  * @author MarcoZ
  * @author Norman
  */
-public class TemporalBinReprojector {
+public class BinReprojector {
 
-    private final BinningContext binningContext;
-    private final TemporalBinRasterizer temporalBinRasterizer;
+    private final BinnerContext binnerContext;
+    private final BinRasterizer binRasterizer;
     private final Rectangle pixelRegion;
     private int yGlobalUltimate;
 
-    public TemporalBinReprojector(BinningContext binningContext, TemporalBinRasterizer temporalBinRasterizer, Rectangle pixelRegion) {
-        Assert.notNull(binningContext, "binningContext");
-        Assert.notNull(temporalBinRasterizer, "temporalBinProcessor");
+    public BinReprojector(BinnerContext binnerContext, BinRasterizer binRasterizer, Rectangle pixelRegion) {
+        Assert.notNull(binnerContext, "binningContext");
+        Assert.notNull(binRasterizer, "temporalBinProcessor");
         Assert.notNull(pixelRegion, "pixelRegion");
-        this.binningContext = binningContext;
-        this.temporalBinRasterizer = temporalBinRasterizer;
+        this.binnerContext = binnerContext;
+        this.binRasterizer = binRasterizer;
         this.pixelRegion = pixelRegion;
     }
 
     public void begin() throws Exception {
         yGlobalUltimate = pixelRegion.y - 1;
-        temporalBinRasterizer.begin(binningContext);
+        binRasterizer.begin(binnerContext);
     }
 
     public void end() throws Exception {
@@ -40,7 +40,7 @@ public class TemporalBinReprojector {
         final int y1 = pixelRegion.y;
         final int y2 = y1 + pixelRegion.height - 1;
         processRowsWithoutBins(x1, x2, yGlobalUltimate + 1, y2);
-        temporalBinRasterizer.end(binningContext);
+        binRasterizer.end(binnerContext);
     }
 
     public void processBins(Iterator<? extends TemporalBin> temporalBins) throws Exception {
@@ -48,7 +48,7 @@ public class TemporalBinReprojector {
         final int x2 = x1 + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;
         final int y2 = y1 + pixelRegion.height - 1;
-        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final BinningGrid binningGrid = binnerContext.getBinningGrid();
         final int gridWidth = binningGrid.getNumRows() * 2;
         final int gridHeight = binningGrid.getNumRows();
 
@@ -88,8 +88,8 @@ public class TemporalBinReprojector {
         final int x1 = pixelRegion.x;
         final int x2 = pixelRegion.x + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;
-        final BinningGrid binningGrid = binningContext.getBinningGrid();
-        final BinManager binManager = binningContext.getBinManager();
+        final BinningGrid binningGrid = binnerContext.getBinningGrid();
+        final BinManager binManager = binnerContext.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
         final double lat = 90.0 - (y + 0.5) * 180.0 / gridHeight;
         long lastBinIndex = -1;
@@ -115,9 +115,9 @@ public class TemporalBinReprojector {
                 }
             }
             if (temporalBin != null) {
-                temporalBinRasterizer.processBin(x - x1, y - y1, temporalBin, outputVector);
+                binRasterizer.processBin(x - x1, y - y1, temporalBin, outputVector);
             } else {
-                temporalBinRasterizer.processMissingBin(x - x1, y - y1);
+                binRasterizer.processMissingBin(x - x1, y - y1);
             }
         }
     }
@@ -130,7 +130,7 @@ public class TemporalBinReprojector {
 
     private void processRowWithoutBins(int x1, int x2, int y) throws Exception {
         for (int x = x1; x <= x2; x++) {
-            temporalBinRasterizer.processMissingBin(x - x1, y);
+            binRasterizer.processMissingBin(x - x1, y);
         }
     }
 }

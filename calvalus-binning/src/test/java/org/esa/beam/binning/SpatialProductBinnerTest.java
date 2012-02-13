@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
 public class SpatialProductBinnerTest {
     @Test
     public void testThatProductMustHaveAGeoCoding() throws Exception {
-        BinningContext ctx = createValidCtx();
+        BinnerContext ctx = createValidCtx();
 
         try {
             MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
@@ -47,7 +47,7 @@ public class SpatialProductBinnerTest {
     @Test
     public void testProcessProduct() throws Exception {
 
-        BinningContext ctx = createValidCtx();
+        BinnerContext ctx = createValidCtx();
         Product product = new Product("p", "t", 32, 256);
         final TiePointGrid lat = new TiePointGrid("lat", 2, 2, 0f, 0f, 32f, 256f,
                                                   new float[]{+40f, +40f, -40f, -40f});
@@ -85,7 +85,7 @@ public class SpatialProductBinnerTest {
     }
 
 
-    private static BinningContext createValidCtx() {
+    private static BinnerContext createValidCtx() {
         VariableContextImpl variableContext = new VariableContextImpl();
         variableContext.setMaskExpr("!invalid");
         variableContext.defineVariable("invalid", "0");
@@ -96,14 +96,14 @@ public class SpatialProductBinnerTest {
         BinManager binManager = new BinManagerImpl(new AggregatorAverage(variableContext, "a", null, null),
                                                    new AggregatorAverage(variableContext, "b", null, null));
 
-        return new BinningContextImpl(binningGrid, variableContext, binManager);
+        return new BinnerContextImpl(binningGrid, variableContext, binManager);
     }
 
     private static class MySpatialBinProcessor implements SpatialBinProcessor {
         int numObs;
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
+        public void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> spatialBins) throws Exception {
             // System.out.println("spatialBins = " + Arrays.toString(spatialBins.toArray()));
             for (SpatialBin spatialBin : spatialBins) {
                 Assert.assertEquals(2.4f, spatialBin.getFeatureValues()[0], 0.01f);  // mean of a

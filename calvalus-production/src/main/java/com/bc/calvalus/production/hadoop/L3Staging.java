@@ -13,6 +13,7 @@ import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.OutputterConfig;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
@@ -112,7 +113,7 @@ class L3Staging extends ProductionStaging {
         // todo - make 'outputType' a production request parameter (mz)
         String outputType = "Product";
         // todo - make 'bandConfiguration' a production request parameter (mz)
-        L3FormatterConfig.BandConfiguration[] rgbBandConfig = new L3FormatterConfig.BandConfiguration[0];
+        OutputterConfig.BandConfiguration[] rgbBandConfig = new OutputterConfig.BandConfiguration[0];
 
         return new L3FormatterConfig(outputType,
                                      stagingFilePath,

@@ -34,9 +34,9 @@ import java.io.InputStreamReader;
 
 import static org.junit.Assert.*;
 
-public class BinningConfigTest {
+public class BinnerConfigTest {
 
-    private BinningConfig config;
+    private BinnerConfig config;
 
     @Before
     public void initBinningConfig() throws IOException, BindingException {
@@ -45,18 +45,18 @@ public class BinningConfigTest {
 
     @Test
     public void testBinningGrid() {
-        BinningGrid grid = new BinningConfig().getBinningGrid();
+        BinningGrid grid = new BinnerConfig().createBinningGrid();
         assertEquals(2160, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
 
-        grid = config.getBinningGrid();
+        grid = config.createBinningGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
     }
 
     @Test
     public void testVariableContext() {
-        VariableContext varCtx = config.getVariableContext();
+        VariableContext varCtx = config.createVariableContext();
 
         assertEquals(8, varCtx.getVariableCount());
 
@@ -85,7 +85,7 @@ public class BinningConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = config.getBinningContext().getBinManager();
+        BinManager binManager = config.createBinningContext().getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
 
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
@@ -117,7 +117,7 @@ public class BinningConfigTest {
     public void testXmlGeneration() throws BindingException {
         final String xml = config.toXml();
         // System.out.println("xml = \n" + xml);
-        final BinningConfig configCopy = BinningConfig.fromXml(xml);
+        final BinnerConfig configCopy = BinnerConfig.fromXml(xml);
 
         assertEquals(config.getNumRows(), configCopy.getNumRows());
         assertEquals(config.getSuperSampling(), configCopy.getSuperSampling());
@@ -131,10 +131,10 @@ public class BinningConfigTest {
         assertEquals(4320, config.getNumRows());
     }
 
-    private BinningConfig loadConfig(String configPath) throws IOException, BindingException {
+    private BinnerConfig loadConfig(String configPath) throws IOException, BindingException {
         final InputStreamReader reader = new InputStreamReader(getClass().getResourceAsStream(configPath));
         try {
-            return BinningConfig.fromXml(FileUtils.readText(reader));
+            return BinnerConfig.fromXml(FileUtils.readText(reader));
         } finally {
             reader.close();
         }

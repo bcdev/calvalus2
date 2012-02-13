@@ -32,7 +32,7 @@ import java.util.Arrays;
  * @author Marco Zühlke
  */
 @SuppressWarnings({"UnusedDeclaration"})
-public class BinningConfig {
+public class BinnerConfig {
 
     /**
      * Number of rows in the binning grid.
@@ -105,26 +105,26 @@ public class BinningConfig {
         this.aggregatorConfigurations = aggregatorConfigurations;
     }
 
-    public BinningContext getBinningContext() {
-        VariableContext varCtx = getVariableContext();
-        return new BinningContextImpl(getBinningGrid(),
+    public BinnerContext createBinningContext() {
+        VariableContext varCtx = createVariableContext();
+        return new BinnerContextImpl(createBinningGrid(),
                                       varCtx,
-                                      getBinManager(varCtx));
+                                      createBinManager(varCtx));
     }
 
-    public BinningGrid getBinningGrid() {
+    public BinningGrid createBinningGrid() {
         if (numRows == 0) {
             numRows = IsinBinningGrid.DEFAULT_NUM_ROWS;
         }
         return new IsinBinningGrid(numRows);
     }
 
-    private BinManager getBinManager(VariableContext varCtx) {
-        Aggregator[] aggregators = getAggregators(varCtx);
+    private BinManager createBinManager(VariableContext varCtx) {
+        Aggregator[] aggregators = createAggregators(varCtx);
         return createBinManager(aggregators);
     }
 
-    public Aggregator[] getAggregators(VariableContext varCtx) {
+    public Aggregator[] createAggregators(VariableContext varCtx) {
         Aggregator[] aggregators = new Aggregator[aggregatorConfigurations.length];
         for (int i = 0; i < aggregators.length; i++) {
             AggregatorConfiguration aggregatorConfiguration = aggregatorConfigurations[i];
@@ -142,7 +142,7 @@ public class BinningConfig {
         return new BinManagerImpl(aggregators);
     }
 
-    public VariableContext getVariableContext() {
+    public VariableContext createVariableContext() {
         VariableContextImpl variableContext = new VariableContextImpl();
         if (maskExpr == null) {
             maskExpr = "";
@@ -177,8 +177,8 @@ public class BinningConfig {
         return variableContext;
     }
 
-    public static BinningConfig fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new BinningConfig());
+    public static BinnerConfig fromXml(String xml) throws BindingException {
+        return new ParameterBlockConverter().convertXmlToObject(xml, new BinnerConfig());
     }
 
     public String toXml() {

@@ -10,9 +10,8 @@ package com.bc.calvalus.binning;
  *     int rasterWidth = binningGrid.getNumRows() * 2;
  *     int rasterHeight = binningGrid.getNumRows();
  * </pre>
-
  */
-public abstract class TemporalBinRasterizer {
+public abstract class BinRasterizer {
     /**
      * Called before the processing of bins begins.
      *
@@ -20,7 +19,7 @@ public abstract class TemporalBinRasterizer {
      * @throws Exception If a problem occurred.
      */
     @SuppressWarnings({"UnusedParameters"})
-    public void begin(BinningContext ctx) throws Exception {
+    public void begin(BinnerContext ctx) throws Exception {
     }
 
     /**
@@ -29,7 +28,7 @@ public abstract class TemporalBinRasterizer {
      * @param ctx The binning context.
      * @throws Exception If a problem occurred.
      */
-    public void end(BinningContext ctx) throws Exception {
+    public void end(BinnerContext ctx) throws Exception {
     }
 
     /**

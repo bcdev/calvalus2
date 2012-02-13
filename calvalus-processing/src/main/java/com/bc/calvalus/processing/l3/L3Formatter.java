@@ -17,10 +17,8 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.*;
-import com.bc.calvalus.binning.TemporalBinRasterizer;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -29,6 +27,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
+import org.esa.beam.binning.OutputterConfig;
+import org.esa.beam.binning.ProductDataWriter;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.*;
@@ -38,7 +38,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.ImageIO;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
@@ -57,7 +57,7 @@ public class L3Formatter {
     private String outputType;
     private String outputFormat;
     private Path l3OutputDir;
-    private BinningContext binningContext;
+    private BinnerContext binnerContext;
     private File outputFile;
     private String outputFileNameBase;
     private String outputFileNameExt;
@@ -71,10 +71,10 @@ public class L3Formatter {
     }
 
     public static void reproject(Configuration configuration,
-                                 BinningContext binningContext,
+                                 BinnerContext binnerContext,
                                  Rectangle pixelRegion,
                                  Path partsDir,
-                                 TemporalBinRasterizer temporalBinRasterizer) throws Exception {
+                                 BinRasterizer binRasterizer) throws Exception {
 
         long startTime = System.nanoTime();
 
@@ -90,7 +90,7 @@ public class L3Formatter {
 
         Arrays.sort(parts);
 
-        TemporalBinReprojector reprojector = new TemporalBinReprojector(binningContext, temporalBinRasterizer, pixelRegion);
+        BinReprojector reprojector = new BinReprojector(binnerContext, binRasterizer, pixelRegion);
 
         reprojector.begin();
         for (FileStatus part : parts) {
@@ -142,8 +142,8 @@ public class L3Formatter {
         }
 
         l3OutputDir = new Path(hadoopJobOutputDir);
-        binningContext = l3Config.getBinningContext();
-        final BinManager binManager = binningContext.getBinManager();
+        binnerContext = l3Config.getBinningContext();
+        final BinManager binManager = binnerContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {
             throw new IllegalArgumentException("Illegal binning context: aggregatorCount == 0");
@@ -162,7 +162,7 @@ public class L3Formatter {
             parentFile.mkdirs();
         }
         if (outputType.equalsIgnoreCase("Product")) {
-            writeProductFile(formatterConfig, l3Config);
+            writeProductFile(formatterConfig);
         } else {
             writeImageFiles(formatterConfig);
         }
@@ -170,7 +170,12 @@ public class L3Formatter {
         return 0;
     }
 
-    private void writeProductFile(L3FormatterConfig formatterConfig, L3Config l3Config) throws Exception {
+    private void writeProductFile(L3FormatterConfig formatterConfig) throws Exception {
+        final ProductDataWriter dataWriter = createProductDataWriter(formatterConfig);
+        reproject(configuration, binnerContext, outputRegion, l3OutputDir, dataWriter);
+    }
+
+    private ProductDataWriter createProductDataWriter(L3FormatterConfig formatterConfig) throws IOException {
         final ProductWriter productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
@@ -210,24 +215,22 @@ public class L3Formatter {
         numPassesBand.setNoDataValueUsed(true);
         final ProductData numPassesLine = numPassesBand.createCompatibleRasterData(outputRegion.width, 1);
 
-        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
+        String[] outputFeatureNames = binnerContext.getBinManager().getOutputFeatureNames();
         final Band[] outputBands = new Band[outputFeatureNames.length];
         final ProductData[] outputLines = new ProductData[outputFeatureNames.length];
         for (int i = 0; i < outputFeatureNames.length; i++) {
             String name = outputFeatureNames[i];
             outputBands[i] = product.addBand(name, ProductData.TYPE_FLOAT32);
-            outputBands[i].setNoDataValue(binningContext.getBinManager().getOutputFeatureFillValue(i));
+            outputBands[i].setNoDataValue(binnerContext.getBinManager().getOutputFeatureFillValue(i));
             outputBands[i].setNoDataValueUsed(true);
             outputLines[i] = outputBands[i].createCompatibleRasterData(outputRegion.width, 1);
         }
 
         productWriter.writeProductNodes(product, outputFile);
-        final ProductDataWriter dataWriter = new ProductDataWriter(productWriter,
+        return new ProductDataWriter(productWriter,
                                                                    numObsBand, numObsLine,
                                                                    numPassesBand, numPassesLine,
                                                                    outputBands, outputLines);
-        reproject(configuration, binningContext, outputRegion, l3OutputDir, dataWriter);
-        productWriter.close();
     }
 
     private MetadataElement createConfigurationMetadataElement() {
@@ -276,7 +279,7 @@ public class L3Formatter {
     }
 
     private void computeOutputRegion(Geometry roiGeometry) {
-        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final BinningGrid binningGrid = binnerContext.getBinningGrid();
 
         final int gridWidth = binningGrid.getNumRows() * 2;
         final int gridHeight = binningGrid.getNumRows();
@@ -306,42 +309,41 @@ public class L3Formatter {
     }
 
     private void writeImageFiles(L3FormatterConfig formatterConfig) throws Exception {
-        L3FormatterConfig.BandConfiguration[] bandConfigurations = formatterConfig.getBands();
+        OutputterConfig.BandConfiguration[] bandConfigurations = formatterConfig.getBands();
         int numBands = bandConfigurations.length;
         if (numBands == 0) {
             throw new IllegalArgumentException("No output band given.");
         }
-        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
+        String[] outputFeatureNames = binnerContext.getBinManager().getOutputFeatureNames();
         int[] indices = new int[numBands];
         String[] names = new String[numBands];
         float[] v1s = new float[numBands];
         float[] v2s = new float[numBands];
         for (int i = 0; i < numBands; i++) {
-            L3FormatterConfig.BandConfiguration bandConfiguration = bandConfigurations[i];
+            OutputterConfig.BandConfiguration bandConfiguration = bandConfigurations[i];
             String nameStr = bandConfiguration.name;
-
             indices[i] = Integer.parseInt(bandConfiguration.index);
             names[i] = nameStr != null ? nameStr : outputFeatureNames[indices[i]];
             v1s[i] = Float.parseFloat(bandConfiguration.v1);
             v2s[i] = Float.parseFloat(bandConfiguration.v2);
         }
 
-        final ImageRaster raster = new ImageRaster(outputRegion.width, outputRegion.height, indices);
-        reproject(configuration, binningContext, outputRegion, l3OutputDir, raster);
+        final ImageBinRasterizer binRasterizer = new ImageBinRasterizer(outputRegion.width, outputRegion.height, indices);
+        reproject(configuration, binnerContext, outputRegion, l3OutputDir, binRasterizer);
 
         if (outputType.equalsIgnoreCase("RGB")) {
-            writeRgbImage(outputRegion.width, outputRegion.height, raster.getBandData(), v1s, v2s, outputFormat, outputFile);
+            writeRgbImage(outputRegion.width, outputRegion.height, binRasterizer.getBandData(), v1s, v2s, outputFormat, outputFile);
         } else {
             for (int i = 0; i < numBands; i++) {
                 final String fileName = String.format("%s_%s.%s", outputFileNameBase, names[i], outputFileNameExt);
                 final File imageFile = new File(outputFile.getParentFile(), fileName);
-                writeGrayScaleImage(outputRegion.width, outputRegion.height, raster.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
+                writeGrayScaleImage(outputRegion.width, outputRegion.height, binRasterizer.getBandData(i), v1s[i], v2s[i], outputFormat, imageFile);
             }
         }
     }
 
 
-    private void writeGrayScaleImage(int width, int height,
+    private static void writeGrayScaleImage(int width, int height,
                                      float[] rawData,
                                      float rawValue1, float rawValue2,
                                      String outputFormat, File outputImageFile) throws IOException {
@@ -358,7 +360,7 @@ public class L3Formatter {
         ImageIO.write(image, outputFormat, outputImageFile);
     }
 
-    private void writeRgbImage(int width, int height,
+    private static void writeRgbImage(int width, int height,
                                float[][] rawData,
                                float[] rawValue1, float[] rawValue2,
                                String outputFormat, File outputImageFile) throws IOException {
@@ -394,7 +396,7 @@ public class L3Formatter {
         return (byte) sample;
     }
 
-    private final static class ImageRaster extends TemporalBinRasterizer {
+    public final static class ImageBinRasterizer extends BinRasterizer {
         private final int rasterWidth;
         private final int[] bandIndices;
         private final float[][] bandData;
@@ -402,7 +404,7 @@ public class L3Formatter {
         private final int bandCount;
 
 
-        public ImageRaster(int rasterWidth, int rasterHeight, int[] bandIndices) {
+        public ImageBinRasterizer(int rasterWidth, int rasterHeight, int[] bandIndices) {
             this.rasterWidth = rasterWidth;
             this.bandIndices = bandIndices.clone();
             this.bandCount = bandIndices.length;
@@ -435,97 +437,4 @@ public class L3Formatter {
         }
     }
 
-    private final static class ProductDataWriter extends TemporalBinRasterizer {
-        private final int width;
-        private final ProductData numObsLine;
-        private final ProductData numPassesLine;
-        private final Band[] outputBands;
-        private final ProductData[] outputLines;
-        private final ProductWriter productWriter;
-        private final Band numObsBand;
-        private final Band numPassesBand;
-        private final float[] fillValues;
-        private int yLast;
-
-        public ProductDataWriter(ProductWriter productWriter,
-                                 Band numObsBand,
-                                 ProductData numObsLine,
-                                 Band numPassesBand,
-                                 ProductData numPassesLine,
-                                 Band[] outputBands,
-                                 ProductData[] outputLines) {
-            this.numObsLine = numObsLine;
-            this.numPassesLine = numPassesLine;
-            this.outputBands = outputBands;
-            this.outputLines = outputLines;
-            this.productWriter = productWriter;
-            this.numObsBand = numObsBand;
-            this.numPassesBand = numPassesBand;
-            this.width = numObsBand.getSceneRasterWidth();
-            this.yLast = 0;
-            this.fillValues = new float[outputBands.length];
-            for (int i = 0; i < outputBands.length; i++) {
-                fillValues[i] = (float) outputBands[i].getNoDataValue();
-            }
-            initLine();
-        }
-
-        @Override
-        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
-            setData(x, temporalBin, outputVector);
-            if (y != yLast) {
-                completeLine();
-                yLast = y;
-            }
-        }
-
-        @Override
-        public void processMissingBin(int x, int y) throws Exception {
-            setNoData(x);
-            if (y != yLast) {
-                completeLine();
-                yLast = y;
-            }
-        }
-
-        @Override
-        public void end(BinningContext ctx) throws Exception {
-            completeLine();
-        }
-
-        private void completeLine() throws IOException {
-            writeLine(yLast);
-            initLine();
-        }
-
-        private void writeLine(int y) throws IOException {
-            productWriter.writeBandRasterData(numObsBand, 0, y, width, 1, numObsLine, ProgressMonitor.NULL);
-            productWriter.writeBandRasterData(numPassesBand, 0, y, width, 1, numPassesLine, ProgressMonitor.NULL);
-            for (int i = 0; i < outputBands.length; i++) {
-                productWriter.writeBandRasterData(outputBands[i], 0, y, width, 1, outputLines[i], ProgressMonitor.NULL);
-            }
-        }
-
-        private void initLine() {
-            for (int x = 0; x < width; x++) {
-                setNoData(x);
-            }
-        }
-
-        private void setData(int x, TemporalBin temporalBin, WritableVector outputVector) {
-            numObsLine.setElemIntAt(x, temporalBin.getNumObs());
-            numPassesLine.setElemIntAt(x, temporalBin.getNumPasses());
-            for (int i = 0; i < outputBands.length; i++) {
-                outputLines[i].setElemFloatAt(x, outputVector.get(i));
-            }
-        }
-
-        private void setNoData(int x) {
-            numObsLine.setElemIntAt(x, -1);
-            numPassesLine.setElemIntAt(x, -1);
-            for (int i = 0; i < outputBands.length; i++) {
-                outputLines[i].setElemFloatAt(x, fillValues[i]);
-            }
-        }
-    }
 }

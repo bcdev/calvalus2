@@ -14,13 +14,13 @@ import static org.junit.Assert.*;
  * @author MarcoZ
  * @author Norman
  */
-public class TemporalBinReprojectorTest {
+public class BinReprojectorTest {
     static final int NAN = -1;
     private BinManager binManager = new BinManagerImpl();
     private IsinBinningGrid binningGrid;
     private NobsRaster raster;
     private int width;
-    private TemporalBinReprojector reprojector;
+    private BinReprojector reprojector;
 
     @Before
     public void setUp() throws Exception {
@@ -50,21 +50,21 @@ public class TemporalBinReprojectorTest {
                              "------------\n",
                      raster.toString());
 
-        reprojector = new TemporalBinReprojector(getCtx(binningGrid), raster, rectangle);
+        reprojector = new BinReprojector(getCtx(binningGrid), raster, rectangle);
         reprojector.begin();
     }
 
     @Test
     public void testSubPixelRegion() throws Exception {
         Rectangle rectangle = new Rectangle(2, 2, 6, 3);
-        TemporalBinRasterizer raster = new NobsRaster(6, 3);
+        BinRasterizer raster = new NobsRaster(6, 3);
         assertEquals("" +
                              "------\n" +
                              "------\n" +
                              "------\n",
                      raster.toString());
 
-        TemporalBinReprojector reprojector = new TemporalBinReprojector(getCtx(binningGrid), raster, rectangle);
+        BinReprojector reprojector = new BinReprojector(getCtx(binningGrid), raster, rectangle);
         reprojector.begin();
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
@@ -415,11 +415,11 @@ public class TemporalBinReprojectorTest {
         return temporalBin;
     }
 
-    private BinningContextImpl getCtx(IsinBinningGrid binningGrid) {
-        return new BinningContextImpl(binningGrid, new VariableContextImpl(), binManager);
+    private BinnerContextImpl getCtx(IsinBinningGrid binningGrid) {
+        return new BinnerContextImpl(binningGrid, new VariableContextImpl(), binManager);
     }
 
-    private static class NobsRaster extends TemporalBinRasterizer {
+    private static class NobsRaster extends BinRasterizer {
         int[] nobsData;
         private final int w;
 
