@@ -36,14 +36,16 @@ public class L3FormatterConfig implements XmlConvertible {
                              String outputFile,
                              String outputFormat,
                              OutputterConfig.BandConfiguration[] bands,
+                             // todo - remove
                              String startTime,
+                             // todo - remove
                              String endTime) {
         this(new OutputterConfig(outputType,
-                              outputFile,
-                              outputFormat,
-                              bands,
-                              startTime,
-                              endTime));
+                                 outputFile,
+                                 outputFormat,
+                                 bands,
+                                 startTime,
+                                 endTime));
     }
 
 
@@ -84,10 +86,12 @@ public class L3FormatterConfig implements XmlConvertible {
         return outputterConfig.getBands();
     }
 
+    // todo - remove
     public ProductData.UTC getStartTime() {
         return outputterConfig.getStartTime();
     }
 
+    // todo - remove
     public ProductData.UTC getEndTime() {
         return outputterConfig.getEndTime();
     }
