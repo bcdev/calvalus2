@@ -57,7 +57,7 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     public void setConf(Configuration conf) {
         this.conf = conf;
         L3Config l3Config = L3Config.get(conf);
-        this.binningGrid = l3Config.getBinningGrid();
+        this.binningGrid = l3Config.createBinningGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {

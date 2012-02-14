@@ -44,7 +44,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        temporalBinner = new TemporalBinner(L3Config.get(conf).getBinningContext());
+        temporalBinner = new TemporalBinner(L3Config.get(conf).createBinningContext());
     }
 
     @Override

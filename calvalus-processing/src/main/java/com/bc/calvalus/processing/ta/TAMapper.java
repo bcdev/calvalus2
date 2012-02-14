@@ -41,7 +41,7 @@ public class TAMapper extends Mapper<LongWritable, L3TemporalBin, Text, L3Tempor
     public void setConf(Configuration conf) {
         this.conf = conf;
         L3Config l3Config = L3Config.get(conf);
-        binningGrid = l3Config.getBinningContext().getBinningGrid();
+        binningGrid = l3Config.createBinningContext().getBinningGrid();
         taConfig = TAConfig.get(conf);
     }
 

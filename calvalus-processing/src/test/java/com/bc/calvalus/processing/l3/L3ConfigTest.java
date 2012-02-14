@@ -49,11 +49,11 @@ public class L3ConfigTest {
 
     @Test
     public void testBinningGrid() {
-        BinningGrid grid = new L3Config().getBinningGrid();
+        BinningGrid grid = new L3Config().createBinningGrid();
         assertEquals(2160, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
 
-        grid = l3Config.getBinningGrid();
+        grid = l3Config.createBinningGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(IsinBinningGrid.class, grid.getClass());
 
@@ -83,7 +83,7 @@ public class L3ConfigTest {
 
     @Test
     public void testVariableContext() {
-        VariableContext varCtx = l3Config.getVariableContext();
+        VariableContext varCtx = l3Config.createVariableContext();
 
         assertEquals(8, varCtx.getVariableCount());
 
@@ -113,7 +113,7 @@ public class L3ConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = l3Config.getBinningContext().getBinManager();
+        BinManager binManager = l3Config.createBinningContext().getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
         assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());

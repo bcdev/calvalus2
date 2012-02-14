@@ -63,7 +63,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         final L3Config l3Config = L3Config.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
         mosaicGrid = MosaicGrid.create(jobConfig);
-        final VariableContext ctx = l3Config.getVariableContext();
+        final VariableContext ctx = l3Config.createVariableContext();
         final FileSplit split = (FileSplit) context.getInputSplit();
 
         // write initial log entry for runtime measurements
