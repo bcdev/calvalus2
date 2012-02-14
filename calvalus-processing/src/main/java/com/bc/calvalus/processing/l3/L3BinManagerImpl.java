@@ -7,7 +7,7 @@ import com.bc.calvalus.binning.*;
  *
  * @author Norman Fomferra
  */
-public class L3BinManagerImpl extends BinManagerImpl {
+public class L3BinManagerImpl extends BinManager {
 
     public L3BinManagerImpl(Aggregator... aggregators) {
         super(aggregators);

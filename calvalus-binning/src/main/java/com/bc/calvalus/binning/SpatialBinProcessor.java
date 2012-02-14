@@ -16,5 +16,5 @@ public interface SpatialBinProcessor {
      * @param spatialBins The slice of spatial bins.
      * @throws Exception If an error occurs.
      */
-    void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> spatialBins) throws Exception;
+    void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception;
 }

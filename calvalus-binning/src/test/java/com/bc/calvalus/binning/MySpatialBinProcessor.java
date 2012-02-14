@@ -17,7 +17,7 @@ class MySpatialBinProcessor implements SpatialBinProcessor {
     }
 
     @Override
-    public void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> sliceBins) {
+    public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> sliceBins) {
         for (SpatialBin spatialBin : sliceBins) {
             TemporalBin temporalBin = binMap.get(spatialBin.getIndex());
             if (temporalBin == null) {

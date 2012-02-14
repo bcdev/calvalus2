@@ -1,6 +1,6 @@
 package org.esa.beam.binning;
 
-import com.bc.calvalus.binning.BinnerContext;
+import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.ObservationSlice;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.ceres.core.ProgressMonitor;
@@ -42,7 +42,7 @@ public class SpatialProductBinner {
 
         final float[] superSamplingSteps = getSuperSamplingSteps(superSampling);
 
-        final BinnerContext ctx = spatialBinner.getBinnerContext();
+        final BinningContext ctx = spatialBinner.getBinningContext();
         final int sliceWidth = product.getSceneRasterWidth();
         for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
             String variableName = ctx.getVariableContext().getVariableName(i);

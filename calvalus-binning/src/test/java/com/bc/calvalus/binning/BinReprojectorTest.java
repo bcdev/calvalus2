@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.awt.Rectangle;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ import static org.junit.Assert.*;
  */
 public class BinReprojectorTest {
     static final int NAN = -1;
-    private BinManager binManager = new BinManagerImpl();
+    private BinManager binManager = new BinManager();
     private IsinBinningGrid binningGrid;
     private NobsRaster raster;
     private int width;
@@ -72,7 +73,7 @@ public class BinReprojectorTest {
             bins.add(createTBin(i));
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "******\n" +
@@ -91,7 +92,7 @@ public class BinReprojectorTest {
             bins.add(createTBin(i));
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "************\n" +
@@ -115,7 +116,7 @@ public class BinReprojectorTest {
                 bins.add(createTBin(i));
             }
             startBinIndex += numCols;
-            reprojector.processBins(bins.iterator());
+            reprojector.processPart(bins.iterator());
             bins.clear();
         }
         reprojector.end();
@@ -135,7 +136,7 @@ public class BinReprojectorTest {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
 
         assertEquals("" +
@@ -153,9 +154,9 @@ public class BinReprojectorTest {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
 
-        reprojector.processBins(bins.iterator());
-        reprojector.processBins(bins.iterator());
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
+        reprojector.processPart(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
 
         assertEquals("" +
@@ -179,7 +180,7 @@ public class BinReprojectorTest {
             }
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "************\n" +
@@ -205,7 +206,7 @@ public class BinReprojectorTest {
                 }
             }
             startBinIndex += numCols;
-            reprojector.processBins(bins.iterator());
+            reprojector.processPart(bins.iterator());
             bins.clear();
         }
         reprojector.end();
@@ -229,7 +230,7 @@ public class BinReprojectorTest {
             i++;  // SKIP!!!
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "****++++****\n" +
@@ -249,7 +250,7 @@ public class BinReprojectorTest {
             bins.add(createTBin(i));
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "++++++++++++\n" +
@@ -269,7 +270,7 @@ public class BinReprojectorTest {
             bins.add(createTBin(i));
         }
 
-        reprojector.processBins(bins.iterator());
+        reprojector.processPart(bins.iterator());
         reprojector.end();
         assertEquals("" +
                              "************\n" +
@@ -299,7 +300,7 @@ public class BinReprojectorTest {
         );
 
         int y = 2;
-        reprojector.processBins(binRow.iterator());
+        reprojector.processPart(binRow.iterator());
         int[] nobsData = raster.nobsData;
 
         assertEquals(11, nobsData[y * width + 0]);
@@ -336,7 +337,7 @@ public class BinReprojectorTest {
         );
 
         int y = 2;
-        reprojector.processBins(binRow.iterator());
+        reprojector.processPart(binRow.iterator());
         int[] nobsData = raster.nobsData;
 
         assertEquals(NAN, nobsData[y * width + 0]);
@@ -364,7 +365,7 @@ public class BinReprojectorTest {
                                                  createTBin(2));
 
         int y = 0;
-        reprojector.processBins(binRow.iterator());
+        reprojector.processPart(binRow.iterator());
         int[] nobsData = raster.nobsData;
 
         assertEquals(0, nobsData[y * width + 0]);
@@ -389,7 +390,7 @@ public class BinReprojectorTest {
                                                  createTBin(2));
 
         int y = 0;
-        reprojector.processBins(binRow.iterator());
+        reprojector.processPart(binRow.iterator());
         int[] nobsData = raster.nobsData;
 
         assertEquals(0, nobsData[y * width + 0]);
@@ -415,11 +416,11 @@ public class BinReprojectorTest {
         return temporalBin;
     }
 
-    private BinnerContextImpl getCtx(IsinBinningGrid binningGrid) {
-        return new BinnerContextImpl(binningGrid, new VariableContextImpl(), binManager);
+    private BinningContext getCtx(IsinBinningGrid binningGrid) {
+        return new BinningContext(binningGrid, new VariableContextImpl(), binManager);
     }
 
-    private static class NobsRaster extends BinRasterizer {
+    private static class NobsRaster implements BinRasterizer {
         int[] nobsData;
         private final int w;
 
@@ -430,12 +431,20 @@ public class BinReprojectorTest {
         }
 
         @Override
-        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
+        public void begin(BinningContext context) throws IOException {
+        }
+
+        @Override
+        public void end(BinningContext context) throws IOException {
+        }
+
+        @Override
+        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
             nobsData[y * w + x] = temporalBin.getNumObs();
         }
 
         @Override
-        public void processMissingBin(int x, int y) throws Exception {
+        public void processMissingBin(int x, int y) throws IOException {
             nobsData[y * w + x] = -1;
         }
 

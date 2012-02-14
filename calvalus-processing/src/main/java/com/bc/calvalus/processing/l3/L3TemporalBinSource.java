@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
-import org.esa.beam.binning.Outputter;
 import org.esa.beam.binning.TemporalBinSource;
 
 import java.io.IOException;
@@ -47,16 +46,16 @@ public class L3TemporalBinSource implements TemporalBinSource {
     private final Path partsDir;
     private final long startTime;
     private FileStatus[] parts;
-    private  FileSystem hdfs;
+    private FileSystem hdfs;
 
-    public L3TemporalBinSource(Configuration configuration, String partsDirPath) {
+    public L3TemporalBinSource(Configuration configuration, Path partsDir) {
         this.configuration = configuration;
-        this.partsDir =  new Path(partsDirPath);
+        this.partsDir = partsDir;
         startTime = System.nanoTime();
     }
 
     @Override
-    public int open(Outputter outputter) throws IOException {
+    public int open() throws IOException {
 
         hdfs = partsDir.getFileSystem(configuration);
         parts = hdfs.listStatus(partsDir, new PathFilter() {
@@ -74,7 +73,7 @@ public class L3TemporalBinSource implements TemporalBinSource {
     }
 
     @Override
-    public  Iterator<? extends TemporalBin> getPart(int index) throws IOException {
+    public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
         final FileStatus part = parts[index];
         Path partFile = part.getPath();
         LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
@@ -84,11 +83,11 @@ public class L3TemporalBinSource implements TemporalBinSource {
 
     @Override
     public void partProcessed(int index, Iterator<? extends TemporalBin> part) throws IOException {
-        ((SequenceFileBinIterator)part).getReader().close();
+        ((SequenceFileBinIterator) part).getReader().close();
     }
 
     @Override
-    public void close(){
+    public void close() {
         long stopTime = System.nanoTime();
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
     }

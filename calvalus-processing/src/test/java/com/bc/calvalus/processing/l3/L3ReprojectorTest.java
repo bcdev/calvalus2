@@ -20,11 +20,13 @@ import com.bc.calvalus.binning.*;
 import com.bc.calvalus.binning.BinRasterizer;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class L3ReprojectorTest {
     static final int NAN = -1;
-    private BinManager binManager = new BinManagerImpl();
+    private BinManager binManager = new BinManager();
 
     @Test
     public void testPathExpansion() {
@@ -38,7 +40,7 @@ public class L3ReprojectorTest {
         return temporalBin;
     }
 
-    private static class NobsRaster extends BinRasterizer {
+    private static class NobsRaster implements BinRasterizer {
         int[] nobsData;
         private final int w;
 
@@ -48,12 +50,20 @@ public class L3ReprojectorTest {
         }
 
         @Override
-        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws Exception {
+        public void begin(BinningContext context) throws IOException {
+        }
+
+        @Override
+        public void end(BinningContext context) throws IOException {
+        }
+
+        @Override
+        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
             nobsData[y * w + x] = temporalBin.getNumObs();
         }
 
         @Override
-        public void processMissingBin(int x, int y) throws Exception {
+        public void processMissingBin(int x, int y) throws IOException {
             nobsData[y * w + x] = -1;
         }
     }

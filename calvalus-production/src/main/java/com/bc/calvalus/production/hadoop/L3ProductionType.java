@@ -8,7 +8,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.l3.L3FWorkflowItem;
+import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
@@ -19,7 +19,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinnerConfig;
+import org.esa.beam.binning.BinningConfig;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
@@ -58,8 +58,8 @@ public class L3ProductionType extends HadoopProductionType {
         if (processorName != null) {
             processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
             processorBundle = String.format("%s-%s",
-                    productionRequest.getString("processorBundleName"),
-                    productionRequest.getString("processorBundleVersion"));
+                                            productionRequest.getString("processorBundleName"),
+                                            productionRequest.getString("processorBundleVersion"));
         }
 
         String regionName = productionRequest.getRegionName();
@@ -67,21 +67,20 @@ public class L3ProductionType extends HadoopProductionType {
 
         String l3ConfigXml = getL3ConfigXml(productionRequest);
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
-        boolean formatOnCluster = productionRequest.getBoolean("formatOnCluster", false);
+        String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
 
         Workflow workflow = new Workflow.Parallel();
         workflow.setSustainable(false);
-        List<String> rgbInputDirs = new ArrayList<String>(dateRanges.size());
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
             if (l1InputFiles.length > 0) {
-                String outputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
+                String singleRangeOutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
-                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDir);
                 if (processorName != null) {
                     jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
                     jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
@@ -93,12 +92,10 @@ public class L3ProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
                 WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
 
-                if (formatOnCluster && outputFormat != null) {
+                if (outputFormat != null) {
                     jobConfig = createJobConfig(productionRequest);
-                    jobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
-                    String productOutputDir = getOutputPath(productionRequest, productionId, "-L3F-" + (i + 1));
-                    rgbInputDirs.add(productOutputDir);
-                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, productOutputDir);
+                    jobConfig.set(JobConfigNames.CALVALUS_INPUT, singleRangeOutputDir);
+                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
                     jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
                     // is in fact dependent on the outputFormat TODO unify
@@ -110,7 +107,7 @@ public class L3ProductionType extends HadoopProductionType {
                     jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                     jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
-                    WorkflowItem formatItem = new L3FWorkflowItem(getProcessingService(), productionName + " Format " + date1Str, jobConfig);
+                    WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(), productionName + " Format " + date1Str, jobConfig);
                     item = new Workflow.Sequential(item, formatItem);
                 }
                 workflow.add(item);
@@ -121,10 +118,9 @@ public class L3ProductionType extends HadoopProductionType {
         }
         if (productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
             Configuration qlJobConfig = createJobConfig(productionRequest);
-            qlJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(rgbInputDirs, ","));
+            qlJobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
-            String rgbOutputDir = getOutputPath(productionRequest, productionId, "-L3rgb");
-            qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, rgbOutputDir);
+            qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
             WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionName + " RGB", qlJobConfig);
             workflow = new Workflow.Sequential(workflow, qlItem);
@@ -133,19 +129,19 @@ public class L3ProductionType extends HadoopProductionType {
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
-                productionName,
-                null, // no dedicated output directory
-                stagingDir,
-                autoStaging,
-                productionRequest,
-                workflow);
+                              productionName,
+                              null, // no dedicated output directory
+                              stagingDir,
+                              autoStaging,
+                              productionRequest,
+                              workflow);
     }
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        return new L3Staging(production,
-                getProcessingService().getJobClient().getConf(),
-                getStagingService().getStagingDir());
+        return new CopyStaging(production,
+                               getProcessingService().getJobClient().getConf(),
+                               getStagingService().getStagingDir());
     }
 
     static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
@@ -209,9 +205,9 @@ public class L3ProductionType extends HadoopProductionType {
         return l3Config;
     }
 
-    static BinnerConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+    static BinningConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
         int variableCount = request.getInteger("variables.count");
-        BinnerConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinnerConfig.AggregatorConfiguration[variableCount];
+        BinningConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinningConfig.AggregatorConfiguration[variableCount];
         for (int i = 0; i < variableCount; i++) {
             String prefix = "variables." + i;
             String variableName = request.getString(prefix + ".name");
@@ -220,7 +216,7 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            BinnerConfig.AggregatorConfiguration aggregatorConfiguration = new BinnerConfig.AggregatorConfiguration(aggregatorName);
+            BinningConfig.AggregatorConfiguration aggregatorConfiguration = new BinningConfig.AggregatorConfiguration(aggregatorName);
             aggregatorConfiguration.setVarName(variableName);
             aggregatorConfiguration.setPercentage(percentage);
             aggregatorConfiguration.setWeightCoeff(weightCoeff);
@@ -230,14 +226,14 @@ public class L3ProductionType extends HadoopProductionType {
         return aggregatorConfigurations;
     }
 
-    static BinnerConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+    static BinningConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
         int expressionCount = request.getInteger("expression.count", 0);
-        BinnerConfig.VariableConfiguration[] variableConfigurations = new BinnerConfig.VariableConfiguration[expressionCount];
+        BinningConfig.VariableConfiguration[] variableConfigurations = new BinningConfig.VariableConfiguration[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
             String exp = request.getString(prefix + ".expression");
-            variableConfigurations[i] = new BinnerConfig.VariableConfiguration(name, exp);
+            variableConfigurations[i] = new BinningConfig.VariableConfiguration(name, exp);
         }
         return variableConfigurations;
     }

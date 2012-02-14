@@ -21,6 +21,10 @@ import com.bc.ceres.binding.BindingException;
 import org.esa.beam.binning.OutputterConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.text.ParseException;
+
+// todo - remove class (OutputterConfig should be a sufficient replacement) (nf, 2012-02-14)
+
 /**
  * The configuration of the L3 formatter
  */
@@ -35,22 +39,20 @@ public class L3FormatterConfig implements XmlConvertible {
     public L3FormatterConfig(String outputType,
                              String outputFile,
                              String outputFormat,
-                             OutputterConfig.BandConfiguration[] bands,
-                             // todo - remove
-                             String startTime,
-                             // todo - remove
-                             String endTime) {
+                             OutputterConfig.BandConfiguration[] bands) {
         this(new OutputterConfig(outputType,
                                  outputFile,
                                  outputFormat,
-                                 bands,
-                                 startTime,
-                                 endTime));
+                                 bands));
     }
 
 
     private L3FormatterConfig(OutputterConfig outputterConfig) {
         this.outputterConfig = outputterConfig;
+    }
+
+    public OutputterConfig getOutputterConfig() {
+        return outputterConfig;
     }
 
     /**
@@ -70,29 +72,11 @@ public class L3FormatterConfig implements XmlConvertible {
         return outputterConfig.toXml();
     }
 
-    public String getOutputType() {
-        return outputterConfig.getOutputType();
-    }
-
-    public String getOutputFile() {
-        return outputterConfig.getOutputFile();
-    }
-
-    public String getOutputFormat() {
-        return outputterConfig.getOutputFormat();
-    }
-
-    public OutputterConfig.BandConfiguration[] getBands() {
-        return outputterConfig.getBands();
-    }
-
-    // todo - remove
-    public ProductData.UTC getStartTime() {
-        return outputterConfig.getStartTime();
-    }
-
-    // todo - remove
-    public ProductData.UTC getEndTime() {
-        return outputterConfig.getEndTime();
+    public static ProductData.UTC parseTime(String timeString) {
+        try {
+            return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Illegal date format.", e);
+        }
     }
 }

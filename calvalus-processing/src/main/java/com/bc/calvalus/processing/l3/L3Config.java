@@ -17,20 +17,21 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.BinnerContext;
-import com.bc.calvalus.binning.BinnerContextImpl;
+import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.BinningGrid;
 import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinnerConfig;
+import org.esa.beam.binning.BinningConfig;
+
+// todo - remove class (BinningConfig should be a sufficient replacement) (nf, 2012-02-14)
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class L3Config implements XmlConvertible {
 
-    private BinnerConfig binnerConfig;
+    private BinningConfig binningConfig;
 
     public static L3Config get(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
@@ -45,79 +46,79 @@ public class L3Config implements XmlConvertible {
     }
 
     public L3Config() {
-        this(new BinnerConfig());
+        this(new BinningConfig());
     }
 
-    private L3Config(BinnerConfig binnerConfig) {
-        this.binnerConfig = binnerConfig;
+    private L3Config(BinningConfig binningConfig) {
+        this.binningConfig = binningConfig;
     }
 
-    public BinnerConfig getBinnerConfig() {
-        return binnerConfig;
+    public BinningConfig getBinningConfig() {
+        return binningConfig;
     }
 
     public static L3Config fromXml(String xml) throws BindingException {
-        return new L3Config(BinnerConfig.fromXml(xml));
+        return new L3Config(BinningConfig.fromXml(xml));
     }
 
     @Override
     public String toXml() {
-        return binnerConfig.toXml();
+        return getBinningConfig().toXml();
     }
 
     public int getNumRows() {
-        return binnerConfig.getNumRows();
+        return getBinningConfig().getNumRows();
     }
 
     public void setNumRows(int numRows) {
-        binnerConfig.setNumRows(numRows);
+        getBinningConfig().setNumRows(numRows);
     }
 
     public Integer getSuperSampling() {
-        return binnerConfig.getSuperSampling();
+        return getBinningConfig().getSuperSampling();
     }
 
     public void setSuperSampling(Integer superSampling) {
-        binnerConfig.setSuperSampling(superSampling);
+        getBinningConfig().setSuperSampling(superSampling);
     }
 
     public String getMaskExpr() {
-        return binnerConfig.getMaskExpr();
+        return getBinningConfig().getMaskExpr();
     }
 
     public void setMaskExpr(String maskExpr) {
-        binnerConfig.setMaskExpr(maskExpr);
+        getBinningConfig().setMaskExpr(maskExpr);
     }
 
-    public BinnerConfig.VariableConfiguration[] getVariableConfigurations() {
-        return binnerConfig.getVariableConfigurations();
+    public BinningConfig.VariableConfiguration[] getVariableConfigurations() {
+        return getBinningConfig().getVariableConfigurations();
     }
 
-    public void setVariableConfigurations(BinnerConfig.VariableConfiguration... variables) {
-        binnerConfig.setVariableConfigurations(variables);
+    public void setVariableConfigurations(BinningConfig.VariableConfiguration... variables) {
+        getBinningConfig().setVariableConfigurations(variables);
     }
 
-    public BinnerConfig.AggregatorConfiguration[] getAggregatorConfigurations() {
-        return binnerConfig.getAggregatorConfigurations();
+    public BinningConfig.AggregatorConfiguration[] getAggregatorConfigurations() {
+        return getBinningConfig().getAggregatorConfigurations();
     }
 
-    public void setAggregatorConfigurations(BinnerConfig.AggregatorConfiguration... aggregators) {
-        binnerConfig.setAggregatorConfigurations(aggregators);
+    public void setAggregatorConfigurations(BinningConfig.AggregatorConfiguration... aggregators) {
+        getBinningConfig().setAggregatorConfigurations(aggregators);
     }
 
-    public BinnerContext getBinningContext() {
-        VariableContext varCtx = getVariableContext();
-        return new BinnerContextImpl(getBinningGrid(),
-                                      varCtx,
-                                      new L3BinManagerImpl(binnerConfig.createAggregators(varCtx)));
+    public BinningContext createBinningContext() {
+        VariableContext varCtx = createVariableContext();
+        return new BinningContext(createBinningGrid(),
+                                  varCtx,
+                                  new L3BinManagerImpl(getBinningConfig().createAggregators(varCtx)));
     }
 
-    public BinningGrid getBinningGrid() {
-        return binnerConfig.createBinningGrid();
+    public BinningGrid createBinningGrid() {
+        return getBinningConfig().createBinningGrid();
     }
 
-    public VariableContext getVariableContext() {
-        return binnerConfig.createVariableContext();
+    public VariableContext createVariableContext() {
+        return getBinningConfig().createVariableContext();
     }
 
 }

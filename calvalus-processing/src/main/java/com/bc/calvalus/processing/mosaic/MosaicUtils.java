@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.mosaic;
 import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.esa.beam.binning.BinnerConfig;
+import org.esa.beam.binning.BinningConfig;
 
 /**
  * Utility methods for mosaic processing.
@@ -30,10 +30,10 @@ public class MosaicUtils {
 
     public static MosaicAlgorithm createAlgorithm(Configuration jobConf) {
         L3Config l3Config = L3Config.get(jobConf);
-        BinnerConfig.AggregatorConfiguration[] aggregators = l3Config.getAggregatorConfigurations();
+        BinningConfig.AggregatorConfiguration[] aggregators = l3Config.getAggregatorConfigurations();
         MosaicAlgorithm mosaicAlgorithm = null;
         if (aggregators != null) {
-            BinnerConfig.AggregatorConfiguration first = aggregators[0];
+            BinningConfig.AggregatorConfiguration first = aggregators[0];
             String type = first.getType();
             try {
                 Class<?> algorithClass = Class.forName(type);
@@ -45,7 +45,7 @@ public class MosaicUtils {
         if (mosaicAlgorithm == null) {
             mosaicAlgorithm = new MeanMosaicAlgorithm();
         }
-        mosaicAlgorithm.setVariableContext(l3Config.getVariableContext());
+        mosaicAlgorithm.setVariableContext(l3Config.createVariableContext());
         return mosaicAlgorithm;
     }
 }

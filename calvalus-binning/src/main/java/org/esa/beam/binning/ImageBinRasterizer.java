@@ -1,38 +1,105 @@
 package org.esa.beam.binning;
 
 import com.bc.calvalus.binning.BinRasterizer;
+import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
+import org.esa.beam.util.io.FileUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
-* @author Norman Fomferra
-*/
-public final class ImageBinRasterizer extends BinRasterizer {
-    private final int rasterWidth;
-    private final int[] bandIndices;
-    private final float[][] bandData;
+ * A bin rasterizer that writes JPEG or PNG images.
+ *
+ * @author Norman Fomferra
+ */
+public final class ImageBinRasterizer implements BinRasterizer {
 
     private final int bandCount;
+    private final int rasterWidth;
+    private final int[] bandIndices;
+    private final String[] bandNames;
+    private final float[] bandMinValues;
+    private final float[] bandMaxValues;
+    private final float[][] bandData;
+    private final Rectangle outputRegion;
+    private final boolean writeRgb;
+    private final File outputFile;
+    private final String outputFormat;
 
+    public ImageBinRasterizer(BinningContext binningContext,
+                              File outputFile, String outputFormat, Rectangle outputRegion, OutputterConfig.BandConfiguration[] bandConfigurations,
+                              boolean writeRgb) {
 
-    public ImageBinRasterizer(int rasterWidth, int rasterHeight, int[] bandIndices) {
+        final int bandCount = bandConfigurations.length;
+        if (bandCount == 0) {
+            throw new IllegalArgumentException("No output band given.");
+        }
+
+        this.outputRegion = outputRegion;
+        this.writeRgb = writeRgb;
+        this.outputFile = outputFile;
+        this.outputFormat = outputFormat;
+        int rasterWidth = outputRegion.width;
+        int rasterHeight = outputRegion.height;
+
         this.rasterWidth = rasterWidth;
-        this.bandIndices = bandIndices.clone();
-        this.bandCount = bandIndices.length;
+
+        this.bandCount = bandCount;
         this.bandData = new float[bandCount][rasterWidth * rasterHeight];
-        for (int i = 0; i < bandCount; i++) {
+        for (int i = 0; i < this.bandCount; i++) {
             Arrays.fill(bandData[i], Float.NaN);
+        }
+        
+        String[] outputFeatureNames = binningContext.getBinManager().getOutputFeatureNames();
+        bandIndices = new int[bandCount];
+        bandNames = new String[bandCount];
+        bandMinValues = new float[bandCount];
+        bandMaxValues = new float[bandCount];
+        for (int i = 0; i < bandCount; i++) {
+            OutputterConfig.BandConfiguration bandConfiguration = bandConfigurations[i];
+            String nameStr = bandConfiguration.name;
+            bandIndices[i] = Integer.parseInt(bandConfiguration.index);
+            bandNames[i] = nameStr != null ? nameStr : outputFeatureNames[bandIndices[i]];
+            bandMinValues[i] = Float.parseFloat(bandConfiguration.minValue);
+            bandMaxValues[i] = Float.parseFloat(bandConfiguration.maxValue);
         }
     }
 
-    public float[][] getBandData() {
-        return bandData;
+    @Override
+    public void begin(BinningContext context) {
+        final File parentFile = outputFile.getParentFile();
+        if (parentFile != null) {
+            parentFile.mkdirs();
+        }
     }
 
-    public float[] getBandData(int bandIndex) {
-        return this.bandData[bandIndex];
+    @Override
+    public void end(BinningContext context) throws IOException {
+        if (writeRgb) {
+            writeRgbImage(outputRegion.width, outputRegion.height,
+                          bandData,
+                          bandMinValues, bandMaxValues,
+                          outputFormat, outputFile);
+        } else {
+            for (int i = 0; i < bandCount; i++) {
+                String fileName = String.format("%s_%s.%s",
+                                                FileUtils.getFilenameWithoutExtension(outputFile),
+                                                bandNames[i],
+                                                FileUtils.getExtension(outputFile));
+                File imageFile = new File(outputFile.getParentFile(), fileName);
+                writeGrayScaleImage(outputRegion.width, outputRegion.height,
+                                    bandData[i],
+                                    bandMinValues[i], bandMaxValues[i],
+                                    outputFormat, imageFile);
+            }
+        }
     }
 
     @Override
@@ -43,9 +110,64 @@ public final class ImageBinRasterizer extends BinRasterizer {
     }
 
     @Override
-    public void processMissingBin(int x, int y) throws Exception {
+    public void processMissingBin(int x, int y) {
         for (int i = 0; i < bandCount; i++) {
             bandData[i][rasterWidth * y + x] = Float.NaN;
         }
     }
+
+    private static void writeGrayScaleImage(int width, int height,
+                                            float[] rawData,
+                                            float rawValue1, float rawValue2,
+                                            String outputFormat, File outputImageFile) throws IOException {
+
+        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
+        @SuppressWarnings("MismatchedReadAndWriteOfArray")
+        final byte[] data = dataBuffer.getData();
+        final float a = 255f / (rawValue2 - rawValue1);
+        final float b = -255f * rawValue1 / (rawValue2 - rawValue1);
+        for (int i = 0; i < rawData.length; i++) {
+            data[i] = toByte(rawData[i], a, b);
+        }
+        ImageIO.write(image, outputFormat, outputImageFile);
+    }
+
+    private static void writeRgbImage(int width, int height,
+                                      float[][] rawData,
+                                      float[] rawValue1, float[] rawValue2,
+                                      String outputFormat, File outputImageFile) throws IOException {
+        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        final DataBufferByte dataBuffer = (DataBufferByte) image.getRaster().getDataBuffer();
+        @SuppressWarnings("MismatchedReadAndWriteOfArray")
+        final byte[] data = dataBuffer.getData();
+        final float[] rawDataR = rawData[0];
+        final float[] rawDataG = rawData[1];
+        final float[] rawDataB = rawData[2];
+        final float aR = 255f / (rawValue2[0] - rawValue1[0]);
+        final float bR = -255f * rawValue1[0] / (rawValue2[0] - rawValue1[0]);
+        final float aG = 255f / (rawValue2[1] - rawValue1[1]);
+        final float bG = -255f * rawValue1[1] / (rawValue2[1] - rawValue1[1]);
+        final float aB = 255f / (rawValue2[2] - rawValue1[2]);
+        final float bB = -255f * rawValue1[2] / (rawValue2[2] - rawValue1[2]);
+        final int n = width * height;
+        for (int i = 0, j = 0; i < n; i++, j += 3) {
+            data[j + 2] = toByte(rawDataR[i], aR, bR);
+            data[j + 1] = toByte(rawDataG[i], aG, bG);
+            data[j] = toByte(rawDataB[i], aB, bB);
+        }
+        ImageIO.write(image, outputFormat, outputImageFile);
+    }
+
+    private static byte toByte(float s, float a, float b) {
+        int sample = (int) (a * s + b);
+        if (sample < 0) {
+            sample = 0;
+        } else if (sample > 255) {
+            sample = 255;
+        }
+        return (byte) sample;
+    }
+
+
 }

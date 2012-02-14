@@ -17,22 +17,23 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
 /**
  * A workflow item creating a Hadoop job for formatting the result of an L3 job into a single L3 product.
  */
-public class L3FWorkflowItem extends HadoopWorkflowItem {
+public class L3FormatWorkflowItem extends HadoopWorkflowItem {
 
-    public L3FWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public L3FormatWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -68,7 +69,7 @@ public class L3FWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
     }
 
 }

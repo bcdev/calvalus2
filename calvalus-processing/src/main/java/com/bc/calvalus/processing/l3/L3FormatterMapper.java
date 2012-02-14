@@ -67,21 +67,21 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
             L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
                                                                       productFile.getAbsolutePath(),
                                                                       outputFormat,
-                                                                      rgbBandConfig,
-                                                                      dateStart,
-                                                                      dateStop);
+                                                                      rgbBandConfig);
 
             Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
-            String partsDir = split.getPath().toString();
             L3Config l3Config = L3Config.get(jobConfig);
             L3Formatter formatter = new L3Formatter(jobConfig);
 
-
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
-            formatter.format(formatterConfig, l3Config, partsDir, regionGeometry);
-
+            formatter.format(l3Config.createBinningContext(),
+                             formatterConfig,
+                             split.getPath(),
+                             regionGeometry,
+                             L3FormatterConfig.parseTime(dateStart),
+                             L3FormatterConfig.parseTime(dateStop));
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");

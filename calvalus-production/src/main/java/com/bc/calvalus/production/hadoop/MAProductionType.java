@@ -81,7 +81,7 @@ public class MAProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        return new MAStaging(production,
+        return new CopyStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
     }

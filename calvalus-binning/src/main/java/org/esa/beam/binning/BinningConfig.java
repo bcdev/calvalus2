@@ -32,7 +32,7 @@ import java.util.Arrays;
  * @author Marco Zühlke
  */
 @SuppressWarnings({"UnusedDeclaration"})
-public class BinnerConfig {
+public class BinningConfig {
 
     /**
      * Number of rows in the binning grid.
@@ -81,7 +81,7 @@ public class BinnerConfig {
         this.maskExpr = maskExpr;
     }
 
-     public Integer getSuperSampling() {
+    public Integer getSuperSampling() {
         return superSampling;
     }
 
@@ -105,11 +105,11 @@ public class BinnerConfig {
         this.aggregatorConfigurations = aggregatorConfigurations;
     }
 
-    public BinnerContext createBinningContext() {
+    public BinningContext createBinningContext() {
         VariableContext varCtx = createVariableContext();
-        return new BinnerContextImpl(createBinningGrid(),
-                                      varCtx,
-                                      createBinManager(varCtx));
+        return new BinningContext(createBinningGrid(),
+                                  varCtx,
+                                  createBinManager(varCtx));
     }
 
     public BinningGrid createBinningGrid() {
@@ -139,7 +139,7 @@ public class BinnerConfig {
     }
 
     protected BinManager createBinManager(Aggregator[] aggregators) {
-        return new BinManagerImpl(aggregators);
+        return new BinManager(aggregators);
     }
 
     public VariableContext createVariableContext() {
@@ -177,8 +177,8 @@ public class BinnerConfig {
         return variableContext;
     }
 
-    public static BinnerConfig fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new BinnerConfig());
+    public static BinningConfig fromXml(String xml) throws BindingException {
+        return new ParameterBlockConverter().convertXmlToObject(xml, new BinningConfig());
     }
 
     public String toXml() {

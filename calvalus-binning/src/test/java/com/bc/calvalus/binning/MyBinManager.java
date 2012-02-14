@@ -2,7 +2,7 @@ package com.bc.calvalus.binning;
 
 import java.util.ArrayList;
 
-class MyBinManager extends BinManagerImpl {
+class MyBinManager extends BinManager {
     ArrayList<SpatialBin> producedSpatialBins = new ArrayList<SpatialBin>();
 
     public MyBinManager(Aggregator... aggregators) {

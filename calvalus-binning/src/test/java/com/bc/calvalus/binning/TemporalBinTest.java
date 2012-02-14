@@ -5,13 +5,10 @@ import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
 import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TemporalBinTest {
     @Test
@@ -35,10 +32,10 @@ public class TemporalBinTest {
     @Test
     public void testBinAggregationAndIO() throws IOException {
         MyVariableContext variableContext = new MyVariableContext("A", "B", "C");
-        BinManagerImpl bman = new BinManagerImpl(new AggregatorMinMax(variableContext, "A", null),
-                                                         new AggregatorAverage(variableContext, "B", null, null),
-                                                         new AggregatorAverageML(variableContext, "C", null, null));
- 
+        BinManager bman = new BinManager(new AggregatorMinMax(variableContext, "A", null),
+                                         new AggregatorAverage(variableContext, "B", null, null),
+                                         new AggregatorAverageML(variableContext, "C", null, null));
+
         SpatialBin sbin;
         TemporalBin tbin;
 

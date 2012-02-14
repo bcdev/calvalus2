@@ -2,7 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.processing.ma.MAWorkflowItem;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
 import org.apache.hadoop.conf.Configuration;
@@ -19,14 +19,14 @@ import java.io.File;
  *
  * @author Norman
  */
-class MAStaging extends ProductionStaging {
+class CopyStaging extends ProductionStaging {
 
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
-    public MAStaging(Production production,
-                     Configuration hadoopConfiguration,
-                     File stagingAreaPath) {
+    public CopyStaging(Production production,
+                       Configuration hadoopConfiguration,
+                       File stagingAreaPath) {
         super(production);
         this.hadoopConfiguration = hadoopConfiguration;
         this.stagingDir = new File(stagingAreaPath, production.getStagingPath());
@@ -36,7 +36,7 @@ class MAStaging extends ProductionStaging {
     public void performStaging() throws Throwable {
         Production production = getProduction();
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0F, ""));
-        MAWorkflowItem workflow = (MAWorkflowItem) production.getWorkflow();
+        HadoopWorkflowItem workflow = (HadoopWorkflowItem) production.getWorkflow();
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }

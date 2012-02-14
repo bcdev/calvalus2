@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinnerContext;
+import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.SpatialBin;
 import com.bc.calvalus.binning.SpatialBinProcessor;
 import com.bc.calvalus.binning.SpatialBinner;
@@ -56,7 +56,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final L3Config l3Config = L3Config.get(jobConfig);
         final ProductFactory productFactory = new ProductFactory(jobConfig);
 
-        final BinnerContext ctx = l3Config.getBinningContext();
+        final BinningContext ctx = l3Config.createBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
 
@@ -98,7 +98,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     }
 
     static long processProduct(Product product,
-                               BinnerContext ctx,
+                               BinningContext ctx,
                                SpatialBinner spatialBinner,
                                Integer superSampling,
                                MapContext mapContext) throws IOException, InterruptedException {
@@ -117,7 +117,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         }
 
         @Override
-        public void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> spatialBins) throws Exception {
+        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
                 context.write(new LongWritable(spatialBin.getIndex()), (L3SpatialBin) spatialBin);
                 numObsTotal += spatialBin.getNumObs();

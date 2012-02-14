@@ -28,10 +28,9 @@ public class SpatialBinnerTest {
         MyBinningGrid binningGrid = new MyBinningGrid();
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
-        BinnerContextImpl binningContext = new BinnerContextImpl(binningGrid, variableContext, binManager);
+        BinningContext binningContext = new BinningContext(binningGrid, variableContext, binManager);
         com.bc.calvalus.binning.MySpatialBinProcessor mySpatialBinProcessor = new com.bc.calvalus.binning.MySpatialBinProcessor(binManager);
-        SpatialBinner spatialBinner = new SpatialBinner(binningContext,
-                                                        mySpatialBinProcessor);
+        SpatialBinner spatialBinner = new SpatialBinner(binningContext, mySpatialBinProcessor);
 
         spatialBinner.processObservationSlice(new ObservationImpl(0, 1.1, 1.1f),
                                               new ObservationImpl(0, 1.1, 1.2f),
@@ -119,7 +118,7 @@ public class SpatialBinnerTest {
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
         MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
-        BinnerContextImpl binningContext = new BinnerContextImpl(binningGrid, variableContext, binManager);
+        BinningContext binningContext = new BinningContext(binningGrid, variableContext, binManager);
 
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
 
@@ -157,7 +156,7 @@ public class SpatialBinnerTest {
         int sliceIndex;
 
         @Override
-        public void processSpatialBinSlice(BinnerContext ctx, List<SpatialBin> sliceBins) {
+        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> sliceBins) {
             if (verbous) {
                 // Sort for better readability
                 Collections.sort(sliceBins, new BinComparator());

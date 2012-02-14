@@ -9,30 +9,30 @@ import java.util.List;
 
 /**
  * Used to re-project temporal bins onto a rectangular grid.
- * Uses a {@link BinRasterizer} to convert bin values into raster data.
+ * Uses a {@link BinRasterizer} to convert subsequent collections of bins (parts) into raster data.
  *
  * @author Marco Zühlke
  * @author Norman Fomferra
  */
 public class BinReprojector {
 
-    private final BinnerContext binnerContext;
+    private final BinningContext binningContext;
     private final BinRasterizer binRasterizer;
     private final Rectangle pixelRegion;
     private int yGlobalUltimate;
 
-    public BinReprojector(BinnerContext binnerContext, BinRasterizer binRasterizer, Rectangle pixelRegion) {
-        Assert.notNull(binnerContext, "binningContext");
+    public BinReprojector(BinningContext binningContext, BinRasterizer binRasterizer, Rectangle pixelRegion) {
+        Assert.notNull(binningContext, "binningContext");
         Assert.notNull(binRasterizer, "temporalBinProcessor");
         Assert.notNull(pixelRegion, "pixelRegion");
-        this.binnerContext = binnerContext;
+        this.binningContext = binningContext;
         this.binRasterizer = binRasterizer;
         this.pixelRegion = pixelRegion;
     }
 
     public void begin() throws Exception {
         yGlobalUltimate = pixelRegion.y - 1;
-        binRasterizer.begin(binnerContext);
+        binRasterizer.begin(binningContext);
     }
 
     public void end() throws Exception {
@@ -41,15 +41,15 @@ public class BinReprojector {
         final int y1 = pixelRegion.y;
         final int y2 = y1 + pixelRegion.height - 1;
         processRowsWithoutBins(x1, x2, yGlobalUltimate + 1, y2);
-        binRasterizer.end(binnerContext);
+        binRasterizer.end(binningContext);
     }
 
-    public void processBins(Iterator<? extends TemporalBin> temporalBins) throws Exception {
+    public void processPart(Iterator<? extends TemporalBin> temporalBins) throws Exception {
         final int x1 = pixelRegion.x;
         final int x2 = x1 + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;
         final int y2 = y1 + pixelRegion.height - 1;
-        final BinningGrid binningGrid = binnerContext.getBinningGrid();
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
         final int gridWidth = binningGrid.getNumRows() * 2;
         final int gridHeight = binningGrid.getNumRows();
 
@@ -89,8 +89,8 @@ public class BinReprojector {
         final int x1 = pixelRegion.x;
         final int x2 = pixelRegion.x + pixelRegion.width - 1;
         final int y1 = pixelRegion.y;
-        final BinningGrid binningGrid = binnerContext.getBinningGrid();
-        final BinManager binManager = binnerContext.getBinManager();
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final BinManager binManager = binningContext.getBinManager();
         final WritableVector outputVector = binManager.createOutputVector();
         final double lat = 90.0 - (y + 0.5) * 180.0 / gridHeight;
         long lastBinIndex = -1;
