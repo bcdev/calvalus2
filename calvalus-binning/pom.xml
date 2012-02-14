@@ -25,6 +25,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envisat-reader</artifactId>
+            <version>1.5-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
         </dependency>

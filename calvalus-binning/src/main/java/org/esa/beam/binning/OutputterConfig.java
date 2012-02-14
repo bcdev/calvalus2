@@ -31,6 +31,30 @@ public class OutputterConfig {
         public String name;
         public String minValue;
         public String maxValue;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            BandConfiguration that = (BandConfiguration) o;
+
+            if (index != null ? !index.equals(that.index) : that.index != null) return false;
+            if (maxValue != null ? !maxValue.equals(that.maxValue) : that.maxValue != null) return false;
+            if (minValue != null ? !minValue.equals(that.minValue) : that.minValue != null) return false;
+            if (name != null ? !name.equals(that.name) : that.name != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = index != null ? index.hashCode() : 0;
+            result = 31 * result + (name != null ? name.hashCode() : 0);
+            result = 31 * result + (minValue != null ? minValue.hashCode() : 0);
+            result = 31 * result + (maxValue != null ? maxValue.hashCode() : 0);
+            return result;
+        }
     }
 
     @Parameter(valueSet = {"Product", "RGB", "Grey"})
@@ -39,8 +63,8 @@ public class OutputterConfig {
     private String outputFile;
     @Parameter
     private String outputFormat;
-    @Parameter(itemAlias = "band")
-    private BandConfiguration[] bands;
+    @Parameter(alias="outputBands", itemAlias = "band")
+    private BandConfiguration[] bandConfigurations;
 
     public OutputterConfig() {
         // used by DOM converter
@@ -49,11 +73,11 @@ public class OutputterConfig {
     public OutputterConfig(String outputType,
                            String outputFile,
                            String outputFormat,
-                           BandConfiguration[] bands) {
+                           BandConfiguration[] bandConfigurations) {
         this.outputType = outputType;
         this.outputFile = outputFile;
         this.outputFormat = outputFormat;
-        this.bands = bands;
+        this.bandConfigurations = bandConfigurations;
     }
 
     /**
@@ -96,7 +120,7 @@ public class OutputterConfig {
         return outputFormat;
     }
 
-    public BandConfiguration[] getBands() {
-        return bands;
+    public BandConfiguration[] getBandConfigurations() {
+        return bandConfigurations;
     }
 }

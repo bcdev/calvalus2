@@ -67,7 +67,7 @@ public class Outputter {
                                                    outputFile,
                                                    outputFormat,
                                                    outputRegion,
-                                                   outputterConfig.getBands(),
+                                                   outputterConfig.getBandConfigurations(),
                                                    outputType.equalsIgnoreCase("RGB"));
         }
 

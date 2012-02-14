@@ -55,7 +55,7 @@ public class BinningConfigTest {
     }
 
     @Test
-    public void testVariableContext() {
+    public void testResultingVariableContext() {
         VariableContext varCtx = config.createVariableContext();
 
         assertEquals(8, varCtx.getVariableCount());
@@ -84,7 +84,7 @@ public class BinningConfigTest {
     }
 
     @Test
-    public void testBinManager() {
+    public void testResultingBinManager() {
         BinManager binManager = config.createBinningContext().getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
 
@@ -116,7 +116,7 @@ public class BinningConfigTest {
     @Test
     public void testXmlGeneration() throws BindingException {
         final String xml = config.toXml();
-        // System.out.println("xml = \n" + xml);
+        //System.out.println("xml = \n" + xml);
         final BinningConfig configCopy = BinningConfig.fromXml(xml);
 
         assertEquals(config.getNumRows(), configCopy.getNumRows());
