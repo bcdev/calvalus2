@@ -15,13 +15,13 @@ import static org.junit.Assert.*;
  * @author MarcoZ
  * @author Norman
  */
-public class BinReprojectorTest {
+public class ReprojectorTest {
     static final int NAN = -1;
     private BinManager binManager = new BinManager();
     private IsinBinningGrid binningGrid;
     private NobsRaster raster;
     private int width;
-    private BinReprojector reprojector;
+    private Reprojector reprojector;
 
     @Before
     public void setUp() throws Exception {
@@ -40,8 +40,7 @@ public class BinReprojectorTest {
         assertEquals(12, width);
         assertEquals(6, height);
 
-        Rectangle rectangle = new Rectangle(width, height);
-        raster = new NobsRaster(width, height);
+        raster = new NobsRaster(new Rectangle(width, height));
         assertEquals("" +
                              "------------\n" +
                              "------------\n" +
@@ -51,21 +50,20 @@ public class BinReprojectorTest {
                              "------------\n",
                      raster.toString());
 
-        reprojector = new BinReprojector(getCtx(binningGrid), raster, rectangle);
+        reprojector = new Reprojector(createBinningContext(binningGrid), raster);
         reprojector.begin();
     }
 
     @Test
     public void testSubPixelRegion() throws Exception {
-        Rectangle rectangle = new Rectangle(2, 2, 6, 3);
-        BinRasterizer raster = new NobsRaster(6, 3);
+        TemporalBinRenderer raster = new NobsRaster(new Rectangle(2, 2, 6, 3));
         assertEquals("" +
                              "------\n" +
                              "------\n" +
                              "------\n",
                      raster.toString());
 
-        BinReprojector reprojector = new BinReprojector(getCtx(binningGrid), raster, rectangle);
+        Reprojector reprojector = new Reprojector(createBinningContext(binningGrid), raster);
         reprojector.begin();
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
@@ -416,18 +414,27 @@ public class BinReprojectorTest {
         return temporalBin;
     }
 
-    private BinningContext getCtx(IsinBinningGrid binningGrid) {
+    private BinningContext createBinningContext(IsinBinningGrid binningGrid) {
         return new BinningContext(binningGrid, new VariableContextImpl(), binManager);
     }
 
-    private static class NobsRaster implements BinRasterizer {
-        int[] nobsData;
+    private static class NobsRaster implements TemporalBinRenderer {
         private final int w;
+        private final int h;
+        private final int[] nobsData;
+        private final Rectangle rasterRegion;
 
-        private NobsRaster(int w, int h) {
-            this.w = w;
+        private NobsRaster(Rectangle rasterRegion) {
+            this.rasterRegion = rasterRegion;
+            this.w = rasterRegion.width;
+            this.h = rasterRegion.height;
             nobsData = new int[w * h];
             Arrays.fill(nobsData, -2);
+        }
+
+        @Override
+        public Rectangle getRasterRegion() {
+            return rasterRegion;
         }
 
         @Override
@@ -439,12 +446,12 @@ public class BinReprojectorTest {
         }
 
         @Override
-        public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
+        public void renderBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
             nobsData[y * w + x] = temporalBin.getNumObs();
         }
 
         @Override
-        public void processMissingBin(int x, int y) throws IOException {
+        public void renderMissingBin(int x, int y) throws IOException {
             nobsData[y * w + x] = -1;
         }
 

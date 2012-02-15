@@ -27,9 +27,9 @@ import java.io.InputStreamReader;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class OutputterConfigTest {
+public class FormatterConfigTest {
 
-    private OutputterConfig config;
+    private FormatterConfig config;
 
     @Before
     public void initOutputterConfig() throws IOException, BindingException {
@@ -47,7 +47,7 @@ public class OutputterConfigTest {
     public void testXmlGeneration() throws BindingException {
         final String xml = config.toXml();
         //System.out.println("xml = \n" + xml);
-        final OutputterConfig configCopy = OutputterConfig.fromXml(xml);
+        final FormatterConfig configCopy = FormatterConfig.fromXml(xml);
 
         assertEquals(config.getOutputFile(), configCopy.getOutputFile());
         assertEquals(config.getOutputFormat(), configCopy.getOutputFormat());
@@ -55,10 +55,10 @@ public class OutputterConfigTest {
         assertArrayEquals(config.getBandConfigurations(), configCopy.getBandConfigurations());
     }
 
-    private OutputterConfig loadConfig(String configPath) throws IOException, BindingException {
+    private FormatterConfig loadConfig(String configPath) throws IOException, BindingException {
         final InputStreamReader reader = new InputStreamReader(getClass().getResourceAsStream(configPath));
         try {
-            return OutputterConfig.fromXml(FileUtils.readText(reader));
+            return FormatterConfig.fromXml(FileUtils.readText(reader));
         } finally {
             reader.close();
         }

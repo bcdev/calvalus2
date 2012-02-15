@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
-import org.esa.beam.binning.OutputterConfig;
+import org.esa.beam.binning.FormatterConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.ParseException;
@@ -30,29 +30,29 @@ import java.text.ParseException;
  */
 public class L3FormatterConfig implements XmlConvertible {
 
-    private OutputterConfig outputterConfig;
+    private FormatterConfig formatterConfig;
 
     public L3FormatterConfig() {
-        this(new OutputterConfig());
+        this(new FormatterConfig());
     }
 
     public L3FormatterConfig(String outputType,
                              String outputFile,
                              String outputFormat,
-                             OutputterConfig.BandConfiguration[] bands) {
-        this(new OutputterConfig(outputType,
+                             FormatterConfig.BandConfiguration[] bands) {
+        this(new FormatterConfig(outputType,
                                  outputFile,
                                  outputFormat,
                                  bands));
     }
 
 
-    private L3FormatterConfig(OutputterConfig outputterConfig) {
-        this.outputterConfig = outputterConfig;
+    private L3FormatterConfig(FormatterConfig formatterConfig) {
+        this.formatterConfig = formatterConfig;
     }
 
-    public OutputterConfig getOutputterConfig() {
-        return outputterConfig;
+    public FormatterConfig getFormatterConfig() {
+        return formatterConfig;
     }
 
     /**
@@ -64,12 +64,12 @@ public class L3FormatterConfig implements XmlConvertible {
      *          If the XML cannot be converted to a new formatter configuration object
      */
     public static L3FormatterConfig fromXml(String xml) throws BindingException {
-        return new L3FormatterConfig(OutputterConfig.fromXml(xml));
+        return new L3FormatterConfig(FormatterConfig.fromXml(xml));
     }
 
     @Override
     public String toXml() {
-        return outputterConfig.toXml();
+        return formatterConfig.toXml();
     }
 
     public static ProductData.UTC parseTime(String timeString) {

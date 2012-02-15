@@ -17,12 +17,12 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningContext;
+import com.bc.calvalus.binning.TemporalBinSource;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.binning.Outputter;
-import org.esa.beam.binning.TemporalBinSource;
+import org.esa.beam.binning.Formatter;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -46,13 +46,13 @@ public class L3Formatter {
                        ProductData.UTC startTime,
                        ProductData.UTC endTime) throws Exception {
         final TemporalBinSource temporalBinSource = new L3TemporalBinSource(configuration, partsDir);
-        Outputter.output(binningContext,
-                         formatterConfig.getOutputterConfig(),
+        Formatter.format(binningContext,
+                         temporalBinSource, formatterConfig.getFormatterConfig(),
                          roiGeometry,
                          startTime,
                          endTime,
-                         createConfigurationMetadataElement() ,
-                         temporalBinSource);
+                         createConfigurationMetadataElement()
+        );
     }
 
     private MetadataElement createConfigurationMetadataElement() {

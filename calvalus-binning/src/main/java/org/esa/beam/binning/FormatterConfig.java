@@ -22,9 +22,11 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 /**
- * The configuration of the L3 formatter
+ * The configuration for the {@link Formatter}.
+ *
+ * @author Norman Fomferra
  */
-public class OutputterConfig {
+public class FormatterConfig {
 
     public static class BandConfiguration {
         public String index;
@@ -66,11 +68,11 @@ public class OutputterConfig {
     @Parameter(alias="outputBands", itemAlias = "band")
     private BandConfiguration[] bandConfigurations;
 
-    public OutputterConfig() {
+    public FormatterConfig() {
         // used by DOM converter
     }
 
-    public OutputterConfig(String outputType,
+    public FormatterConfig(String outputType,
                            String outputFile,
                            String outputFormat,
                            BandConfiguration[] bandConfigurations) {
@@ -88,8 +90,8 @@ public class OutputterConfig {
      * @throws com.bc.ceres.binding.BindingException
      *          If the XML cannot be converted to a new formatter configuration object
      */
-    public static OutputterConfig fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new OutputterConfig());
+    public static FormatterConfig fromXml(String xml) throws BindingException {
+        return new ParameterBlockConverter().convertXmlToObject(xml, new FormatterConfig());
     }
 
     public String toXml() {

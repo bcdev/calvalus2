@@ -1,11 +1,12 @@
-package org.esa.beam.binning;
-
-import com.bc.calvalus.binning.TemporalBin;
+package com.bc.calvalus.binning;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 /**
+ * A source for temporal bins. Temporal bin sources are assumed to organise their temporal bins as parts
+ * in order to allow for parallel provision of multiple parts.
+ *
  * @author Norman Fomferra
  */
 public interface TemporalBinSource {

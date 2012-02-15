@@ -1,6 +1,6 @@
 package org.esa.beam.binning;
 
-import com.bc.calvalus.binning.BinRasterizer;
+import com.bc.calvalus.binning.TemporalBinRenderer;
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
@@ -17,9 +17,11 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * A renderer that renders temporal bins into {@link Product}s.
+ *
  * @author Norman Fomferra
  */
-public final class ProductBinRasterizer implements BinRasterizer {
+public final class ProductTemporalBinRenderer implements TemporalBinRenderer {
     private final Product product;
     private final int rasterWidth;
     private final ProductData numObsLine;
@@ -32,21 +34,23 @@ public final class ProductBinRasterizer implements BinRasterizer {
     private final File outputFile;
     private int yLast;
     private final ProductWriter productWriter;
+    private final Rectangle outputRegion;
 
-    public ProductBinRasterizer(BinningContext binningContext,
-                                File outputFile,
-                                String outputFormat,
-                                Rectangle outputRegion,
-                                double pixelSize,
-                                ProductData.UTC startTime,
-                                ProductData.UTC endTime,
-                                MetadataElement metadata) throws IOException {
+    public ProductTemporalBinRenderer(BinningContext binningContext,
+                                      File outputFile,
+                                      String outputFormat,
+                                      Rectangle outputRegion,
+                                      double pixelSize,
+                                      ProductData.UTC startTime,
+                                      ProductData.UTC endTime,
+                                      MetadataElement metadata) throws IOException {
 
         productWriter = ProductIO.getProductWriter(outputFormat);
         if (productWriter == null) {
             throw new IllegalArgumentException("No writer found for output format " + outputFormat);
         }
 
+        this.outputRegion = new Rectangle(outputRegion);
         this.outputFile = outputFile;
 
         CrsGeoCoding geoCoding = createMapGeoCoding(outputRegion, pixelSize);
@@ -83,7 +87,11 @@ public final class ProductBinRasterizer implements BinRasterizer {
         for (int i = 0; i < outputBands.length; i++) {
             fillValues[i] = (float) outputBands[i].getNoDataValue();
         }
+    }
 
+    @Override
+    public Rectangle getRasterRegion() {
+        return outputRegion;
     }
 
     @Override
@@ -104,7 +112,7 @@ public final class ProductBinRasterizer implements BinRasterizer {
     }
 
     @Override
-    public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
+    public void renderBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) throws IOException {
         setData(x, temporalBin, outputVector);
         if (y != yLast) {
             completeLine();
@@ -113,7 +121,7 @@ public final class ProductBinRasterizer implements BinRasterizer {
     }
 
     @Override
-    public void processMissingBin(int x, int y) throws IOException {
+    public void renderMissingBin(int x, int y) throws IOException {
         setNoData(x);
         if (y != yLast) {
             completeLine();

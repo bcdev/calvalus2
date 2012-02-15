@@ -33,7 +33,7 @@ import java.util.*;
  * <ul>
  * <li>{@link SpatialBinner}</li>
  * <li>{@link TemporalBinner}</li>
- * <li>{@link Outputter}</li>
+ * <li>{@link Formatter}</li>
  * </ul>
  *
  *
@@ -70,16 +70,16 @@ public class TestBinner {
         List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
         // Step 3: Formatting
         for (String outputterConfigFile : outputterConfigFiles) {
-            OutputterConfig outputterConfig = OutputterConfig.fromXml(FileUtils.readText(new File(outputterConfigFile)));
-            doOutputting(regionWkt, outputterConfig, binningContext, temporalBins);
+            FormatterConfig formatterConfig = FormatterConfig.fromXml(FileUtils.readText(new File(outputterConfigFile)));
+            doOutputting(regionWkt, formatterConfig, binningContext, temporalBins);
         }
 
         stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceFiles.length));
     }
 
     private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, BinningConfig binningConfig, File[] sourceFiles) throws IOException {
-        final MySpatialBinConsumer spatialBinProcessor = new MySpatialBinConsumer();
-        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
+        final SpatialBinStore spatialBinStore = new SpatialBinStore();
+        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
         for (File sourceFile : sourceFiles) {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
@@ -92,7 +92,7 @@ public class TestBinner {
 
             stopWatch.stopAndTrace("Spatial binning of product took");
         }
-        return spatialBinProcessor.getSpatialBinMap();
+        return spatialBinStore.getSpatialBinMap();
     }
 
     private static List<TemporalBin> doTemporalBinning(BinningContext binningContext, SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
@@ -111,22 +111,22 @@ public class TestBinner {
         return temporalBins;
     }
 
-    private static void doOutputting(String regionWKT, OutputterConfig outputterConfig, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
+    private static void doOutputting(String regionWKT, FormatterConfig formatterConfig, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Outputter.output(binningContext,
-                         outputterConfig,
+        Formatter.format(binningContext,
+                         new MyTemporalBinSource(temporalBins), formatterConfig,
                          new WKTReader().read(regionWKT),
                          new ProductData.UTC(),
                          new ProductData.UTC(),
-                         new MetadataElement("TODO_add_metadata_here"),
-                         new MyTemporalBinSource(temporalBins));
+                         new MetadataElement("TODO_add_metadata_here")
+        );
 
         stopWatch.stopAndTrace("Writing output took");
     }
 
-    private static class MySpatialBinConsumer implements SpatialBinConsumer {
+    private static class SpatialBinStore implements SpatialBinConsumer {
         // Note, we use a sorted map in order to sort entries on-the-fly
         final private SortedMap<Long, List<SpatialBin>> spatialBinMap = new TreeMap<Long, List<SpatialBin>>();
 

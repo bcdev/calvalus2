@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class BinManagerImplTest {
+public class BinManagerTest {
     @Test
     public void testBinCreation() {
         VariableContext vctx = new MyVariableContext("a", "b", "c");

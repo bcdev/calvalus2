@@ -122,6 +122,15 @@ public class BinManager {
          return temporalBin;
      }
 
+    public TemporalBin createTemporalBin(long binIndex, Iterable<? extends SpatialBin> spatialBins) {
+        TemporalBin temporalBin = createTemporalBin(binIndex);
+        for (SpatialBin spatialBin : spatialBins) {
+            aggregateTemporalBin(spatialBin, temporalBin);
+        }
+        completeTemporalBin(temporalBin);
+        return temporalBin;
+    }
+
     public void aggregateTemporalBin(SpatialBin inputBin, TemporalBin outputBin) {
         aggregateBin(inputBin, outputBin);
         outputBin.numPasses++;

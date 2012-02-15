@@ -5,9 +5,11 @@ import java.util.*;
 /**
  * Produces spatial bins by processing a given "slice" of observations.
  * A slice is referred to as a spatially contiguous region.
+ * The class uses a {@link SpatialBinConsumer} to inform clients about a new slice of spatial bins ready to be consumed.
  *
  * @author Norman Fomferra
  * @see ObservationSlice
+ * @see TemporalBinner
  */
 public class SpatialBinner {
 
@@ -25,7 +27,7 @@ public class SpatialBinner {
      * Constructs a spatial binner.
      *
      * @param binningContext The binning context.
-     * @param consumer      The processor that recieves the spatial bins processed from observations.
+     * @param consumer       The consumer that receives the spatial bins processed from observations.
      */
     public SpatialBinner(BinningContext binningContext, SpatialBinConsumer consumer) {
         this.binningContext = binningContext;

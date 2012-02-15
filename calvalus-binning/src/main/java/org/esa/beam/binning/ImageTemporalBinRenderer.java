@@ -1,6 +1,6 @@
 package org.esa.beam.binning;
 
-import com.bc.calvalus.binning.BinRasterizer;
+import com.bc.calvalus.binning.TemporalBinRenderer;
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.binning.WritableVector;
@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * A bin rasterizer that writes JPEG or PNG images.
+ * A renderer that renders temporal bins into JPEG or PNG images.
  *
  * @author Norman Fomferra
  */
-public final class ImageBinRasterizer implements BinRasterizer {
+public final class ImageTemporalBinRenderer implements TemporalBinRenderer {
 
     private final int bandCount;
     private final int rasterWidth;
@@ -33,9 +33,11 @@ public final class ImageBinRasterizer implements BinRasterizer {
     private final File outputFile;
     private final String outputFormat;
 
-    public ImageBinRasterizer(BinningContext binningContext,
-                              File outputFile, String outputFormat, Rectangle outputRegion, OutputterConfig.BandConfiguration[] bandConfigurations,
-                              boolean writeRgb) {
+    public ImageTemporalBinRenderer(BinningContext binningContext,
+                                    File outputFile, String outputFormat,
+                                    Rectangle outputRegion,
+                                    FormatterConfig.BandConfiguration[] bandConfigurations,
+                                    boolean writeRgb) {
 
         final int bandCount = bandConfigurations.length;
         if (bandCount == 0) {
@@ -63,13 +65,18 @@ public final class ImageBinRasterizer implements BinRasterizer {
         bandMinValues = new float[bandCount];
         bandMaxValues = new float[bandCount];
         for (int i = 0; i < bandCount; i++) {
-            OutputterConfig.BandConfiguration bandConfiguration = bandConfigurations[i];
+            FormatterConfig.BandConfiguration bandConfiguration = bandConfigurations[i];
             String nameStr = bandConfiguration.name;
             bandIndices[i] = Integer.parseInt(bandConfiguration.index);
             bandNames[i] = nameStr != null ? nameStr : outputFeatureNames[bandIndices[i]];
             bandMinValues[i] = Float.parseFloat(bandConfiguration.minValue);
             bandMaxValues[i] = Float.parseFloat(bandConfiguration.maxValue);
         }
+    }
+
+    @Override
+    public Rectangle getRasterRegion() {
+        return outputRegion;
     }
 
     @Override
@@ -103,14 +110,14 @@ public final class ImageBinRasterizer implements BinRasterizer {
     }
 
     @Override
-    public void processBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
+    public void renderBin(int x, int y, TemporalBin temporalBin, WritableVector outputVector) {
         for (int i = 0; i < bandCount; i++) {
             bandData[i][rasterWidth * y + x] = outputVector.get(bandIndices[i]);
         }
     }
 
     @Override
-    public void processMissingBin(int x, int y) {
+    public void renderMissingBin(int x, int y) {
         for (int i = 0; i < bandCount; i++) {
             bandData[i][rasterWidth * y + x] = Float.NaN;
         }
