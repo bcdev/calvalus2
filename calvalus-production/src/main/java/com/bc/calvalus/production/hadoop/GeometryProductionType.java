@@ -49,7 +49,7 @@ public class GeometryProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("WorldMap ", productionRequest);
+        String defaultProductionName = L2ProductionType.createProductionName("Geometries ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         String inputPath = productionRequest.getString("inputPath");
@@ -63,7 +63,7 @@ public class GeometryProductionType extends HadoopProductionType {
                 String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
                 String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
 
-                String outputDir = getOutputPath(productionRequest, productionId, "worldmap-" + (i + 1));
+                String outputDir = getOutputPath(productionRequest, productionId, "geometries-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
