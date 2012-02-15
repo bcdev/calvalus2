@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.processing.UnixTestRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,9 +39,9 @@ public class SequenceFileBinIteratorTest {
                                                                conf,
                                                                PATH,
                                                                LongWritable.class,
-                                                               TemporalBin.class);
+                                                               L3TemporalBin.class);
 
-        TemporalBin val = new TemporalBin(2L, 3);
+        L3TemporalBin val = new L3TemporalBin(2L, 3);
         val.getFeatureValues()[0] = 0.1F;
         val.getFeatureValues()[1] = 0.2F;
         val.getFeatureValues()[2] = 0.3F;
@@ -56,7 +55,7 @@ public class SequenceFileBinIteratorTest {
         Iterator<L3TemporalBin> it = new SequenceFileBinIterator(reader);
 
         assertTrue(it.hasNext());
-        TemporalBin bin = it.next();
+        L3TemporalBin bin = it.next();
         assertNotNull(bin);
         assertNotNull(bin.getFeatureValues());
         assertEquals(3, bin.getFeatureValues().length);
