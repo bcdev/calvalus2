@@ -89,7 +89,7 @@ public final class ImageBinRasterizer implements BinRasterizer {
                           outputFormat, outputFile);
         } else {
             for (int i = 0; i < bandCount; i++) {
-                String fileName = String.format("%s_%s.%s",
+                String fileName = String.format("%s_%s%s",
                                                 FileUtils.getFilenameWithoutExtension(outputFile),
                                                 bandNames[i],
                                                 FileUtils.getExtension(outputFile));
