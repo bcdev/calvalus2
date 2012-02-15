@@ -29,7 +29,7 @@ public class SpatialBinnerTest {
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
         BinningContext binningContext = new BinningContext(binningGrid, variableContext, binManager);
-        com.bc.calvalus.binning.MySpatialBinProcessor mySpatialBinProcessor = new com.bc.calvalus.binning.MySpatialBinProcessor(binManager);
+        MySpatialBinConsumer mySpatialBinProcessor = new MySpatialBinConsumer(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, mySpatialBinProcessor);
 
         spatialBinner.processObservationSlice(new ObservationImpl(0, 1.1, 1.1f),
@@ -117,7 +117,7 @@ public class SpatialBinnerTest {
 
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(new AggregatorAverageML(variableContext, "x", null, null));
-        MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
+        TestSpatialBinConsumer spatialBinProcessor = new TestSpatialBinConsumer();
         BinningContext binningContext = new BinningContext(binningGrid, variableContext, binManager);
 
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
@@ -150,13 +150,13 @@ public class SpatialBinnerTest {
         }
     }
 
-    private static class MySpatialBinProcessor implements SpatialBinProcessor {
+    private static class TestSpatialBinConsumer implements SpatialBinConsumer {
         int numObservationsTotal;
         boolean verbous = false;
         int sliceIndex;
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> sliceBins) {
+        public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> sliceBins) {
             if (verbous) {
                 // Sort for better readability
                 Collections.sort(sliceBins, new BinComparator());

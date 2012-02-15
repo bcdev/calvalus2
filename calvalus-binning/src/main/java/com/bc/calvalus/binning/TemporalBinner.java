@@ -16,7 +16,7 @@ public class TemporalBinner {
     }
 
     /**
-     * @return The binning context that will also be passed to {@link SpatialBinProcessor#processSpatialBinSlice(BinningContext, java.util.List)}.
+     * @return The binning context that will also be passed to {@link SpatialBinConsumer#consumeSpatialBins(BinningContext, java.util.List)}.
      */
     public BinningContext getBinningContext() {
         return binningContext;

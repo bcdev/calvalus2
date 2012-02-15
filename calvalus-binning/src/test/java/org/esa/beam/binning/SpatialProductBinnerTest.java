@@ -36,7 +36,7 @@ public class SpatialProductBinnerTest {
         BinningContext ctx = createValidCtx();
 
         try {
-            MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
+            MySpatialBinConsumer mySpatialBinProcessor = new MySpatialBinConsumer();
             SpatialProductBinner.processProduct(new Product("p", "t", 32, 256), new SpatialBinner(ctx, mySpatialBinProcessor), 1, null);
             Assert.fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
@@ -58,7 +58,7 @@ public class SpatialProductBinnerTest {
         product.setGeoCoding(new TiePointGeoCoding(lat, lon));
         product.setPreferredTileSize(32, 16);
 
-        MySpatialBinProcessor mySpatialBinProcessor = new MySpatialBinProcessor();
+        MySpatialBinConsumer mySpatialBinProcessor = new MySpatialBinConsumer();
         SpatialProductBinner.processProduct(product, new SpatialBinner(ctx, mySpatialBinProcessor), 1, ProgressMonitor.NULL);
         Assert.assertEquals(32 * 256, mySpatialBinProcessor.numObs);
     }
@@ -99,11 +99,11 @@ public class SpatialProductBinnerTest {
         return new BinningContext(binningGrid, variableContext, binManager);
     }
 
-    private static class MySpatialBinProcessor implements SpatialBinProcessor {
+    private static class MySpatialBinConsumer implements SpatialBinConsumer {
         int numObs;
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
+        public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> spatialBins) {
             // System.out.println("spatialBins = " + Arrays.toString(spatialBins.toArray()));
             for (SpatialBin spatialBin : spatialBins) {
                 Assert.assertEquals(2.4f, spatialBin.getFeatureValues()[0], 0.01f);  // mean of a

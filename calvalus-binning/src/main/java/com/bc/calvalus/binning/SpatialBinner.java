@@ -14,7 +14,7 @@ public class SpatialBinner {
     private final BinningContext binningContext;
     private final BinningGrid binningGrid;
     private final BinManager binManager;
-    private final SpatialBinProcessor processor;
+    private final SpatialBinConsumer consumer;
 
     // State variables
     private final Map<Long, SpatialBin> activeBinMap;
@@ -25,20 +25,20 @@ public class SpatialBinner {
      * Constructs a spatial binner.
      *
      * @param binningContext The binning context.
-     * @param processor      The processor that recieves the spatial bins processed from observations.
+     * @param consumer      The processor that recieves the spatial bins processed from observations.
      */
-    public SpatialBinner(BinningContext binningContext, SpatialBinProcessor processor) {
+    public SpatialBinner(BinningContext binningContext, SpatialBinConsumer consumer) {
         this.binningContext = binningContext;
         this.binningGrid = binningContext.getBinningGrid();
         this.binManager = binningContext.getBinManager();
-        this.processor = processor;
+        this.consumer = consumer;
         this.activeBinMap = new HashMap<Long, SpatialBin>();
         this.finalizedBinMap = new HashMap<Long, SpatialBin>();
         this.exceptions = new ArrayList<Exception>();
     }
 
     /**
-     * @return The binning context that will also be passed to {@link  SpatialBinProcessor#processSpatialBinSlice(BinningContext, java.util.List)}.
+     * @return The binning context that will also be passed to {@link  SpatialBinConsumer#consumeSpatialBins(BinningContext, java.util.List)}.
      */
     public BinningContext getBinningContext() {
         return binningContext;
@@ -53,7 +53,7 @@ public class SpatialBinner {
 
     /**
      * Processes a slice of observations.
-     * Will cause the {@link com.bc.calvalus.binning.SpatialBinProcessor} to be invoked.
+     * Will cause the {@link SpatialBinConsumer} to be invoked.
      *
      * @param observations The observations.
      */
@@ -109,7 +109,7 @@ public class SpatialBinner {
             binManager.completeSpatialBin(bin);
         }
         try {
-            processor.processSpatialBinSlice(binningContext, bins);
+            consumer.consumeSpatialBins(binningContext, bins);
         } catch (Exception e) {
             exceptions.add(e);
         }

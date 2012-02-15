@@ -78,7 +78,7 @@ public class TestBinner {
     }
 
     private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, BinningConfig binningConfig, File[] sourceFiles) throws IOException {
-        final MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
+        final MySpatialBinConsumer spatialBinProcessor = new MySpatialBinConsumer();
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
         for (File sourceFile : sourceFiles) {
             StopWatch stopWatch = new StopWatch();
@@ -126,7 +126,7 @@ public class TestBinner {
         stopWatch.stopAndTrace("Writing output took");
     }
 
-    private static class MySpatialBinProcessor implements SpatialBinProcessor {
+    private static class MySpatialBinConsumer implements SpatialBinConsumer {
         // Note, we use a sorted map in order to sort entries on-the-fly
         final private SortedMap<Long, List<SpatialBin>> spatialBinMap = new TreeMap<Long, List<SpatialBin>>();
 
@@ -135,7 +135,7 @@ public class TestBinner {
         }
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
+        public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> spatialBins) {
 
             for (SpatialBin spatialBin : spatialBins) {
                 List<SpatialBin> spatialBinList = spatialBinMap.get(spatialBin.getIndex());

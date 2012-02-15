@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.SpatialBinProcessor;
+import com.bc.calvalus.binning.SpatialBinConsumer;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
@@ -107,7 +107,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     }
 
 
-    private static class SpatialBinEmitter implements SpatialBinProcessor {
+    private static class SpatialBinEmitter implements SpatialBinConsumer {
         private Context context;
         int numObsTotal = 0;
         int numBinsTotal = 0;
@@ -117,7 +117,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         }
 
         @Override
-        public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
+        public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
                 context.write(new LongWritable(spatialBin.getIndex()), (L3SpatialBin) spatialBin);
                 numObsTotal += spatialBin.getNumObs();
