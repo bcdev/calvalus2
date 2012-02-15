@@ -47,6 +47,17 @@ public class InputPathResolverTest {
     }
 
     @Test
+    public void testThatInputPatternsCanHaveMultipleEntries() throws ParseException {
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("foo,bar,baz", null, null, null);
+        assertNotNull(pathGlobs);
+        assertEquals(3, pathGlobs.size());
+        assertEquals("foo", pathGlobs.get(0));
+        assertEquals("bar", pathGlobs.get(1));
+        assertEquals("baz", pathGlobs.get(2));
+    }
+
+
+    @Test
     public void testThatInputIsOutputWithSlashesNameAndNoVars() throws ParseException {
         List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/", null, null, null);
         assertNotNull(pathGlobs);

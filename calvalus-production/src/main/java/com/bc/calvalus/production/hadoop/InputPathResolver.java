@@ -66,35 +66,37 @@ public class InputPathResolver {
         this.maxDate = maxDate;
     }
 
-    public List<String> resolve(String inputPathPattern) {
-        if (regionName != null) {
-            inputPathPattern = inputPathPattern.replace("${region}", regionName);
-        } else {
-            inputPathPattern = inputPathPattern.replace("${region}", ".*");
-        }
+    public List<String> resolve(String inputPathPatterns) {
         List<String> globList = new ArrayList<String>(128);
+        for (String pattern : inputPathPatterns.split(",")) {
+            if (regionName != null) {
+                pattern = pattern.replace("${region}", regionName);
+            } else {
+                pattern = pattern.replace("${region}", ".*");
+            }
 
-        if (minDate != null && maxDate != null) {
-            Set<String> globSet = new HashSet<String>(517);
-            Calendar calendar = ProductData.UTC.createCalendar();
-            calendar.setTime(minDate);
-            Calendar stopCal = ProductData.UTC.createCalendar();
-            stopCal.setTime(maxDate);
-            do {
-                String glob = inputPathPattern.replace("${yyyy}", String.format("%tY", calendar));
-                glob = glob.replace("${MM}", String.format("%tm", calendar));
-                glob = glob.replace("${dd}", String.format("%td", calendar));
-                if (!globSet.contains(glob)) {
-                    globSet.add(glob);
-                    globList.add(glob);
-                }
-                calendar.add(Calendar.DAY_OF_WEEK, 1);
-            } while (!calendar.after(stopCal));
-        } else {
-            String glob = inputPathPattern.replace("${yyyy}", ".*");
-            glob = glob.replace("${MM}", ".*");
-            glob = glob.replace("${dd}", ".*");
-            globList.add(glob);
+            if (minDate != null && maxDate != null) {
+                Set<String> globSet = new HashSet<String>(517);
+                Calendar calendar = ProductData.UTC.createCalendar();
+                calendar.setTime(minDate);
+                Calendar stopCal = ProductData.UTC.createCalendar();
+                stopCal.setTime(maxDate);
+                do {
+                    String glob = pattern.replace("${yyyy}", String.format("%tY", calendar));
+                    glob = glob.replace("${MM}", String.format("%tm", calendar));
+                    glob = glob.replace("${dd}", String.format("%td", calendar));
+                    if (!globSet.contains(glob)) {
+                        globSet.add(glob);
+                        globList.add(glob);
+                    }
+                    calendar.add(Calendar.DAY_OF_WEEK, 1);
+                } while (!calendar.after(stopCal));
+            } else {
+                String glob = pattern.replace("${yyyy}", ".*");
+                glob = glob.replace("${MM}", ".*");
+                glob = glob.replace("${dd}", ".*");
+                globList.add(glob);
+            }
         }
         return globList;
     }
