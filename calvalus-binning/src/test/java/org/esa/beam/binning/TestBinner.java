@@ -7,6 +7,8 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.Debug;
+import org.esa.beam.util.StopWatch;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Ignore;
 
@@ -16,28 +18,103 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * <p>
+ * Usage: <code>TestBinner <i>sourceDir</i> <i>regionWkt</i> <i>binnerConfig</i> <i>formatterConfig</i> [<i>formatterConfig</i> ...]</code>
+ * </p>
+ * with
+ * <ul>
+ * <li><code><i>sourceDir</i></code> Directory containing input product files</li>
+ * <li><code><i>regionWkt</i></code> File with region geometry WKT, e.g. "POLYGON((1 47,27 47,27 33,1 33,1 47))"</li>
+ * <li><code><i>binnerConfig</i></code> File with binning configuration XML (see /org/esa/beam/binning/BinningConfigTest.xml)</li>
+ * <li><code><i>formatterConfig</i></code> File with formatter configuration XML (see /org/esa/beam/binning/OutputterConfigTest.xml)</li>
+ * </ul>
+ *
+ * The test demonstrates the usage of various binning API classes such as
+ * <ul>
+ * <li>{@link SpatialBinner}</li>
+ * <li>{@link TemporalBinner}</li>
+ * <li>{@link Outputter}</li>
+ * </ul>
+ *
+ *
  * @author Norman Fomferra
  */
 @Ignore
 public class TestBinner {
     public static void main(String[] args) throws Exception {
-        String binnerConfigPath = args[0];
-        String outputterConfigPath = args[1];
-        String sourceDirPath = args[2];
-        String regionWKT = "polygon((16.77 29.97, 35.80 30.00, 42.27 41.98, 39.63 47.43, 31.50 47.47, 25.95 41.74, 21.20 40.95, 13.85 46.17,  3.50 43.75, -5.50 36.20, -5.50 35.30, 16.77 29.97))";
 
-        BinningConfig binningConfig = BinningConfig.fromXml(FileUtils.readText(new File(binnerConfigPath)));
-        OutputterConfig outputterConfig = OutputterConfig.fromXml(FileUtils.readText(new File(outputterConfigPath)));
-        File[] sourceFiles = new File(sourceDirPath).listFiles(new FilenameFilter() {
+        String sourceDirFile = args[0];
+        String regionWktFile = args[1];
+        String binnerConfigFile = args[2];
+        String[] outputterConfigFiles = new String[args.length - 3];
+        System.arraycopy(args, 3, outputterConfigFiles, 0, outputterConfigFiles.length);
+
+        File[] sourceFiles = new File(sourceDirFile).listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 return name.endsWith(".N1");
             }
         });
+        String regionWkt = FileUtils.readText(new File(regionWktFile));
+        BinningConfig binningConfig = BinningConfig.fromXml(FileUtils.readText(new File(binnerConfigFile)));
+
+        Debug.setEnabled(true);
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         BinningContext binningContext = binningConfig.createBinningContext();
-        TreeMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning(binningContext, binningConfig, sourceFiles);
+        // Step 1: Spatial binning - creates time-series of spatial bins for each bin ID ordered by ID. The tree map structure is <ID, time-series>
+        SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning(binningContext, binningConfig, sourceFiles);
+        // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
         List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
+        // Step 3: Formatting
+        for (String outputterConfigFile : outputterConfigFiles) {
+            OutputterConfig outputterConfig = OutputterConfig.fromXml(FileUtils.readText(new File(outputterConfigFile)));
+            doOutputting(regionWkt, outputterConfig, binningContext, temporalBins);
+        }
+
+        stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceFiles.length));
+    }
+
+    private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, BinningConfig binningConfig, File[] sourceFiles) throws IOException {
+        final MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
+        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
+        for (File sourceFile : sourceFiles) {
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
+            System.out.println("reading " + sourceFile);
+            final Product product = ProductIO.readProduct(sourceFile);
+            System.out.println("processing " + sourceFile);
+            final long numObs = SpatialProductBinner.processProduct(product, spatialBinner, binningConfig.getSuperSampling(), ProgressMonitor.NULL);
+            System.out.println("done, " + numObs + " observations processed");
+
+            stopWatch.stopAndTrace("Spatial binning of product took");
+        }
+        return spatialBinProcessor.getSpatialBinMap();
+    }
+
+    private static List<TemporalBin> doTemporalBinning(BinningContext binningContext, SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        final TemporalBinner temporalBinner = new TemporalBinner(binningContext);
+        final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
+        for (Map.Entry<Long, List<SpatialBin>> entry : spatialBinMap.entrySet()) {
+            final TemporalBin temporalBin = temporalBinner.processSpatialBins(entry.getKey(), entry.getValue());
+            temporalBins.add(temporalBin);
+        }
+
+        stopWatch.stopAndTrace("Temporal binning took");
+
+        return temporalBins;
+    }
+
+    private static void doOutputting(String regionWKT, OutputterConfig outputterConfig, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
         Outputter.output(binningContext,
                          outputterConfig,
                          new WKTReader().read(regionWKT),
@@ -45,41 +122,21 @@ public class TestBinner {
                          new ProductData.UTC(),
                          new MetadataElement("TODO_add_metadata_here"),
                          new MyTemporalBinSource(temporalBins));
-    }
 
-    private static TreeMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, BinningConfig binningConfig, File[] sourceFiles) throws IOException {
-        final MySpatialBinProcessor spatialBinProcessor = new MySpatialBinProcessor();
-        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
-        for (File sourceFile : sourceFiles) {
-            System.out.println("reading " + sourceFile);
-            final Product product = ProductIO.readProduct(sourceFile);
-            System.out.println("processing " + sourceFile);
-            final long numObs = SpatialProductBinner.processProduct(product, spatialBinner, binningConfig.getSuperSampling(), ProgressMonitor.NULL);
-            System.out.println("done, " + numObs + " observations processed");
-        }
-        return spatialBinProcessor.getSpatialBinMap();
-    }
-
-    private static List<TemporalBin> doTemporalBinning(BinningContext binningContext, TreeMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
-        final TemporalBinner temporalBinner = new TemporalBinner(binningContext);
-        final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
-        for (Map.Entry<Long, List<SpatialBin>> entry : spatialBinMap.entrySet()) {
-            final TemporalBin temporalBin = temporalBinner.processSpatialBins(entry.getKey(), entry.getValue());
-            temporalBins.add(temporalBin);
-        }
-        return temporalBins;
+        stopWatch.stopAndTrace("Writing output took");
     }
 
     private static class MySpatialBinProcessor implements SpatialBinProcessor {
-        final private TreeMap<Long, List<SpatialBin>> spatialBinMap = new TreeMap<Long, List<SpatialBin>>();
+        // Note, we use a sorted map in order to sort entries on-the-fly
+        final private SortedMap<Long, List<SpatialBin>> spatialBinMap = new TreeMap<Long, List<SpatialBin>>();
 
-        public TreeMap<Long, List<SpatialBin>> getSpatialBinMap() {
+        public SortedMap<Long, List<SpatialBin>> getSpatialBinMap() {
             return spatialBinMap;
         }
 
         @Override
         public void processSpatialBinSlice(BinningContext ctx, List<SpatialBin> spatialBins) throws Exception {
-            
+
             for (SpatialBin spatialBin : spatialBins) {
                 List<SpatialBin> spatialBinList = spatialBinMap.get(spatialBin.getIndex());
                 if (spatialBinList == null) {
@@ -87,7 +144,7 @@ public class TestBinner {
                     spatialBinMap.put(spatialBin.getIndex(), spatialBinList);
                 }
                 spatialBinList.add(spatialBin);
-            }                
+            }
         }
     }
 
