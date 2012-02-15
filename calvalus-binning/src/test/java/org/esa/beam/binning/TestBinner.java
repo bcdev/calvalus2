@@ -26,7 +26,7 @@ import java.util.*;
  * <li><code><i>sourceDir</i></code> Directory containing input product files</li>
  * <li><code><i>regionWkt</i></code> File with region geometry WKT, e.g. "POLYGON((1 47,27 47,27 33,1 33,1 47))"</li>
  * <li><code><i>binnerConfig</i></code> File with binning configuration XML (see /org/esa/beam/binning/BinningConfigTest.xml)</li>
- * <li><code><i>formatterConfig</i></code> File with formatter configuration XML (see /org/esa/beam/binning/OutputterConfigTest.xml)</li>
+ * <li><code><i>formatterConfig</i></code> File with formatter configuration XML (see /org/esa/beam/binning/FormatterConfigTest.xml)</li>
  * </ul>
  *
  * The test demonstrates the usage of various binning API classes such as

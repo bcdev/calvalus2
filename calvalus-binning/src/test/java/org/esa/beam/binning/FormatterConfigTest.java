@@ -33,7 +33,7 @@ public class FormatterConfigTest {
 
     @Before
     public void initOutputterConfig() throws IOException, BindingException {
-        config = loadConfig("OutputterConfigTest.xml");
+        config = loadConfig("FormatterConfigTest.xml");
     }
 
     @Test
