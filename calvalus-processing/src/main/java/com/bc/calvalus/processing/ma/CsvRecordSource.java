@@ -12,8 +12,23 @@ import java.util.Date;
 import java.util.Iterator;
 
 /**
- * A record source that reads from a CSV stream. Values must be separated by a TAB character, records by a NL (newline).
- * The first records must contain header names. All non-header records must use the same data type in a column.
+ * A record source that reads from a CSV stream.
+ * <p>
+ * The expected CSV text format is as follows:<br/>
+ * <ul>
+ * <li>Values must be separated by a TAB character, records by a NL (newline).</li>
+ * <li>Comment lines are ones whose first character is the hash character ('#').
+ * Comment lines and empty lines are ignored.</li>
+ * <li>The first record must contain the header names. All non-header records must use the same data type in a column.</li>
+ * <li>Calvalus expects a geographical point coordinate top be present, the recognised header names are "lat",
+ * "latitude", "northing" and "lon", "long", "longitude", "easting" (all case-insensitive).
+ * Coordinates must be given as decimal degrees.</li>
+ * <li>In order to indicate an optional time(-stamp) value, the header names "time" or "date" (all case-insensitive)
+ * are recognised.
+ * The usual format for time values is "yyyy-MM-dd hh:mm:ss".</li>
+ * <li>Missing numbers (no-data) must be indicated using the string "nan" (case-insensitive).</li>
+ * </ul>
+ * </p>
  *
  * @author Norman
  */
