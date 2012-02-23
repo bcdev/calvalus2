@@ -23,8 +23,6 @@ import com.bc.ceres.binding.PropertyContainer;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
-import java.util.Arrays;
-
 /**
  * Configuration for the binning.
  *
@@ -57,13 +55,13 @@ public class BinningConfig {
      * in the input data product to be binned, so that it can be used for binning.
      */
     @Parameter(alias = "variables", itemAlias = "variable")
-    VariableConfiguration[] variableConfigurations;
+    VariableConfig[] variableConfigs;
 
     /**
      * List of aggregators. Aggregators generate the bands in the binned output products.
      */
     @Parameter(alias = "aggregators", itemAlias = "aggregator")
-    AggregatorConfiguration[] aggregatorConfigurations;
+    AggregatorConfig[] aggregatorConfigs;
 
     public int getNumRows() {
         return numRows;
@@ -89,20 +87,32 @@ public class BinningConfig {
         this.superSampling = superSampling;
     }
 
-    public VariableConfiguration[] getVariableConfigurations() {
-        return variableConfigurations;
+    public VariableConfig[] getVariableConfigs() {
+        return variableConfigs;
     }
 
-    public void setVariableConfigurations(VariableConfiguration... variableConfigurations) {
-        this.variableConfigurations = variableConfigurations;
+    public void setVariableConfigs(VariableConfig... variableConfigs) {
+        this.variableConfigs = variableConfigs;
     }
 
-    public AggregatorConfiguration[] getAggregatorConfigurations() {
-        return aggregatorConfigurations;
+    public AggregatorConfig[] getAggregatorConfigs() {
+        return aggregatorConfigs;
     }
 
-    public void setAggregatorConfigurations(AggregatorConfiguration... aggregatorConfigurations) {
-        this.aggregatorConfigurations = aggregatorConfigurations;
+    public void setAggregatorConfigs(AggregatorConfig... aggregatorConfigs) {
+        this.aggregatorConfigs = aggregatorConfigs;
+    }
+
+    public static BinningConfig fromXml(String xml) throws BindingException {
+        return new ParameterBlockConverter().convertXmlToObject(xml, new BinningConfig());
+    }
+
+    public String toXml() {
+        try {
+            return new ParameterBlockConverter().convertObjectToXml(this);
+        } catch (BindingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public BinningContext createBinningContext() {
@@ -125,14 +135,14 @@ public class BinningConfig {
     }
 
     public Aggregator[] createAggregators(VariableContext variableContext) {
-        Aggregator[] aggregators = new Aggregator[aggregatorConfigurations.length];
+        Aggregator[] aggregators = new Aggregator[aggregatorConfigs.length];
         for (int i = 0; i < aggregators.length; i++) {
-            AggregatorConfiguration aggregatorConfiguration = aggregatorConfigurations[i];
-            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfiguration.type);
+            AggregatorConfig aggregatorConfig = aggregatorConfigs[i];
+            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfig.getType());
             if (descriptor != null) {
-                aggregators[i] = descriptor.createAggregator(variableContext, PropertyContainer.createObjectBacked(aggregatorConfiguration));
+                aggregators[i] = descriptor.createAggregator(variableContext, PropertyContainer.createObjectBacked(aggregatorConfig));
             } else {
-                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfiguration.type);
+                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfig.getType());
             }
         }
         return aggregators;
@@ -151,21 +161,21 @@ public class BinningConfig {
 
         // define declared variables
         //
-        if (variableConfigurations != null) {
-            for (VariableConfiguration variable : variableConfigurations) {
-                variableContext.defineVariable(variable.name, variable.expr);
+        if (variableConfigs != null) {
+            for (VariableConfig variableConfig : variableConfigs) {
+                variableContext.defineVariable(variableConfig.getName(), variableConfig.getExpr());
             }
         }
 
         // define variables of all aggregators
         //
-        if (aggregatorConfigurations != null) {
-            for (AggregatorConfiguration aggregatorConfiguration : aggregatorConfigurations) {
-                String varName = aggregatorConfiguration.varName;
+        if (aggregatorConfigs != null) {
+            for (AggregatorConfig aggregatorConfig : aggregatorConfigs) {
+                String varName = aggregatorConfig.getVarName();
                 if (varName != null) {
                     variableContext.defineVariable(varName);
                 } else {
-                    String[] varNames = aggregatorConfiguration.varNames;
+                    String[] varNames = aggregatorConfig.getVarNames();
                     if (varNames != null) {
                         for (String varName1 : varNames) {
                             variableContext.defineVariable(varName1);
@@ -175,165 +185,6 @@ public class BinningConfig {
             }
         }
         return variableContext;
-    }
-
-    public static BinningConfig fromXml(String xml) throws BindingException {
-        return new ParameterBlockConverter().convertXmlToObject(xml, new BinningConfig());
-    }
-
-    public String toXml() {
-        try {
-            return new ParameterBlockConverter().convertObjectToXml(this);
-        } catch (BindingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static class VariableConfiguration {
-        private String name;
-
-        private String expr;
-
-        public VariableConfiguration() {
-        }
-
-        public VariableConfiguration(String name, String expr) {
-            this.name = name;
-            this.expr = expr;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getExpr() {
-            return expr;
-        }
-
-        public void setExpr(String expr) {
-            this.expr = expr;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            VariableConfiguration that = (VariableConfiguration) o;
-
-            if (!expr.equals(that.expr)) return false;
-            if (!name.equals(that.name)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = name.hashCode();
-            result = 31 * result + expr.hashCode();
-            return result;
-        }
-    }
-
-    public static class AggregatorConfiguration {
-        private String type;
-
-        private String varName;
-
-        private String[] varNames;
-
-        private Integer percentage;
-
-        private Double weightCoeff;
-
-        private Float fillValue;
-
-        public AggregatorConfiguration() {
-        }
-
-        public AggregatorConfiguration(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public String getVarName() {
-            return varName;
-        }
-
-        public void setVarName(String varName) {
-            this.varName = varName;
-        }
-
-        public String[] getVarNames() {
-            return varNames;
-        }
-
-        public void setVarNames(String[] varNames) {
-            this.varNames = varNames;
-        }
-
-        public Integer getPercentage() {
-            return percentage;
-        }
-
-        public void setPercentage(Integer percentage) {
-            this.percentage = percentage;
-        }
-
-        public Double getWeightCoeff() {
-            return weightCoeff;
-        }
-
-        public void setWeightCoeff(Double weightCoeff) {
-            this.weightCoeff = weightCoeff;
-        }
-
-        public Float getFillValue() {
-            return fillValue;
-        }
-
-        public void setFillValue(Float fillValue) {
-            this.fillValue = fillValue;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            AggregatorConfiguration that = (AggregatorConfiguration) o;
-
-            if (fillValue != null ? !fillValue.equals(that.fillValue) : that.fillValue != null) return false;
-            if (percentage != null ? !percentage.equals(that.percentage) : that.percentage != null) return false;
-            if (!type.equals(that.type)) return false;
-            if (varName != null ? !varName.equals(that.varName) : that.varName != null) return false;
-            if (!Arrays.equals(varNames, that.varNames)) return false;
-            if (weightCoeff != null ? !weightCoeff.equals(that.weightCoeff) : that.weightCoeff != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = type.hashCode();
-            result = 31 * result + (varName != null ? varName.hashCode() : 0);
-            result = 31 * result + (varNames != null ? Arrays.hashCode(varNames) : 0);
-            result = 31 * result + (percentage != null ? percentage.hashCode() : 0);
-            result = 31 * result + (weightCoeff != null ? weightCoeff.hashCode() : 0);
-            result = 31 * result + (fillValue != null ? fillValue.hashCode() : 0);
-            return result;
-        }
     }
 
 }

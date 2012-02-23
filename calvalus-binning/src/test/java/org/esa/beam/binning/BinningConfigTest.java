@@ -56,31 +56,31 @@ public class BinningConfigTest {
 
     @Test
     public void testResultingVariableContext() {
-        VariableContext varCtx = config.createVariableContext();
+        VariableContext variableContext = config.createVariableContext();
 
-        assertEquals(8, varCtx.getVariableCount());
+        assertEquals(8, variableContext.getVariableCount());
 
-        assertEquals(0, varCtx.getVariableIndex("ndvi"));
-        assertEquals(1, varCtx.getVariableIndex("tsm"));
-        assertEquals(2, varCtx.getVariableIndex("algal1"));
-        assertEquals(3, varCtx.getVariableIndex("algal2"));
-        assertEquals(4, varCtx.getVariableIndex("chl"));
-        assertEquals(5, varCtx.getVariableIndex("reflec_3"));
-        assertEquals(6, varCtx.getVariableIndex("reflec_7"));
-        assertEquals(7, varCtx.getVariableIndex("reflec_8"));
-        assertEquals(-1, varCtx.getVariableIndex("reflec_6"));
-        assertEquals(-1, varCtx.getVariableIndex("reflec_10"));
+        assertEquals(0, variableContext.getVariableIndex("ndvi"));
+        assertEquals(1, variableContext.getVariableIndex("tsm"));
+        assertEquals(2, variableContext.getVariableIndex("algal1"));
+        assertEquals(3, variableContext.getVariableIndex("algal2"));
+        assertEquals(4, variableContext.getVariableIndex("chl"));
+        assertEquals(5, variableContext.getVariableIndex("reflec_3"));
+        assertEquals(6, variableContext.getVariableIndex("reflec_7"));
+        assertEquals(7, variableContext.getVariableIndex("reflec_8"));
+        assertEquals(-1, variableContext.getVariableIndex("reflec_6"));
+        assertEquals(-1, variableContext.getVariableIndex("reflec_10"));
 
-        assertEquals("!l2_flags.INVALID && l2_flags.WATER", varCtx.getValidMaskExpression());
+        assertEquals("!l2_flags.INVALID && l2_flags.WATER", variableContext.getValidMaskExpression());
 
-        assertEquals("ndvi", varCtx.getVariableName(0));
-        assertEquals("(reflec_10 - reflec_6) / (reflec_10 + reflec_6)", varCtx.getVariableExpression(0));
+        assertEquals("ndvi", variableContext.getVariableName(0));
+        assertEquals("(reflec_10 - reflec_6) / (reflec_10 + reflec_6)", variableContext.getVariableExpression(0));
 
-        assertEquals("algal2", varCtx.getVariableName(3));
-        assertEquals(null, varCtx.getVariableExpression(3));
+        assertEquals("algal2", variableContext.getVariableName(3));
+        assertEquals(null, variableContext.getVariableExpression(3));
 
-        assertEquals("reflec_7", varCtx.getVariableName(6));
-        assertEquals(null, varCtx.getVariableExpression(6));
+        assertEquals("reflec_7", variableContext.getVariableName(6));
+        assertEquals(null, variableContext.getVariableExpression(6));
     }
 
     @Test
@@ -122,8 +122,8 @@ public class BinningConfigTest {
         assertEquals(config.getNumRows(), configCopy.getNumRows());
         assertEquals(config.getSuperSampling(), configCopy.getSuperSampling());
         assertEquals(config.getMaskExpr(), configCopy.getMaskExpr());
-        assertArrayEquals(config.getVariableConfigurations(), configCopy.getVariableConfigurations());
-        assertArrayEquals(config.getAggregatorConfigurations(), configCopy.getAggregatorConfigurations());
+        assertArrayEquals(config.getVariableConfigs(), configCopy.getVariableConfigs());
+        assertArrayEquals(config.getAggregatorConfigs(), configCopy.getAggregatorConfigs());
     }
 
     @Test

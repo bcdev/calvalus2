@@ -19,7 +19,8 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinningConfig;
+import org.esa.beam.binning.AggregatorConfig;
+import org.esa.beam.binning.VariableConfig;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
@@ -200,14 +201,14 @@ public class L3ProductionType extends HadoopProductionType {
         l3Config.setNumRows(getNumRows(productionRequest));
         l3Config.setSuperSampling(productionRequest.getInteger("superSampling", 1));
         l3Config.setMaskExpr(productionRequest.getString("maskExpr", ""));
-        l3Config.setVariableConfigurations(getVariables(productionRequest));
-        l3Config.setAggregatorConfigurations(getAggregators(productionRequest));
+        l3Config.setVariableConfigs(getVariables(productionRequest));
+        l3Config.setAggregatorConfigs(getAggregators(productionRequest));
         return l3Config;
     }
 
-    static BinningConfig.AggregatorConfiguration[] getAggregators(ProductionRequest request) throws ProductionException {
+    static AggregatorConfig[] getAggregators(ProductionRequest request) throws ProductionException {
         int variableCount = request.getInteger("variables.count");
-        BinningConfig.AggregatorConfiguration[] aggregatorConfigurations = new BinningConfig.AggregatorConfiguration[variableCount];
+        AggregatorConfig[] aggregatorConfigs = new AggregatorConfig[variableCount];
         for (int i = 0; i < variableCount; i++) {
             String prefix = "variables." + i;
             String variableName = request.getString(prefix + ".name");
@@ -216,26 +217,26 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            BinningConfig.AggregatorConfiguration aggregatorConfiguration = new BinningConfig.AggregatorConfiguration(aggregatorName);
-            aggregatorConfiguration.setVarName(variableName);
-            aggregatorConfiguration.setPercentage(percentage);
-            aggregatorConfiguration.setWeightCoeff(weightCoeff);
-            aggregatorConfiguration.setFillValue(fillValue);
-            aggregatorConfigurations[i] = aggregatorConfiguration;
+            AggregatorConfig aggregatorConfig = new AggregatorConfig(aggregatorName);
+            aggregatorConfig.setVarName(variableName);
+            aggregatorConfig.setPercentage(percentage);
+            aggregatorConfig.setWeightCoeff(weightCoeff);
+            aggregatorConfig.setFillValue(fillValue);
+            aggregatorConfigs[i] = aggregatorConfig;
         }
-        return aggregatorConfigurations;
+        return aggregatorConfigs;
     }
 
-    static BinningConfig.VariableConfiguration[] getVariables(ProductionRequest request) throws ProductionException {
+    static VariableConfig[] getVariables(ProductionRequest request) throws ProductionException {
         int expressionCount = request.getInteger("expression.count", 0);
-        BinningConfig.VariableConfiguration[] variableConfigurations = new BinningConfig.VariableConfiguration[expressionCount];
+        VariableConfig[] variableConfigs = new VariableConfig[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
             String exp = request.getString(prefix + ".expression");
-            variableConfigurations[i] = new BinningConfig.VariableConfiguration(name, exp);
+            variableConfigs[i] = new VariableConfig(name, exp);
         }
-        return variableConfigurations;
+        return variableConfigs;
     }
 
     static int getNumRows(ProductionRequest request) throws ProductionException {

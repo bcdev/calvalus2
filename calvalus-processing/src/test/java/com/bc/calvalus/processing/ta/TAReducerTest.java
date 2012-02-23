@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinningConfig;
+import org.esa.beam.binning.AggregatorConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -99,11 +99,11 @@ public class TAReducerTest {
         l3Config.setNumRows(2160);
         l3Config.setSuperSampling(1); // unused
         l3Config.setMaskExpr(""); // unused
-        BinningConfig.AggregatorConfiguration aggConf = new BinningConfig.AggregatorConfiguration("AVG_ML");
+        AggregatorConfig aggConf = new AggregatorConfig("AVG_ML");
         aggConf.setVarName("chl_conc");
         aggConf.setWeightCoeff(0.5);
         aggConf.setFillValue(Float.NaN);
-        l3Config.setAggregatorConfigurations(aggConf);
+        l3Config.setAggregatorConfigs(aggConf);
         return l3Config;
     }
 }

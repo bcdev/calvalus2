@@ -24,7 +24,9 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.BinningConfig;
+import org.esa.beam.binning.VariableConfig;
 
 // todo - remove class (BinningConfig should be a sufficient replacement) (nf, 2012-02-14)
 
@@ -90,20 +92,20 @@ public class L3Config implements XmlConvertible {
         getBinningConfig().setMaskExpr(maskExpr);
     }
 
-    public BinningConfig.VariableConfiguration[] getVariableConfigurations() {
-        return getBinningConfig().getVariableConfigurations();
+    public VariableConfig[] getVariableConfigs() {
+        return getBinningConfig().getVariableConfigs();
     }
 
-    public void setVariableConfigurations(BinningConfig.VariableConfiguration... variables) {
-        getBinningConfig().setVariableConfigurations(variables);
+    public void setVariableConfigs(VariableConfig... variables) {
+        getBinningConfig().setVariableConfigs(variables);
     }
 
-    public BinningConfig.AggregatorConfiguration[] getAggregatorConfigurations() {
-        return getBinningConfig().getAggregatorConfigurations();
+    public AggregatorConfig[] getAggregatorConfigs() {
+        return getBinningConfig().getAggregatorConfigs();
     }
 
-    public void setAggregatorConfigurations(BinningConfig.AggregatorConfiguration... aggregators) {
-        getBinningConfig().setAggregatorConfigurations(aggregators);
+    public void setAggregatorConfigs(AggregatorConfig... aggregators) {
+        getBinningConfig().setAggregatorConfigs(aggregators);
     }
 
     public BinningContext createBinningContext() {
