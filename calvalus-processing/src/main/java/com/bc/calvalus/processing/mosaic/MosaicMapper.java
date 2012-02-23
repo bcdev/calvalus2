@@ -118,19 +118,19 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         Product gridProduct = toPlateCareGrid(sourceProduct);
         for (int i = 0; i < ctx.getVariableCount(); i++) {
             String variableName = ctx.getVariableName(i);
-            String variableExpr = ctx.getVariableExpr(i);
+            String variableExpr = ctx.getVariableExpression(i);
             if (variableExpr != null) {
                 VirtualBand band = new VirtualBand(variableName,
                                                    ProductData.TYPE_FLOAT32,
                                                    gridProduct.getSceneRasterWidth(),
                                                    gridProduct.getSceneRasterHeight(),
                                                    variableExpr);
-                band.setValidPixelExpression(ctx.getMaskExpr());
+                band.setValidPixelExpression(ctx.getValidMaskExpression());
                 gridProduct.addBand(band);
             }
         }
 
-        final String maskExpr = ctx.getMaskExpr();
+        final String maskExpr = ctx.getValidMaskExpression();
         final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, gridProduct);
 
         final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableCount()];

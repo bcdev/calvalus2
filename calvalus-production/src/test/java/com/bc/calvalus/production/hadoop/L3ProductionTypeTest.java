@@ -77,7 +77,7 @@ public class L3ProductionTypeTest {
         L3Config l3Config = L3ProductionType.getL3Config(productionRequest);
         assertNotNull(l3Config);
         assertEquals(4320, l3Config.createBinningContext().getBinningGrid().getNumRows());
-        assertEquals("NOT INVALID", l3Config.createVariableContext().getMaskExpr());
+        assertEquals("NOT INVALID", l3Config.createVariableContext().getValidMaskExpression());
         assertNotNull(l3Config.getSuperSampling());
         assertEquals(1, (int) l3Config.getSuperSampling());
         assertEquals(3, l3Config.createVariableContext().getVariableCount());

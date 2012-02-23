@@ -108,7 +108,6 @@ public class BinningConfig {
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
         return new BinningContext(createBinningGrid(),
-                                  variableContext,
                                   createBinManager(variableContext),
                                   getSuperSampling() != null ? getSuperSampling() : 1);
     }
@@ -120,18 +119,18 @@ public class BinningConfig {
         return new IsinBinningGrid(numRows);
     }
 
-    private BinManager createBinManager(VariableContext varCtx) {
-        Aggregator[] aggregators = createAggregators(varCtx);
-        return createBinManager(aggregators);
+    private BinManager createBinManager(VariableContext variableContext) {
+        Aggregator[] aggregators = createAggregators(variableContext);
+        return createBinManager(variableContext, aggregators);
     }
 
-    public Aggregator[] createAggregators(VariableContext varCtx) {
+    public Aggregator[] createAggregators(VariableContext variableContext) {
         Aggregator[] aggregators = new Aggregator[aggregatorConfigurations.length];
         for (int i = 0; i < aggregators.length; i++) {
             AggregatorConfiguration aggregatorConfiguration = aggregatorConfigurations[i];
             AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfiguration.type);
             if (descriptor != null) {
-                aggregators[i] = descriptor.createAggregator(varCtx, PropertyContainer.createObjectBacked(aggregatorConfiguration));
+                aggregators[i] = descriptor.createAggregator(variableContext, PropertyContainer.createObjectBacked(aggregatorConfiguration));
             } else {
                 throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfiguration.type);
             }
@@ -139,8 +138,8 @@ public class BinningConfig {
         return aggregators;
     }
 
-    protected BinManager createBinManager(Aggregator[] aggregators) {
-        return new BinManager(aggregators);
+    protected BinManager createBinManager(VariableContext variableContext, Aggregator[] aggregators) {
+        return new BinManager(variableContext, aggregators);
     }
 
     public VariableContext createVariableContext() {

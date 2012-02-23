@@ -5,8 +5,8 @@ import java.util.ArrayList;
 class MyBinManager extends BinManager {
     ArrayList<SpatialBin> producedSpatialBins = new ArrayList<SpatialBin>();
 
-    public MyBinManager(Aggregator... aggregators) {
-        super(aggregators);
+    public MyBinManager(VariableContext variableContext, Aggregator... aggregators) {
+        super(variableContext, aggregators);
     }
 
     @Override

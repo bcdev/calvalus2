@@ -8,29 +8,25 @@ package com.bc.calvalus.binning;
 public class BinningContext {
 
     private final BinningGrid binningGrid;
-    private final VariableContext variableContext;
     private final BinManager binManager;
     private final int superSampling;
 
-    public BinningContext(BinningGrid binningGrid, VariableContext variableContext, BinManager binManager) {
-        this(binningGrid, variableContext, binManager, 1);
+    public BinningContext(BinningGrid binningGrid, BinManager binManager) {
+        this(binningGrid, binManager, 1);
     }
 
-    public BinningContext(BinningGrid binningGrid,
-                          VariableContext variableContext,
-                          BinManager binManager, int superSampling) {
+    public BinningContext(BinningGrid binningGrid, BinManager binManager, int superSampling) {
         this.binningGrid = binningGrid;
-        this.variableContext = variableContext;
         this.binManager = binManager;
         this.superSampling = superSampling;
     }
 
-    public BinningGrid getBinningGrid() {
-        return binningGrid;
+    public VariableContext getVariableContext() {
+        return getBinManager().getVariableContext();
     }
 
-    public VariableContext getVariableContext() {
-        return variableContext;
+    public BinningGrid getBinningGrid() {
+        return binningGrid;
     }
 
     public BinManager getBinManager() {

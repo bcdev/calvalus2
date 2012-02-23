@@ -93,10 +93,11 @@ public class SpatialProductBinnerTest {
         variableContext.defineVariable("b", "1.8");
 
         IsinBinningGrid binningGrid = new IsinBinningGrid(6);
-        BinManager binManager = new BinManager(new AggregatorAverage(variableContext, "a", null, null),
+        BinManager binManager = new BinManager(variableContext,
+                                               new AggregatorAverage(variableContext, "a", null, null),
                                                new AggregatorAverage(variableContext, "b", null, null));
 
-        return new BinningContext(binningGrid, variableContext, binManager);
+        return new BinningContext(binningGrid, binManager);
     }
 
     private static class MySpatialBinConsumer implements SpatialBinConsumer {

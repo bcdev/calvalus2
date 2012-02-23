@@ -9,8 +9,8 @@ import com.bc.calvalus.binning.*;
  */
 public class L3BinManagerImpl extends BinManager {
 
-    public L3BinManagerImpl(Aggregator... aggregators) {
-        super(aggregators);
+    public L3BinManagerImpl(VariableContext variableContext, Aggregator... aggregators) {
+        super(variableContext, aggregators);
     }
 
     @Override

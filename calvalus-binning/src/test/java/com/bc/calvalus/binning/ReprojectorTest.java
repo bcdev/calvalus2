@@ -415,7 +415,7 @@ public class ReprojectorTest {
     }
 
     private BinningContext createBinningContext(IsinBinningGrid binningGrid) {
-        return new BinningContext(binningGrid, new VariableContextImpl(), binManager);
+        return new BinningContext(binningGrid, binManager);
     }
 
     private static class NobsRaster implements TemporalBinRenderer {

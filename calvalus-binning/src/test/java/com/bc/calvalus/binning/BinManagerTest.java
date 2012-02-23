@@ -11,11 +11,12 @@ import static org.junit.Assert.assertEquals;
 public class BinManagerTest {
     @Test
     public void testBinCreation() {
-        VariableContext vctx = new MyVariableContext("a", "b", "c");
-        BinManager binManager = new BinManager(new AggregatorAverage(vctx, "c", null, null),
-                                               new AggregatorAverageML(vctx, "b", null, null),
-                                               new AggregatorMinMax(vctx, "a", null),
-                                               new AggregatorOnMaxSet(vctx, "c", "a", "b"));
+        VariableContext variableContext = new MyVariableContext("a", "b", "c");
+        BinManager binManager = new BinManager(variableContext,
+                                               new AggregatorAverage(variableContext, "c", null, null),
+                                               new AggregatorAverageML(variableContext, "b", null, null),
+                                               new AggregatorMinMax(variableContext, "a", null),
+                                               new AggregatorOnMaxSet(variableContext, "c", "a", "b"));
 
         assertEquals(4, binManager.getAggregatorCount());
 

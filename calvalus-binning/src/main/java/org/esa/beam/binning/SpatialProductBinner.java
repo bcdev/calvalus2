@@ -1,8 +1,8 @@
 package org.esa.beam.binning;
 
-import com.bc.calvalus.binning.BinningContext;
 import com.bc.calvalus.binning.ObservationSlice;
 import com.bc.calvalus.binning.SpatialBinner;
+import com.bc.calvalus.binning.VariableContext;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.*;
@@ -42,30 +42,31 @@ public class SpatialProductBinner {
 
         final float[] superSamplingSteps = getSuperSamplingSteps(superSampling);
 
-        final BinningContext ctx = spatialBinner.getBinningContext();
+        final VariableContext variableContext = spatialBinner.getBinningContext().getVariableContext();
+
         final int sliceWidth = product.getSceneRasterWidth();
-        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
-            String variableName = ctx.getVariableContext().getVariableName(i);
-            String variableExpr = ctx.getVariableContext().getVariableExpr(i);
+        for (int i = 0; i < variableContext.getVariableCount(); i++) {
+            String variableName = variableContext.getVariableName(i);
+            String variableExpr = variableContext.getVariableExpression(i);
             if (variableExpr != null) {
                 VirtualBand band = new VirtualBand(variableName,
                                                    ProductData.TYPE_FLOAT32,
                                                    product.getSceneRasterWidth(),
                                                    product.getSceneRasterHeight(),
                                                    variableExpr);
-                band.setValidPixelExpression(ctx.getVariableContext().getMaskExpr());
+                band.setValidPixelExpression(variableContext.getValidMaskExpression());
                 product.addBand(band);
             }
         }
 
-        final String maskExpr = ctx.getVariableContext().getMaskExpr();
+        final String maskExpr = variableContext.getValidMaskExpression();
         final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, product);
         final int sliceHeight = maskImage.getTileHeight();
         boolean compatibleTileSizes = areTileSizesCompatible(maskImage, sliceWidth, sliceHeight);
 
-        final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableContext().getVariableCount()];
-        for (int i = 0; i < ctx.getVariableContext().getVariableCount(); i++) {
-            final String nodeName = ctx.getVariableContext().getVariableName(i);
+        final MultiLevelImage[] varImages = new MultiLevelImage[variableContext.getVariableCount()];
+        for (int i = 0; i < variableContext.getVariableCount(); i++) {
+            final String nodeName = variableContext.getVariableName(i);
             final RasterDataNode node = getRasterDataNode(product, nodeName);
             final MultiLevelImage varImage = node.getGeophysicalImage();
             compatibleTileSizes = compatibleTileSizes && areTileSizesCompatible(varImage, sliceWidth, sliceHeight);

@@ -23,9 +23,9 @@ public class MyVariableContext implements VariableContext {
     }
 
     @Override
-    public int getVariableIndex(String varName) {
+    public int getVariableIndex(String name) {
         for (int i = 0; i < varNames.length; i++) {
-            if (varName.equals(varNames[i])) {
+            if (name.equals(varNames[i])) {
                 return i;
             }
         }
@@ -33,13 +33,13 @@ public class MyVariableContext implements VariableContext {
     }
 
     @Override
-    public String getVariableExpr(int i) {
+    public String getVariableExpression(int i) {
         return null;
     }
 
 
     @Override
-    public String getMaskExpr() {
+    public String getValidMaskExpression() {
         return null;
     }
 }

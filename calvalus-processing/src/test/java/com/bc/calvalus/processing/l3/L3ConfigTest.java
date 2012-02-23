@@ -98,16 +98,16 @@ public class L3ConfigTest {
         assertEquals(-1, varCtx.getVariableIndex("reflec_6"));
         assertEquals(-1, varCtx.getVariableIndex("reflec_10"));
 
-        assertEquals("!l2_flags.INVALID && l2_flags.WATER", varCtx.getMaskExpr());
+        assertEquals("!l2_flags.INVALID && l2_flags.WATER", varCtx.getValidMaskExpression());
 
         assertEquals("ndvi", varCtx.getVariableName(0));
-        assertEquals("(reflec_10 - reflec_6) / (reflec_10 + reflec_6)", varCtx.getVariableExpr(0));
+        assertEquals("(reflec_10 - reflec_6) / (reflec_10 + reflec_6)", varCtx.getVariableExpression(0));
 
         assertEquals("algal2", varCtx.getVariableName(3));
-        assertEquals(null, varCtx.getVariableExpr(3));
+        assertEquals(null, varCtx.getVariableExpression(3));
 
         assertEquals("reflec_7", varCtx.getVariableName(6));
-        assertEquals(null, varCtx.getVariableExpr(6));
+        assertEquals(null, varCtx.getVariableExpression(6));
 
     }
 

@@ -7,6 +7,7 @@ package com.bc.calvalus.binning;
  */
 public class BinManager {
 
+    private final VariableContext variableContext;
     private final Aggregator[] aggregators;
     private final int spatialFeatureCount;
     private final int temporalFeatureCount;
@@ -17,7 +18,12 @@ public class BinManager {
     private final String[] outputFeatureNames;
     private final double[] outputFeatureFillValues;
 
-    public BinManager(Aggregator... aggregators) {
+    public BinManager() {
+        this(new VariableContextImpl());
+    }
+
+    public BinManager(VariableContext variableContext, Aggregator... aggregators) {
+        this.variableContext = variableContext;
         this.aggregators = aggregators.clone();
         this.spatialFeatureOffsets = new int[aggregators.length];
         this.temporalFeatureOffsets = new int[aggregators.length];
@@ -47,6 +53,10 @@ public class BinManager {
                 k++;
             }
         }
+    }
+
+    public VariableContext getVariableContext() {
+        return variableContext;
     }
 
     public final int getSpatialFeatureCount() {

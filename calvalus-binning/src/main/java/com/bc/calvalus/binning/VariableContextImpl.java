@@ -39,7 +39,7 @@ public class VariableContextImpl implements VariableContext {
     }
 
     @Override
-    public String getMaskExpr() {
+    public String getValidMaskExpression() {
         return maskExpr;
     }
 
@@ -58,12 +58,12 @@ public class VariableContextImpl implements VariableContext {
     }
 
     @Override
-    public String getVariableExpr(int i) {
+    public String getVariableExpression(int i) {
         return exprs.get(i);
     }
 
     @Override
-    public int getVariableIndex(String varName) {
-        return names.indexOf(varName);
+    public int getVariableIndex(String name) {
+        return names.indexOf(name);
     }
 }

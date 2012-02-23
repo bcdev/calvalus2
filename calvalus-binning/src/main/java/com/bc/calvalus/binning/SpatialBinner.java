@@ -111,7 +111,7 @@ public class SpatialBinner {
             binManager.completeSpatialBin(bin);
         }
         try {
-            consumer.consumeSpatialBins(binningContext, bins);
+            consumer.consumeSpatialBins(getBinningContext(), bins);
         } catch (Exception e) {
             exceptions.add(e);
         }
