@@ -80,6 +80,7 @@ public class UclCloudDetection {
         return image.getData();
     }
 
+    //TODO handle metadata instead of having it in static fields
     private static void handleMetadata(TIFFImageMetadata imageMetadata) {
         final TIFFIFD tiffifd = imageMetadata.getRootIFD();
         final TIFFField[] tiffFields = tiffifd.getTIFFFields();

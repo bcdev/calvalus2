@@ -218,7 +218,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         this.jobConf = jobConf;
     }
 
-    private void openSdr8MeanReader(int partition) {
+    private void openSdr8MeanReader(int partition) throws IOException {
         String sdr8MeanDir = jobConf.get(CALVALUS_LC_SDR8_MEAN);
         NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
         NUMBER_FORMAT.setMinimumIntegerDigits(5);
@@ -226,14 +226,10 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
         String fileName = "part-r-" + NUMBER_FORMAT.format(partition);
         Path path = new Path(sdr8MeanDir, fileName);
-        try {
-            FileSystem fs = path.getFileSystem(jobConf);
-            reader = new SequenceFile.Reader(fs, path, jobConf);
-            sdr8Key = new TileIndexWritable();
-            sdr8Data = new TileDataWritable();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        FileSystem fs = path.getFileSystem(jobConf);
+        reader = new SequenceFile.Reader(fs, path, jobConf);
+        sdr8Key = new TileIndexWritable();
+        sdr8Data = new TileDataWritable();
     }
 
     @Override

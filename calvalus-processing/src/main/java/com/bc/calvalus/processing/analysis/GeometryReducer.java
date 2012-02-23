@@ -50,7 +50,6 @@ public class GeometryReducer extends Reducer<Text, Text, NullWritable, NullWrita
             try {
                 worldGenerator.addGeometry(wktReader.read(wkt.toString()));
             } catch (ParseException ignore) {
-                ignore.printStackTrace();
             }
         }
         Configuration jobConfig = context.getConfiguration();

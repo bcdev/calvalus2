@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeFilter;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
@@ -45,7 +46,7 @@ class UclCloudOperator extends PixelOperator {
         try {
             uclCloudDetection = UclCloudDetection.create();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw  new OperatorException("failed to initialize algorithm:", e);
         }
     }
 
