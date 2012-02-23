@@ -106,10 +106,11 @@ public class BinningConfig {
     }
 
     public BinningContext createBinningContext() {
-        VariableContext varCtx = createVariableContext();
+        VariableContext variableContext = createVariableContext();
         return new BinningContext(createBinningGrid(),
-                                  varCtx,
-                                  createBinManager(varCtx));
+                                  variableContext,
+                                  createBinManager(variableContext),
+                                  getSuperSampling() != null ? getSuperSampling() : 1);
     }
 
     public BinningGrid createBinningGrid() {

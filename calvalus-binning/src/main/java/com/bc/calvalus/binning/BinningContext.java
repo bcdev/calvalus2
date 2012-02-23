@@ -10,13 +10,19 @@ public class BinningContext {
     private final BinningGrid binningGrid;
     private final VariableContext variableContext;
     private final BinManager binManager;
+    private final int superSampling;
+
+    public BinningContext(BinningGrid binningGrid, VariableContext variableContext, BinManager binManager) {
+        this(binningGrid, variableContext, binManager, 1);
+    }
 
     public BinningContext(BinningGrid binningGrid,
                           VariableContext variableContext,
-                          BinManager binManager) {
+                          BinManager binManager, int superSampling) {
         this.binningGrid = binningGrid;
         this.variableContext = variableContext;
         this.binManager = binManager;
+        this.superSampling = superSampling;
     }
 
     public BinningGrid getBinningGrid() {
@@ -31,4 +37,7 @@ public class BinningContext {
         return binManager;
     }
 
+    public Integer getSuperSampling() {
+        return superSampling;
+    }
 }

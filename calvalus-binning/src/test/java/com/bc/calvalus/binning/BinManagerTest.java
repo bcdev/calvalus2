@@ -6,16 +6,16 @@ import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
 import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class BinManagerTest {
     @Test
     public void testBinCreation() {
         VariableContext vctx = new MyVariableContext("a", "b", "c");
         BinManager binManager = new BinManager(new AggregatorAverage(vctx, "c", null, null),
-                                                   new AggregatorAverageML(vctx, "b", null, null),
-                                                   new AggregatorMinMax(vctx, "a", null),
-                                                   new AggregatorOnMaxSet(vctx, "c", "a", "b"));
+                                               new AggregatorAverageML(vctx, "b", null, null),
+                                               new AggregatorMinMax(vctx, "a", null),
+                                               new AggregatorOnMaxSet(vctx, "c", "a", "b"));
 
         assertEquals(4, binManager.getAggregatorCount());
 

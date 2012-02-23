@@ -64,8 +64,9 @@ public class TestBinner {
         stopWatch.start();
 
         BinningContext binningContext = binningConfig.createBinningContext();
+
         // Step 1: Spatial binning - creates time-series of spatial bins for each bin ID ordered by ID. The tree map structure is <ID, time-series>
-        SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning(binningContext, binningConfig, sourceFiles);
+        SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning(binningContext, sourceFiles);
         // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
         List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
         // Step 3: Formatting
@@ -77,7 +78,7 @@ public class TestBinner {
         stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceFiles.length));
     }
 
-    private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, BinningConfig binningConfig, File[] sourceFiles) throws IOException {
+    private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, File[] sourceFiles) throws IOException {
         final SpatialBinStore spatialBinStore = new SpatialBinStore();
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
         for (File sourceFile : sourceFiles) {
@@ -87,7 +88,7 @@ public class TestBinner {
             System.out.println("reading " + sourceFile);
             final Product product = ProductIO.readProduct(sourceFile);
             System.out.println("processing " + sourceFile);
-            final long numObs = SpatialProductBinner.processProduct(product, spatialBinner, binningConfig.getSuperSampling(), ProgressMonitor.NULL);
+            final long numObs = SpatialProductBinner.processProduct(product, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
             System.out.println("done, " + numObs + " observations processed");
 
             stopWatch.stopAndTrace("Spatial binning of product took");
