@@ -53,20 +53,20 @@ public class Formatter {
         final TemporalBinRenderer temporalBinRenderer;
         if (outputType.equalsIgnoreCase("Product")) {
             temporalBinRenderer = new ProductTemporalBinRenderer(binningContext,
-                                                     outputFile,
-                                                     outputFormat,
-                                                     outputRegion,
-                                                     Reprojector.getRasterPixelSize(binningGrid),
-                                                     startTime,
-                                                     stopTime,
-                                                     metadataElement);
+                                                                 outputFile,
+                                                                 outputFormat,
+                                                                 outputRegion,
+                                                                 Reprojector.getRasterPixelSize(binningGrid),
+                                                                 startTime,
+                                                                 stopTime,
+                                                                 metadataElement);
         } else {
             temporalBinRenderer = new ImageTemporalBinRenderer(binningContext,
-                                                   outputFile,
-                                                   outputFormat,
-                                                   outputRegion,
-                                                   formatterConfig.getBandConfigurations(),
-                                                   outputType.equalsIgnoreCase("RGB"));
+                                                               outputFile,
+                                                               outputFormat,
+                                                               outputRegion,
+                                                               formatterConfig.getBandConfigurations(),
+                                                               outputType.equalsIgnoreCase("RGB"));
         }
 
         Reprojector.reproject(binningContext, temporalBinSource, temporalBinRenderer);
