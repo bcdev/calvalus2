@@ -58,33 +58,42 @@ public class MappedByteBufferTest {
     static final int N = 25000;
 
     File file;
+    static int fileId;
 
     @Before
     public void setUp() throws Exception {
-        file = getTestFile();
+        file = genTestFile();
         file.deleteOnExit();
+        deleteFile("setUp");
     }
 
     @After
     public void tearDown() throws Exception {
-        file.delete();
+        deleteFile("tearDown");
     }
 
     @Test
     public void testThatMemoryMappedFileIODoesNotConsumeHeapSpace() throws Exception {
-        final long mem1 = getFreeMiB();
-
         final int fileSize = Integer.MAX_VALUE; // 2GB!
-        final FileChannel fc = new RandomAccessFile(file, "rw").getChannel();
-        final MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
-        final long mem2 = getFreeMiB();
-        // Modify buffer, so that it must be written when channel is closed.
-        buffer.putDouble(1.2);
-        buffer.putFloat(3.4f);
-        buffer.putLong(fileSize - 8, 123456789L);
-        final long mem3 = getFreeMiB();
-        fc.close();
-        final long mem4 = getFreeMiB();
+        final long mem1, mem2, mem3, mem4;
+
+        final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+        final FileChannel fc = raf.getChannel();
+        try {
+            mem1 = getFreeMiB();
+            final MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
+            mem2 = getFreeMiB();
+
+            // Modify buffer, so that it must be written when channel is closed.
+            buffer.putDouble(1.2);
+            buffer.putFloat(3.4f);
+            buffer.putLong(fileSize - 8, 123456789L);
+
+        } finally {
+            mem3 = getFreeMiB();
+            raf.close();
+            mem4 = getFreeMiB();
+        }
 
         assertTrue(file.exists());
         assertEquals(fileSize, file.length());
@@ -101,11 +110,14 @@ public class MappedByteBufferTest {
 
         // Now make sure we get the values back
         final DataInputStream stream = new DataInputStream(new FileInputStream(file));
-        assertEquals(1.2, stream.readDouble(), 1e-10); // 8 bytes
-        assertEquals(3.4, stream.readFloat(), 1e-5f);  // 4 bytes
-        stream.skip(fileSize - (8 + 4 + 8));
-        assertEquals(123456789L, stream.readLong());
-        stream.close();
+        try {
+            assertEquals(1.2, stream.readDouble(), 1e-10); // 8 bytes
+            assertEquals(3.4, stream.readFloat(), 1e-5f);  // 4 bytes
+            stream.skip(fileSize - (8 + 4 + 8));
+            assertEquals(123456789L, stream.readLong());
+        } finally {
+            stream.close();
+        }
     }
 
     @Test
@@ -113,28 +125,31 @@ public class MappedByteBufferTest {
 
         final int chunkSize = 100 * MiB;
 
-        final FileChannel fc = new RandomAccessFile(file, "rw").getChannel();
+        final RandomAccessFile raf1 = new RandomAccessFile(file, "rw");
+        final FileChannel gc1 = raf1.getChannel();
         try {
-            final MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, chunkSize);
-            buffer.putDouble(0, 0.111);
-            buffer.putDouble(chunkSize - 8, 1.222);
+            final MappedByteBuffer buffer1 = gc1.map(FileChannel.MapMode.READ_WRITE, 0, chunkSize);
+            buffer1.putDouble(0, 0.111);
+            buffer1.putDouble(chunkSize - 8, 1.222);
         } finally {
-            fc.close();
+            raf1.close();
             assertEquals(chunkSize, file.length());
         }
 
-        final FileChannel fc2 = new RandomAccessFile(file, "rw").getChannel();
+        final RandomAccessFile raf2 = new RandomAccessFile(file, "rw");
+        final FileChannel fc2 = raf2.getChannel();
         try {
             final MappedByteBuffer buffer2 = fc2.map(FileChannel.MapMode.READ_WRITE, 0, 2 * chunkSize);
             assertEquals(0.111, buffer2.getDouble(0), 1e-10);
             assertEquals(1.222, buffer2.getDouble(chunkSize - 8), 1e-10);
             buffer2.putDouble(2 * chunkSize - 8, 2.333);
         } finally {
-            fc2.close();
+            raf2.close();
             assertEquals(2 * chunkSize, file.length());
         }
 
-        final FileChannel fc3 = new RandomAccessFile(file, "rw").getChannel();
+        final RandomAccessFile raf3 = new RandomAccessFile(file, "rw");
+        final FileChannel fc3 = raf3.getChannel();
         try {
             final MappedByteBuffer buffer3 = fc3.map(FileChannel.MapMode.READ_WRITE, 0, 3 * chunkSize);
             assertEquals(0.111, buffer3.getDouble(0), 1e-10);
@@ -143,10 +158,12 @@ public class MappedByteBufferTest {
             buffer3.putDouble(3 * chunkSize - 8, 3.444);
         } finally {
             fc3.close();
+            raf3.close();
             assertEquals(3 * chunkSize, file.length());
         }
 
-        final FileChannel fc4 = new RandomAccessFile(file, "rw").getChannel();
+        final RandomAccessFile raf4 = new RandomAccessFile(file, "rw");
+        final FileChannel fc4 = raf4.getChannel();
         try {
             final MappedByteBuffer buffer4 = fc4.map(FileChannel.MapMode.READ_WRITE, 0, 3 * chunkSize);
             assertEquals(0.111, buffer4.getDouble(0), 1e-10);
@@ -154,7 +171,7 @@ public class MappedByteBufferTest {
             assertEquals(2.333, buffer4.getDouble(2 * chunkSize - 8), 1e-10);
             assertEquals(3.444, buffer4.getDouble(3 * chunkSize - 8), 1e-10);
         } finally {
-            fc4.close();
+            raf4.close();
             assertEquals(3 * chunkSize, file.length());
         }
     }
@@ -206,7 +223,6 @@ public class MappedByteBufferTest {
                 }
             } finally {
                 writeKey(buffer, -1L);
-                channel.close();
                 raf.close();
             }
         }
@@ -229,7 +245,6 @@ public class MappedByteBufferTest {
                     n++;
                 }
             } finally {
-                channel.close();
                 raf.close();
             }
             return n;
@@ -265,37 +280,37 @@ public class MappedByteBufferTest {
     class StreamedFileIO implements FileIO {
         @Override
         public void write(File file, int n, Producer producer) throws IOException {
-            DataOutputStream os = new DataOutputStream(new FileOutputStream(file));
+            DataOutputStream stream = new DataOutputStream(new FileOutputStream(file));
             try {
                 for (int i = 0; i < n; i++) {
                     long key = producer.createKey();
                     float[] samples = producer.createSamples();
-                    writeKey(os, key);
-                    writeSamples(os, samples);
+                    writeKey(stream, key);
+                    writeSamples(stream, samples);
                 }
             } finally {
-                os.close();
+                stream.close();
             }
         }
 
         @Override
         public int read(File file, Consumer consumer) throws IOException {
             int n = 0;
-            DataInputStream is = new DataInputStream(new FileInputStream(file));
+            DataInputStream stream = new DataInputStream(new FileInputStream(file));
             try {
                 while (true) {
                     long key;
                     try {
-                        key = readKey(is);
+                        key = readKey(stream);
                     } catch (EOFException eof) {
                         break;
                     }
-                    float[] samples = readSamples(is);
+                    float[] samples = readSamples(stream);
                     consumer.process(key, samples);
                     n++;
                 }
             } finally {
-                is.close();
+                stream.close();
             }
             return n;
         }
@@ -324,7 +339,6 @@ public class MappedByteBufferTest {
             }
         }
     }
-
 
     /**
      * Sample producer which creates randomly-sized sample arrays (length: 0 ... 10).
@@ -363,8 +377,44 @@ public class MappedByteBufferTest {
         return Runtime.getRuntime().freeMemory() / MiB;
     }
 
-    private File getTestFile() {
-        return new File(MappedByteBufferTest.class.getSimpleName() + "$" + Long.toHexString(System.nanoTime()) + ".dat");
+    private File genTestFile() throws IOException {
+        // return new File(MappedByteBufferTest.class.getSimpleName() + "-" + (++fileId) + ".dat");
+        return File.createTempFile(MappedByteBufferTest.class.getSimpleName() + "-", ".dat");
     }
 
+    private void deleteFile(String msg) throws InterruptedException {
+        int waitMillis = 500;
+        int maxMillis = 3 * 1000;
+        int numTries = maxMillis / waitMillis;
+
+        for (int i = 1; file.exists() && i <= numTries; i++) {
+            if (!file.delete()) {
+                if (file.exists()) {
+                    System.out.println("error: " + msg + ": failed to delete test file " + file + ". Try " + i + ", waiting another 500 ms...");
+                    Thread.sleep(waitMillis);
+                    /* On Windows, Norman gets:
+
+                    java.lang.Error: Cleaner terminated abnormally
+                    	at sun.misc.Cleaner$1.run(Cleaner.java:130)
+                    	at java.security.AccessController.doPrivileged(Native Method)
+                    	at sun.misc.Cleaner.clean(Cleaner.java:127)
+                    	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:124)
+                    Caused by: java.io.IOException: Der Prozess kann nicht auf die Datei zugreifen, da ein anderer Prozess einen Teil der Datei gesperrt hat
+                    	at sun.nio.ch.FileChannelImpl.unmap0(Native Method)
+                    	at sun.nio.ch.FileChannelImpl.access$100(FileChannelImpl.java:32)
+                    	at sun.nio.ch.FileChannelImpl$Unmapper.run(FileChannelImpl.java:667)
+                    	at sun.misc.Cleaner.clean(Cleaner.java:125)
+                    	... 1 more
+                     */
+//                    try {
+//                        Runtime.getRuntime().gc();
+//                    } catch (Throwable e) {
+//                        e.printStackTrace();
+//                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
 }
