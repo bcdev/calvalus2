@@ -24,7 +24,7 @@ public class BinManager {
 
     public BinManager(VariableContext variableContext, Aggregator... aggregators) {
         this.variableContext = variableContext;
-        this.aggregators = aggregators.clone();
+        this.aggregators = aggregators;
         this.spatialFeatureOffsets = new int[aggregators.length];
         this.temporalFeatureOffsets = new int[aggregators.length];
         this.outputFeatureOffsets = new int[aggregators.length];
@@ -45,10 +45,10 @@ public class BinManager {
         this.outputFeatureCount = outputFeatureCount;
         this.outputFeatureNames = new String[outputFeatureCount];
         this.outputFeatureFillValues = new double[outputFeatureCount];
-        for (int i = 0, k = 0; i < aggregators.length; i++) {
-            Aggregator aggregator = aggregators[i];
-            for (int j = 0; j < aggregator.getOutputFeatureNames().length; j++) {
-                outputFeatureNames[k] = aggregator.getOutputFeatureNames()[j];
+        int k = 0;
+        for (Aggregator aggregator : aggregators) {
+            for (int i = 0; i < aggregator.getOutputFeatureNames().length; i++) {
+                outputFeatureNames[k] = aggregator.getOutputFeatureNames()[i];
                 outputFeatureFillValues[k] = aggregator.getOutputFillValue();
                 k++;
             }

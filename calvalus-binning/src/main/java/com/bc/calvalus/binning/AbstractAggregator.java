@@ -7,21 +7,22 @@ package com.bc.calvalus.binning;
  * @author Norman
  */
 public abstract class AbstractAggregator implements Aggregator {
+
     private final String name;
     private final String[] spatialFeatureNames;
     private final String[] temporalFeatureNames;
     private final String[] outputFeatureNames;
     private final float fillValue;
 
-    public AbstractAggregator(String name, String[] featureNames, Float fillValue) {
+    protected AbstractAggregator(String name, String[] featureNames, Float fillValue) {
         this(name, featureNames, featureNames, featureNames, fillValue);
     }
 
-    public AbstractAggregator(String name,
-                              String[] spatialFeatureNames,
-                              String[] temporalFeatureNames,
-                              String[] outputFeatureNames,
-                              Float fillValue) {
+    protected AbstractAggregator(String name,
+                                 String[] spatialFeatureNames,
+                                 String[] temporalFeatureNames,
+                                 String[] outputFeatureNames,
+                                 Float fillValue) {
         this.name = name;
         this.spatialFeatureNames = spatialFeatureNames;
         this.temporalFeatureNames = temporalFeatureNames;
@@ -52,7 +53,7 @@ public abstract class AbstractAggregator implements Aggregator {
 
     @Override
     public float getOutputFillValue() {
-        return  fillValue;
+        return fillValue;
     }
 
     public static String[] createFeatureNames(String varName, String... names) {
