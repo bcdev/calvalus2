@@ -79,7 +79,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 float sdr8Sigma = (float) Math.sqrt(sdr8SqrSum / count - sdr8Mean * sdr8Mean);
                 float cloudValue2 = sdr8Sigma / sdr8Mean;
                 if (cloudValue2 > 0.2f) {
-                    float sdr8CloudDetector = sdr8Mean + sdr8Sigma;
+                    float sdr8CloudDetector = Math.min(sdr8Mean * 1.35f, sdr8Mean + sdr8Sigma);
                     result[0][i] = sdr8CloudDetector;
                 }
             }
