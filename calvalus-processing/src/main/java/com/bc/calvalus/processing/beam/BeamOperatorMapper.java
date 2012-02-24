@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -59,11 +60,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
             Path inputPath = split.getPath();
             String inputFilename = inputPath.getName();
             String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+            FileSystem fileSystem = FileSystem.get(jobConfig);
             if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
                 Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
-                if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                if (fileSystem.exists(outputProductPath)) {
                     LOG.info("resume: target product already exist, skip processing");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
+                    writeValidMarkerFile(context, fileSystem, outputFilename);
                     return;
                 }
             }
@@ -84,6 +87,7 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
                 streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
+                writeValidMarkerFile(context, fileSystem, outputFilename);
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
@@ -96,5 +100,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
         }
     }
 
-
+    private void writeValidMarkerFile(Context context, FileSystem fileSystem, String outputFilename) throws IOException, InterruptedException {
+        if (context.getConfiguration().getBoolean("calvalus.validMarkerFile", false)) {
+            Path validPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename + ".valid");
+            if (!fileSystem.exists(validPath)) {
+                FSDataOutputStream out = fileSystem.create(validPath);
+                out.close();
+            }
+        }
+    }
 }
