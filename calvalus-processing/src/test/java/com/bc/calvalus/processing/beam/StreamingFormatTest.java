@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.UnixTestRunner;
 import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -64,7 +65,7 @@ public class StreamingFormatTest {
         System.setProperty("beam.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
         Product sourceProduct = productReader.readProductNodes(testProductFile, null);
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, null);
+        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, null, ProgressMonitor.NULL);
         Path outputDir = new Path("target/testdata/StreamingProductWriterTest");
         Path productPath = new Path(outputDir, "testWrite.seq");
         try {

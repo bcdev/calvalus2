@@ -2,7 +2,9 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -84,7 +86,8 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 if (preferredTileSize != null) {
                     tileHeight = preferredTileSize.height;
                 }
-                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context);
+                ProgressMonitor progressMonitor = new ProductSplitProgressMonitor(context);
+                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context, progressMonitor);
                 streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
                 writeValidMarkerFile(context, fileSystem, outputFilename);

@@ -18,13 +18,13 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
-import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.util.Progressable;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -49,17 +49,13 @@ public class StreamingProductWriter {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Configuration configuration;
-    private final MapContext context;
-    private final ProductSplit productSplit;
+    private final Progressable progressable;
+    private final ProgressMonitor progressMonitor;
 
-    public StreamingProductWriter(Configuration configuration, MapContext context) {
+    public StreamingProductWriter(Configuration configuration, Progressable progressable, ProgressMonitor progressMonitor) {
         this.configuration = configuration;
-        this.context = context;
-        if (context != null) {
-            this.productSplit = (ProductSplit) context.getInputSplit();
-        } else {
-            this.productSplit = null;
-        }
+        this.progressable = progressable;
+        this.progressMonitor = progressMonitor;
     }
 
     public void writeProduct(Product product, Path outputPath, int tileHeight) throws Exception {
@@ -75,6 +71,7 @@ public class StreamingProductWriter {
         int w = product.getSceneRasterWidth();
         int h = tileHeight;
         int sliceIndex = 0;
+        progressMonitor.beginTask("Writing", sceneHeight);
         for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
             if (y + h > sceneHeight) {
                 h = sceneHeight - y;
@@ -95,21 +92,14 @@ public class StreamingProductWriter {
                 updateIndex(indexMap, key, writer.getLength());
                 writeProductData(writer, key, productData);
             }
-            LOG.info(" written y=" + y + " h=" + h + " sceneHeight=" + sceneHeight);
-            if (context != null) {
-                productSplit.setProgress(Math.min(1.0f, (float)y / sceneHeight));
-                context.nextKeyValue(); // trigger progress propagation
-                context.setStatus(String.format("%d of %d", y, sceneHeight));
-            }
+            progressMonitor.worked(h);
         }
         writer.close();
+        progressMonitor.done();
 
         Path indexPath = StreamingProductIndex.getIndexPath(outputPath);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         streamingProductIndex.writeIndex(indexMap);
-        if (context != null) {
-            context.setStatus(Integer.toString(sceneHeight));
-         }
     }
 
     private SequenceFile.Writer writeHeader(Product product, Path outputPath, int tile_height) throws IOException {
@@ -125,7 +115,7 @@ public class StreamingProductWriter {
                                          fileSystem.getDefaultBlockSize(),
                                          SequenceFile.CompressionType.NONE,
                                          null, // new DefaultCodec(),
-                                         context,
+                                         progressable,
                                          metadata);
     }
 

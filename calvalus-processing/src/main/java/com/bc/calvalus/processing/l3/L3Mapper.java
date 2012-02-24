@@ -22,8 +22,7 @@ import com.bc.calvalus.binning.SpatialBinConsumer;
 import com.bc.calvalus.binning.SpatialBinner;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.ceres.core.ProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -126,60 +125,4 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         }
     }
 
-    private static class ProductSplitProgressMonitor implements ProgressMonitor {
-        private float totalWork;
-        private final MapContext mapContext;
-        private float work;
-
-        public ProductSplitProgressMonitor(MapContext mapContext) {
-            this.mapContext = mapContext;
-        }
-
-        @Override
-        public void beginTask(String taskName, int totalWork) {
-            this.totalWork = totalWork;
-        }
-
-        @Override
-        public void worked(int delta) {
-            work += delta;
-            ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
-            productSplit.setProgress(Math.min(1.0f,  work / totalWork));
-            try {
-                // trigger progress propagation (yes, that's weird but we don't use true input formats
-                // that are responsible for read progress)
-                mapContext.nextKeyValue();
-            } catch (IOException e) {
-                // ignore
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        }
-
-
-        @Override
-        public void done() {
-        }
-
-        @Override
-        public void internalWorked(double work) {
-        }
-
-        @Override
-        public boolean isCanceled() {
-            return false;
-        }
-
-        @Override
-        public void setCanceled(boolean canceled) {
-        }
-
-        @Override
-        public void setTaskName(String taskName) {
-        }
-
-        @Override
-        public void setSubTaskName(String subTaskName) {
-        }
-    }
 }

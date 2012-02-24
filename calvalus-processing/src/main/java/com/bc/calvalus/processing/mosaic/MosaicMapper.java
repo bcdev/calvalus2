@@ -21,8 +21,9 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.ProductFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -140,25 +141,21 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             final MultiLevelImage varImage = node.getGeophysicalImage();
             varImages[i] = varImage;
         }
+        mapContext.progress();
         TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
         int numTilesTotal = tileIndices.length;
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
-        int numTilesHandled = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
+        ProgressMonitor progressMonitor = new ProductSplitProgressMonitor(mapContext);
+        progressMonitor.beginTask("Mosaicing", tileIndices.length);
         for (TileIndexWritable tileIndex : tileIndices) {
-            LOG.info("Processing tile: " + tileIndex);
-            mapContext.progress();
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
-            numTilesHandled++;
-            mapContext.setStatus(numTilesHandled + " of " + numTilesTotal);
-            ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
-            productSplit.setProgress(Math.min(1.0f, (float)numTilesHandled / tileIndices.length));
-            mapContext.nextKeyValue(); // trigger progress propagation
+            progressMonitor.worked(1);
         }
-        mapContext.setStatus(Integer.toString(numTilesHandled));
+        progressMonitor.done();
         return numTilesProcessed;
     }
 
