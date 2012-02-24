@@ -28,12 +28,8 @@ public class AggregatorConfig {
         this.type = type;
     }
 
-    public String getType() {
+    public String getAggregatorName() {
         return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getVarName() {

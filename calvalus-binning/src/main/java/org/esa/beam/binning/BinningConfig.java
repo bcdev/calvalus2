@@ -138,11 +138,11 @@ public class BinningConfig {
         Aggregator[] aggregators = new Aggregator[aggregatorConfigs.length];
         for (int i = 0; i < aggregators.length; i++) {
             AggregatorConfig aggregatorConfig = aggregatorConfigs[i];
-            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfig.getType());
+            AggregatorDescriptor descriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(aggregatorConfig.getAggregatorName());
             if (descriptor != null) {
                 aggregators[i] = descriptor.createAggregator(variableContext, PropertyContainer.createObjectBacked(aggregatorConfig));
             } else {
-                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfig.getType());
+                throw new IllegalArgumentException("Unknown aggregator type: " + aggregatorConfig.getAggregatorName());
             }
         }
         return aggregators;
