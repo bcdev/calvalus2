@@ -115,6 +115,7 @@ public class ProductionTool {
         }
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
+        defaultConfig.put("production.db.type", "memory");
         defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://master00:9000");
         defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "master00:9001");
 

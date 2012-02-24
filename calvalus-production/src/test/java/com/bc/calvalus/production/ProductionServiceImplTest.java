@@ -3,7 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.production.store.TestProductionStore;
+import com.bc.calvalus.production.store.MemoryProductionStore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ public class ProductionServiceImplTest {
     private TestInventoryService inventoryServiceMock;
     private TestProcessingService processingServiceMock;
     private TestStagingService stagingServiceMock;
-    private TestProductionStore productionStoreMock;
+    private MemoryProductionStore productionStoreMock;
     private TestProductionType productionTypeMock;
 
     @Before
@@ -28,7 +28,7 @@ public class ProductionServiceImplTest {
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType(processingServiceMock,
                                                     stagingServiceMock);
-        productionStoreMock = new TestProductionStore();
+        productionStoreMock = new MemoryProductionStore();
         productionServiceUnderTest = new ProductionServiceImpl(inventoryServiceMock,
                                                                processingServiceMock,
                                                                stagingServiceMock,
