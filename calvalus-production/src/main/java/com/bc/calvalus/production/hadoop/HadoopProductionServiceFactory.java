@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.store.MemoryProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
@@ -38,14 +39,19 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             JobClient jobClient = new JobClient(jobConf);
             HdfsInventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
             HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
-            // todo - get the database connect info from configuration
-            String databaseUrl = "jdbc:hsqldb:file:" + new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME).getPath();
-            boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME + ".properties").exists();
-            ProductionStore productionStore = SqlProductionStore.create(processingService,
-                                                                        "org.hsqldb.jdbcDriver",
-                                                                        databaseUrl,
-                                                                        "SA", "",
-                                                                        !databaseExists);
+            ProductionStore productionStore = null;
+            if ("memory".equals(serviceConfiguration.get("production.db.type"))) {
+                productionStore = new MemoryProductionStore();
+            } else {
+                // todo - get the database connect info from configuration
+                String databaseUrl = "jdbc:hsqldb:file:" + new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME).getPath();
+                boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME + ".properties").exists();
+                productionStore = SqlProductionStore.create(processingService,
+                                                            "org.hsqldb.jdbcDriver",
+                                                            databaseUrl,
+                                                            "SA", "",
+                                                            !databaseExists);
+            }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
             ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService, stagingService);
