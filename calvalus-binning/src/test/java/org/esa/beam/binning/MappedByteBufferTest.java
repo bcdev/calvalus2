@@ -378,42 +378,13 @@ public class MappedByteBufferTest {
     }
 
     private File genTestFile() throws IOException {
-        // return new File(MappedByteBufferTest.class.getSimpleName() + "-" + (++fileId) + ".dat");
         return File.createTempFile(MappedByteBufferTest.class.getSimpleName() + "-", ".dat");
     }
 
     private void deleteFile(String msg) throws InterruptedException {
-        int waitMillis = 500;
-        int maxMillis = 3 * 1000;
-        int numTries = maxMillis / waitMillis;
-
-        for (int i = 1; file.exists() && i <= numTries; i++) {
+        if (file.exists()) {
             if (!file.delete()) {
-                if (file.exists()) {
-                    System.out.println("error: " + msg + ": failed to delete test file " + file + ". Try " + i + ", waiting another 500 ms...");
-                    Thread.sleep(waitMillis);
-                    /* On Windows, Norman gets:
-
-                    java.lang.Error: Cleaner terminated abnormally
-                    	at sun.misc.Cleaner$1.run(Cleaner.java:130)
-                    	at java.security.AccessController.doPrivileged(Native Method)
-                    	at sun.misc.Cleaner.clean(Cleaner.java:127)
-                    	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:124)
-                    Caused by: java.io.IOException: Der Prozess kann nicht auf die Datei zugreifen, da ein anderer Prozess einen Teil der Datei gesperrt hat
-                    	at sun.nio.ch.FileChannelImpl.unmap0(Native Method)
-                    	at sun.nio.ch.FileChannelImpl.access$100(FileChannelImpl.java:32)
-                    	at sun.nio.ch.FileChannelImpl$Unmapper.run(FileChannelImpl.java:667)
-                    	at sun.misc.Cleaner.clean(Cleaner.java:125)
-                    	... 1 more
-                     */
-//                    try {
-//                        Runtime.getRuntime().gc();
-//                    } catch (Throwable e) {
-//                        e.printStackTrace();
-//                    }
-                } else {
-                    break;
-                }
+                System.out.println("error: " + msg + ": failed to delete test file " + file);
             }
         }
     }
