@@ -53,6 +53,7 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "true"},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},

@@ -52,6 +52,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "true"},
                 {JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
         };
