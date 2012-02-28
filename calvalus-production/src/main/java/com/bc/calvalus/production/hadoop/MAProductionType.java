@@ -112,7 +112,7 @@ public class MAProductionType extends HadoopProductionType {
         l3Config.setMaxTimeDifference(productionRequest.getDouble("maxTimeDifference", 3.0));
         l3Config.setSortInputByPixelYX(productionRequest.getBoolean("sortInputByPixelYX", false));
         l3Config.setOutputGroupName(productionRequest.getString("outputGroupName", "SITE"));
-        l3Config.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd hh:mm:ss"));
+        l3Config.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
         l3Config.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
         l3Config.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
         return l3Config;

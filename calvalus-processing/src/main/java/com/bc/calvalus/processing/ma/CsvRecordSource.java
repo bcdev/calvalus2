@@ -25,7 +25,7 @@ import java.util.Iterator;
  * Coordinates must be given as decimal degrees.</li>
  * <li>In order to indicate an optional time(-stamp) value, the header names "time" or "date" (all case-insensitive)
  * are recognised.
- * The usual format for time values is "yyyy-MM-dd hh:mm:ss".</li>
+ * The usual format for time values is "yyyy-MM-dd HH:mm:ss".</li>
  * <li>Missing numbers (no-data) must be indicated using the string "nan" (case-insensitive).</li>
  * </ul>
  * </p>

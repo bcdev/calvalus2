@@ -145,9 +145,9 @@ public class MAConfig implements XmlConvertible {
     /**
      * The input format used for the time.
      * General parameter for many types of record sources.
-     * Default value is "yyyy-MM-dd hh:mm:ss".
+     * Default value is "yyyy-MM-dd HH:mm:ss".
      */
-    // @Parameter (defaultValue = "yyyy-MM-dd hh:mm:ss")
+    // @Parameter (defaultValue = "yyyy-MM-dd HH:mm:ss")
     // private String recordSourceTimeFormat;
     public MAConfig() {
     }

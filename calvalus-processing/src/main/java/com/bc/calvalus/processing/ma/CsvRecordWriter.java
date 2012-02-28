@@ -15,7 +15,7 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PR
  * @author Norman
  */
 public class CsvRecordWriter implements RecordProcessor {
-    public static final DateFormat DEFAULT_DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd hh:mm:ss");
+    public static final DateFormat DEFAULT_DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
     public static final char DEFAULT_COLUMN_SEPARATOR_CHAR = '\t';
     static final String SUFFIX_MEAN = "_mean";
     static final String SUFFIX_SIGMA = "_sigma";
