@@ -32,6 +32,10 @@ public class AggregatorConfig {
         return type;
     }
 
+    public void setAggregatorName(String aggregatorName) {
+        type = aggregatorName;
+    }
+
     public String getVarName() {
         return varName;
     }

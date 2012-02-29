@@ -65,7 +65,7 @@ public class FormatterConfig {
     private String outputFile;
     @Parameter
     private String outputFormat;
-    @Parameter(alias="outputBands", itemAlias = "band")
+    @Parameter(alias = "outputBands", itemAlias = "band")
     private BandConfiguration[] bandConfigurations;
 
     public FormatterConfig() {
@@ -114,15 +114,32 @@ public class FormatterConfig {
         return outputType;
     }
 
+    public void setOutputType(String outputType) {
+        this.outputType = outputType;
+    }
+
     public String getOutputFile() {
         return outputFile;
+    }
+
+    public void setOutputFile(String outputFile) {
+        this.outputFile = outputFile;
     }
 
     public String getOutputFormat() {
         return outputFormat;
     }
 
-    public BandConfiguration[] getBandConfigurations() {
-        return bandConfigurations;
+    public void setOutputFormat(String outputFormat) {
+        this.outputFormat = outputFormat;
     }
+
+    public BandConfiguration[] getBandConfigurations() {
+        return bandConfigurations.clone();
+    }
+
+    public void setBandConfigurations(BandConfiguration... bandConfigurations) {
+        this.bandConfigurations = bandConfigurations;
+    }
+
 }

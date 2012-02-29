@@ -34,7 +34,7 @@ public class MosaicUtils {
         MosaicAlgorithm mosaicAlgorithm = null;
         if (aggregators != null) {
             AggregatorConfig first = aggregators[0];
-            String type = first.getType();
+            String type = first.getAggregatorName();
             try {
                 Class<?> algorithmClass = Class.forName(type);
                 mosaicAlgorithm = (MosaicAlgorithm) ReflectionUtils.newInstance(algorithmClass, jobConf);
