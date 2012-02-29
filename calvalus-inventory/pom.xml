@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-inventory</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus Inventory and Catalogue</name>
     <description>Data inventory and catalogue service.</description>

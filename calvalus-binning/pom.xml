@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-binning</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus L3 Binning</name>
     <description>Level-3 Binning</description>

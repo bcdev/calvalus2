@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-l2gen</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus l2gen Connector</name>
     <description>Connects the NASA l2gen executable to Calvalus.</description>

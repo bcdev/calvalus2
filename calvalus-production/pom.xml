@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-production</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus Production</name>
     <description>Production request and workflow management.</description>

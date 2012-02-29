@@ -10,7 +10,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-processing</artifactId>
-    <version>${calvalus.version}</version>
     <packaging>jar</packaging>
 
     <name>Calvalus Processing</name>

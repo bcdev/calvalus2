@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-commons</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus Commons</name>
     <description>Common code used throughout other Calvalus modules.</description>

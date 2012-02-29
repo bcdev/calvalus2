@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-portal</artifactId>
-    <version>${calvalus.version}</version>
     <packaging>war</packaging>
 
     <name>Calvalus Portal</name>
@@ -164,6 +163,7 @@
             <!-- Copy static web files before executing gwt:run -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
+                <version>2.5</version>
                 <executions>
                     <execution>
                         <phase>compile</phase>
@@ -185,6 +185,7 @@
             <!-- Delete gwt generated stuff -->
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
                 <configuration>
                     <filesets>
                         <fileset>

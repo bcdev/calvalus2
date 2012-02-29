@@ -12,7 +12,6 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-exchange</artifactId>
-    <version>${calvalus.version}</version>
 
     <name>Calvalus Data Exchange</name>
     <description>Data ingestion, post-processing and staging for Calvalus.</description>
