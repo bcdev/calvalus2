@@ -19,7 +19,7 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
-import com.bc.ceres.binding.dom.Xpp3DomElement;
+import com.bc.ceres.binding.dom.XppDomElement;
 import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.DomReader;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
@@ -103,9 +103,9 @@ public class WpsConfig {
 
     public String getFilenamePattern() {
         try {
-            return requestXmlDoc.getString(INPUT_PATTERN_XPATH, (String)null);
+            return requestXmlDoc.getString(INPUT_PATTERN_XPATH, (String) null);
         } catch (XPathExpressionException e) {
-           throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -114,7 +114,7 @@ public class WpsConfig {
         try {
             return requestXmlDoc.getString(OUTPUT_DIR_XPATH);
         } catch (XPathExpressionException e) {
-           throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
+            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
     }
 
@@ -128,7 +128,7 @@ public class WpsConfig {
 
     public String getPriority() {
         try {
-            return requestXmlDoc.getString(PRIORITY_XPATH, (String)null);
+            return requestXmlDoc.getString(PRIORITY_XPATH, (String) null);
         } catch (XPathExpressionException e) {
             throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
         }
@@ -207,7 +207,7 @@ public class WpsConfig {
         }
         XppDomWriter destination = new XppDomWriter();
         new HierarchicalStreamCopier().copy(new DomReader(element), destination);
-        return new Xpp3DomElement(destination.getConfiguration());
+        return new XppDomElement(destination.getConfiguration());
     }
 
     public String getGeometry() {
