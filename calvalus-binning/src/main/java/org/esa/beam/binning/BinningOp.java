@@ -1,7 +1,11 @@
 package org.esa.beam.binning;
 
 import com.bc.calvalus.binning.*;
+import com.bc.ceres.binding.Converter;
+import com.bc.ceres.binding.converters.DateFormatConverter;
 import com.bc.ceres.core.ProgressMonitor;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -14,6 +18,8 @@ import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.StopWatch;
+import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.converters.JtsGeometryConverter;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,14 +45,14 @@ public class BinningOp extends Operator {
     @TargetProduct
     Product targetProduct;
 
-    @Parameter(description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, the Globe is considered.")
-    String regionWkt;
+    @Parameter(converter = JtsGeometryConverter.class, description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, the Globe is considered.")
+    Geometry regionWkt;
 
-    @Parameter(notNull = true, description = "The start date.", format = "YYYY-mm-DD")
-    String startDate;
+    @Parameter(converter = DateFormatConverter.class, notNull = true, description = "The start date.", format = "YYYY-mm-DD")
+    ProductData.UTC startDate;
 
     @Parameter(notNull = true, description = "The end date.", format = "YYYY-mm-DD")
-    String endDate;
+    ProductData.UTC endDate;
 
     @Parameter(notNull = true,
                description = "The configuration used for the binning process. Specifies the binning grid, any variables and their aggregators.")
@@ -95,9 +101,6 @@ public class BinningOp extends Operator {
         if (formatterConfig.getOutputFile() == null) {
             throw new OperatorException("Missing operator parameter 'formatterConfig.outputFile'");
         }
-        for (Product sourceProduct : sourceProducts) {
-            System.out.println("sourceProduct = " + sourceProduct);
-        }
 
         Debug.setEnabled(true);
 
@@ -112,9 +115,9 @@ public class BinningOp extends Operator {
             // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
             List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
             // Step 3: Formatting
-            doOutputting(regionWkt, formatterConfig, binningContext, temporalBins);
+            writeOutput(regionWkt, startDate, endDate, binningContext, temporalBins);
 
-            targetProduct = ProductIO.readProduct(new File(formatterConfig.getOutputFile()));
+            targetProduct = readOutput();
 
         } catch (OperatorException e) {
             throw e;
@@ -128,6 +131,25 @@ public class BinningOp extends Operator {
         //targetProduct = new Product("N", "T", 360, 180);
         //targetProduct.setFileLocation(new File(formatterConfig.getOutputFile()));
 
+    }
+
+    private Product readOutput() throws IOException {
+        return ProductIO.readProduct(new File(formatterConfig.getOutputFile()));
+    }
+
+    private void writeOutput(Geometry roiGeometry, ProductData.UTC startTime, ProductData.UTC stopTime, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
+        StopWatch stopWatch1 = new StopWatch();
+        stopWatch1.start();
+
+        Formatter.format(binningContext,
+                         new MyTemporalBinSource(temporalBins), formatterConfig,
+                         roiGeometry,
+                         startTime,
+                         stopTime,
+                         new MetadataElement("TODO_add_metadata_here")
+        );
+
+        stopWatch1.stopAndTrace("Writing output took");
     }
 
 
@@ -160,21 +182,6 @@ public class BinningOp extends Operator {
         stopWatch.stopAndTrace("Temporal binning took");
 
         return temporalBins;
-    }
-
-    private static void doOutputting(String regionWKT, FormatterConfig formatterConfig, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
-        Formatter.format(binningContext,
-                         new MyTemporalBinSource(temporalBins), formatterConfig,
-                         new WKTReader().read(regionWKT),
-                         new ProductData.UTC(),
-                         new ProductData.UTC(),
-                         new MetadataElement("TODO_add_metadata_here")
-        );
-
-        stopWatch.stopAndTrace("Writing output took");
     }
 
     private static class SpatialBinStore implements SpatialBinConsumer {

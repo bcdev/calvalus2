@@ -9,7 +9,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Norman Fomferra
@@ -17,7 +19,7 @@ import static org.junit.Assert.*;
 public class BinningOpTest {
     int productCounter = 1;
 
-    @Test (expected = OperatorException.class)
+    @Test(expected = OperatorException.class)
     public void testConfigsNotSet() throws Exception {
         final BinningOp binningOp = new BinningOp();
         binningOp.setSourceProducts(createSourceProduct(),
@@ -54,7 +56,7 @@ public class BinningOpTest {
         binningOp.setSourceProducts(createSourceProduct(),
                                     createSourceProduct(),
                                     createSourceProduct());
-        
+
         final BinningConfig binningConfig = createBinningConfig();
         binningOp.setBinningConfig(binningConfig);
 
@@ -65,6 +67,10 @@ public class BinningOpTest {
         assertNotNull(targetProduct);
         assertEquals(360, targetProduct.getSceneRasterWidth());
         assertEquals(180, targetProduct.getSceneRasterHeight());
+        assertNull(targetProduct.getStartTime());
+        assertNull(targetProduct.getEndTime());
+        assertNotNull(targetProduct.getBand("num_obs"));
+        assertNotNull(targetProduct.getBand("num_passes"));
         assertNotNull(targetProduct.getBand("chl_mean"));
         assertNotNull(targetProduct.getBand("chl_sigma"));
         assertEquals(new File(formatterConfig.getOutputFile()), targetProduct.getFileLocation());
@@ -93,8 +99,8 @@ public class BinningOpTest {
     private Product createSourceProduct() {
         final Product p = new Product("P" + productCounter++, "T", 2, 2);
         final TiePointGrid latitude = new TiePointGrid("latitude", 2, 2, 0.5F, 0.5F, 1.0F, 1.0F, new float[]{
-              1.0F, 1.0F,
-              0.0F, 0.0F,
+                1.0F, 1.0F,
+                0.0F, 0.0F,
         });
         final TiePointGrid longitude = new TiePointGrid("longitude", 2, 2, 0.5F, 0.5F, 1.0F, 1.0F, new float[]{
                 0.0F, 1.0F,
