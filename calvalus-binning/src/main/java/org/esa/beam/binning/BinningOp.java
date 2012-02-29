@@ -1,28 +1,26 @@
 package org.esa.beam.binning;
 
 import com.bc.calvalus.binning.*;
-import com.bc.ceres.binding.Converter;
-import com.bc.ceres.binding.converters.DateFormatConverter;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.util.Debug;
 import org.esa.beam.util.StopWatch;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -35,24 +33,36 @@ import java.util.*;
  * of its source products in its {@link #initialize()} method.
  *
  * @author Norman Fomferra
+ * @author Marco Zühlke
  * @author Thomas Storm
  */
+@OperatorMetadata(alias = "Binning",
+                  version = "0.1a",
+                  authors = "Norman Fomferra, Marco Zühlke, Thomas Storm",
+                  copyright = "(c) 2012 by Brockmann Consult GmbH",
+                  description = "Performs spatial and temporal aggregation of pixel values into 'bin' cells")
 public class BinningOp extends Operator {
 
-    @SourceProducts(count = -1, description = "The source products to be binned. Must be all of the same structure.")
+    public static final String DATE_PATTERN = "yyyy-MM-dd";
+
+    @SourceProducts(count = -1,
+                    description = "The source products to be binned. Must be all of the same structure.")
     Product[] sourceProducts;
 
     @TargetProduct
     Product targetProduct;
 
-    @Parameter(converter = JtsGeometryConverter.class, description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, the Globe is considered.")
-    Geometry regionWkt;
+    @Parameter(converter = JtsGeometryConverter.class,
+               description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, it is the Globe.")
+    Geometry region;
 
-    @Parameter(converter = DateFormatConverter.class, notNull = true, description = "The start date.", format = "YYYY-mm-DD")
-    ProductData.UTC startDate;
+    @Parameter(description = "The start date. If not given, taken from the 'oldest' source product.",
+               format = DATE_PATTERN)
+    String startDate;
 
-    @Parameter(notNull = true, description = "The end date.", format = "YYYY-mm-DD")
-    ProductData.UTC endDate;
+    @Parameter(description = "The end date. If not given, taken from the 'youngest' source product.",
+               format = DATE_PATTERN)
+    String endDate;
 
     @Parameter(notNull = true,
                description = "The configuration used for the binning process. Specifies the binning grid, any variables and their aggregators.")
@@ -61,6 +71,33 @@ public class BinningOp extends Operator {
     @Parameter(notNull = true,
                description = "The configuration used for the output formatting process.")
     FormatterConfig formatterConfig;
+
+    public BinningOp() {
+    }
+
+    public Geometry getRegion() {
+        return region;
+    }
+
+    public void setRegion(Geometry region) {
+        this.region = region;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
+    }
 
     public BinningConfig getBinningConfig() {
         return binningConfig;
@@ -102,7 +139,8 @@ public class BinningOp extends Operator {
             throw new OperatorException("Missing operator parameter 'formatterConfig.outputFile'");
         }
 
-        Debug.setEnabled(true);
+        ProductData.UTC startDateUtc = getStartDateUtc("startDate");
+        ProductData.UTC endDateUtc = getEndDateUtc("endDate");
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -115,9 +153,13 @@ public class BinningOp extends Operator {
             // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
             List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
             // Step 3: Formatting
-            writeOutput(regionWkt, startDate, endDate, binningContext, temporalBins);
+            writeOutput(binningContext, temporalBins, formatterConfig, region, startDateUtc, endDateUtc);
 
             targetProduct = readOutput();
+            for (Band band : targetProduct.getBands()) {
+                // Force setting source image, otherwise GPF will set an OperatorImage and invoke computeTile()!!
+                band.getSourceImage();
+            }
 
         } catch (OperatorException e) {
             throw e;
@@ -137,17 +179,18 @@ public class BinningOp extends Operator {
         return ProductIO.readProduct(new File(formatterConfig.getOutputFile()));
     }
 
-    private void writeOutput(Geometry roiGeometry, ProductData.UTC startTime, ProductData.UTC stopTime, BinningContext binningContext, List<TemporalBin> temporalBins) throws Exception {
+    private static void writeOutput(BinningContext binningContext, List<TemporalBin> temporalBins, FormatterConfig formatterConfig, Geometry region, ProductData.UTC startTime, ProductData.UTC stopTime) throws Exception {
         StopWatch stopWatch1 = new StopWatch();
         stopWatch1.start();
 
+        // TODO - add metadata (nf)
         Formatter.format(binningContext,
-                         new MyTemporalBinSource(temporalBins), formatterConfig,
-                         roiGeometry,
+                         new MyTemporalBinSource(temporalBins),
+                         formatterConfig,
+                         region,
                          startTime,
                          stopTime,
-                         new MetadataElement("TODO_add_metadata_here")
-        );
+                         new MetadataElement("TODO_add_metadata_here"));
 
         stopWatch1.stopAndTrace("Writing output took");
     }
@@ -182,6 +225,52 @@ public class BinningOp extends Operator {
         stopWatch.stopAndTrace("Temporal binning took");
 
         return temporalBins;
+    }
+
+    private ProductData.UTC getStartDateUtc(String parameterName) throws OperatorException {
+        if (!StringUtils.isNullOrEmpty(startDate)) {
+            return parseDateUtc(parameterName, startDate);
+        }
+        ProductData.UTC startDateUtc = null;
+        for (Product sourceProduct : sourceProducts) {
+            if (sourceProduct.getStartTime() != null) {
+                if (startDateUtc == null
+                        || sourceProduct.getStartTime().getAsDate().before(startDateUtc.getAsDate())) {
+                    startDateUtc = sourceProduct.getStartTime();
+                }
+            }
+        }
+        if (startDateUtc == null) {
+            throw new OperatorException(String.format("Failed to determine '%s' from source products", parameterName));
+        }
+        return startDateUtc;
+    }
+
+    private ProductData.UTC getEndDateUtc(String parameterName) {
+        if (!StringUtils.isNullOrEmpty(endDate)) {
+            return parseDateUtc(parameterName, endDate);
+        }
+        ProductData.UTC endDateUtc = null;
+        for (Product sourceProduct : sourceProducts) {
+            if (sourceProduct.getEndTime() != null) {
+                if (endDateUtc == null
+                        || sourceProduct.getEndTime().getAsDate().after(endDateUtc.getAsDate())) {
+                    endDateUtc = sourceProduct.getStartTime();
+                }
+            }
+        }
+        if (endDateUtc == null) {
+            throw new OperatorException(String.format("Failed to determine '%s' from source products", parameterName));
+        }
+        return endDateUtc;
+    }
+
+    private ProductData.UTC parseDateUtc(String name, String date) {
+        try {
+            return ProductData.UTC.parse(date, DATE_PATTERN);
+        } catch (ParseException e) {
+            throw new OperatorException(String.format("Invalid parameter '%s': %s", name, e.getMessage()));
+        }
     }
 
     private static class SpatialBinStore implements SpatialBinConsumer {
