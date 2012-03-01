@@ -22,14 +22,20 @@ import com.bc.ceres.grender.Rendering;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.geometry.jts.LiteShape2;
 
+import javax.imageio.ImageIO;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,5 +102,27 @@ public class WorldQuickLookGenerator {
         imageLayer.render(rendering);
 
         return quickLookImage;
+    }
+
+    public static void main(String[] args) throws IOException {
+        BufferedImage sourceWorldMap = ImageIO.read(GeometryReducer.class.getResourceAsStream("worldMap.png"));
+
+        Color lineColor = Color.WHITE;
+        Color fillColor = new Color(255, 255, 255, 150);
+        WorldQuickLookGenerator worldGenerator = new WorldQuickLookGenerator(lineColor, fillColor);
+        WKTReader wktReader = new WKTReader();
+        File inputFile = new File(args[0]);
+        String text = FileUtils.readText(inputFile);
+        String[] lines = text.split("\n");
+        for (String wkt : lines) {
+            try {
+                worldGenerator.addGeometry(wktReader.read(wkt));
+            } catch (ParseException ignore) {
+            }
+        }
+        BufferedImage worldMap = worldGenerator.createQuickLookImage(sourceWorldMap);
+        ImageIO.write(worldMap, "png", new File("geometry-worldmap.png"));
+
+
     }
 }
