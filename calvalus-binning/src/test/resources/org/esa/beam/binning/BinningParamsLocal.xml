@@ -17,7 +17,7 @@
     </binningConfig>
     <formatterConfig>
         <outputType>Product</outputType>
-        <outputFile>binning-test-io/output-local.dim</outputFile>
+        <outputFile>target/binning-test-io/output-local.dim</outputFile>
         <outputFormat>BEAM-DIMAP</outputFormat>
     </formatterConfig>
 </parameters>

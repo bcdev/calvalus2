@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
  * @author Norman Fomferra
  */
 public class BinningOpTest {
-    static final File TESTDATA_DIR = new File(System.getProperty("java.io.tmpdir"), "binning-test-io");
+    static final File TESTDATA_DIR = new File("target/binning-test-io");
 
     static {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -36,7 +36,7 @@ public class BinningOpTest {
 
     @Before
     public void setUp() throws Exception {
-        TESTDATA_DIR.mkdir();
+        TESTDATA_DIR.mkdirs();
         if (!TESTDATA_DIR.isDirectory()) {
             fail("Can't create test I/O directory: " + TESTDATA_DIR);
         }
