@@ -1,0 +1,46 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-binning2</symbolicName>
+    <version>0.1a</version>
+    <name>Level-3 Binning Processor (GPF)</name>
+
+    <description>
+        The Level-3 Binning Processor performs a spatial and temporal aggregation of a number of input (Level-2) products
+        using the NASA SeaDAS binning scheme. This is the BEAM GPF version of the "old" BEAM Level-3 Binning Processor.
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2012 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <dependency>
+        <module>beam-gpf</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat-rcp</module>
+        <optional>true</optional>
+    </dependency>
+
+    <changelog>
+        <![CDATA[
+        Changes in 0.1a:<br\>
+        [BEAM-xxx] yyy<br\>
+        ]]>
+    </changelog>
+
+
+    <categories>Application,Processor,Geometry,VISAT,Level-3,Envisat,MERIS,AATSR,AVHRR,CHRIS</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <id>BinningNew</id>
+            <text>Level-3 Binning (GPF)</text>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <placeAfter>Binning</placeAfter>
+            <operatorName>Binning</operatorName>
+        </action>
+    </extension>
+
+</module>
