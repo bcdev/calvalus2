@@ -21,6 +21,10 @@ import static java.lang.Math.sqrt;
 import static org.junit.Assert.*;
 
 /**
+ * Test that creates a local and a global L3 product from 5 source files.
+ * The {@link BinningOp} is tested directly using an operator instance,
+ * and indirectly using the GPF facade and the GPT command-line tool.
+ *
  * @author Norman Fomferra
  */
 public class BinningOpTest {
@@ -40,7 +44,9 @@ public class BinningOpTest {
 
     @After
     public void tearDown() throws Exception {
-        FileUtils.deleteTree(TESTDATA_DIR);
+        if (!FileUtils.deleteTree(TESTDATA_DIR)) {
+            System.out.println("Warning: failed to completely delete test I/O directory:" + TESTDATA_DIR);
+        }
     }
 
     /**
