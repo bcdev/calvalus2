@@ -2,29 +2,46 @@ package org.esa.beam.binning;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.main.GPT;
+import org.esa.beam.util.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.regex.Pattern;
 
 import static java.lang.Math.sqrt;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Norman Fomferra
  */
 public class BinningOpTest {
-     static {
-         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-     }
+    static final File TESTDATA_DIR = new File(System.getProperty("java.io.tmpdir"), "binning-test-io");
+
+    static {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        TESTDATA_DIR.mkdir();
+        if (!TESTDATA_DIR.isDirectory()) {
+            fail("Can't create test I/O directory: " + TESTDATA_DIR);
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        FileUtils.deleteTree(TESTDATA_DIR);
+    }
 
     /**
      * The following configuration generates a 1-degree resolution global product (360 x 180 pixels) from 5 observations.
@@ -66,47 +83,6 @@ public class BinningOpTest {
             targetProduct.dispose();
         }
     }
-
-    /**
-     * The following configuration generates a 1-degree resolution global product (360 x 180 pixels) from 5 observations.
-     * Values are only generated for pixels at x=180..181 and y=87..89.
-     *
-     * @throws Exception if something goes badly wrong
-     * @see #testLocalBinning()
-     */
-    @Test
-    public void testGlobalBinningViaGPF() throws Exception {
-
-        BinningConfig binningConfig = createBinningConfig();
-        FormatterConfig formatterConfig = createFormatterConfig();
-
-        float obs1 = 0.2F;
-        float obs2 = 0.4F;
-        float obs3 = 0.6F;
-        float obs4 = 0.8F;
-        float obs5 = 1.0F;
-
-        final HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("startDate", "2002-01-01");
-        parameters.put("endDate", "2002-01-10");
-        parameters.put("binningConfig", binningConfig);
-        parameters.put("formatterConfig", formatterConfig);
-
-        final Product targetProduct = GPF.createProduct("Binning", parameters,
-                                                        createSourceProduct(obs1),
-                                                        createSourceProduct(obs2),
-                                                        createSourceProduct(obs3),
-                                                        createSourceProduct(obs4),
-                                                        createSourceProduct(obs5));
-
-        assertNotNull(targetProduct);
-        try {
-            assertGlobalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
-        } catch (Exception e) {
-            targetProduct.dispose();
-        }
-    }
-
 
     /**
      * The following configuration generates a 1-degree resolution local product (4 x 4 pixels) from 5 observations.
@@ -152,19 +128,57 @@ public class BinningOpTest {
         final Product targetProduct = binningOp.getTargetProduct();
         assertNotNull(targetProduct);
         try {
-            testLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
         } catch (IOException e) {
             targetProduct.dispose();
         }
     }
 
+
     /**
-     * The following configuration generates a 1-degree resolution local product (4 x 4 pixels) from 5 observations.
-     * The local region is lon=-1..+3 and lat=-1..+3 degrees.
-     * Values are only generated for pixels at x=1..2 and y=1..2.
+     * Same as {@link #testGlobalBinning}, but this time via the GPF facade.
      *
      * @throws Exception if something goes badly wrong
-     * @see #testGlobalBinning()
+     * @see #testLocalBinning()
+     */
+    @Test
+    public void testGlobalBinningViaGPF() throws Exception {
+
+        BinningConfig binningConfig = createBinningConfig();
+        FormatterConfig formatterConfig = createFormatterConfig();
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("startDate", "2002-01-01");
+        parameters.put("endDate", "2002-01-10");
+        parameters.put("binningConfig", binningConfig);
+        parameters.put("formatterConfig", formatterConfig);
+
+        final Product targetProduct = GPF.createProduct("Binning", parameters,
+                                                        createSourceProduct(obs1),
+                                                        createSourceProduct(obs2),
+                                                        createSourceProduct(obs3),
+                                                        createSourceProduct(obs4),
+                                                        createSourceProduct(obs5));
+
+        assertNotNull(targetProduct);
+        try {
+            assertGlobalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+        } catch (Exception e) {
+            targetProduct.dispose();
+        }
+    }
+
+    /**
+     * Same as {@link #testLocalBinning}, but this time via the GPF facade.
+     *
+     * @throws Exception if something goes badly wrong
+     * @see #testLocalBinning()
      */
     @Test
     public void testLocalBinningViaGPF() throws Exception {
@@ -194,7 +208,114 @@ public class BinningOpTest {
                                                         createSourceProduct(obs5));
         assertNotNull(targetProduct);
         try {
-            testLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+        } catch (IOException e) {
+            targetProduct.dispose();
+        }
+    }
+
+    /**
+     * Same as {@link #testGlobalBinning}, but this time via the 'gpt' command-line tool.
+     *
+     * @throws Exception if something goes badly wrong
+     * @see #testLocalBinning()
+     */
+    @Test
+    public void testGlobalBinningViaGPT() throws Exception {
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final File parameterFile = new File(getClass().getResource("BinningParamsGlobal.xml").toURI());
+        final File targetFile = getTestFile("output.dim");
+        final File sourceFile1 = getTestFile("obs1.dim");
+        final File sourceFile2 = getTestFile("obs2.dim");
+        final File sourceFile3 = getTestFile("obs3.dim");
+        final File sourceFile4 = getTestFile("obs4.dim");
+        final File sourceFile5 = getTestFile("obs5.dim");
+
+        try {
+            ProductIO.writeProduct(createSourceProduct(obs1), sourceFile1, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs2), sourceFile2, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs3), sourceFile3, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs4), sourceFile4, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs5), sourceFile5, "BEAM-DIMAP", false);
+
+            GPT.run(new String[]{
+                    "Binning",
+                    "-p", parameterFile.getPath(),
+                    "-t", targetFile.getPath(),
+                    sourceFile1.getPath(),
+                    sourceFile2.getPath(),
+                    sourceFile3.getPath(),
+                    sourceFile4.getPath(),
+                    sourceFile5.getPath(),
+            });
+
+            assertTrue(targetFile.exists());
+
+            final Product targetProduct = ProductIO.readProduct(targetFile);
+            assertNotNull(targetProduct);
+            try {
+                assertGlobalBinningProductIsOk(targetProduct, targetFile, obs1, obs2, obs3, obs4, obs5);
+            } catch (IOException e) {
+                targetProduct.dispose();
+            }
+        } finally {
+            FileUtils.deleteTree(TESTDATA_DIR);
+        }
+    }
+
+    /**
+     * Same as {@link #testLocalBinning}, but this time via the 'gpt' command-line tool.
+     *
+     * @throws Exception if something goes badly wrong
+     * @see #testLocalBinning()
+     */
+    @Test
+    public void testLocalBinningViaGPT() throws Exception {
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final File parameterFile = new File(getClass().getResource("BinningParamsLocal.xml").toURI());
+        final String fileName = "output.dim";
+        final File targetFile = getTestFile(fileName);
+        final File sourceFile1 = getTestFile("obs1.dim");
+        final File sourceFile2 = getTestFile("obs2.dim");
+        final File sourceFile3 = getTestFile("obs3.dim");
+        final File sourceFile4 = getTestFile("obs4.dim");
+        final File sourceFile5 = getTestFile("obs5.dim");
+
+        ProductIO.writeProduct(createSourceProduct(obs1), sourceFile1, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs2), sourceFile2, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs3), sourceFile3, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs4), sourceFile4, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs5), sourceFile5, "BEAM-DIMAP", false);
+
+        GPT.run(new String[]{
+                "Binning",
+                "-p", parameterFile.getPath(),
+                "-t", targetFile.getPath(),
+                sourceFile1.getPath(),
+                sourceFile2.getPath(),
+                sourceFile3.getPath(),
+                sourceFile4.getPath(),
+                sourceFile5.getPath(),
+        });
+
+        assertTrue(targetFile.exists());
+
+        final Product targetProduct = ProductIO.readProduct(targetFile);
+        assertNotNull(targetProduct);
+        try {
+            assertLocalBinningProductIsOk(targetProduct, targetFile, obs1, obs2, obs3, obs4, obs5);
         } catch (IOException e) {
             targetProduct.dispose();
         }
@@ -204,7 +325,7 @@ public class BinningOpTest {
         assertTargetProductIsOk(targetProduct, location, obs1, obs2, obs3, obs4, obs5, 360, 180, 179, 87);
     }
 
-    private void testLocalBinningProductIsOk(Product targetProduct, File location, float obs1, float obs2, float obs3, float obs4, float obs5) throws IOException {
+    private void assertLocalBinningProductIsOk(Product targetProduct, File location, float obs1, float obs2, float obs3, float obs4, float obs5) throws IOException {
         assertTargetProductIsOk(targetProduct, location, obs1, obs2, obs3, obs4, obs5, 4, 4, 0, 0);
     }
 
@@ -282,48 +403,7 @@ public class BinningOpTest {
         assertArrayEquals(expectedSigs, actualSigs, 1e-4F);
     }
 
-
-    @Test
-    public void testNoSourceProductSet() throws Exception {
-        final BinningOp binningOp = new BinningOp();
-        testThatOperatorExceptionIsThrown(binningOp, ".*single source product.*");
-    }
-
-    @Test
-    public void testBinningConfigNotSet() throws Exception {
-        final BinningOp binningOp = new BinningOp();
-        binningOp.setSourceProduct(createSourceProduct());
-        testThatOperatorExceptionIsThrown(binningOp, ".*parameter 'binningConfig'.*");
-    }
-
-    @Test
-    public void testInvalidConfigsSet() throws Exception {
-        final BinningOp binningOp = new BinningOp();
-        binningOp.setSourceProduct(createSourceProduct());
-        binningOp.setBinningConfig(new BinningConfig());        // not ok, numRows == 0
-        testThatOperatorExceptionIsThrown(binningOp, ".*parameter 'binningConfig.maskExpr'.*");
-    }
-
-    @Test
-    public void testNoStartDateSet() throws Exception {
-        final BinningOp binningOp = new BinningOp();
-        binningOp.setSourceProduct(createSourceProduct());
-        binningOp.setBinningConfig(createBinningConfig());
-        binningOp.setFormatterConfig(createFormatterConfig());
-        testThatOperatorExceptionIsThrown(binningOp, ".*determine 'startDate'.*");
-    }
-
-    @Test
-    public void testNoEndDateSet() throws Exception {
-        final BinningOp binningOp = new BinningOp();
-        binningOp.setSourceProduct(createSourceProduct());
-        binningOp.setStartDate("2007-06-21");
-        binningOp.setBinningConfig(createBinningConfig());
-        binningOp.setFormatterConfig(createFormatterConfig());
-        testThatOperatorExceptionIsThrown(binningOp, ".*determine 'endDate'.*");
-    }
-
-    private BinningConfig createBinningConfig() {
+    static BinningConfig createBinningConfig() {
         final AggregatorConfig aggregatorConfig = new AggregatorConfig();
         aggregatorConfig.setAggregatorName("AVG");
         aggregatorConfig.setVarName("chl");
@@ -334,8 +414,11 @@ public class BinningOpTest {
         return binningConfig;
     }
 
-    private FormatterConfig createFormatterConfig() throws IOException {
-        final File targetFile = File.createTempFile("BinningOpTest-", ".dim");
+    static int sourceProductCounter = 1;
+    static int targetProductCounter = 1;
+
+    static FormatterConfig createFormatterConfig() throws IOException {
+        final File targetFile = getTestFile("target-" + (targetProductCounter++) + ".dim");
         final FormatterConfig formatterConfig = new FormatterConfig();
         formatterConfig.setOutputFile(targetFile.getPath());
         formatterConfig.setOutputType("Product");
@@ -343,13 +426,11 @@ public class BinningOpTest {
         return formatterConfig;
     }
 
-    static int sourceProductCounter = 1;
-
-    private Product createSourceProduct() {
+    static Product createSourceProduct() {
         return createSourceProduct(1.0F);
     }
 
-    private Product createSourceProduct(float value) {
+    static Product createSourceProduct(float value) {
         final Product p = new Product("P" + sourceProductCounter++, "T", 2, 2);
         final TiePointGrid latitude = new TiePointGrid("latitude", 2, 2, 0.5F, 0.5F, 1.0F, 1.0F, new float[]{
                 1.0F, 1.0F,
@@ -366,15 +447,8 @@ public class BinningOpTest {
         return p;
     }
 
-    private void testThatOperatorExceptionIsThrown(BinningOp binningOp, String regex) {
-        String message = "OperatorException expected with message regex: " + regex;
-        try {
-            binningOp.getTargetProduct();
-            fail(message);
-        } catch (OperatorException e) {
-            assertTrue(message + ", got [" + e.getMessage() + "]", Pattern.matches(regex, e.getMessage()));
-        }
+    static File getTestFile(String fileName) {
+        return new File(TESTDATA_DIR, fileName);
     }
-
 
 }
