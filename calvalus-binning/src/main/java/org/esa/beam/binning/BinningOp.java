@@ -10,6 +10,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
@@ -318,6 +319,16 @@ public class BinningOp extends Operator {
 
         @Override
         public void close() throws IOException {
+        }
+    }
+
+    /**
+     * The service provider interface (SPI) which is referenced
+     * in {@code /META-INF/services/org.esa.beam.framework.gpf.OperatorSpi}.
+     */
+    public static class Spi extends OperatorSpi {
+        public Spi() {
+            super(BinningOp.class);
         }
     }
 
