@@ -17,7 +17,7 @@
     </binningConfig>
     <formatterConfig>
         <outputType>Product</outputType>
-        <outputFile>target/binning-test-io/output-local.dim</outputFile>
+        <outputFile>${gpt.targetFile}</outputFile>
         <outputFormat>BEAM-DIMAP</outputFormat>
     </formatterConfig>
 </parameters>

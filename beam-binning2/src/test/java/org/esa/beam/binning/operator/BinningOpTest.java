@@ -84,7 +84,7 @@ public class BinningOpTest {
         final Product targetProduct = binningOp.getTargetProduct();
         assertNotNull(targetProduct);
         try {
-            assertGlobalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertGlobalBinningProductIsOk(targetProduct, null, obs1, obs2, obs3, obs4, obs5);
         } catch (Exception e) {
             targetProduct.dispose();
         }
@@ -134,7 +134,7 @@ public class BinningOpTest {
         final Product targetProduct = binningOp.getTargetProduct();
         assertNotNull(targetProduct);
         try {
-            assertLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertLocalBinningProductIsOk(targetProduct, null, obs1, obs2, obs3, obs4, obs5);
         } catch (IOException e) {
             targetProduct.dispose();
         }
@@ -174,7 +174,7 @@ public class BinningOpTest {
 
         assertNotNull(targetProduct);
         try {
-            assertGlobalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertGlobalBinningProductIsOk(targetProduct, null, obs1, obs2, obs3, obs4, obs5);
         } catch (Exception e) {
             targetProduct.dispose();
         }
@@ -214,7 +214,7 @@ public class BinningOpTest {
                                                         createSourceProduct(obs5));
         assertNotNull(targetProduct);
         try {
-            assertLocalBinningProductIsOk(targetProduct, new File(formatterConfig.getOutputFile()), obs1, obs2, obs3, obs4, obs5);
+            assertLocalBinningProductIsOk(targetProduct, null, obs1, obs2, obs3, obs4, obs5);
         } catch (IOException e) {
             targetProduct.dispose();
         }
@@ -345,6 +345,8 @@ public class BinningOpTest {
         assertEquals(location, targetProduct.getFileLocation());
         assertEquals(sceneRasterWidth, targetProduct.getSceneRasterWidth());
         assertEquals(sceneRasterHeight, targetProduct.getSceneRasterHeight());
+        assertNotNull(targetProduct.getStartTime());
+        assertNotNull(targetProduct.getEndTime());
         assertEquals("01-JAN-2002 00:00:00.000000", targetProduct.getStartTime().format());
         assertEquals("10-JAN-2002 00:00:00.000000", targetProduct.getEndTime().format());
         assertNotNull(targetProduct.getBand("num_obs"));

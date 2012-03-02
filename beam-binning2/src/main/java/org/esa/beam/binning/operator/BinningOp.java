@@ -31,6 +31,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.framework.gpf.experimental.Output;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StopWatch;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.converters.JtsGeometryConverter;
@@ -58,7 +60,7 @@ import java.util.*;
                   authors = "Norman Fomferra, Marco Zühlke, Thomas Storm",
                   copyright = "(c) 2012 by Brockmann Consult GmbH",
                   description = "Performs spatial and temporal aggregation of pixel values into 'bin' cells")
-public class BinningOp extends Operator {
+public class BinningOp extends Operator implements Output {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
 
@@ -172,11 +174,16 @@ public class BinningOp extends Operator {
             // Step 3: Formatting
             writeOutput(binningContext, temporalBins, formatterConfig, region, startDateUtc, endDateUtc);
 
-            targetProduct = readOutput();
-            for (Band band : targetProduct.getBands()) {
-                // Force setting source image, otherwise GPF will set an OperatorImage and invoke computeTile()!!
-                band.getSourceImage();
-            }
+            // TODO - Check efficiency of interface 'org.esa.beam.framework.gpf.experimental.Output'  (nf, 2012-03-02)
+            // actually, the following line of code would be sufficient, but then, the
+            // 'Output' interface implemented by this operator has no effect, because it already has a
+            // 'ProductReader' instance set. The overall concept of 'Output' is not fully thought-out!
+            //
+            // this.targetProduct = readOutput();
+            //
+            // This is why I have to do the following
+            Product writtenProduct = readOutput();
+            this.targetProduct = copyProduct(writtenProduct);
 
         } catch (OperatorException e) {
             throw e;
@@ -190,6 +197,23 @@ public class BinningOp extends Operator {
         //targetProduct = new Product("N", "T", 360, 180);
         //targetProduct.setFileLocation(new File(formatterConfig.getOutputFile()));
 
+    }
+
+    private static Product copyProduct(Product writtenProduct) {
+        Product targetProduct = new Product(writtenProduct.getName(), writtenProduct.getProductType(), writtenProduct.getSceneRasterWidth(), writtenProduct.getSceneRasterHeight());
+        targetProduct.setStartTime(writtenProduct.getStartTime());
+        targetProduct.setEndTime(writtenProduct.getEndTime());
+        ProductUtils.copyMetadata(writtenProduct, targetProduct);
+        ProductUtils.copyGeoCoding(writtenProduct, targetProduct);
+        ProductUtils.copyTiePointGrids(writtenProduct, targetProduct);
+        ProductUtils.copyMasks(writtenProduct, targetProduct);
+        ProductUtils.copyVectorData(writtenProduct, targetProduct);
+        for (Band band : writtenProduct.getBands()) {
+            // Force setting source image, otherwise GPF will set an OperatorImage and invoke computeTile()!!
+            ProductUtils.copyBand(band.getName(), writtenProduct, targetProduct);
+            targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
+        }
+        return targetProduct;
     }
 
     private Product readOutput() throws IOException {
@@ -219,9 +243,9 @@ public class BinningOp extends Operator {
         for (Product sourceProduct : sourceProducts) {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            System.out.println("processing " + sourceProduct);
+            // System.out.println("processing " + sourceProduct);
             final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
-            System.out.println("done, " + numObs + " observations processed");
+            // System.out.println("done, " + numObs + " observations processed");
 
             stopWatch.stopAndTrace("Spatial binning of product took");
         }
