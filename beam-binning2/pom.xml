@@ -4,12 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bc.calvalus</groupId>
-    <artifactId>calvalus-binning</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <groupId>org.esa.beam</groupId>
+    <artifactId>beam-binning2</artifactId>
+    <version>0.5-SNAPSHOT</version>
 
-    <name>Calvalus L3 Binning</name>
-    <description>Level-3 Binning</description>
+    <name>BEAM Level-3 Binning (GPF)</name>
+    <description>
+        A new implementation of the SeaDAS binning scheme using the BEAM GPF.
+        This module will supersede 'beam-binning' in the future.
+    </description>
 
     <dependencies>
 

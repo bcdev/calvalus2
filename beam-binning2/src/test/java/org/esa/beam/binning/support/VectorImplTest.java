@@ -17,7 +17,6 @@
 package org.esa.beam.binning.support;
 
 
-import org.esa.beam.binning.support.VectorImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

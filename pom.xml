@@ -26,8 +26,10 @@
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
 
+        <!-- Will be moved to BEAM sooner or later -->
+        <module>beam-binning2</module>
+
         <!-- Plug-ins to Calvalus -->
-        <module>calvalus-binning</module>
         <module>calvalus-l2gen</module>
         <!--<module>calvalus-matchup</module>-->
         <!--<module>calvalus-trend</module>-->
@@ -37,7 +39,7 @@
     </modules>
 
     <repositories>
-       <repository>
+        <repository>
             <id>bc-mvn-repo-http</id>
             <name>Public Maven Repository at Brockmann Consult</name>
             <url>http://www.brockmann-consult.de/mvn/os</url>
@@ -50,7 +52,7 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-         <repository>
+        <repository>
             <id>bc-mvn-repo-closed</id>
             <name>Private Maven Repository at Brockmann Consult</name>
             <url>scp://www.brockmann-consult.de/home/maven-cs</url>
@@ -162,12 +164,6 @@
 
             <dependency>
                 <groupId>com.bc.calvalus</groupId>
-                <artifactId>calvalus-binning</artifactId>
-                <version>${calvalus.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.bc.calvalus</groupId>
                 <artifactId>calvalus-inventory</artifactId>
                 <version>${calvalus.version}</version>
             </dependency>
@@ -189,6 +185,11 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
                 <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-binning2</artifactId>
+                <version>0.5-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>

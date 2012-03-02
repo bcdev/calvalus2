@@ -26,14 +26,6 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-commons</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-binning</artifactId>
-        </dependency>
-        <!--<dependency>-->
-        <!--<groupId>com.bc.calvalus</groupId>-->
-        <!--<artifactId>calvalus-lc</artifactId>-->
-        <!--</dependency>-->
 
         <!--  BEAM -->
 
@@ -44,6 +36,10 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-binning2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
