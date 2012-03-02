@@ -56,6 +56,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
     private static final int NUM_SDR_BANDS = 15;
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
+    public static final String CALVALUS_LC_UCL_CLOUD = "calvalus.lc.uclCloud";
 
     private int[] varIndexes;
 
@@ -195,11 +196,12 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
         variableCount = outputFeatures.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
-        // UCL cloud test, implemented but disabled for time being (mz, 2012-02-03)
-        //try {
-        //    uclCloudDetection = UclCloudDetection.create();
-        //} catch (IOException ignore) {
-        //}
+        if (jobConf.getBoolean(CALVALUS_LC_UCL_CLOUD, false)) {
+            try {
+                uclCloudDetection = UclCloudDetection.create();
+            } catch (IOException ignore) {
+            }
+        }
     }
 
     @Override
