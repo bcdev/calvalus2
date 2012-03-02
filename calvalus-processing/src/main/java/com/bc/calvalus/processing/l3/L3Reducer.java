@@ -16,11 +16,12 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.*;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.beam.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBinner;
 
 import java.io.IOException;
 

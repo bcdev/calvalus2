@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBin;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;

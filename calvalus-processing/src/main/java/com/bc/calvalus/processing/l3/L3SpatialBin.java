@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.SpatialBin;
+import org.esa.beam.binning.SpatialBin;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;

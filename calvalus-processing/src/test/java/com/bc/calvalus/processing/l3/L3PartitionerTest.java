@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinningGrid;
+import org.esa.beam.binning.BinningGrid;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;

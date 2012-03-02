@@ -5,7 +5,8 @@
     <name>Level-3 Binning Processor (GPF)</name>
 
     <description>
-        The Level-3 Binning Processor performs a spatial and temporal aggregation of a number of input (Level-2) products
+        The Level-3 Binning Processor performs a spatial and temporal aggregation of a number of input (Level-2)
+        products
         using the NASA SeaDAS binning scheme. This is the BEAM GPF version of the "old" BEAM Level-3 Binning Processor.
     </description>
 
@@ -34,7 +35,7 @@
     <categories>Application,Processor,Geometry,VISAT,Level-3,Envisat,MERIS,AATSR,AVHRR,CHRIS</categories>
 
     <extension point="ceres-core:serviceProviders">
-        <serviceProvider>com.bc.calvalus.binning.AggregatorDescriptor</serviceProvider>
+        <serviceProvider>org.esa.beam.binning.AggregatorDescriptor</serviceProvider>
     </extension>
 
     <extension point="beam-ui:actions">

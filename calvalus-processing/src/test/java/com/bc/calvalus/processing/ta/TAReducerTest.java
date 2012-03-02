@@ -17,12 +17,12 @@
 package com.bc.calvalus.processing.ta;
 
 
-import com.bc.calvalus.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBin;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
+import org.esa.beam.binning.operator.AggregatorConfig;
 import org.junit.Before;
 import org.junit.Test;
 

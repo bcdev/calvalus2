@@ -25,7 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.binning.FormatterConfig;
+import org.esa.beam.binning.operator.FormatterConfig;
 
 import java.io.File;
 import java.io.IOException;

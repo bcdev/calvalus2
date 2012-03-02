@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.*;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.VariableContext;
 
 /**
  * Overrides the default implementation in order to create instances of {@link L3SpatialBin} and {@link L3TemporalBin}.

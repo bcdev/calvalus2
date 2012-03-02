@@ -1,6 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.binning.BinManager;
+import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;

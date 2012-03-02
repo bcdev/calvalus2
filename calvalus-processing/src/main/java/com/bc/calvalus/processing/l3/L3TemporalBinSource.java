@@ -16,8 +16,8 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.TemporalBin;
-import com.bc.calvalus.binning.TemporalBinSource;
+import org.esa.beam.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBinSource;
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;

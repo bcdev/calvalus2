@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.VectorImpl;
+import org.esa.beam.binning.support.VectorImpl;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.CsvReader;
 import org.jfree.chart.ChartFactory;
@@ -29,11 +29,8 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.Range;
 import org.jfree.data.function.Function2D;
 import org.jfree.data.function.LineFunction2D;
-import org.jfree.data.general.DatasetUtilities;
-import org.jfree.data.statistics.Regression;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;

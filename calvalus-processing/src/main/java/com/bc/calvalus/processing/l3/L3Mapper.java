@@ -16,10 +16,9 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.SpatialBinConsumer;
-import com.bc.calvalus.binning.SpatialBinner;
+import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.SpatialBin;
+import org.esa.beam.binning.SpatialBinConsumer;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
@@ -29,7 +28,8 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.binning.SpatialProductBinner;
+import org.esa.beam.binning.SpatialBinner;
+import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -102,7 +102,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                                Integer superSampling,
                                MapContext mapContext) throws IOException, InterruptedException {
         return SpatialProductBinner.processProduct(product, spatialBinner, superSampling,
-                                                   new ProductSplitProgressMonitor(mapContext));
+                new ProductSplitProgressMonitor(mapContext));
     }
 
 

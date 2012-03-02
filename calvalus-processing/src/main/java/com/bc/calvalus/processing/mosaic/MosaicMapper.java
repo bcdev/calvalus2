@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.binning.VariableContext;
+import org.esa.beam.binning.VariableContext;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;

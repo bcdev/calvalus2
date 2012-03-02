@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.Vector;
+import org.esa.beam.binning.Vector;
 
 import java.util.ArrayList;
 import java.util.Collections;

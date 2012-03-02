@@ -17,16 +17,17 @@
 package com.bc.calvalus.processing.l3;
 
 
-import com.bc.calvalus.binning.BinningContext;
-import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.VariableContext;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.binning.BinningConfig;
-import org.esa.beam.binning.VariableConfig;
+import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.VariableContext;
+import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.beam.binning.operator.VariableConfig;
+import org.esa.beam.binning.support.BinningContextImpl;
 
 // todo - remove class (BinningConfig should be a sufficient replacement) (nf, 2012-02-14)
 
@@ -110,9 +111,9 @@ public class L3Config implements XmlConvertible {
 
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
-        return new BinningContext(createBinningGrid(),
-                                  new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext)),
-                                  getSuperSampling() != null ? getSuperSampling() : 1);
+        return new BinningContextImpl(createBinningGrid(),
+                                      new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext)),
+                                      getSuperSampling() != null ? getSuperSampling() : 1);
     }
 
     public BinningGrid createBinningGrid() {

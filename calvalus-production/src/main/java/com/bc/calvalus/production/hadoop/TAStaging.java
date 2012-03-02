@@ -1,8 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.WritableVector;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -18,6 +17,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.esa.beam.binning.WritableVector;
 import org.esa.beam.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 

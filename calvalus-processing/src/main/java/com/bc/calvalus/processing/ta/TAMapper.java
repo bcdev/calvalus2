@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.BinningGrid;
+import org.esa.beam.binning.BinningGrid;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;

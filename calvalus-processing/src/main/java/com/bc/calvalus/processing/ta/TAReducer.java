@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.BinManager;
+import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;

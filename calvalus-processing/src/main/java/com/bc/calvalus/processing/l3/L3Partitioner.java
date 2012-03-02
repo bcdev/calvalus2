@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinningGrid;
+import org.esa.beam.binning.BinningGrid;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Envelope;

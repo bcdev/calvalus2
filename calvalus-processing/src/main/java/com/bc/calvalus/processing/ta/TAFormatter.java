@@ -16,9 +16,8 @@
 
 package com.bc.calvalus.processing.ta;
 
-import com.bc.calvalus.binning.Aggregator;
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinningContext;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
@@ -29,6 +28,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.esa.beam.binning.BinningContext;
 
 import java.io.File;
 import java.io.IOException;

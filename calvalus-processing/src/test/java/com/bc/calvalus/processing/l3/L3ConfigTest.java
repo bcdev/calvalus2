@@ -16,16 +16,16 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.BinManager;
-import com.bc.calvalus.binning.BinningGrid;
-import com.bc.calvalus.binning.IsinBinningGrid;
-import com.bc.calvalus.binning.VariableContext;
-import com.bc.calvalus.binning.aggregators.AggregatorAverage;
-import com.bc.calvalus.binning.aggregators.AggregatorAverageML;
-import com.bc.calvalus.binning.aggregators.AggregatorMinMax;
-import com.bc.calvalus.binning.aggregators.AggregatorOnMaxSet;
+import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.aggregators.AggregatorAverage;
+import org.esa.beam.binning.aggregators.AggregatorAverageML;
+import org.esa.beam.binning.aggregators.AggregatorMinMax;
+import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
 import com.bc.calvalus.processing.WpsConfig;
 import com.bc.ceres.binding.BindingException;
+import org.esa.beam.binning.VariableContext;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;

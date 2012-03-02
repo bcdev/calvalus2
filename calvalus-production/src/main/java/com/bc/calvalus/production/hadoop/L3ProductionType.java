@@ -1,6 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.binning.IsinBinningGrid;
+import org.esa.beam.binning.support.IsinBinningGrid;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
@@ -19,8 +19,8 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.binning.VariableConfig;
+import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;

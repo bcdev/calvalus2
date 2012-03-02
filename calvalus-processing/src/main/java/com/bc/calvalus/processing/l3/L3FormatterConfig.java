@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
-import org.esa.beam.binning.FormatterConfig;
+import org.esa.beam.binning.operator.FormatterConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.ParseException;

@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.binning.SpatialBin;
-import com.bc.calvalus.binning.TemporalBin;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
