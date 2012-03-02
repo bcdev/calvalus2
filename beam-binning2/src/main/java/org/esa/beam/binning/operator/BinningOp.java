@@ -91,6 +91,9 @@ public class BinningOp extends Operator implements Output {
                description = "The configuration used for the output formatting process.")
     FormatterConfig formatterConfig;
 
+
+    private transient BinningContext binningContext;
+
     public BinningOp() {
     }
 
@@ -164,15 +167,15 @@ public class BinningOp extends Operator implements Output {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        BinningContext binningContext = binningConfig.createBinningContext();
+        binningContext = binningConfig.createBinningContext();
 
         try {
             // Step 1: Spatial binning - creates time-series of spatial bins for each bin ID ordered by ID. The tree map structure is <ID, time-series>
-            SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning(binningContext, sourceProducts);
+            SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning();
             // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
-            List<TemporalBin> temporalBins = doTemporalBinning(binningContext, spatialBinMap);
+            List<TemporalBin> temporalBins = doTemporalBinning(spatialBinMap);
             // Step 3: Formatting
-            writeOutput(binningContext, temporalBins, formatterConfig, region, startDateUtc, endDateUtc);
+            writeOutput(temporalBins, startDateUtc, endDateUtc);
 
             // TODO - Check efficiency of interface 'org.esa.beam.framework.gpf.experimental.Output'  (nf, 2012-03-02)
             // actually, the following line of code would be sufficient, but then, the
@@ -192,11 +195,6 @@ public class BinningOp extends Operator implements Output {
         }
 
         stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceProducts.length));
-
-
-        //targetProduct = new Product("N", "T", 360, 180);
-        //targetProduct.setFileLocation(new File(formatterConfig.getOutputFile()));
-
     }
 
     private static Product copyProduct(Product writtenProduct) {
@@ -220,10 +218,43 @@ public class BinningOp extends Operator implements Output {
         return ProductIO.readProduct(new File(formatterConfig.getOutputFile()));
     }
 
-    private static void writeOutput(BinningContext binningContext, List<TemporalBin> temporalBins, FormatterConfig formatterConfig, Geometry region, ProductData.UTC startTime, ProductData.UTC stopTime) throws Exception {
-        StopWatch stopWatch1 = new StopWatch();
-        stopWatch1.start();
 
+    private SortedMap<Long, List<SpatialBin>> doSpatialBinning() throws IOException {
+        final SpatialBinStore spatialBinStore = new SpatialBinStore();
+        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
+        for (Product sourceProduct : sourceProducts) {
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+            getLogger().info(String.format("spatial binning of product '%s'...", sourceProduct.getName()));
+            final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
+            stopWatch.stop();
+            getLogger().info(String.format("spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
+        }
+        return spatialBinStore.getSpatialBinMap();
+    }
+
+    private List<TemporalBin> doTemporalBinning(SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        getLogger().info(String.format("spatial binning of %d bins", spatialBinMap.size()));
+        final TemporalBinner temporalBinner = new TemporalBinner(binningContext);
+        final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
+        for (Map.Entry<Long, List<SpatialBin>> entry : spatialBinMap.entrySet()) {
+            final TemporalBin temporalBin = temporalBinner.processSpatialBins(entry.getKey(), entry.getValue());
+            temporalBins.add(temporalBin);
+        }
+        stopWatch.stop();
+        getLogger().info(String.format("spatial binning of %d bins done, took %s", spatialBinMap.size(), stopWatch));
+
+        return temporalBins;
+    }
+
+    private void writeOutput(List<TemporalBin> temporalBins, ProductData.UTC startTime, ProductData.UTC stopTime) throws Exception {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        getLogger().info(String.format("writing target product '%s'...", formatterConfig.getOutputFile()));
         // TODO - add metadata (nf)
         Formatter.format(binningContext,
                          new MyTemporalBinSource(temporalBins),
@@ -232,40 +263,9 @@ public class BinningOp extends Operator implements Output {
                          startTime,
                          stopTime,
                          new MetadataElement("TODO_add_metadata_here"));
+        stopWatch.stop();
 
-        stopWatch1.stopAndTrace("Writing output took");
-    }
-
-
-    private static SortedMap<Long, List<SpatialBin>> doSpatialBinning(BinningContext binningContext, Product[] sourceProducts) throws IOException {
-        final SpatialBinStore spatialBinStore = new SpatialBinStore();
-        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
-        for (Product sourceProduct : sourceProducts) {
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            // System.out.println("processing " + sourceProduct);
-            final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
-            // System.out.println("done, " + numObs + " observations processed");
-
-            stopWatch.stopAndTrace("Spatial binning of product took");
-        }
-        return spatialBinStore.getSpatialBinMap();
-    }
-
-    private static List<TemporalBin> doTemporalBinning(BinningContext binningContext, SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
-        final TemporalBinner temporalBinner = new TemporalBinner(binningContext);
-        final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
-        for (Map.Entry<Long, List<SpatialBin>> entry : spatialBinMap.entrySet()) {
-            final TemporalBin temporalBin = temporalBinner.processSpatialBins(entry.getKey(), entry.getValue());
-            temporalBins.add(temporalBin);
-        }
-
-        stopWatch.stopAndTrace("Temporal binning took");
-
-        return temporalBins;
+        getLogger().info(String.format("writing target product '%s' done, took %s", formatterConfig.getOutputFile(), stopWatch));
     }
 
     private ProductData.UTC getStartDateUtc(String parameterName) throws OperatorException {
