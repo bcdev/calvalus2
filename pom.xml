@@ -178,11 +178,6 @@
                 <version>${calvalus.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>com.bc.calvalus</groupId>
-                <artifactId>calvalus-lc</artifactId>
-                <version>${calvalus.version}</version>
-            </dependency>
             <!--  BEAM -->
 
             <dependency>
