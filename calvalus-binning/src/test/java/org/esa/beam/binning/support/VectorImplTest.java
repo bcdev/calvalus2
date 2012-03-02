@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.binning;
+package org.esa.beam.binning.support;
 
 
 import org.esa.beam.binning.support.VectorImpl;

@@ -1,4 +1,4 @@
-package org.esa.beam.binning;
+package org.esa.beam.binning.support;
 
 
 import org.esa.beam.binning.support.GrowableVector;
