@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A default implementation of a {@link RecordSource}.
+ * A default implementation of a {@link Header}.
  *
  * @author Norman
  */
