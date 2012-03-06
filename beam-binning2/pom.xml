@@ -22,6 +22,12 @@
             <version>4.10-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-netcdf</artifactId>
+            <version>1.1-SNAPSHOT</version>
+        </dependency>
+
         <!-- Not a real dependency, but used for tests -->
         <dependency>
             <groupId>org.esa.beam</groupId>

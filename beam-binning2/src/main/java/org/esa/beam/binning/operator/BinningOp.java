@@ -36,11 +36,14 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StopWatch;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.converters.JtsGeometryConverter;
+import org.esa.beam.util.io.FileUtils;
+import ucar.ma2.InvalidRangeException;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * An operator that is used to perform spatial and temporal aggregations into "bin" cells for any number of source
@@ -254,6 +257,8 @@ public class BinningOp extends Operator implements Output {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
+        writeNetcdfBinFile(FileUtils.exchangeExtension(new File(formatterConfig.getOutputFile()), "-bins.nc"), temporalBins, region, startTime, stopTime);
+
         getLogger().info(String.format("writing target product '%s'...", formatterConfig.getOutputFile()));
         // TODO - add metadata (nf)
         Formatter.format(binningContext,
@@ -266,6 +271,17 @@ public class BinningOp extends Operator implements Output {
         stopWatch.stop();
 
         getLogger().info(String.format("writing target product '%s' done, took %s", formatterConfig.getOutputFile(), stopWatch));
+    }
+
+    private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, Geometry region, ProductData.UTC startTime, ProductData.UTC stopTime) {
+        final NetCdfBinFileIO fileIO = new NetCdfBinFileIO(getLogger());
+        try {
+            fileIO.write(file, temporalBins, binningContext, region, startTime, stopTime);
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Failed to write " + file, e);
+        } catch (InvalidRangeException e) {
+            getLogger().log(Level.SEVERE, "Failed to write " + file, e);
+        }
     }
 
     private ProductData.UTC getStartDateUtc(String parameterName) throws OperatorException {
