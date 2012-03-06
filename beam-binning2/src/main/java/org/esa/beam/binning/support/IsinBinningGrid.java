@@ -60,8 +60,10 @@ public final class IsinBinningGrid implements BinningGrid {
         numBin = new int[numRows];
         baseBin[0] = 0;
         for (int row = 0; row < numRows; row++) {
-            latBin[row] = 90.0 - ((row + 0.5) * 180.0 / numRows);
-            numBin[row] = (int) (0.5 + (2 * numRows * cos(toRadians(latBin[row]))));
+            // Note: this differs from SeaDAS. We start counting IDs from North to South
+            // In SeaDAS L3 and ACRI MERIS L3: latBin[row] = -90.0 + (row + 0.5) * 180.0 / numRows;
+            latBin[row] = 90.0 - (row + 0.5) * 180.0 / numRows;
+            numBin[row] = (int) (0.5 + 2 * numRows * cos(toRadians(latBin[row])));
             if (row > 0) {
                 baseBin[row] = baseBin[row - 1] + numBin[row - 1];
             }
@@ -119,7 +121,7 @@ public final class IsinBinningGrid implements BinningGrid {
     public int getRowIndex(long binIndex) {
         // compute max constant
         final int max = baseBin.length - 1;
-        // avoid field access from the while loop
+        // avoid field access within body of while loop
         final long[] rowBinIds = this.baseBin;
         int low = 0;
         int high = max;
@@ -138,21 +140,13 @@ public final class IsinBinningGrid implements BinningGrid {
     }
 
     @Override
-    public double[] getCenterLonLat(long binIndex) {
+    public double[] getCenterLatLon(long binIndex) {
         final int row = getRowIndex(binIndex);
         return new double[]{
-                getCenterLon(row, (int) (binIndex - baseBin[row])),
-                latBin[row]
+                latBin[row],
+                getCenterLon(row, (int) (binIndex - baseBin[row]))
         };
     }
-
-    public double[] getCenterLatLon(int row, int col) {
-        return new double[]{
-                getCenterLon(row, col),
-                latBin[row]
-        };
-    }
-
 
     public double getCenterLon(int row, int col) {
         return 360.0 * (col + 0.5) / numBin[row] - 180.0;

@@ -28,7 +28,7 @@ class MyBinningGrid implements BinningGrid {
     }
 
     @Override
-    public double[] getCenterLonLat(long bin) {
+    public double[] getCenterLatLon(long bin) {
         return new double[0];
     }
 }

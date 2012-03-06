@@ -74,5 +74,5 @@ public interface BinningGrid {
      * @param bin The bin index.
      * @return longitude and latitude (in this order)
      */
-    double[] getCenterLonLat(long bin);
+    double[] getCenterLatLon(long bin);
 }
