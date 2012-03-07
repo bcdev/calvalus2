@@ -97,7 +97,6 @@ public class IsinBinningGridTest {
 
     @Test
     public void testGetRowIndex() {
-
         // 3, 8, 12, 12, 8, 3
         IsinBinningGrid grid = new IsinBinningGrid(6);
         try {
@@ -157,6 +156,103 @@ public class IsinBinningGridTest {
         } catch (ArrayIndexOutOfBoundsException e) {
         }
     }
+
+    @Test
+    public void testGetFirstBinIndex() {
+        // 3, 8, 12, 12, 8, 3
+        IsinBinningGrid grid = new IsinBinningGrid(6);
+        try {
+            grid.getFirstBinIndex(-1);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+        assertEquals(0, grid.getFirstBinIndex(0));
+        assertEquals(3, grid.getFirstBinIndex(1));
+        assertEquals(3 + 8, grid.getFirstBinIndex(2));
+        assertEquals(3 + 8 + 12, grid.getFirstBinIndex(3));
+        assertEquals(3 + 8 + 12 + 12, grid.getFirstBinIndex(4));
+        assertEquals(3 + 8 + 12 + 12 + 8, grid.getFirstBinIndex(5));
+        try {
+            grid.getFirstBinIndex(6);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+    }
+
+    @Test
+    public void testGetCenterLat() {
+        // 3, 8, 12, 12, 8, 3
+        IsinBinningGrid grid = new IsinBinningGrid(6);
+        try {
+            grid.getCenterLat(-1);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+        assertEquals(+75.0, grid.getCenterLat(0), 1E-10);
+        assertEquals(+45.0, grid.getCenterLat(1), 1E-10);
+        assertEquals(+15.0, grid.getCenterLat(2), 1E-10);
+        assertEquals(-15.0, grid.getCenterLat(3), 1E-10);
+        assertEquals(-45.0, grid.getCenterLat(4), 1E-10);
+        assertEquals(-75.0, grid.getCenterLat(5), 1E-10);
+        try {
+            grid.getCenterLat(6);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+    }
+
+    @Test
+    public void testGetBinIndex() {
+        // 3, 8, 12, 12, 8, 3
+        IsinBinningGrid grid = new IsinBinningGrid(6);
+        assertEquals(0, grid.getBinIndex(+75.0, -500.0));
+        assertEquals(0, grid.getBinIndex(+100, -120.0));
+
+        assertEquals(0, grid.getBinIndex(+75.0, -120.0));
+        assertEquals(2, grid.getBinIndex(+75.0, +120.0));
+        assertEquals(3, grid.getBinIndex(+45.0, -157.5));
+        assertEquals(3 + 7, grid.getBinIndex(+45.0, +157.5));
+        assertEquals(3 + 8, grid.getBinIndex(+15.0, -165.0));
+        assertEquals(3 + 8 + 11, grid.getBinIndex(+15.0, +165.0));
+        assertEquals(3 + 8 + 12, grid.getBinIndex(-15.0, -165.0));
+        assertEquals(3 + 8 + 12 + 11, grid.getBinIndex(-15.0, +165.0));
+        assertEquals(3 + 8 + 12 + 12, grid.getBinIndex(-45.0, -157.5));
+        assertEquals(3 + 8 + 12 + 12 + 7, grid.getBinIndex(-45.0, +157.5));
+        assertEquals(3 + 8 + 12 + 12 + 8, grid.getBinIndex(-75.0, -120.0));
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +120.0 ));
+
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +500.0 ));
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-100.0, +120.0 ));
+    }
+
+    @Test
+    public void testGetCenterLatLon() {
+        // 3, 8, 12, 12, 8, 3
+        IsinBinningGrid grid = new IsinBinningGrid(6);
+        try {
+            grid.getCenterLatLon(-1);
+            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+        assertArrayEquals(new double[]{+75.0, -120.0}, grid.getCenterLatLon(0), 1E-10);
+        assertArrayEquals(new double[]{+75.0, +120.0}, grid.getCenterLatLon(2), 1E-10);
+        assertArrayEquals(new double[]{+45.0, -157.5}, grid.getCenterLatLon(3), 1E-10);
+        assertArrayEquals(new double[]{+45.0, +157.5}, grid.getCenterLatLon(3 + 7), 1E-10);
+        assertArrayEquals(new double[]{+15.0, -165.0}, grid.getCenterLatLon(3 + 8), 1E-10);
+        assertArrayEquals(new double[]{+15.0, +165.0}, grid.getCenterLatLon(3 + 8 + 11), 1E-10);
+        assertArrayEquals(new double[]{-15.0, -165.0}, grid.getCenterLatLon(3 + 8 + 12), 1E-10);
+        assertArrayEquals(new double[]{-15.0, +165.0}, grid.getCenterLatLon(3 + 8 + 12 + 11), 1E-10);
+        assertArrayEquals(new double[]{-45.0, -157.5}, grid.getCenterLatLon(3 + 8 + 12 + 12), 1E-10);
+        assertArrayEquals(new double[]{-45.0, +157.5}, grid.getCenterLatLon(3 + 8 + 12 + 12 + 7), 1E-10);
+        assertArrayEquals(new double[]{-75.0, -120.0}, grid.getCenterLatLon(3 + 8 + 12 + 12 + 8), 1E-10);
+        assertArrayEquals(new double[]{-75.0, +120.0}, grid.getCenterLatLon(3 + 8 + 12 + 12 + 8 + 2), 1E-10);
+        try {
+            grid.getCenterLatLon(grid.getNumBins());
+//            fail("ArrayIndexOutOfBoundsException?");
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+    }
+
 
     @Test
     public void testComputeRowCount() {

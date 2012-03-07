@@ -22,11 +22,12 @@ package org.esa.beam.binning;
  * @author Norman Fomferra
  */
 public interface BinningGrid {
+
     /**
      * Transforms a geographical point into a unique bin index.
      *
-     * @param lat The latitude in degrees.
-     * @param lon The longitude in degrees.
+     * @param lat The latitude in degrees. Must be in the range -90 to +90.
+     * @param lon The longitude in degrees. Must be in the range -180 to +180.
      * @return The unique bin index.
      */
     long getBinIndex(double lat, double lon);
@@ -41,7 +42,7 @@ public interface BinningGrid {
      *       return row;
      * </pre>
      *
-     * @param bin The bin index.
+     * @param bin The bin index. Must be in the range 0 to {@link #getNumBins()} - 1.
      * @return The row index.
      */
     int getRowIndex(long bin);
@@ -63,15 +64,31 @@ public interface BinningGrid {
     /**
      * Gets the number of columns in the given row.
      *
-     * @param row The row index.
+     * @param row The row index. Must be in the range 0 to {@link #getNumRows()} - 1.
      * @return The number of columns.
      */
     int getNumCols(int row);
 
     /**
+     * Gets the first bin index in the given row.
+     *
+     * @param row The row index. Must be in the range 0 to {@link #getNumRows()} - 1.
+     * @return The bin index.
+     */
+    long getFirstBinIndex(int row);
+
+    /**
+     * Gets the center latitude of the given row.
+     *
+     * @param row The row index. Must be in the range 0 to {@link #getNumRows()} - 1.
+     * @return The center latitude.
+     */
+    double getCenterLat(int row);
+
+    /**
      * Gets geographical longitude and latitude (in this order) for the center of the given bin.
      *
-     * @param bin The bin index.
+     * @param bin The bin index. Must be in the range 0 to {@link #getNumBins()} - 1.
      * @return longitude and latitude (in this order)
      */
     double[] getCenterLatLon(long bin);

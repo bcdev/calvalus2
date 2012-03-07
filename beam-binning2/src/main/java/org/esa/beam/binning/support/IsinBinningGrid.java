@@ -34,7 +34,15 @@ import static java.lang.Math.toRadians;
  * @see <a href="http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf">Ocean Level-3 Binned Data Products</a>
  */
 public final class IsinBinningGrid implements BinningGrid {
+    /**
+     * Default number of rows. This results in a vertical bin cell size of approx. 9.28 km.
+     */
     public static final int DEFAULT_NUM_ROWS = 2160;
+
+    /**
+     * Average Earth radius: see NASA SeaWiFS Technical Report Series Vol. 32;
+      */
+    public static double RE = 6378.145;
 
     private final int numRows;
     private final double[] latBin;  // latitude of first bin in row
@@ -72,8 +80,6 @@ public final class IsinBinningGrid implements BinningGrid {
     }
 
     public static int computeRowCount(double res) {
-        // see: SeaWiFS Technical Report Series Vol. 32;
-        final double RE = 6378.145;
         int numRows = 1 + (int) Math.floor(0.5 * (2 * Math.PI * RE) / res);
         if (numRows % 2 == 0) {
             return numRows;
@@ -95,6 +101,16 @@ public final class IsinBinningGrid implements BinningGrid {
     @Override
     public long getNumBins() {
         return numBins;
+    }
+
+    @Override
+    public long getFirstBinIndex(int row) {
+        return baseBin[row];
+    }
+
+    @Override
+    public double getCenterLat(int row) {
+        return latBin[row];
     }
 
     @Override

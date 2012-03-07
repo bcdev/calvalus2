@@ -31,4 +31,14 @@ class MyBinningGrid implements BinningGrid {
     public double[] getCenterLatLon(long bin) {
         return new double[0];
     }
+
+    @Override
+    public long getFirstBinIndex(int row) {
+        return 0;
+    }
+
+    @Override
+    public double getCenterLat(int row) {
+        return 0;
+    }
 }
