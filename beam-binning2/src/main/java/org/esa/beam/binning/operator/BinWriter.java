@@ -3,6 +3,7 @@ package org.esa.beam.binning.operator;
 import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.BinningGrid;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
@@ -39,7 +40,8 @@ public class BinWriter {
 
         final NetcdfFileWriteable netcdfFile = NetcdfFileWriteable.createNew(filePath.getPath());
 
-        netcdfFile.addGlobalAttribute("global_grid_num_rows", binningContext.getBinningGrid().getNumRows());
+        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        netcdfFile.addGlobalAttribute("global_grid_num_rows", binningGrid.getNumRows());
         netcdfFile.addGlobalAttribute("super_sampling", binningContext.getSuperSampling());
         if (region != null) {
             netcdfFile.addGlobalAttribute("region", region.toText());
@@ -67,11 +69,10 @@ public class BinWriter {
         }
 
         netcdfFile.create();
-
         writeVariable(netcdfFile, idxVar, temporalBins, new BinAccessor() {
             @Override
             public void setBuffer(Array buffer, int index, TemporalBin temporalBin) {
-                buffer.setInt(index, (int) temporalBin.getIndex());
+                buffer.setInt(index, (int) convertCalvalusToSeadasBinIndex(binningGrid, temporalBin.getIndex()));
             }
         });
         writeVariable(netcdfFile, numObsVar, temporalBins, new BinAccessor() {
@@ -101,6 +102,17 @@ public class BinWriter {
 
     }
 
+    static long convertCalvalusToSeadasBinIndex(BinningGrid grid, long binIndex) {
+
+        int row1 = grid.getRowIndex(binIndex);
+        long firstBinIndex1 = grid.getFirstBinIndex(row1);
+        long col = binIndex - firstBinIndex1;
+
+        int row2 = grid.getNumRows() - (row1 + 1);
+        long firstBinIndex2 = grid.getFirstBinIndex(row2);
+
+        return firstBinIndex2 + col;
+    }
 
     private void writeVariable(NetcdfFileWriteable netcdfFile, Variable variable, List<TemporalBin> temporalBins, BinAccessor binAccessor) throws IOException, InvalidRangeException {
         logger.info("Writing variable " + variable.getName() + "...");
