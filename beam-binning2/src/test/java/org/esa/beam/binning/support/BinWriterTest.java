@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Norman Fomferra
  */
-public class NetCdfBinFileIOTest {
+public class BinWriterTest {
 
     @Test
     public void testCalvalusToSeaDasBinIndex() throws Exception {

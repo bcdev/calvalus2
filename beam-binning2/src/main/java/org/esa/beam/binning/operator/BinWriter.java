@@ -22,11 +22,11 @@ import java.util.logging.Logger;
 /**
  * @author Norman Fomferra
  */
-public class NetCdfBinFileIO {
+public class BinWriter {
 
     final Logger logger;
 
-    public NetCdfBinFileIO(Logger logger) {
+    public BinWriter(Logger logger) {
         this.logger = logger;
     }
 
@@ -58,9 +58,9 @@ public class NetCdfBinFileIO {
         final ArrayList<Variable> featureVars = new ArrayList<Variable>();
         for (int i = 0; i < aggregatorCount; i++) {
             final Aggregator aggregator = binningContext.getBinManager().getAggregator(i);
-            final String[] outputFeatureNames = aggregator.getOutputFeatureNames();
-            for (String outputFeatureName : outputFeatureNames) {
-                final Variable featureVar = netcdfFile.addVariable(outputFeatureName, DataType.FLOAT, new Dimension[]{binDim});
+            final String[] featureNames = aggregator.getTemporalFeatureNames();
+            for (String featureName : featureNames) {
+                final Variable featureVar = netcdfFile.addVariable(featureName, DataType.FLOAT, new Dimension[]{binDim});
                 featureVar.addAttribute(new Attribute("_FillValue", aggregator.getOutputFillValue()));
                 featureVars.add(featureVar);
             }
@@ -89,7 +89,7 @@ public class NetCdfBinFileIO {
 
         for (int featureIndex = 0; featureIndex < featureVars.size(); featureIndex++) {
             final int k = featureIndex;
-            writeVariable(netcdfFile, featureVars.get(featureIndex), temporalBins, new BinAccessor() {
+            writeVariable(netcdfFile, featureVars.get(k), temporalBins, new BinAccessor() {
                 @Override
                 public void setBuffer(Array buffer, int index, TemporalBin temporalBin) {
                     buffer.setFloat(index, temporalBin.getFeatureValues()[k]);

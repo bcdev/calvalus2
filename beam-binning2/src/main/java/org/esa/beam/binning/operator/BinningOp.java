@@ -274,9 +274,9 @@ public class BinningOp extends Operator implements Output {
     }
 
     private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, Geometry region, ProductData.UTC startTime, ProductData.UTC stopTime) {
-        final NetCdfBinFileIO fileIO = new NetCdfBinFileIO(getLogger());
+        final BinWriter writer = new BinWriter(getLogger());
         try {
-            fileIO.write(file, temporalBins, binningContext, region, startTime, stopTime);
+            writer.write(file, temporalBins, binningContext, region, startTime, stopTime);
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Failed to write " + file, e);
         } catch (InvalidRangeException e) {
