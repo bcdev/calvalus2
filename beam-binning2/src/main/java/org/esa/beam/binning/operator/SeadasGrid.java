@@ -3,7 +3,10 @@ package org.esa.beam.binning.operator;
 import org.esa.beam.binning.BinningGrid;
 
 /**
- * Utility class that is used to convert from BEAM / Calvalus SEA grid indexes to the ones used in SeaDAS.
+ * Thin wrapper around a {@code BinningGrid} used to convert from BEAM row and bin indexes to the ones
+ * used in SeaDAS. BEAM row and bin indexes are 0-based and increase from North to South (top down), while the
+ * SeaDAS ones are 1-based and from South to North (bottom up). In both grids, columns indexes increase from East
+ * to West (left to right).
  *
  * @author Norman Fomferra
  */
@@ -14,11 +17,15 @@ public class SeadasGrid {
 
     public SeadasGrid(BinningGrid baseGrid) {
 
-        if (baseGrid.getNumBins() > MAX_NUM_BINS) {
+        if (!isCompatibleBaseGrid(baseGrid)) {
             throw new IllegalArgumentException("Base grid has more than " + MAX_NUM_BINS + " bins");
         }
 
         this.baseGrid = baseGrid;
+    }
+
+    public static boolean isCompatibleBaseGrid(BinningGrid baseGrid) {
+        return baseGrid.getNumBins() <= MAX_NUM_BINS;
     }
 
     public int getNumRows() {
