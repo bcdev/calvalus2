@@ -7,12 +7,12 @@ import org.esa.beam.binning.BinningGrid;
  *
  * @author Norman Fomferra
  */
-public class SeadasBinningGrid {
+public class SeadasGrid {
 
     public static final int MAX_NUM_BINS = Integer.MAX_VALUE - 1;
-    final BinningGrid baseGrid;
+    private final BinningGrid baseGrid;
 
-    public SeadasBinningGrid(BinningGrid baseGrid) {
+    public SeadasGrid(BinningGrid baseGrid) {
 
         if (baseGrid.getNumBins() > MAX_NUM_BINS) {
             throw new IllegalArgumentException("Base grid has more than " + MAX_NUM_BINS + " bins");
@@ -21,15 +21,20 @@ public class SeadasBinningGrid {
         this.baseGrid = baseGrid;
     }
 
-    public BinningGrid getBaseGrid() {
-        return baseGrid;
-    }
-
     public int getNumRows() {
         return baseGrid.getNumRows();
     }
 
-    public int getSeadasBinIndex(long bin) {
+    public int getNumCols(int row) {
+        return baseGrid.getNumCols(row);
+    }
+
+    public int getRowIndex(int row) {
+        // SeaDAS uses FORTRAN-style, 1-based indexes
+        return baseGrid.getNumRows() - (row + 1) + 1;
+    }
+
+    public int getBinIndex(long bin) {
 
         int row1 = baseGrid.getRowIndex(bin);
         long firstBin1 = baseGrid.getFirstBinIndex(row1);
@@ -42,8 +47,5 @@ public class SeadasBinningGrid {
         return (int) (firstBin2 + col + 1L);
     }
 
-    public int getSeadasRowIndex(int row) {
-        // SeaDAS uses FORTRAN-style, 1-based indexes
-        return baseGrid.getNumRows() - (row + 1) + 1;
-    }
+
 }
