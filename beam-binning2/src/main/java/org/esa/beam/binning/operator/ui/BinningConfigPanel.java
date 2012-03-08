@@ -18,7 +18,9 @@ package org.esa.beam.binning.operator.ui;
 
 import org.esa.beam.framework.ui.AppContext;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import java.awt.FlowLayout;
 import java.awt.LayoutManager;
 
@@ -42,6 +44,8 @@ class BinningConfigPanel extends JPanel {
     }
 
     private void init() {
+        final JTextField gridRowText = new JTextField();
+        final JLabel gridRowLabel = new JLabel("Number of grid rows");
 
     }
 
