@@ -48,14 +48,14 @@ public class AggregatorAverageTest {
 
         String[] spatialFeatureNames = agg.getSpatialFeatureNames();
         assertEquals(2, spatialFeatureNames.length);
-        assertEquals("c_sum_x", spatialFeatureNames[0]);
-        assertEquals("c_sum_xx", spatialFeatureNames[1]);
+        assertEquals("c_sum", spatialFeatureNames[0]);
+        assertEquals("c_sum_sq", spatialFeatureNames[1]);
 
         String[] temporalFeatureNames = agg.getTemporalFeatureNames();
         assertEquals(3, temporalFeatureNames.length);
-        assertEquals("c_sum_x", temporalFeatureNames[0]);
-        assertEquals("c_sum_xx", temporalFeatureNames[1]);
-        assertEquals("c_sum_w", temporalFeatureNames[2]);
+        assertEquals("c_sum", temporalFeatureNames[0]);
+        assertEquals("c_sum_sq", temporalFeatureNames[1]);
+        assertEquals("c_weights", temporalFeatureNames[2]);
 
         String[] outputFeatureNames = agg.getOutputFeatureNames();
         assertEquals(2, outputFeatureNames.length);

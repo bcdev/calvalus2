@@ -41,9 +41,9 @@ public class AggregatorPercentileTest {
     public void testMetadata_P90() {
         AggregatorPercentile agg = new AggregatorPercentile(new MyVariableContext("c"), "c", null, null);
 
-        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
-        assertEquals("c_P90", agg.getTemporalFeatureNames()[0]);
-        assertEquals("c_P90", agg.getOutputFeatureNames()[0]);
+        assertEquals("c_sum", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c_p90", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c_p90", agg.getOutputFeatureNames()[0]);
         assertTrue(Float.isNaN(agg.getOutputFillValue()));
     }
 
@@ -54,13 +54,13 @@ public class AggregatorPercentileTest {
         assertEquals("PERCENTILE", agg.getName());
 
         assertEquals(1, agg.getSpatialFeatureNames().length);
-        assertEquals("c_sum_x", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c_sum", agg.getSpatialFeatureNames()[0]);
 
         assertEquals(1, agg.getTemporalFeatureNames().length);
-        assertEquals("c_P70", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c_p70", agg.getTemporalFeatureNames()[0]);
 
         assertEquals(1, agg.getOutputFeatureNames().length);
-        assertEquals("c_P70", agg.getOutputFeatureNames()[0]);
+        assertEquals("c_p70", agg.getOutputFeatureNames()[0]);
 
         assertEquals(0.42F, agg.getOutputFillValue(), 1e-5F);
     }

@@ -31,8 +31,8 @@ public final class AggregatorAverage extends AbstractAggregator {
 
     public AggregatorAverage(VariableContext varCtx, String varName, Double weightCoeff, Float fillValue) {
         super(Descriptor.NAME,
-              createFeatureNames(varName, "sum_x", "sum_xx"),
-              createFeatureNames(varName, "sum_x", "sum_xx", "sum_w"),
+              createFeatureNames(varName, "sum", "sum_sq"),
+              createFeatureNames(varName, "sum", "sum_sq", "weights"),
               createFeatureNames(varName, "mean", "sigma"),
               fillValue);
         if (varCtx == null) {

@@ -56,9 +56,9 @@ public class AggregatorPercentile extends AbstractAggregator {
 
     private AggregatorPercentile(VariableContext varCtx, String varName, int percentage, Float fillValue) {
         super(Descriptor.NAME,
-              createFeatureNames(varName, "sum_x"),
-              createFeatureNames(varName, "P" + percentage),
-              createFeatureNames(varName, "P" + percentage),
+              createFeatureNames(varName, "sum"),
+              createFeatureNames(varName, "p" + percentage),
+              createFeatureNames(varName, "p" + percentage),
               fillValue);
 
         if (varCtx == null) {

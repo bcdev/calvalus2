@@ -48,13 +48,13 @@ public class AggregatorAverageMLTest {
         assertTrue(Float.isNaN(agg.getOutputFillValue()));
 
         assertEquals(2, agg.getSpatialFeatureNames().length);
-        assertEquals("b_sum_x", agg.getSpatialFeatureNames()[0]);
-        assertEquals("b_sum_xx", agg.getSpatialFeatureNames()[1]);
+        assertEquals("b_sum", agg.getSpatialFeatureNames()[0]);
+        assertEquals("b_sum_sq", agg.getSpatialFeatureNames()[1]);
 
         assertEquals(3, agg.getTemporalFeatureNames().length);
-        assertEquals("b_sum_x", agg.getTemporalFeatureNames()[0]);
-        assertEquals("b_sum_xx", agg.getTemporalFeatureNames()[1]);
-        assertEquals("b_sum_w", agg.getTemporalFeatureNames()[2]);
+        assertEquals("b_sum", agg.getTemporalFeatureNames()[0]);
+        assertEquals("b_sum_sq", agg.getTemporalFeatureNames()[1]);
+        assertEquals("b_weights", agg.getTemporalFeatureNames()[2]);
 
         assertEquals(4, agg.getOutputFeatureNames().length);
         assertEquals("b_mean", agg.getOutputFeatureNames()[0]);
