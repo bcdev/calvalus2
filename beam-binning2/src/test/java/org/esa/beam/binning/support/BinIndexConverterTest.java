@@ -33,18 +33,18 @@ public class BinIndexConverterTest {
 
         SeadasBinningGrid converter = new SeadasBinningGrid(grid);
 
-        assertEquals(43, converter.getSeadasBinIndex(0));
-        assertEquals(45, converter.getSeadasBinIndex(2));
-        assertEquals(35, converter.getSeadasBinIndex(3));
-        assertEquals(42, converter.getSeadasBinIndex(10));
-        assertEquals(23, converter.getSeadasBinIndex(11));
-        assertEquals(34, converter.getSeadasBinIndex(22));
-        assertEquals(11, converter.getSeadasBinIndex(23));
-        assertEquals(22, converter.getSeadasBinIndex(34));
-        assertEquals(3, converter.getSeadasBinIndex(35));
-        assertEquals(10, converter.getSeadasBinIndex(42));
-        assertEquals(0, converter.getSeadasBinIndex(43));
-        assertEquals(2, converter.getSeadasBinIndex(45));
+        assertEquals(44, converter.getSeadasBinIndex(0));
+        assertEquals(46, converter.getSeadasBinIndex(2));
+        assertEquals(36, converter.getSeadasBinIndex(3));
+        assertEquals(43, converter.getSeadasBinIndex(10));
+        assertEquals(24, converter.getSeadasBinIndex(11));
+        assertEquals(35, converter.getSeadasBinIndex(22));
+        assertEquals(12, converter.getSeadasBinIndex(23));
+        assertEquals(23, converter.getSeadasBinIndex(34));
+        assertEquals(4, converter.getSeadasBinIndex(35));
+        assertEquals(11, converter.getSeadasBinIndex(42));
+        assertEquals(1, converter.getSeadasBinIndex(43));
+        assertEquals(3, converter.getSeadasBinIndex(45));
     }
 
 }
