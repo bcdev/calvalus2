@@ -65,7 +65,7 @@ todo - address the following BinningOp requirements (nf, 2012-03-09)
     MappedByteBufferTest.java)
 (6) If the 'region' parameter is not given, the geographical extend of the mapped product shall be limited to the one
     given by the all the participating bin cells. This is in line with the case where the parameters 'startDate' and
-    'endDate' are omitted: The actual start and end dates are thejn computed from the source products.
+    'endDate' are omitted: The actual start and end dates are computed from the source products.
 (7) For simplicity, we shall introduce a Boolean parameter 'global'. If it is true, 'region' will be ignored.
 
 */
