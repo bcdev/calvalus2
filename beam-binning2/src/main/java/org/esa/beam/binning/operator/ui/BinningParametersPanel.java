@@ -16,6 +16,7 @@
 
 package org.esa.beam.binning.operator.ui;
 
+import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.binning.AggregatorDescriptor;
 import org.esa.beam.binning.AggregatorDescriptorRegistry;
@@ -42,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import java.awt.BorderLayout;
@@ -68,6 +70,7 @@ class BinningParametersPanel extends JPanel {
     private final BinningModel model;
     private final String[] aggregatorNames;
     private final List<Component> components;
+    private ProcessingParamsTable table;
 
     BinningParametersPanel(AppContext appContext, BinningModel model) {
         this.appContext = appContext;
@@ -85,8 +88,9 @@ class BinningParametersPanel extends JPanel {
         for (int i = 0; i < aggregatorDescriptors.length; i++) {
             aggregatorNames[i] = aggregatorDescriptors[i].getName();
         }
-        final JPanel bandsPanel = createBandsPanel(new ProcessingParamsTable());
+        final JPanel bandsPanel = createBandsPanel();
         add(bandsPanel);
+        updateComponents();
     }
 
     private void updateComponents() {
@@ -100,9 +104,12 @@ class BinningParametersPanel extends JPanel {
         for (Component component : components) {
             component.setEnabled(hasSourceProducts);
         }
+        if (!hasSourceProducts) {
+            table.clear();
+        }
     }
 
-    private JPanel createBandsPanel(final ProcessingParamsTable table) {
+    private JPanel createBandsPanel() {
         final TableLayout layout = new TableLayout(3);
         layout.setRowFill(0, TableLayout.Fill.HORIZONTAL);
         layout.setRowFill(1, TableLayout.Fill.BOTH);
@@ -114,6 +121,7 @@ class BinningParametersPanel extends JPanel {
         layout.setCellWeightX(0, 1, 0.0);
         layout.setCellWeightX(0, 2, 0.0);
 
+        table = new ProcessingParamsTable();
         final Component bandFilterButton = createBandFilterButton(table);
         final JLabel label = new JLabel("Bands to be included");
 
@@ -178,32 +186,13 @@ class BinningParametersPanel extends JPanel {
             this.weightCoefficient = weightCoefficient;
             this.fillValue = fillValue;
         }
-
-        public String getBandName() {
-            return bandName;
-        }
-
-        public String getBitmaskExpression() {
-            return bitmaskExpression;
-        }
-
-        public String getAlgorithmName() {
-            return algorithmName;
-        }
-
-        public double getWeightCoefficient() {
-            return weightCoefficient;
-        }
-
-        public double getFillValue() {
-            return fillValue;
-        }
     }
 
     private class ProcessingParamsTable {
 
         private JTable table;
         private DefaultTableModel tableModel;
+        private final JScrollPane scrollPane;
 
         public ProcessingParamsTable() {
             tableModel = new DefaultTableModel() {
@@ -220,6 +209,8 @@ class BinningParametersPanel extends JPanel {
                     "Weight",
                     "Fill value"
             });
+
+            tableModel.addTableModelListener(new MyTableModelListener());
 
             table = new JTable(tableModel) {
                 @Override
@@ -246,12 +237,13 @@ class BinningParametersPanel extends JPanel {
 
             table.getColumnModel().getColumn(1).setCellEditor(new ExpressionEditor(true));
             table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(new JComboBox(aggregatorNames)));
+            scrollPane = new JScrollPane(table);
+            components.add(table);
+            components.add(scrollPane);
         }
 
         public JComponent getComponent() {
-            final JScrollPane jScrollPane = new JScrollPane(table);
-//            jScrollPane.setPreferredSize(new Dimension(500, 200));
-            return jScrollPane;
+            return scrollPane;
         }
 
         public String[] getBandNames() {
@@ -296,10 +288,31 @@ class BinningParametersPanel extends JPanel {
             for (final String bandName : bandNames) {
                 remove(bandName);
             }
-        }
-
-        public void removeAll() {
             tableModel.setRowCount(0);
+        }
+    }
+
+    private class MyTableModelListener implements TableModelListener {
+
+        @Override
+        public void tableChanged(TableModelEvent event) {
+            try {
+                final VariableConfig[] variableConfigs = new VariableConfig[table.getRows().length];
+                final Row[] rows = table.getRows();
+                for (int i = 0; i < rows.length; i++) {
+                    final Row row = rows[i];
+                    final VariableConfig config = new VariableConfig();
+                    config.name = row.bandName;
+                    config.expression = row.bitmaskExpression;
+                    config.aggregator = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName);
+                    config.weight = row.weightCoefficient;
+                    config.fillValue = row.fillValue;
+                    variableConfigs[i] = config;
+                }
+                model.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIG, variableConfigs);
+            } catch (ValidationException e1) {
+                appContext.handleError("Unable to validate variable configurations.", e1);
+            }
         }
     }
 
@@ -385,9 +398,9 @@ class BinningParametersPanel extends JPanel {
                     final Row[] rows = table.getRows();
                     final HashMap<String, Row> rowsMap = new HashMap<String, Row>();
                     for (final Row row : rows) {
-                        rowsMap.put(row.getBandName(), row);
+                        rowsMap.put(row.bandName, row);
                     }
-                    table.removeAll();
+                    table.clear();
 
                     final Band[] selectedBands = bandChooser.getSelectedBands();
 
@@ -395,8 +408,8 @@ class BinningParametersPanel extends JPanel {
                         final String bandName = selectedBand.getName();
                         if (rowsMap.containsKey(bandName)) {
                             final Row row = rowsMap.get(bandName);
-                            table.add(bandName, row.getBitmaskExpression(), row.getAlgorithmName(),
-                                      row.getWeightCoefficient(), row.getFillValue());
+                            table.add(bandName, row.bitmaskExpression, row.algorithmName,
+                                      row.weightCoefficient, row.fillValue);
                         } else {
                             table.add(bandName, selectedBand.getValidMaskExpression(), AggregatorAverage.Descriptor.NAME, 1.0, selectedBand.getNoDataValue());
                         }
@@ -405,4 +418,14 @@ class BinningParametersPanel extends JPanel {
             }
         }
     }
+
+    public static class VariableConfig {
+
+        public String name;
+        public String expression;
+        public AggregatorDescriptor aggregator;
+        public Double weight;
+        public Double fillValue;
+    }
+
 }

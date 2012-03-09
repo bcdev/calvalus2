@@ -51,17 +51,17 @@ public class BinningModelImplTest {
         binningModel.setProperty("key1", "value1");
         binningModel.setProperty("key2", "value2");
         
-        assertEquals("value1", listener.map.get("key1"));
-        assertEquals("value2", listener.map.get("key2"));
+        assertEquals("value1", listener.targetMap.get("key1"));
+        assertEquals("value2", listener.targetMap.get("key2"));
     }
 
     private static class MyPropertyChangeListener implements PropertyChangeListener {
 
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> targetMap = new HashMap<String, Object>();
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            map.put(evt.getPropertyName(), evt.getNewValue());
+            targetMap.put(evt.getPropertyName(), evt.getNewValue());
         }
     }
 }
