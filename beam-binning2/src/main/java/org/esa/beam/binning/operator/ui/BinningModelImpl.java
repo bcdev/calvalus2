@@ -54,8 +54,10 @@ class BinningModelImpl implements BinningModel {
 
     @Override
     public Product[] getSourceProducts() throws IOException {
-        final Property sourceProducts = propertySet.getProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
-        final File[] files = sourceProducts.getValue();
+        final File[] files = getProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
+        if(files == null) {
+            return new Product[0];
+        }
         Product[] products = new Product[files.length];
         for (int i = 0; i < files.length; i++) {
             products[i] = ProductIO.readProduct(files[i]);
@@ -72,8 +74,8 @@ class BinningModelImpl implements BinningModel {
             descriptor = new PropertyDescriptor(key, value.getClass());
         }
         final Property property = new Property(descriptor, new DefaultPropertyAccessor());
-        property.setValue(value);
         propertySet.addProperty(property);
+        property.setValue(value);
         System.out.println("set property: 'key = " + key + ", value = " + value + "'.");
     }
 
