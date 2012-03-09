@@ -93,7 +93,7 @@ public class BinningOp extends Operator implements Output {
     @Parameter(notNull = true,
                description = "The configuration used for the output formatting process.")
     FormatterConfig formatterConfig;
-
+    
 
     private transient BinningContext binningContext;
 
@@ -228,10 +228,10 @@ public class BinningOp extends Operator implements Output {
         for (Product sourceProduct : sourceProducts) {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            getLogger().info(String.format("spatial binning of product '%s'...", sourceProduct.getName()));
+            getLogger().info(String.format("Spatial binning of product '%s'...", sourceProduct.getName()));
             final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
             stopWatch.stop();
-            getLogger().info(String.format("spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
+            getLogger().info(String.format("Spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
         }
         return spatialBinStore.getSpatialBinMap();
     }
@@ -240,7 +240,7 @@ public class BinningOp extends Operator implements Output {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        getLogger().info(String.format("spatial binning of %d bins", spatialBinMap.size()));
+        getLogger().info(String.format("Spatial binning of %d bins", spatialBinMap.size()));
         final TemporalBinner temporalBinner = new TemporalBinner(binningContext);
         final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
         for (Map.Entry<Long, List<SpatialBin>> entry : spatialBinMap.entrySet()) {
@@ -248,7 +248,7 @@ public class BinningOp extends Operator implements Output {
             temporalBins.add(temporalBin);
         }
         stopWatch.stop();
-        getLogger().info(String.format("spatial binning of %d bins done, took %s", spatialBinMap.size(), stopWatch));
+        getLogger().info(String.format("Spatial binning of %d bins done, took %s", spatialBinMap.size(), stopWatch));
 
         return temporalBins;
     }
@@ -257,9 +257,17 @@ public class BinningOp extends Operator implements Output {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        writeNetcdfBinFile(FileUtils.exchangeExtension(new File(formatterConfig.getOutputFile()), "-bins.nc"), temporalBins, region, startTime, stopTime);
+        File binnedDataFile = FileUtils.exchangeExtension(new File(formatterConfig.getOutputFile()), "-bins.nc");
+        try {
+            getLogger().info(String.format("Writing binned data to '%s'...", binnedDataFile));
+            writeNetcdfBinFile(binnedDataFile,
+                               temporalBins, startTime, stopTime);
+            getLogger().info(String.format("Writing binned data to '%s' done.", binnedDataFile));
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, String.format("Failed to write binned data to '%s': %s", binnedDataFile, e.getMessage()), e);
+        }
 
-        getLogger().info(String.format("writing target product '%s'...", formatterConfig.getOutputFile()));
+        getLogger().info(String.format("Writing mapped product '%s'...", formatterConfig.getOutputFile()));
         // TODO - add metadata (nf)
         Formatter.format(binningContext,
                          new MyTemporalBinSource(temporalBins),
@@ -270,17 +278,15 @@ public class BinningOp extends Operator implements Output {
                          new MetadataElement("TODO_add_metadata_here"));
         stopWatch.stop();
 
-        getLogger().info(String.format("writing target product '%s' done, took %s", formatterConfig.getOutputFile(), stopWatch));
+        getLogger().info(String.format("Writing mapped product '%s' done, took %s", formatterConfig.getOutputFile(), stopWatch));
     }
 
-    private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, Geometry region, ProductData.UTC startTime, ProductData.UTC stopTime) {
+    private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, ProductData.UTC startTime, ProductData.UTC stopTime) throws IOException {
         final BinWriter writer = new BinWriter(getLogger());
         try {
             writer.write(file, temporalBins, binningContext, region, startTime, stopTime);
-        } catch (IOException e) {
-            getLogger().log(Level.SEVERE, "Failed to write " + file, e);
         } catch (InvalidRangeException e) {
-            getLogger().log(Level.SEVERE, "Failed to write " + file, e);
+            throw new IllegalArgumentException(e);
         }
     }
 
