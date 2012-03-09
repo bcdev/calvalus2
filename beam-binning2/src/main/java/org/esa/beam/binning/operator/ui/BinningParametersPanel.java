@@ -309,7 +309,7 @@ class BinningParametersPanel extends JPanel {
                     config.fillValue = row.fillValue;
                     variableConfigs[i] = config;
                 }
-                model.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIG, variableConfigs);
+                model.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS, variableConfigs);
             } catch (ValidationException e1) {
                 appContext.handleError("Unable to validate variable configurations.", e1);
             }

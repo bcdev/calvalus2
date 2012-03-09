@@ -31,7 +31,7 @@ public interface BinningModel {
 
     String PROPERTY_KEY_SOURCE_PRODUCTS = "sourceProducts";
     String PROPERTY_KEY_CRS = "crs";
-    String PROPERTY_KEY_VARIABLE_CONFIG = "variableConfig";
+    String PROPERTY_KEY_VARIABLE_CONFIGS = "variableConfigs";
 
     /**
      * Returns the value of the property given by the key; <code>null</code> if it does not exist.
