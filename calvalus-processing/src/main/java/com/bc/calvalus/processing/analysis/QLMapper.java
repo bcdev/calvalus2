@@ -26,7 +26,9 @@ import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -35,6 +37,7 @@ import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RGBImageProfile;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
+import org.esa.beam.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -56,10 +59,12 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         ProductFactory productFactory = new ProductFactory(jobConfig);
         Product product = null;
         try {
-            product = productFactory.getProcessedProduct(context.getInputSplit());
+            InputSplit inputSplit = context.getInputSplit();
+            product = productFactory.getProcessedProduct(inputSplit);
             if (product != null) {
                 QLConfig qlConfig = QLConfig.get(jobConfig);
-                String qlName = product.getName() + "." + qlConfig.imageType;
+                String name = FileUtils.getFilenameWithoutExtension(((FileSplit) inputSplit).getPath().getName());
+                String qlName = name + "." + qlConfig.imageType;
                 Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
                 OutputStream quickLookOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
                 try {
