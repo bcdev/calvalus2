@@ -86,7 +86,9 @@ class BinningGeometryPanel extends JPanel {
 
         @Override
         protected String getLabelText() {
-            return "Use the globe as geographical region";
+            return "<html>Compute the geographical<br>" +
+                   "region according to extents<br>" +
+                   "of input products</html>";
         }
 
         @Override

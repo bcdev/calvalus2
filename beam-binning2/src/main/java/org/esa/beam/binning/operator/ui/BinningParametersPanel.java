@@ -123,7 +123,7 @@ class BinningParametersPanel extends JPanel {
 
         table = new ProcessingParamsTable();
         final Component bandFilterButton = createBandFilterButton(table);
-        final JLabel label = new JLabel("Bands to be included");
+        final JLabel label = new JLabel("Choose bands");
 
         components.add(bandFilterButton);
         components.add(label);
