@@ -1,10 +1,8 @@
 package org.esa.beam.binning.support;
 
-import org.esa.beam.binning.operator.SeadasGrid;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -16,11 +14,11 @@ public class SeadasGridTest {
     public void testConstructorRejectsTooLargeBaseGrids() {
 
         // ok
-        new SeadasGrid(new IsinBinningGrid(41068));
+        new SeadasGrid(new SEAGrid(41068));
 
         // not ok
         try {
-            new SeadasGrid(new IsinBinningGrid(41070));
+            new SeadasGrid(new SEAGrid(41070));
             fail("IAE expected");
         } catch (IllegalArgumentException e) {
             assertEquals("Base grid has more than 2147483646 bins", e.getMessage());
@@ -30,7 +28,7 @@ public class SeadasGridTest {
     @Test
     public void testConvertCalvalusToSeadasBinIndex() {
         // 3 + 8 + 12 + 12 + 8 + 3 bins
-        final IsinBinningGrid baseGrid = new IsinBinningGrid(6);
+        final SEAGrid baseGrid = new SEAGrid(6);
 
         // These asserts show the first bin indices of our SEA baseGrid.
         assertEquals(0L, baseGrid.getFirstBinIndex(0));

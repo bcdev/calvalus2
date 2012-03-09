@@ -10,7 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 
 import java.io.IOException;
 
@@ -21,13 +21,13 @@ import java.io.IOException;
  */
 public class TAMapper extends Mapper<LongWritable, L3TemporalBin, Text, L3TemporalBin> implements Configurable {
     private Configuration conf;
-    private BinningGrid binningGrid;
+    private PlanetaryGrid planetaryGrid;
     private TAConfig taConfig;
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
         GeometryFactory geometryFactory = new GeometryFactory();
-        double[] centerLatLon = binningGrid.getCenterLatLon(binIndex.get());
+        double[] centerLatLon = planetaryGrid.getCenterLatLon(binIndex.get());
         Point point = geometryFactory.createPoint(new Coordinate(centerLatLon[1], centerLatLon[0]));
         TAConfig.RegionConfiguration[] regions = taConfig.getRegions();
         for (TAConfig.RegionConfiguration region : regions) {
@@ -41,7 +41,7 @@ public class TAMapper extends Mapper<LongWritable, L3TemporalBin, Text, L3Tempor
     public void setConf(Configuration conf) {
         this.conf = conf;
         L3Config l3Config = L3Config.get(conf);
-        binningGrid = l3Config.createBinningContext().getBinningGrid();
+        planetaryGrid = l3Config.createBinningContext().getPlanetaryGrid();
         taConfig = TAConfig.get(conf);
     }
 

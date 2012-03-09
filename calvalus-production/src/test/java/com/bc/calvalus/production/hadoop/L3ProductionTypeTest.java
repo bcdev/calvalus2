@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -11,6 +10,7 @@ import com.bc.calvalus.production.*;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.esa.beam.binning.BinManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,7 +76,7 @@ public class L3ProductionTypeTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3Config l3Config = L3ProductionType.getL3Config(productionRequest);
         assertNotNull(l3Config);
-        assertEquals(4320, l3Config.createBinningContext().getBinningGrid().getNumRows());
+        assertEquals(4320, l3Config.createBinningContext().getPlanetaryGrid().getNumRows());
         assertEquals("NOT INVALID", l3Config.createVariableContext().getValidMaskExpression());
         assertNotNull(l3Config.getSuperSampling());
         assertEquals(1, (int) l3Config.getSuperSampling());

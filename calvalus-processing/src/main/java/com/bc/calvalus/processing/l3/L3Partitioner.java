@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.l3;
 
-import org.esa.beam.binning.BinningGrid;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Envelope;
@@ -25,6 +24,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
+import org.esa.beam.binning.PlanetaryGrid;
 
 /**
  * Partitions the bins by their bin index.
@@ -36,14 +36,14 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> implements Configurable {
 
     private Configuration conf;
-    private BinningGrid binningGrid;
+    private PlanetaryGrid planetaryGrid;
     private int minRowIndex;
     private int numRowsCovered;
 
     @Override
     public int getPartition(LongWritable binIndex, L3SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
-        int row = binningGrid.getRowIndex(idx);
+        int row = planetaryGrid.getRowIndex(idx);
         int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
         if (partition < 0) {
             partition = 0;
@@ -57,18 +57,18 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     public void setConf(Configuration conf) {
         this.conf = conf;
         L3Config l3Config = L3Config.get(conf);
-        this.binningGrid = l3Config.createBinningGrid();
+        this.planetaryGrid = l3Config.createPlanetaryGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {
             Envelope envelope = roiGeometry.getEnvelopeInternal();
             double minY = envelope.getMinY();
             double maxY = envelope.getMaxY();
-            int maxRowIndex = binningGrid.getRowIndex(binningGrid.getBinIndex(minY, 0));
-            minRowIndex = binningGrid.getRowIndex(binningGrid.getBinIndex(maxY, 0));
+            int maxRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(minY, 0));
+            minRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(maxY, 0));
             numRowsCovered = maxRowIndex - minRowIndex + 1;
         } else {
-            numRowsCovered = binningGrid.getNumRows();
+            numRowsCovered = planetaryGrid.getNumRows();
             minRowIndex = 0;
         }
     }
@@ -78,7 +78,7 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
         return conf;
     }
 
-    BinningGrid getBinningGrid() {
-        return binningGrid;
+    PlanetaryGrid getPlanetaryGrid() {
+        return planetaryGrid;
     }
 }

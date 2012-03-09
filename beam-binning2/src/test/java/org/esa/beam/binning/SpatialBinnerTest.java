@@ -3,8 +3,8 @@ package org.esa.beam.binning;
 
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.support.BinningContextImpl;
-import org.esa.beam.binning.support.IsinBinningGrid;
 import org.esa.beam.binning.support.ObservationImpl;
+import org.esa.beam.binning.support.SEAGrid;
 import org.junit.Test;
 
 import java.awt.geom.AffineTransform;
@@ -24,10 +24,10 @@ public class SpatialBinnerTest {
     @Test
     public void testThatObservationsAreAggregated() throws Exception {
 
-        MyBinningGrid binningGrid = new MyBinningGrid();
+        MyPlanetaryGrid planetaryGrid = new MyPlanetaryGrid();
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(variableContext, new AggregatorAverageML(variableContext, "x", null, null));
-        BinningContext binningContext = new BinningContextImpl(binningGrid, binManager);
+        BinningContext binningContext = new BinningContextImpl(planetaryGrid, binManager);
         MySpatialBinConsumer mySpatialBinProcessor = new MySpatialBinConsumer(binManager);
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, mySpatialBinProcessor);
 
@@ -83,10 +83,10 @@ public class SpatialBinnerTest {
 
     @Test
     public void testThatCellsAreDeterminedCorrectly() throws Exception {
-        IsinBinningGrid binningGrid = new IsinBinningGrid();
+        PlanetaryGrid planetaryGrid = new SEAGrid();
 
         // bin size in degree
-        double binEdgeSize = 180.0 / binningGrid.getNumRows();
+        double binEdgeSize = 180.0 / planetaryGrid.getNumRows();
 
         // we want 4 x 4 pixels per bin
         int pixelsPerBinEdge = 4;
@@ -117,7 +117,7 @@ public class SpatialBinnerTest {
         MyVariableContext variableContext = new MyVariableContext("x");
         MyBinManager binManager = new MyBinManager(variableContext, new AggregatorAverageML(variableContext, "x", null, null));
         TestSpatialBinConsumer spatialBinProcessor = new TestSpatialBinConsumer();
-        BinningContext binningContext = new BinningContextImpl(binningGrid, binManager);
+        BinningContext binningContext = new BinningContextImpl(planetaryGrid, binManager);
 
         SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinProcessor);
 

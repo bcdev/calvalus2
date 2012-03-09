@@ -3,9 +3,10 @@ package org.esa.beam.binning.operator;
 import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.support.SEAGrid;
+import org.esa.beam.binning.support.SeadasGrid;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
@@ -43,7 +44,7 @@ public class BinWriter {
 
         final NetcdfFileWriteable netcdfFile = NetcdfFileWriteable.createNew(filePath.getPath());
 
-        final BinningGrid binningGrid = binningContext.getBinningGrid();
+        final PlanetaryGrid planetaryGrid = binningContext.getPlanetaryGrid();
         netcdfFile.addGlobalAttribute("title", "Level-3 Binned Data");
         netcdfFile.addGlobalAttribute("super_sampling", binningContext.getSuperSampling());
         if (region != null) {
@@ -52,13 +53,13 @@ public class BinWriter {
         netcdfFile.addGlobalAttribute("start_time", ProductData.UTC.createDateFormat("yyyy-MM-dd").format(startTime.getAsDate()));
         netcdfFile.addGlobalAttribute("stop_time", ProductData.UTC.createDateFormat("yyyy-MM-dd").format(stopTime.getAsDate()));
 
-        netcdfFile.addGlobalAttribute("SEAGrid_bins", 2 * binningGrid.getNumRows());
-        netcdfFile.addGlobalAttribute("SEAGrid_radius", IsinBinningGrid.RE);
+        netcdfFile.addGlobalAttribute("SEAGrid_bins", 2 * planetaryGrid.getNumRows());
+        netcdfFile.addGlobalAttribute("SEAGrid_radius", SEAGrid.RE);
         netcdfFile.addGlobalAttribute("SEAGrid_max_north", +90.0);
         netcdfFile.addGlobalAttribute("SEAGrid_max_south", -90.0);
         netcdfFile.addGlobalAttribute("SEAGrid_seam_lon", -180.0);
 
-        final Dimension binIndexDim = netcdfFile.addDimension("bin_index", binningGrid.getNumRows());
+        final Dimension binIndexDim = netcdfFile.addDimension("bin_index", planetaryGrid.getNumRows());
         final Dimension binListDim = netcdfFile.addDimension("bin_list", temporalBins.size());
 
         final Variable rowNumVar = netcdfFile.addVariable("bi_row_num", DataType.INT, new Dimension[]{binIndexDim});
@@ -83,7 +84,7 @@ public class BinWriter {
         }
 
         netcdfFile.create();
-        final SeadasGrid seadasGrid = new SeadasGrid(binningGrid);
+        final SeadasGrid seadasGrid = new SeadasGrid(planetaryGrid);
         writeBinIndexVariables(netcdfFile, rowNumVar, vsizeVar, hsizeVar, startNumVar, maxVar, seadasGrid);
         writeBinListVariables(netcdfFile, binNumVar, numObsVar, numScenesVar, featureVars, seadasGrid, temporalBins);
         netcdfFile.close();
@@ -153,12 +154,12 @@ public class BinWriter {
         }
     }
 
-    private void writeBinIndexVariable(NetcdfFileWriteable netcdfFile, Variable variable, SeadasGrid binningGrid, BinIndexElementSetter setter) throws IOException, InvalidRangeException {
+    private void writeBinIndexVariable(NetcdfFileWriteable netcdfFile, Variable variable, SeadasGrid seadasGrid, BinIndexElementSetter setter) throws IOException, InvalidRangeException {
         logger.info("Writing bin index variable " + variable.getName());
-        final int numRows = binningGrid.getNumRows();
+        final int numRows = seadasGrid.getNumRows();
         final Array array = Array.factory(variable.getDataType(), new int[]{numRows});
         for (int i = 0; i < numRows; i++) {
-            setter.setArray(array, i, binningGrid);
+            setter.setArray(array, i, seadasGrid);
         }
         netcdfFile.write(variable.getName(), array);
     }

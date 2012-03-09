@@ -18,13 +18,13 @@ package org.esa.beam.binning.operator;
 
 import com.bc.ceres.binding.BindingException;
 import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.aggregators.AggregatorMinMax;
 import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,14 +44,14 @@ public class BinningConfigTest {
     }
 
     @Test
-    public void testBinningGrid() {
-        BinningGrid grid = new BinningConfig().createBinningGrid();
+    public void testPlanetaryGrid() {
+        PlanetaryGrid grid = new BinningConfig().createPlanetaryGrid();
         assertEquals(2160, grid.getNumRows());
-        assertEquals(IsinBinningGrid.class, grid.getClass());
+        assertEquals(SEAGrid.class, grid.getClass());
 
-        grid = config.createBinningGrid();
+        grid = config.createPlanetaryGrid();
         assertEquals(4320, grid.getNumRows());
-        assertEquals(IsinBinningGrid.class, grid.getClass());
+        assertEquals(SEAGrid.class, grid.getClass());
     }
 
     @Test

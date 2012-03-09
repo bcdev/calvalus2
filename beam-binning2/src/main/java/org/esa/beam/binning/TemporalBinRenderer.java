@@ -24,9 +24,9 @@ import java.io.IOException;
  * <p/>
  * Bin renderers can render either maximum rasters of the size
  * <pre>
- *     BinningGrid binningGrid = ctx.getBinningGrid();
- *     int rasterWidth = 2 * binningGrid.getNumRows();
- *     int rasterHeight = binningGrid.getNumRows();
+ *     PlanetaryGrid grid = ctx.getPlanetaryGrid();
+ *     int rasterWidth = 2 * grid.getNumRows();
+ *     int rasterHeight = grid.getNumRows();
  * </pre>
  * or just render a sub-region returned by {@link #getRasterRegion()}.
  *

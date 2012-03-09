@@ -14,7 +14,7 @@ public interface BinningContext {
     /**
      * @return The definition of the binning grid.
      */
-    BinningGrid getBinningGrid();
+    PlanetaryGrid getPlanetaryGrid();
 
     /**
      * @return The bin manager which is used to perform compute bin operations.

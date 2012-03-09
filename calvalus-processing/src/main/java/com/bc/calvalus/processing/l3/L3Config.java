@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.binning.operator.BinningConfig;
@@ -111,13 +111,13 @@ public class L3Config implements XmlConvertible {
 
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
-        return new BinningContextImpl(createBinningGrid(),
+        return new BinningContextImpl(createPlanetaryGrid(),
                                       new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext)),
                                       getSuperSampling() != null ? getSuperSampling() : 1);
     }
 
-    public BinningGrid createBinningGrid() {
-        return getBinningConfig().createBinningGrid();
+    public PlanetaryGrid createPlanetaryGrid() {
+        return getBinningConfig().createPlanetaryGrid();
     }
 
     public VariableContext createVariableContext() {

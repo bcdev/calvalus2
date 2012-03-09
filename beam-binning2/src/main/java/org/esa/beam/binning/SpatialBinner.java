@@ -30,7 +30,7 @@ import java.util.*;
 public class SpatialBinner {
 
     private final BinningContext binningContext;
-    private final BinningGrid binningGrid;
+    private final PlanetaryGrid planetaryGrid;
     private final BinManager binManager;
     private final SpatialBinConsumer consumer;
 
@@ -47,7 +47,7 @@ public class SpatialBinner {
      */
     public SpatialBinner(BinningContext binningContext, SpatialBinConsumer consumer) {
         this.binningContext = binningContext;
-        this.binningGrid = binningContext.getBinningGrid();
+        this.planetaryGrid = binningContext.getPlanetaryGrid();
         this.binManager = binningContext.getBinManager();
         this.consumer = consumer;
         this.activeBinMap = new HashMap<Long, SpatialBin>();
@@ -80,7 +80,7 @@ public class SpatialBinner {
         finalizedBinMap.putAll(activeBinMap);
 
         for (Observation observation : observations) {
-            Long binIndex = binningGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
+            Long binIndex = planetaryGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
             SpatialBin bin = activeBinMap.get(binIndex);
             if (bin == null) {
                 bin = binManager.createSpatialBin(binIndex);

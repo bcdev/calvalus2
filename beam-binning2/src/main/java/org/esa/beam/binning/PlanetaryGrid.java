@@ -17,11 +17,12 @@
 package org.esa.beam.binning;
 
 /**
- * The grid used for the binning.
+ * The planetary grid used for the binning. It subdivides the planet into approximately equal-area bin cells
+ * organised in rows with a number of columns varying with the latitude.
  *
  * @author Norman Fomferra
  */
-public interface BinningGrid {
+public interface PlanetaryGrid {
 
     /**
      * Transforms a geographical point into a unique bin index.

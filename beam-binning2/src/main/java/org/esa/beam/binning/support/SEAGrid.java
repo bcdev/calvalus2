@@ -16,24 +16,23 @@
 
 package org.esa.beam.binning.support;
 
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
 
 /**
- * Implementation of the ISIN (Integerized Sinusoidal) binning grid as used for NASA
- * SeaDAS and MODIS L3 products.
+ * Implementation of a PlanetaryGrid that uses a Sinusoidal Equal Area (SEA) grid layout.
+ * It is similar to the SEA grid used in the NASA  SeaDAS software for creating the binned Level-3 MODIS and SeaWiFS products.
+ * The mayor difference is the way how we count bin indexes and row indexes.
  * <p/>
- * The only difference to the original NASA binning grid is, that the bin indices increase from top left to bottom right starting from zero.
- * The NASA grid counts the opposite way. The conversion is thus: {@code idxNasa = numBins - (idx + 1)}.
  *
  * @author Norman Fomferra
  * @author Marco Zühlke
  * @see <a href="http://oceancolor.gsfc.nasa.gov/SeaWiFS/TECH_REPORTS/PreLPDF/PreLVol32.pdf">SeaWiFS Technical Report Series Volume 32, Level-3 SeaWiFS Data</a>
  * @see <a href="http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf">Ocean Level-3 Binned Data Products</a>
  */
-public final class IsinBinningGrid implements BinningGrid {
+public final class SEAGrid implements PlanetaryGrid {
     /**
      * Default number of rows. This results in a vertical bin cell size of approx. 9.28 km.
      */
@@ -41,7 +40,7 @@ public final class IsinBinningGrid implements BinningGrid {
 
     /**
      * Average Earth radius: see NASA SeaWiFS Technical Report Series Vol. 32;
-      */
+     */
     public static double RE = 6378.145;
 
     private final int numRows;
@@ -50,11 +49,11 @@ public final class IsinBinningGrid implements BinningGrid {
     private final int[] numBin;  // number of bins in this row
     private final long numBins;
 
-    public IsinBinningGrid() {
+    public SEAGrid() {
         this(DEFAULT_NUM_ROWS);
     }
 
-    public IsinBinningGrid(int numRows) {
+    public SEAGrid(int numRows) {
         if (numRows < 2) {
             throw new IllegalArgumentException("numRows < 2");
         }

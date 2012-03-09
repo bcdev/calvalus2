@@ -16,10 +16,10 @@
 
 package com.bc.calvalus.processing.l3;
 
-import org.esa.beam.binning.BinningGrid;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,15 +39,15 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows2Partitions() {
         L3Partitioner l3Partitioner = createPartitioner(6, "");
-        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        PlanetaryGrid planetaryGrid = l3Partitioner.getPlanetaryGrid();
 
-        assertEquals(3, binningGrid.getNumCols(0));
-        assertEquals(8, binningGrid.getNumCols(1));
-        assertEquals(12, binningGrid.getNumCols(2));
+        assertEquals(3, planetaryGrid.getNumCols(0));
+        assertEquals(8, planetaryGrid.getNumCols(1));
+        assertEquals(12, planetaryGrid.getNumCols(2));
 
-        assertEquals(12, binningGrid.getNumCols(3));
-        assertEquals(8, binningGrid.getNumCols(4));
-        assertEquals(3, binningGrid.getNumCols(5));
+        assertEquals(12, planetaryGrid.getNumCols(3));
+        assertEquals(8, planetaryGrid.getNumCols(4));
+        assertEquals(3, planetaryGrid.getNumCols(5));
 
         int numPartitions = 2;
         //row 1
@@ -72,16 +72,16 @@ public class L3PartitionerTest {
     @Test
     public void test6Rows3Partitions() {
         L3Partitioner l3Partitioner = createPartitioner(6, "");
-        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        PlanetaryGrid planetaryGrid = l3Partitioner.getPlanetaryGrid();
 
-        assertEquals(3, binningGrid.getNumCols(0));
-        assertEquals(8, binningGrid.getNumCols(1));
+        assertEquals(3, planetaryGrid.getNumCols(0));
+        assertEquals(8, planetaryGrid.getNumCols(1));
 
-        assertEquals(12, binningGrid.getNumCols(2));
-        assertEquals(12, binningGrid.getNumCols(3));
+        assertEquals(12, planetaryGrid.getNumCols(2));
+        assertEquals(12, planetaryGrid.getNumCols(3));
 
-        assertEquals(8, binningGrid.getNumCols(4));
-        assertEquals(3, binningGrid.getNumCols(5));
+        assertEquals(8, planetaryGrid.getNumCols(4));
+        assertEquals(3, planetaryGrid.getNumCols(5));
 
         int numPartitions = 3;
 
@@ -101,18 +101,18 @@ public class L3PartitionerTest {
     @Test
     public void test8Rows3Partitions() {
         L3Partitioner l3Partitioner = createPartitioner(8, "");
-        BinningGrid binningGrid = l3Partitioner.getBinningGrid();
+        PlanetaryGrid planetaryGrid = l3Partitioner.getPlanetaryGrid();
 
-        assertEquals(3, binningGrid.getNumCols(0));
-        assertEquals(9, binningGrid.getNumCols(1));
-        assertEquals(13, binningGrid.getNumCols(2));
+        assertEquals(3, planetaryGrid.getNumCols(0));
+        assertEquals(9, planetaryGrid.getNumCols(1));
+        assertEquals(13, planetaryGrid.getNumCols(2));
 
-        assertEquals(16, binningGrid.getNumCols(3));
-        assertEquals(16, binningGrid.getNumCols(4));
-        assertEquals(13, binningGrid.getNumCols(5));
+        assertEquals(16, planetaryGrid.getNumCols(3));
+        assertEquals(16, planetaryGrid.getNumCols(4));
+        assertEquals(13, planetaryGrid.getNumCols(5));
 
-        assertEquals(9, binningGrid.getNumCols(6));
-        assertEquals(3, binningGrid.getNumCols(7));
+        assertEquals(9, planetaryGrid.getNumCols(6));
+        assertEquals(3, planetaryGrid.getNumCols(7));
 
         int numPartitions = 3;
 

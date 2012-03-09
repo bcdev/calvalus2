@@ -48,8 +48,8 @@ public class Formatter {
         final String outputType = formatterConfig.getOutputType();
         final String outputFormat = getOutputFormat(formatterConfig, outputFile);
 
-        final BinningGrid binningGrid = binningContext.getBinningGrid();
-        final Rectangle outputRegion = Reprojector.computeRasterSubRegion(binningGrid, roiGeometry);
+        final PlanetaryGrid planetaryGrid = binningContext.getPlanetaryGrid();
+        final Rectangle outputRegion = Reprojector.computeRasterSubRegion(planetaryGrid, roiGeometry);
 
         final TemporalBinRenderer temporalBinRenderer;
         if (outputType.equalsIgnoreCase("Product")) {
@@ -57,7 +57,7 @@ public class Formatter {
                                                                  outputFile,
                                                                  outputFormat,
                                                                  outputRegion,
-                                                                 Reprojector.getRasterPixelSize(binningGrid),
+                                                                 Reprojector.getRasterPixelSize(planetaryGrid),
                                                                  startTime,
                                                                  stopTime,
                                                                  metadataElement);

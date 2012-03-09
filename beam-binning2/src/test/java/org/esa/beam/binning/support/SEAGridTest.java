@@ -4,35 +4,35 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class IsinBinningGridTest {
+public class SEAGridTest {
     @Test
     public void testConstructors() {
-        IsinBinningGrid grid = new IsinBinningGrid();
+        SEAGrid grid = new SEAGrid();
         assertEquals(2160, grid.getNumRows());
 
-        grid = new IsinBinningGrid(2);
+        grid = new SEAGrid(2);
         assertEquals(2, grid.getNumRows());
 
         try {
-            new IsinBinningGrid(1);
+            new SEAGrid(1);
             fail("IAE expected");
         } catch (IllegalArgumentException e) {
         }
 
         try {
-            new IsinBinningGrid(0);
+            new SEAGrid(0);
             fail("IAE expected");
         } catch (IllegalArgumentException e) {
         }
 
         try {
-            new IsinBinningGrid(-1);
+            new SEAGrid(-1);
             fail("IAE expected");
         } catch (IllegalArgumentException e) {
         }
 
         try {
-            new IsinBinningGrid(9);
+            new SEAGrid(9);
             fail("IAE expected");
         } catch (IllegalArgumentException e) {
         }
@@ -42,7 +42,7 @@ public class IsinBinningGridTest {
     public void testDefaultGrid() {
         int NUM_ROWS = 2160;
         final int NUM_BINS = 5940422;
-        IsinBinningGrid grid = new IsinBinningGrid();
+        SEAGrid grid = new SEAGrid();
 
         testGrid(grid, NUM_ROWS, NUM_BINS);
     }
@@ -52,12 +52,12 @@ public class IsinBinningGridTest {
         //300m resolution
         final int NUM_ROWS = 66792;
         final long NUM_BINS = 5680139712L;
-        IsinBinningGrid grid = new IsinBinningGrid(NUM_ROWS);
+        SEAGrid grid = new SEAGrid(NUM_ROWS);
 
         testGrid(grid, NUM_ROWS, NUM_BINS);
     }
 
-    private static void testGrid(IsinBinningGrid grid, int numRows, long numBins) {
+    private static void testGrid(SEAGrid grid, int numRows, long numBins) {
         assertEquals(numRows, grid.getNumRows());
         assertEquals(numBins, grid.getNumBins());
 
@@ -85,12 +85,12 @@ public class IsinBinningGridTest {
         long t0 = System.nanoTime();
         int N = 1000;
         for (int i = 0; i < N; i++) {
-            new IsinBinningGrid();
+            new SEAGrid();
         }
         long t1 = System.nanoTime();
 
         final double seconds = (t1 - t0) / 1.0E9;
-        assertTrue("Bad performance in IsinBinningGrid detected, took " + seconds + " seconds",
+        assertTrue("Bad performance in " + SEAGrid.class + " detected, took " + seconds + " seconds",
                    seconds < 1.0);
     }
 
@@ -98,7 +98,7 @@ public class IsinBinningGridTest {
     @Test
     public void testGetRowIndex() {
         // 3, 8, 12, 12, 8, 3
-        IsinBinningGrid grid = new IsinBinningGrid(6);
+        SEAGrid grid = new SEAGrid(6);
         try {
             grid.getRowIndex(-1);
             fail("ArrayIndexOutOfBoundsException?");
@@ -160,7 +160,7 @@ public class IsinBinningGridTest {
     @Test
     public void testGetFirstBinIndex() {
         // 3, 8, 12, 12, 8, 3
-        IsinBinningGrid grid = new IsinBinningGrid(6);
+        SEAGrid grid = new SEAGrid(6);
         try {
             grid.getFirstBinIndex(-1);
             fail("ArrayIndexOutOfBoundsException?");
@@ -182,7 +182,7 @@ public class IsinBinningGridTest {
     @Test
     public void testGetCenterLat() {
         // 3, 8, 12, 12, 8, 3
-        IsinBinningGrid grid = new IsinBinningGrid(6);
+        SEAGrid grid = new SEAGrid(6);
         try {
             grid.getCenterLat(-1);
             fail("ArrayIndexOutOfBoundsException?");
@@ -204,7 +204,7 @@ public class IsinBinningGridTest {
     @Test
     public void testGetBinIndex() {
         // 3, 8, 12, 12, 8, 3
-        IsinBinningGrid grid = new IsinBinningGrid(6);
+        SEAGrid grid = new SEAGrid(6);
         assertEquals(0, grid.getBinIndex(+75.0, -500.0));
         assertEquals(0, grid.getBinIndex(+100, -120.0));
 
@@ -219,16 +219,16 @@ public class IsinBinningGridTest {
         assertEquals(3 + 8 + 12 + 12, grid.getBinIndex(-45.0, -157.5));
         assertEquals(3 + 8 + 12 + 12 + 7, grid.getBinIndex(-45.0, +157.5));
         assertEquals(3 + 8 + 12 + 12 + 8, grid.getBinIndex(-75.0, -120.0));
-        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +120.0 ));
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +120.0));
 
-        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +500.0 ));
-        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-100.0, +120.0 ));
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-75.0, +500.0));
+        assertEquals(3 + 8 + 12 + 12 + 8 + 2, grid.getBinIndex(-100.0, +120.0));
     }
 
     @Test
     public void testGetCenterLatLon() {
         // 3, 8, 12, 12, 8, 3
-        IsinBinningGrid grid = new IsinBinningGrid(6);
+        SEAGrid grid = new SEAGrid(6);
         try {
             grid.getCenterLatLon(-1);
             fail("ArrayIndexOutOfBoundsException?");
@@ -257,14 +257,14 @@ public class IsinBinningGridTest {
     @Test
     public void testComputeRowCount() {
         // Test "standard" 9.28km grid
-        assertEquals(2160, IsinBinningGrid.computeRowCount(9.28));
-        assertEquals(2160 * 2, IsinBinningGrid.computeRowCount(9.28 / 2));
-        assertEquals(2160 / 2, IsinBinningGrid.computeRowCount(9.28 * 2));
+        assertEquals(2160, SEAGrid.computeRowCount(9.28));
+        assertEquals(2160 * 2, SEAGrid.computeRowCount(9.28 / 2));
+        assertEquals(2160 / 2, SEAGrid.computeRowCount(9.28 * 2));
 
         // Test MERIS FR equivalent at 300m
-        assertEquals(66792, IsinBinningGrid.computeRowCount(0.300));
+        assertEquals(66792, SEAGrid.computeRowCount(0.300));
 
         // And at 400m
-        assertEquals(50094, IsinBinningGrid.computeRowCount(0.400));
+        assertEquals(50094, SEAGrid.computeRowCount(0.400));
     }
 }

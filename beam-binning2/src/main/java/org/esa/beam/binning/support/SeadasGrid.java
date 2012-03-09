@@ -1,9 +1,9 @@
-package org.esa.beam.binning.operator;
+package org.esa.beam.binning.support;
 
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 
 /**
- * Thin wrapper around a {@code BinningGrid} used to convert from BEAM row and bin indexes to the ones
+ * Thin wrapper around a {@code PlanetaryGrid} used to convert from BEAM row and bin indexes to the ones
  * used in SeaDAS. BEAM row and bin indexes are 0-based and increase from North to South (top down), while the
  * SeaDAS ones are 1-based and from South to North (bottom up). In both grids, columns indexes increase from East
  * to West (left to right).
@@ -13,9 +13,9 @@ import org.esa.beam.binning.BinningGrid;
 public class SeadasGrid {
 
     public static final int MAX_NUM_BINS = Integer.MAX_VALUE - 1;
-    private final BinningGrid baseGrid;
+    private final PlanetaryGrid baseGrid;
 
-    public SeadasGrid(BinningGrid baseGrid) {
+    public SeadasGrid(PlanetaryGrid baseGrid) {
 
         if (!isCompatibleBaseGrid(baseGrid)) {
             throw new IllegalArgumentException("Base grid has more than " + MAX_NUM_BINS + " bins");
@@ -24,7 +24,7 @@ public class SeadasGrid {
         this.baseGrid = baseGrid;
     }
 
-    public static boolean isCompatibleBaseGrid(BinningGrid baseGrid) {
+    public static boolean isCompatibleBaseGrid(PlanetaryGrid baseGrid) {
         return baseGrid.getNumBins() <= MAX_NUM_BINS;
     }
 

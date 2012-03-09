@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import org.esa.beam.binning.support.IsinBinningGrid;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
@@ -21,6 +20,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.binning.operator.VariableConfig;
+import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
@@ -241,7 +241,7 @@ public class L3ProductionType extends HadoopProductionType {
 
     static int getNumRows(ProductionRequest request) throws ProductionException {
         double resolution = request.getDouble("resolution");
-        return IsinBinningGrid.computeRowCount(resolution);
+        return SEAGrid.computeRowCount(resolution);
     }
 
 }

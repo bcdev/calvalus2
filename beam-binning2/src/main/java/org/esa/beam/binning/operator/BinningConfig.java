@@ -37,7 +37,7 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertyContainer;
 import org.esa.beam.binning.*;
 import org.esa.beam.binning.support.BinningContextImpl;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.binning.support.VariableContextImpl;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
@@ -136,16 +136,16 @@ public class BinningConfig {
 
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
-        return new BinningContextImpl(createBinningGrid(),
+        return new BinningContextImpl(createPlanetaryGrid(),
                                       createBinManager(variableContext),
                                       getSuperSampling() != null ? getSuperSampling() : 1);
     }
 
-    public BinningGrid createBinningGrid() {
+    public PlanetaryGrid createPlanetaryGrid() {
         if (numRows == 0) {
-            numRows = IsinBinningGrid.DEFAULT_NUM_ROWS;
+            numRows = SEAGrid.DEFAULT_NUM_ROWS;
         }
-        return new IsinBinningGrid(numRows);
+        return new SEAGrid(numRows);
     }
 
     private BinManager createBinManager(VariableContext variableContext) {

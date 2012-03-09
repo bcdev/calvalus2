@@ -1,7 +1,7 @@
 package org.esa.beam.binning;
 
 import org.esa.beam.binning.support.BinningContextImpl;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.support.SEAGrid;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,25 +20,25 @@ import static org.junit.Assert.assertEquals;
 public class ReprojectorTest {
     static final int NAN = -1;
     private BinManager binManager = new BinManager();
-    private IsinBinningGrid binningGrid;
+    private PlanetaryGrid planetaryGrid;
     private NobsRaster raster;
     private int width;
     private Reprojector reprojector;
 
     @Before
     public void setUp() throws Exception {
-        binningGrid = new IsinBinningGrid(6);
-        assertEquals(46, binningGrid.getNumBins());
+        planetaryGrid = new SEAGrid(6);
+        assertEquals(46, planetaryGrid.getNumBins());
 
-        assertEquals(3, binningGrid.getNumCols(0));  //  0... 2 --> 0
-        assertEquals(8, binningGrid.getNumCols(1));  //  3...10 --> 1
-        assertEquals(12, binningGrid.getNumCols(2)); // 11...22 --> 2
-        assertEquals(12, binningGrid.getNumCols(3)); // 23...34 --> 3
-        assertEquals(8, binningGrid.getNumCols(4));  // 35...42 --> 4
-        assertEquals(3, binningGrid.getNumCols(5));  // 43...45 --> 5
+        assertEquals(3, planetaryGrid.getNumCols(0));  //  0... 2 --> 0
+        assertEquals(8, planetaryGrid.getNumCols(1));  //  3...10 --> 1
+        assertEquals(12, planetaryGrid.getNumCols(2)); // 11...22 --> 2
+        assertEquals(12, planetaryGrid.getNumCols(3)); // 23...34 --> 3
+        assertEquals(8, planetaryGrid.getNumCols(4));  // 35...42 --> 4
+        assertEquals(3, planetaryGrid.getNumCols(5));  // 43...45 --> 5
 
-        width = 2 * binningGrid.getNumRows();
-        int height = binningGrid.getNumRows();
+        width = 2 * planetaryGrid.getNumRows();
+        int height = planetaryGrid.getNumRows();
         assertEquals(12, width);
         assertEquals(6, height);
 
@@ -52,7 +52,7 @@ public class ReprojectorTest {
                              "------------\n",
                      raster.toString());
 
-        reprojector = new Reprojector(createBinningContext(binningGrid), raster);
+        reprojector = new Reprojector(createBinningContext(planetaryGrid), raster);
         reprojector.begin();
     }
 
@@ -65,11 +65,11 @@ public class ReprojectorTest {
                              "------\n",
                      raster.toString());
 
-        Reprojector reprojector = new Reprojector(createBinningContext(binningGrid), raster);
+        Reprojector reprojector = new Reprojector(createBinningContext(planetaryGrid), raster);
         reprojector.begin();
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {
+        for (int i = 0; i < planetaryGrid.getNumBins(); i++) {
             bins.add(createTBin(i));
         }
 
@@ -88,7 +88,7 @@ public class ReprojectorTest {
     public void testProcessBins_Full() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {
+        for (int i = 0; i < planetaryGrid.getNumBins(); i++) {
             bins.add(createTBin(i));
         }
 
@@ -108,10 +108,10 @@ public class ReprojectorTest {
     public void testProcessBins_Full_multipleParts() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        int numRows = binningGrid.getNumRows();
+        int numRows = planetaryGrid.getNumRows();
         int startBinIndex = 0;
         for (int row = 0; row < numRows; row++) {
-            int numCols = binningGrid.getNumCols(row);
+            int numCols = planetaryGrid.getNumCols(row);
             for (int i = startBinIndex; i < startBinIndex + numCols; i++) {
                 bins.add(createTBin(i));
             }
@@ -174,8 +174,8 @@ public class ReprojectorTest {
     public void testProcessBins_SomeLinesMissing() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {
-            if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
+        for (int i = 0; i < planetaryGrid.getNumBins(); i++) {
+            if (!(planetaryGrid.getRowIndex(i) == 2 || planetaryGrid.getRowIndex(i) == 4)) {
                 bins.add(createTBin(i));
             }
         }
@@ -196,12 +196,12 @@ public class ReprojectorTest {
     public void testProcessBins_SomeLinesMissing_multipleParts() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        int numRows = binningGrid.getNumRows();
+        int numRows = planetaryGrid.getNumRows();
         int startBinIndex = 0;
         for (int row = 0; row < numRows; row++) {
-            int numCols = binningGrid.getNumCols(row);
+            int numCols = planetaryGrid.getNumCols(row);
             for (int i = startBinIndex; i < startBinIndex + numCols; i++) {
-                if (!(binningGrid.getRowIndex(i) == 2 || binningGrid.getRowIndex(i) == 4)) {
+                if (!(planetaryGrid.getRowIndex(i) == 2 || planetaryGrid.getRowIndex(i) == 4)) {
                     bins.add(createTBin(i));
                 }
             }
@@ -225,7 +225,7 @@ public class ReprojectorTest {
     public void testProcessBins_Alternating() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 0; i < binningGrid.getNumBins(); i++) {
+        for (int i = 0; i < planetaryGrid.getNumBins(); i++) {
             bins.add(createTBin(i));
             i++;  // SKIP!!!
         }
@@ -246,7 +246,7 @@ public class ReprojectorTest {
     public void testProcessBins_TopMissing() throws Exception {
 
         ArrayList<TemporalBin> bins = new ArrayList<TemporalBin>();
-        for (int i = 15; i < binningGrid.getNumBins(); i++) {  // from 15 on!!!
+        for (int i = 15; i < planetaryGrid.getNumBins(); i++) {  // from 15 on!!!
             bins.add(createTBin(i));
         }
 
@@ -416,8 +416,8 @@ public class ReprojectorTest {
         return temporalBin;
     }
 
-    private BinningContext createBinningContext(IsinBinningGrid binningGrid) {
-        return new BinningContextImpl(binningGrid, binManager);
+    private BinningContext createBinningContext(PlanetaryGrid planetaryGrid) {
+        return new BinningContextImpl(planetaryGrid, binManager);
     }
 
     private static class NobsRaster implements TemporalBinRenderer {

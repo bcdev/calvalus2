@@ -18,7 +18,7 @@ package org.esa.beam.binning.support;
 
 import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.BinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 
 /**
@@ -28,16 +28,16 @@ import org.esa.beam.binning.VariableContext;
  */
 public class BinningContextImpl implements BinningContext {
 
-    private final BinningGrid binningGrid;
+    private final PlanetaryGrid planetaryGrid;
     private final BinManager binManager;
     private final int superSampling;
 
-    public BinningContextImpl(BinningGrid binningGrid, BinManager binManager) {
-        this(binningGrid, binManager, 1);
+    public BinningContextImpl(PlanetaryGrid planetaryGrid, BinManager binManager) {
+        this(planetaryGrid, binManager, 1);
     }
 
-    public BinningContextImpl(BinningGrid binningGrid, BinManager binManager, int superSampling) {
-        this.binningGrid = binningGrid;
+    public BinningContextImpl(PlanetaryGrid planetaryGrid, BinManager binManager, int superSampling) {
+        this.planetaryGrid = planetaryGrid;
         this.binManager = binManager;
         this.superSampling = superSampling;
     }
@@ -48,8 +48,8 @@ public class BinningContextImpl implements BinningContext {
     }
 
     @Override
-    public BinningGrid getBinningGrid() {
-        return binningGrid;
+    public PlanetaryGrid getPlanetaryGrid() {
+        return planetaryGrid;
     }
 
     @Override

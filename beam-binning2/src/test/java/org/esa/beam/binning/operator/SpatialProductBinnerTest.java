@@ -20,7 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.binning.*;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.support.BinningContextImpl;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.binning.support.VariableContextImpl;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
@@ -95,12 +95,12 @@ public class SpatialProductBinnerTest {
         variableContext.defineVariable("a", "2.4");
         variableContext.defineVariable("b", "1.8");
 
-        IsinBinningGrid binningGrid = new IsinBinningGrid(6);
+        PlanetaryGrid planetaryGrid = new SEAGrid(6);
         BinManager binManager = new BinManager(variableContext,
                                                new AggregatorAverage(variableContext, "a", null, null),
                                                new AggregatorAverage(variableContext, "b", null, null));
 
-        return new BinningContextImpl(binningGrid, binManager);
+        return new BinningContextImpl(planetaryGrid, binManager);
     }
 
     private static class MySpatialBinConsumer implements SpatialBinConsumer {

@@ -16,16 +16,16 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.WpsConfig;
+import com.bc.ceres.binding.BindingException;
 import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningGrid;
-import org.esa.beam.binning.support.IsinBinningGrid;
+import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.aggregators.AggregatorMinMax;
 import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
-import com.bc.calvalus.processing.WpsConfig;
-import com.bc.ceres.binding.BindingException;
-import org.esa.beam.binning.VariableContext;
+import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class L3ConfigTest {
 
@@ -48,14 +48,14 @@ public class L3ConfigTest {
     }
 
     @Test
-    public void testBinningGrid() {
-        BinningGrid grid = new L3Config().createBinningGrid();
+    public void testPlanetaryGrid() {
+        PlanetaryGrid grid = new L3Config().createPlanetaryGrid();
         assertEquals(2160, grid.getNumRows());
-        assertEquals(IsinBinningGrid.class, grid.getClass());
+        assertEquals(SEAGrid.class, grid.getClass());
 
-        grid = l3Config.createBinningGrid();
+        grid = l3Config.createPlanetaryGrid();
         assertEquals(4320, grid.getNumRows());
-        assertEquals(IsinBinningGrid.class, grid.getClass());
+        assertEquals(SEAGrid.class, grid.getClass());
 
     }
 

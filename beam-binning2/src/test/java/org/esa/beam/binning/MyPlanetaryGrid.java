@@ -1,7 +1,7 @@
 package org.esa.beam.binning;
 
 
-class MyBinningGrid implements BinningGrid {
+class MyPlanetaryGrid implements PlanetaryGrid {
     @Override
     public long getBinIndex(double lat, double lon) {
         return (int) lon;
