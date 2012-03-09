@@ -45,6 +45,31 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.logging.Level;
 
+/*
+
+todo - address the following BinningOp requirements (nf, 2012-03-09)
+
+(1) allow for reading a metadata attributes file (e.g. Java Properties file) whose content will be converted
+    to NetCDF global attributes. See http://oceancolor.gsfc.nasa.gov/DOCS/Ocean_Level-3_Binned_Data_Products.pdf
+    for possible attributes. Ideally, we treat the metadata file as a template and fill in placeholders, e.g.
+    ${operatorParameters}, or ${operatorName} or ${operatorVersion} ...
+(2) We shall not only rely on the @SourceProducts annotation, but also use an input directory which we scan by
+    globbing (using filename wildcards). This is important for windows users because the DOS shell does not allow
+    for argument expansion using wildcard. PixExOp follows a similar approach but used a weird pattern. (check!)
+(3) For simplicity, we shall not use BinningConfig and FormatterConfig but simply move their @Parameter declarations
+    into the BinningOp class.
+(4) It shall be possible to output both or either one, a mapped product file AND/OR the SeaDAS-like binned data
+    file (SeaDAS).
+(5) For dealing with really large amounts of bins (global binning), we need SpatialBinConsumer and TemporalBinSource
+    implementations that write to and read from local files. (E.g. use memory-mapped file I/O, see
+    MappedByteBufferTest.java)
+(6) If the 'region' parameter is not given, the geographical extend of the mapped product shall be limited to the one
+    given by the all the participating bin cells. This is in line with the case where the parameters 'startDate' and
+    'endDate' are omitted: The actual start and end dates are thejn computed from the source products.
+(7) For simplicity, we shall introduce a Boolean parameter 'global'. If it is true, 'region' will be ignored.
+
+*/
+
 /**
  * An operator that is used to perform spatial and temporal aggregations into "bin" cells for any number of source
  * product. The output is either a file comprising the resulting bins or a reprojected "map" of the bin cells
@@ -93,7 +118,7 @@ public class BinningOp extends Operator implements Output {
     @Parameter(notNull = true,
                description = "The configuration used for the output formatting process.")
     FormatterConfig formatterConfig;
-    
+
 
     private transient BinningContext binningContext;
 
@@ -270,7 +295,7 @@ public class BinningOp extends Operator implements Output {
         getLogger().info(String.format("Writing mapped product '%s'...", formatterConfig.getOutputFile()));
         // TODO - add metadata (nf)
         Formatter.format(binningContext,
-                         new MyTemporalBinSource(temporalBins),
+                         new SimpleTemporalBinSource(temporalBins),
                          formatterConfig,
                          region,
                          startTime,
@@ -358,10 +383,10 @@ public class BinningOp extends Operator implements Output {
         }
     }
 
-    private static class MyTemporalBinSource implements TemporalBinSource {
+    private static class SimpleTemporalBinSource implements TemporalBinSource {
         private final List<TemporalBin> temporalBins;
 
-        public MyTemporalBinSource(List<TemporalBin> temporalBins) {
+        public SimpleTemporalBinSource(List<TemporalBin> temporalBins) {
             this.temporalBins = temporalBins;
         }
 
