@@ -83,7 +83,7 @@ class BinningIOPanel extends JPanel {
                 final SwingWorker worker = new SwingWorker() {
                     @Override
                     protected Object doInBackground() throws Exception {
-                        binningModel.setSourceProducts(files);
+                        binningModel.setProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS, files);
                         return null;
                     }
 

@@ -21,6 +21,8 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.ui.AppContext;
 
+import java.util.Map;
+
 /**
  * UI for binning operator.
  *
@@ -34,13 +36,14 @@ public class BinningDialog extends SingleTargetProductDialog {
 
     protected BinningDialog(AppContext appContext, String title, String helpID) {
         super(appContext, title, helpID);
-        model = new BinningModel();
+        model = new BinningModelImpl();
         form = new BinningForm(appContext, model, getTargetProductSelector());
     }
 
     @Override
     protected Product createTargetProduct() throws Exception {
-        return GPF.createProduct("Binning", model.getParameters(), model.getSourceProducts());
+        final Map<String, Object> parameters = null; // todo - replace by getting parameters from model
+        return GPF.createProduct("Binning", parameters, model.getSourceProducts());
     }
 
     @Override

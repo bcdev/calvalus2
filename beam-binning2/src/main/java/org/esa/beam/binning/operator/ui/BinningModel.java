@@ -16,61 +16,33 @@
 
 package org.esa.beam.binning.operator.ui;
 
-import com.bc.ceres.binding.Property;
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertyDescriptor;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.accessors.DefaultPropertyAccessor;
-import org.esa.beam.framework.dataio.ProductIO;
+import com.bc.ceres.binding.ValidationException;
 import org.esa.beam.framework.datamodel.Product;
 
-import java.io.File;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.Map;
 
 /**
- * TODO fill out or delete
+ * The model responsible for managing the binning parameters.
  *
  * @author Thomas Storm
  */
-public class BinningModel {
+public interface BinningModel {
 
-    private File[] files;
-    private PropertySet propertySet;
+    String PROPERTY_KEY_SOURCE_PRODUCTS = "sourceProducts";
+    String PROPERTY_KEY_CRS = "crs";
 
-    public BinningModel() {
-        this.propertySet = new PropertyContainer();
-    }
+    /**
+     * Returns the value of the property given by the key; <code>null</code> if it does not exist.
+     * @param key the property key
+     * @param <T> the property type
+     * @return the property value or <code>null</code>.
+     */
+    <T> T getProperty(String key);
 
-    public PropertySet getPropertySet() {
-        return propertySet;
-    }
+    Product[] getSourceProducts() throws IOException;
 
-    public void setSourceProducts(File[] files) {
-        this.files = files;
-    }
+    void setProperty(String key, Object value) throws ValidationException;
 
-    public Map<String, Object> getParameters() {
-        return null;
-    }
-
-    public Product[] getSourceProducts() throws IOException {
-        Product[] products = new Product[files.length];
-        for (int i = 0; i < files.length; i++) {
-            products[i] = ProductIO.readProduct(files[i]);
-        }
-        return products;
-    }
-
-    public void setProperty(String key, Object value) {
-        final PropertyDescriptor descriptor;
-        if(value == null) {
-            descriptor = new PropertyDescriptor(key, Object.class);
-        } else {
-            descriptor = new PropertyDescriptor(key, value.getClass());
-        }
-        final Property property = new Property(descriptor, new DefaultPropertyAccessor());
-        propertySet.addProperty(property);
-        System.out.println("set property: 'key = " + key + ", value = " + value + "'.");
-    }
+    void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);
 }

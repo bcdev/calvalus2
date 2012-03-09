@@ -16,6 +16,7 @@
 
 package org.esa.beam.binning;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -42,6 +43,16 @@ public class AggregatorDescriptorRegistry {
 
     public AggregatorDescriptor getAggregatorDescriptor(String name) {
         return map.get(name);
+    }
+
+    public AggregatorDescriptor[] getAggregatorDescriptors() {
+        final AggregatorDescriptor[] aggregatorDescriptors = new AggregatorDescriptor[map.size()];
+        final Collection<AggregatorDescriptor> values = map.values();
+        int index = 0;
+        for (AggregatorDescriptor value : values) {
+            aggregatorDescriptors[index++] = value;
+        }
+        return aggregatorDescriptors;
     }
 
     // Initialization-on-demand holder idiom

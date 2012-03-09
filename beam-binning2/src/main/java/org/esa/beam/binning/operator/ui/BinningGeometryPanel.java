@@ -69,12 +69,12 @@ class BinningGeometryPanel extends JPanel {
         try {
             final CoordinateReferenceSystem crs = crsSelectionPanel.getCrs(null);
             if (crs != null) {
-                model.setProperty("crs", crs.toWKT());
+                model.setProperty(BinningModel.PROPERTY_KEY_CRS, crs.toWKT());
             } else {
-                model.setProperty("crs", null);
+                model.setProperty(BinningModel.PROPERTY_KEY_CRS, null);
             }
-        } catch (FactoryException e) {
-            throw new IllegalStateException(e);
+        } catch (Exception e) {
+            appContext.handleError("Unable to update CRS", e);
         }
     }
 

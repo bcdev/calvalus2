@@ -32,17 +32,17 @@ class BinningForm extends JTabbedPane {
 
     private final JPanel ioPanel;
     private final JPanel geometryPanel;
-    private final JPanel binningConfigPanel;
+    private final JPanel binningParametersPanel;
     private final JPanel formatterConfigPanel;
 
     BinningForm(AppContext appContext, BinningModel binningModel, TargetProductSelector targetProductSelector) {
         ioPanel = new BinningIOPanel(appContext, binningModel, targetProductSelector);
         geometryPanel = new BinningGeometryPanel(appContext, binningModel);
-        binningConfigPanel = new BinningConfigPanel(appContext, binningModel);
+        binningParametersPanel = new BinningParametersPanel(appContext, binningModel);
         formatterConfigPanel = new FormatterConfigPanel();
         addTab("I/O Parameters", ioPanel);
         addTab("Geometry", geometryPanel);
-        addTab("Binning Config", binningConfigPanel);
+        addTab("Binning Parameters", binningParametersPanel);
         addTab("Formatter Config", formatterConfigPanel);
     }
 

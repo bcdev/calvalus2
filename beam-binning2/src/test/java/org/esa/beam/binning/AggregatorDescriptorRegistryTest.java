@@ -50,6 +50,13 @@ public class AggregatorDescriptorRegistryTest {
         assertEquals(AggregatorOnMaxSet.class, aggregator.getClass());
     }
 
+    @Test
+    public void testGetAllRegisteredAggregatorDescriptors() throws Exception {
+        final AggregatorDescriptorRegistry registry = AggregatorDescriptorRegistry.getInstance();
+        final AggregatorDescriptor[] aggregatorDescriptors = registry.getAggregatorDescriptors();
+        assertEquals(5, aggregatorDescriptors.length);
+    }
+
     private AggregatorDescriptor assertRegistered(String name) {
         AggregatorDescriptorRegistry registry = AggregatorDescriptorRegistry.getInstance();
         AggregatorDescriptor descriptor = registry.getAggregatorDescriptor(name);
