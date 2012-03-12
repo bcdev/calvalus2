@@ -73,7 +73,8 @@ class BinningIOPanel extends JPanel {
         setLayout(tableLayout);
         tableLayout.setRowWeightY(0, 1.0);
         add(createSourceProductsPanel());
-        add(createTargetProductPanel());
+//        add(createTargetProductPanel());
+        add(targetProductSelectorPanel.createDefaultPanel());
     }
 
     private JPanel createSourceProductsPanel() {
