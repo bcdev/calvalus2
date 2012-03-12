@@ -26,6 +26,19 @@ import java.util.Map;
 /**
  * UI for binning operator.
  *
+ * todo
+ * - target product: remove outer group
+ * - remove first bullet, replace by min/max lat/lon or beam map region chooser
+ * - valid expression globally
+ * - allow specifying bands by expression
+ * - weight -> parameters, empty by default, add description on aggregators to help
+ * - fill value -> NaN by default
+ * - missing parameters: add to parameters panel
+ * - remove formatter config
+ * - geometry: rename to region
+ * - add time parameters
+ * - allow specifying spatial resolution OR supersampling
+ *
  * @author Olaf Danne
  * @author Thomas Storm
  */
