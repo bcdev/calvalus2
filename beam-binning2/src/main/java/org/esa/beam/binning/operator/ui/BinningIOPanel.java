@@ -73,7 +73,6 @@ class BinningIOPanel extends JPanel {
         setLayout(tableLayout);
         tableLayout.setRowWeightY(0, 1.0);
         add(createSourceProductsPanel());
-//        add(createTargetProductPanel());
         add(targetProductSelectorPanel.createDefaultPanel());
     }
 
@@ -127,21 +126,6 @@ class BinningIOPanel extends JPanel {
 
 
         return sourceProductPanel;
-    }
-
-    private JPanel createTargetProductPanel() {
-        final TableLayout tableLayout = new TableLayout(1);
-        tableLayout.setTableAnchor(TableLayout.Anchor.WEST);
-        tableLayout.setTableFill(TableLayout.Fill.BOTH);
-        tableLayout.setTableWeightX(1.0);
-        tableLayout.setTableWeightY(1.0);
-        tableLayout.setTablePadding(3, 3);
-
-        final JPanel targetProductPanel = new JPanel(tableLayout);
-        targetProductPanel.setBorder(BorderFactory.createTitledBorder("Target Product"));
-        targetProductPanel.add(targetProductSelectorPanel.createDefaultPanel());
-
-        return targetProductPanel;
     }
 
     private static class FilePathContext implements FileArrayEditor.EditorParent {
