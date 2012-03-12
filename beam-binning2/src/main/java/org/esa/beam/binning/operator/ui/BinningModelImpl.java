@@ -44,15 +44,6 @@ class BinningModelImpl implements BinningModel {
     }
 
     @Override
-    public <T> T getProperty(String key) {
-        final Property property = propertySet.getProperty(key);
-        if(property != null) {
-            return property.getValue();
-        }
-        return null;
-    }
-
-    @Override
     public Product[] getSourceProducts() throws IOException {
         final File[] files = getProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
         if(files == null) {
@@ -63,6 +54,15 @@ class BinningModelImpl implements BinningModel {
             products[i] = ProductIO.readProduct(files[i]);
         }
         return products;
+    }
+
+    @Override
+    public BinningParametersPanel.VariableConfig[] getVariableConfigurations() {
+        BinningParametersPanel.VariableConfig[] variableConfigs = getProperty(PROPERTY_KEY_VARIABLE_CONFIGS);
+        if(variableConfigs == null) {
+            variableConfigs = new BinningParametersPanel.VariableConfig[0];
+        }
+        return variableConfigs;
     }
 
     @Override
@@ -83,5 +83,13 @@ class BinningModelImpl implements BinningModel {
     @Override
     public void addPropertyChangeListener(PropertyChangeListener propertyChangeListener) {
         propertySet.addPropertyChangeListener(propertyChangeListener);
+    }
+
+    <T> T getProperty(String key) {
+        final Property property = propertySet.getProperty(key);
+        if(property != null) {
+            return property.getValue();
+        }
+        return null;
     }
 }

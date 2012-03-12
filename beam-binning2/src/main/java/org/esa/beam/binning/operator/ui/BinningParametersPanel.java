@@ -70,7 +70,7 @@ class BinningParametersPanel extends JPanel {
     private final BinningModel model;
     private final String[] aggregatorNames;
     private final List<Component> components;
-    private ProcessingParamsTable table;
+    private VariableConfigTable table;
 
     BinningParametersPanel(AppContext appContext, BinningModel model) {
         this.appContext = appContext;
@@ -121,7 +121,7 @@ class BinningParametersPanel extends JPanel {
         layout.setCellWeightX(0, 1, 0.0);
         layout.setCellWeightX(0, 2, 0.0);
 
-        table = new ProcessingParamsTable();
+        table = new VariableConfigTable();
         final Component bandFilterButton = createBandFilterButton(table);
         final JLabel label = new JLabel("Choose bands");
 
@@ -137,7 +137,7 @@ class BinningParametersPanel extends JPanel {
         return bandsPanel;
     }
 
-    private Component createBandFilterButton(final ProcessingParamsTable table) {
+    private Component createBandFilterButton(final VariableConfigTable table) {
         final AbstractButton bandFilterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Copy16.gif"), false);
         bandFilterButton.setName("BandFilterButton");
         bandFilterButton.setToolTipText("Choose the bands to process");
@@ -188,13 +188,13 @@ class BinningParametersPanel extends JPanel {
         }
     }
 
-    private class ProcessingParamsTable {
+    private class VariableConfigTable {
 
         private JTable table;
         private DefaultTableModel tableModel;
         private final JScrollPane scrollPane;
 
-        public ProcessingParamsTable() {
+        public VariableConfigTable() {
             tableModel = new DefaultTableModel() {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -210,7 +210,7 @@ class BinningParametersPanel extends JPanel {
                     "Fill value"
             });
 
-            tableModel.addTableModelListener(new MyTableModelListener());
+            tableModel.addTableModelListener(new VariableConfigTableListener());
 
             table = new JTable(tableModel) {
                 @Override
@@ -292,7 +292,7 @@ class BinningParametersPanel extends JPanel {
         }
     }
 
-    private class MyTableModelListener implements TableModelListener {
+    private class VariableConfigTableListener implements TableModelListener {
 
         @Override
         public void tableChanged(TableModelEvent event) {
@@ -301,13 +301,11 @@ class BinningParametersPanel extends JPanel {
                 final Row[] rows = table.getRows();
                 for (int i = 0; i < rows.length; i++) {
                     final Row row = rows[i];
-                    final VariableConfig config = new VariableConfig();
-                    config.name = row.bandName;
-                    config.expression = row.bitmaskExpression;
-                    config.aggregator = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName);
-                    config.weight = row.weightCoefficient;
-                    config.fillValue = row.fillValue;
-                    variableConfigs[i] = config;
+                    variableConfigs[i] = new VariableConfig(row.bandName,
+                                                            row.bitmaskExpression,
+                                                            AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName),
+                                                            row.weightCoefficient,
+                                                            row.fillValue);
                 }
                 model.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS, variableConfigs);
             } catch (ValidationException e1) {
@@ -364,9 +362,9 @@ class BinningParametersPanel extends JPanel {
 
     private class BandFilterButtonListener implements ActionListener {
 
-        private final ProcessingParamsTable table;
+        private final VariableConfigTable table;
 
-        public BandFilterButtonListener(ProcessingParamsTable table) {
+        public BandFilterButtonListener(VariableConfigTable table) {
             this.table = table;
         }
 
@@ -421,11 +419,19 @@ class BinningParametersPanel extends JPanel {
 
     public static class VariableConfig {
 
-        public String name;
-        public String expression;
-        public AggregatorDescriptor aggregator;
-        public Double weight;
-        public Double fillValue;
+        public final String name;
+        public final String expression;
+        public final AggregatorDescriptor aggregator;
+        public final Double weight;
+        public final Double fillValue;
+
+        public VariableConfig(String name, String expression, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
+            this.fillValue = fillValue;
+            this.weight = weight;
+            this.aggregator = aggregator;
+            this.expression = expression;
+            this.name = name;
+        }
     }
 
 }

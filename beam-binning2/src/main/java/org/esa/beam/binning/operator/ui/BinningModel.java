@@ -27,23 +27,24 @@ import java.io.IOException;
  *
  * @author Thomas Storm
  */
-public interface BinningModel {
+interface BinningModel {
 
     String PROPERTY_KEY_SOURCE_PRODUCTS = "sourceProducts";
     String PROPERTY_KEY_CRS = "crs";
     String PROPERTY_KEY_VARIABLE_CONFIGS = "variableConfigs";
 
-    /**
-     * Returns the value of the property given by the key; <code>null</code> if it does not exist.
-     * @param key the property key
-     * @param <T> the property type
-     * @return the property value or <code>null</code>.
-     */
-    <T> T getProperty(String key);
-
     void setProperty(String key, Object value) throws ValidationException;
 
     void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);
 
+    /**
+     * @return The source products of this binning operation, never <code>null</code>.
+     * @throws IOException if some product cannot be read.
+     */
     Product[] getSourceProducts() throws IOException;
+
+    /**
+     * @return The variable configurations
+     */
+    BinningParametersPanel.VariableConfig[] getVariableConfigurations();
 }
