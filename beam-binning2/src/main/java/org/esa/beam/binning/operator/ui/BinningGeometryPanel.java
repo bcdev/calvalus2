@@ -43,7 +43,7 @@ class BinningGeometryPanel extends JPanel {
     private final BinningModel model;
     private CrsSelectionPanel crsSelectionPanel;
 
-    BinningGeometryPanel(AppContext appContext, BinningModel model) {
+    BinningGeometryPanel(AppContext appContext, final BinningModel model) {
         this.appContext = appContext;
         this.model = model;
         final BorderLayout layout = new BorderLayout(4, 4);
@@ -52,9 +52,10 @@ class BinningGeometryPanel extends JPanel {
     }
 
     private void init() {
-        final PredefinedCrsForm predefinedCrsForm = new PredefinedCrsForm(appContext);
-
-        crsSelectionPanel = new CrsSelectionPanel(predefinedCrsForm, new NullCrsForm(appContext));
+        final CrsForm computeCrsForm = new ComputeCrsForm(appContext);
+        final CrsForm baseCrsForm = new BaseCrsForm(appContext);
+        final CrsForm nullCrsForm = new NullCrsForm(appContext);
+        crsSelectionPanel = new CrsSelectionPanel(baseCrsForm, computeCrsForm, nullCrsForm);
         crsSelectionPanel.prepareShow();
         crsSelectionPanel.addPropertyChangeListener("crs", new PropertyChangeListener() {
             @Override
@@ -78,9 +79,21 @@ class BinningGeometryPanel extends JPanel {
         }
     }
 
-    private static class NullCrsForm extends CrsForm {
+    private static class BaseCrsForm extends PredefinedCrsForm {
 
-        protected NullCrsForm(AppContext appContext) {
+        public BaseCrsForm(AppContext appContext) {
+            super(appContext);
+        }
+
+        @Override
+        protected String getLabelText() {
+            return "Use region given by CRS";
+        }
+    }
+
+    private static class ComputeCrsForm extends CrsForm {
+
+        protected ComputeCrsForm(AppContext appContext) {
             super(appContext);
         }
 
@@ -89,6 +102,37 @@ class BinningGeometryPanel extends JPanel {
             return "<html>Compute the geographical<br>" +
                    "region according to extents<br>" +
                    "of input products</html>";
+        }
+
+        @Override
+        public CoordinateReferenceSystem getCRS(GeoPos referencePos) throws FactoryException {
+            // todo - compute
+            return null;
+        }
+
+        @Override
+        protected JComponent createCrsComponent() {
+            return new JLabel("");
+        }
+
+        @Override
+        public void prepareShow() {
+        }
+
+        @Override
+        public void prepareHide() {
+        }
+    }
+
+    private static class NullCrsForm extends CrsForm {
+
+        protected NullCrsForm(AppContext appContext) {
+            super(appContext);
+        }
+
+        @Override
+        protected String getLabelText() {
+            return "Use the whole globe as region";
         }
 
         @Override

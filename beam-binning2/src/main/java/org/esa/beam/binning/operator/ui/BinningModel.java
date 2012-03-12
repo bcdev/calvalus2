@@ -41,9 +41,9 @@ public interface BinningModel {
      */
     <T> T getProperty(String key);
 
-    Product[] getSourceProducts() throws IOException;
-
     void setProperty(String key, Object value) throws ValidationException;
 
     void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);
+
+    Product[] getSourceProducts() throws IOException;
 }
