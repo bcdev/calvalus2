@@ -85,10 +85,11 @@ class BinningModelImpl implements BinningModel {
         propertySet.addPropertyChangeListener(propertyChangeListener);
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getProperty(String key) {
         final Property property = propertySet.getProperty(key);
         if(property != null) {
-            return property.getValue();
+            return (T)property.getValue();
         }
         return null;
     }
