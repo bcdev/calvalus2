@@ -17,6 +17,7 @@
 package org.esa.beam.binning.operator.ui;
 
 import com.bc.ceres.binding.ValidationException;
+import com.bc.ceres.swing.binding.BindingContext;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.beans.PropertyChangeListener;
@@ -29,13 +30,19 @@ import java.io.IOException;
  */
 interface BinningModel {
 
+    String PROPERTY_KEY_ENABLE = "enable";
     String PROPERTY_KEY_SOURCE_PRODUCTS = "sourceProducts";
     String PROPERTY_KEY_CRS = "crs";
     String PROPERTY_KEY_VARIABLE_CONFIGS = "variableConfigs";
+    String PROPERTY_KEY_REGION = "region";
+    String PROPERTY_KEY_COMPUTE_REGION = "compute";
+    String PROPERTY_KEY_GLOBAL = "global";
 
     void setProperty(String key, Object value) throws ValidationException;
 
     void addPropertyChangeListener(PropertyChangeListener propertyChangeListener);
+
+    BindingContext getBindingContext();
 
     /**
      * @return The source products of this binning operation, never <code>null</code>.
@@ -44,7 +51,9 @@ interface BinningModel {
     Product[] getSourceProducts() throws IOException;
 
     /**
-     * @return The variable configurations
+     * @return The variable configurations.
      */
     BinningParametersPanel.VariableConfig[] getVariableConfigurations();
+
+    Region getRegion();
 }

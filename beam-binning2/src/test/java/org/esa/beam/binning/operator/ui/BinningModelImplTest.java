@@ -67,6 +67,10 @@ public class BinningModelImplTest {
         assertEquals("value2", listener.targetMap.get("key2"));
     }
 
+    @Test
+    public void testRegion() throws Exception {
+    }
+
     private static class MyPropertyChangeListener implements PropertyChangeListener {
 
         Map<String, Object> targetMap = new HashMap<String, Object>();

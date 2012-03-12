@@ -19,6 +19,8 @@ package org.esa.beam.binning.operator.ui;
 import com.jidesoft.utils.Lm;
 import org.esa.beam.framework.gpf.ui.DefaultAppContext;
 
+import javax.swing.UIManager;
+
 /**
  * Test main class for UI.
  *
@@ -29,6 +31,11 @@ public class Main {
 
     public static void main(String[] args) {
         Lm.verifyLicense("Brockmann Consult", "BEAM", "lCzfhklpZ9ryjomwWxfdupxIcuIoCxg2");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Throwable e) {
+            // ok
+        }
 
         final BinningDialog dialog = new BinningDialog(new DefaultAppContext("VISAT"), "Binning Op", "") {
             @Override

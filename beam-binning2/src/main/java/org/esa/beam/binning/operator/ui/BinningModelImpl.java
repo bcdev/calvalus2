@@ -22,8 +22,10 @@ import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.binding.accessors.DefaultPropertyAccessor;
+import com.bc.ceres.swing.binding.BindingContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.ui.BoundsInputPanel;
 
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -38,9 +40,26 @@ import java.io.IOException;
 class BinningModelImpl implements BinningModel {
 
     private PropertySet propertySet;
+    private BindingContext bindingContext;
 
     public BinningModelImpl() {
-        this.propertySet = new PropertyContainer();
+        propertySet = new PropertyContainer();
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_EAST_BOUND, Float.class));
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_NORTH_BOUND, Float.class));
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_WEST_BOUND, Float.class));
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_SOUTH_BOUND, Float.class));
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_X, Float.class));
+        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_Y, Float.class));
+        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_ENABLE, Boolean.class));
+        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_GLOBAL, Boolean.class));
+        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_COMPUTE_REGION, Boolean.class));
+        propertySet.setDefaultValues();
+    }
+
+    private Property createProperty(String name, Class type) {
+        final DefaultPropertyAccessor defaultAccessor = new DefaultPropertyAccessor();
+        final PropertyDescriptor descriptor = new PropertyDescriptor(name, type);
+        return new Property(descriptor, defaultAccessor);
     }
 
     @Override
@@ -66,6 +85,13 @@ class BinningModelImpl implements BinningModel {
     }
 
     @Override
+    public Region getRegion() {
+        final Region wkt = Region.WKT;
+        wkt.setWkt("");
+        return wkt;
+    }
+
+    @Override
     public void setProperty(String key, Object value) throws ValidationException {
         final PropertyDescriptor descriptor;
         if(value == null) {
@@ -83,6 +109,14 @@ class BinningModelImpl implements BinningModel {
     @Override
     public void addPropertyChangeListener(PropertyChangeListener propertyChangeListener) {
         propertySet.addPropertyChangeListener(propertyChangeListener);
+    }
+
+    @Override
+    public BindingContext getBindingContext() {
+        if(bindingContext == null) {
+            bindingContext = new BindingContext(propertySet);
+        }
+        return bindingContext;
     }
 
     @SuppressWarnings("unchecked")

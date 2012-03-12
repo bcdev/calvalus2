@@ -16,13 +16,34 @@
 
 package org.esa.beam.binning.operator.ui;
 
-import javax.swing.JPanel;
-
 /**
  * TODO fill out or delete
  *
  * @author Thomas Storm
  */
-public class FormatterConfigPanel extends JPanel {
+public enum Region {
+    WKT {
+        private String wkt;
 
+        @Override
+        public String getWkt() {
+            return wkt;
+        }
+
+        @Override
+        public void setWkt(String wkt) {
+            this.wkt = wkt;
+        }
+
+    },
+    PRODUCT_BOUNDS,
+    GLOBE;
+
+    public String getWkt() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    public void setWkt(String wkt) {
+        throw new IllegalStateException("Not implemented");
+    }
 }
