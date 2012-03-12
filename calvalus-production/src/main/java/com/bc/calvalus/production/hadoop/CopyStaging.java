@@ -2,7 +2,6 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
 import org.apache.hadoop.conf.Configuration;
@@ -36,12 +35,11 @@ class CopyStaging extends ProductionStaging {
     public void performStaging() throws Throwable {
         Production production = getProduction();
         production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, 0.0F, ""));
-        HadoopWorkflowItem workflow = (HadoopWorkflowItem) production.getWorkflow();
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
 
-        Path remoteOutputDir = new Path(workflow.getOutputDir());
+        Path remoteOutputDir = new Path(production.getOutputPath());
         FileSystem fileSystem = remoteOutputDir.getFileSystem(hadoopConfiguration);
 
         // Simply copy entire content of remoteOutputDir

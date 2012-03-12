@@ -131,7 +131,7 @@ public class L3ProductionType extends HadoopProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              null, // no dedicated output directory
+                              outputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,

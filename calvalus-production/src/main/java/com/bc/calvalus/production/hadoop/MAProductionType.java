@@ -72,7 +72,7 @@ public class MAProductionType extends HadoopProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              workflowItem.getOutputDir(),
+                              outputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,
