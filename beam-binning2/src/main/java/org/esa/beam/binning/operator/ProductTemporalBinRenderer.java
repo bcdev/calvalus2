@@ -124,6 +124,7 @@ public final class ProductTemporalBinRenderer implements TemporalBinRenderer {
     @Override
     public void end(BinningContext context) throws IOException {
         completeLine();
+        productWriter.close();
         product.closeIO();
     }
 
