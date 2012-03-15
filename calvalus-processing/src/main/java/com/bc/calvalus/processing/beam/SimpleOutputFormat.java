@@ -22,8 +22,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileAlreadyExistsException;
 import org.apache.hadoop.mapred.InvalidJobConfException;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
@@ -31,11 +33,13 @@ import java.io.IOException;
 /**
  * A output format that only provides an output directory into which the job can writes its results.
  * In contrast to the {@link org.apache.hadoop.mapreduce.lib.output.NullOutputFormat},
- * it provides a {@link org.apache.hadoop.mapreduce.OutputCommitter} (provided by its base class)
+ * it provides a {@link org.apache.hadoop.mapreduce.OutputCommitter}
  *
  * @author MarcoZ
  */
 public class SimpleOutputFormat<K, V> extends FileOutputFormat<K, V> {
+
+    private FileOutputCommitter committer = null;
 
     /**
      * The specification is the following:
@@ -69,5 +73,26 @@ public class SimpleOutputFormat<K, V> extends FileOutputFormat<K, V> {
             public void close(TaskAttemptContext context) {
             }
         };
+    }
+
+    @Override
+    public synchronized OutputCommitter getOutputCommitter(TaskAttemptContext context) throws IOException {
+        if (committer == null) {
+            committer = new SimpleOutputCommitter(getOutputPath(context), context);
+        }
+        return committer;
+    }
+
+    private class SimpleOutputCommitter extends FileOutputCommitter {
+        public SimpleOutputCommitter(Path outputPath, TaskAttemptContext context) throws IOException {
+            super(outputPath, context);
+        }
+
+        @Override
+        public void cleanupJob(JobContext context) throws IOException {
+            // Do nothing intentionally !!
+            // The super class removes the whole "_temporay"-directory.
+            // this leads to data loss if multiple job use the sme output directory.
+        }
     }
 }
