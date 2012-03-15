@@ -47,6 +47,9 @@ public class WpsProductionRequestConverterTest {
         assertTrue(parameters.containsKey("calvalus.output.compression"));
         assertNotNull(parameters.get("calvalus.output.compression"));
         assertEquals("", parameters.get("calvalus.output.compression"));
+
+        assertNull(productionRequest.getRegionGeometry(null));
+
     }
 
 }
