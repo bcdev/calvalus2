@@ -56,7 +56,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int SDR_OFFSET = COUNTER_NAMES.length + 1;
     private static final int NUM_SDR_BANDS = 15;
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
-    public static final String CALVALUS_LC_UCL_CLOUD = "calvalus.lc.uclCloud";
 
     private int[] varIndexes;
 
@@ -70,7 +69,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private TileIndexWritable sdr8Key;
     private TileDataWritable sdr8Data;
     private float[][] sdr8DataSamples;
-    private UclCloudDetection uclCloudDetection;
 
 
     @Override
@@ -115,14 +113,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
             if (status == STATUS_LAND && sdr8DataSamples != null) {
                 status = temporalCloudCheck(samples[varIndexes[8]][i], sdr8DataSamples[0][i]);
-            }
-            if (status == STATUS_LAND && uclCloudDetection != null) {
-                float sdrRed = samples[varIndexes[7]][i];
-                float sdrGreen = samples[varIndexes[14]][i];
-                float sdrBlue = samples[varIndexes[3]][i];
-                if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
-                    status = STATUS_CLOUD;
-                }
             }
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
@@ -196,12 +186,6 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
         variableCount = outputFeatures.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
-        if (jobConf.getBoolean(CALVALUS_LC_UCL_CLOUD, false)) {
-            try {
-                uclCloudDetection = UclCloudDetection.create();
-            } catch (IOException ignore) {
-            }
-        }
     }
 
     @Override
