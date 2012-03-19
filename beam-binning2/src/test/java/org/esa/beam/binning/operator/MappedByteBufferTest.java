@@ -70,12 +70,12 @@ public class MappedByteBufferTest {
     public void setUp() throws Exception {
         file = genTestFile();
         file.deleteOnExit();
-        deleteFile("setUp");
+        deleteFile("setUp", file);
     }
 
     @After
     public void tearDown() throws Exception {
-        deleteFile("tearDown");
+        deleteFile("tearDown", file);
     }
 
     /*
@@ -430,11 +430,11 @@ public class MappedByteBufferTest {
         return Runtime.getRuntime().freeMemory() / MiB;
     }
 
-    private File genTestFile() throws IOException {
+    public static File genTestFile() throws IOException {
         return File.createTempFile(MappedByteBufferTest.class.getSimpleName() + "-", ".dat");
     }
 
-    private void deleteFile(String msg) throws InterruptedException {
+    public static  void deleteFile(String msg, File file) throws InterruptedException {
         if (file.exists()) {
             if (!file.delete()) {
                 System.out.println("error: " + msg + ": failed to delete test file " + file);
