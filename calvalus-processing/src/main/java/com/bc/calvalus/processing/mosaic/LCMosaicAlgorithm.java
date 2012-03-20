@@ -145,7 +145,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private int temporalCloudCheck(float sdr8, float sdr8CloudThreshold) {
-        if (Float.isNaN(sdr8CloudThreshold) || sdr8 > sdr8CloudThreshold) {
+        if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
             // treat this as cloud
             return STATUS_CLOUD;
         } else {
