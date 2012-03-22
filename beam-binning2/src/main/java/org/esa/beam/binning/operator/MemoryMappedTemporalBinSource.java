@@ -46,7 +46,6 @@ class MemoryMappedTemporalBinSource implements TemporalBinSource {
         RandomAccessFile raf = null;
         try {
             file = File.createTempFile(getClass().getSimpleName() + "-", ".dat");
-            file.deleteOnExit();
             raf = new RandomAccessFile(file, "rw");
             FileChannel channel = raf.getChannel();
             final ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
@@ -91,6 +90,10 @@ class MemoryMappedTemporalBinSource implements TemporalBinSource {
     public void close() throws IOException {
         if(readRaf != null) {
             readRaf.close();
+        }
+        if (file.exists() && !file.delete()) {
+            // todo - replace by system logging
+            System.out.println("WARNING: Failed to delete temporal file '" + file.getAbsolutePath() + "'.");
         }
     }
 

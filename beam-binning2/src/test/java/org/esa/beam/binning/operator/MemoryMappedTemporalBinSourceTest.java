@@ -17,6 +17,7 @@
 package org.esa.beam.binning.operator;
 
 import org.esa.beam.binning.TemporalBin;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ public class MemoryMappedTemporalBinSourceTest {
     private static final int NUM_PASSES = 7;
 
     @Test
+    @Ignore
     public void testTemporalBinSourceIteration() throws Exception {
         final ArrayList<TemporalBin> temporalBins = new ArrayList<TemporalBin>();
         temporalBins.add(TemporalBin.read(0L, new TestDataInput(0.0f)));

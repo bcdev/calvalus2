@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.main.GPT;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -92,6 +93,7 @@ public class BinningOpTest {
     }
 
     @Test
+    @Ignore
     public void testGlobalBinning_WithMemoryMappedFile() throws Exception {
         BinningConfig binningConfig = createBinningConfig();
         FormatterConfig formatterConfig = createFormatterConfig();

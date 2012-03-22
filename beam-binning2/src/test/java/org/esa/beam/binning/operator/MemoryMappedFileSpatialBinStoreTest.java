@@ -17,6 +17,7 @@
 package org.esa.beam.binning.operator;
 
 import org.esa.beam.binning.SpatialBin;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ public class MemoryMappedFileSpatialBinStoreTest {
     public static final int FEATURE_COUNT = 5;
 
     @Test
+    @Ignore
     public void testConsumeAndGet() throws Exception {
         final MemoryMappedFileSpatialBinStore binStore = new MemoryMappedFileSpatialBinStore();
         final ArrayList<SpatialBin> spatialBins = new ArrayList<SpatialBin>();

@@ -95,6 +95,10 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         if(consumeRaf != null) {
             consumeRaf.close();
         }
+        if (file.exists() && !file.delete()) {
+            // todo - replace by system logging
+            System.out.println("WARNING: Failed to delete temporal file '" + file.getAbsolutePath() + "'.");
+        }
     }
 
     private long readKey(ByteBuffer buffer) throws IOException {
