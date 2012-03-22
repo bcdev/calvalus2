@@ -57,7 +57,12 @@ public class SpatialBin extends Bin {
     }
 
     public static SpatialBin read(DataInput dataInput) throws IOException {
+        return read(-1L, dataInput);
+    }
+
+    public static SpatialBin read(long index, DataInput dataInput) throws IOException {
         SpatialBin bin = new SpatialBin();
+        bin.index = index;
         bin.readFields(dataInput);
         return bin;
     }

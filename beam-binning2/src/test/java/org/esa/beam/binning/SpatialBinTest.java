@@ -119,4 +119,15 @@ public class SpatialBinTest {
         bin.featureValues[1] = 8.9f;
         assertEquals("SpatialBin{index=42, numObs=13, featureValues=[56.7, 8.9]}", bin.toString());
     }
+
+    @Test
+    public void testBinCreationWithIndex() throws Exception {
+        final SpatialBin bin = SpatialBin.read(10L, new DataInputStream(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return 0;
+            }
+        }));
+        assertEquals(10L, bin.getIndex());
+    }
 }

@@ -18,7 +18,13 @@ package org.esa.beam.binning.operator;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
-import org.esa.beam.binning.*;
+import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.SpatialBin;
+import org.esa.beam.binning.SpatialBinConsumer;
+import org.esa.beam.binning.SpatialBinner;
+import org.esa.beam.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBinSource;
+import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -42,7 +48,12 @@ import ucar.ma2.InvalidRangeException;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 /*
@@ -121,8 +132,14 @@ public class BinningOp extends Operator implements Output {
 
 
     private transient BinningContext binningContext;
+    private final SpatialBinStore spatialBinStore;
 
     public BinningOp() {
+        spatialBinStore = new SpatialBinStoreImpl();
+    }
+
+    public BinningOp(SpatialBinStore spatialBinStore) {
+        this.spatialBinStore = spatialBinStore;
     }
 
     public Geometry getRegion() {
@@ -248,7 +265,6 @@ public class BinningOp extends Operator implements Output {
 
 
     private SortedMap<Long, List<SpatialBin>> doSpatialBinning() throws IOException {
-        final SpatialBinStore spatialBinStore = new SpatialBinStore();
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
         for (Product sourceProduct : sourceProducts) {
             StopWatch stopWatch = new StopWatch();
@@ -258,6 +274,7 @@ public class BinningOp extends Operator implements Output {
             stopWatch.stop();
             getLogger().info(String.format("Spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
         }
+        spatialBinStore.consumingCompleted();
         return spatialBinStore.getSpatialBinMap();
     }
 
@@ -361,10 +378,17 @@ public class BinningOp extends Operator implements Output {
         }
     }
 
-    private static class SpatialBinStore implements SpatialBinConsumer {
+    static interface SpatialBinStore extends SpatialBinConsumer {
+        SortedMap<Long, List<SpatialBin>> getSpatialBinMap() throws IOException;
+
+        void consumingCompleted() throws IOException;
+    }
+
+    private static class SpatialBinStoreImpl implements SpatialBinStore {
         // Note, we use a sorted map in order to sort entries on-the-fly
         final private SortedMap<Long, List<SpatialBin>> spatialBinMap = new TreeMap<Long, List<SpatialBin>>();
 
+        @Override
         public SortedMap<Long, List<SpatialBin>> getSpatialBinMap() {
             return spatialBinMap;
         }
@@ -380,6 +404,10 @@ public class BinningOp extends Operator implements Output {
                 }
                 spatialBinList.add(spatialBin);
             }
+        }
+
+        @Override
+        public void consumingCompleted() {
         }
     }
 

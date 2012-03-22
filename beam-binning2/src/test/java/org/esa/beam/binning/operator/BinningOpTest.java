@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 import static org.junit.Assert.*;
 
 /**
@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
  * @author Norman Fomferra
  */
 public class BinningOpTest {
+
     static final File TESTDATA_DIR = new File("target/binning-test-io");
 
     static {
@@ -69,6 +70,39 @@ public class BinningOpTest {
         float obs5 = 1.0F;
 
         final BinningOp binningOp = new BinningOp();
+
+        binningOp.setSourceProducts(createSourceProduct(obs1),
+                                    createSourceProduct(obs2),
+                                    createSourceProduct(obs3),
+                                    createSourceProduct(obs4),
+                                    createSourceProduct(obs5));
+
+        binningOp.setStartDate("2002-01-01");
+        binningOp.setEndDate("2002-01-10");
+        binningOp.setBinningConfig(binningConfig);
+        binningOp.setFormatterConfig(formatterConfig);
+
+        final Product targetProduct = binningOp.getTargetProduct();
+        assertNotNull(targetProduct);
+        try {
+            assertGlobalBinningProductIsOk(targetProduct, null, obs1, obs2, obs3, obs4, obs5);
+        } catch (Exception e) {
+            targetProduct.dispose();
+        }
+    }
+
+    @Test
+    public void testGlobalBinning_WithMemoryMappedFile() throws Exception {
+        BinningConfig binningConfig = createBinningConfig();
+        FormatterConfig formatterConfig = createFormatterConfig();
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final BinningOp binningOp = new BinningOp(new MemoryMappedFileSpatialBinStore());
 
         binningOp.setSourceProducts(createSourceProduct(obs1),
                                     createSourceProduct(obs2),
