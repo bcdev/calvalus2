@@ -37,17 +37,17 @@ import java.util.TreeMap;
 class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
 
     private final File file;
-    private final ByteBuffer buffer;
+    private final ByteBuffer consumeBuffer;
+    private final RandomAccessFile consumeRaf;
 
     private static final int MB = 1024 * 1024;
-    private final RandomAccessFile raf;
 
     MemoryMappedFileSpatialBinStore() throws IOException {
         file = File.createTempFile(getClass().getSimpleName() + "-", ".dat");
         file.deleteOnExit();
-        raf = new RandomAccessFile(file, "rw");
-        FileChannel channel = raf.getChannel();
-        buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
+        consumeRaf = new RandomAccessFile(file, "rw");
+        FileChannel channel = consumeRaf.getChannel();
+        consumeBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
     }
 
     @Override
@@ -56,11 +56,11 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         FileChannel channel = raf.getChannel();
         long length = file.length();
-        ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length);
-        final DataInput dataInput = new ByteBufferWrapper(buffer);
+        ByteBuffer readBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length);
+        final DataInput dataInput = new ByteBufferWrapper(readBuffer);
         try {
             while (true) {
-                long key = readKey(buffer);
+                long key = readKey(readBuffer);
                 if (key == -1L) {
                     break;
                 }
@@ -82,17 +82,19 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         for (SpatialBin spatialBin : spatialBins) {
             long key = spatialBin.getIndex();
             float[] samples = spatialBin.getFeatureValues();
-            writeKey(buffer, key);
-            buffer.putInt(spatialBin.getNumObs());
-            buffer.putInt(spatialBin.getFeatureValues().length);
-            writeSamples(buffer, samples);
+            writeKey(consumeBuffer, key);
+            consumeBuffer.putInt(spatialBin.getNumObs());
+            consumeBuffer.putInt(spatialBin.getFeatureValues().length);
+            writeSamples(consumeBuffer, samples);
         }
     }
 
     @Override
     public void consumingCompleted() throws IOException {
-        writeKey(buffer, -1L);
-        raf.close();
+        writeKey(consumeBuffer, -1L);
+        if(consumeRaf != null) {
+            consumeRaf.close();
+        }
     }
 
     private long readKey(ByteBuffer buffer) throws IOException {

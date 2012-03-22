@@ -43,6 +43,7 @@ public class MemoryMappedFileSpatialBinStoreTest {
         spatialBins.add(SpatialBin.read(0L, new TestDataInput(1)));
         spatialBins.add(SpatialBin.read(1L, new TestDataInput(100)));
         binStore.consumeSpatialBins(null, spatialBins);
+        binStore.consumingCompleted();
 
         final SortedMap<Long,List<SpatialBin>> spatialBinMap = binStore.getSpatialBinMap();
 
