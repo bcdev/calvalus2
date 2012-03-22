@@ -56,7 +56,7 @@ class BinningRegionPanel extends JPanel {
         final LayoutManager layout = new TableLayout(1);
         setLayout(layout);
 
-        final JPanel boundsInputPanel = new BoundsInputPanel(bindingContext, BinningModel.PROPERTY_KEY_ENABLE, false).createBoundsInputPanel();
+        final JPanel boundsInputPanel = new BoundsInputPanel(bindingContext, BinningModel.PROPERTY_KEY_ENABLE).createBoundsInputPanel(false);
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
