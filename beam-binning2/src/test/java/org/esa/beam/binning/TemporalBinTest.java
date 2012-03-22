@@ -119,4 +119,16 @@ public class TemporalBinTest {
         bin.featureValues[2] = 2.4f;
         assertEquals("TemporalBin{index=43, numObs=3, numPasses=7, featureValues=[1.2, 0.0, 2.4]}", bin.toString());
     }
+
+
+    @Test
+    public void testBinCreationWithIndex() throws Exception {
+        final TemporalBin bin = TemporalBin.read(10L, new DataInputStream(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return 0;
+            }
+        }));
+        assertEquals(10L, bin.getIndex());
+    }
 }

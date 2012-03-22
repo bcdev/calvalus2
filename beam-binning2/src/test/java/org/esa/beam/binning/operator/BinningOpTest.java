@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static java.lang.Math.*;
+import static java.lang.Math.sqrt;
 import static org.junit.Assert.*;
 
 /**
@@ -102,7 +102,7 @@ public class BinningOpTest {
         float obs4 = 0.8F;
         float obs5 = 1.0F;
 
-        final BinningOp binningOp = new BinningOp(new MemoryMappedFileSpatialBinStore());
+        final BinningOp binningOp = new BinningOp(new MemoryMappedFileSpatialBinStore(), true);
 
         binningOp.setSourceProducts(createSourceProduct(obs1),
                                     createSourceProduct(obs2),

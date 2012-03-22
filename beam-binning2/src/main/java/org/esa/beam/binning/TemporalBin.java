@@ -74,6 +74,13 @@ public class TemporalBin extends Bin {
         return bin;
     }
 
+    public static TemporalBin read(long index, DataInput dataInput) throws IOException {
+        TemporalBin bin = new TemporalBin();
+        bin.readFields(dataInput);
+        bin.index = index;
+        return bin;
+    }
+
     @Override
     public String toString() {
         return String.format("%s{index=%d, numObs=%d, numPasses=%d, featureValues=%s}",

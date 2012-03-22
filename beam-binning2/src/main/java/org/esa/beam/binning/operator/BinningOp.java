@@ -133,13 +133,15 @@ public class BinningOp extends Operator implements Output {
 
     private transient BinningContext binningContext;
     private final SpatialBinStore spatialBinStore;
+    private final boolean useMemoryMappedTemporalBinSource;
 
     public BinningOp() {
-        spatialBinStore = new SpatialBinStoreImpl();
+        this(new SpatialBinStoreImpl(), false);
     }
 
-    public BinningOp(SpatialBinStore spatialBinStore) {
+    public BinningOp(SpatialBinStore spatialBinStore, boolean useMemoryMappedTemporalBinSource) {
         this.spatialBinStore = spatialBinStore;
+        this.useMemoryMappedTemporalBinSource = useMemoryMappedTemporalBinSource;
     }
 
     public Geometry getRegion() {
@@ -312,7 +314,7 @@ public class BinningOp extends Operator implements Output {
         getLogger().info(String.format("Writing mapped product '%s'...", formatterConfig.getOutputFile()));
         // TODO - add metadata (nf)
         Formatter.format(binningContext,
-                         new SimpleTemporalBinSource(temporalBins),
+                         getTemporalBinSource(temporalBins),
                          formatterConfig,
                          region,
                          startTime,
@@ -321,6 +323,14 @@ public class BinningOp extends Operator implements Output {
         stopWatch.stop();
 
         getLogger().info(String.format("Writing mapped product '%s' done, took %s", formatterConfig.getOutputFile(), stopWatch));
+    }
+
+    private TemporalBinSource getTemporalBinSource(List<TemporalBin> temporalBins) throws IOException {
+        if(useMemoryMappedTemporalBinSource) {
+            return new MemoryMappedTemporalBinSource(temporalBins);
+        } else {
+            return new SimpleTemporalBinSource(temporalBins);
+        }
     }
 
     private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, ProductData.UTC startTime, ProductData.UTC stopTime) throws IOException {
