@@ -58,7 +58,6 @@ public class MappedByteBufferTest {
     static final int N = 25000;
 
     File file;
-    static int fileId;
 
     @Before
     public void setUp() throws Exception {
@@ -103,7 +102,7 @@ public class MappedByteBufferTest {
         System.out.println("free mem before closing: " + mem3 + " MiB");
         System.out.println("free mem after closing:  " + mem4 + " MiB");
 
-        // If these memory checks fail, check if 1 MiB is still to fine grained
+        // If these memory checks fail, check if 1 MiB is still too fine grained
         assertEquals(mem2, mem1);
         assertEquals(mem3, mem1);
         assertEquals(mem4, mem1);
