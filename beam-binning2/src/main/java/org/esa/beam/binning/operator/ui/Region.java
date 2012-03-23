@@ -21,7 +21,7 @@ package org.esa.beam.binning.operator.ui;
  *
  * @author Thomas Storm
  */
-public enum Region {
+enum Region {
     WKT {
         private String wkt;
 
@@ -39,11 +39,11 @@ public enum Region {
     PRODUCT_BOUNDS,
     GLOBE;
 
-    public String getWkt() {
+    String getWkt() {
         throw new IllegalStateException("Not implemented");
     }
 
-    public void setWkt(String wkt) {
+    void setWkt(String wkt) {
         throw new IllegalStateException("Not implemented");
     }
 }
