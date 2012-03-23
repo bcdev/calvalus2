@@ -32,7 +32,7 @@ class MemoryMappedFileCleaner {
         }
         // due to Java bug: workaround needed in order to be able to delete temporary file
         // see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4715154
-        // CAUTION: does only work if
+        // See org.esa.beam.binning.operator.MappedByteBufferTest for valid use cases.
         unmap(buffer);
     }
 
