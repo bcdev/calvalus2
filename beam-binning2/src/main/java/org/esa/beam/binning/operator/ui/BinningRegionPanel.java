@@ -27,7 +27,6 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import java.awt.LayoutManager;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
@@ -53,7 +52,8 @@ class BinningRegionPanel extends JPanel {
     }
 
     private void init() {
-        final LayoutManager layout = new TableLayout(1);
+        final TableLayout layout = new TableLayout(1);
+        layout.setTableFill(TableLayout.Fill.BOTH);
         setLayout(layout);
 
         final JPanel boundsInputPanel = new BoundsInputPanel(bindingContext, BinningModel.PROPERTY_KEY_ENABLE).createBoundsInputPanel(false);
