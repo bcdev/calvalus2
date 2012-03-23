@@ -135,6 +135,7 @@ public class BinningOp extends Operator implements Output {
     private final SpatialBinStore spatialBinStore;
     private final boolean useMemoryMappedTemporalBinSource;
 
+    // todo - after code review, remove this constructor and always use the memory mapped bin sources
     public BinningOp() {
         this(new SpatialBinStoreImpl(), false);
     }
