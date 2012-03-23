@@ -17,7 +17,6 @@
 package org.esa.beam.binning.operator;
 
 import org.esa.beam.binning.SpatialBin;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,7 +36,6 @@ public class MemoryMappedFileSpatialBinStoreTest {
     public static final int FEATURE_COUNT = 5;
 
     @Test
-    @Ignore
     public void testConsumeAndGet() throws Exception {
         final MemoryMappedFileSpatialBinStore binStore = new MemoryMappedFileSpatialBinStore();
         final ArrayList<SpatialBin> spatialBins = new ArrayList<SpatialBin>();
@@ -49,6 +47,24 @@ public class MemoryMappedFileSpatialBinStoreTest {
 
         final SortedMap<Long,List<SpatialBin>> spatialBinMap = binStore.getSpatialBinMap();
 
+        validateSpatialBinMap(spatialBinMap);
+    }
+
+    @Test
+    public void testCanGetSpatialMapTwice() throws Exception {
+        final MemoryMappedFileSpatialBinStore binStore = new MemoryMappedFileSpatialBinStore();
+        final ArrayList<SpatialBin> spatialBins = new ArrayList<SpatialBin>();
+        spatialBins.add(SpatialBin.read(0L, new TestDataInput(0)));
+        spatialBins.add(SpatialBin.read(0L, new TestDataInput(1)));
+        spatialBins.add(SpatialBin.read(1L, new TestDataInput(100)));
+        binStore.consumeSpatialBins(null, spatialBins);
+        binStore.consumingCompleted();
+
+        validateSpatialBinMap(binStore.getSpatialBinMap());
+        validateSpatialBinMap(binStore.getSpatialBinMap());
+    }
+
+    private void validateSpatialBinMap(SortedMap<Long, List<SpatialBin>> spatialBinMap) {
         assertEquals(2, spatialBinMap.size());
         final List<SpatialBin> spatialBinsWithIndex0 = spatialBinMap.get(0L);
         assertEquals(2, spatialBinsWithIndex0.size());

@@ -24,20 +24,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
-* @author Thomas Storm
-*/
+ * @author Thomas Storm
+ */
 class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
 
     private final File file;
-    private final ByteBuffer consumeBuffer;
+    private final MappedByteBuffer consumeBuffer;
     private final RandomAccessFile consumeRaf;
 
     private static final int MB = 1024 * 1024;
@@ -46,7 +50,7 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         file = File.createTempFile(getClass().getSimpleName() + "-", ".dat");
         file.deleteOnExit();
         consumeRaf = new RandomAccessFile(file, "rw");
-        FileChannel channel = consumeRaf.getChannel();
+        final FileChannel channel = consumeRaf.getChannel();
         consumeBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
     }
 
@@ -56,7 +60,7 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         FileChannel channel = raf.getChannel();
         long length = file.length();
-        ByteBuffer readBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length);
+        MappedByteBuffer readBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length);
         final DataInput dataInput = new ByteBufferWrapper(readBuffer);
         try {
             while (true) {
@@ -64,18 +68,17 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
                 if (key == -1L) {
                     break;
                 }
-                if(!spatialBinMap.containsKey(key)) {
+                if (!spatialBinMap.containsKey(key)) {
                     spatialBinMap.put(key, new ArrayList<SpatialBin>());
                 }
                 final SpatialBin spatialBin = SpatialBin.read(key, dataInput);
                 spatialBinMap.get(key).add(spatialBin);
             }
         } finally {
-            raf.close();
+            cleanup(raf, readBuffer);
         }
         return spatialBinMap;
     }
-
 
     @Override
     public void consumeSpatialBins(BinningContext ignored, List<SpatialBin> spatialBins) throws IOException {
@@ -89,16 +92,36 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
         }
     }
 
+
     @Override
     public void consumingCompleted() throws IOException {
         writeKey(consumeBuffer, -1L);
-        if(consumeRaf != null) {
-            consumeRaf.close();
-        }
-        if (file.exists() && !file.delete()) {
-            // todo - replace by system logging
-            System.out.println("WARNING: Failed to delete temporal file '" + file.getAbsolutePath() + "'.");
-        }
+        cleanup(consumeRaf, consumeBuffer);
+    }
+
+    private void cleanup(RandomAccessFile raf, MappedByteBuffer readBuffer) throws IOException {
+        raf.close();
+        // workaround needed due to Java bug
+        // see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4715154
+        unmap(readBuffer);
+    }
+
+    private void unmap(final MappedByteBuffer buffer) {
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            public Void run() {
+                try {
+                    Method getCleanerMethod = buffer.getClass().getMethod("cleaner", new Class[0]);
+                    getCleanerMethod.setAccessible(true);
+                    sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(buffer);
+                    cleaner.clean();
+                } catch (Exception e) {
+                    // todo - replace by system logging
+                    System.out.println("WARNING: Failed to clear buffer due to exception:");
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        });
     }
 
     private long readKey(ByteBuffer buffer) throws IOException {
