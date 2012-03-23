@@ -29,7 +29,7 @@ import java.util.Map;
  * todo
  * - target product: remove outer group [done]
  * - remove first bullet, replace by min/max lat/lon or beam map region chooser
- * - valid expression globally
+ * - valid expression globally [done]
  * - allow specifying bands by expression
  * - weight -> parameters, empty by default, add description on aggregators to help
  * - fill value -> NaN by default

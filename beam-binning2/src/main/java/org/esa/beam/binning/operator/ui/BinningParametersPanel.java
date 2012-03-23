@@ -54,6 +54,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The panel in the binning operator UI which allows for specifying the binning configuration.
@@ -158,6 +159,7 @@ class BinningParametersPanel extends JPanel {
         layout.setCellWeightX(0, 2, 0.0);
 
         table = new VariableConfigTable();
+        table.add("<expression>", AggregatorAverage.Descriptor.NAME, Double.NaN, Double.NaN);
         final Component bandFilterButton = createBandFilterButton(table);
         final JLabel label = new JLabel("Choose bands");
 
@@ -217,12 +219,15 @@ class BinningParametersPanel extends JPanel {
         private JTable table;
         private DefaultTableModel tableModel;
         private final JScrollPane scrollPane;
+        // todo - begin using this map
+        private final Map<Integer, Boolean> rowIsExpressionBand;
 
         public VariableConfigTable() {
+            rowIsExpressionBand = new HashMap<Integer, Boolean>();
             tableModel = new DefaultTableModel() {
                 @Override
                 public boolean isCellEditable(int row, int column) {
-                    return column != 0;
+                    return true;
                 }
             };
 
