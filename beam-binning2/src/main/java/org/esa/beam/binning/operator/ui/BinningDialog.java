@@ -27,7 +27,7 @@ import java.util.Map;
  * UI for binning operator.
  *
  * todo
- * - target product: remove outer group
+ * - target product: remove outer group [done]
  * - remove first bullet, replace by min/max lat/lon or beam map region chooser
  * - valid expression globally
  * - allow specifying bands by expression

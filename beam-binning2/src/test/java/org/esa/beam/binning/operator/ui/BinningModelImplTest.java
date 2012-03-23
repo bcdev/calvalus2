@@ -47,7 +47,7 @@ public class BinningModelImplTest {
         final BinningModel binningModel = new BinningModelImpl();
         assertArrayEquals(new BinningParametersPanel.VariableConfig[0], binningModel.getVariableConfigurations());
 
-        final BinningParametersPanel.VariableConfig variableConfig = new BinningParametersPanel.VariableConfig("name", "expression", null, 0.1, 0.2);
+        final BinningParametersPanel.VariableConfig variableConfig = new BinningParametersPanel.VariableConfig("name", null, 0.1, 0.2);
         binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS,
                                  new BinningParametersPanel.VariableConfig[]{variableConfig});
 

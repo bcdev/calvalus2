@@ -32,7 +32,6 @@ import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.util.StringUtils;
 
 import javax.swing.AbstractButton;
-import javax.swing.AbstractCellEditor;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -45,7 +44,6 @@ import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -53,7 +51,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +79,9 @@ class BinningParametersPanel extends JPanel {
             }
         });
         this.components = new ArrayList<Component>();
-        setLayout(new BorderLayout());
+        final TableLayout layout = new TableLayout(1);
+        layout.setTableFill(TableLayout.Fill.BOTH);
+        setLayout(layout);
         final AggregatorDescriptor[] aggregatorDescriptors = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptors();
         aggregatorNames = new String[aggregatorDescriptors.length];
         for (int i = 0; i < aggregatorDescriptors.length; i++) {
@@ -90,21 +89,58 @@ class BinningParametersPanel extends JPanel {
         }
         final JPanel bandsPanel = createBandsPanel();
         add(bandsPanel);
+        add(createValidExpressionPanel());
         updateComponents();
     }
 
-    private void updateComponents() {
-        boolean hasSourceProducts = false;
-        try {
-            hasSourceProducts = model.getSourceProducts().length > 0;
-        } catch (IOException e) {
-            appContext.handleError("", e);
-        }
+    private JPanel createValidExpressionPanel() {
+        JPanel validExpressionPanel = new JPanel(new BorderLayout());
+        final JButton button = new JButton("...");
+        final Dimension preferredSize = button.getPreferredSize();
+        preferredSize.setSize(25, preferredSize.getHeight());
+        button.setPreferredSize(preferredSize);
+        button.setEnabled(hasSourceProducts());
+        model.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (!evt.getPropertyName().equals(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS)) {
+                    return;
+                }
+                button.setEnabled(hasSourceProducts());
+            }
+        });
+        final JTextField textField = new JTextField();
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                final String expression = editExpression(textField.getText());
+                if (expression != null) {
+                    textField.setText(expression);
+                    try {
+                        model.setProperty(BinningModel.PROPERTY_KEY_EXPRESSION, expression);
+                    } catch (ValidationException e) {
+                        appContext.handleError("Invalid expression", e);
+                    }
+                }
+            }
+        });
 
+        JPanel editorComponent = new JPanel(new BorderLayout());
+        editorComponent.add(textField);
+        editorComponent.add(button, BorderLayout.EAST);
+        validExpressionPanel.add(new JLabel("Valid expression:"), BorderLayout.WEST);
+        validExpressionPanel.add(editorComponent);
+        return validExpressionPanel;
+    }
+
+    private boolean hasSourceProducts() {
+        return model.getSourceProducts().length > 0;
+    }
+
+    private void updateComponents() {
         for (Component component : components) {
-            component.setEnabled(hasSourceProducts);
+            component.setEnabled(hasSourceProducts());
         }
-        if (!hasSourceProducts) {
+        if (!hasSourceProducts()) {
             table.clear();
         }
     }
@@ -145,24 +181,14 @@ class BinningParametersPanel extends JPanel {
         return bandFilterButton;
     }
 
-    private String editExpression(String expression, final boolean booleanExpected) {
-        final Product product;
-        try {
-            product = model.getSourceProducts()[0];
-        } catch (IOException e) {
-            return null;
-        }
+    private String editExpression(String expression) {
+        final Product product = model.getSourceProducts()[0];
         if (product == null) {
             return null;
         }
         final ProductExpressionPane expressionPane;
-        if (booleanExpected) {
-            expressionPane = ProductExpressionPane.createBooleanExpressionPane(new Product[]{product}, product,
-                                                                               appContext.getPreferences());
-        } else {
-            expressionPane = ProductExpressionPane.createGeneralExpressionPane(new Product[]{product}, product,
-                                                                               appContext.getPreferences());
-        }
+        expressionPane = ProductExpressionPane.createBooleanExpressionPane(new Product[]{product}, product,
+                                                                           appContext.getPreferences());
         expressionPane.setCode(expression);
         final int i = expressionPane.showModalDialog(appContext.getApplicationWindow(), "Expression Editor");
         if (i == ModalDialog.ID_OK) {
@@ -174,14 +200,12 @@ class BinningParametersPanel extends JPanel {
     private static class Row {
 
         private final String bandName;
-        private final String bitmaskExpression;
         private final String algorithmName;
         private final double weightCoefficient;
         private final double fillValue;
 
-        public Row(String bandName, String bitmaskExpression, String algorithmName, double weightCoefficient, double fillValue) {
+        public Row(String bandName, String algorithmName, double weightCoefficient, double fillValue) {
             this.bandName = bandName;
-            this.bitmaskExpression = bitmaskExpression;
             this.algorithmName = algorithmName;
             this.weightCoefficient = weightCoefficient;
             this.fillValue = fillValue;
@@ -204,7 +228,6 @@ class BinningParametersPanel extends JPanel {
 
             tableModel.setColumnIdentifiers(new String[]{
                     "Band",
-                    "Valid expression",
                     "Aggregation",
                     "Weight",
                     "Fill value"
@@ -230,13 +253,11 @@ class BinningParametersPanel extends JPanel {
             table.getTableHeader().setReorderingAllowed(false);
 
             table.getColumnModel().getColumn(0).setMinWidth(60);
-            table.getColumnModel().getColumn(1).setMinWidth(100);
+            table.getColumnModel().getColumn(1).setMinWidth(60);
             table.getColumnModel().getColumn(2).setMinWidth(60);
             table.getColumnModel().getColumn(3).setMinWidth(60);
-            table.getColumnModel().getColumn(4).setMinWidth(60);
 
-            table.getColumnModel().getColumn(1).setCellEditor(new ExpressionEditor(true));
-            table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(new JComboBox(aggregatorNames)));
+            table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(new JComboBox(aggregatorNames)));
             scrollPane = new JScrollPane(table);
             components.add(table);
             components.add(scrollPane);
@@ -255,12 +276,11 @@ class BinningParametersPanel extends JPanel {
             return bandNames;
         }
 
-        public void add(final String bandName, final String validExpression, String algorithmName,
-                        double weightCoefficient, double fillValue) {
+        public void add(final String bandName, String algorithmName, double weightCoefficient, double fillValue) {
             if (algorithmName == null || !StringUtils.contains(aggregatorNames, algorithmName)) {
                 algorithmName = AggregatorAverage.Descriptor.NAME;
             }
-            tableModel.addRow(new Object[]{bandName, validExpression, algorithmName, weightCoefficient, fillValue});
+            tableModel.addRow(new Object[]{bandName, algorithmName, weightCoefficient, fillValue});
         }
 
         public void remove(final String bandName) {
@@ -276,9 +296,8 @@ class BinningParametersPanel extends JPanel {
                 final List dataListRow = (List) dataList.get(i);
                 rows[i] = new Row((String) dataListRow.get(0),
                                   (String) dataListRow.get(1),
-                                  (String) dataListRow.get(2),
-                                  (Double) dataListRow.get(3),
-                                  (Double) dataListRow.get(4));
+                                  (Double) dataListRow.get(2),
+                                  (Double) dataListRow.get(3));
             }
             return rows;
         }
@@ -302,7 +321,6 @@ class BinningParametersPanel extends JPanel {
                 for (int i = 0; i < rows.length; i++) {
                     final Row row = rows[i];
                     variableConfigs[i] = new VariableConfig(row.bandName,
-                                                            row.bitmaskExpression,
                                                             AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName),
                                                             row.weightCoefficient,
                                                             row.fillValue);
@@ -311,52 +329,6 @@ class BinningParametersPanel extends JPanel {
             } catch (ValidationException e1) {
                 appContext.handleError("Unable to validate variable configurations.", e1);
             }
-        }
-    }
-
-    private class ExpressionEditor extends AbstractCellEditor implements TableCellEditor {
-
-        private final JPanel editorComponent;
-        private final JTextField textField;
-
-        public ExpressionEditor(final boolean booleanExpected) {
-
-            JButton button = new JButton("...");
-            final Dimension preferredSize = button.getPreferredSize();
-            preferredSize.setSize(25, preferredSize.getHeight());
-            button.setPreferredSize(preferredSize);
-
-            final ActionListener actionListener = new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    final String expression = editExpression(textField.getText(), booleanExpected);
-                    if (expression != null) {
-                        textField.setText(expression);
-                        fireEditingStopped();
-                    } else {
-                        fireEditingCanceled();
-                    }
-                }
-            };
-            button.addActionListener(actionListener);
-
-            textField = new JTextField();
-
-            editorComponent = new JPanel(new BorderLayout());
-            editorComponent.add(textField);
-            editorComponent.add(button, BorderLayout.EAST);
-        }
-
-        public Object getCellEditorValue() {
-            return textField.getText();
-        }
-
-        public Component getTableCellEditorComponent(JTable table,
-                                                     Object value,
-                                                     boolean isSelected,
-                                                     int row,
-                                                     int column) {
-            textField.setText((String) value);
-            return editorComponent;
         }
     }
 
@@ -370,12 +342,7 @@ class BinningParametersPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent event) {
-            Product exampleProduct = null;
-            try {
-                exampleProduct = model.getSourceProducts()[0];
-            } catch (IOException e) {
-                appContext.handleError("Unable to select the bands which are to process.", e);
-            }
+            Product exampleProduct = model.getSourceProducts()[0];
             if (exampleProduct != null) {
                 final Band[] allBands = exampleProduct.getBands();
                 final String[] existingBandNames = table.getBandNames();
@@ -406,10 +373,10 @@ class BinningParametersPanel extends JPanel {
                         final String bandName = selectedBand.getName();
                         if (rowsMap.containsKey(bandName)) {
                             final Row row = rowsMap.get(bandName);
-                            table.add(bandName, row.bitmaskExpression, row.algorithmName,
+                            table.add(bandName, row.algorithmName,
                                       row.weightCoefficient, row.fillValue);
                         } else {
-                            table.add(bandName, selectedBand.getValidMaskExpression(), AggregatorAverage.Descriptor.NAME, 1.0, selectedBand.getNoDataValue());
+                            table.add(bandName, AggregatorAverage.Descriptor.NAME, 1.0, selectedBand.getNoDataValue());
                         }
                     }
                 }
@@ -420,16 +387,14 @@ class BinningParametersPanel extends JPanel {
     public static class VariableConfig {
 
         public final String name;
-        public final String expression;
         public final AggregatorDescriptor aggregator;
         public final Double weight;
         public final Double fillValue;
 
-        public VariableConfig(String name, String expression, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
+        public VariableConfig(String name, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
             this.fillValue = fillValue;
             this.weight = weight;
             this.aggregator = aggregator;
-            this.expression = expression;
             this.name = name;
         }
     }

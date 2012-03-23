@@ -37,6 +37,7 @@ interface BinningModel {
     String PROPERTY_KEY_REGION = "region";
     String PROPERTY_KEY_COMPUTE_REGION = "compute";
     String PROPERTY_KEY_GLOBAL = "global";
+    String PROPERTY_KEY_EXPRESSION = "expression";
 
     void setProperty(String key, Object value) throws ValidationException;
 
@@ -48,12 +49,20 @@ interface BinningModel {
      * @return The source products of this binning operation, never <code>null</code>.
      * @throws IOException if some product cannot be read.
      */
-    Product[] getSourceProducts() throws IOException;
+    Product[] getSourceProducts();
 
     /**
      * @return The variable configurations.
      */
     BinningParametersPanel.VariableConfig[] getVariableConfigurations();
 
+    /**
+     * @return The selected target region.
+     */
     Region getRegion();
+
+    /**
+     * @return the expression good pixels in the target product need to comply with.
+     */
+    String getValidExpression();
 }

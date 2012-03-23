@@ -30,6 +30,8 @@ import org.esa.beam.framework.ui.BoundsInputPanel;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The model responsible for managing the binning parameters.
@@ -53,6 +55,7 @@ class BinningModelImpl implements BinningModel {
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_ENABLE, Boolean.class));
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_GLOBAL, Boolean.class));
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_COMPUTE_REGION, Boolean.class));
+        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_EXPRESSION, String.class));
         propertySet.setDefaultValues();
     }
 
@@ -63,16 +66,20 @@ class BinningModelImpl implements BinningModel {
     }
 
     @Override
-    public Product[] getSourceProducts() throws IOException {
+    public Product[] getSourceProducts() {
         final File[] files = getProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
         if(files == null) {
             return new Product[0];
         }
-        Product[] products = new Product[files.length];
-        for (int i = 0; i < files.length; i++) {
-            products[i] = ProductIO.readProduct(files[i]);
+        List<Product> products = new ArrayList<Product>();
+        for (final File file : files) {
+            try {
+                products.add(ProductIO.readProduct(file));
+            } catch (IOException e) {
+                // todo - handle in VISAT context
+            }
         }
-        return products;
+        return products.toArray(new Product[products.size()]);
     }
 
     @Override
@@ -89,6 +96,11 @@ class BinningModelImpl implements BinningModel {
         final Region wkt = Region.WKT;
         wkt.setWkt("");
         return wkt;
+    }
+
+    @Override
+    public String getValidExpression() {
+        return getProperty(PROPERTY_KEY_EXPRESSION);
     }
 
     @Override
