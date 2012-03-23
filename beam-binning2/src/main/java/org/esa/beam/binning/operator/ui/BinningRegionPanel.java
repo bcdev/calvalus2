@@ -19,7 +19,6 @@ package org.esa.beam.binning.operator.ui;
 import com.bc.ceres.swing.TableLayout;
 import com.bc.ceres.swing.binding.BindingContext;
 import com.bc.ceres.swing.binding.internal.AbstractButtonAdapter;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.BoundsInputPanel;
 import org.esa.beam.framework.ui.WorldMapPaneDataModel;
 
@@ -29,10 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * The panel in the binning operator UI which allows for setting the region.
@@ -68,16 +63,15 @@ class BinningRegionPanel extends JPanel {
         bindingContext.bind(BinningModel.PROPERTY_KEY_GLOBAL, new RadioButtonAdapter(globalOption));
         bindingContext.bind(BinningModel.PROPERTY_KEY_ENABLE, new RadioButtonAdapter(regionOption));
 
-        bindingContext.addPropertyChangeListener(new MapBoundsChangeListener());
-
         buttonGroup.add(computeOption);
         buttonGroup.add(globalOption);
         buttonGroup.add(regionOption);
 
         regionOption.setSelected(true);
 
-        // todo - comment in following code
-
+        // todo - comment in following code after moving this module to BEAM
+        // until then, world map creation will fail because it tries reading the world map images from a jar
+        // see MosaicOp UI for how it is done
 //        final WorldMapPane worldMapPanel = new WorldMapPane(worldMapModel);
 //        worldMapPanel.setMinimumSize(new Dimension(250, 125));
 //        worldMapPanel.setBorder(BorderFactory.createEtchedBorder());
@@ -111,33 +105,4 @@ class BinningRegionPanel extends JPanel {
             getBinding().setPropertyValue(getButton().isSelected());
         }
     }
-
-    private class MapBoundsChangeListener implements PropertyChangeListener {
-
-        private final List<String> knownProperties;
-
-        private MapBoundsChangeListener() {
-            knownProperties = Arrays.asList("westBound", "northBound", "eastBound", "southBound", "crs");
-        }
-
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            if (knownProperties.contains(evt.getPropertyName())) {
-                setMapBoundary(worldMapModel);
-            }
-        }
-
-        private void setMapBoundary(WorldMapPaneDataModel worldMapModel) {
-            // todo - comment in following code
-            Product boundaryProduct;
-            try {
-//                boundaryProduct = getBoundaryProduct();
-            } catch (Throwable ignored) {
-                boundaryProduct = null;
-            }
-//            worldMapModel.setSelectedProduct(boundaryProduct);
-        }
-
-    }
-
 }
