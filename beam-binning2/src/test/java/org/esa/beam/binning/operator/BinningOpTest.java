@@ -11,14 +11,13 @@ import org.esa.beam.framework.gpf.main.GPT;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 import static org.junit.Assert.*;
 
 /**
@@ -93,7 +92,6 @@ public class BinningOpTest {
     }
 
     @Test
-    @Ignore
     public void testGlobalBinning_WithMemoryMappedFile() throws Exception {
         BinningConfig binningConfig = createBinningConfig();
         FormatterConfig formatterConfig = createFormatterConfig();

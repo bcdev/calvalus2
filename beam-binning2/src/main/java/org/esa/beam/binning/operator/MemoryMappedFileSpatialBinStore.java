@@ -24,12 +24,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
@@ -75,7 +72,7 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
                 spatialBinMap.get(key).add(spatialBin);
             }
         } finally {
-            cleanup(raf, readBuffer);
+            MemoryMappedFileCleaner.cleanup(raf, readBuffer);
         }
         return spatialBinMap;
     }
@@ -96,32 +93,7 @@ class MemoryMappedFileSpatialBinStore implements BinningOp.SpatialBinStore {
     @Override
     public void consumingCompleted() throws IOException {
         writeKey(consumeBuffer, -1L);
-        cleanup(consumeRaf, consumeBuffer);
-    }
-
-    private void cleanup(RandomAccessFile raf, MappedByteBuffer readBuffer) throws IOException {
-        raf.close();
-        // workaround needed due to Java bug
-        // see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4715154
-        unmap(readBuffer);
-    }
-
-    private void unmap(final MappedByteBuffer buffer) {
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-            public Void run() {
-                try {
-                    Method getCleanerMethod = buffer.getClass().getMethod("cleaner", new Class[0]);
-                    getCleanerMethod.setAccessible(true);
-                    sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod.invoke(buffer);
-                    cleaner.clean();
-                } catch (Exception e) {
-                    // todo - replace by system logging
-                    System.out.println("WARNING: Failed to clear buffer due to exception:");
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        });
+        MemoryMappedFileCleaner.cleanup(consumeRaf, consumeBuffer);
     }
 
     private long readKey(ByteBuffer buffer) throws IOException {

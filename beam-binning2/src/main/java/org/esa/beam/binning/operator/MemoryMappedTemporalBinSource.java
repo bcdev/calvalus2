@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.List;
@@ -39,16 +40,18 @@ class MemoryMappedTemporalBinSource implements TemporalBinSource {
     private final File file;
     private final TemporalBinIterator temporalBinIterator;
 
-    private ByteBuffer readBuffer;
+    private MappedByteBuffer readBuffer;
     private RandomAccessFile readRaf;
 
     MemoryMappedTemporalBinSource(List<TemporalBin> temporalBins) throws IOException {
         RandomAccessFile raf = null;
+        MappedByteBuffer buffer = null;
         try {
             file = File.createTempFile(getClass().getSimpleName() + "-", ".dat");
+            file.deleteOnExit();
             raf = new RandomAccessFile(file, "rw");
             FileChannel channel = raf.getChannel();
-            final ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
+            buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 100L * MB);
             temporalBinIterator = new TemporalBinIterator();
             for (TemporalBin temporalBin : temporalBins) {
                 buffer.putLong(temporalBin.getIndex());
@@ -61,9 +64,7 @@ class MemoryMappedTemporalBinSource implements TemporalBinSource {
             }
             buffer.putLong(-1L);
         } finally {
-            if(raf != null) {
-                raf.close();
-            }
+            MemoryMappedFileCleaner.cleanup(raf, buffer);
         }
     }
 
@@ -88,13 +89,7 @@ class MemoryMappedTemporalBinSource implements TemporalBinSource {
 
     @Override
     public void close() throws IOException {
-        if(readRaf != null) {
-            readRaf.close();
-        }
-        if (file.exists() && !file.delete()) {
-            // todo - replace by system logging
-            System.out.println("WARNING: Failed to delete temporal file '" + file.getAbsolutePath() + "'.");
-        }
+        MemoryMappedFileCleaner.cleanup(readRaf, readBuffer);
     }
 
     private class TemporalBinIterator implements Iterator<TemporalBin> {
