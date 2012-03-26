@@ -19,42 +19,25 @@ package org.esa.beam.binning.operator.ui;
 import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.binning.AggregatorDescriptor;
-import org.esa.beam.binning.AggregatorDescriptorRegistry;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.ModalDialog;
-import org.esa.beam.framework.ui.UIUtils;
-import org.esa.beam.framework.ui.product.BandChooser;
 import org.esa.beam.framework.ui.product.ProductExpressionPane;
-import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.util.StringUtils;
 
-import javax.swing.AbstractButton;
-import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The panel in the binning operator UI which allows for specifying the binning configuration.
@@ -65,33 +48,70 @@ import java.util.Map;
 class BinningParametersPanel extends JPanel {
 
     private final AppContext appContext;
-    private final BinningModel model;
-    private final String[] aggregatorNames;
-    private final List<Component> components;
-    private VariableConfigTable table;
+    private final BinningModel binningModel;
+    private VariableConfigTable bandsTable;
 
-    BinningParametersPanel(AppContext appContext, BinningModel model) {
+    BinningParametersPanel(AppContext appContext, BinningModel binningModel) {
         this.appContext = appContext;
-        this.model = model;
-        model.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                updateComponents();
-            }
-        });
-        this.components = new ArrayList<Component>();
+        this.binningModel = binningModel;
         final TableLayout layout = new TableLayout(1);
         layout.setTableFill(TableLayout.Fill.BOTH);
         setLayout(layout);
-        final AggregatorDescriptor[] aggregatorDescriptors = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptors();
-        aggregatorNames = new String[aggregatorDescriptors.length];
-        for (int i = 0; i < aggregatorDescriptors.length; i++) {
-            aggregatorNames[i] = aggregatorDescriptors[i].getName();
-        }
         final JPanel bandsPanel = createBandsPanel();
         add(bandsPanel);
         add(createValidExpressionPanel());
-        updateComponents();
+    }
+
+    private JPanel createBandsPanel() {
+        bandsTable = new VariableConfigTable(binningModel, appContext);
+        final JPanel bandsPanel = new JPanel(new GridBagLayout());
+
+        final GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(5, 5, 5, 5);
+
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 1.0;
+
+        bandsPanel.add(new JLabel(), constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.weightx = 0.0;
+        constraints.fill = GridBagConstraints.NONE;
+
+        final JButton addButton = new JButton("Add");
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                bandsTable.addRow("<expression>", null, AggregatorAverage.Descriptor.NAME, Double.NaN, Double.NaN);
+            }
+        });
+        bandsPanel.add(addButton, constraints);
+
+        constraints.gridx = 2;
+        constraints.gridy = 0;
+        constraints.weightx = 0.0;
+
+        final JButton removeButton = new JButton("Remove");
+        removeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                bandsTable.removeSelectedRows();
+            }
+        });
+        bandsPanel.add(removeButton, constraints);
+
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.fill = GridBagConstraints.BOTH;
+
+        bandsPanel.add(bandsTable.getComponent(), constraints);
+        return bandsPanel;
     }
 
     private JPanel createValidExpressionPanel() {
@@ -101,7 +121,7 @@ class BinningParametersPanel extends JPanel {
         preferredSize.setSize(25, preferredSize.getHeight());
         button.setPreferredSize(preferredSize);
         button.setEnabled(hasSourceProducts());
-        model.addPropertyChangeListener(new PropertyChangeListener() {
+        binningModel.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if (!evt.getPropertyName().equals(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS)) {
@@ -117,7 +137,7 @@ class BinningParametersPanel extends JPanel {
                 if (expression != null) {
                     textField.setText(expression);
                     try {
-                        model.setProperty(BinningModel.PROPERTY_KEY_EXPRESSION, expression);
+                        binningModel.setProperty(BinningModel.PROPERTY_KEY_EXPRESSION, expression);
                     } catch (ValidationException e) {
                         appContext.handleError("Invalid expression", e);
                     }
@@ -134,57 +154,11 @@ class BinningParametersPanel extends JPanel {
     }
 
     private boolean hasSourceProducts() {
-        return model.getSourceProducts().length > 0;
-    }
-
-    private void updateComponents() {
-        for (Component component : components) {
-            component.setEnabled(hasSourceProducts());
-        }
-        if (!hasSourceProducts()) {
-            table.clear();
-        }
-    }
-
-    private JPanel createBandsPanel() {
-        final TableLayout layout = new TableLayout(3);
-        layout.setRowFill(0, TableLayout.Fill.HORIZONTAL);
-        layout.setRowFill(1, TableLayout.Fill.BOTH);
-        layout.setCellColspan(1, 0, 3);
-        layout.setRowWeightY(0, 0.0);
-        layout.setRowWeightY(1, 1.0);
-        layout.setRowWeightX(1, 1.0);
-        layout.setCellWeightX(0, 0, 1.0);
-        layout.setCellWeightX(0, 1, 0.0);
-        layout.setCellWeightX(0, 2, 0.0);
-
-        table = new VariableConfigTable();
-        table.add("<expression>", AggregatorAverage.Descriptor.NAME, Double.NaN, Double.NaN);
-        final Component bandFilterButton = createBandFilterButton(table);
-        final JLabel label = new JLabel("Choose bands");
-
-        components.add(bandFilterButton);
-        components.add(label);
-
-        final JPanel bandsPanel = new JPanel(layout);
-        bandsPanel.add(layout.createHorizontalSpacer());
-        bandsPanel.add(label);
-        bandsPanel.add(bandFilterButton);
-        bandsPanel.add(table.getComponent());
-
-        return bandsPanel;
-    }
-
-    private Component createBandFilterButton(final VariableConfigTable table) {
-        final AbstractButton bandFilterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Copy16.gif"), false);
-        bandFilterButton.setName("BandFilterButton");
-        bandFilterButton.setToolTipText("Choose the bands to process");
-        bandFilterButton.addActionListener(new BandFilterButtonListener(table));
-        return bandFilterButton;
+        return binningModel.getSourceProducts().length > 0;
     }
 
     private String editExpression(String expression) {
-        final Product product = model.getSourceProducts()[0];
+        final Product product = binningModel.getSourceProducts()[0];
         if (product == null) {
             return null;
         }
@@ -199,209 +173,31 @@ class BinningParametersPanel extends JPanel {
         return null;
     }
 
-    private static class Row {
-
-        private final String bandName;
-        private final String algorithmName;
-        private final double weightCoefficient;
-        private final double fillValue;
-
-        public Row(String bandName, String algorithmName, double weightCoefficient, double fillValue) {
-            this.bandName = bandName;
-            this.algorithmName = algorithmName;
-            this.weightCoefficient = weightCoefficient;
-            this.fillValue = fillValue;
-        }
-    }
-
-    private class VariableConfigTable {
-
-        private JTable table;
-        private DefaultTableModel tableModel;
-        private final JScrollPane scrollPane;
-        // todo - begin using this map
-        private final Map<Integer, Boolean> rowIsExpressionBand;
-
-        public VariableConfigTable() {
-            rowIsExpressionBand = new HashMap<Integer, Boolean>();
-            tableModel = new DefaultTableModel() {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return true;
-                }
-            };
-
-            tableModel.setColumnIdentifiers(new String[]{
-                    "Band",
-                    "Aggregation",
-                    "Weight",
-                    "Fill value"
-            });
-
-            tableModel.addTableModelListener(new VariableConfigTableListener());
-
-            table = new JTable(tableModel) {
-                @Override
-                public Class getColumnClass(int column) {
-                    if (column == 3) {
-                        return Double.class;
-                    } else {
-                        return String.class;
-                    }
-                }
-
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    super.tableChanged(e);
-                }
-            };
-            table.getTableHeader().setReorderingAllowed(false);
-
-            table.getColumnModel().getColumn(0).setMinWidth(60);
-            table.getColumnModel().getColumn(1).setMinWidth(60);
-            table.getColumnModel().getColumn(2).setMinWidth(60);
-            table.getColumnModel().getColumn(3).setMinWidth(60);
-
-            table.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(new JComboBox(aggregatorNames)));
-            scrollPane = new JScrollPane(table);
-            components.add(table);
-            components.add(scrollPane);
-        }
-
-        public JComponent getComponent() {
-            return scrollPane;
-        }
-
-        public String[] getBandNames() {
-            final int numRows = table.getRowCount();
-            final String[] bandNames = new String[numRows];
-            for (int i = 0; i < bandNames.length; i++) {
-                bandNames[i] = (String) table.getValueAt(i, 0);
-            }
-            return bandNames;
-        }
-
-        public void add(final String bandName, String algorithmName, double weightCoefficient, double fillValue) {
-            if (algorithmName == null || !StringUtils.contains(aggregatorNames, algorithmName)) {
-                algorithmName = AggregatorAverage.Descriptor.NAME;
-            }
-            tableModel.addRow(new Object[]{bandName, algorithmName, weightCoefficient, fillValue});
-        }
-
-        public void remove(final String bandName) {
-            final String[] bandNames = getBandNames();
-            final int rowToRemove = StringUtils.indexOf(bandNames, bandName);
-            tableModel.removeRow(rowToRemove);
-        }
-
-        public Row[] getRows() {
-            final List dataList = tableModel.getDataVector();
-            final Row[] rows = new Row[dataList.size()];
-            for (int i = 0; i < dataList.size(); i++) {
-                final List dataListRow = (List) dataList.get(i);
-                rows[i] = new Row((String) dataListRow.get(0),
-                                  (String) dataListRow.get(1),
-                                  (Double) dataListRow.get(2),
-                                  (Double) dataListRow.get(3));
-            }
-            return rows;
-        }
-
-        public void clear() {
-            final String[] bandNames = getBandNames();
-            for (final String bandName : bandNames) {
-                remove(bandName);
-            }
-            tableModel.setRowCount(0);
-        }
-    }
-
-    private class VariableConfigTableListener implements TableModelListener {
-
-        @Override
-        public void tableChanged(TableModelEvent event) {
-            try {
-                final VariableConfig[] variableConfigs = new VariableConfig[table.getRows().length];
-                final Row[] rows = table.getRows();
-                for (int i = 0; i < rows.length; i++) {
-                    final Row row = rows[i];
-                    variableConfigs[i] = new VariableConfig(row.bandName,
-                                                            AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName),
-                                                            row.weightCoefficient,
-                                                            row.fillValue);
-                }
-                model.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS, variableConfigs);
-            } catch (ValidationException e1) {
-                appContext.handleError("Unable to validate variable configurations.", e1);
-            }
-        }
-    }
-
-    private class BandFilterButtonListener implements ActionListener {
-
-        private final VariableConfigTable table;
-
-        public BandFilterButtonListener(VariableConfigTable table) {
-            this.table = table;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            Product exampleProduct = model.getSourceProducts()[0];
-            if (exampleProduct != null) {
-                final Band[] allBands = exampleProduct.getBands();
-                final String[] existingBandNames = table.getBandNames();
-                final List<Band> existingBandList = new ArrayList<Band>();
-                for (String existingBandName : existingBandNames) {
-                    final Band band = exampleProduct.getBand(existingBandName);
-                    if (band != null) {
-                        existingBandList.add(band);
-                    }
-                }
-                final Band[] existingBands = existingBandList.toArray(
-                        new Band[existingBandList.size()]);
-                final BandChooser bandChooser = new BandChooser(appContext.getApplicationWindow(),
-                                                                "Band Chooser", "", /*I18N*/
-                                                                allBands,
-                                                                existingBands);
-                if (bandChooser.show() == ModalDialog.ID_OK) {
-                    final Row[] rows = table.getRows();
-                    final HashMap<String, Row> rowsMap = new HashMap<String, Row>();
-                    for (final Row row : rows) {
-                        rowsMap.put(row.bandName, row);
-                    }
-                    table.clear();
-
-                    final Band[] selectedBands = bandChooser.getSelectedBands();
-
-                    for (final Band selectedBand : selectedBands) {
-                        final String bandName = selectedBand.getName();
-                        if (rowsMap.containsKey(bandName)) {
-                            final Row row = rowsMap.get(bandName);
-                            table.add(bandName, row.algorithmName,
-                                      row.weightCoefficient, row.fillValue);
-                        } else {
-                            table.add(bandName, AggregatorAverage.Descriptor.NAME, 1.0, selectedBand.getNoDataValue());
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public static class VariableConfig {
 
         public final String name;
+        public final String expression;
         public final AggregatorDescriptor aggregator;
         public final Double weight;
         public final Double fillValue;
 
-        public VariableConfig(String name, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
+        public VariableConfig(String name, String expression, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
+            this.expression = expression;
             this.fillValue = fillValue;
             this.weight = weight;
             this.aggregator = aggregator;
             this.name = name;
         }
-    }
 
+        @Override
+        public String toString() {
+            return "VariableConfig{" +
+                   "aggregator=" + aggregator +
+                   ", name='" + name + '\'' +
+                   ", expression='" + expression + '\'' +
+                   ", weight=" + weight +
+                   ", fillValue=" + fillValue +
+                   '}';
+        }
+    }
 }

@@ -31,6 +31,9 @@ import javax.swing.SwingWorker;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The panel in the binning operator UI which allows for setting input products and the path of the output product.
@@ -80,10 +83,11 @@ class BinningIOPanel extends JPanel {
         final FileArrayEditor.FileArrayEditorListener listener = new FileArrayEditor.FileArrayEditorListener() {
             @Override
             public void updatedList(final File[] files) {
-                final SwingWorker worker = new SwingWorker() {
+                final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                     @Override
-                    protected Object doInBackground() throws Exception {
-                        binningModel.setProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS, files);
+                    protected Void doInBackground() throws Exception {
+                        final File[] productFiles = removeDuplicates(files);
+                        binningModel.setProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS, productFiles);
                         return null;
                     }
 
@@ -98,6 +102,12 @@ class BinningIOPanel extends JPanel {
                     }
                 };
                 worker.execute();
+            }
+
+            private File[] removeDuplicates(File[] files) {
+                final Set<File> result = new HashSet<File>();
+                Collections.addAll(result, files);
+                return result.toArray(new File[result.size()]);
             }
         };
         sourceFileEditor.setListener(listener);

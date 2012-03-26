@@ -35,11 +35,11 @@ public class BinningModelImplTest {
     public void testSetGetProperty() throws Exception {
         final BinningModelImpl binningModel = new BinningModelImpl();
         binningModel.setProperty("key", new Float[]{2.0f, 3.0f});
-        binningModel.setProperty("key2", new int[]{10, 20, 30});
+        binningModel.setProperty("key2", new Integer[]{10, 20, 30});
 
         assertArrayEquals(new Product[0], binningModel.getSourceProducts());
         assertArrayEquals(new Float[]{2.0f, 3.0f}, (Float[])binningModel.getProperty("key"));
-        assertArrayEquals(new int[]{10, 20, 30}, (int[]) binningModel.getProperty("key2"));
+        assertArrayEquals(new Integer[]{10, 20, 30}, (Integer[]) binningModel.getProperty("key2"));
     }
 
     @Test
@@ -47,7 +47,7 @@ public class BinningModelImplTest {
         final BinningModel binningModel = new BinningModelImpl();
         assertArrayEquals(new BinningParametersPanel.VariableConfig[0], binningModel.getVariableConfigurations());
 
-        final BinningParametersPanel.VariableConfig variableConfig = new BinningParametersPanel.VariableConfig("name", null, 0.1, 0.2);
+        final BinningParametersPanel.VariableConfig variableConfig = new BinningParametersPanel.VariableConfig("name", "name", null, 0.1, 0.2);
         binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS,
                                  new BinningParametersPanel.VariableConfig[]{variableConfig});
 

@@ -114,8 +114,14 @@ class BinningModelImpl implements BinningModel {
         final Property property = new Property(descriptor, new DefaultPropertyAccessor());
         propertySet.addProperty(property);
         property.setValue(value);
-        // todo -- remove this line
-        System.out.println("set property: 'key = " + key + ", value = " + value + "'.");
+        // todo -- remove this lines
+        if(value != null && value.getClass().isArray()) {
+            for(Object _value : (Object[])value) {
+                System.out.println("set property: 'key = " + key + ", value = " + _value + "'.");
+            }
+        } else {
+            System.out.println("set property: 'key = " + key + ", value = " + value + "'.");
+        }
     }
 
     @Override
