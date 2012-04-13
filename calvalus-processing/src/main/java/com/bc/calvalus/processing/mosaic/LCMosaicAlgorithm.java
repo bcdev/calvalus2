@@ -60,6 +60,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private int[] varIndexes;
 
     private float[][] aggregatedSamples = null;
+    private int[] deepWaterCounter = null;
     private String[] outputFeatures;
     private int tileSize;
     private int variableCount;
@@ -75,6 +76,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public void init(TileIndexWritable tileIndex) throws IOException {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
+        deepWaterCounter = new int[numElems];
         for (int band = 0; band < variableCount; band++) {
             Arrays.fill(aggregatedSamples[band], 0.0f);
         }
@@ -119,7 +121,8 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 // If we haven't seen LAND so far, but we had SNOW clear SDRs
                 if (landCount == 0) {
                     int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
-                    if (snowCount > 0) {
+                    int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
+                    if (snowCount > 0 || waterCount > 0) {
                         clearSDR(i, 0.0f);
                     }
                 }
@@ -131,13 +134,28 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, accumulate SNOW SDRs
                 if (landCount == 0) {
+                    int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
+                    if (waterCount > 0) {
+                        clearSDR(i, 0.0f);
+                    }
                     addSdrs(samples, i);
                 }
                 // Count SNOW
                 aggregatedSamples[STATUS_SNOW][i]++;
-            } else if (status == STATUS_WATER ||
-                    status == STATUS_CLOUD ||
-                    status == STATUS_CLOUD_SHADOW) {
+            } else if (status == STATUS_WATER ) {
+                if (Float.isNaN(sdr_1)) {
+                    // deep water
+                    deepWaterCounter[i]++;
+                } else {
+                    // shallow water
+                    int landCount = (int) aggregatedSamples[STATUS_LAND][i];
+                    int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
+                    if (landCount == 0 && snowCount == 0) {
+                        addSdrs(samples, i);
+                    }
+                    aggregatedSamples[STATUS_WATER][i]++;
+                }
+            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
                 // Count CLOUD orCLOUD_SHADOW
                 aggregatedSamples[status][i]++;
             }
@@ -162,12 +180,11 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                                          aggregatedSamples[STATUS_SNOW][i],
                                          aggregatedSamples[STATUS_CLOUD][i],
                                          aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+
             aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
-            if (status == STATUS_LAND) {
-                wSum = aggregatedSamples[STATUS_LAND][i];
-            } else if (status == STATUS_SNOW) {
-                wSum = aggregatedSamples[STATUS_SNOW][i];
+            if (status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER) {
+                wSum = aggregatedSamples[status][i];
             }
             if (wSum != 0f) {
                 for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {  // sdr + ndvi + sdr_error
@@ -175,6 +192,13 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 }
             } else {
                 clearSDR(i, Float.NaN);
+            }
+            if (deepWaterCounter[i] > 0) {
+                if (status == STATUS_WATER) {
+                    aggregatedSamples[STATUS_CLOUD][i] = (int) aggregatedSamples[STATUS_CLOUD][i] + deepWaterCounter[i];
+                } else {
+                    aggregatedSamples[STATUS_WATER][i] = (int) aggregatedSamples[STATUS_WATER][i] + deepWaterCounter[i];
+                }
             }
         }
         return aggregatedSamples;
@@ -246,12 +270,10 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     static int calculateStatus(float land, float water, float snow, float cloud, float cloudShadow) {
         if (land > 0) {
             return STATUS_LAND;
-        } else if (water > 0 || snow > 0) {
-            if (water > snow) {
-                return STATUS_WATER;
-            } else {
-                return STATUS_SNOW;
-            }
+        } else if (snow > 0) {
+            return STATUS_SNOW;
+        } else if (water > 0) {
+            return STATUS_WATER;
         } else if (cloud > 0 || cloudShadow > 0) {
             if (cloud > cloudShadow) {
                 return STATUS_CLOUD;
