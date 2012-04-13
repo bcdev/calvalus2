@@ -183,7 +183,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
             aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
-            if (status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER) {
+            if ((status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER) && deepWaterCounter[i] == 0) {
                 wSum = aggregatedSamples[status][i];
             }
             if (wSum != 0f) {
@@ -194,11 +194,8 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 clearSDR(i, Float.NaN);
             }
             if (deepWaterCounter[i] > 0) {
-                if (status == STATUS_WATER) {
-                    aggregatedSamples[STATUS_CLOUD][i] = (int) aggregatedSamples[STATUS_CLOUD][i] + deepWaterCounter[i];
-                } else {
-                    aggregatedSamples[STATUS_WATER][i] = (int) aggregatedSamples[STATUS_WATER][i] + deepWaterCounter[i];
-                }
+                aggregatedSamples[STATUS_WATER][i] = (int) aggregatedSamples[STATUS_WATER][i] + deepWaterCounter[i];
+                aggregatedSamples[STATUS][i] = STATUS_WATER;
             }
         }
         return aggregatedSamples;
