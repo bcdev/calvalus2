@@ -245,7 +245,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
     static L3Config getMainL3Config() throws ProductionException {
         // exclude invalid and deep water pixels
-        String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status == 4 or status == 5 ) and dem_alt > -100))";
+        String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4 and status <= 20) and dem_alt > -100))";
 
         String[] varNames = new String[]{"status",
                 "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",

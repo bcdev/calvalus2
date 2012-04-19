@@ -112,6 +112,10 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             if ((status == STATUS_LAND || status == STATUS_SNOW) && Float.isNaN(sdr_1)) {
                 status = STATUS_INVALID;
             }
+            if (status > STATUS_CLOUD_SHADOW) {
+                // re-map ucl-cloud, ucl-cloud-buffer and schiller-cloud ==> cloud
+                status = STATUS_CLOUD;
+            }
 
             if (status == STATUS_LAND && sdr8DataSamples != null) {
                 status = temporalCloudCheck(samples[varIndexes[8]][i], sdr8DataSamples[0][i]);
