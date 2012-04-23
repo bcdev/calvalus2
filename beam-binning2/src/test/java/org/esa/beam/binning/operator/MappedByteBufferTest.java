@@ -19,22 +19,15 @@ package org.esa.beam.binning.operator;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests runtime behaviour and performance of {@link FileChannel#map(java.nio.channels.FileChannel.MapMode, long, long)}.
@@ -78,52 +71,52 @@ public class MappedByteBufferTest {
         deleteFile("tearDown", file);
     }
 
-    /*
-     * This - failing and therefore ignored - test documents a case in which unmapping
-     * does not work. A long is written into the buffer using an index; after that, cleanup fails
-     * with an instance of java.lang.Error. See testMemoryMappedFileIOWithCleaning below
-     * for a nearly identical, non-failing test which is able to delete the temporary file.
-     */
-    @Test
-    @Ignore
-    public void testMemoryMappedFileIOWithCleaning_Failing() throws Exception {
-        final int fileSize = 1024 * 1024 * 100;
+//    /*
+//     * This - failing and therefore ignored - test documents a case in which unmapping
+//     * does not work. A long is written into the buffer using an index; after that, cleanup fails
+//     * with an instance of java.lang.Error. See testMemoryMappedFileIOWithCleaning below
+//     * for a nearly identical, non-failing test which is able to delete the temporary file.
+//     */
+//    @Test
+//    @Ignore
+//    public void testMemoryMappedFileIOWithCleaning_Failing() throws Exception {
+//        final int fileSize = 1024 * 1024 * 100;
+//
+//        final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+//        final FileChannel fc = raf.getChannel();
+//        MappedByteBuffer buffer = null;
+//        try {
+//            buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
+//            buffer.putDouble(1.2);
+//            buffer.putFloat(3.4f);
+//            buffer.putLong(fileSize - 8, 1L);
+//        } finally {
+//            MemoryMappedFileCleaner.cleanup(raf, buffer);
+//        }
+//
+//        deleteFile("MappedByteBufferTest.testMemoryMappedFileIOWithCleaning");
+//        assertFalse(file.exists());
+//    }
 
-        final RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        final FileChannel fc = raf.getChannel();
-        MappedByteBuffer buffer = null;
-        try {
-            buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
-            buffer.putDouble(1.2);
-            buffer.putFloat(3.4f);
-            buffer.putLong(fileSize - 8, 1L);
-        } finally {
-            MemoryMappedFileCleaner.cleanup(raf, buffer);
-        }
-
-        deleteFile("MappedByteBufferTest.testMemoryMappedFileIOWithCleaning");
-        assertFalse(file.exists());
-    }
-
-    @Test
-    public void testMemoryMappedFileIOWithCleaning() throws Exception {
-        final int fileSize = 1024 * 1024 * 100;
-
-        final RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        final FileChannel fc = raf.getChannel();
-        MappedByteBuffer buffer = null;
-        try {
-            buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
-            buffer.putDouble(1.2);
-            buffer.putFloat(3.4f);
-            buffer.putLong(1L);
-        } finally {
-            MemoryMappedFileCleaner.cleanup(raf, buffer);
-        }
-
-        deleteFile("MappedByteBufferTest.testMemoryMappedFileIOWithCleaning");
-        assertFalse(file.exists());
-    }
+//    @Test
+//    public void testMemoryMappedFileIOWithCleaning() throws Exception {
+//        final int fileSize = 1024 * 1024 * 100;
+//
+//        final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+//        final FileChannel fc = raf.getChannel();
+//        MappedByteBuffer buffer = null;
+//        try {
+//            buffer = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
+//            buffer.putDouble(1.2);
+//            buffer.putFloat(3.4f);
+//            buffer.putLong(1L);
+//        } finally {
+//            MemoryMappedFileCleaner.cleanup(raf, buffer);
+//        }
+//
+//        deleteFile("MappedByteBufferTest.testMemoryMappedFileIOWithCleaning");
+//        assertFalse(file.exists());
+//    }
 
     @Test
     public void testThatMemoryMappedFileIODoesNotConsumeHeapSpace() throws Exception {
@@ -434,7 +427,7 @@ public class MappedByteBufferTest {
         return File.createTempFile(MappedByteBufferTest.class.getSimpleName() + "-", ".dat");
     }
 
-    public static  void deleteFile(String msg, File file) throws InterruptedException {
+    public static void deleteFile(String msg, File file) throws InterruptedException {
         if (file.exists()) {
             if (!file.delete()) {
                 System.out.println("error: " + msg + ": failed to delete test file " + file);

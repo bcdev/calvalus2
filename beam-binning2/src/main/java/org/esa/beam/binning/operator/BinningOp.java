@@ -25,6 +25,7 @@ import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.TemporalBinner;
+import org.esa.beam.binning.support.WildcardMatcher;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -110,6 +111,12 @@ public class BinningOp extends Operator implements Output {
     @TargetProduct
     Product targetProduct;
 
+    @Parameter(description = "The file pattern that is used to search for source product. " +
+            "This is an alternative way to specify source products. May contain wildcard '**' " +
+            "(any directory and sub-directory), '*' (any character sequence in a filename) and '?' " +
+            "(any single character in a filename).")
+    String filePattern;
+
     @Parameter(converter = JtsGeometryConverter.class,
                description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, it is the Globe.")
     Geometry region;
@@ -130,19 +137,15 @@ public class BinningOp extends Operator implements Output {
                description = "The configuration used for the output formatting process.")
     FormatterConfig formatterConfig;
 
-
     private transient BinningContext binningContext;
-    private final SpatialBinStore spatialBinStore;
-    private final boolean useMemoryMappedTemporalBinSource;
+    private transient final SpatialBinStore spatialBinStore;
 
-    // todo - after code review, remove this constructor and always use the memory mapped bin sources
     public BinningOp() {
-        this(new SpatialBinStoreImpl(), false);
+        this(new SpatialBinStoreImpl());
     }
 
-    public BinningOp(SpatialBinStore spatialBinStore, boolean useMemoryMappedTemporalBinSource) {
+    private BinningOp(SpatialBinStore spatialBinStore) {
         this.spatialBinStore = spatialBinStore;
-        this.useMemoryMappedTemporalBinSource = useMemoryMappedTemporalBinSource;
     }
 
     public Geometry getRegion() {
@@ -270,15 +273,34 @@ public class BinningOp extends Operator implements Output {
     private SortedMap<Long, List<SpatialBin>> doSpatialBinning() throws IOException {
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
         for (Product sourceProduct : sourceProducts) {
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            getLogger().info(String.format("Spatial binning of product '%s'...", sourceProduct.getName()));
-            final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
-            stopWatch.stop();
-            getLogger().info(String.format("Spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
+            processSource(sourceProduct, spatialBinner);
+        }
+        if (filePattern != null && !filePattern.isEmpty()) {
+            File[] files = WildcardMatcher.glob(filePattern);
+            if (files == null) {
+                throw new OperatorException(String.format("I/O problem occurred with file pattern '%s'", filePattern));
+            }
+            for (File file : files) {
+                Product sourceProduct = ProductIO.readProduct(file);
+                if (sourceProduct != null) {
+                    processSource(sourceProduct, spatialBinner);
+                } else {
+                    getLogger().severe(String.format("Failed to read file '%s' (not a data product or reader missing)", file));
+                }
+            }
         }
         spatialBinStore.consumingCompleted();
         return spatialBinStore.getSpatialBinMap();
+    }
+
+
+    private void processSource(Product sourceProduct, SpatialBinner spatialBinner) throws IOException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        getLogger().info(String.format("Spatial binning of product '%s'...", sourceProduct.getName()));
+        final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
+        stopWatch.stop();
+        getLogger().info(String.format("Spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
     }
 
     private List<TemporalBin> doTemporalBinning(SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
@@ -327,11 +349,7 @@ public class BinningOp extends Operator implements Output {
     }
 
     private TemporalBinSource getTemporalBinSource(List<TemporalBin> temporalBins) throws IOException {
-        if(useMemoryMappedTemporalBinSource) {
-            return new MemoryMappedTemporalBinSource(temporalBins);
-        } else {
-            return new SimpleTemporalBinSource(temporalBins);
-        }
+        return new SimpleTemporalBinSource(temporalBins);
     }
 
     private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, ProductData.UTC startTime, ProductData.UTC stopTime) throws IOException {

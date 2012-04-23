@@ -91,6 +91,7 @@ public class BinningOpTest {
         }
     }
 
+    /*
     @Test
     public void testGlobalBinning_WithMemoryMappedFile() throws Exception {
         BinningConfig binningConfig = createBinningConfig();
@@ -102,7 +103,7 @@ public class BinningOpTest {
         float obs4 = 0.8F;
         float obs5 = 1.0F;
 
-        final BinningOp binningOp = new BinningOp(new MemoryMappedFileSpatialBinStore(), true);
+        final BinningOp binningOp = new BinningOp(new MemoryMappedFileSpatialBinStore());
 
         binningOp.setSourceProducts(createSourceProduct(obs1),
                                     createSourceProduct(obs2),
@@ -123,6 +124,7 @@ public class BinningOpTest {
             targetProduct.dispose();
         }
     }
+    */
 
     /**
      * The following configuration generates a 1-degree resolution local product (4 x 4 pixels) from 5 observations.
