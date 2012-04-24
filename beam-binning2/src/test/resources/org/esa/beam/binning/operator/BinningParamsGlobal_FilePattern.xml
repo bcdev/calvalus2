@@ -1,6 +1,6 @@
 <parameters>
 
-    <filePatterns>target/binning-test-io/**/obs?.dim</filePatterns>
+    <sourceProductPaths>target/binning-test-io/**/obs?.dim</sourceProductPaths>
 
     <startDate>2002-01-01</startDate>
     <endDate>2002-01-10</endDate>

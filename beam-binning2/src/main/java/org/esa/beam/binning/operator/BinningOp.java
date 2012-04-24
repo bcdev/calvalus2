@@ -85,7 +85,7 @@ todo - address the following BinningOp requirements (nf, 2012-03-09)
  * @author Thomas Storm
  */
 @OperatorMetadata(alias = "Binning",
-                  version = "0.1a",
+                  version = "0.5.3",
                   authors = "Norman Fomferra, Marco Zühlke, Thomas Storm",
                   copyright = "(c) 2012 by Brockmann Consult GmbH",
                   description = "Performs spatial and temporal aggregation of pixel values into 'bin' cells")
@@ -100,14 +100,15 @@ public class BinningOp extends Operator implements Output {
     @TargetProduct
     Product targetProduct;
 
-    @Parameter(description = "The comma-separated list of file patterns that are used to search for source products. " +
-            "This is an alternative way to specify source products. A pattern contain wildcard '**' " +
-            "(any directory and sub-directory), '*' (any character sequence in a filename) and '?' " +
-            "(any single character in a filename).")
-    String[] filePatterns;
+    @Parameter(description = "A comma-separated list of file paths specifying the source products.\n" +
+            "Each path may contain the wildcards '**' (matches recursively any directory),\n" +
+            "'*' (matches any character sequence in path names) and\n" +
+            "'?' (matches any single character).")
+    String[] sourceProductPaths;
 
     @Parameter(converter = JtsGeometryConverter.class,
-               description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, it is the Globe.")
+               description = "The considered geographical region as a geometry in well-known text format (WKT).\n" +
+                       "If not given, the entire Globe is assumed.")
     Geometry region;
 
     @Parameter(description = "The start date. If not given, taken from the 'oldest' source product.",
@@ -117,6 +118,10 @@ public class BinningOp extends Operator implements Output {
     @Parameter(description = "The end date. If not given, taken from the 'youngest' source product.",
                format = DATE_PATTERN)
     String endDate;
+
+    @Parameter(description = "If true, a SeaDAS-style, binned data NetCDF file is written in addition to the target product.\n" +
+            "The output file name will be <targetName>-bins.nc", defaultValue = "true")
+    boolean outputBinnedData;
 
     @Parameter(notNull = true,
                description = "The configuration used for the binning process. Specifies the binning grid, any variables and their aggregators.")
@@ -188,7 +193,7 @@ public class BinningOp extends Operator implements Output {
      */
     @Override
     public void initialize() throws OperatorException {
-        if (sourceProducts == null && (filePatterns == null || filePatterns.length == 0)) {
+        if (sourceProducts == null && (sourceProductPaths == null || sourceProductPaths.length == 0)) {
             throw new OperatorException("Either source products must be given or parameter 'filePatterns' must be specified");
         }
         if (binningConfig == null) {
@@ -257,8 +262,7 @@ public class BinningOp extends Operator implements Output {
         ProductUtils.copyVectorData(writtenProduct, targetProduct);
         for (Band band : writtenProduct.getBands()) {
             // Force setting source image, otherwise GPF will set an OperatorImage and invoke computeTile()!!
-            ProductUtils.copyBand(band.getName(), writtenProduct, targetProduct);
-            targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
+            ProductUtils.copyBand(band.getName(), writtenProduct, targetProduct, true);
         }
         return targetProduct;
     }
@@ -275,9 +279,9 @@ public class BinningOp extends Operator implements Output {
                 processSource(sourceProduct, spatialBinner);
             }
         }
-        if (filePatterns != null) {
+        if (sourceProductPaths != null) {
             SortedSet<File> fileSet = new TreeSet<File>();
-            for (String filePattern : filePatterns) {
+            for (String filePattern : sourceProductPaths) {
                 WildcardMatcher.glob(filePattern, fileSet);
             }
             if (fileSet.isEmpty()) {
@@ -333,14 +337,16 @@ public class BinningOp extends Operator implements Output {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        File binnedDataFile = FileUtils.exchangeExtension(new File(formatterConfig.getOutputFile()), "-bins.nc");
-        try {
-            getLogger().info(String.format("Writing binned data to '%s'...", binnedDataFile));
-            writeNetcdfBinFile(binnedDataFile,
-                               temporalBins, startTime, stopTime);
-            getLogger().info(String.format("Writing binned data to '%s' done.", binnedDataFile));
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, String.format("Failed to write binned data to '%s': %s", binnedDataFile, e.getMessage()), e);
+        if (outputBinnedData) {
+            File binnedDataFile = FileUtils.exchangeExtension(new File(formatterConfig.getOutputFile()), "-bins.nc");
+            try {
+                getLogger().info(String.format("Writing binned data to '%s'...", binnedDataFile));
+                writeNetcdfBinFile(binnedDataFile,
+                                   temporalBins, startTime, stopTime);
+                getLogger().info(String.format("Writing binned data to '%s' done.", binnedDataFile));
+            } catch (Exception e) {
+                getLogger().log(Level.SEVERE, String.format("Failed to write binned data to '%s': %s", binnedDataFile, e.getMessage()), e);
+            }
         }
 
         getLogger().info(String.format("Writing mapped product '%s'...", formatterConfig.getOutputFile()));

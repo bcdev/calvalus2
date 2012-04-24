@@ -1,5 +1,5 @@
 <parameters>
-    <filePatterns>target/binning-test-io/**/obs?.dim</filePatterns>
+    <sourceProductPaths>target/binning-test-io/**/obs?.dim</sourceProductPaths>
     <region>POLYGON((-1 -1, 3 -1, 3 3, -1 3, -1 -1))</region>
     <startDate>2002-01-01</startDate>
     <endDate>2002-01-10</endDate>
