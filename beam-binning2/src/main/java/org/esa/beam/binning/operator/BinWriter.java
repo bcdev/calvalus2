@@ -18,6 +18,7 @@ import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -50,8 +51,9 @@ public class BinWriter {
         if (region != null) {
             netcdfFile.addGlobalAttribute("region", region.toText());
         }
-        netcdfFile.addGlobalAttribute("start_time", ProductData.UTC.createDateFormat("yyyy-MM-dd").format(startTime.getAsDate()));
-        netcdfFile.addGlobalAttribute("stop_time", ProductData.UTC.createDateFormat("yyyy-MM-dd").format(stopTime.getAsDate()));
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+        netcdfFile.addGlobalAttribute("start_time", startTime != null ? dateFormat.format(startTime.getAsDate()) : "");
+        netcdfFile.addGlobalAttribute("stop_time", stopTime != null ? dateFormat.format(stopTime.getAsDate()) : "");
 
         netcdfFile.addGlobalAttribute("SEAGrid_bins", 2 * planetaryGrid.getNumRows());
         netcdfFile.addGlobalAttribute("SEAGrid_radius", SEAGrid.RE);

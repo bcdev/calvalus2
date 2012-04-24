@@ -2,8 +2,8 @@ package org.esa.beam.binning.support;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
@@ -23,23 +23,35 @@ public class WildcardMatcher {
     }
 
     public static File[] glob(String filePattern) throws IOException {
-        WildcardMatcher matcher = new WildcardMatcher(filePattern);
-        File dir = new File(getBasePath(filePattern)).getCanonicalFile();
-        ArrayList<File> matchedFiles = new ArrayList<File>();
-        collectFiles(matcher, dir, matchedFiles);
-        return matchedFiles.toArray(new File[matchedFiles.size()]);
+        Set<File> fileSet = new TreeSet<File>();
+        glob(filePattern, fileSet);
+        return fileSet.toArray(new File[fileSet.size()]);
     }
 
-    private static void collectFiles(WildcardMatcher matcher, File dir, List<File> matchedFiles) throws IOException {
+    public static void glob(String filePattern, Set<File> fileSet) throws IOException {
+        WildcardMatcher matcher = new WildcardMatcher(filePattern);
+        String basePath = getBasePath(filePattern);
+        File dir = new File(basePath).getCanonicalFile();
+        int validPos = dir.getPath().indexOf(basePath);
+        collectFiles(matcher, validPos, dir, fileSet);
+    }
+
+    private static void collectFiles(WildcardMatcher matcher, int validPos, File dir, Set<File> fileSet) throws IOException {
         File[] files = dir.listFiles();
         if (files == null) {
             throw new IOException(String.format("Failed to access directory '%s'", dir));
         }
         for (File file : files) {
-            if (matcher.matches(file.getPath())) {
-                matchedFiles.add(file);
+            String text;
+            if (validPos > 0) {
+                text = file.getPath().substring(validPos);
+            } else {
+                text = file.getPath();
+            }
+            if (matcher.matches(text)) {
+                fileSet.add(file);
             } else if (file.isDirectory()) {
-                collectFiles(matcher, file, matchedFiles);
+                collectFiles(matcher, validPos, file, fileSet);
             }
         }
     }
@@ -58,7 +70,7 @@ public class WildcardMatcher {
                 }
             }
         }
-        return basePath;
+        return new File(basePath).getPath();
     }
 
     String getRegex() {

@@ -18,13 +18,7 @@ package org.esa.beam.binning.operator;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.SpatialBin;
-import org.esa.beam.binning.SpatialBinConsumer;
-import org.esa.beam.binning.SpatialBinner;
-import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.TemporalBinSource;
-import org.esa.beam.binning.TemporalBinner;
+import org.esa.beam.binning.*;
 import org.esa.beam.binning.support.WildcardMatcher;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
@@ -49,12 +43,7 @@ import ucar.ma2.InvalidRangeException;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Level;
 
 /*
@@ -104,18 +93,18 @@ public class BinningOp extends Operator implements Output {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
 
-    @SourceProducts(count = -1,
-                    description = "The source products to be binned. Must be all of the same structure.")
+    @SourceProducts(description = "The source products to be binned. Must be all of the same structure. " +
+            "If not given, the parameter 'filePatterns' must be provided.")
     Product[] sourceProducts;
 
     @TargetProduct
     Product targetProduct;
 
-    @Parameter(description = "The file pattern that is used to search for source product. " +
-            "This is an alternative way to specify source products. May contain wildcard '**' " +
+    @Parameter(description = "The comma-separated list of file patterns that are used to search for source products. " +
+            "This is an alternative way to specify source products. A pattern contain wildcard '**' " +
             "(any directory and sub-directory), '*' (any character sequence in a filename) and '?' " +
             "(any single character in a filename).")
-    String filePattern;
+    String[] filePatterns;
 
     @Parameter(converter = JtsGeometryConverter.class,
                description = "The considered geographical region as a geometry in well-known text format (WKT). If not given, it is the Globe.")
@@ -139,6 +128,9 @@ public class BinningOp extends Operator implements Output {
 
     private transient BinningContext binningContext;
     private transient final SpatialBinStore spatialBinStore;
+    private transient int sourceProductCount;
+    private transient ProductData.UTC minDateUtc;
+    private transient ProductData.UTC maxDateUtc;
 
     public BinningOp() {
         this(new SpatialBinStoreImpl());
@@ -196,6 +188,9 @@ public class BinningOp extends Operator implements Output {
      */
     @Override
     public void initialize() throws OperatorException {
+        if (sourceProducts == null && (filePatterns == null || filePatterns.length == 0)) {
+            throw new OperatorException("Either source products must be given or parameter 'filePatterns' must be specified");
+        }
         if (binningConfig == null) {
             throw new OperatorException("Missing operator parameter 'binningConfig'");
         }
@@ -212,6 +207,7 @@ public class BinningOp extends Operator implements Output {
             throw new OperatorException("Missing operator parameter 'formatterConfig.outputFile'");
         }
 
+
         ProductData.UTC startDateUtc = getStartDateUtc("startDate");
         ProductData.UTC endDateUtc = getEndDateUtc("endDate");
 
@@ -219,6 +215,8 @@ public class BinningOp extends Operator implements Output {
         stopWatch.start();
 
         binningContext = binningConfig.createBinningContext();
+
+        sourceProductCount = 0;
 
         try {
             // Step 1: Spatial binning - creates time-series of spatial bins for each bin ID ordered by ID. The tree map structure is <ID, time-series>
@@ -245,7 +243,7 @@ public class BinningOp extends Operator implements Output {
             throw new OperatorException(e);
         }
 
-        stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceProducts.length));
+        stopWatch.stopAndTrace(String.format("Total time for binning %d product(s)", sourceProductCount));
     }
 
     private static Product copyProduct(Product writtenProduct) {
@@ -272,18 +270,27 @@ public class BinningOp extends Operator implements Output {
 
     private SortedMap<Long, List<SpatialBin>> doSpatialBinning() throws IOException {
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinStore);
-        for (Product sourceProduct : sourceProducts) {
-            processSource(sourceProduct, spatialBinner);
-        }
-        if (filePattern != null && !filePattern.isEmpty()) {
-            File[] files = WildcardMatcher.glob(filePattern);
-            if (files == null) {
-                throw new OperatorException(String.format("I/O problem occurred with file pattern '%s'", filePattern));
+        if (sourceProducts != null) {
+            for (Product sourceProduct : sourceProducts) {
+                processSource(sourceProduct, spatialBinner);
             }
-            for (File file : files) {
+        }
+        if (filePatterns != null) {
+            SortedSet<File> fileSet = new TreeSet<File>();
+            for (String filePattern : filePatterns) {
+                WildcardMatcher.glob(filePattern, fileSet);
+            }
+            if (fileSet.isEmpty()) {
+                getLogger().warning("The given file patterns did not match any files");
+            }
+            for (File file : fileSet) {
                 Product sourceProduct = ProductIO.readProduct(file);
                 if (sourceProduct != null) {
-                    processSource(sourceProduct, spatialBinner);
+                    try {
+                        processSource(sourceProduct, spatialBinner);
+                    } finally {
+                        sourceProduct.dispose();
+                    }
                 } else {
                     getLogger().severe(String.format("Failed to read file '%s' (not a data product or reader missing)", file));
                 }
@@ -297,10 +304,12 @@ public class BinningOp extends Operator implements Output {
     private void processSource(Product sourceProduct, SpatialBinner spatialBinner) throws IOException {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
+        updateDateRangeUtc(sourceProduct);
         getLogger().info(String.format("Spatial binning of product '%s'...", sourceProduct.getName()));
         final long numObs = SpatialProductBinner.processProduct(sourceProduct, spatialBinner, binningContext.getSuperSampling(), ProgressMonitor.NULL);
         stopWatch.stop();
         getLogger().info(String.format("Spatial binning of product '%s' done, %d observations seen, took %s", sourceProduct.getName(), numObs, stopWatch));
+        sourceProductCount++;
     }
 
     private List<TemporalBin> doTemporalBinning(SortedMap<Long, List<SpatialBin>> spatialBinMap) throws IOException {
@@ -355,7 +364,12 @@ public class BinningOp extends Operator implements Output {
     private void writeNetcdfBinFile(File file, List<TemporalBin> temporalBins, ProductData.UTC startTime, ProductData.UTC stopTime) throws IOException {
         final BinWriter writer = new BinWriter(getLogger());
         try {
-            writer.write(file, temporalBins, binningContext, region, startTime, stopTime);
+            writer.write(file,
+                         temporalBins,
+                         binningContext,
+                         region,
+                         startTime != null ? startTime : minDateUtc,
+                         stopTime != null ? stopTime : maxDateUtc);
         } catch (InvalidRangeException e) {
             throw new IllegalArgumentException(e);
         }
@@ -364,39 +378,32 @@ public class BinningOp extends Operator implements Output {
     private ProductData.UTC getStartDateUtc(String parameterName) throws OperatorException {
         if (!StringUtils.isNullOrEmpty(startDate)) {
             return parseDateUtc(parameterName, startDate);
+        } else {
+            return null;
         }
-        ProductData.UTC startDateUtc = null;
-        for (Product sourceProduct : sourceProducts) {
-            if (sourceProduct.getStartTime() != null) {
-                if (startDateUtc == null
-                        || sourceProduct.getStartTime().getAsDate().before(startDateUtc.getAsDate())) {
-                    startDateUtc = sourceProduct.getStartTime();
-                }
-            }
-        }
-        if (startDateUtc == null) {
-            throw new OperatorException(String.format("Failed to determine '%s' from source products", parameterName));
-        }
-        return startDateUtc;
     }
 
     private ProductData.UTC getEndDateUtc(String parameterName) {
         if (!StringUtils.isNullOrEmpty(endDate)) {
             return parseDateUtc(parameterName, endDate);
+        } else {
+            return null;
         }
-        ProductData.UTC endDateUtc = null;
-        for (Product sourceProduct : sourceProducts) {
-            if (sourceProduct.getEndTime() != null) {
-                if (endDateUtc == null
-                        || sourceProduct.getEndTime().getAsDate().after(endDateUtc.getAsDate())) {
-                    endDateUtc = sourceProduct.getStartTime();
-                }
+    }
+
+    private void updateDateRangeUtc(Product sourceProduct) {
+        if (sourceProduct.getStartTime() != null) {
+            if (minDateUtc == null
+                    || sourceProduct.getStartTime().getAsDate().before(minDateUtc.getAsDate())) {
+                minDateUtc = sourceProduct.getStartTime();
             }
         }
-        if (endDateUtc == null) {
-            throw new OperatorException(String.format("Failed to determine '%s' from source products", parameterName));
+        if (sourceProduct.getEndTime() != null) {
+            if (maxDateUtc == null
+                    || sourceProduct.getEndTime().getAsDate().after(maxDateUtc.getAsDate())) {
+                maxDateUtc = sourceProduct.getStartTime();
+            }
         }
-        return endDateUtc;
     }
 
     private ProductData.UTC parseDateUtc(String name, String date) {

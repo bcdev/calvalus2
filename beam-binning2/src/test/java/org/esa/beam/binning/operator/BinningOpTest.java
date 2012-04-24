@@ -363,6 +363,105 @@ public class BinningOpTest {
         }
     }
 
+    /**
+     * Same as {@link #testGlobalBinning}, but this time via the 'gpt' command-line tool.
+     *
+     * @throws Exception if something goes badly wrong
+     * @see #testLocalBinning()
+     */
+    @Test
+    public void testGlobalBinningViaGPT_FilePattern() throws Exception {
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final File parameterFile = new File(getClass().getResource("BinningParamsGlobal_FilePattern.xml").toURI());
+        final File targetFile = getTestFile("output.dim");
+        final File sourceFile1 = getTestFile("obs1.dim");
+        final File sourceFile2 = getTestFile("obs2.dim");
+        final File sourceFile3 = getTestFile("obs3.dim");
+        final File sourceFile4 = getTestFile("obs4.dim");
+        final File sourceFile5 = getTestFile("obs5.dim");
+
+        try {
+            ProductIO.writeProduct(createSourceProduct(obs1), sourceFile1, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs2), sourceFile2, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs3), sourceFile3, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs4), sourceFile4, "BEAM-DIMAP", false);
+            ProductIO.writeProduct(createSourceProduct(obs5), sourceFile5, "BEAM-DIMAP", false);
+
+            GPT.run(new String[]{
+                    "Binning",
+                    "-p", parameterFile.getPath(),
+                    "-t", targetFile.getPath(),
+            });
+
+            assertTrue(targetFile.exists());
+
+            final Product targetProduct = ProductIO.readProduct(targetFile);
+            assertNotNull(targetProduct);
+            try {
+                assertGlobalBinningProductIsOk(targetProduct, targetFile, obs1, obs2, obs3, obs4, obs5);
+            } catch (IOException e) {
+                targetProduct.dispose();
+            }
+        } finally {
+            FileUtils.deleteTree(TESTDATA_DIR);
+        }
+    }
+
+
+    /**
+     * Same as {@link #testLocalBinning}, but this time via the 'gpt' command-line tool.
+     *
+     * @throws Exception if something goes badly wrong
+     * @see #testLocalBinning()
+     */
+    @Test
+    public void testLocalBinningViaGPT_FilePattern() throws Exception {
+
+        float obs1 = 0.2F;
+        float obs2 = 0.4F;
+        float obs3 = 0.6F;
+        float obs4 = 0.8F;
+        float obs5 = 1.0F;
+
+        final File parameterFile = new File(getClass().getResource("BinningParamsLocal_FilePattern.xml").toURI());
+        final String fileName = "output.dim";
+        final File targetFile = getTestFile(fileName);
+        final File sourceFile1 = getTestFile("obs1.dim");
+        final File sourceFile2 = getTestFile("obs2.dim");
+        final File sourceFile3 = getTestFile("obs3.dim");
+        final File sourceFile4 = getTestFile("obs4.dim");
+        final File sourceFile5 = getTestFile("obs5.dim");
+
+        ProductIO.writeProduct(createSourceProduct(obs1), sourceFile1, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs2), sourceFile2, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs3), sourceFile3, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs4), sourceFile4, "BEAM-DIMAP", false);
+        ProductIO.writeProduct(createSourceProduct(obs5), sourceFile5, "BEAM-DIMAP", false);
+
+        GPT.run(new String[]{
+                "Binning",
+                "-p", parameterFile.getPath(),
+                "-t", targetFile.getPath(),
+        });
+
+        assertTrue(targetFile.exists());
+
+        final Product targetProduct = ProductIO.readProduct(targetFile);
+        assertNotNull(targetProduct);
+        try {
+            assertLocalBinningProductIsOk(targetProduct, targetFile, obs1, obs2, obs3, obs4, obs5);
+        } catch (IOException e) {
+            targetProduct.dispose();
+        }
+    }
+
+
     private void assertGlobalBinningProductIsOk(Product targetProduct, File location, float obs1, float obs2, float obs3, float obs4, float obs5) throws IOException {
         assertTargetProductIsOk(targetProduct, location, obs1, obs2, obs3, obs4, obs5, 360, 180, 179, 87);
     }
