@@ -19,7 +19,6 @@ package org.esa.beam.binning.operator;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.binning.*;
-import org.esa.beam.binning.support.WildcardMatcher;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -38,6 +37,7 @@ import org.esa.beam.util.StopWatch;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.converters.JtsGeometryConverter;
 import org.esa.beam.util.io.FileUtils;
+import org.esa.beam.util.io.WildcardMatcher;
 import ucar.ma2.InvalidRangeException;
 
 import java.io.File;
