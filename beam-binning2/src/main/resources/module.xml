@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-binning2</symbolicName>
-    <version>0.1a</version>
+    <version>0.5.4</version>
     <name>Level-3 Binning Processor (GPF)</name>
 
     <description>
@@ -26,8 +26,10 @@
 
     <changelog>
         <![CDATA[
-        Changes in 0.1a:<br\>
-        [BEAM-xxx] yyy<br\>
+        Changes since initial version 0.5:<br\>
+        <ol>
+        <li>Introduced parameters 'sourceProductPaths' and 'outputBinnedData'</li>
+        </ol>
         ]]>
     </changelog>
 

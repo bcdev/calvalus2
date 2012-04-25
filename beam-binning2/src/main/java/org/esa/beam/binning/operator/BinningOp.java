@@ -85,7 +85,7 @@ todo - address the following BinningOp requirements (nf, 2012-03-09)
  * @author Thomas Storm
  */
 @OperatorMetadata(alias = "Binning",
-                  version = "0.5.3",
+                  version = "0.5.4",
                   authors = "Norman Fomferra, Marco Zühlke, Thomas Storm",
                   copyright = "(c) 2012 by Brockmann Consult GmbH",
                   description = "Performs spatial and temporal aggregation of pixel values into 'bin' cells")
@@ -119,8 +119,8 @@ public class BinningOp extends Operator implements Output {
                format = DATE_PATTERN)
     String endDate;
 
-    @Parameter(description = "If true, a SeaDAS-style, binned data NetCDF file is written in addition to the target product.\n" +
-            "The output file name will be <targetName>-bins.nc", defaultValue = "true")
+    @Parameter(description = "If true, a SeaDAS-style, binned data NetCDF file is written in addition to the\n" +
+            "target product. The output file name will be <target>-bins.nc", defaultValue = "true")
     boolean outputBinnedData;
 
     @Parameter(notNull = true,
