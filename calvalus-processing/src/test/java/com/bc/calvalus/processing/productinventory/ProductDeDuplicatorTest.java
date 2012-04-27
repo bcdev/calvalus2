@@ -19,9 +19,7 @@ package com.bc.calvalus.processing.productinventory;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,21 +50,23 @@ public class ProductDeDuplicatorTest {
     }
 
     public static void main(String[] args) throws IOException {
-        InputStream is = ProductDeDuplicatorTest.class.getResourceAsStream("inventory_frs_year.csv");
-        Reader reader = new InputStreamReader(is);
-        ProductInventory productInventory = ProductInventory.createInventory(reader);
-        List<ProductInventoryEntry> inventory = productInventory.getAll();
+        List<ProductInventoryEntry> l1b = load("inv_fr_l1b").getAll();
+        List<ProductInventoryEntry> amorgos = load("inv_fr_amo").getAll();
 
-        ProductDeDuplicator.printHistogram(inventory);
-        ProductDeDuplicator.sort(inventory);
-        ProductDeDuplicator.deduplicate(inventory);
-        ProductDeDuplicator.printHistogram(inventory);
-//        printInventory(inventory);
+        System.out.println("amorgos.size() = " + amorgos.size());
+        System.out.println("l1b.size() = " + l1b.size());
+        List<ProductInventoryEntry> missing = ProductDeDuplicator.missing(l1b, amorgos);
+        System.out.println("missing.size() = " + missing.size());
+//        printInventory(missing);
+    }
+
+    private static ProductInventory load(String name) throws IOException {
+        return ProductInventory.createInventory(new InputStreamReader(ProductDeDuplicatorTest.class.getResourceAsStream(name)));
     }
 
     private static void printInventory(List<ProductInventoryEntry> entries) {
         for (ProductInventoryEntry entry : entries) {
-            System.out.println(entry.toCSVString());
+            System.out.println(entry.getProductName() + "\t" + entry.toCSVString());
         }
     }
 

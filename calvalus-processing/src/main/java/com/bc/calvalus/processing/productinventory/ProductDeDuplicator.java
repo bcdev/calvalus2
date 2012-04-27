@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.productinventory;
 
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,18 +45,65 @@ public class ProductDeDuplicator {
         Collections.sort(inventory, new ProductInventoryEntryComparator());
     }
 
+    public static List<ProductInventoryEntry> missing(List<ProductInventoryEntry> src, List<ProductInventoryEntry> target) {
+        List<ProductInventoryEntry> missing = new ArrayList<ProductInventoryEntry>();
+        for (ProductInventoryEntry srcEntry : src) {
+            boolean found = false;
+            int processLength = srcEntry.getProcessLength();
+            int processStartLine = srcEntry.getProcessStartLine();
+
+            if (processLength != 0) {
+
+                int a0 = (processStartLine / 64) * 64;
+                int a1 = (processStartLine + processLength - 1 + 64 - 1) / 64 * 64;
+
+                long startMicros = getMJDMicros(srcEntry.getStartTime());
+                long endMicros = getMJDMicros(srcEntry.getStopTime());
+                long perLineMicros = (endMicros - startMicros) / (srcEntry.getLength() - 1);
+
+                long newStartTime = startMicros + a0 * perLineMicros;
+                for (ProductInventoryEntry e : target) {
+                    if (e.getProcessLength() != 0) {
+                        long targetStartMicros = getMJDMicros(e.getStartTime());
+                        if (targetStartMicros == newStartTime || targetStartMicros == startMicros) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    long newStopTime = startMicros + a1 * perLineMicros;
+                    for (ProductInventoryEntry e : target) {
+                        if (e.getProcessLength() != 0) {
+                            long targetStopMicros = getMJDMicros(e.getStopTime());
+                            if (targetStopMicros == newStopTime) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!found) {
+                    missing.add(srcEntry);
+                }
+            }
+        }
+        return missing;
+    }
+
     public static void deduplicate(List<ProductInventoryEntry> inventory) {
         long cursorMicros = 0;
         ProductInventoryEntry cursorEntry = null;
 
         for (ProductInventoryEntry entry : inventory) {
             long startMicros = getMJDMicros(entry.getStartTime());
+            long endMicros = getMJDMicros(entry.getStopTime());
             if (entry.getLength() <= 1 ||
                     !entry.getMessage().equalsIgnoreCase("Good") ||
-                    startMicros == 0) {
+                    startMicros == 0 ||
+                    endMicros == 0) {
                 entry.setProcessLength(0);
             } else {
-                long endMicros = getMJDMicros(entry.getStopTime());
                 if (cursorMicros == 0 || startMicros > cursorMicros) {
                     cursorMicros = endMicros;
                     cursorEntry = entry;
@@ -126,7 +174,7 @@ public class ProductDeDuplicator {
         public int getLinesToProcess() {
             return linesToProcess;
         }
-        
+
         public int getLinesDuplicated() {
             return linesTotal - linesToProcess;
         }
