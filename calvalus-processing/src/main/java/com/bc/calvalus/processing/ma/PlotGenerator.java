@@ -143,7 +143,7 @@ public class PlotGenerator {
         if (dataset.getItemCount(0) >= 2) {
             series++;
             double[] coefficients = Regression.getOLSRegression(dataset, 0);
-            if (coefficients[0] < coefficients[1]) {
+            if (domainBounds.getLowerBound() < domainBounds.getUpperBound()) {
                 XYDataset regressionData = DatasetUtilities.sampleFunction2D(new LineFunction2D(coefficients[0], coefficients[1]),
                                                                              domainBounds.getLowerBound(),
                                                                              domainBounds.getUpperBound(),
