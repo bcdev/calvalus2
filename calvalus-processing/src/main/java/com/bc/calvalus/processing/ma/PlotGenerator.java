@@ -143,14 +143,16 @@ public class PlotGenerator {
         if (dataset.getItemCount(0) >= 2) {
             series++;
             double[] coefficients = Regression.getOLSRegression(dataset, 0);
-            XYDataset regressionData = DatasetUtilities.sampleFunction2D(new LineFunction2D(coefficients[0], coefficients[1]),
-                                                                         domainBounds.getLowerBound(),
-                                                                         domainBounds.getUpperBound(),
-                                                                         2, "Regression");
-            plot.setDataset(series, regressionData);
-            XYLineAndShapeRenderer regressionRenderer = new XYLineAndShapeRenderer(true, false);
-            regressionRenderer.setSeriesPaint(0, Color.DARK_GRAY);
-            plot.setRenderer(series, regressionRenderer);
+            if (coefficients[0] < coefficients[1]) {
+                XYDataset regressionData = DatasetUtilities.sampleFunction2D(new LineFunction2D(coefficients[0], coefficients[1]),
+                                                                             domainBounds.getLowerBound(),
+                                                                             domainBounds.getUpperBound(),
+                                                                             2, "Regression");
+                plot.setDataset(series, regressionData);
+                XYLineAndShapeRenderer regressionRenderer = new XYLineAndShapeRenderer(true, false);
+                regressionRenderer.setSeriesPaint(0, Color.DARK_GRAY);
+                plot.setRenderer(series, regressionRenderer);
+            }
         }
 
         JFreeChart chart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
