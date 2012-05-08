@@ -38,6 +38,8 @@ class QLConfig {
     double[] v2;
     @Parameter
     String imageType;
+    @Parameter
+    String overlayURL;
 
     public static QLConfig get(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS);

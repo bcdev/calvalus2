@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.analysis;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
@@ -24,6 +25,7 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -44,7 +46,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +56,19 @@ import java.util.Map;
  * A mapper for generating quick-looks of products.
  */
 public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
+
+    static {
+        try {
+            // Make "hdfs:" a recognised URL protocol
+            URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
+        } catch (Throwable e) {
+            // ignore as it is most likely already set
+            String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
+                                               "This may not be a problem because it is most likely already set.",
+                                       e.getMessage());
+            CalvalusLogger.getLogger().fine(msg);
+        }
+    }
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
@@ -129,6 +146,12 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        collectionLayer.getChildren().add(0, landMask);
 //        collectionLayer.getChildren().add(1, coastlineMask);
 
+        if (qlConfig.overlayURL != null) {
+            InputStream inputStream = new URL(qlConfig.overlayURL).openStream();
+            BufferedImage bufferedImage = ImageIO.read(inputStream);
+            final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
+            collectionLayer.getChildren().add(0, overlayLayer);
+        }
         boolean useAlpha = useAlpha(qlConfig);
         int imageType = useAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
         BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(), imageType);
