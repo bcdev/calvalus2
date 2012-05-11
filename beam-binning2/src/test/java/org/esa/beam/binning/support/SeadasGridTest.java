@@ -65,12 +65,12 @@ public class SeadasGridTest {
         assertEquals(1, seadasGrid.getBinIndex(43L));
         assertEquals(3, seadasGrid.getBinIndex(45L));
 
-        assertEquals(6, seadasGrid.getRowIndex(0));
-        assertEquals(5, seadasGrid.getRowIndex(1));
-        assertEquals(4, seadasGrid.getRowIndex(2));
-        assertEquals(3, seadasGrid.getRowIndex(3));
-        assertEquals(2, seadasGrid.getRowIndex(4));
-        assertEquals(1, seadasGrid.getRowIndex(5));
+        assertEquals(6, seadasGrid.convertRowIndex(0));
+        assertEquals(5, seadasGrid.convertRowIndex(1));
+        assertEquals(4, seadasGrid.convertRowIndex(2));
+        assertEquals(3, seadasGrid.convertRowIndex(3));
+        assertEquals(2, seadasGrid.convertRowIndex(4));
+        assertEquals(1, seadasGrid.convertRowIndex(5));
     }
 
 }
