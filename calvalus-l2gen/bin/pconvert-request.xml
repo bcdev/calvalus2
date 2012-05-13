@@ -29,7 +29,7 @@
       <ows:Identifier>calvalus.output.dir</ows:Identifier> 
       <ows:Title>output directory</ows:Title> 
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-amorgos-ql/WesternEurope" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-amorgos-ql/WesternEurope" />
       </wps:Data>
     </wps:Input>
 
@@ -37,9 +37,9 @@
       <ows:Identifier>calvalus.input</ows:Identifier> 
       <ows:Title>MERIS L1B input</ows:Title> 
 <!--
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-geochildgen/WesternEurope/2009/01/01/MER_FRS_1PNUPA20090101_103537_000003822075_00137_35762_5797-WesternEurope.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-geochildgen/WesternEurope/2009/01/01/MER_FRS_1PNUPA20090101_103537_000003822075_00137_35762_5797-WesternEurope.N1" />
 -->
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-geochildgen/WesternEurope/2009/01/01" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-geochildgen/WesternEurope/2009/01/01" />
     </wps:Input>
 
     <wps:Input>

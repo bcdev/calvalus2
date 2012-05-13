@@ -37,7 +37,7 @@
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <ows:Title>output directory</ows:Title>
             <wps:Data>
-                <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-l2beam-99"/>
+                <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/meris-l2beam-99"/>
             </wps:Data>
         </wps:Input>
 
@@ -45,7 +45,7 @@
             <ows:Identifier>calvalus.input</ows:Identifier>
             <ows:Title>MERIS L1B input</ows:Title>
             <wps:Reference
-                    xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1"/>
+                    xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1"/>
         </wps:Input>
 
         <wps:Input>

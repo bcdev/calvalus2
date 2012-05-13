@@ -28,11 +28,11 @@
 
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050101_092244_000000392033_00265_14848_0001.seq" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050101_092244_000000392033_00265_14848_0001.seq" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050102_085122_000000252033_00279_14862_0001.seq" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-sdr/Africa/2005/L2_of_MER_FSG_1PNBCG20050102_085122_000000252033_00279_14862_0001.seq" />
     </wps:Input>
 
     <wps:Input>

@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  *
  * <pre>
  * Usage: TransferTool source destination format
- * Example: TransferTool ~/samples/MERIS-RR-2010-08 hdfs://cvmaster00:9000/data/transfer/MERIS-RR-2010-08 lineinterleaved
+ * Example: TransferTool ~/samples/MERIS-RR-2010-08 hdfs://master00:9000/data/transfer/MERIS-RR-2010-08 lineinterleaved
  * </pre>
  *
  * Supported formats: n1 (single block), lineinterleaved (default block size), sliced (into slices of block size)
@@ -143,7 +143,7 @@ public class TransferTool extends Configured implements Tool {
         } catch (ArrayIndexOutOfBoundsException ex) {
 
             System.err.println("usage: TransferTool <source> <destination> <format>");
-            System.err.println("example: TransferTool ~/samples/MERIS-RR-2010-08 hdfs://cvmaster00:9000/data/transfer/MERIS-RR-2010-08 lineinterleaved");
+            System.err.println("example: TransferTool ~/samples/MERIS-RR-2010-08 hdfs://master00:9000/data/transfer/MERIS-RR-2010-08 lineinterleaved");
             return 1;
         }
     }

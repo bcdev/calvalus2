@@ -35,74 +35,74 @@
 
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/11/MER_RR__1PRACR20040811_061121_000003272029_00220_12799_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/11/MER_RR__1PRACR20040811_061121_000003272029_00220_12799_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/04/MER_RR__1PRACR20040804_063109_000003122029_00120_12699_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/04/MER_RR__1PRACR20040804_063109_000003122029_00120_12699_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/07/MER_RR__1PRACR20040807_063709_000003122029_00163_12742_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/07/MER_RR__1PRACR20040807_063709_000003122029_00163_12742_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/05/MER_RR__1PRACR20040805_055954_000002942029_00134_12713_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/05/MER_RR__1PRACR20040805_055954_000002942029_00134_12713_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/08/MER_RR__1PRACR20040808_060552_000002952029_00177_12756_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/08/MER_RR__1PRACR20040808_060552_000002952029_00177_12756_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/17/MER_RR__1PRACR20040817_062357_000002942029_00306_12885_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/17/MER_RR__1PRACR20040817_062357_000002942029_00306_12885_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/04/MER_RR__1PRACR20040904_094247_000002852030_00065_13145_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/04/MER_RR__1PRACR20040904_094247_000002852030_00065_13145_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/09/MER_RR__1PRACR20040809_071508_000002842029_00192_12771_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/09/MER_RR__1PRACR20040809_071508_000002842029_00192_12771_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/10/MER_RR__1PRACR20040810_064340_000002802029_00206_12785_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/10/MER_RR__1PRACR20040810_064340_000002802029_00206_12785_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/29/MER_RR__1PRACR20040729_061949_000002762029_00034_12613_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/29/MER_RR__1PRACR20040729_061949_000002762029_00034_12613_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/05/MER_RR__1PRACR20040905_091116_000002722030_00079_13159_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/05/MER_RR__1PRACR20040905_091116_000002722030_00079_13159_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/04/MER_RR__1PRACR20040904_080210_000002632030_00064_13144_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/04/MER_RR__1PRACR20040904_080210_000002632030_00064_13144_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/30/MER_RR__1PRACR20040730_054848_000002432029_00048_12627_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/30/MER_RR__1PRACR20040730_054848_000002432029_00048_12627_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/22/MER_RR__1PRACR20040922_101926_000002452030_00323_13403_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/22/MER_RR__1PRACR20040922_101926_000002452030_00323_13403_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/06/MER_RR__1PRACR20040806_070959_000002342029_00149_12728_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/06/MER_RR__1PRACR20040806_070959_000002342029_00149_12728_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier> 
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/18/MER_RR__1PRACR20040818_073428_000002092029_00321_12900_0000.N1" /> 
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/18/MER_RR__1PRACR20040818_073428_000002092029_00321_12900_0000.N1" />
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.output.dir</ows:Identifier> 
       <ows:Title>output directory</ows:Title> 
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-l2gen-2" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/meris-l2gen-2" />
       </wps:Data>
     </wps:Input>
 

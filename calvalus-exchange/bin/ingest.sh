@@ -5,9 +5,9 @@
 #    echo "transfers products to HDFS"
 #    echo "usage  : $0 ( <source-dir> | <source-files> ) [-producttype=<productType>] [-revision=<revision>] [-replication=<replication>] [-blocksize=<blocksize>]"
 #    echo "example: $0 /hd3"
-#    echo "creates e.g. hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2010/11/17"
+#    echo "creates e.g. hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2010/11/17"
 #    echo "example: $0 /hd3 -producttype=MER_FRS_1P -revision=cc -replication=2"
-#    echo "creates e.g. hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/cc/2010/11/17"
+#    echo "creates e.g. hdfs://master00:9000/calvalus/eodata/MER_FRS_1P/cc/2010/11/17"
 #
 #    exit 1
 #fi

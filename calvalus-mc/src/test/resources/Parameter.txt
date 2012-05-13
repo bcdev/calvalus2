@@ -3,7 +3,7 @@
 -categorySorting=host;
 -start=2010-10-28T10:20:00.000Z;
 -stop=2010-10-28T14:00:00.000Z;
--logFile=C:/Users/bettina/temp/calvalus/hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20;
+-logFile=C:/Users/bettina/temp/calvalus/hadoop-hadoop-jobtracker-master00.log.2010-10-20;
 
 
  -categorySorting=default -start=2010-10-28T10:20:00.000Z -stop=2010-10-28T14:00:00.000Z

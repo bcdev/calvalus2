@@ -34,7 +34,7 @@ public class TestInventoryService implements InventoryService {
             if (!inputRegex.startsWith("/")) {
                 inputRegex = "/calvalus/eodata/" + inputRegex;
             }
-            inputPathes[i] = "hdfs://cvmaster00:9000" + inputRegex;
+            inputPathes[i] = "hdfs://master00:9000" + inputRegex;
         }
         return inputPathes;
     }
@@ -44,7 +44,7 @@ public class TestInventoryService implements InventoryService {
         if (!outputPath.startsWith("/")) {
             outputPath = "/calvalus/outputs/" + outputPath;
         }
-        return "hdfs://cvmaster00:9000" + outputPath;
+        return "hdfs://master00:9000" + outputPath;
     }
 
     @Override

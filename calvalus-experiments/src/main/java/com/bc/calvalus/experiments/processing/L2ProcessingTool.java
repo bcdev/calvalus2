@@ -21,10 +21,10 @@ import java.util.logging.Logger;
  * <p/>
  * Call with:
  * <pre>
- *    hadoop jar target/calvalus-experiments-0.3-SNAPSHOT-job.jar \
+ *    hadoop jar target/calvalus-experiments-0.4-SNAPSHOT-job.jar \
  *    com.bc.calvalus.experiments.processing.L2ProcessingTool \
- *    hdfs://cvmaster00:9000/input \
- *    hdfs://cvmaster00:9000/output \
+ *    hdfs://master00:9000/input \
+ *    hdfs://master00:9000/output \
  *    (n1|n3|sliced|lineinterleaved) \
  *    [ndvi|radiometry|c2r] [-splits=n] [-tileHeight=h]
  * </pre>
@@ -151,7 +151,7 @@ public class L2ProcessingTool extends Configured implements Tool {
         } catch (ArrayIndexOutOfBoundsException ex) {
 
             System.err.println("usage:   L2ProcessingTool <source> <destination> <format> [<operator>]");
-            System.err.println("example: L2ProcessingTool hdfs://cvmaster00:9000/data/experiments/n1/MERIS-RR-2010-08 hdfs://cvmaster00:9000/output/n1/MERIS-RR-2010-08 n1 ndvi");
+            System.err.println("example: L2ProcessingTool hdfs://master00:9000/data/experiments/n1/MERIS-RR-2010-08 hdfs://master00:9000/output/n1/MERIS-RR-2010-08 n1 ndvi");
             System.err.println("formats: n1, n3, sliced, lineinterleaved");
             System.err.println("operators: ndvi, radiometry");
             return 1;

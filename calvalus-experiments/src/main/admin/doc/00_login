@@ -1,4 +1,4 @@
-xterm -geometry 80x8+0+000 -e 'ssh hadoop@cvmaster00' &
+xterm -geometry 80x8+0+000 -e 'ssh hadoop@master00' &
 xterm -geometry 80x8+0+160 -e 'ssh hadoop@cvslave00' &
 xterm -geometry 80x8+0+320 -e 'ssh hadoop@cvslave01' &
 xterm -geometry 80x8+0+480 -e 'ssh hadoop@cvslave02' &

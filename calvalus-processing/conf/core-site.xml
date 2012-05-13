@@ -6,6 +6,6 @@
 <configuration>
   <property>
     <name>fs.default.name</name>
-    <value>hdfs://cvmaster00:9000</value>
+    <value>hdfs://master00:9000</value>
   </property>
 </configuration>

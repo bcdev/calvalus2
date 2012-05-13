@@ -8,21 +8,21 @@ cd /home/boe/20101210-MTR
 less /home/boe/20101210-MTR/l3tool-request-1.properties
 
 # remove output dir
-hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs
-hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -rmr hdfs://cvmaster00:9000/calvalus/outputs/meris-c2rl3-1/
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://master00:9000/calvalus/outputs
+hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -rmr hdfs://master00:9000/calvalus/outputs/meris-c2rl3-1/
 rm -r ~/20101210-MTR/meris-c2rl3-1
 
 # submit request
 /home/boe/modules/calvalus/calvalus-experiments/bin/runl3tool.sh /home/boe/20101210-MTR/l3tool-request-1.properties
 
 # show map-reduce engine
-firefox http://cvmaster00:50030/
+firefox http://master00:50030/
 # navigate to "Running Jobs", select it
 # select running map task, select its output, show command line, show process trace
 # navigate back to list of map tasks
 
 # show output directory
-hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs/meris-c2rl3-1/
+hadoop  --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://master00:9000/calvalus/outputs/meris-c2rl3-1/
 
 # -----
 

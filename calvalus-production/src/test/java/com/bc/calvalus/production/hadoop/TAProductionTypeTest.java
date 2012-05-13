@@ -59,7 +59,7 @@ public class TAProductionTypeTest {
         L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) item1.getItems()[0];
         assertEquals(date1, l3WorkflowItem.getMinDate());
         assertEquals(date2, l3WorkflowItem.getMaxDate());
-        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
 
         assertTrue(item1.getItems()[1] instanceof TAWorkflowItem);
         TAWorkflowItem taWorkflowItem = (TAWorkflowItem) item1.getItems()[1];
@@ -67,7 +67,7 @@ public class TAProductionTypeTest {
         assertEquals(date2, taWorkflowItem.getMaxDate());
         assertEquals(l3WorkflowItem.getOutputDir(), taWorkflowItem.getInputDir());
         assertFalse(l3WorkflowItem.getOutputDir().equals(taWorkflowItem.getOutputDir()));
-        assertEquals(true, taWorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true, taWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
     }
 
 

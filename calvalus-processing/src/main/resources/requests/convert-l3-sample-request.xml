@@ -13,17 +13,17 @@
     <wps:Input>
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/l3-netcdf" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/l3-netcdf" />
       </wps:Data>
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-01" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-01" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-11" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/lc-sr/Africa/2009/10d-2009-01-11" />
     </wps:Input>
 
     <wps:Input>

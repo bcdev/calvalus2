@@ -77,9 +77,9 @@ public class PlotterConfigurator {
         String input = in.next();
         final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
         if (input.equals("default")) {
-            input = userHomeTemp + "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-28";
+            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.log.2010-10-28";
         } else if (input.equals("errors")) {
-            input = userHomeTemp + "hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20";
+            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.log.2010-10-20";
         }
         inputFile = input;
     }

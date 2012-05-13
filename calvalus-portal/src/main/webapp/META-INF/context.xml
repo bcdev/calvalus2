@@ -19,11 +19,11 @@
                override="true"/>
 
     <Parameter name="calvalus.hadoop.fs.default.name"
-               value="hdfs://cvmaster00:9000"
+               value="hdfs://master00:9000"
             override="true"/>
 
     <Parameter name="calvalus.hadoop.mapred.job.tracker"
-               value="cvmaster00:9001"
+               value="master00:9001"
             override="true"/>
     -->
 </Context>

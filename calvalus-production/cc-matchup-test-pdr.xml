@@ -111,7 +111,7 @@
                     <parameters>
 
                         <recordSourceSpiClassName>com.bc.calvalus.processing.ma.CsvRecordSource$Spi</recordSourceSpiClassName>
-                        <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/home/norman/cc-matchup-test-insitu.csv</recordSourceUrl>
+                        <recordSourceUrl>hdfs://master00:9000/calvalus/home/norman/cc-matchup-test-insitu.csv</recordSourceUrl>
                         <outputGroupName>SITE</outputGroupName>
 
                         <copyInput>true</copyInput>

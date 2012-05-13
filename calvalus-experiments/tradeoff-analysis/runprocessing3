@@ -4,8 +4,8 @@ if [ "$1" == "" -o "$2" == "" ]
 then
     echo "processes products with MapReduce"
     echo "usage  : $0 <source-url> <format> <operator>"
-    echo "example: $0 hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08 lineinterleaved"
-    echo "creates dir hdfs://cvmaster00:9000/output/lineinterleaved/MERIS-RR-2010-08/*"
+    echo "example: $0 hdfs://master00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08 lineinterleaved"
+    echo "creates dir hdfs://master00:9000/output/lineinterleaved/MERIS-RR-2010-08/*"
     exit 1
 fi
 

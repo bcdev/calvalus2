@@ -29,39 +29,39 @@
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <ows:Title>output directory</ows:Title>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-mz" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/meris-level3-mz" />
       </wps:Data>
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_025842_000026382028_00333_12411_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_025842_000026382028_00333_12411_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_043918_000026382028_00334_12412_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_043918_000026382028_00334_12412_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_061955_000026382028_00335_12413_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_061955_000026382028_00335_12413_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_080031_000026382028_00336_12414_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_080031_000026382028_00336_12414_0000.N1" />
     </wps:Input>
     <wps:Input>
       <ows:Identifier>calvalus.input</ows:Identifier>
       <ows:Title>MERIS L1B input</ows:Title>
-      <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_094107_000026382028_00337_12415_0000.N1" />
+      <wps:Reference xlink:href="hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_094107_000026382028_00337_12415_0000.N1" />
     </wps:Input>
 
       <wps:Input>

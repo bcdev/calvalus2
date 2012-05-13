@@ -41,7 +41,7 @@ public class ReportGeneratorTest {
         configuration.set(JobConfigNames.CALVALUS_MA_PARAMETERS, "" +
                 "<parameters>\n" +
                 "    <recordSourceSpiClassName>com.bc.calvalus.processing.ma.CsvRecordSource$Spi</recordSourceSpiClassName>\n" +
-                "    <recordSourceUrl>hdfs://cvmaster00:9000/calvalus/home/norman/cc-matchup-test-insitu.csv</recordSourceUrl>\n" +
+                "    <recordSourceUrl>hdfs://master00:9000/calvalus/home/norman/cc-matchup-test-insitu.csv</recordSourceUrl>\n" +
                 "    <outputGroupName>SITE</outputGroupName>\n" +
                 "    <copyInput>true</copyInput>\n" +
                 "    <goodPixelExpression>!l2_flags.CLOUD</goodPixelExpression>\n" +
@@ -51,7 +51,7 @@ public class ReportGeneratorTest {
                 "    <maxTimeDifference>5.0</maxTimeDifference>\n" +
                 "</parameters>");
         configuration.set(JobConfigNames.CALVALUS_BEAM_BUNDLE, "beam-4.10-SNAPSHOT" );
-        configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-0.3-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-0.4-SNAPSHOT" );
         configuration.set(JobConfigNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.2-SNAPSHOT" );
         configuration.set(JobConfigNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W" );
                 configuration.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "" +

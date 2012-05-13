@@ -14,23 +14,23 @@ gnome-open /home/boe/modules/seadas-6.1
 emacs -nw l2gen-request.xml
 
 # remove output dir
-hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs
-hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -rmr hdfs://cvmaster00:9000/calvalus/outputs/meris-l2gen-2/
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://master00:9000/calvalus/outputs
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -rmr hdfs://master00:9000/calvalus/outputs/meris-l2gen-2/
 rm -r ~/20101210-MTR/meris-l2gen-2
 
 # submit request
 /home/boe/modules/calvalus/calvalus-experiments/bin/submitexejob.sh /home/boe/20101210-MTR/l2gen-request-2.xml
 
 # show map-reduce engine
-firefox http://cvmaster00:50030/
+firefox http://master00:50030/
 # navigate to "Running Jobs", select it
 # select running map task, select its output, show command line, show process trace
 # navigate back to list of map tasks
 
 # show output directory, copy result
-hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://cvmaster00:9000/calvalus/outputs/meris-l2gen-2/M*
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf fs -ls hdfs://master00:9000/calvalus/outputs/meris-l2gen-2/M*
 mkdir -p ~/20101210-MTR/meris-l2gen-2
-hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf  fs -cp hdfs://cvmaster00:9000/calvalus/outputs/meris-l2gen-2/M* file:///home/boe/20101210-MTR/meris-l2gen-2/
+hadoop --config /home/boe/modules/calvalus/calvalus-experiments/src/main/admin/conf  fs -cp hdfs://master00:9000/calvalus/outputs/meris-l2gen-2/M* file:///home/boe/20101210-MTR/meris-l2gen-2/
 
 # visualise result
 /home/boe/modules/beam/target/beam-bin.dir/bin/visat-d.sh /home/boe/20101210-MTR/meris-l2gen-2/M*

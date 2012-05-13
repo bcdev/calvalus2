@@ -40,7 +40,7 @@ public class WpsConfigTest {
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
         assertNotNull(requestInputPaths);
         assertEquals(1, requestInputPaths.length);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[0]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[0]);
     }
 
     @Test
@@ -49,9 +49,9 @@ public class WpsConfigTest {
         String[] requestInputPaths = wpsConfig.getRequestInputPaths();
         assertNotNull(requestInputPaths);
         assertEquals(3, requestInputPaths.length);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[0]);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[1]);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[2]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[0]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/08/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[1]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/09/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", requestInputPaths[2]);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class WpsConfigTest {
         WpsConfig wpsConfig = createFromResource("radiometry-request.xml");
         String requestOutputDir = wpsConfig.getRequestOutputDir();
         assertNotNull(requestOutputDir);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/outputs/meris-l2beam-99", requestOutputDir);
+        assertEquals("hdfs://master00:9000/calvalus/outputs/meris-l2beam-99", requestOutputDir);
     }
 
     @Test

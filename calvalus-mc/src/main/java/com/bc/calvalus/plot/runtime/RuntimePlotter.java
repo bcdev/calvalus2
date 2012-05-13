@@ -28,7 +28,7 @@ import java.util.List;
  * TODO add API doc
  *
  * program arguments:
- * C:\Users\bettina\temp\calvalus\hadoop-hadoop-jobtracker-cvmaster00.log.2010-10-20 -start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z -category=host -colour=type
+ * C:\Users\bettina\temp\calvalus\hadoop-hadoop-jobtracker-master00.log.2010-10-20 -start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z -category=host -colour=type
  */
 public class RuntimePlotter {
 

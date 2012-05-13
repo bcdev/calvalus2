@@ -94,7 +94,7 @@ hadoop fs -get <xsl:value-of select="$calvalus.input" /><xsl:text> </xsl:text><x
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
           select="$calvalus.input.day" /> AUX_FRA_AX
-hadoop fs -get hdfs://cvmaster00:9000/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/<xsl:value-of
+hadoop fs -get hdfs://master00:9000/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/<xsl:value-of
           select="$calvalus.input.year" />/AUX_FRA_AXVFOS<xsl:value-of
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
@@ -106,7 +106,7 @@ hadoop fs -get hdfs://cvmaster00:9000/calvalus/auxiliary/amorgos-3.0/AUX_FRA_AX/
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of
           select="$calvalus.input.day" /> DOR_VOR_AX
-hadoop fs -get hdfs://cvmaster00:9000/calvalus/auxiliary/amorgos-3.0/DOR_VOR_AX/<xsl:value-of
+hadoop fs -get hdfs://master00:9000/calvalus/auxiliary/amorgos-3.0/DOR_VOR_AX/<xsl:value-of
           select="$calvalus.input.year" />/DOR_VOR_AXVF-P<xsl:value-of
           select="$calvalus.input.year" /><xsl:value-of
           select="$calvalus.input.month" /><xsl:value-of

@@ -5,7 +5,7 @@ then
     echo "transfers products to HDFS"
     echo "usage  : $0 <source-dir> <format>"
     echo "example: $0 /data/hadoop/samples/MERIS-RR-2010-08 lineinterleaved"
-    echo "creates dir hdfs://cvmaster00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08/*"
+    echo "creates dir hdfs://master00:9000/data/experiments/lineinterleaved/MERIS-RR-2010-08/*"
     exit 1
 fi
 
@@ -16,7 +16,7 @@ jobJar=${baseDir}/target/calvalus-experiments-0.1-SNAPSHOT-job.jar
 sourceDir=$1
 format=$2
 sourceName=`basename ${sourceDir}`
-targetUrl=hdfs://cvmaster00:9000/data/experiments/${format}/${sourceName}
+targetUrl=hdfs://master00:9000/data/experiments/${format}/${sourceName}
 now=`date '+%Y-%m-%dT%H:%M:%S'`
 
 hadoop --config ${configDir} fs -rmr ${targetUrl}

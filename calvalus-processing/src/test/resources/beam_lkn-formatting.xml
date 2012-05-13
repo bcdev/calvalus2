@@ -13,7 +13,7 @@
         <ows:Identifier>calvalus.output.dir</ows:Identifier>
         <ows:Title>output directory</ows:Title>
         <wps:Data>
-          <wps:Reference xlink:href="hdfs://cvmaster00:9000/calvalus/outputs/meris-level3-waqs-2009-06-01" />
+          <wps:Reference xlink:href="hdfs://master00:9000/calvalus/outputs/meris-level3-waqs-2009-06-01" />
         </wps:Data>
       </wps:Input>
       <wps:Input>

@@ -34,8 +34,8 @@ public class WpsProductionRequestConverterTest {
         assertTrue(inputValue.contains(","));
         String[] splits = inputValue.split(",");
         assertEquals(2, splits.length);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", splits[0]);
-        assertEquals("hdfs://cvmaster00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_021806_000026382028_00332_12410_0000.N1", splits[1]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1", splits[0]);
+        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_021806_000026382028_00332_12410_0000.N1", splits[1]);
 
         assertTrue(parameters.containsKey("calvalus.l2.parameters"));
         String l2Parameters = parameters.get("calvalus.l2.parameters");
