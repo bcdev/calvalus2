@@ -21,7 +21,6 @@ import com.bc.ceres.swing.binding.BindingContext;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 
 /**
  * The model responsible for managing the binning parameters.
@@ -30,9 +29,7 @@ import java.io.IOException;
  */
 interface BinningModel {
 
-    String PROPERTY_KEY_ENABLE = "enable";
     String PROPERTY_KEY_SOURCE_PRODUCTS = "sourceProducts";
-    String PROPERTY_KEY_CRS = "crs";
     String PROPERTY_KEY_VARIABLE_CONFIGS = "variableConfigs";
     String PROPERTY_KEY_REGION = "region";
     String PROPERTY_KEY_COMPUTE_REGION = "compute";
@@ -47,19 +44,18 @@ interface BinningModel {
 
     /**
      * @return The source products of this binning operation, never <code>null</code>.
-     * @throws IOException if some product cannot be read.
      */
     Product[] getSourceProducts();
 
     /**
      * @return The variable configurations.
      */
-    BinningParametersPanel.VariableConfig[] getVariableConfigurations();
+    VariableConfig[] getVariableConfigurations();
 
     /**
      * @return The selected target region.
      */
-    Region getRegion();
+    String getRegion();
 
     /**
      * @return the expression good pixels in the target product need to comply with.

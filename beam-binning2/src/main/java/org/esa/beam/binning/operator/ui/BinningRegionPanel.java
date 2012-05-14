@@ -51,7 +51,7 @@ class BinningRegionPanel extends JPanel {
         layout.setTableFill(TableLayout.Fill.BOTH);
         setLayout(layout);
 
-        final JPanel boundsInputPanel = new BoundsInputPanel(bindingContext, BinningModel.PROPERTY_KEY_ENABLE).createBoundsInputPanel(false);
+        final JPanel boundsInputPanel = new BoundsInputPanel(bindingContext, BinningModel.PROPERTY_KEY_REGION).createBoundsInputPanel(false);
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
@@ -61,7 +61,7 @@ class BinningRegionPanel extends JPanel {
 
         bindingContext.bind(BinningModel.PROPERTY_KEY_COMPUTE_REGION, new RadioButtonAdapter(computeOption));
         bindingContext.bind(BinningModel.PROPERTY_KEY_GLOBAL, new RadioButtonAdapter(globalOption));
-        bindingContext.bind(BinningModel.PROPERTY_KEY_ENABLE, new RadioButtonAdapter(regionOption));
+        bindingContext.bind(BinningModel.PROPERTY_KEY_REGION, new RadioButtonAdapter(regionOption));
 
         buttonGroup.add(computeOption);
         buttonGroup.add(globalOption);

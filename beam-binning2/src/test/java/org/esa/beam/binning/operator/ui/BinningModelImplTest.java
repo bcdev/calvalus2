@@ -38,20 +38,20 @@ public class BinningModelImplTest {
         binningModel.setProperty("key2", new Integer[]{10, 20, 30});
 
         assertArrayEquals(new Product[0], binningModel.getSourceProducts());
-        assertArrayEquals(new Float[]{2.0f, 3.0f}, (Float[])binningModel.getProperty("key"));
-        assertArrayEquals(new Integer[]{10, 20, 30}, (Integer[]) binningModel.getProperty("key2"));
+        assertArrayEquals(new Float[]{2.0f, 3.0f}, (Float[])binningModel.getPropertyValue("key"));
+        assertArrayEquals(new Integer[]{10, 20, 30}, (Integer[]) binningModel.getPropertyValue("key2"));
     }
 
     @Test
     public void testVariableConfigurationProperty() throws Exception {
         final BinningModel binningModel = new BinningModelImpl();
-        assertArrayEquals(new BinningParametersPanel.VariableConfig[0], binningModel.getVariableConfigurations());
+        assertArrayEquals(new VariableConfig[0], binningModel.getVariableConfigurations());
 
-        final BinningParametersPanel.VariableConfig variableConfig = new BinningParametersPanel.VariableConfig("name", "name", null, 0.1, 0.2);
+        final VariableConfig variableConfig = new VariableConfig("name", "name", null, 0.1, 0.2);
         binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS,
-                                 new BinningParametersPanel.VariableConfig[]{variableConfig});
+                                 new VariableConfig[]{variableConfig});
 
-        assertArrayEquals(new BinningParametersPanel.VariableConfig[]{variableConfig}, binningModel.getVariableConfigurations());
+        assertArrayEquals(new VariableConfig[]{variableConfig}, binningModel.getVariableConfigurations());
     }
 
     @Test

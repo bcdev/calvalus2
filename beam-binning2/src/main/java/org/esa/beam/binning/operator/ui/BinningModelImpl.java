@@ -52,9 +52,9 @@ class BinningModelImpl implements BinningModel {
         propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_SOUTH_BOUND, Float.class));
         propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_X, Float.class));
         propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_Y, Float.class));
-        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_ENABLE, Boolean.class));
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_GLOBAL, Boolean.class));
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_COMPUTE_REGION, Boolean.class));
+        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_REGION, Boolean.class));
         propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_EXPRESSION, String.class));
         propertySet.setDefaultValues();
     }
@@ -67,8 +67,8 @@ class BinningModelImpl implements BinningModel {
 
     @Override
     public Product[] getSourceProducts() {
-        final File[] files = getProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
-        if(files == null) {
+        final File[] files = getPropertyValue(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
+        if (files == null) {
             return new Product[0];
         }
         List<Product> products = new ArrayList<Product>();
@@ -83,30 +83,37 @@ class BinningModelImpl implements BinningModel {
     }
 
     @Override
-    public BinningParametersPanel.VariableConfig[] getVariableConfigurations() {
-        BinningParametersPanel.VariableConfig[] variableConfigs = getProperty(PROPERTY_KEY_VARIABLE_CONFIGS);
-        if(variableConfigs == null) {
-            variableConfigs = new BinningParametersPanel.VariableConfig[0];
+    public VariableConfig[] getVariableConfigurations() {
+        VariableConfig[] variableConfigs = getPropertyValue(PROPERTY_KEY_VARIABLE_CONFIGS);
+        if (variableConfigs == null) {
+            variableConfigs = new VariableConfig[0];
         }
         return variableConfigs;
     }
 
     @Override
-    public Region getRegion() {
-        final Region wkt = Region.WKT;
-        wkt.setWkt("");
-        return wkt;
+    public String getRegion() {
+        if (getPropertyValue(PROPERTY_KEY_GLOBAL) != null && (Boolean) getPropertyValue(PROPERTY_KEY_GLOBAL)) {
+            return null;
+        } else if (getPropertyValue(PROPERTY_KEY_COMPUTE_REGION) != null && (Boolean) getPropertyValue(PROPERTY_KEY_COMPUTE_REGION)) {
+            // todo - compute input region from properties
+            return "WKT[...]";
+        } else if (getPropertyValue(PROPERTY_KEY_REGION) != null && (Boolean) getPropertyValue(PROPERTY_KEY_REGION)) {
+            // todo - create WKT from input properties
+            return "WKT[...]";
+        }
+        throw new IllegalStateException("Cannot come here");
     }
 
     @Override
     public String getValidExpression() {
-        return getProperty(PROPERTY_KEY_EXPRESSION);
+        return getPropertyValue(PROPERTY_KEY_EXPRESSION);
     }
 
     @Override
     public void setProperty(String key, Object value) throws ValidationException {
         final PropertyDescriptor descriptor;
-        if(value == null) {
+        if (value == null) {
             descriptor = new PropertyDescriptor(key, Object.class);
         } else {
             descriptor = new PropertyDescriptor(key, value.getClass());
@@ -114,9 +121,9 @@ class BinningModelImpl implements BinningModel {
         final Property property = new Property(descriptor, new DefaultPropertyAccessor());
         propertySet.addProperty(property);
         property.setValue(value);
-        // todo -- remove this lines
-        if(value != null && value.getClass().isArray()) {
-            for(Object _value : (Object[])value) {
+        // todo -- replace by debug-level logging
+        if (value != null && value.getClass().isArray()) {
+            for (Object _value : (Object[]) value) {
                 System.out.println("set property: 'key = " + key + ", value = " + _value + "'.");
             }
         } else {
@@ -131,17 +138,17 @@ class BinningModelImpl implements BinningModel {
 
     @Override
     public BindingContext getBindingContext() {
-        if(bindingContext == null) {
+        if (bindingContext == null) {
             bindingContext = new BindingContext(propertySet);
         }
         return bindingContext;
     }
 
     @SuppressWarnings("unchecked")
-    <T> T getProperty(String key) {
+    <T> T getPropertyValue(String key) {
         final Property property = propertySet.getProperty(key);
-        if(property != null) {
-            return (T)property.getValue();
+        if (property != null) {
+            return (T) property.getValue();
         }
         return null;
     }

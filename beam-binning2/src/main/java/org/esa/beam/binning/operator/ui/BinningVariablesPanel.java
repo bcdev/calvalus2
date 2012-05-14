@@ -17,19 +17,20 @@
 package org.esa.beam.binning.operator.ui;
 
 import com.bc.ceres.binding.ValidationException;
-import com.bc.ceres.swing.TableLayout;
-import org.esa.beam.binning.AggregatorDescriptor;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.product.ProductExpressionPane;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -40,26 +41,25 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
- * The panel in the binning operator UI which allows for specifying the binning configuration.
+ * The panel in the binning operator UI which allows for specifying the configuration of binning variables.
  *
  * @author Olaf Danne
  * @author Thomas Storm
  */
-class BinningParametersPanel extends JPanel {
+class BinningVariablesPanel extends JPanel {
 
     private final AppContext appContext;
     private final BinningModel binningModel;
     private VariableConfigTable bandsTable;
 
-    BinningParametersPanel(AppContext appContext, BinningModel binningModel) {
+    BinningVariablesPanel(AppContext appContext, BinningModel binningModel) {
         this.appContext = appContext;
         this.binningModel = binningModel;
-        final TableLayout layout = new TableLayout(1);
-        layout.setTableFill(TableLayout.Fill.BOTH);
-        setLayout(layout);
-        final JPanel bandsPanel = createBandsPanel();
-        add(bandsPanel);
-        add(createValidExpressionPanel());
+        setLayout(new BorderLayout());
+        add(createBandsPanel(), BorderLayout.CENTER);
+        add(createValidExpressionPanel(), BorderLayout.SOUTH);
+//        add(createTemporalFilterPanel());
+//        add(createSuperSamplingPanel());
     }
 
     private JPanel createBandsPanel() {
@@ -153,6 +153,32 @@ class BinningParametersPanel extends JPanel {
         return validExpressionPanel;
     }
 
+    private Component createTemporalFilterPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("Temporal Filter");
+        JRadioButton noFilter = new JRadioButton("No filter");
+        JRadioButton filter = new JRadioButton("By date range");
+        JLabel startDateLabel = new JLabel("    Start date:");
+        JLabel endDateLabel = new JLabel("    End date:");
+        JTextField startDateField = new JTextField();
+        JTextField endDateField = new JTextField();
+
+        GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+
+        GridBagUtils.addToPanel(panel, label, gbc, "");
+        GridBagUtils.addToPanel(panel, noFilter, gbc, "gridy=1");
+        GridBagUtils.addToPanel(panel, filter, gbc, "gridy=2");
+        GridBagUtils.addToPanel(panel, startDateLabel, gbc, "gridy=3");
+        GridBagUtils.addToPanel(panel, startDateField, gbc, "gridx=1, gridy=3");
+        GridBagUtils.addToPanel(panel, endDateLabel, gbc, "gridy=4");
+        GridBagUtils.addToPanel(panel, endDateField, gbc, "gridx=1, gridy=4");
+        return panel;
+    }
+
+    private Component createSuperSamplingPanel() {
+        return new JPanel();
+    }
+
     private boolean hasSourceProducts() {
         return binningModel.getSourceProducts().length > 0;
     }
@@ -173,31 +199,4 @@ class BinningParametersPanel extends JPanel {
         return null;
     }
 
-    public static class VariableConfig {
-
-        public final String name;
-        public final String expression;
-        public final AggregatorDescriptor aggregator;
-        public final Double weight;
-        public final Double fillValue;
-
-        public VariableConfig(String name, String expression, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
-            this.expression = expression;
-            this.fillValue = fillValue;
-            this.weight = weight;
-            this.aggregator = aggregator;
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return "VariableConfig{" +
-                   "aggregator=" + aggregator +
-                   ", name='" + name + '\'' +
-                   ", expression='" + expression + '\'' +
-                   ", weight=" + weight +
-                   ", fillValue=" + fillValue +
-                   '}';
-        }
-    }
 }

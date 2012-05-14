@@ -273,12 +273,12 @@ class VariableConfigTable {
 
         @Override
         public void tableChanged(TableModelEvent event) {
-            final BinningParametersPanel.VariableConfig[] variableConfigs = new BinningParametersPanel.VariableConfig[bandsTable.getRows().length];
+            final VariableConfig[] variableConfigs = new VariableConfig[bandsTable.getRows().length];
             final Row[] rows = bandsTable.getRows();
             for (int i = 0; i < rows.length; i++) {
                 final Row row = rows[i];
                 final AggregatorDescriptor aggregatorDescriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName);
-                variableConfigs[i] = new BinningParametersPanel.VariableConfig(row.bandName,
+                variableConfigs[i] = new VariableConfig(row.bandName,
                                                                                row.expression,
                                                                                aggregatorDescriptor,
                                                                                row.weightCoefficient,

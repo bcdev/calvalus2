@@ -16,11 +16,13 @@
 
 package org.esa.beam.binning.operator.ui;
 
+import org.esa.beam.binning.operator.BinningOp;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.ui.AppContext;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -55,7 +57,10 @@ public class BinningDialog extends SingleTargetProductDialog {
 
     @Override
     protected Product createTargetProduct() throws Exception {
-        final Map<String, Object> parameters = null; // todo - replace by getting parameters from model
+        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new BinningOp.Spi());
+
+        final Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("region", model.getRegion());
         return GPF.createProduct("Binning", parameters, model.getSourceProducts());
     }
 

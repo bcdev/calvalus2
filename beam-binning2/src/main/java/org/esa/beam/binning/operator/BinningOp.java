@@ -94,7 +94,7 @@ public class BinningOp extends Operator implements Output {
     public static final String DATE_PATTERN = "yyyy-MM-dd";
 
     @SourceProducts(description = "The source products to be binned. Must be all of the same structure. " +
-            "If not given, the parameter 'filePatterns' must be provided.")
+            "If not given, the parameter 'sourceProductPaths' must be provided.")
     Product[] sourceProducts;
 
     @TargetProduct
