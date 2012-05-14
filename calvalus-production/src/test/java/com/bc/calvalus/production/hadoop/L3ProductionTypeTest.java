@@ -63,11 +63,11 @@ public class L3ProductionTypeTest {
         L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) items[0];
         assertEquals(date1, l3WorkflowItem.getMinDate());
         assertEquals(date2, l3WorkflowItem.getMaxDate());
-        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
 
         L3FormatWorkflowItem l3formatWorkflowItem = (L3FormatWorkflowItem) items[1];
-        assertEquals(true, l3formatWorkflowItem.getInputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
-        assertEquals(true, l3formatWorkflowItem.getOutputDir().startsWith("hdfs://cvmaster00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true, l3formatWorkflowItem.getInputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true, l3formatWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
     }
 
 
