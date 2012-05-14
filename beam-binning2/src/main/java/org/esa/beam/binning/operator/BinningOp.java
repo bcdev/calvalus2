@@ -194,7 +194,7 @@ public class BinningOp extends Operator implements Output {
     @Override
     public void initialize() throws OperatorException {
         if (sourceProducts == null && (sourceProductPaths == null || sourceProductPaths.length == 0)) {
-            throw new OperatorException("Either source products must be given or parameter 'filePatterns' must be specified");
+            throw new OperatorException("Either source products must be given or parameter 'sourceProductPaths' must be specified");
         }
         if (binningConfig == null) {
             throw new OperatorException("Missing operator parameter 'binningConfig'");
@@ -212,7 +212,6 @@ public class BinningOp extends Operator implements Output {
             throw new OperatorException("Missing operator parameter 'formatterConfig.outputFile'");
         }
 
-
         ProductData.UTC startDateUtc = getStartDateUtc("startDate");
         ProductData.UTC endDateUtc = getEndDateUtc("endDate");
 
@@ -226,22 +225,24 @@ public class BinningOp extends Operator implements Output {
         try {
             // Step 1: Spatial binning - creates time-series of spatial bins for each bin ID ordered by ID. The tree map structure is <ID, time-series>
             SortedMap<Long, List<SpatialBin>> spatialBinMap = doSpatialBinning();
-            // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
-            List<TemporalBin> temporalBins = doTemporalBinning(spatialBinMap);
-            // Step 3: Formatting
-            writeOutput(temporalBins, startDateUtc, endDateUtc);
-
-            // TODO - Check efficiency of interface 'org.esa.beam.framework.gpf.experimental.Output'  (nf, 2012-03-02)
-            // actually, the following line of code would be sufficient, but then, the
-            // 'Output' interface implemented by this operator has no effect, because it already has a
-            // 'ProductReader' instance set. The overall concept of 'Output' is not fully thought-out!
-            //
-            // this.targetProduct = readOutput();
-            //
-            // This is why I have to do the following
-            Product writtenProduct = readOutput();
-            this.targetProduct = copyProduct(writtenProduct);
-
+            if (!spatialBinMap.isEmpty()) {
+                // Step 2: Temporal binning - creates a list of temporal bins, sorted by bin ID
+                List<TemporalBin> temporalBins = doTemporalBinning(spatialBinMap);
+                // Step 3: Formatting
+                writeOutput(temporalBins, startDateUtc, endDateUtc);
+                // TODO - Check efficiency of interface 'org.esa.beam.framework.gpf.experimental.Output'  (nf, 2012-03-02)
+                // actually, the following line of code would be sufficient, but then, the
+                // 'Output' interface implemented by this operator has no effect, because it already has a
+                // 'ProductReader' instance set. The overall concept of 'Output' is not fully thought-out!
+                //
+                // this.targetProduct = readOutput();
+                //
+                // This is why I have to do the following
+                Product writtenProduct = readOutput();
+                this.targetProduct = copyProduct(writtenProduct);
+            } else {
+                getLogger().warning("No bins have been generated, no output has been written");
+            }
         } catch (OperatorException e) {
             throw e;
         } catch (Exception e) {
@@ -285,7 +286,7 @@ public class BinningOp extends Operator implements Output {
                 WildcardMatcher.glob(filePattern, fileSet);
             }
             if (fileSet.isEmpty()) {
-                getLogger().warning("The given file patterns did not match any files");
+                getLogger().warning("The given source file patterns did not match any files");
             }
             for (File file : fileSet) {
                 Product sourceProduct = ProductIO.readProduct(file);

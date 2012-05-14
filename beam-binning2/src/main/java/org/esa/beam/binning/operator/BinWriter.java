@@ -96,13 +96,13 @@ public class BinWriter {
         writeBinIndexVariable(netcdfFile, rowNumVar, grid, new BinIndexElementSetter() {
             @Override
             public void setArray(Array array, int rowIndex, SeadasGrid grid) {
-                array.setInt(rowIndex, grid.convertRowIndex(rowIndex));
+                array.setInt(rowIndex, rowIndex);
             }
         });
         writeBinIndexVariable(netcdfFile, startNumVar, grid, new BinIndexElementSetter() {
             @Override
             public void setArray(Array array, int rowIndex, SeadasGrid grid) {
-                array.setInt(rowIndex, grid.getBinIndex(rowIndex));
+                array.setInt(rowIndex, grid.getFirstBinIndex(rowIndex));
             }
         });
         writeBinIndexVariable(netcdfFile, vsizeVar, grid, new BinIndexElementSetter() {
@@ -129,7 +129,7 @@ public class BinWriter {
         writeBinListVariable(netcdfFile, binNumVar, temporalBins, new BinListElementSetter() {
             @Override
             public void setArray(Array array, int binIndex, TemporalBin bin) {
-                array.setInt(binIndex, seadasGrid.getBinIndex(bin.getIndex()));
+                array.setInt(binIndex, seadasGrid.convertBinIndex(bin.getIndex()));
             }
         });
         writeBinListVariable(netcdfFile, numObsVar, temporalBins, new BinListElementSetter() {
@@ -175,7 +175,7 @@ public class BinWriter {
         int bufferIndex = 0;
         final String varName = variable.getName();
         for (TemporalBin temporalBin : temporalBins) {
-            if (bufferIndex == BUFFER_SIZE) {
+            if (bufferIndex == BUFFER_SIZE)  {
                 netcdfFile.write(varName, origin, buffer);
                 bufferIndex = 0;
                 origin[0] += BUFFER_SIZE;

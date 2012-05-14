@@ -27,6 +27,11 @@
 
     <changelog>
         <![CDATA[
+        Changes from version 0.5 to 0.6:<br\>
+        <ol>
+        <li>Fixed content the 'BinIndex' annotation datasets (variable prefix 'bi_').</li>
+        <li>If no temporal bins are generated, no output will be written</li>
+        </ol>
         Changes since initial version 0.5:<br\>
         <ol>
         <li>Introduced parameters 'sourceProductPaths' and 'outputBinnedData'</li>

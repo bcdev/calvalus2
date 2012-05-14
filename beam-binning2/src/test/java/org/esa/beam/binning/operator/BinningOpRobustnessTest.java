@@ -30,7 +30,7 @@ public class BinningOpRobustnessTest {
     @Test
     public void testNoSourceProductSet() throws Exception {
         final BinningOp binningOp = new BinningOp();
-        testThatOperatorExceptionIsThrown(binningOp, ".*or parameter 'filePatterns' must be.*");
+        testThatOperatorExceptionIsThrown(binningOp, ".*or parameter 'sourceProductPaths' must be.*");
     }
 
     @Test

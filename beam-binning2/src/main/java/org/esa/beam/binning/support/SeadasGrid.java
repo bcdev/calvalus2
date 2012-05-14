@@ -36,22 +36,27 @@ public class SeadasGrid {
         return baseGrid.getNumCols(rowIndex);
     }
 
+    public int getFirstBinIndex(int rowIndex) {
+        // SeaDAS uses FORTRAN-style, 1-based indexes
+        return (int) (baseGrid.getFirstBinIndex(rowIndex) + 1L);
+    }
+
     public int convertRowIndex(int rowIndex) {
         // SeaDAS uses FORTRAN-style, 1-based indexes
         return baseGrid.getNumRows() - (rowIndex + 1) + 1;
     }
 
-    public int getBinIndex(long binIndex) {
+    public int convertBinIndex(long binIndex) {
 
-        int row1 = baseGrid.getRowIndex(binIndex);
-        long firstBin1 = baseGrid.getFirstBinIndex(row1);
-        long col = binIndex - firstBin1;
+        int rowIndex1 = baseGrid.getRowIndex(binIndex);
+        long binIndex1 = baseGrid.getFirstBinIndex(rowIndex1);
+        long colIndex = binIndex - binIndex1;
 
-        int row2 = baseGrid.getNumRows() - (row1 + 1);
-        long firstBin2 = baseGrid.getFirstBinIndex(row2);
+        int rowIndex2 = baseGrid.getNumRows() - (rowIndex1 + 1);
+        long binIndex2 = baseGrid.getFirstBinIndex(rowIndex2);
 
         // SeaDAS uses FORTRAN-style, 1-based indexes
-        return (int) (firstBin2 + col + 1L);
+        return (int) (binIndex2 + colIndex + 1L);
     }
 
 
