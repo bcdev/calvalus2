@@ -16,8 +16,11 @@
 
 package org.esa.beam.binning.operator.ui;
 
+import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.ValidationException;
+import com.jidesoft.combobox.DateExComboBox;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
+import org.esa.beam.binning.operator.BinningOp;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.GridBagUtils;
@@ -25,20 +28,23 @@ import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.product.ProductExpressionPane;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * The panel in the binning operator UI which allows for specifying the configuration of binning variables.
@@ -55,67 +61,45 @@ class BinningVariablesPanel extends JPanel {
     BinningVariablesPanel(AppContext appContext, BinningModel binningModel) {
         this.appContext = appContext;
         this.binningModel = binningModel;
-        setLayout(new BorderLayout());
-        add(createBandsPanel(), BorderLayout.CENTER);
-        add(createValidExpressionPanel(), BorderLayout.SOUTH);
-//        add(createTemporalFilterPanel());
-//        add(createSuperSamplingPanel());
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        GridBagUtils.addToPanel(this, createBandsPanel(), gbc, "insets=5,fill=BOTH,weightx=1.0,weighty=1.0");
+        GridBagUtils.addToPanel(this, createValidExpressionPanel(), gbc, "gridy=1,fill=HORIZONTAL,weightx=1.0,weighty=0.0");
+        GridBagUtils.addToPanel(this, createTemporalFilterPanel(), gbc, "gridy=2");
+        GridBagUtils.addToPanel(this, createSuperSamplingAndTargetHeightPanel(), gbc, "gridy=3");
+        GridBagUtils.addToPanel(this, createOutputBinnedDataComponent(), gbc, "gridy=4");
     }
 
     private JPanel createBandsPanel() {
         bandsTable = new VariableConfigTable(binningModel, appContext);
         final JPanel bandsPanel = new JPanel(new GridBagLayout());
 
-        final GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(5, 5, 5, 5);
-
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        constraints.gridwidth = 1;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.weightx = 1.0;
-
-        bandsPanel.add(new JLabel(), constraints);
-
-        constraints.gridx = 1;
-        constraints.gridy = 0;
-        constraints.gridwidth = 1;
-        constraints.weightx = 0.0;
-        constraints.fill = GridBagConstraints.NONE;
-
         final JButton addButton = new JButton("Add");
+        final JButton removeButton = new JButton("Remove");
+
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 bandsTable.addRow("<expression>", null, AggregatorAverage.Descriptor.NAME, Double.NaN, Double.NaN);
             }
         });
-        bandsPanel.add(addButton, constraints);
-
-        constraints.gridx = 2;
-        constraints.gridy = 0;
-        constraints.weightx = 0.0;
-
-        final JButton removeButton = new JButton("Remove");
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 bandsTable.removeSelectedRows();
             }
         });
-        bandsPanel.add(removeButton, constraints);
 
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.gridwidth = 3;
-        constraints.fill = GridBagConstraints.BOTH;
+        final GridBagConstraints gbc = new GridBagConstraints();
+        GridBagUtils.addToPanel(bandsPanel, new JLabel(), gbc, "insets=5,gridwidth=1,fill=HORIZONTAL,weightx=1.0");
+        GridBagUtils.addToPanel(bandsPanel, addButton, gbc, "gridx=1,fill=NONE,weightx=0.0");
+        GridBagUtils.addToPanel(bandsPanel, removeButton, gbc, "gridx=2");
+        GridBagUtils.addToPanel(bandsPanel, bandsTable.getComponent(), gbc, "gridx=0,gridy=1,gridwidth=3,fill=BOTH,weightx=1,weighty=1");
 
-        bandsPanel.add(bandsTable.getComponent(), constraints);
         return bandsPanel;
     }
 
     private JPanel createValidExpressionPanel() {
-        JPanel validExpressionPanel = new JPanel(new BorderLayout());
         final JButton button = new JButton("...");
         final Dimension preferredSize = button.getPreferredSize();
         preferredSize.setSize(25, preferredSize.getHeight());
@@ -145,38 +129,98 @@ class BinningVariablesPanel extends JPanel {
             }
         });
 
-        JPanel editorComponent = new JPanel(new BorderLayout());
-        editorComponent.add(textField);
-        editorComponent.add(button, BorderLayout.EAST);
-        validExpressionPanel.add(new JLabel("Valid expression:"), BorderLayout.WEST);
-        validExpressionPanel.add(editorComponent);
+        final JPanel validExpressionPanel = GridBagUtils.createPanel();
+        final GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+        GridBagUtils.addToPanel(validExpressionPanel, new JLabel("Valid expression:"), gbc, "anchor=NORTHWEST,insets=3,insets.top=6");
+        GridBagUtils.addToPanel(validExpressionPanel, textField, gbc, "gridx=1,weightx=1,fill=HORIZONTAL,insets.top=3,insets.left=24");
+        GridBagUtils.addToPanel(validExpressionPanel, button, gbc, "gridx=2,weightx=0,fill=NONE,insets.top=2,insets.left=3");
+
         return validExpressionPanel;
     }
 
     private Component createTemporalFilterPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel("Temporal Filter");
-        JRadioButton noFilter = new JRadioButton("No filter");
-        JRadioButton filter = new JRadioButton("By date range");
-        JLabel startDateLabel = new JLabel("    Start date:");
-        JLabel endDateLabel = new JLabel("    End date:");
-        JTextField startDateField = new JTextField();
-        JTextField endDateField = new JTextField();
+        JCheckBox temporalFilterCheckBox = new JCheckBox("Temporal Filter");
+        JLabel startDateLabel = new JLabel("Start date:");
+        JLabel endDateLabel = new JLabel("End date:");
+        DateExComboBox startDatePicker = createDatePicker();
+        DateExComboBox endDatePicker = createDatePicker();
+        startDateLabel.setEnabled(false);
+        endDateLabel.setEnabled(false);
+        binningModel.getBindingContext().getPropertySet().addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, Boolean.class));
+        binningModel.getBindingContext().getPropertySet().addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_START_DATE, Calendar.class));
+        binningModel.getBindingContext().getPropertySet().addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_END_DATE, Calendar.class));
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, temporalFilterCheckBox);
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_START_DATE, startDatePicker);
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_END_DATE, endDatePicker);
+        binningModel.getBindingContext().bindEnabledState(BinningModel.PROPERTY_KEY_START_DATE, true, BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, true);
+        binningModel.getBindingContext().bindEnabledState(BinningModel.PROPERTY_KEY_END_DATE, true, BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, true);
+        binningModel.getBindingContext().getBinding(BinningModel.PROPERTY_KEY_START_DATE).addComponent(startDateLabel);
+        binningModel.getBindingContext().getBinding(BinningModel.PROPERTY_KEY_END_DATE).addComponent(endDateLabel);
 
         GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
 
-        GridBagUtils.addToPanel(panel, label, gbc, "");
-        GridBagUtils.addToPanel(panel, noFilter, gbc, "gridy=1");
-        GridBagUtils.addToPanel(panel, filter, gbc, "gridy=2");
-        GridBagUtils.addToPanel(panel, startDateLabel, gbc, "gridy=3");
-        GridBagUtils.addToPanel(panel, startDateField, gbc, "gridx=1, gridy=3");
-        GridBagUtils.addToPanel(panel, endDateLabel, gbc, "gridy=4");
-        GridBagUtils.addToPanel(panel, endDateField, gbc, "gridx=1, gridy=4");
+        GridBagUtils.addToPanel(panel, temporalFilterCheckBox, gbc, "anchor=NORTHWEST, insets=5");
+        GridBagUtils.addToPanel(panel, startDateLabel, gbc, "gridx=1,insets.top=9");
+        GridBagUtils.addToPanel(panel, startDatePicker, gbc, "gridx=2,insets.top=6,weightx=1");
+        GridBagUtils.addToPanel(panel, endDateLabel, gbc, "gridy=1,gridx=1,insets.top=9,weightx=0");
+        GridBagUtils.addToPanel(panel, endDatePicker, gbc, "gridx=2,insets.top=6,weightx=1");
         return panel;
     }
 
-    private Component createSuperSamplingPanel() {
-        return new JPanel();
+    private JComponent createOutputBinnedDataComponent() {
+        final JCheckBox checkBox = new JCheckBox("Output binned data");
+        final Property property = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA, Boolean.class);
+        binningModel.getBindingContext().getPropertySet().addProperty(property);
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA, checkBox);
+        try {
+            property.setValue(Boolean.TRUE);
+        } catch (ValidationException e) {
+            throw new IllegalStateException("Cannot come here");
+        }
+        return checkBox;
+    }
+
+    private DateExComboBox createDatePicker() {
+        DateExComboBox datePicker = new DateExComboBox();
+        datePicker.setLocale(Locale.ENGLISH);
+        datePicker.getDateModel().setDateFormat(new SimpleDateFormat(BinningOp.DATE_PATTERN));
+        datePicker.setPreferredSize(new Dimension(120, 20));
+        datePicker.setMinimumSize(new Dimension(120, 20));
+        return datePicker;
+    }
+
+    private Component createSuperSamplingAndTargetHeightPanel() {
+        final JLabel targetHeightLabel = new JLabel("Target height (px):");
+        final JLabel superSamplingLabel = new JLabel("Supersampling:");
+        final JTextField targetHeightTextField = new IntegerTextField("2160");
+        final JTextField superSamplingTextField = new IntegerTextField("1");
+        targetHeightTextField.setPreferredSize(new Dimension(120, 20));
+        targetHeightTextField.setMinimumSize(new Dimension(120, 20));
+        superSamplingTextField.setPreferredSize(new Dimension(120, 20));
+        superSamplingTextField.setMinimumSize(new Dimension(120, 20));
+
+        final Property targetHeightProperty = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, Integer.class);
+        final Property supersamplingProperty = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_SUPERSAMPLING, Integer.class);
+        try {
+            targetHeightProperty.setValue(2160);
+            supersamplingProperty.setValue(1);
+        } catch (ValidationException e) {
+            throw new IllegalStateException("Can never come here");
+        }
+        binningModel.getBindingContext().getPropertySet().addProperty(targetHeightProperty);
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, targetHeightTextField);
+        binningModel.getBindingContext().getPropertySet().addProperty(supersamplingProperty);
+        binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_SUPERSAMPLING, superSamplingTextField);
+
+        final JPanel panel = GridBagUtils.createPanel();
+        GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();
+        GridBagUtils.addToPanel(panel, targetHeightLabel, gbc, "anchor=NORTHWEST,weightx=0,insets=3,insets.top=8");
+        GridBagUtils.addToPanel(panel, targetHeightTextField, gbc, "gridx=2,weightx=1,insets.top=3,insets.left=13");
+        GridBagUtils.addToPanel(panel, superSamplingLabel, gbc, "gridy=1,gridx=0,weightx=0,insets.top=8,insets.left=3");
+        GridBagUtils.addToPanel(panel, superSamplingTextField, gbc, "gridx=2,weightx=1,insets.top=3,insets.left=13");
+
+        return panel;
     }
 
     private boolean hasSourceProducts() {
@@ -197,6 +241,22 @@ class BinningVariablesPanel extends JPanel {
             return expressionPane.getCode();
         }
         return null;
+    }
+
+    private static class IntegerTextField extends JTextField {
+
+        private final static String disallowedChars = "`~!@#$%^&*()_+=\\|\"':;?/>.<,- ";
+
+        public IntegerTextField(String defaultValue) {
+            super(defaultValue);
+        }
+
+        @Override
+        protected void processKeyEvent(KeyEvent e) {
+            if (!Character.isLetter(e.getKeyChar()) && disallowedChars.indexOf(e.getKeyChar()) == -1) {
+                super.processKeyEvent(e);
+            }
+        }
     }
 
 }

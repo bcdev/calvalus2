@@ -16,11 +16,14 @@
 
 package org.esa.beam.binning.operator.ui;
 
+import org.esa.beam.binning.operator.BinningOp;
 import org.esa.beam.framework.datamodel.Product;
 import org.junit.Test;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,13 +48,13 @@ public class BinningModelImplTest {
     @Test
     public void testVariableConfigurationProperty() throws Exception {
         final BinningModel binningModel = new BinningModelImpl();
-        assertArrayEquals(new VariableConfig[0], binningModel.getVariableConfigurations());
+        assertArrayEquals(new TableRow[0], binningModel.getTableRows());
 
-        final VariableConfig variableConfig = new VariableConfig("name", "name", null, 0.1, 0.2);
+        final TableRow tableRow = new TableRow("name", "name", null, 0.1, 0.2f);
         binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS,
-                                 new VariableConfig[]{variableConfig});
+                                 new TableRow[]{tableRow});
 
-        assertArrayEquals(new VariableConfig[]{variableConfig}, binningModel.getVariableConfigurations());
+        assertArrayEquals(new TableRow[]{tableRow}, binningModel.getTableRows());
     }
 
     @Test
@@ -65,6 +68,73 @@ public class BinningModelImplTest {
         
         assertEquals("value1", listener.targetMap.get("key1"));
         assertEquals("value2", listener.targetMap.get("key2"));
+    }
+
+    @Test
+    public void testGetStartDate() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, false);
+
+        assertNull(binningModel.getStartDate());
+
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, true);
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_START_DATE, new GregorianCalendar(2000, 1, 1));
+
+        assertNotNull(binningModel.getStartDate());
+        SimpleDateFormat dateFormat = new SimpleDateFormat(BinningOp.DATE_PATTERN);
+        String expectedString = dateFormat.format(new GregorianCalendar(2000, 1, 1).getTime());
+        assertEquals(expectedString, binningModel.getStartDate());
+    }
+
+    @Test
+    public void testGetEndDate() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, false);
+
+        assertNull(binningModel.getEndDate());
+
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_TEMPORAL_FILTER, true);
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_END_DATE, new GregorianCalendar(2010, 0, 1));
+
+        assertNotNull(binningModel.getEndDate());
+        SimpleDateFormat dateFormat = new SimpleDateFormat(BinningOp.DATE_PATTERN);
+        String expectedString = dateFormat.format(new GregorianCalendar(2010, 0, 1).getTime());
+        assertEquals(expectedString, binningModel.getEndDate());
+    }
+
+    @Test
+    public void testGetValidExpression() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        assertNull(binningModel.getValidExpression());
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_EXPRESSION, "some_expression");
+
+        assertEquals("some_expression", binningModel.getValidExpression());
+    }
+
+    @Test
+    public void testGetOutputBinnedData() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        assertFalse(binningModel.shallOutputBinnedData());
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA, true);
+        assertTrue(binningModel.shallOutputBinnedData());
+    }
+
+    @Test
+    public void testGetSuperSampling() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        assertEquals(1, binningModel.getSuperSampling());
+
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_SUPERSAMPLING, 10);
+        assertEquals(10, binningModel.getSuperSampling());
+    }
+
+    @Test
+    public void testGetNumRows() throws Exception {
+        final BinningModelImpl binningModel = new BinningModelImpl();
+        assertEquals(2160, binningModel.getNumRows());
+
+        binningModel.setProperty(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, 2000);
+        assertEquals(2000, binningModel.getNumRows());
     }
 
     @Test

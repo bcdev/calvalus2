@@ -23,6 +23,7 @@ import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.binding.accessors.DefaultPropertyAccessor;
 import com.bc.ceres.swing.binding.BindingContext;
+import org.esa.beam.binning.operator.BinningOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.BoundsInputPanel;
@@ -30,7 +31,10 @@ import org.esa.beam.framework.ui.BoundsInputPanel;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,23 +50,17 @@ class BinningModelImpl implements BinningModel {
 
     public BinningModelImpl() {
         propertySet = new PropertyContainer();
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_EAST_BOUND, Float.class));
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_NORTH_BOUND, Float.class));
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_WEST_BOUND, Float.class));
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_SOUTH_BOUND, Float.class));
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_X, Float.class));
-        propertySet.addProperty(createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_Y, Float.class));
-        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_GLOBAL, Boolean.class));
-        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_COMPUTE_REGION, Boolean.class));
-        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_REGION, Boolean.class));
-        propertySet.addProperty(createProperty(BinningModel.PROPERTY_KEY_EXPRESSION, String.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_EAST_BOUND, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_NORTH_BOUND, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_WEST_BOUND, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_SOUTH_BOUND, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_X, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BoundsInputPanel.PROPERTY_PIXEL_SIZE_Y, Float.class));
+        propertySet.addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_GLOBAL, Boolean.class));
+        propertySet.addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_COMPUTE_REGION, Boolean.class));
+        propertySet.addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_REGION, Boolean.class));
+        propertySet.addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_EXPRESSION, String.class));
         propertySet.setDefaultValues();
-    }
-
-    private Property createProperty(String name, Class type) {
-        final DefaultPropertyAccessor defaultAccessor = new DefaultPropertyAccessor();
-        final PropertyDescriptor descriptor = new PropertyDescriptor(name, type);
-        return new Property(descriptor, defaultAccessor);
     }
 
     @Override
@@ -83,19 +81,20 @@ class BinningModelImpl implements BinningModel {
     }
 
     @Override
-    public VariableConfig[] getVariableConfigurations() {
-        VariableConfig[] variableConfigs = getPropertyValue(PROPERTY_KEY_VARIABLE_CONFIGS);
-        if (variableConfigs == null) {
-            variableConfigs = new VariableConfig[0];
+    public TableRow[] getTableRows() {
+        TableRow[] tableRows = getPropertyValue(PROPERTY_KEY_VARIABLE_CONFIGS);
+        if (tableRows == null) {
+            tableRows = new TableRow[0];
         }
-        return variableConfigs;
+        return tableRows;
     }
 
     @Override
     public String getRegion() {
         if (getPropertyValue(PROPERTY_KEY_GLOBAL) != null && (Boolean) getPropertyValue(PROPERTY_KEY_GLOBAL)) {
             return null;
-        } else if (getPropertyValue(PROPERTY_KEY_COMPUTE_REGION) != null && (Boolean) getPropertyValue(PROPERTY_KEY_COMPUTE_REGION)) {
+        } else if (getPropertyValue(PROPERTY_KEY_COMPUTE_REGION) != null &&
+                   (Boolean) getPropertyValue(PROPERTY_KEY_COMPUTE_REGION)) {
             // todo - compute input region from properties
             return "WKT[...]";
         } else if (getPropertyValue(PROPERTY_KEY_REGION) != null && (Boolean) getPropertyValue(PROPERTY_KEY_REGION)) {
@@ -108,6 +107,53 @@ class BinningModelImpl implements BinningModel {
     @Override
     public String getValidExpression() {
         return getPropertyValue(PROPERTY_KEY_EXPRESSION);
+    }
+
+    @Override
+    public String getStartDate() {
+        return getDate(PROPERTY_KEY_START_DATE);
+    }
+
+    @Override
+    public String getEndDate() {
+        return getDate(PROPERTY_KEY_END_DATE);
+    }
+
+    @Override
+    public boolean shallOutputBinnedData() {
+        if (getPropertyValue(PROPERTY_KEY_OUTPUT_BINNED_DATA) == null) {
+            return false;
+        }
+        return (Boolean) getPropertyValue(PROPERTY_KEY_OUTPUT_BINNED_DATA);
+    }
+
+    @Override
+    public int getSuperSampling() {
+        if (getPropertyValue(PROPERTY_KEY_SUPERSAMPLING) == null) {
+            return 1;
+        }
+        return (Integer) getPropertyValue(PROPERTY_KEY_SUPERSAMPLING);
+    }
+
+    private String getDate(String propertyKey) {
+        if (getPropertyValue(PROPERTY_KEY_TEMPORAL_FILTER) != null &&
+            (Boolean) getPropertyValue(PROPERTY_KEY_TEMPORAL_FILTER)) {
+            final Calendar propertyValue = getPropertyValue(propertyKey);
+            if (propertyValue == null) {
+                return null;
+            }
+            final Date date = propertyValue.getTime();
+            return new SimpleDateFormat(BinningOp.DATE_PATTERN).format(date);
+        }
+        return null;
+    }
+
+    @Override
+    public int getNumRows() {
+        if (getPropertyValue(PROPERTY_KEY_TARGET_HEIGHT) == null) {
+            return 2160;
+        }
+        return (Integer) getPropertyValue(PROPERTY_KEY_TARGET_HEIGHT);
     }
 
     @Override

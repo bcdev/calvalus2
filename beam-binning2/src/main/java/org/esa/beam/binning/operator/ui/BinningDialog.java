@@ -16,13 +16,21 @@
 
 package org.esa.beam.binning.operator.ui;
 
+import com.bc.ceres.binding.Property;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.accessors.DefaultPropertyAccessor;
+import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.BinningOp;
+import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.ui.AppContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,12 +63,43 @@ public class BinningDialog extends SingleTargetProductDialog {
         form = new BinningForm(appContext, model, getTargetProductSelector());
     }
 
+    static Property createProperty(String name, Class type) {
+        final DefaultPropertyAccessor defaultAccessor = new DefaultPropertyAccessor();
+        final PropertyDescriptor descriptor = new PropertyDescriptor(name, type);
+        descriptor.setDefaultConverter();
+        return new Property(descriptor, defaultAccessor);
+    }
+
     @Override
     protected Product createTargetProduct() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new BinningOp.Spi());
 
         final Map<String, Object> parameters = new HashMap<String, Object>();
+        final BinningConfig binningConfig = new BinningConfig();
+        binningConfig.setMaskExpr(model.getValidExpression());
+        binningConfig.setSuperSampling(model.getSuperSampling());
+
+        final List<VariableConfig> variableConfigs = new ArrayList<VariableConfig>();
+        final List<AggregatorConfig> aggregatorConfigs = new ArrayList<AggregatorConfig>();
+        final TableRow[] tableRows = model.getTableRows();
+        for (TableRow tableRow : tableRows) {
+            final VariableConfig variableConfig = new VariableConfig(tableRow.name, tableRow.expression);
+            final AggregatorConfig aggregatorConfig = new AggregatorConfig();
+            aggregatorConfig.setAggregatorName(tableRow.aggregator.getName());
+            aggregatorConfig.setVarName(tableRow.name);
+            aggregatorConfig.setFillValue(tableRow.fillValue);
+            aggregatorConfig.setWeightCoeff(tableRow.weight);
+            variableConfigs.add(variableConfig);
+            aggregatorConfigs.add(aggregatorConfig);
+        }
+        binningConfig.setAggregatorConfigs(aggregatorConfigs.toArray(new AggregatorConfig[aggregatorConfigs.size()]));
+        binningConfig.setVariableConfigs(variableConfigs.toArray(new VariableConfig[variableConfigs.size()]));
+
         parameters.put("region", model.getRegion());
+        parameters.put("startDate", model.getStartDate());
+        parameters.put("endDate", model.getEndDate());
+        parameters.put("outputBinnedData", model.shallOutputBinnedData());
+        parameters.put("binningConfig", binningConfig);
         return GPF.createProduct("Binning", parameters, model.getSourceProducts());
     }
 

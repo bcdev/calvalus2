@@ -35,6 +35,12 @@ interface BinningModel {
     String PROPERTY_KEY_COMPUTE_REGION = "compute";
     String PROPERTY_KEY_GLOBAL = "global";
     String PROPERTY_KEY_EXPRESSION = "expression";
+    String PROPERTY_KEY_TEMPORAL_FILTER = "temporalFilter";
+    String PROPERTY_KEY_START_DATE = "startDate";
+    String PROPERTY_KEY_END_DATE = "endDate";
+    String PROPERTY_KEY_OUTPUT_BINNED_DATA = "outputBinnedData";
+    String PROPERTY_KEY_TARGET_HEIGHT = "targetHeight";
+    String PROPERTY_KEY_SUPERSAMPLING = "supersampling";
 
     void setProperty(String key, Object value) throws ValidationException;
 
@@ -50,7 +56,7 @@ interface BinningModel {
     /**
      * @return The variable configurations.
      */
-    VariableConfig[] getVariableConfigurations();
+    TableRow[] getTableRows();
 
     /**
      * @return The selected target region.
@@ -61,4 +67,20 @@ interface BinningModel {
      * @return the expression good pixels in the target product need to comply with.
      */
     String getValidExpression();
+
+    /**
+     * @return the user-chosen start date; <code>null</code> if no start date has been chosen
+     */
+    String getStartDate();
+
+    /**
+     * @return the user-chosen end date; <code>null</code> if no end date has been chosen
+     */
+    String getEndDate();
+
+    boolean shallOutputBinnedData();
+
+    int getSuperSampling();
+
+    int getNumRows();
 }

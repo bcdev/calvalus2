@@ -23,15 +23,15 @@ import org.esa.beam.binning.AggregatorDescriptor;
 *
 * @author Thomas Storm
 */
-class VariableConfig {
+class TableRow {
 
     final String name;
     final String expression;
     final AggregatorDescriptor aggregator;
     final Double weight;
-    final Double fillValue;
+    final Float fillValue;
 
-    VariableConfig(String name, String expression, AggregatorDescriptor aggregator, Double weight, Double fillValue) {
+    TableRow(String name, String expression, AggregatorDescriptor aggregator, Double weight, Float fillValue) {
         this.expression = expression;
         this.fillValue = fillValue;
         this.weight = weight;
@@ -41,7 +41,7 @@ class VariableConfig {
 
     @Override
     public String toString() {
-        return "VariableConfig{" +
+        return "TableRow{" +
                "aggregator=" + aggregator +
                ", name='" + name + '\'' +
                ", expression='" + expression + '\'' +

@@ -133,6 +133,7 @@ class VariableConfigTable {
         };
         table.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
         table.getColumnModel().getColumn(4).setCellRenderer(cellRenderer);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
     }
 
@@ -162,7 +163,7 @@ class VariableConfigTable {
                               (String) dataListRow.get(1),
                               (String) dataListRow.get(2),
                               (Double) dataListRow.get(3),
-                              (Double) dataListRow.get(4));
+                              (Float) dataListRow.get(4));
         }
         return rows;
     }
@@ -212,8 +213,8 @@ class VariableConfigTable {
             binningModel.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent evt) {
-                    if(evt.getPropertyName().equals(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS)) {
-                        if(binningModel.getSourceProducts().length > 0) {
+                    if (evt.getPropertyName().equals(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS)) {
+                        if (binningModel.getSourceProducts().length > 0) {
                             button.setEnabled(true);
                         } else {
                             button.setEnabled(false);
@@ -273,19 +274,19 @@ class VariableConfigTable {
 
         @Override
         public void tableChanged(TableModelEvent event) {
-            final VariableConfig[] variableConfigs = new VariableConfig[bandsTable.getRows().length];
+            final TableRow[] tableRows = new TableRow[bandsTable.getRows().length];
             final Row[] rows = bandsTable.getRows();
             for (int i = 0; i < rows.length; i++) {
                 final Row row = rows[i];
                 final AggregatorDescriptor aggregatorDescriptor = AggregatorDescriptorRegistry.getInstance().getAggregatorDescriptor(row.algorithmName);
-                variableConfigs[i] = new VariableConfig(row.bandName,
-                                                                               row.expression,
-                                                                               aggregatorDescriptor,
-                                                                               row.weightCoefficient,
-                                                                               row.fillValue);
+                tableRows[i] = new TableRow(row.bandName,
+                                            row.expression,
+                                            aggregatorDescriptor,
+                                            row.weightCoefficient,
+                                            row.fillValue);
             }
             try {
-                binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS, variableConfigs);
+                binningModel.setProperty(BinningModel.PROPERTY_KEY_VARIABLE_CONFIGS, tableRows);
             } catch (ValidationException e) {
                 appContext.handleError("Unable to validate variable configurations.", e);
             }
@@ -298,9 +299,9 @@ class VariableConfigTable {
         private final String expression;
         private final String algorithmName;
         private final double weightCoefficient;
-        private final double fillValue;
+        private final float fillValue;
 
-        Row(String bandName, String expression, String algorithmName, double weightCoefficient, double fillValue) {
+        Row(String bandName, String expression, String algorithmName, double weightCoefficient, float fillValue) {
             this.bandName = bandName;
             this.algorithmName = algorithmName;
             this.weightCoefficient = weightCoefficient;
