@@ -92,7 +92,13 @@ public class BinWriter {
         netcdfFile.close();
     }
 
-    private void writeBinIndexVariables(NetcdfFileWriteable netcdfFile, Variable rowNumVar, Variable vsizeVar, Variable hsizeVar, Variable startNumVar, Variable maxVar, SeadasGrid grid) throws IOException, InvalidRangeException {
+    private void writeBinIndexVariables(final NetcdfFileWriteable netcdfFile,
+                                        final Variable rowNumVar,
+                                        final Variable vsizeVar,
+                                        final Variable hsizeVar,
+                                        final Variable startNumVar,
+                                        final Variable maxVar,
+                                        final SeadasGrid grid) throws IOException, InvalidRangeException {
         writeBinIndexVariable(netcdfFile, rowNumVar, grid, new BinIndexElementSetter() {
             @Override
             public void setArray(Array array, int rowIndex, SeadasGrid grid) {
@@ -125,7 +131,13 @@ public class BinWriter {
         });
     }
 
-    private void writeBinListVariables(NetcdfFileWriteable netcdfFile, Variable binNumVar, Variable numObsVar, Variable numScenesVar, List<Variable> featureVars, final SeadasGrid seadasGrid, List<TemporalBin> temporalBins) throws IOException, InvalidRangeException {
+    private void writeBinListVariables(final NetcdfFileWriteable netcdfFile,
+                                       final Variable binNumVar,
+                                       final Variable numObsVar,
+                                       final Variable numScenesVar,
+                                       final List<Variable> featureVars,
+                                       final SeadasGrid seadasGrid,
+                                       final List<TemporalBin> temporalBins) throws IOException, InvalidRangeException {
         writeBinListVariable(netcdfFile, binNumVar, temporalBins, new BinListElementSetter() {
             @Override
             public void setArray(Array array, int binIndex, TemporalBin bin) {
@@ -175,7 +187,7 @@ public class BinWriter {
         int bufferIndex = 0;
         final String varName = variable.getName();
         for (TemporalBin temporalBin : temporalBins) {
-            if (bufferIndex == BUFFER_SIZE)  {
+            if (bufferIndex == BUFFER_SIZE) {
                 netcdfFile.write(varName, origin, buffer);
                 bufferIndex = 0;
                 origin[0] += BUFFER_SIZE;
