@@ -36,6 +36,12 @@
 
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-visat-rcp</artifactId>
+            <version>4.10</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-netcdf</artifactId>
             <version>1.1</version>
         </dependency>

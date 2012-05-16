@@ -80,7 +80,7 @@ class BinningVariablesPanel extends JPanel {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                bandsTable.addRow("<expression>", null, AggregatorAverage.Descriptor.NAME, Double.NaN, Double.NaN);
+                bandsTable.addRow("<expression>", null, AggregatorAverage.Descriptor.NAME, Double.NaN, Float.NaN);
             }
         });
         removeButton.addActionListener(new ActionListener() {
@@ -173,11 +173,7 @@ class BinningVariablesPanel extends JPanel {
         final Property property = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA, Boolean.class);
         binningModel.getBindingContext().getPropertySet().addProperty(property);
         binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA, checkBox);
-        try {
-            property.setValue(Boolean.TRUE);
-        } catch (ValidationException e) {
-            throw new IllegalStateException("Cannot come here");
-        }
+        binningModel.getBindingContext().getBinding(BinningModel.PROPERTY_KEY_OUTPUT_BINNED_DATA).setPropertyValue(Boolean.TRUE);
         return checkBox;
     }
 
@@ -200,18 +196,12 @@ class BinningVariablesPanel extends JPanel {
         superSamplingTextField.setPreferredSize(new Dimension(120, 20));
         superSamplingTextField.setMinimumSize(new Dimension(120, 20));
 
-        final Property targetHeightProperty = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, Integer.class);
-        final Property supersamplingProperty = BinningDialog.createProperty(BinningModel.PROPERTY_KEY_SUPERSAMPLING, Integer.class);
-        try {
-            targetHeightProperty.setValue(2160);
-            supersamplingProperty.setValue(1);
-        } catch (ValidationException e) {
-            throw new IllegalStateException("Can never come here");
-        }
-        binningModel.getBindingContext().getPropertySet().addProperty(targetHeightProperty);
+        binningModel.getBindingContext().getPropertySet().addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, Integer.class));
+        binningModel.getBindingContext().getPropertySet().addProperty(BinningDialog.createProperty(BinningModel.PROPERTY_KEY_SUPERSAMPLING, Integer.class));
         binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_TARGET_HEIGHT, targetHeightTextField);
-        binningModel.getBindingContext().getPropertySet().addProperty(supersamplingProperty);
         binningModel.getBindingContext().bind(BinningModel.PROPERTY_KEY_SUPERSAMPLING, superSamplingTextField);
+        binningModel.getBindingContext().getBinding(BinningModel.PROPERTY_KEY_TARGET_HEIGHT).setPropertyValue(2160);
+        binningModel.getBindingContext().getBinding(BinningModel.PROPERTY_KEY_SUPERSAMPLING).setPropertyValue(1);
 
         final JPanel panel = GridBagUtils.createPanel();
         GridBagConstraints gbc = GridBagUtils.createDefaultConstraints();

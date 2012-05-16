@@ -141,7 +141,7 @@ class VariableConfigTable {
         return scrollPane;
     }
 
-    void addRow(final String name, String expression, String algorithmName, double weightCoefficient, double fillValue) {
+    void addRow(final String name, String expression, String algorithmName, double weightCoefficient, float fillValue) {
         if (algorithmName == null || !StringUtils.contains(aggregatorNames, algorithmName)) {
             algorithmName = AggregatorAverage.Descriptor.NAME;
         }

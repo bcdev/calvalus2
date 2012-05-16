@@ -27,6 +27,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.visat.VisatApp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +60,9 @@ public class BinningDialog extends SingleTargetProductDialog {
 
     protected BinningDialog(AppContext appContext, String title, String helpID) {
         super(appContext, title, helpID);
+        if(appContext instanceof VisatApp) {
+            ((VisatApp) appContext).getLogger().warning("");
+        }
         model = new BinningModelImpl();
         form = new BinningForm(appContext, model, getTargetProductSelector());
     }
@@ -78,6 +82,7 @@ public class BinningDialog extends SingleTargetProductDialog {
         final BinningConfig binningConfig = new BinningConfig();
         binningConfig.setMaskExpr(model.getValidExpression());
         binningConfig.setSuperSampling(model.getSuperSampling());
+        binningConfig.setNumRows(model.getNumRows());
 
         final List<VariableConfig> variableConfigs = new ArrayList<VariableConfig>();
         final List<AggregatorConfig> aggregatorConfigs = new ArrayList<AggregatorConfig>();

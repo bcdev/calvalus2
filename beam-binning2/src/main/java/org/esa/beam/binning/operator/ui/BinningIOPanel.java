@@ -17,6 +17,8 @@
 package org.esa.beam.binning.operator.ui;
 
 import com.bc.ceres.swing.TableLayout;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelector;
 import org.esa.beam.framework.ui.AppContext;
@@ -87,7 +89,12 @@ class BinningIOPanel extends JPanel {
                     @Override
                     protected Void doInBackground() throws Exception {
                         final File[] productFiles = removeDuplicates(files);
-                        binningModel.setProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS, productFiles);
+                        final Product[] products = new Product[productFiles.length];
+                        for (int i = 0; i < productFiles.length; i++) {
+                            final File productFile = productFiles[i];
+                            products[i] = ProductIO.readProduct(productFile);
+                        }
+                        binningModel.setProperty(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS, products);
                         return null;
                     }
 

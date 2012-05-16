@@ -23,19 +23,21 @@ import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.binding.accessors.DefaultPropertyAccessor;
 import com.bc.ceres.swing.binding.BindingContext;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.binning.operator.BinningOp;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.BoundsInputPanel;
+import org.esa.beam.util.FeatureUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 /**
  * The model responsible for managing the binning parameters.
@@ -65,19 +67,11 @@ class BinningModelImpl implements BinningModel {
 
     @Override
     public Product[] getSourceProducts() {
-        final File[] files = getPropertyValue(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
-        if (files == null) {
+        final Product[] products = getPropertyValue(BinningModel.PROPERTY_KEY_SOURCE_PRODUCTS);
+        if (products == null) {
             return new Product[0];
         }
-        List<Product> products = new ArrayList<Product>();
-        for (final File file : files) {
-            try {
-                products.add(ProductIO.readProduct(file));
-            } catch (IOException e) {
-                // todo - handle in VISAT context
-            }
-        }
-        return products.toArray(new Product[products.size()]);
+        return products;
     }
 
     @Override
@@ -95,11 +89,39 @@ class BinningModelImpl implements BinningModel {
             return null;
         } else if (getPropertyValue(PROPERTY_KEY_COMPUTE_REGION) != null &&
                    (Boolean) getPropertyValue(PROPERTY_KEY_COMPUTE_REGION)) {
-            // todo - compute input region from properties
-            return "WKT[...]";
+            final Product[] products = getPropertyValue(PROPERTY_KEY_SOURCE_PRODUCTS);
+            Geometry currentGeometry = null;
+            for (Product product : products) {
+                if (product.getGeoCoding() == null) {
+                    final String msg = MessageFormat.format(
+                            "Product ''{0}'' contains no geo-information. Using the entire globe as region.",
+                            product.getName());
+                    BeamLogManager.getSystemLogger().warning(msg);
+                    return null;
+                }
+                final Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(product);
+                if (currentGeometry == null) {
+                    currentGeometry = geometry;
+                } else {
+                    currentGeometry = currentGeometry.union(geometry);
+                }
+            }
+
+            return currentGeometry.toText();
         } else if (getPropertyValue(PROPERTY_KEY_REGION) != null && (Boolean) getPropertyValue(PROPERTY_KEY_REGION)) {
-            // todo - create WKT from input properties
-            return "WKT[...]";
+            final double westValue = (Double) getPropertyValue(BinningRegionPanel.PROPERTY_WEST_BOUND);
+            final double eastValue = (Double) getPropertyValue(BinningRegionPanel.PROPERTY_EAST_BOUND);
+            final double northValue = (Double) getPropertyValue(BinningRegionPanel.PROPERTY_NORTH_BOUND);
+            final double southValue = (Double) getPropertyValue(BinningRegionPanel.PROPERTY_SOUTH_BOUND);
+            Coordinate[] coordinates = {
+                    new Coordinate(westValue, southValue), new Coordinate(westValue, northValue),
+                    new Coordinate(eastValue, northValue), new Coordinate(eastValue, southValue),
+                    new Coordinate(westValue, southValue)
+            };
+
+            final GeometryFactory geometryFactory = new GeometryFactory();
+            final Polygon polygon = geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+            return polygon.toText();
         }
         throw new IllegalStateException("Cannot come here");
     }
