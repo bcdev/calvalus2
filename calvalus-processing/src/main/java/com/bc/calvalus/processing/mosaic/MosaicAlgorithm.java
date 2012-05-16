@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  * @author MarcoZ
 */
-interface MosaicAlgorithm {
+public interface MosaicAlgorithm {
 
     void init(TileIndexWritable tileIndex) throws IOException;
 
