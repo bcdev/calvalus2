@@ -18,7 +18,13 @@ package org.esa.beam.binning.operator;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
-import org.esa.beam.binning.*;
+import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.SpatialBin;
+import org.esa.beam.binning.SpatialBinConsumer;
+import org.esa.beam.binning.SpatialBinner;
+import org.esa.beam.binning.TemporalBin;
+import org.esa.beam.binning.TemporalBinSource;
+import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -43,7 +49,14 @@ import ucar.ma2.InvalidRangeException;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 /*
@@ -193,6 +206,12 @@ public class BinningOp extends Operator implements Output {
      */
     @Override
     public void initialize() throws OperatorException {
+        ProductData.UTC startDateUtc = getStartDateUtc("startDate");
+        ProductData.UTC endDateUtc = getEndDateUtc("endDate");
+
+        if (startDateUtc != null && endDateUtc != null && endDateUtc.getAsDate().before(startDateUtc.getAsDate())) {
+            throw new OperatorException("End date '" + this.endDate + "' before start date '" + this.startDate + "'");
+        }
         if (sourceProducts == null && (sourceProductPaths == null || sourceProductPaths.length == 0)) {
             throw new OperatorException("Either source products must be given or parameter 'sourceProductPaths' must be specified");
         }
@@ -211,9 +230,6 @@ public class BinningOp extends Operator implements Output {
         if (formatterConfig.getOutputFile() == null) {
             throw new OperatorException("Missing operator parameter 'formatterConfig.outputFile'");
         }
-
-        ProductData.UTC startDateUtc = getStartDateUtc("startDate");
-        ProductData.UTC endDateUtc = getEndDateUtc("endDate");
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();

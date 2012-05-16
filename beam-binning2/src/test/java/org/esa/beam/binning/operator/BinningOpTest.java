@@ -7,6 +7,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.main.GPT;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.After;
@@ -47,6 +48,19 @@ public class BinningOpTest {
     public void tearDown() throws Exception {
         if (!FileUtils.deleteTree(TESTDATA_DIR)) {
             System.out.println("Warning: failed to completely delete test I/O directory:" + TESTDATA_DIR);
+        }
+    }
+
+    @Test
+    public void testInvalidDates() throws Exception {
+        final BinningOp binningOp = new BinningOp();
+        binningOp.setStartDate("2010-01-01");
+        binningOp.setEndDate("2009-01-01");
+        try {
+            binningOp.initialize();
+            fail();
+        } catch (OperatorException expected) {
+            assertTrue(expected.getMessage().contains("before"));
         }
     }
 
