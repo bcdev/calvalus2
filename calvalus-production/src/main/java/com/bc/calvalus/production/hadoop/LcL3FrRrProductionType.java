@@ -41,7 +41,8 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * A production type used for generating one or more lc_cci Level-3 products.
+ * A production type used for generating one or more lc_cci Level-3 products
+ * from a day by day mixture of RR and FF products. Mostly for quality analysises.
  *
  * @author MarcoZ
  */
