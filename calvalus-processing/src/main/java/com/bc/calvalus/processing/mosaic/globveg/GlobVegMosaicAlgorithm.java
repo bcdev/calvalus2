@@ -83,10 +83,12 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
             }
             if (obsCount > 0) {
                 final  float faparMean = faparSum / obsCount;
-                final  float faparSigma = faparSumSqr / obsCount;
+                final  float faparSigmaSqr = faparSumSqr / obsCount - faparMean * faparMean;
+                final  float faparSigma = faparSigmaSqr > 0.0f ? (float) Math.sqrt(faparSigmaSqr) : 0.0f;
 
                 final  float laiMean = laiSum / obsCount;
-                final  float laiSigma = laiSumSqr / obsCount;
+                final  float laiSigmaSqr = laiSumSqr / obsCount - laiMean * laiMean;
+                final  float laiSigma = laiSigmaSqr > 0.0f ? (float) Math.sqrt(laiSigmaSqr) : 0.0f;
 
                 float bestFapar = Float.NaN;
                 float bestLai = Float.NaN;
