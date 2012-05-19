@@ -59,12 +59,13 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
 
             // TODO move constants to some configuration
             final String installationRootPath = "/home/hadoop/opt";
-            final String archiveMountPath = "/mnt/hdfs";
+            //final String archiveMountPath = "/mnt/hdfs";
+            final String archiveMountPath = "hdfs://master00:9000";
             final String archiveRootPath = archiveMountPath + "/calvalus/software/0.5";
 
             // check for and maybe install processor package and XSL for request type
             final ExecutablesInstaller installer =
-                new ExecutablesInstaller(archiveRootPath, installationRootPath);
+                new ExecutablesInstaller(context, archiveRootPath, installationRootPath);
             final File packageDir =
                 installer.maybeInstallProcessorPackage(packageName, packageVersion);
             final File callXsl =
@@ -84,12 +85,16 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
             final long startTime = System.nanoTime();
 
-            // ensure that output dir exists
-            final String requestOutputPhysicalPath = (requestOutputPath.startsWith("hdfs:"))
-                    ? archiveMountPath + File.separator + new Path(requestOutputPath).toUri().getPath()
-                    : new Path(requestOutputPath).toUri().getPath();
-            final File requestOutputDir = new File(requestOutputPhysicalPath);
-            requestOutputDir.mkdirs();
+//            // ensure that output dir exists
+//            final String requestOutputPhysicalPath = (requestOutputPath.startsWith("hdfs:"))
+//                    ? archiveMountPath + File.separator + new Path(requestOutputPath).toUri().getPath()
+//                    : new Path(requestOutputPath).toUri().getPath();
+//            final File requestOutputDir = new File(requestOutputPhysicalPath);
+//            requestOutputDir.mkdirs();
+
+//            System.out.println(context.getConfiguration().get("java.io.tmpdir"));
+//            File requestOutputDir = new File(context.getConfiguration().get("java.io.tmpdir"));
+            //File requestOutputDir = new File(context.getWorkingDirectory().toUri().getPath());
 
             // run process for command line
             final Context theContext = context;
@@ -99,7 +104,7 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
                     theContext.progress();
                 }
             });
-            processor.directory(requestOutputDir);
+//            processor.directory(requestOutputDir);
             final int returnCode = processor.run("/bin/bash", "-c", commandLine);
             if (returnCode == 0) {
                 LOG.info("execution of " + commandLine + " successful: " + processor.getOutputString());

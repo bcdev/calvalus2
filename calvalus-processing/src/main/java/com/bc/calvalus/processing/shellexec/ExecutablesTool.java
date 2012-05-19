@@ -14,6 +14,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,6 +54,10 @@ public class ExecutablesTool extends Configured implements Tool {
 
     private static Options options;
     private static final String PRIORITY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.priority']/Data/LiteralData";
+    private static final String FAILURE_PERCENT_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.hadoop.mapred.max.map.failures.percent']/Data/LiteralData";
+    private static final String CALVALUS_PARAMS_XPATH = "/Execute/DataInputs/Input[starts-with(Identifier,'calvalus.')]";
+    private static final String PARAM_NAME_XPATH = "Identifier";
+    private static final String PARAM_VALUE_XPATH = "Data/LiteralData";
 
     static {
         options = new Options();
@@ -84,6 +90,7 @@ public class ExecutablesTool extends Configured implements Tool {
             final String requestType = request.getString(TYPE_XPATH);
             final String requestPriority = request.getString(PRIORITY_XPATH, "LOW");  // one of VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH
             //final String requestOutputDir = request.getString(OUTPUT_DIR_XPATH);
+            final String failurePercent = request.getString(FAILURE_PERCENT_XPATH);
 
             // clear output directory
             //final Path output = new Path(requestOutputDir);
@@ -97,7 +104,9 @@ public class ExecutablesTool extends Configured implements Tool {
             // construct job and set parameters and handlers
             Job job = new Job(getConf(), requestPath);  // TODO improve job identification
             job.getConfiguration().set("calvalus.request", requestContent);
-            job.getConfiguration().set("mapred.job.priority", requestPriority);
+            if (requestPriority != null) {
+                job.getConfiguration().set("mapred.job.priority", requestPriority);
+            }
 
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);
@@ -106,7 +115,9 @@ public class ExecutablesTool extends Configured implements Tool {
             job.getConfiguration().set("mapred.reduce.tasks.speculative.execution", "false");
             job.getConfiguration().set("mapred.child.java.opts", "-Xmx1024m");
             job.getConfiguration().set("mapred.reduce.tasks", "0");
-            job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
+            if (failurePercent == null) {
+                job.getConfiguration().setInt("mapred.max.map.failures.percent", 20);
+            }
             // TODO is this necessary?
             //FileOutputFormat.setOutputPath(job, output);
             job.setOutputFormatClass(NullOutputFormat.class);
@@ -121,6 +132,20 @@ public class ExecutablesTool extends Configured implements Tool {
                 }
             }
             job.getConfiguration().set("mapred.jar", pathname);
+
+            final NodeList nodes = request.getNodes(CALVALUS_PARAMS_XPATH);
+            for (int i = 0; i < nodes.getLength(); ++i) {
+                Node node = nodes.item(i);
+                String name = request.getString(PARAM_NAME_XPATH, node);
+                String value = request.getString(PARAM_VALUE_XPATH, node);
+                if (name.startsWith("calvalus.hadoop.")) {
+                    String hadoopName = name.substring("calvalus.hadoop.".length());
+                    job.getConfiguration().set(hadoopName, value);
+                } else if (name.startsWith("calvalus.")) {
+                    String calvalusName = name.substring("calvalus.".length());
+                    job.getConfiguration().set(calvalusName, value);
+                }
+            }
 
             int result = job.waitForCompletion(true) ? 0 : 1;
 

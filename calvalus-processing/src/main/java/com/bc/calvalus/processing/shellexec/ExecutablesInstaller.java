@@ -1,6 +1,9 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +20,12 @@ public class ExecutablesInstaller {
 
     final String archiveRootPath;
     final String installationRootPath;
+    final Mapper.Context context;
 
-    public ExecutablesInstaller(String archiveRootPath, String installationRootPath) {
+    public ExecutablesInstaller(Mapper.Context context, String archiveRootPath, String installationRootPath) {
         this.archiveRootPath = archiveRootPath;
         this.installationRootPath = installationRootPath;
+        this.context = context;
     }
 
     /** Checks whether package version is installed, else installs it using archived install script */
@@ -29,26 +34,29 @@ public class ExecutablesInstaller {
     {
         String installationScriptFilename = packageName + "-" + packageVersion + "-install.sh";
         // check package availability in software archive
-        File archivePackage = new File(archiveRootPath, packageName + "-" + packageVersion + ".tar.gz");  // TODO generalise to allow zip
-        if (!archivePackage.exists())
-            throw new ProcessorException(archivePackage.getPath() + " installation package not found");
+        Path archivePackage = new Path(archiveRootPath, packageName + "-" + packageVersion + ".tar.gz");
+        FileSystem fs = archivePackage.getFileSystem(context.getConfiguration());
+        if (! fs.exists(archivePackage))
+            throw new ProcessorException(archivePackage.toUri().getPath() + " installation package not found");
         // check package dir availability and age in installation dir
         File installationRootDir = new File(installationRootPath);
         File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
-        if (! packageDir.exists() || packageDir.lastModified() < archivePackage.lastModified()) {
+        if (! packageDir.exists() || packageDir.lastModified() < fs.listStatus(archivePackage)[0].getModificationTime()) {
             LOG.info("installation " + installationScriptFilename + " ...");
             // check package installation script availability in software archive
-            File packageInstallScript = new File(archiveRootPath, installationScriptFilename);
-            if (! packageInstallScript.exists())
-                throw new ProcessorException(packageInstallScript.getPath() + " install script not found");
+            Path packageInstallScript = new Path(archiveRootPath, installationScriptFilename);
+            if (! fs.exists(packageInstallScript))
+                throw new ProcessorException(packageInstallScript.toUri().getPath() + " install script not found");
             // install package from software archive
             installationRootDir.mkdirs();
+            fs.copyToLocalFile(archivePackage, new Path(installationRootPath + "/" + packageName + "-" + packageVersion + ".tar.gz"));
+            fs.copyToLocalFile(packageInstallScript, new Path(installationRootPath + "/" + installationScriptFilename));
             ProcessUtil installation = new ProcessUtil();
             installation.directory(installationRootDir);
-            if (installation.run("/bin/bash",  // hdfs does not support exe mode of files
+            if (installation.run("/bin/bash",
                                  "-c",
-                                 ". " + packageInstallScript.getPath() + " " +
-                                 archivePackage.getPath() + " " +
+                                 ". " + installationRootPath + "/" + installationScriptFilename + " " +
+                                 installationRootPath + "/" + packageName + "-" + packageVersion + ".tar.gz" + " " +
                                  installationRootPath + " " +
                                  packageName + "-" + packageVersion) == 0) {
                 LOG.info("installation " + installationScriptFilename + " successful: " + installation.getOutputString());
@@ -67,22 +75,17 @@ public class ExecutablesInstaller {
     {
         String callXslFilename   = packageName + "-" + packageVersion + "-" + requestType + "-call.xsl";
         // check transformation file availability in software archive
-        File archiveCallXsl = new File(archiveRootPath, callXslFilename);
-        if (! archiveCallXsl.exists()) throw new ProcessorException(archiveCallXsl.getPath() + " call transformation not found");
+        Path archiveCallXsl = new Path(archiveRootPath, callXslFilename);
+        FileSystem fs = archiveCallXsl.getFileSystem(context.getConfiguration());
+        if (! fs.exists(archiveCallXsl)) throw new ProcessorException(archiveCallXsl.toUri().getPath() + " call transformation not found");
         // -- check transformation file availability and age in package directory
         File installationRootDir = new File(installationRootPath);
         File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
         File callXsl             = new File(packageDir, callXslFilename);
-        if (! callXsl.exists() || callXsl.lastModified() < archiveCallXsl.lastModified()) {
+        if (! callXsl.exists() || callXsl.lastModified() < fs.listStatus(archiveCallXsl)[0].getModificationTime()) {
             LOG.info("installation of " + callXslFilename + " ...");
             // copy transformation file into package directory
-            ProcessUtil installation = new ProcessUtil();
-            installation.directory(installationRootDir);
-            if (installation.run("/bin/cp", archiveCallXsl.getPath(), callXsl.getPath()) == 0) {
-                LOG.info("installation of " + callXslFilename + " successful: " + installation.getOutputString());
-            } else {
-                throw new ProcessorException("installation of " + callXslFilename + " failed: " + installation.getOutputString());
-            }
+            fs.copyToLocalFile(archiveCallXsl, new Path(callXsl.getPath()));
         }
         return callXsl;
     }

@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 @Ignore
 public class ExecutablesInputFormatTest {
 
-    //final static String INPUT_PATH = "hdfs://cvmaster00:9000/calvalus/eodata/MER_FRS_1P/r03/2009/01/01";
+    //final static String INPUT_PATH = "hdfs://master00:9000/calvalus/eodata/MER_FRS_1P/r03/2009/01/01";
     private final static String INPUT_PATH = "/calvalus-processing/src/test/resources";
     private final static String REQUEST_PATH = "/calvalus-l2gen/bin/geochildgen-request.xml";
     private static final String CALVALUS_MARKER = "/calvalus";
