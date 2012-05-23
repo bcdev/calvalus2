@@ -41,10 +41,7 @@ public class CalvalusLogger {
 
     private static Logger createLogger() {
         Logger logger = Logger.getLogger("com.bc.calvalus");
-        Handler[] handlers = logger.getHandlers();
-        for (Handler handler : handlers) {
-            logger.removeHandler(handler);
-        }
+        logger.setUseParentHandlers(false);
         Handler handler = new ConsoleHandler();
         handler.setFormatter(new LogFormatter());
         logger.addHandler(handler);

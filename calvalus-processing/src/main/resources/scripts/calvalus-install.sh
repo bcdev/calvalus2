@@ -1,8 +1,8 @@
 #!/bin/bash
 
 archive=$1
-targetdir=$2
-package=$3
+targetdir=$2/`dirname $3`
+package=`basename $3`
 
 mkdir -p $targetdir
 cd $targetdir

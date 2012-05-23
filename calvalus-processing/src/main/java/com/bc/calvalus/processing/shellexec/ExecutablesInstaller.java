@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
 
+import javax.annotation.processing.Processor;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -17,6 +18,8 @@ import java.util.logging.Logger;
 public class ExecutablesInstaller {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final String DEFAULT_SCRIPT_FILENAME = "calvalus-call.xsl";
+    private static final String DEFAULT_INSTALLER_FILENAME = "calvalus-install.sh";
 
     final String archiveRootPath;
     final String installationRootPath;
@@ -28,65 +31,112 @@ public class ExecutablesInstaller {
         this.context = context;
     }
 
-    /** Checks whether package version is installed, else installs it using archived install script */
+    /** Checks whether package version is installed and up-to-date, else installs it using install script */
     public File maybeInstallProcessorPackage(String packageName, String packageVersion)
         throws IOException, InterruptedException
     {
-        String installationScriptFilename = packageName + "-" + packageVersion + "-install.sh";
         // check package availability in software archive
-        Path archivePackage = new Path(archiveRootPath, packageName + "-" + packageVersion + ".tar.gz");
+        final String packageFilename = packageName + "-" + packageVersion + ".tar.gz";
+        Path archivePackage = new Path(archiveRootPath, packageFilename);
         FileSystem fs = archivePackage.getFileSystem(context.getConfiguration());
-        if (! fs.exists(archivePackage))
+        if (! fs.exists(archivePackage)) {
             throw new ProcessorException(archivePackage.toUri().getPath() + " installation package not found");
+        }
         // check package dir availability and age in installation dir
         File installationRootDir = new File(installationRootPath);
         File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
-        if (! packageDir.exists() || packageDir.lastModified() < fs.listStatus(archivePackage)[0].getModificationTime()) {
-            LOG.info("installation " + installationScriptFilename + " ...");
-            // check package installation script availability in software archive
-            Path packageInstallScript = new Path(archiveRootPath, installationScriptFilename);
-            if (! fs.exists(packageInstallScript))
-                throw new ProcessorException(packageInstallScript.toUri().getPath() + " install script not found");
-            // install package from software archive
-            installationRootDir.mkdirs();
-            fs.copyToLocalFile(archivePackage, new Path(installationRootPath + "/" + packageName + "-" + packageVersion + ".tar.gz"));
-            fs.copyToLocalFile(packageInstallScript, new Path(installationRootPath + "/" + installationScriptFilename));
-            ProcessUtil installation = new ProcessUtil();
-            installation.directory(installationRootDir);
-            if (installation.run("/bin/bash",
-                                 "-c",
-                                 ". " + installationRootPath + "/" + installationScriptFilename + " " +
-                                 installationRootPath + "/" + packageName + "-" + packageVersion + ".tar.gz" + " " +
-                                 installationRootPath + " " +
-                                 packageName + "-" + packageVersion) == 0) {
-                LOG.info("installation " + installationScriptFilename + " successful: " + installation.getOutputString());
-            } else {
-                throw new ProcessorException("installation " + installationScriptFilename + " failed: " + installation.getOutputString());
-            }
+        if (packageDir.exists() && packageDir.lastModified() >= fs.listStatus(archivePackage)[0].getModificationTime()) {
+            LOG.info("package " + packageName + "-" + packageVersion + " up-to-date");
+            return packageDir;
         }
+
+        // determine package installation script
+        String installationScriptFilename = packageName + "-" + packageVersion + "-install.sh";
+        Path packageInstallScript = new Path(archiveRootPath, installationScriptFilename);
+        if (!fs.exists(packageInstallScript)) {
+            installationScriptFilename = DEFAULT_INSTALLER_FILENAME;
+            packageInstallScript = new Path(archiveRootPath, installationScriptFilename);
+            if (!fs.exists(packageInstallScript))
+                throw new ProcessorException(packageInstallScript.toUri().getPath() + " install script not found");
+        }
+
+        // install package from software archive
+        installationRootDir.mkdirs();
+        fs.copyToLocalFile(archivePackage, new Path(installationRootPath + "/" + packageFilename));
+        fs.copyToLocalFile(packageInstallScript, new Path(installationRootPath + "/" + installationScriptFilename));
+        ProcessUtil installation = new ProcessUtil();
+        installation.directory(installationRootDir);
+        if (installation.run("/bin/bash",
+                             "-c",
+                             ". " + installationRootPath + "/" + installationScriptFilename + " " +
+                                     installationRootPath + "/" + packageFilename + " " +
+                                     installationRootPath + " " +
+                                     packageName + "-" + packageVersion) != 0) {
+            throw new ProcessorException("package installation with " + installationScriptFilename + " failed: " + installation.getOutputString());
+        }
+
+        LOG.info("package " + packageName + "-" + packageVersion + " installed with " + installationScriptFilename + ": " + installation.getOutputString());
         return packageDir;
     }
 
-    /** Checks whether request type call XSL is installed, else copies it into package installation */
-    public File maybeInstallCallXsl(String packageName,
+    /** Checks whether XSL or executable script is installed, else copies it into package installation.
+     * Three cases:
+     * <ul><li>script and tgz</li><li>xsl and tgz</li><li>script or xsl only</li></ul>
+     */
+    public File maybeInstallScripts(String packageName,
                                     String packageVersion,
-                                    String requestType)
+                                    String requestType,
+                                    File packageDir)
         throws IOException, InterruptedException
     {
-        String callXslFilename   = packageName + "-" + packageVersion + "-" + requestType + "-call.xsl";
-        // check transformation file availability in software archive
-        Path archiveCallXsl = new Path(archiveRootPath, callXslFilename);
-        FileSystem fs = archiveCallXsl.getFileSystem(context.getConfiguration());
-        if (! fs.exists(archiveCallXsl)) throw new ProcessorException(archiveCallXsl.toUri().getPath() + " call transformation not found");
-        // -- check transformation file availability and age in package directory
+        String xslScriptFilename = packageName + "-" + packageVersion + "-" + requestType + "-call.xsl";
+        String scriptFilename = requestType;
+        Path archiveDefaultScript = new Path(archiveRootPath, DEFAULT_SCRIPT_FILENAME);
+        Path archiveXslScript = new Path(archiveRootPath, xslScriptFilename);
+        Path archiveScriptWithPackage = new Path(new Path(archiveRootPath,String.valueOf(packageName)).getParent(),scriptFilename);
+        Path archiveScript = new Path(archiveRootPath, scriptFilename);
+        FileSystem fs = archiveDefaultScript.getFileSystem(context.getConfiguration());
         File installationRootDir = new File(installationRootPath);
-        File packageDir          = new File(installationRootDir, packageName + "-" + packageVersion);
-        File callXsl             = new File(packageDir, callXslFilename);
-        if (! callXsl.exists() || callXsl.lastModified() < fs.listStatus(archiveCallXsl)[0].getModificationTime()) {
-            LOG.info("installation of " + callXslFilename + " ...");
-            // copy transformation file into package directory
-            fs.copyToLocalFile(archiveCallXsl, new Path(callXsl.getPath()));
+        File script = null;
+
+        // check and maybe install default xsl script
+        if (! fs.exists(archiveDefaultScript)) {
+            throw new ProcessorException(archiveDefaultScript.toUri().getPath() + " XSL script not found");
         }
-        return callXsl;
+        File defaultScript = new File(installationRootDir, DEFAULT_SCRIPT_FILENAME);
+        if (! defaultScript.exists() || defaultScript.lastModified() < fs.listStatus(archiveDefaultScript)[0].getModificationTime()) {
+            fs.copyToLocalFile(archiveDefaultScript, new Path(defaultScript.getPath()));
+        }
+
+        if (packageName != null && packageVersion != null && fs.exists(archiveXslScript)) {
+            // xsl+tgz
+            script = new File(packageDir, xslScriptFilename);
+            maybeInstallScript(xslScriptFilename, archiveXslScript, script, fs);
+        } else if (packageName != null && packageVersion != null && fs.exists(archiveScriptWithPackage)) {
+            // sh+tgz
+            script = new File(packageDir, requestType);
+            maybeInstallScript(requestType, archiveScriptWithPackage, script, fs);
+        } else if ((packageName == null || packageVersion != null) && fs.exists(archiveScript)) {
+            // sh but no tgz
+            script = new File(installationRootDir, requestType);
+            maybeInstallScript(requestType, archiveScript, script, fs);
+        } else {
+            // tgz with sh or xsl in tgz root dir
+            script = new File(packageDir, requestType);
+            if (! script.exists()) {
+                throw new ProcessorException("file " + script.getPath() + " not found");
+            }
+        }
+        return script;
+    }
+
+    /** Checks whether script exists and is up to date, else copies it from archive */
+    private void maybeInstallScript(String xslScriptFilename, Path archiveXslScript, File script, FileSystem fs) throws IOException {
+        if (script.exists() && script.lastModified() >= fs.listStatus(archiveXslScript)[0].getModificationTime()) {
+            LOG.info("XSL script " + xslScriptFilename + " up-to-date");
+        } else {
+            fs.copyToLocalFile(archiveXslScript, new Path(script.getPath()));
+            LOG.info("XSL script " + xslScriptFilename + " installed");
+        }
     }
 }

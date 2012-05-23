@@ -9,9 +9,9 @@
 
   <xsl:param name="calvalus.input" />
   <xsl:param name="calvalus.task.id">default-task-id</xsl:param>
-  <xsl:param name="calvalus.package.dir">/home/hadoop/opt/seadas-6.1</xsl:param>
+  <xsl:param name="calvalus.package.dir">/home/hadoop/opt/seadas-6.3</xsl:param>
   <xsl:variable name="l2gen.envscript">config/seadas.env</xsl:variable>
-  <xsl:variable name="l2gen.executable">bin/l2gen</xsl:variable>
+  <xsl:variable name="l2gen.executable">run/bin/linux_64/l2gen</xsl:variable>
   <xsl:variable name="output" select="/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:Reference/@xlink:href" />
 
   <!-- variables computed from parameters -->
@@ -37,7 +37,7 @@
 
   <xsl:template match="/">
     <!-- source env file -->
-    <xsl:text>. </xsl:text>
+    <xsl:text>set -e; . </xsl:text>
     <xsl:value-of select="$calvalus.package.dir" />
     <xsl:text>/</xsl:text>
     <xsl:value-of select="$l2gen.envscript" />

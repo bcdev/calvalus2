@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -27,12 +26,7 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    //private static final String TYPE_XPATH = "/wps:Execute/ows:Identifier";
-    //private static final String OUTPUT_DIR_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:LiteralData";
-    //private static final String PACKAGE_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.processor.package']/wps:Data/wps:LiteralData";
-    //private static final String VERSION_XPATH = "/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.processor.version']/wps:Data/wps:LiteralData";
     private static final String TYPE_XPATH = "/Execute/Identifier";
-    private static final String OUTPUT_DIR_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.output.dir']/Data/Reference/@href";
     private static final String PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
     private static final String VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
 
@@ -53,28 +47,41 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final String requestContent = context.getConfiguration().get("calvalus.request");
             final XmlDoc request = new XmlDoc(requestContent);
             final String requestType = request.getString(TYPE_XPATH);
-            final String requestOutputPath = request.getString(OUTPUT_DIR_XPATH);
-            final String packageName = request.getString(PACKAGE_XPATH);
-            final String packageVersion = request.getString(VERSION_XPATH);
+            final String packageName = request.getString(PACKAGE_XPATH, (String) null);
+            final String packageVersion = request.getString(VERSION_XPATH, (String) null);
 
             // TODO move constants to some configuration
             final String installationRootPath = "/home/hadoop/opt";
-            //final String archiveMountPath = "/mnt/hdfs";
             final String archiveMountPath = "hdfs://master00:9000";
             final String archiveRootPath = archiveMountPath + "/calvalus/software/0.5";
 
-            // check for and maybe install processor package and XSL for request type
+            // check for and maybe install processor package and XSL or executable script
             final ExecutablesInstaller installer =
-                new ExecutablesInstaller(context, archiveRootPath, installationRootPath);
-            final File packageDir =
-                installer.maybeInstallProcessorPackage(packageName, packageVersion);
-            final File callXsl =
-                installer.maybeInstallCallXsl(packageName, packageVersion, requestType);
+                    new ExecutablesInstaller(context, archiveRootPath, installationRootPath);
 
-            // transform request into command line, may write parameter files as side effect
-            final XslTransformer xslt = new XslTransformer(new File(callXsl.getPath()));
-            //xslt.setParameter("calvalus.input", archiveMountPath + File.separator + split.getPath().toUri().getPath());
+            final File packageDir;
+            if (packageName != null && packageVersion != null) {
+                packageDir =
+                    installer.maybeInstallProcessorPackage(packageName, packageVersion);
+            } else {
+                packageDir = new File(".");
+            }
+
+            final File script =
+                installer.maybeInstallScripts(packageName, packageVersion, requestType, packageDir);
+
+            // transform request into command line using specific or default XSL script
+            File xslScript;
+            if (script.getPath().endsWith(".xsl")) {
+                xslScript = script;
+            } else {
+                xslScript = new File(installationRootPath, "calvalus-call.xsl");
+            }
+            final XslTransformer xslt = new XslTransformer(new File(xslScript.getPath()));
             xslt.setParameter("calvalus.input", split.getPath().toUri());
+            if (! script.getPath().endsWith(".xsl")) {
+                xslt.setParameter("calvalus.script", script.getPath());
+            }
             xslt.setParameter("calvalus.task.id", context.getTaskAttemptID());
             xslt.setParameter("calvalus.package.dir", packageDir.getPath());
             xslt.setParameter("calvalus.archive.mount", archiveMountPath);
@@ -85,17 +92,6 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
             final long startTime = System.nanoTime();
 
-//            // ensure that output dir exists
-//            final String requestOutputPhysicalPath = (requestOutputPath.startsWith("hdfs:"))
-//                    ? archiveMountPath + File.separator + new Path(requestOutputPath).toUri().getPath()
-//                    : new Path(requestOutputPath).toUri().getPath();
-//            final File requestOutputDir = new File(requestOutputPhysicalPath);
-//            requestOutputDir.mkdirs();
-
-//            System.out.println(context.getConfiguration().get("java.io.tmpdir"));
-//            File requestOutputDir = new File(context.getConfiguration().get("java.io.tmpdir"));
-            //File requestOutputDir = new File(context.getWorkingDirectory().toUri().getPath());
-
             // run process for command line
             final Context theContext = context;
             final ProcessUtil processor = new ProcessUtil(new ProcessUtil.OutputObserver() {
@@ -104,12 +100,11 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
                     theContext.progress();
                 }
             });
-//            processor.directory(requestOutputDir);
             final int returnCode = processor.run("/bin/bash", "-c", commandLine);
             if (returnCode == 0) {
-                LOG.info("execution of " + commandLine + " successful: " + processor.getOutputString());
+                LOG.info("execution successful: " + processor.getOutputString());
             } else {
-                throw new ProcessorException("execution of " + commandLine + " failed: " + processor.getOutputString());
+                throw new ProcessorException("execution failed: " + processor.getOutputString());
             }
 
             // write final log entry for runtime measurements
