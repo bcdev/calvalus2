@@ -14,7 +14,7 @@
 
 baseDir="`dirname ${0}`/.."
 configDir=${baseDir}/conf
-jar=${baseDir}/lib/calvalus-exchange-1.3-SNAPSHOT.jar
+jar=${baseDir}/lib/calvalus-exchange-1.4-SNAPSHOT.jar
 
 sourceDir=$1
 sourceName=`basename ${sourceDir}`
