@@ -149,9 +149,9 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
         int[] varIndexes = new int[4];
         int j = 0;
         varIndexes[VAR_VALID = j++] = getVariableIndex(varCtx, "valid");
-        varIndexes[VAR_TIME = j++] = getVariableIndex(varCtx, "time");
-        varIndexes[VAR_FAPAR = j++] = getVariableIndex(varCtx, "fapar");
-        varIndexes[VAR_LAI = j++] = getVariableIndex(varCtx, "lai");
+        varIndexes[VAR_TIME = j++] = getVariableIndex(varCtx, "obs_time");
+        varIndexes[VAR_FAPAR = j++] = getVariableIndex(varCtx, "FAPAR");
+        varIndexes[VAR_LAI = j++] = getVariableIndex(varCtx, "LAI");
         return varIndexes;
     }
 

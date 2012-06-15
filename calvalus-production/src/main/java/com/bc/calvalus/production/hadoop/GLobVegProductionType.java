@@ -75,6 +75,10 @@ public class GLobVegProductionType extends HadoopProductionType {
             throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
         }
 
+        String processorName = productionRequest.getString("processorName", null);
+        String processorBundle = productionRequest.getString("processorBundle", null);
+        String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+
         String l3ConfigXml = getL3Config().toXml();
 
         String period = getPeriodName(productionRequest);
@@ -89,6 +93,11 @@ public class GLobVegProductionType extends HadoopProductionType {
             Configuration jobConfig = createJobConfig(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, partsOutputDir);
+
+            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+
             jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfig.setInt("calvalus.mosaic.macroTileSize", 10);
@@ -157,23 +166,16 @@ public class GLobVegProductionType extends HadoopProductionType {
     }
 
     static L3Config getL3Config() throws ProductionException {
-        // TODO this is only an example to get is workging with MERIS L1b products
-        String maskExpr = "!l1_flags.INVALID && !l1_flags.BRIGHT && l1_flags.LAND_OCEAN";
+        String maskExpr = "valid != 0";
 
-        // TODO once the L2op is ready use these varNames
-        //String[] varNames = new String[]{ "time", "fapar", "lai" };
-        VariableConfig[] variableConfigs = new VariableConfig[4];
+        String[] varNames = new String[]{"obs_time", "FAPAR", "LAI"};
+        VariableConfig[] variableConfigs = new VariableConfig[1];
         variableConfigs[0] = new VariableConfig("valid", maskExpr);
-
-        //TODO this is just to create virtual band with some data before the L2 op is ready
-        variableConfigs[1] = new VariableConfig("time", "Y");
-        variableConfigs[2] = new VariableConfig("fapar", "(radiance_10 - radiance_6) / (radiance_10 + radiance_6)");
-        variableConfigs[3] = new VariableConfig("lai", "(radiance_8 - radiance_2) / (radiance_8 + radiance_2)");
 
         String type = GlobVegMosaicAlgorithm.class.getName();
 
         AggregatorConfig aggregatorConfig = new AggregatorConfig(type);
-//        aggregatorConfig.setVarNames(varNames);
+        aggregatorConfig.setVarNames(varNames);
 
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr(maskExpr);
