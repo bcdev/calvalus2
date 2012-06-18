@@ -168,9 +168,7 @@ public class GLobVegProductionType extends HadoopProductionType {
     static L3Config getL3Config() throws ProductionException {
         String maskExpr = "valid != 0";
 
-        String[] varNames = new String[]{"obs_time", "FAPAR", "LAI"};
-        VariableConfig[] variableConfigs = new VariableConfig[1];
-        variableConfigs[0] = new VariableConfig("valid", maskExpr);
+        String[] varNames = new String[]{"valid", "obs_time", "FAPAR", "LAI"};
 
         String type = GlobVegMosaicAlgorithm.class.getName();
 
@@ -180,7 +178,6 @@ public class GLobVegProductionType extends HadoopProductionType {
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr(maskExpr);
         l3Config.setAggregatorConfigs(aggregatorConfig);
-        l3Config.setVariableConfigs(variableConfigs);
         return l3Config;
     }
 
