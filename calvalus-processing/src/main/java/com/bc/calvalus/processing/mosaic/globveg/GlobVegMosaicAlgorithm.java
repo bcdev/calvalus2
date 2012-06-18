@@ -71,7 +71,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
 
             for (float[][] sample : accu) {
                 float valid = sample[varIndexes[VAR_VALID]][i];
-                if (valid != 0f) {
+                if (valid == 1f) {
                     float fapar = sample[varIndexes[VAR_FAPAR]][i];
                     float lai = sample[varIndexes[VAR_LAI]][i];
                     ++obsCount;
@@ -96,7 +96,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
 
                 for (float[][] sample : accu) {
                     float valid = sample[varIndexes[VAR_VALID]][i];
-                    if (valid != 0f) {
+                    if (valid == 1f) {
                         float time = sample[varIndexes[VAR_TIME]][i];
                         float fapar = sample[varIndexes[VAR_FAPAR]][i];
                         float lai = sample[varIndexes[VAR_LAI]][i];
