@@ -54,7 +54,11 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
 
     @Override
     public void process(float[][] samples) {
-        accu.add(samples);
+        float[][] mySamples = new float[samples.length][];
+        for (int i = 0; i < samples.length; i++) {
+            mySamples[i] = samples[i].clone();
+        }
+        accu.add(mySamples);
     }
 
     @Override
