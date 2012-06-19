@@ -53,7 +53,8 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static int VAR_TIME;
     private static int VAR_FAPAR;
     private static int VAR_LAI;
-    private static int VAR_VALID;
+    private static int VAR_VALID_FAPAR;
+    private static int VAR_VALID_LAI;
 
     @Override
     public void init(TileIndexWritable tileIndex) {
@@ -74,67 +75,55 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         int numElems = tileSize * tileSize;
         float[][] aggregatedSamples = new float[outputFeatures.length][numElems];
         for (int i = 0; i < numElems; i++) {
-            int obsCount = 0;
-            float obsTime = 0;
-            float faparSum = 0.0f;
-            float faparSumSqr = 0.0f;
-            float laiSum = 0.0f;
-            float laiSumSqr = 0.0f;
-
-            for (float[][] sample : accu) {
-                float valid = sample[varIndexes[VAR_VALID]][i];
-                if (valid == 1f) {
-                    float fapar = sample[varIndexes[VAR_FAPAR]][i];
-                    float lai = sample[varIndexes[VAR_LAI]][i];
-                    ++obsCount;
-                    faparSum += fapar;
-                    faparSumSqr += fapar * fapar;
-                    laiSum += lai;
-                    laiSumSqr += lai * lai;
-                }
-            }
-            if (obsCount > 0) {
-                final float faparMean = faparSum / obsCount;
-                final float faparSigmaSqr = faparSumSqr / obsCount - faparMean * faparMean;
-                final float faparSigma = faparSigmaSqr > 0.0f ? (float) Math.sqrt(faparSigmaSqr) : 0.0f;
-
-                final float laiMean = laiSum / obsCount;
-                final float laiSigmaSqr = laiSumSqr / obsCount - laiMean * laiMean;
-                final float laiSigma = laiSigmaSqr > 0.0f ? (float) Math.sqrt(laiSigmaSqr) : 0.0f;
-
-                float bestFapar = Float.NaN;
-                float bestLai = Float.NaN;
-                float bestFaparTime = Float.NaN;
-
-                for (float[][] sample : accu) {
-                    float valid = sample[varIndexes[VAR_VALID]][i];
-                    if (valid == 1f) {
-                        float time = sample[varIndexes[VAR_TIME]][i];
-                        float fapar = sample[varIndexes[VAR_FAPAR]][i];
-                        float lai = sample[varIndexes[VAR_LAI]][i];
-                        if (Float.isNaN(bestFapar) || Math.abs(fapar - faparMean) < Math.abs(bestFapar - faparMean)) {
-                            bestFapar = fapar;
-                            bestLai = lai;
-                            bestFaparTime = time;
-                        }
-                    }
-                }
-                aggregatedSamples[0][i] = obsCount;
-                aggregatedSamples[1][i] = bestFaparTime;
-                aggregatedSamples[2][i] = bestFapar;
-                aggregatedSamples[3][i] = faparSigma;
-                aggregatedSamples[4][i] = bestLai;
-                aggregatedSamples[5][i] = laiSigma;
-            } else {
-                aggregatedSamples[0][i] = 0;
-                aggregatedSamples[1][i] = Float.NaN;
-                aggregatedSamples[2][i] = Float.NaN;
-                aggregatedSamples[3][i] = Float.NaN;
-                aggregatedSamples[4][i] = Float.NaN;
-                aggregatedSamples[5][i] = Float.NaN;
-            }
+            processSinglePixel(i, varIndexes[VAR_VALID_FAPAR], varIndexes[VAR_TIME], varIndexes[VAR_FAPAR], 0, aggregatedSamples, -1.0f / 65534.0f);
+            processSinglePixel(i, varIndexes[VAR_VALID_LAI], varIndexes[VAR_TIME], varIndexes[VAR_LAI], 4, aggregatedSamples, -1.0f / (256 * 16 - 2));
         }
         return aggregatedSamples;
+    }
+
+    private void processSinglePixel(int i, int validIndex, int timeIndex, int measureIndex, int offset, float[][] aggregatedSamples, float noDataValue) {
+        int obsCount = 0;
+        float sum = 0.0f;
+        float sumSqr = 0.0f;
+
+        for (float[][] sample : accu) {
+            float valid = sample[varIndexes[validIndex]][i];
+            if (valid == 1f) {
+                float measurement = sample[varIndexes[measureIndex]][i];
+                ++obsCount;
+                sum += measurement;
+                sumSqr += measurement * measurement;
+            }
+        }
+        if (obsCount > 0) {
+            final float mean = sum / obsCount;
+            final float sigmaSqr = sumSqr / obsCount - mean * mean;
+            final float sigma = sigmaSqr > 0.0f ? (float) Math.sqrt(sigmaSqr) : 0.0f;
+
+            float bestMeasurement = Float.NaN;
+            float bestTime = Float.NaN;
+
+            for (float[][] sample : accu) {
+                float valid = sample[varIndexes[validIndex]][i];
+                if (valid == 1f) {
+                    float time = sample[varIndexes[timeIndex]][i];
+                    float measurement = sample[varIndexes[measureIndex]][i];
+                    if (Float.isNaN(bestMeasurement) || Math.abs(measurement - mean) < Math.abs(bestMeasurement - mean)) {
+                        bestMeasurement = measurement;
+                        bestTime = time;
+                    }
+                }
+            }
+            aggregatedSamples[offset + 0][i] = obsCount;
+            aggregatedSamples[offset + 1][i] = bestTime;
+            aggregatedSamples[offset + 2][i] = bestMeasurement;
+            aggregatedSamples[offset + 3][i] = sigma;
+        } else {
+            aggregatedSamples[offset + 0][i] = 0;
+            aggregatedSamples[offset + 1][i] = Float.NaN;
+            aggregatedSamples[offset + 2][i] = noDataValue;
+            aggregatedSamples[offset + 3][i] = noDataValue;
+        }
     }
 
     @Override
@@ -145,12 +134,14 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private static String[] createOutputFeatureNames() {
-        String[] featureNames = new String[6];
+        String[] featureNames = new String[8];
         int j = 0;
-        featureNames[j++] = "obs_count";
-        featureNames[j++] = "obs_time";
+        featureNames[j++] = "fapar_obs_count";
+        featureNames[j++] = "fapar_obs_time";
         featureNames[j++] = "fapar";
         featureNames[j++] = "fapar_sigma";
+        featureNames[j++] = "lai_obs_count";
+        featureNames[j++] = "lai_obs_time";
         featureNames[j++] = "lai";
         featureNames[j++] = "lai_sigma";
         return featureNames;
@@ -158,12 +149,13 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
 
     private static int[] createVariableIndexes(VariableContext varCtx) {
-        int[] varIndexes = new int[4];
+        int[] varIndexes = new int[5];
         int j = 0;
-        varIndexes[VAR_VALID = j++] = getVariableIndex(varCtx, "valid");
+        varIndexes[VAR_VALID_FAPAR = j++] = getVariableIndex(varCtx, "valid_fapar");
+        varIndexes[VAR_VALID_LAI = j++] = getVariableIndex(varCtx, "valid_lai");
         varIndexes[VAR_TIME = j++] = getVariableIndex(varCtx, "obs_time");
-        varIndexes[VAR_FAPAR = j++] = getVariableIndex(varCtx, "FAPAR");
-        varIndexes[VAR_LAI = j++] = getVariableIndex(varCtx, "LAI");
+        varIndexes[VAR_FAPAR = j++] = getVariableIndex(varCtx, "fapar");
+        varIndexes[VAR_LAI = j++] = getVariableIndex(varCtx, "lai");
         return varIndexes;
     }
 
@@ -207,28 +199,44 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         public Product createProduct(String productName, Rectangle rect) {
             final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
 
-            Band band = product.addBand("obs_count", ProductData.TYPE_INT8);
+            Band band = product.addBand("fapar_obs_count", ProductData.TYPE_INT8);
             band.setNoDataValue(0);
             band.setNoDataValueUsed(true);
 
-            band = product.addBand("obs_time", ProductData.TYPE_FLOAT32);
+            band = product.addBand("fapar_obs_time", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
 
-            band = product.addBand("fapar", ProductData.TYPE_FLOAT32);
+            band = product.addBand("fapar", ProductData.TYPE_UINT16);
+            band.setNoDataValue(0.0);
+            band.setScalingFactor(1.0 / 65534.0);
+            band.setScalingOffset(-1.0 / 65534.0);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("fapar_sigma", ProductData.TYPE_UINT16);
+            band.setNoDataValue(0.0);
+            band.setScalingFactor(1.0 / 65534.0);
+            band.setScalingOffset(-1.0 / 65534.0);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("lai_obs_count", ProductData.TYPE_INT8);
+            band.setNoDataValue(0);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("lai_obs_time", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
 
-            band = product.addBand("fapar_sigma", ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band = product.addBand("lai", ProductData.TYPE_UINT16);
+            band.setNoDataValue(0.0);
+            band.setScalingFactor(1.0 / (256 * 16 - 2));
+            band.setScalingOffset(-1.0 / (256 * 16 - 2));
             band.setNoDataValueUsed(true);
 
-            band = product.addBand("lai", ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-
-            band = product.addBand("lai_sigma", ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band = product.addBand("lai_sigma", ProductData.TYPE_UINT16);
+            band.setNoDataValue(0.0);
+            band.setScalingFactor(1.0 / (256 * 16 - 2));
+            band.setScalingOffset(-1.0 / (256 * 16 - 2));
             band.setNoDataValueUsed(true);
 
             //TODO

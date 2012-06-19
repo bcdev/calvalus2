@@ -109,7 +109,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " L3", jobConfig));
         }
         if (!successfullyCompleted(getInventoryService(), ncOutputDir)) {
-            String outputPrefix = String.format("GlobVeg-%s", period);
+            String outputPrefix = String.format("meris-globveg-%s", period);
             Configuration jobConfig = createJobConfig(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, partsOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
@@ -168,9 +168,8 @@ public class GLobVegProductionType extends HadoopProductionType {
     }
 
     static L3Config getL3Config() throws ProductionException {
-        String maskExpr = "valid != 0";
 
-        String[] varNames = new String[]{"valid", "obs_time", "FAPAR", "LAI"};
+        String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
 
         String type = GlobVegMosaicAlgorithm.class.getName();
 
@@ -178,7 +177,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         aggregatorConfig.setVarNames(varNames);
 
         L3Config l3Config = new L3Config();
-        l3Config.setMaskExpr(maskExpr);
+        l3Config.setMaskExpr("valid_fapar == 1 || valid_lai == 1");
         l3Config.setAggregatorConfigs(aggregatorConfig);
         return l3Config;
     }

@@ -82,14 +82,22 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
             Band[] bands = product.getBands();
             ProductData[] productData = new ProductData[bands.length];
             for (int bandIndex = 0; bandIndex < bands.length; bandIndex++) {
-                int dataType = bands[bandIndex].getDataType();
+                Band band = bands[bandIndex];
+                int dataType = band.getDataType();
+
                 float[] floatSamples = samples[bandIndex];
                 if (dataType == ProductData.TYPE_FLOAT32) {
                     productData[bandIndex] = ProductData.createInstance(floatSamples);
                 } else {
                     ProductData pdata = ProductData.createInstance(dataType, floatSamples.length);
-                    for (int i = 0; i < floatSamples.length; i++) {
-                        pdata.setElemFloatAt(i, floatSamples[i]);
+                    if (band.isScalingApplied()) {
+                        for (int i = 0; i < floatSamples.length; i++) {
+                            pdata.setElemDoubleAt(i, band.scaleInverse(floatSamples[i]));
+                        }
+                    } else {
+                        for (int i = 0; i < floatSamples.length; i++) {
+                            pdata.setElemDoubleAt(i, floatSamples[i]);
+                        }
                     }
                     productData[bandIndex] = pdata;
                 }
