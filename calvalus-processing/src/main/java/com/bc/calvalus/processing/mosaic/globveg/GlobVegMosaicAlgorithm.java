@@ -24,7 +24,15 @@ import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.VariableContext;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +43,7 @@ import java.util.List;
  * Time: 14:52
  * To change this template use File | Settings | File Templates.
  */
-public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
+public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private String[] outputFeatures;
     private int tileSize;
     private Configuration jobConf;
@@ -86,13 +94,13 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
                 }
             }
             if (obsCount > 0) {
-                final  float faparMean = faparSum / obsCount;
-                final  float faparSigmaSqr = faparSumSqr / obsCount - faparMean * faparMean;
-                final  float faparSigma = faparSigmaSqr > 0.0f ? (float) Math.sqrt(faparSigmaSqr) : 0.0f;
+                final float faparMean = faparSum / obsCount;
+                final float faparSigmaSqr = faparSumSqr / obsCount - faparMean * faparMean;
+                final float faparSigma = faparSigmaSqr > 0.0f ? (float) Math.sqrt(faparSigmaSqr) : 0.0f;
 
-                final  float laiMean = laiSum / obsCount;
-                final  float laiSigmaSqr = laiSumSqr / obsCount - laiMean * laiMean;
-                final  float laiSigma = laiSigmaSqr > 0.0f ? (float) Math.sqrt(laiSigmaSqr) : 0.0f;
+                final float laiMean = laiSum / obsCount;
+                final float laiSigmaSqr = laiSumSqr / obsCount - laiMean * laiMean;
+                final float laiSigma = laiSigmaSqr > 0.0f ? (float) Math.sqrt(laiSigmaSqr) : 0.0f;
 
                 float bestFapar = Float.NaN;
                 float bestLai = Float.NaN;
@@ -185,7 +193,48 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm , Configurable {
 
     @Override
     public MosaicProductFactory getProductFactory() {
-        // TODO implement special factory
-        return new DefaultMosaicProductFactory(getOutputFeatures());
+        return new GlobVegMosaicProductFactory();
+    }
+
+    /**
+     * The factory for creating the final mosaic product for GlobVeg
+     *
+     * @author MarcoZ
+     */
+    private static class GlobVegMosaicProductFactory implements MosaicProductFactory {
+
+        @Override
+        public Product createProduct(String productName, Rectangle rect) {
+            final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
+
+            Band band = product.addBand("obs_count", ProductData.TYPE_INT8);
+            band.setNoDataValue(0);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("obs_time", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("fapar", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("fapar_sigma", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("lai", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("lai_sigma", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            //TODO
+            //product.setStartTime(formatterConfig.getStartTime());
+            //product.setEndTime(formatterConfig.getEndTime());
+            return product;
+        }
     }
 }
