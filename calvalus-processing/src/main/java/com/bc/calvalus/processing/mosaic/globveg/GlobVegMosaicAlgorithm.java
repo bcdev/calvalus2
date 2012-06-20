@@ -100,19 +100,19 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             float bestTime = Float.NaN;
 
             for (float[][] sample : accu) {
-                float valid = sample[varIndexes[validIndex]][i];
+                final float valid = sample[varIndexes[validIndex]][i];
                 if (valid == 1f) {
-                    float time = sample[varIndexes[timeIndex]][i];
-                    float measurement = sample[varIndexes[measureIndex]][i];
+                    final float time = sample[varIndexes[timeIndex]][i];
+                    final float measurement = sample[varIndexes[measureIndex]][i];
                     if (Float.isNaN(bestMeasurement)) {
                         bestMeasurement = measurement;
                         bestTime = time;
                     } else {
-                        float currentDistance = Math.abs(measurement - mean);
-                        float bestDistance = Math.abs(bestMeasurement - mean);
+                        final float currentDistance = Math.abs(measurement - mean);
+                        final float bestDistance = Math.abs(bestMeasurement - mean);
 
-                        if (currentDistance < bestDistance ||
-                                (MathUtils.equalValues(currentDistance, bestDistance, 1E-6) && measurement > bestMeasurement) || // same distance, but larger value
+                        if (currentDistance < (bestDistance - 1E-6f) ||
+                                (MathUtils.equalValues(currentDistance, bestDistance, 1E-6f) && measurement > bestMeasurement) || // same distance, but larger value
                                 (measurement == bestMeasurement && time < bestTime) // same value, but earlier
                                 ) {
                             bestMeasurement = measurement;
