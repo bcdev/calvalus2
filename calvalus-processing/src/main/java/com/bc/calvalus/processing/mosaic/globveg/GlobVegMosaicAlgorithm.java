@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.mosaic.globveg;
 
-import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
 import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
@@ -25,13 +24,10 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +79,8 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private void processSinglePixel(int i, int validIndex, int timeIndex, int measureIndex, int offset, float[][] aggregatedSamples, float noDataValue) {
         int obsCount = 0;
-        float sum = 0.0f;
-        float sumSqr = 0.0f;
+        double sum = 0.0f;
+        double sumSqr = 0.0f;
 
         for (float[][] sample : accu) {
             float valid = sample[varIndexes[validIndex]][i];
@@ -96,8 +92,8 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             }
         }
         if (obsCount > 0) {
-            final float mean = sum / obsCount;
-            final float sigmaSqr = sumSqr / obsCount - mean * mean;
+            final float mean = (float) (sum / obsCount);
+            final float sigmaSqr = (float) (sumSqr / obsCount - mean * mean);
             final float sigma = sigmaSqr > 0.0f ? (float) Math.sqrt(sigmaSqr) : 0.0f;
 
             float bestMeasurement = Float.NaN;
@@ -108,9 +104,20 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 if (valid == 1f) {
                     float time = sample[varIndexes[timeIndex]][i];
                     float measurement = sample[varIndexes[measureIndex]][i];
-                    if (Float.isNaN(bestMeasurement) || Math.abs(measurement - mean) < Math.abs(bestMeasurement - mean)) {
+                    if (Float.isNaN(bestMeasurement)) {
                         bestMeasurement = measurement;
                         bestTime = time;
+                    } else {
+                        float currentDistance = Math.abs(measurement - mean);
+                        float bestDistance = Math.abs(bestMeasurement - mean);
+
+                        if (currentDistance < bestDistance ||
+                                (MathUtils.equalValues(currentDistance, bestDistance, 1E-6) && measurement > bestMeasurement) || // same distance, but larger value
+                                (measurement == bestMeasurement && time < bestTime) // same value, but earlier
+                                ) {
+                            bestMeasurement = measurement;
+                            bestTime = time;
+                        }
                     }
                 }
             }
