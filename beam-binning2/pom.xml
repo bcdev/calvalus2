@@ -45,6 +45,11 @@
             <artifactId>beam-netcdf</artifactId>
             <version>1.1</version>
         </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>netcdf</artifactId>
+            <version>4.2.20</version>
+        </dependency>
 
         <!-- Not a real dependency, but used for tests -->
         <dependency>
