@@ -109,11 +109,11 @@ public class GLobVegProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " L3", jobConfig));
         }
         if (!successfullyCompleted(getInventoryService(), ncOutputDir)) {
-            String outputPrefix = String.format("meris-globveg-%s-v%02dh%02d-1.0", period);
+            String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, partsOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputNameFormat);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
             jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
