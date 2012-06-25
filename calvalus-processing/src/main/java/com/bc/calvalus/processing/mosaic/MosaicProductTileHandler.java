@@ -41,7 +41,7 @@ import java.io.IOException;
 public class MosaicProductTileHandler extends MosaicTileHandler {
 
     private final TaskInputOutputContext<?, ?, ?, ?> context;
-    private final String outputPrefix;
+    private final String outputNameFormat;
     private final MosaicAlgorithm algorithm;
     private final String format;
     private final String compression;
@@ -57,19 +57,19 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
 
         String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
-        String outputPrefix = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, null);
+        String outputNameFormat = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, null);
 
         MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
 
         MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(jobConfig);
 
-        return new MosaicProductTileHandler(context, mosaicGrid, outputPrefix, algorithm, format, compression);
+        return new MosaicProductTileHandler(context, mosaicGrid, outputNameFormat, algorithm, format, compression);
     }
 
-    MosaicProductTileHandler(TaskInputOutputContext<?, ?, ?, ?> context, MosaicGrid mosaicGrid, String outputPrefix, MosaicAlgorithm algorithm, String format, String compression) {
+    MosaicProductTileHandler(TaskInputOutputContext<?, ?, ?, ?> context, MosaicGrid mosaicGrid, String outputNameFormat, MosaicAlgorithm algorithm, String format, String compression) {
         super(mosaicGrid);
         this.context = context;
-        this.outputPrefix = outputPrefix;
+        this.outputNameFormat = outputNameFormat;
         this.algorithm = algorithm;
         this.format = format;
         this.compression = compression;
@@ -160,7 +160,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     @Override
     protected void createProduct(Point macroTile) throws IOException {
         Rectangle productRect = getMosaicGrid().getMacroTileRectangle(macroTile.x, macroTile.y);
-        String productName = getTileProductName(outputPrefix, macroTile.x, macroTile.y);
+        String productName = getTileProductName(outputNameFormat, macroTile.x, macroTile.y);
         MosaicProductFactory productFactory = algorithm.getProductFactory();
         product = productFactory.createProduct(productName, productRect);
         CrsGeoCoding geoCoding = getMosaicGrid().createMacroCRS(macroTile);
@@ -171,8 +171,8 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
         productWriter = createProductWriter(product, productFile, productFormatter.getOutputFormat());
     }
 
-    static String getTileProductName(String prefix, int tileX, int tileY) {
-        return String.format("%s-v%02dh%02d", prefix, tileY, tileX);
+    static String getTileProductName(String outputNameFormat, int tileX, int tileY) {
+        return String.format(outputNameFormat, tileY, tileX);
     }
 
     static ProductWriter createProductWriter(Product product, File outputFile, String outputFormat) throws IOException {

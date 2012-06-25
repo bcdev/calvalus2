@@ -152,9 +152,7 @@ public class GLobVegProductionType extends HadoopProductionType {
     }
 
     static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
-        String minDate = productionRequest.getString("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        return String.format("%s-%dd", minDate, periodLength);
+        return productionRequest.getString("minDate").replaceAll("-", "");
     }
 
     static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {

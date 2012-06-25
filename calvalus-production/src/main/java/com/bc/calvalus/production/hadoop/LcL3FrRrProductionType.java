@@ -122,7 +122,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 Configuration jobConfigFormat = createJobConfig(productionRequest);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, outputPrefix);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);

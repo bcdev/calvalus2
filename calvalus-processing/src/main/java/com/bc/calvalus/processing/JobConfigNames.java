@@ -33,6 +33,7 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_REGEX = "calvalus.output.regex";
     String CALVALUS_OUTPUT_REPLACEMENT = "calvalus.output.replacement";
     String CALVALUS_OUTPUT_PREFIX = "calvalus.output.prefix";
+    String CALVALUS_OUTPUT_NAMEFORMAT = "calvalus.output.nameformat";
 
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";

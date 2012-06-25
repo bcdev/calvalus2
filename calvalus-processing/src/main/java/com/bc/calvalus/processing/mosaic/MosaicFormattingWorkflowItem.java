@@ -53,7 +53,7 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "mosaic"},
+                {JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, "mosaic-v%02dh%02d"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
                 {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
                 {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
