@@ -33,12 +33,15 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RGBImageProfile;
+import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
+import org.esa.beam.util.PropertyMap;
 import org.esa.beam.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
@@ -106,34 +109,59 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             subsetParams.put("subSamplingY", qlConfig.subSamplingY);
             product = GPF.createProduct("Subset", subsetParams, product);
         }
-        String[] rgbaExpressions;
-        if (qlConfig.RGBAExpressions.length == 4) {
-            rgbaExpressions = qlConfig.RGBAExpressions;
-        } else if (qlConfig.RGBAExpressions.length == 3) {
-            rgbaExpressions = new String[4];
-            System.arraycopy(qlConfig.RGBAExpressions, 0, rgbaExpressions, 0, qlConfig.RGBAExpressions.length);
-            rgbaExpressions[3] = "";
-        } else {
-            throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
-        }
-        RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
-        final Band[] rgbBands = {
-                product.getBand(RGBImageProfile.RED_BAND_NAME),
-                product.getBand(RGBImageProfile.GREEN_BAND_NAME),
-                product.getBand(RGBImageProfile.BLUE_BAND_NAME),
-        };
-        for (Band band : rgbBands) {
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-        }
-        BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
-        if (qlConfig.v1 != null && qlConfig.v2 != null && qlConfig.v1.length == qlConfig.v2.length) {
-            ImageInfo imageInfo = multiLevelSource.getImageInfo();
-            RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
-            for (int i = 0; i < qlConfig.v1.length; i++) {
-                rgbChannelDef.setMinDisplaySample(i, qlConfig.v1[i]);
-                rgbChannelDef.setMaxDisplaySample(i, qlConfig.v2[i]);
+        BandImageMultiLevelSource multiLevelSource;
+        if (qlConfig.RGBAExpressions != null && qlConfig.RGBAExpressions.length > 0) {
+            String[] rgbaExpressions;
+            if (qlConfig.RGBAExpressions.length == 4) {
+                rgbaExpressions = qlConfig.RGBAExpressions;
+            } else if (qlConfig.RGBAExpressions.length == 3) {
+                rgbaExpressions = new String[4];
+                System.arraycopy(qlConfig.RGBAExpressions, 0, rgbaExpressions, 0, qlConfig.RGBAExpressions.length);
+                rgbaExpressions[3] = "";
+            } else {
+                throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
             }
+            RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
+            final Band[] rgbBands = {
+                    product.getBand(RGBImageProfile.RED_BAND_NAME),
+                    product.getBand(RGBImageProfile.GREEN_BAND_NAME),
+                    product.getBand(RGBImageProfile.BLUE_BAND_NAME),
+            };
+            for (Band band : rgbBands) {
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+            }
+            multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
+            if (qlConfig.v1 != null && qlConfig.v2 != null && qlConfig.v1.length == qlConfig.v2.length) {
+                ImageInfo imageInfo = multiLevelSource.getImageInfo();
+                RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
+                for (int i = 0; i < qlConfig.v1.length; i++) {
+                    rgbChannelDef.setMinDisplaySample(i, qlConfig.v1[i]);
+                    rgbChannelDef.setMaxDisplaySample(i, qlConfig.v2[i]);
+                }
+            }
+        } else if (qlConfig.bandName != null) {
+            Band band = product.getBand(qlConfig.bandName);
+            multiLevelSource = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
+            if (qlConfig.cpdURL != null) {
+                InputStream inputStream = new URL(qlConfig.cpdURL).openStream();
+                try {
+                    ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
+                    ImageInfo imageInfo = multiLevelSource.getImageInfo();
+                    if (band.getIndexCoding() != null) {
+                        imageInfo.setColors(colorPaletteDef.getColors());
+                    } else {
+                        Stx stx = band.getStx();
+                        imageInfo.setColorPaletteDef(colorPaletteDef,
+                                                               stx.getMinimum(),
+                                                               stx.getMaximum(), false);
+                    }
+                } finally {
+                    inputStream.close();
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("Neither RGB nor band information given");
         }
         final ImageLayer imageLayer = new ImageLayer(multiLevelSource);
 
@@ -178,6 +206,38 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     private static boolean isModelYAxisDown(ImageLayer imageLayer) {
         return imageLayer.getImageToModelTransform().getDeterminant() > 0.0;
     }
+
+    /**
+     * Taken from  ColorPaletteDef. modified to use InputStream
+     */
+    public static ColorPaletteDef loadColorPaletteDef(InputStream inputStream) throws IOException {
+        final PropertyMap propertyMap = new PropertyMap();
+        propertyMap.getProperties().load(inputStream);
+
+        final int numPoints = propertyMap.getPropertyInt("numPoints");
+        if (numPoints < 2) {
+            throw new IOException("The selected file contains less than\n" +
+                                          "two colour points.");
+        }
+        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[numPoints];
+        double lastSample = 0;
+        for (int i = 0; i < points.length; i++) {
+            final ColorPaletteDef.Point point = new ColorPaletteDef.Point();
+            final Color color = propertyMap.getPropertyColor("color" + i);
+            double sample = propertyMap.getPropertyDouble("sample" + i);
+            if (i > 0 && sample < lastSample) {
+                sample = lastSample + 1.0;
+            }
+            point.setColor(color);
+            point.setSample(sample);
+            points[i] = point;
+            lastSample = sample;
+        }
+        ColorPaletteDef paletteDef = new ColorPaletteDef(points, 256);
+        paletteDef.setAutoDistribute(propertyMap.getPropertyBool("autoDistribute", false));
+        return paletteDef;
+    }
+
 
 //    public static void main(String[] args) throws IOException {
 //

@@ -30,12 +30,19 @@ class QLConfig {
     int subSamplingX;
     @Parameter
     int subSamplingY;
+
     @Parameter
     String[] RGBAExpressions;
     @Parameter
     double[] v1;
     @Parameter
     double[] v2;
+
+    @Parameter
+    String bandName;
+    @Parameter
+    String cpdURL;
+
     @Parameter
     String imageType;
     @Parameter
