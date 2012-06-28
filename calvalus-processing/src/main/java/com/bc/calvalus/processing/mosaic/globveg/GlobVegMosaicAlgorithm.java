@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.globveg;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
@@ -29,15 +30,13 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: marcoz
- * Date: 15.05.12
- * Time: 14:52
- * To change this template use File | Settings | File Templates.
+ * Composting using the algorithm described by Pinty et. al.
  */
 public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private String[] outputFeatures;
@@ -200,7 +199,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
      *
      * @author MarcoZ
      */
-    private static class GlobVegMosaicProductFactory implements MosaicProductFactory {
+    private class GlobVegMosaicProductFactory implements MosaicProductFactory {
 
         @Override
         public Product createProduct(String productName, Rectangle rect) {
@@ -246,10 +245,29 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             band.setScalingOffset(-1.0 / (256 * 16 - 2));
             band.setNoDataValueUsed(true);
 
-            //TODO
-            //product.setStartTime(formatterConfig.getStartTime());
-            //product.setEndTime(formatterConfig.getEndTime());
+            String dateStart = jobConf.get(JobConfigNames.CALVALUS_MIN_DATE);
+            if (dateStart != null) {
+                product.setStartTime(parseTime(dateStart));
+            }
+            String dateStop = jobConf.get(JobConfigNames.CALVALUS_MAX_DATE);
+            if (dateStop != null) {
+                ProductData.UTC stopTime = parseTime(dateStop);
+                Calendar calendar = stopTime.getAsCalendar();
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                ProductData.UTC endTime = ProductData.UTC.create(calendar.getTime(), 0L);
+                product.setEndTime(endTime);
+            }
+
             return product;
         }
+
+        private ProductData.UTC parseTime(String timeString) {
+            try {
+                return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Illegal date format.", e);
+            }
+        }
+
     }
 }
