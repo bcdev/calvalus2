@@ -59,7 +59,7 @@ abstract class MosaicTileHandler {
     public void close() throws IOException {
         if (currentMacroTile != null) {
             writeNaNTiles(currentTile, null);
-            closeProduct();
+            finishProduct();
         }
         currentTile = null;
         currentMacroTile = null;
@@ -117,6 +117,6 @@ abstract class MosaicTileHandler {
 
     protected abstract void writeNaNTile(Point tile) throws IOException;
 
-    protected abstract void closeProduct() throws IOException;
+    protected abstract void finishProduct() throws IOException;
 
 }

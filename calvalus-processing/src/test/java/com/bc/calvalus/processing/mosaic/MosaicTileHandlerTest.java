@@ -266,7 +266,7 @@ public class MosaicTileHandlerTest {
         }
 
         @Override
-        protected void closeProduct() {
+        protected void finishProduct() {
             closeProduct++;
         }
 
