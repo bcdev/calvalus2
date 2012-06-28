@@ -34,13 +34,10 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.operator.AggregatorConfig;
-import org.esa.beam.binning.operator.VariableConfig;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -51,7 +48,6 @@ import java.util.Date;
 public class GLobVegProductionType extends HadoopProductionType {
 
     public static final String NAME = "GLobVeg";
-    private static final int PERIOD_LENGTH_DEFAULT = 10;
 
     public GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -117,6 +113,10 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
             jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
+            jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+            jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
             jobConfig.setInt("calvalus.mosaic.macroTileSize", 10);
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
             jobConfig.set("mapred.job.priority", "HIGH");
@@ -157,12 +157,8 @@ public class GLobVegProductionType extends HadoopProductionType {
 
     static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
         Date minDate = productionRequest.getDate("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        Calendar calendar = ProductData.UTC.createCalendar();
-        calendar.setTimeInMillis(minDate.getTime());
-        calendar.add(Calendar.DAY_OF_MONTH, periodLength - 1);
-
-        return new DateRange(minDate, calendar.getTime());
+        Date maxDate = productionRequest.getDate("maxDate");
+        return new DateRange(minDate, maxDate);
     }
 
     static L3Config getL3Config() throws ProductionException {
