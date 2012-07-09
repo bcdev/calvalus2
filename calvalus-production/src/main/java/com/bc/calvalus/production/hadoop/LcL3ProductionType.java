@@ -172,8 +172,13 @@ public class LcL3ProductionType extends HadoopProductionType {
         return String.format("%s-%s-%dd", resolution, minDate, periodLength);
     }
 
-
     static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");
+        return new DateRange(minDate, maxDate);
+    }
+
+    static DateRange getDateRange_OLD(ProductionRequest productionRequest) throws ProductionException {
         Date minDate = productionRequest.getDate("minDate");
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
         Calendar calendar = ProductData.UTC.createCalendar();

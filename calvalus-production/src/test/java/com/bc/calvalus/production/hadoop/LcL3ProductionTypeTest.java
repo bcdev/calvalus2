@@ -126,7 +126,7 @@ public class LcL3ProductionTypeTest {
                                                                     "minDate", "2010-07-01",
                                                                     "periodLength", "15");
 
-        DateRange dateRange = LcL3ProductionType.getDateRange(productionRequest);
+        DateRange dateRange = LcL3ProductionType.getDateRange_OLD(productionRequest);
         assertNotNull(dateRange);
         assertEquals("2010-07-01", asString(dateRange.getStartDate()));
         assertEquals("2010-07-15", asString(dateRange.getStopDate()));
