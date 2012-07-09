@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.mosaic;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.metadata.MetadataEngine;
+import com.bc.ceres.metadata.MetadataResourceEngine;
 import com.bc.ceres.metadata.SimpleFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -192,10 +192,10 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
             Configuration configuration = context.getConfiguration();
                 String templatePath = configuration.get("calvalus.metadata.template");
             if (templatePath != null) {
-                MetadataEngine metadataEngine = new MetadataEngine(new HDFSSimpleFileSystem(context));
+                MetadataResourceEngine metadataEngine = new MetadataResourceEngine(new HDFSSimpleFileSystem(context));
                 String metadataPath = configuration.get("calvalus.metadata.URL");
                 if (metadataPath != null) {
-                    metadataEngine.readMetadata("metadata", metadataPath, true);
+                    metadataEngine.readResource("metadata", metadataPath);
                 }
                 VelocityContext velocityContext = metadataEngine.getVelocityContext();
 
@@ -212,7 +212,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
                 velocityContext.put("product", product);
 
                 String productFilename = productFormatter.getProductFilename();
-                metadataEngine.writeTargetMetadata(templatePath, productFilename);
+                metadataEngine.writeRelatedResource(templatePath, productFilename);
             }
         } catch (Exception e) {
             throw new IOException(e);
@@ -245,13 +245,13 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
         }
 
         @Override
-        public Reader getReader(String path) throws IOException {
+        public Reader createReader(String path) throws IOException {
             FSDataInputStream inputStream = fileSystem.open(new Path(path));
             return new InputStreamReader(inputStream);
         }
 
         @Override
-        public Writer getWriter(String path) throws IOException {
+        public Writer createWriter(String path) throws IOException {
             Path workOutputPath;
             try {
                 workOutputPath = FileOutputFormat.getWorkOutputPath(context);
