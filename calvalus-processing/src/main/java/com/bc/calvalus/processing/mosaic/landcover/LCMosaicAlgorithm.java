@@ -14,8 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.mosaic;
+package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
+import com.bc.calvalus.processing.mosaic.MosaicGrid;
+import com.bc.calvalus.processing.mosaic.MosaicPartitioner;
+import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.TileDataWritable;
+import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.esa.beam.binning.VariableContext;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -44,12 +50,12 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int STATUS = 0;
 
-    private static final int STATUS_INVALID = 0;
-    private static final int STATUS_LAND = 1;
-    private static final int STATUS_WATER = 2;
-    private static final int STATUS_SNOW = 3;
-    private static final int STATUS_CLOUD = 4;
-    private static final int STATUS_CLOUD_SHADOW = 5;
+    static final int STATUS_INVALID = 0;
+    static final int STATUS_LAND = 1;
+    static final int STATUS_WATER = 2;
+    static final int STATUS_SNOW = 3;
+    static final int STATUS_CLOUD = 4;
+    static final int STATUS_CLOUD_SHADOW = 5;
 
     private static final String[] COUNTER_NAMES = {"land", "water", "snow", "cloud", "cloud_shadow"};
 
@@ -58,6 +64,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
     private int[] varIndexes;
+    private StatusRemapper statusRemapper;
 
     private float[][] aggregatedSamples = null;
     private int[] deepWaterCounter = null;
@@ -112,10 +119,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             if ((status == STATUS_LAND || status == STATUS_SNOW) && Float.isNaN(sdr_1)) {
                 status = STATUS_INVALID;
             }
-            if (status > STATUS_CLOUD_SHADOW) {
-                // re-map ucl-cloud, ucl-cloud-buffer and schiller-cloud ==> cloud
-                status = STATUS_CLOUD;
-            }
+            status = StatusRemapper.remapStatus(statusRemapper, status);
 
             if (status == STATUS_LAND && sdr8DataSamples != null) {
                 status = temporalCloudCheck(samples[varIndexes[8]][i], sdr8DataSamples[0][i]);
@@ -211,6 +215,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
         variableCount = outputFeatures.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
+        statusRemapper = StatusRemapper.create(jobConf);
     }
 
     @Override

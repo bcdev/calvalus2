@@ -14,8 +14,13 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.mosaic;
+package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
+import com.bc.calvalus.processing.mosaic.MosaicGrid;
+import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.esa.beam.binning.VariableContext;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +41,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private float[][] aggregatedSamples = null;
     private String[] outputFeatures;
     private int tileSize;
+    private StatusRemapper statusRemapper;
     private Configuration jobConf;
 
     @Override
@@ -51,7 +57,8 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public void process(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            final int status = (int) samples[varIndexes[0]][i];
+            int status = (int) samples[varIndexes[0]][i];
+            status = StatusRemapper.remapStatus(statusRemapper, status);
             if (status == STATUS_LAND) {
                 // Since we have seen LAND now, accumulate LAND SDRs
                 float sdr8 = samples[varIndexes[1]][i];
@@ -102,6 +109,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         varIndexes = createVariableIndexes(variableContext);
         outputFeatures = createOutputFeatureNames();
         tileSize = MosaicGrid.create(jobConf).getTileSize();
+        statusRemapper = StatusRemapper.create(jobConf);
     }
 
     @Override
