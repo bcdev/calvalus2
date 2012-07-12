@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -8,6 +9,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,9 +52,10 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final String packageName = request.getString(PACKAGE_XPATH, (String) null);
             final String packageVersion = request.getString(VERSION_XPATH, (String) null);
 
+            URI defaultUri = FileSystem.getDefaultUri(context.getConfiguration());
             // TODO move constants to some configuration
             final String installationRootPath = "/home/hadoop/opt";
-            final String archiveMountPath = "hdfs://master00:9000";
+            final String archiveMountPath = defaultUri.toString();
             final String archiveRootPath = archiveMountPath + "/calvalus/software/0.5";
 
             // check for and maybe install processor package and XSL or executable script
