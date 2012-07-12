@@ -90,10 +90,12 @@ public class ExecutablesInstaller {
         throws IOException, InterruptedException
     {
         String xslScriptFilename = packageName + "-" + packageVersion + "-" + requestType + "-call.xsl";
+        String bashScriptFilename = packageName + "-" + packageVersion + "-" + requestType + "-call.bash";
         String scriptFilename = requestType;
         Path archiveDefaultScript = new Path(archiveRootPath, DEFAULT_SCRIPT_FILENAME);
         Path archiveXslScript = new Path(archiveRootPath, xslScriptFilename);
-        Path archiveScriptWithPackage = new Path(new Path(archiveRootPath,String.valueOf(packageName)).getParent(),scriptFilename);
+        Path archiveBashScript = new Path(archiveRootPath, bashScriptFilename);
+        //Path archiveScriptWithPackage = new Path(new Path(archiveRootPath,String.valueOf(packageName)).getParent(),scriptFilename);
         Path archiveScript = new Path(archiveRootPath, scriptFilename);
         FileSystem fs = archiveDefaultScript.getFileSystem(context.getConfiguration());
         File installationRootDir = new File(installationRootPath);
@@ -112,10 +114,10 @@ public class ExecutablesInstaller {
             // xsl+tgz
             script = new File(packageDir, xslScriptFilename);
             maybeInstallScript(xslScriptFilename, archiveXslScript, script, fs);
-        } else if (packageName != null && packageVersion != null && fs.exists(archiveScriptWithPackage)) {
+        } else if (packageName != null && packageVersion != null && fs.exists(archiveBashScript)) {
             // sh+tgz
-            script = new File(packageDir, requestType);
-            maybeInstallScript(requestType, archiveScriptWithPackage, script, fs);
+            script = new File(installationRootDir, bashScriptFilename);
+            maybeInstallScript(bashScriptFilename, archiveBashScript, script, fs);
         } else if ((packageName == null || packageVersion != null) && fs.exists(archiveScript)) {
             // sh but no tgz
             script = new File(installationRootDir, requestType);

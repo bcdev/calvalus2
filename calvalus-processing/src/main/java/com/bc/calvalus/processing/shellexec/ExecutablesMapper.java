@@ -1,7 +1,9 @@
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -62,13 +64,15 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final ExecutablesInstaller installer =
                     new ExecutablesInstaller(context, archiveRootPath, installationRootPath);
 
-            final File packageDir;
-            if (packageName != null && packageVersion != null) {
-                packageDir =
-                    installer.maybeInstallProcessorPackage(packageName, packageVersion);
-            } else {
-                packageDir = new File(".");
-            }
+            Path[] localCacheArchives = DistributedCache.getLocalCacheArchives(context.getConfiguration());
+            String packageBase = new File(packageName + "-" + packageVersion).getName();
+            final File packageDir = new File(localCacheArchives[0].toString(), packageBase);
+//            if (packageName != null && packageVersion != null) {
+//                packageDir =
+//                    installer.maybeInstallProcessorPackage(packageName, packageVersion);
+//            } else {
+//                packageDir = new File(".");
+//            }
 
             final File script =
                 installer.maybeInstallScripts(packageName, packageVersion, requestType, packageDir);
@@ -83,7 +87,8 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final XslTransformer xslt = new XslTransformer(new File(xslScript.getPath()));
             xslt.setParameter("calvalus.input", split.getPath().toUri());
             if (! script.getPath().endsWith(".xsl")) {
-                xslt.setParameter("calvalus.script", script.getPath());
+                xslt.setParameter("calvalus.script", script.getAbsolutePath());
+                LOG.info("calvalus.script " + script.getAbsolutePath());
             }
             xslt.setParameter("calvalus.task.id", context.getTaskAttemptID());
             xslt.setParameter("calvalus.package.dir", packageDir.getPath());

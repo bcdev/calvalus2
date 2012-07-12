@@ -7,6 +7,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -20,6 +21,7 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Logger;
 
 /**
@@ -58,6 +60,8 @@ public class ExecutablesTool extends Configured implements Tool {
     private static final String CALVALUS_PARAMS_XPATH = "/Execute/DataInputs/Input[starts-with(Identifier,'calvalus.')]";
     private static final String PARAM_NAME_XPATH = "Identifier";
     private static final String PARAM_VALUE_XPATH = "Data/LiteralData";
+    private static final String PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
+    private static final String VERSION_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.version']/Data/LiteralData";
 
     static {
         options = new Options();
@@ -107,6 +111,23 @@ public class ExecutablesTool extends Configured implements Tool {
             if (requestPriority != null) {
                 job.getConfiguration().set("mapred.job.priority", requestPriority);
             }
+
+            // check package availability in software archive
+            final String packageName = request.getString(PACKAGE_XPATH, (String) null);
+            final String packageVersion = request.getString(VERSION_XPATH, (String) null);
+            final String packageFilename = packageName + "-" + packageVersion + ".tar.gz";
+            URI defaultUri = FileSystem.getDefaultUri(job.getConfiguration());
+            // TODO move constants to some configuration
+            final String archiveMountPath = defaultUri.toString();
+            final String archiveRootPath = archiveMountPath + "/calvalus/software/0.5";
+
+            Path archivePackage = new Path(archiveRootPath, packageFilename);
+            FileSystem fs = archivePackage.getFileSystem(job.getConfiguration());
+            if (!fs.exists(archivePackage)) {
+                throw new ProcessorException(archivePackage.toUri().getPath() + " installation package not found");
+            }
+            DistributedCache.addCacheArchive(archivePackage.toUri(), job.getConfiguration());
+
 
             job.setInputFormatClass(ExecutablesInputFormat.class);
             job.setMapperClass(ExecutablesMapper.class);

@@ -7,10 +7,14 @@
 
   <xsl:param name="calvalus.input" />
   <xsl:param name="calvalus.script" />
+  <xsl:param name="calvalus.package.dir"/>
 
   <xsl:variable name="calvalus.output.dir" select="/wps:Execute/wps:DataInputs/wps:Input[ows:Identifier='calvalus.output.dir']/wps:Data/wps:Reference/@xlink:href" />
 
   <xsl:template match="/">
+export calvalus_package_dir='<xsl:value-of select="$calvalus.package.dir" />'<xsl:text>
+</xsl:text>
+
 <xsl:apply-templates select="wps:Execute" />
 <xsl:value-of select="$calvalus.script" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.input" /><xsl:text> </xsl:text><xsl:value-of select="$calvalus.output.dir" /><xsl:text>
 </xsl:text>
