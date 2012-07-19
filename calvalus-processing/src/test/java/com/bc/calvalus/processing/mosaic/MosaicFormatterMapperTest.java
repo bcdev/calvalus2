@@ -25,18 +25,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class MosaicFormatterTest {
+public class MosaicFormatterMapperTest {
 
     @Test
     public void testGetPartitionNumber() throws Exception {
-        assertEquals(0, MosaicFormatter.getPartitionNumber("part-r-00000"));
-        assertEquals(1, MosaicFormatter.getPartitionNumber("part-r-00001"));
-        assertEquals(15, MosaicFormatter.getPartitionNumber("part-r-00015"));
+        assertEquals(0, MosaicFormatterMapper.getPartitionNumber("part-r-00000"));
+        assertEquals(1, MosaicFormatterMapper.getPartitionNumber("part-r-00001"));
+        assertEquals(15, MosaicFormatterMapper.getPartitionNumber("part-r-00015"));
     }
 
     @Test
     public void testGetPartGeometry() throws Exception {
-        Geometry partGeometry = MosaicFormatter.getPartGeometry(0, 18);
+        Geometry partGeometry = MosaicFormatterMapper.getPartGeometry(0, 18);
         assertNotNull(partGeometry);
         assertTrue(partGeometry.isRectangle());
         Envelope envelope = partGeometry.getEnvelopeInternal();
@@ -45,7 +45,7 @@ public class MosaicFormatterTest {
         assertEquals("minY", 80.0, envelope.getMinY(), 1e-5);
         assertEquals("maxY", 90.0, envelope.getMaxY(), 1e-5);
 
-        partGeometry = MosaicFormatter.getPartGeometry(9, 18);
+        partGeometry = MosaicFormatterMapper.getPartGeometry(9, 18);
         assertNotNull(partGeometry);
         assertTrue(partGeometry.isRectangle());
         envelope = partGeometry.getEnvelopeInternal();
@@ -54,7 +54,7 @@ public class MosaicFormatterTest {
         assertEquals("minY", -10.0, envelope.getMinY(), 1e-5);
         assertEquals("maxY", 0.0, envelope.getMaxY(), 1e-5);
 
-        partGeometry = MosaicFormatter.getPartGeometry(17, 18);
+        partGeometry = MosaicFormatterMapper.getPartGeometry(17, 18);
         assertNotNull(partGeometry);
         assertTrue(partGeometry.isRectangle());
         envelope = partGeometry.getEnvelopeInternal();

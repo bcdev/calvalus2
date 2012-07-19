@@ -58,12 +58,17 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
             ProductionType maProductionType = new MAProductionType(inventoryService, processingService, stagingService);
+
             ProductionType pvProductionType = new InventoryProductionType(inventoryService, processingService, stagingService);
-            ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService, stagingService);
-            ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService, stagingService);
             ProductionType qlProductionType = new QLProductionType(inventoryService, processingService, stagingService);
             ProductionType pgProductionType = new GeometryProductionType(inventoryService, processingService, stagingService);
+
+            ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService, stagingService);
+            ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService, stagingService);
+            ProductionType lcl3SeasonalProductionType = new LcSeasonalProductionType(inventoryService, processingService, stagingService);
+
             ProductionType prevueProductionType = new PrevueProductionType(inventoryService, processingService, stagingService);
+
             ProductionType globVegProductionType = new GLobVegProductionType(inventoryService, processingService, stagingService);
 
             return new ProductionServiceImpl(inventoryService,
@@ -78,6 +83,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
                                              pvProductionType,
                                              lcl3ProductionType,
                                              lcl3frrrProductionType,
+                                             lcl3SeasonalProductionType,
                                              qlProductionType,
                                              pgProductionType,
                                              prevueProductionType,

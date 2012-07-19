@@ -21,20 +21,22 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
 
 /**
- * A workflow item creating a Hadoop job for formatting a mosaic into many output products.
+ * A workflow item creating a Hadoop job for....
  */
-public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
+public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public MosaicSeasonalWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -52,11 +54,7 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, "mosaic-v%02dh%02d"},
-                {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
-                {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
+                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT}
         };
     }
 
@@ -65,19 +63,21 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
-        job.setInputFormatClass(DirectoryFileInputFormat.class);
-        FileInputFormat.setInputPaths(job, new Path(getInputDir()));
+        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
 
-        job.setMapperClass(MosaicFormatterMapper.class);
-        job.setNumReduceTasks(0);
-        job.setOutputFormatClass(SimpleOutputFormat.class);
+        job.setMapperClass(MosaicSeasonalMapper.class);
+        job.setMapOutputKeyClass(TileIndexWritable.class);
+        job.setMapOutputValueClass(TileDataWritable.class);
 
-        // TODO add resume processing
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        if (resumeProcessing) {
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        } else {
-            JobUtils.clearAndSetOutputDir(job, getOutputDir());
-        }
+        job.setPartitionerClass(MosaicPartitioner.class);
+
+        job.setReducerClass(MosaicReducer.class);
+        job.setOutputKeyClass(TileIndexWritable.class);
+        job.setOutputValueClass(TileDataWritable.class);
+        job.setNumReduceTasks(36);
+
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        JobUtils.clearAndSetOutputDir(job, getOutputDir());
     }
 }

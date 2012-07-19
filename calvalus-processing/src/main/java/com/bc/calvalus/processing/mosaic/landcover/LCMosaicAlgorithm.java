@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.mosaic.MosaicPartitioner;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import com.bc.calvalus.processing.mosaic.TileDataWritable;
 import com.bc.calvalus.processing.mosaic.TileIndexWritable;
+import com.sun.tools.internal.xjc.reader.gbind.ElementSets;
 import org.esa.beam.binning.VariableContext;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -81,6 +82,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     @Override
     public void init(TileIndexWritable tileIndex) throws IOException {
+        System.out.println("init: tileIndex=" + tileIndex);
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         deepWaterCounter = new int[numElems];
@@ -90,16 +92,35 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         if (reader == null && jobConf.get(CALVALUS_LC_SDR8_MEAN) != null) {
             openSdr8MeanReader(getPartition(tileIndex));
         }
+        System.out.println("reader exist= " + (reader != null));
         if (reader != null) {
             sdr8DataSamples = null;
-            while (reader.next(sdr8Key)) {
-                if (sdr8Key.equals(tileIndex)) {
-                    reader.getCurrentValue(sdr8Data);
-                    sdr8DataSamples = sdr8Data.getSamples();
-                    break;
+            if (sdr8Key.equals(tileIndex)) {
+                System.out.println("matches OLD value: sdr8key=" +  sdr8Key);
+                reader.getCurrentValue(sdr8Data);
+                sdr8DataSamples = sdr8Data.getSamples();
+            } else if (sdr8Key.compareTo(tileIndex) == 1) {
+                System.out.println("skipping one old value: sdr8key=" +  sdr8Key);
+                // sdr8Key > tileIndex
+            } else {
+                // sdr8Key < tileIndex
+                while (reader.next(sdr8Key)) {
+                    System.out.println("sdr8Key=" + sdr8Key);
+                    if (sdr8Key.equals(tileIndex)) {
+                        System.out.println("matches");
+                        reader.getCurrentValue(sdr8Data);
+                        sdr8DataSamples = sdr8Data.getSamples();
+                        break;
+                    } else if (sdr8Key.compareTo(tileIndex) == 1) {
+                        System.out.println("skipping while reading");
+                        // sdr8Key > tileIndex
+                        break;
+                    }
                 }
             }
         }
+
+        System.out.println("sdr8DataSamples != null: " + (sdr8DataSamples != null));
     }
 
     private int getPartition(TileIndexWritable tileIndex) {
@@ -173,6 +194,7 @@ public class LCMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private int temporalCloudCheck(float sdr8, float sdr8CloudThreshold) {
         if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
             // treat this as cloud
+            System.out.println("setting to CLOUD: sdr8/sdr8threshold = " + sdr8 + ", " + sdr8CloudThreshold);
             return STATUS_CLOUD;
         } else {
             return STATUS_LAND;

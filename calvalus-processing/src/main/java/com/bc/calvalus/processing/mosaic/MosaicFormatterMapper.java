@@ -35,7 +35,7 @@ import java.text.ParseException;
 import java.util.logging.Logger;
 
 
-public class MosaicFormatter extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
+public class MosaicFormatterMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final NumberFormat PART_FILE_NUMBER_FORMAT = NumberFormat.getInstance();
