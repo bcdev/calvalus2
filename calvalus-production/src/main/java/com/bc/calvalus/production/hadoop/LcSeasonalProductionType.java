@@ -87,8 +87,8 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         String mainL3ConfigXml = getMainL3Config().toXml();
 
         String period = getPeriodName(productionRequest);
-        String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-season-sr");
-        String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-season-nc");
+        String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-sr");
+        String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-nc");
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
