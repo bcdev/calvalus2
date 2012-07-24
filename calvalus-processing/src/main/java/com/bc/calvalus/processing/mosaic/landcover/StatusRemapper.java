@@ -29,15 +29,24 @@ public class StatusRemapper {
     public static StatusRemapper create(Configuration jobConf) {
         String asLandText = jobConf.get("calvalus.lc.remapAsLand");
         if (asLandText != null) {
-            String[] asLandSplits = asLandText.split(",");
-            int[] statusesToLand = new int[asLandSplits.length];
-            for (int i = 0; i < asLandSplits.length; i++) {
-                statusesToLand[i] = Integer.parseInt(asLandSplits[i]);
-            }
-            return new StatusRemapper(statusesToLand);
+            return create(asLandText);
         }
         return null;
     }
+
+    public static StatusRemapper create(String asLandText) {
+        String[] asLandSplits = asLandText.split(",");
+        int[] statusesToLand = new int[asLandSplits.length];
+        for (int i = 0; i < asLandSplits.length; i++) {
+            statusesToLand[i] = Integer.parseInt(asLandSplits[i]);
+        }
+        return new StatusRemapper(statusesToLand);
+    }
+
+    public int[] getStatusesToLand() {
+        return statusesToLand;
+    }
+
 
     public int remap(int status) {
         for (int s : statusesToLand) {
@@ -47,7 +56,6 @@ public class StatusRemapper {
         }
         return status;
     }
-
 
     public static int remapStatus(StatusRemapper statusRemapper, int status) {
         if (status > LCMosaicAlgorithm.STATUS_CLOUD_SHADOW) {

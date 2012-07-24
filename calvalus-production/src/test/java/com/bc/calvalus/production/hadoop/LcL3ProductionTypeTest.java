@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 
+import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -130,6 +131,18 @@ public class LcL3ProductionTypeTest {
         assertNotNull(dateRange);
         assertEquals("2010-07-01", asString(dateRange.getStartDate()));
         assertEquals("2010-07-15", asString(dateRange.getStopDate()));
+    }
+
+    @Test
+    public void testGetCloudL3Config() throws Exception {
+        L3Config cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "foo", "bar"));
+        assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+
+        cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"));
+        assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+
+        cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
+        assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
     }
 
     private static String asString(Date date) {

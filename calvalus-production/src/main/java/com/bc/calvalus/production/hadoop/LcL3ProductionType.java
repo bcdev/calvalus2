@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LcSDR8MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
+import com.bc.calvalus.processing.mosaic.landcover.StatusRemapper;
 import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -78,7 +79,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
         }
 
-        String cloudL3ConfigXml = getCloudL3Config().toXml();
+        String cloudL3ConfigXml = getCloudL3Config(productionRequest).toXml();
         String mainL3ConfigXml = getMainL3Config().toXml();
 
         String period = getPeriodName(productionRequest);
@@ -240,8 +241,21 @@ public class LcL3ProductionType extends HadoopProductionType {
         return new DateRange(date1, date2);
     }
 
-    static L3Config getCloudL3Config() throws ProductionException {
-        String maskExpr = "status == 1 and not nan(sdr_8)";
+    static L3Config getCloudL3Config(ProductionRequest productionRequest) throws ProductionException {
+        String asLandText = productionRequest.getString("calvalus.lc.remapAsLand", null);
+        String maskExpr;
+        if (asLandText != null) {
+            StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
+            int[] statusesToLand = statusRemapper.getStatusesToLand();
+            StringBuilder sb = new StringBuilder();
+            for (int i : statusesToLand) {
+                sb.append(" or status == ");
+                sb.append(i);
+            }
+            maskExpr = "(status == 1 "+ sb.toString() + ") and not nan(sdr_8)";
+        } else {
+            maskExpr = "status == 1 and not nan(sdr_8)";
+        }
         String[] varNames = new String[]{"status", "sdr_8"};
         String type = LcSDR8MosaicAlgorithm.class.getName();
 
