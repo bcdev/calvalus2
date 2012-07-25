@@ -147,29 +147,29 @@ public class LcL3ProductionTypeTest {
     }
 
     @Test
-    public void testGetPeriodName() throws Exception {
-        String periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+    public void testGetLcPeriodName() throws Exception {
+        String periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                                    "minDate", "2010-07-01",
                                                                                    "maxDate", "2010-07-15"));
         assertEquals("FR-2010-07-01-15d", periodName);
 
-        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+        periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                             "minDate", "2010-07-01",
                                                                             "maxDate", "2010-07-07"));
         assertEquals("FR-2010-07-01-7d", periodName);
 
-        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+        periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                             "minDate", "2010-07-01",
                                                                             "maxDate", "2010-07-10"));
         assertEquals("FR-2010-07-01-10d", periodName);
 
-        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+        periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                             "minDate", "2011-01-01",
                                                                             "maxDate", "2011-12-31"));
         assertEquals("FR-2011-01-01-365d", periodName);
 
         // periodLength is NOT used
-        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+        periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                             "minDate", "2010-03-02",
                                                                             "maxDate", "2010-03-12",
                                                                             "periodLength", "20",
@@ -177,7 +177,7 @@ public class LcL3ProductionTypeTest {
         assertEquals("RR-2010-03-02-11d", periodName);
 
         try {
-            LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+            LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
                                                                    "minDate", "2010-03-02"));
             fail();
         } catch (ProductionException pe) {
