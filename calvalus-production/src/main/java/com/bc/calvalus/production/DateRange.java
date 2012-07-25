@@ -37,4 +37,10 @@ public class DateRange {
     public Date getStopDate() {
         return stopDate;
     }
+
+    public static DateRange createFromMinMax(ProductionRequest productionRequest) throws ProductionException {
+        Date minDate = productionRequest.getDate("minDate");
+        Date maxDate = productionRequest.getDate("maxDate");
+        return new DateRange(minDate, maxDate);
+    }
 }

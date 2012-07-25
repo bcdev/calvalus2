@@ -66,7 +66,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange mainRange = getDateRange(productionRequest);
+        DateRange mainRange = DateRange.createFromMinMax(productionRequest);
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         String inputPath = productionRequest.getString("inputPath");
@@ -171,12 +171,6 @@ public class LcL3ProductionType extends HadoopProductionType {
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
         String resolution = productionRequest.getString("resolution", "FR");
         return String.format("%s-%s-%dd", resolution, minDate, periodLength);
-    }
-
-    static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
-        return new DateRange(minDate, maxDate);
     }
 
     static DateRange getDateRange_OLD(ProductionRequest productionRequest) throws ProductionException {

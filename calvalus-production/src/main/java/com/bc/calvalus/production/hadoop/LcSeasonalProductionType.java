@@ -67,7 +67,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("Level 3 LC Seasonal", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange mainRange = getDateRange(productionRequest);
+        DateRange mainRange = DateRange.createFromMinMax(productionRequest);
 
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
@@ -158,12 +158,6 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
         String resolution = productionRequest.getString("resolution", "FR");
         return String.format("%s-%s-%dd", resolution, minDate, periodLength);
-    }
-
-    static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
-        return new DateRange(minDate, maxDate);
     }
 
     static L3Config getMainL3Config() throws ProductionException {

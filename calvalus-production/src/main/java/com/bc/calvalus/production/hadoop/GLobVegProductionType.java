@@ -60,7 +60,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("GLobVeg L3 ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange dateRange = getDateRange(productionRequest);
+        DateRange dateRange = DateRange.createFromMinMax(productionRequest);
 
         String inputPath = productionRequest.getString("inputPath");
         String regionName = productionRequest.getRegionName();
@@ -153,12 +153,6 @@ public class GLobVegProductionType extends HadoopProductionType {
 
     static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
         return productionRequest.getString("minDate").replaceAll("-", "");
-    }
-
-    static DateRange getDateRange(ProductionRequest productionRequest) throws ProductionException {
-        Date minDate = productionRequest.getDate("minDate");
-        Date maxDate = productionRequest.getDate("maxDate");
-        return new DateRange(minDate, maxDate);
     }
 
     static L3Config getL3Config() throws ProductionException {
