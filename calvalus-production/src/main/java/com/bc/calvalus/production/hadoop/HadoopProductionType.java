@@ -28,6 +28,7 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,25 @@ public abstract class HadoopProductionType implements ProductionType {
                                                         productionRequest.getString("outputPath", defaultDir));
         return getInventoryService().getQualifiedPath(outputPath + dirSuffix);
     }
+
+    /**
+     * Test if Hadoop has placed a "_SUCCESS" file into the output directory,
+     * after successfully completing a former job attempt.
+     *
+     * @param outputDir The output directory
+     * @return true, if "_SUCCESS" exists
+     */
+    protected boolean successfullyCompleted(String outputDir) {
+         ArrayList<String> globs = new ArrayList<String>();
+         globs.add(outputDir + "/_SUCCESS");
+         try {
+             String[] pathes = inventoryService.globPaths(globs);
+             return pathes.length == 1;
+         } catch (IOException e) {
+             return false;
+         }
+     }
+
 
     /**
      * Sets {@code jobConfig} values from the given {@code parameters} map.

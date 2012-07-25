@@ -37,7 +37,6 @@ import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -105,7 +104,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc-" + rr);
 
             Workflow.Sequential sequence = new Workflow.Sequential();
-            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(getInventoryService(), mainOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(allInputs, ","));
                 jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
@@ -117,7 +116,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR " + rr, jobConfigSr));
             }
 
-            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(getInventoryService(), ncOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
                 String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s--rrdays%s", groundResultion, period, rr);
                 Configuration jobConfigFormat = createJobConfig(productionRequest);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
@@ -143,17 +142,6 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                               productionRequest,
                               parallel);
 
-    }
-
-    static boolean successfullyCompleted(InventoryService inventoryService, String outputDir) {
-        ArrayList<String> globs = new ArrayList<String>();
-        globs.add(outputDir + "/_SUCCESS");
-        try {
-            String[] pathes = inventoryService.globPaths(globs);
-            return pathes.length == 1;
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {

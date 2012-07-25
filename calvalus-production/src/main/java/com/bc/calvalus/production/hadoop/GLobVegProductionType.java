@@ -36,10 +36,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.util.StringUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-
 /**
  * A production type used for generating one or more GLobVeg Level-3 products.
  *
@@ -85,7 +81,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
         Workflow.Sequential sequence = new Workflow.Sequential();
 
-        if (!successfullyCompleted(getInventoryService(), partsOutputDir)) {
+        if (!successfullyCompleted(partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, partsOutputDir);
@@ -104,7 +100,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " L3", jobConfig));
         }
-        if (!successfullyCompleted(getInventoryService(), ncOutputDir)) {
+        if (!successfullyCompleted(ncOutputDir)) {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, partsOutputDir);
@@ -132,17 +128,6 @@ public class GLobVegProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               sequence);
-    }
-
-    static boolean successfullyCompleted(InventoryService inventoryService, String outputDir) {
-        ArrayList<String> globs = new ArrayList<String>();
-        globs.add(outputDir + "/_SUCCESS");
-        try {
-            String[] pathes = inventoryService.globPaths(globs);
-            return pathes.length == 1;
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
