@@ -44,7 +44,6 @@ import org.esa.beam.util.StringUtils;
 public class LcSeasonalProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3Seasonal";
-    private static final int PERIOD_LENGTH_DEFAULT = 7;
 
     public LcSeasonalProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
@@ -77,8 +76,8 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         String mainL3ConfigXml = getMainL3Config().toXml();
 
         String period = LcL3ProductionType.getLcPeriodName(productionRequest);
-        String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-sr");
-        String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-nc");
+        String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-sr");
+        String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc");
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
