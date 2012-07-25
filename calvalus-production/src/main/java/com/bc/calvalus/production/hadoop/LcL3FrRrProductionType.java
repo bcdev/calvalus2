@@ -58,11 +58,11 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level 3 LC ", productionRequest);
+        String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         String mainL3ConfigXml = getMainL3Config().toXml();
-        String period = getPeriodName(productionRequest);
+        String period = LcL3ProductionType.getLcPeriodName(productionRequest);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
@@ -144,26 +144,11 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
 
     }
 
-    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
-        StringBuilder sb = new StringBuilder(prefix);
-        sb.append(getPeriodName(productionRequest));
-        return sb.toString().trim();
-    }
-
-    static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
-        String minDate = productionRequest.getString("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        String resolution = productionRequest.getString("resolution", "FR");
-        return String.format("%s-%s-%dd", resolution, minDate, periodLength);
-    }
-
-
     static DateRange getDateRangeRR(ProductionRequest productionRequest, int rrDays) throws ProductionException {
         if (rrDays == 0) {
             return null;
         }
         Date minDate = productionRequest.getDate("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
         Calendar calendar = ProductData.UTC.createCalendar();
         calendar.setTimeInMillis(minDate.getTime());
         calendar.add(Calendar.DAY_OF_MONTH, rrDays - 1);

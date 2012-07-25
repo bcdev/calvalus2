@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class LcL3ProductionTypeTest {
 
@@ -143,6 +144,46 @@ public class LcL3ProductionTypeTest {
 
         cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
         assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+    }
+
+    @Test
+    public void testGetPeriodName() throws Exception {
+        String periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                                   "minDate", "2010-07-01",
+                                                                                   "maxDate", "2010-07-15"));
+        assertEquals("FR-2010-07-01-15d", periodName);
+
+        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                            "minDate", "2010-07-01",
+                                                                            "maxDate", "2010-07-07"));
+        assertEquals("FR-2010-07-01-7d", periodName);
+
+        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                            "minDate", "2010-07-01",
+                                                                            "maxDate", "2010-07-10"));
+        assertEquals("FR-2010-07-01-10d", periodName);
+
+        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                            "minDate", "2011-01-01",
+                                                                            "maxDate", "2011-12-31"));
+        assertEquals("FR-2011-01-01-365d", periodName);
+
+        // periodLength is NOT used
+        periodName = LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                            "minDate", "2010-03-02",
+                                                                            "maxDate", "2010-03-12",
+                                                                            "periodLength", "20",
+                                                                            "resolution", "RR"));
+        assertEquals("RR-2010-03-02-11d", periodName);
+
+        try {
+            LcL3ProductionType.getPeriodName(new ProductionRequest("test", "ewa",
+                                                                   "minDate", "2010-03-02"));
+            fail();
+        } catch (ProductionException pe) {
+            assertEquals("Production parameter 'maxDate' not set.", pe.getMessage());
+        }
+
     }
 
     private static String asString(Date date) {

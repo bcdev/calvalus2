@@ -73,7 +73,7 @@ public class GLobVegProductionType extends HadoopProductionType {
 
         String l3ConfigXml = getL3Config().toXml();
 
-        String period = getPeriodName(productionRequest);
+        String period = getGlobVegPeriodName(productionRequest);
         String partsOutputDir = getOutputPath(productionRequest, productionId, period + "-parts");
         String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-nc");
 
@@ -132,11 +132,11 @@ public class GLobVegProductionType extends HadoopProductionType {
 
     static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
-        sb.append(getPeriodName(productionRequest));
+        sb.append(getGlobVegPeriodName(productionRequest));
         return sb.toString().trim();
     }
 
-    static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
+    static String getGlobVegPeriodName(ProductionRequest productionRequest) throws ProductionException {
         return productionRequest.getString("minDate").replaceAll("-", "");
     }
 

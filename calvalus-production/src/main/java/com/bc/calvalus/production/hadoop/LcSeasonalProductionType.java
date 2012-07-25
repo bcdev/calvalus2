@@ -54,7 +54,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level 3 LC Seasonal", productionRequest);
+        String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC Seasonal", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         DateRange mainRange = DateRange.createFromMinMax(productionRequest);
@@ -76,7 +76,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
 
         String mainL3ConfigXml = getMainL3Config().toXml();
 
-        String period = getPeriodName(productionRequest);
+        String period = LcL3ProductionType.getLcPeriodName(productionRequest);
         String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-sr");
         String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-nc");
 
@@ -124,19 +124,6 @@ public class LcSeasonalProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               sequence);
-    }
-
-    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
-        StringBuilder sb = new StringBuilder(prefix);
-        sb.append(getPeriodName(productionRequest));
-        return sb.toString().trim();
-    }
-
-    static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
-        String minDate = productionRequest.getString("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        String resolution = productionRequest.getString("resolution", "FR");
-        return String.format("%s-%s-%dd", resolution, minDate, periodLength);
     }
 
     static L3Config getMainL3Config() throws ProductionException {

@@ -62,7 +62,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level 3 LC ", productionRequest);
+        String defaultProductionName = createLcProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         DateRange mainRange = DateRange.createFromMinMax(productionRequest);
@@ -81,7 +81,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         String cloudL3ConfigXml = getCloudL3Config(productionRequest).toXml();
         String mainL3ConfigXml = getMainL3Config().toXml();
 
-        String period = getPeriodName(productionRequest);
+        String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
         String mainOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-sr");
         String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc");
@@ -148,15 +148,17 @@ public class LcL3ProductionType extends HadoopProductionType {
                               sequence);
     }
 
-    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
+    static String createLcProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
-        sb.append(getPeriodName(productionRequest));
+        sb.append(getLcPeriodName(productionRequest));
         return sb.toString().trim();
     }
 
-    static String getPeriodName(ProductionRequest productionRequest) throws ProductionException {
+    static String getLcPeriodName(ProductionRequest productionRequest) throws ProductionException {
+        DateRange minMax = DateRange.createFromMinMax(productionRequest);
+        long diffMillis = minMax.getStopDate().getTime() - minMax.getStartDate().getTime() + L3ProductionType.MILLIS_PER_DAY;
+        int periodLength = (int) (diffMillis / L3ProductionType.MILLIS_PER_DAY);
         String minDate = productionRequest.getString("minDate");
-        int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
         String resolution = productionRequest.getString("resolution", "FR");
         return String.format("%s-%s-%dd", resolution, minDate, periodLength);
     }
