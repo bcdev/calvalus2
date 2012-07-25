@@ -64,6 +64,7 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
 
         job.setMapperClass(MosaicSeasonalMapper.class);
         job.setMapOutputKeyClass(TileIndexWritable.class);
