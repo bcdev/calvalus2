@@ -53,10 +53,10 @@ public class MosaicGrid {
     private final int numTileY;
     private GeometryFactory geometryFactory;
 
-    public static MosaicGrid create(Configuration jobConfig) {
-        int macroTileSize = jobConfig.getInt("calvalus.mosaic.macroTileSize", 5);
-        int numTileY = jobConfig.getInt("calvalus.mosaic.numTileY", 180);
-        int tileSize = jobConfig.getInt("calvalus.mosaic.tileSize", 370);
+    public static MosaicGrid create(Configuration conf) {
+        int macroTileSize = conf.getInt("calvalus.mosaic.macroTileSize", 5);
+        int numTileY = conf.getInt("calvalus.mosaic.numTileY", 180);
+        int tileSize = conf.getInt("calvalus.mosaic.tileSize", 370);
         return new MosaicGrid(macroTileSize, numTileY, tileSize);
     }
 
@@ -72,6 +72,12 @@ public class MosaicGrid {
         this.gridWidth = numTileX * tileSize;
         this.gridHeight = numTileY * tileSize;
         this.pixelSize = 180.0 / gridHeight;
+    }
+
+    public void saveToConfiguration(Configuration conf) {
+        conf.setInt("calvalus.mosaic.macroTileSize", macroTileSize);
+        conf.setInt("calvalus.mosaic.numTileY", numTileY);
+        conf.setInt("calvalus.mosaic.tileSize", tileSize);
     }
 
     private GeometryFactory getGeometryFactory() {
@@ -91,6 +97,22 @@ public class MosaicGrid {
 
     public double getPixelSize() {
         return pixelSize;
+    }
+
+    public int getNumTileX() {
+        return numTileX;
+    }
+
+    public int getNumTileY() {
+        return numTileY;
+    }
+
+    public int getNumMacroTileX() {
+        return numTileX / macroTileSize;
+    }
+
+    public int getNumMacroTileY() {
+        return numTileY / macroTileSize;
     }
 
     public Rectangle computeBounds(Geometry roiGeometry) {

@@ -4,14 +4,12 @@ package com.bc.calvalus.processing.mosaic;
 import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-import java.awt.Point;
 import java.awt.Rectangle;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class MosaicGridTest {
 
@@ -115,17 +113,6 @@ public class MosaicGridTest {
         assertEquals(new TileIndexWritable(36, 9, 180, (90 - 41)), tileIndices[7]);
     }
 
-//    @Test
-//    public void testGetTileIndices_5degrees() throws Exception {
-//        MosaicGrid mosaicGrid = new MosaicGrid(5, 180 / 5, 370 * 5);
-//        Geometry geometry = null;
-//        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(geometry);
-//        assertNotNull(tileIndices);
-//        assertEquals(72 * 36, tileIndices.length);
-//        assertEquals(new TileIndexWritable(0, 0), tileIndices[0]);
-//        assertEquals(new TileIndexWritable(1, 0), tileIndices[1]);
-//    }
-
     @Test
     public void testTileXToDegree() throws Exception {
         MosaicGrid mosaicGrid = new MosaicGrid();
@@ -162,9 +149,6 @@ public class MosaicGridTest {
         assertTileGeometry(mosaicGrid, 10, 10, -130.0, -125.0, 35.0, 40.0);
     }
 
-
-
-
     private void assertTileGeometry(MosaicGrid mosaicGrid, int tileX, int tileY, double minX, double maxX, double minY, double maxY) {
         Geometry tileGeometry = mosaicGrid.getTileGeometry(tileX, tileY);
         assertNotNull(tileGeometry);
@@ -174,5 +158,46 @@ public class MosaicGridTest {
         assertEquals("maxX", maxX, envelope.getMaxX(), 1e-5);
         assertEquals("minY", minY, envelope.getMinY(), 1e-5);
         assertEquals("maxY", maxY, envelope.getMaxY(), 1e-5);
+    }
+
+    @Test
+    public void testGetter() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        assertEquals(360, mosaicGrid.getNumTileX());
+        assertEquals(180, mosaicGrid.getNumTileY());
+        assertEquals(72, mosaicGrid.getNumMacroTileX());
+        assertEquals(36, mosaicGrid.getNumMacroTileY());
+
+        mosaicGrid = new MosaicGrid(10, 180, 360);
+        assertEquals(360, mosaicGrid.getNumTileX());
+        assertEquals(180, mosaicGrid.getNumTileY());
+        assertEquals(36, mosaicGrid.getNumMacroTileX());
+        assertEquals(18, mosaicGrid.getNumMacroTileY());
+    }
+
+    @Test
+    public void testSaveToConfiguration() throws Exception {
+        Configuration configuration = new Configuration();
+        assertNull(configuration.get("calvalus.mosaic.macroTileSize"));
+        assertNull(configuration.get("calvalus.mosaic.numTileY"));
+        assertNull(configuration.get("calvalus.mosaic.tileSize"));
+
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        mosaicGrid.saveToConfiguration(configuration);
+        assertNotNull(configuration.get("calvalus.mosaic.macroTileSize"));
+        assertNotNull(configuration.get("calvalus.mosaic.numTileY"));
+        assertNotNull(configuration.get("calvalus.mosaic.tileSize"));
+
+        assertEquals("5", configuration.get("calvalus.mosaic.macroTileSize"));
+        assertEquals("180", configuration.get("calvalus.mosaic.numTileY"));
+        assertEquals("370", configuration.get("calvalus.mosaic.tileSize"));
+
+        mosaicGrid = new MosaicGrid(6, 18, 20);
+        mosaicGrid.saveToConfiguration(configuration);
+
+        assertEquals("6", configuration.get("calvalus.mosaic.macroTileSize"));
+        assertEquals("18", configuration.get("calvalus.mosaic.numTileY"));
+        assertEquals("20", configuration.get("calvalus.mosaic.tileSize"));
+
     }
 }

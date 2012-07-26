@@ -60,7 +60,6 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
 
     @Override
     protected void configureJob(Job job) throws IOException {
-
         Configuration jobConfig = job.getConfiguration();
 
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
@@ -73,7 +72,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setNumReduceTasks(36);
+
 
         job.setMapperClass(MosaicMapper.class);
         job.setMapOutputKeyClass(TileIndexWritable.class);
@@ -84,6 +83,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(MosaicReducer.class);
         job.setOutputKeyClass(TileIndexWritable.class);
         job.setOutputValueClass(TileDataWritable.class);
+        job.setNumReduceTasks(computeNumReducers(jobConfig));
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
@@ -91,6 +91,12 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         if (getProcessorBundle() != null) {
             HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
         }
+    }
+
+    static int computeNumReducers(Configuration jobConfig) {
+        int numXPartitions = jobConfig.getInt("calvalus.mosaic.numXPartitions", 1);
+        MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
+        return mosaicGrid.getNumMacroTileY() * numXPartitions;
     }
 
 }

@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
@@ -25,20 +24,83 @@ import static org.junit.Assert.*;
 public class MosaicPartitionerTest {
 
     @Test
-    public void testGlobal() {
+    public void testOnlyRows() {
         MosaicPartitioner partitioner = new MosaicPartitioner();
-        assertEquals(0, partitioner.getPartition(new TileIndexWritable(0, 0, 34, 0), null, 4));
-        assertEquals(0, partitioner.getPartition(new TileIndexWritable(0, 0, 34, 1), null, 4));
+        partitioner.setConf(new Configuration());
+        assertEquals(0, getPartition(partitioner, 0, 0, 4));
+        assertEquals(1, getPartition(partitioner, 0, 1, 4));
+        assertEquals(2, getPartition(partitioner, 0, 2, 4));
+        assertEquals(3, getPartition(partitioner, 0, 3, 4));
 
-        assertEquals(1, partitioner.getPartition(new TileIndexWritable(0, 1,34, 45), null, 4));
-        assertEquals(1, partitioner.getPartition(new TileIndexWritable(0, 1, 34, 89), null, 4));
+        assertEquals(0, getPartition(partitioner, 1, 0, 4));
+        assertEquals(1, getPartition(partitioner, 1, 1, 4));
+        assertEquals(2, getPartition(partitioner, 1, 2, 4));
+        assertEquals(3, getPartition(partitioner, 1, 3, 4));
 
-        assertEquals(2, partitioner.getPartition(new TileIndexWritable(0, 2, 34, 90), null, 4));
-        assertEquals(2, partitioner.getPartition(new TileIndexWritable(0, 2, 34, 134), null, 4));
+        assertEquals(0, getPartition(partitioner, 2, 0, 4));
+        assertEquals(1, getPartition(partitioner, 2, 1, 4));
+        assertEquals(2, getPartition(partitioner, 2, 2, 4));
+        assertEquals(3, getPartition(partitioner, 2, 3, 4));
 
-        assertEquals(3, partitioner.getPartition(new TileIndexWritable(0, 3, 34, 135), null, 4));
-        assertEquals(3, partitioner.getPartition(new TileIndexWritable(0, 3, 34, 136), null, 4));
-        assertEquals(3, partitioner.getPartition(new TileIndexWritable(0, 3, 34, 180), null, 4));
+        assertEquals(3, getPartition(partitioner, 2, 4, 4));
+        assertEquals(3, getPartition(partitioner, 2, 5, 4));
+    }
+
+    @Test
+    public void testByMacroTile() {
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        Configuration conf = new Configuration();
+        mosaicGrid.saveToConfiguration(conf);
+        conf.setInt("calvalus.mosaic.numXPartitions", 6);
+
+        MosaicPartitioner partitioner = new MosaicPartitioner();
+        partitioner.setConf(conf);
+        final int numPartitions = 3 * 6;
+
+        assertEquals(0, getPartition(partitioner, 0, 0, numPartitions));
+        assertEquals(1, getPartition(partitioner, 1, 0, numPartitions));
+        assertEquals(2, getPartition(partitioner, 2, 0, numPartitions));
+        assertEquals(3, getPartition(partitioner, 3, 0, numPartitions));
+        assertEquals(4, getPartition(partitioner, 4, 0, numPartitions));
+        assertEquals(5, getPartition(partitioner, 5, 0, numPartitions));
+
+        assertEquals(6, getPartition(partitioner, 0, 1, numPartitions));
+        assertEquals(7, getPartition(partitioner, 1, 1, numPartitions));
+        assertEquals(8, getPartition(partitioner, 2, 1, numPartitions));
+        assertEquals(9, getPartition(partitioner, 3, 1, numPartitions));
+        assertEquals(10, getPartition(partitioner, 4, 1, numPartitions));
+        assertEquals(11, getPartition(partitioner, 5, 1, numPartitions));
+    }
+
+    @Test
+    public void testTwoPerRow() {
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        Configuration conf = new Configuration();
+        mosaicGrid.saveToConfiguration(conf);
+        conf.setInt("calvalus.mosaic.numXPartitions", 2);
+
+        MosaicPartitioner partitioner = new MosaicPartitioner();
+        partitioner.setConf(conf);
+        final int numPartitions = 3 * 2;
+
+        assertEquals(0, getPartition(partitioner, 0, 0, numPartitions));
+        assertEquals(0, getPartition(partitioner, 1, 0, numPartitions));
+        assertEquals(0, getPartition(partitioner, 2, 0, numPartitions));
+        assertEquals(1, getPartition(partitioner, 3, 0, numPartitions));
+        assertEquals(1, getPartition(partitioner, 4, 0, numPartitions));
+        assertEquals(1, getPartition(partitioner, 5, 0, numPartitions));
+
+        assertEquals(2, getPartition(partitioner, 0, 1, numPartitions));
+        assertEquals(2, getPartition(partitioner, 1, 1, numPartitions));
+        assertEquals(2, getPartition(partitioner, 2, 1, numPartitions));
+        assertEquals(3, getPartition(partitioner, 3, 1, numPartitions));
+        assertEquals(3, getPartition(partitioner, 4, 1, numPartitions));
+        assertEquals(3, getPartition(partitioner, 5, 1, numPartitions));
+    }
+
+    private int getPartition(MosaicPartitioner partitioner, int macroTileX, int macroTileY, int numPartitions) {
+        // tileX and tileY are not ued in the tested partitioner
+        return partitioner.getPartition(new TileIndexWritable(macroTileX, macroTileY, 42, 42), null, numPartitions);
     }
 
 }

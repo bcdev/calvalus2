@@ -16,14 +16,9 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Partitioner;
-import org.esa.beam.util.math.MathUtils;
 
 /**
  * Partitions the tiles by their y index.
@@ -31,7 +26,11 @@ import org.esa.beam.util.math.MathUtils;
  *
  * @author Marco Zuehlke
  */
-public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWritable> {
+public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWritable> implements Configurable {
+
+    private Configuration conf;
+    private int numXPartitions;
+    private int tileXDivisor;
 
     @Override
     public int getPartition(TileIndexWritable tileIndex, TileDataWritable tileData, int numPartitions) {
@@ -41,7 +40,23 @@ public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWr
         } else if (partition >= numPartitions) {
             partition = numPartitions - 1;
         }
+        if (numXPartitions > 1) {
+            partition = partition * numXPartitions + tileIndex.getMacroTileX() / tileXDivisor;
+        }
         return partition;
+    }
+
+    @Override
+    public void setConf(Configuration conf) {
+        this.conf = conf;
+        numXPartitions = conf.getInt("calvalus.mosaic.numXPartitions", 1);
+        MosaicGrid mosaicGrid = MosaicGrid.create(conf);
+        tileXDivisor = mosaicGrid.getNumMacroTileX() / numXPartitions;
+    }
+
+    @Override
+    public Configuration getConf() {
+        return conf;
     }
 
 }

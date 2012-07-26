@@ -18,15 +18,11 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
@@ -40,11 +36,7 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         super(processingService, jobName, jobConfig);
     }
 
-    public String getInputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
-    }
-
-    @Override
+   @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
@@ -58,10 +50,16 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         };
     }
 
+    @Override
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+
+        // because the size of the value objects can get very big
+        // it is better to report progress more often
+        // to prevent timeouts (Hadoop default is 10000)
+        jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
@@ -75,7 +73,7 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(MosaicReducer.class);
         job.setOutputKeyClass(TileIndexWritable.class);
         job.setOutputValueClass(TileDataWritable.class);
-        job.setNumReduceTasks(36);
+        job.setNumReduceTasks(MosaicWorkflowItem.computeNumReducers(jobConfig));
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
