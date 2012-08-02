@@ -39,7 +39,6 @@ import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -132,6 +131,8 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
+            jobConfigFormat.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
