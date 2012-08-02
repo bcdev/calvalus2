@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.mosaic.globveg;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
 import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
@@ -199,7 +200,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
      *
      * @author MarcoZ
      */
-    private class GlobVegMosaicProductFactory implements MosaicProductFactory {
+    private class GlobVegMosaicProductFactory extends DefaultMosaicProductFactory {
 
         @Override
         public Product createProduct(String productName, Rectangle rect) {
@@ -268,6 +269,5 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 throw new IllegalArgumentException("Illegal date format.", e);
             }
         }
-
     }
 }

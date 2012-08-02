@@ -183,7 +183,7 @@ public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {
      *
      * @author MarcoZ
      */
-    private static class LcMosaicProductFactory implements MosaicProductFactory {
+    private static class LcMosaicProductFactory extends DefaultMosaicProductFactory {
 
         static final float[] WAVELENGTH = new float[]{
                 412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,

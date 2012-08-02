@@ -176,13 +176,14 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     @Override
     protected void createProduct(Point macroTile) throws IOException {
         Rectangle productRect = getMosaicGrid().getMacroTileRectangle(macroTile.x, macroTile.y);
-        String productName = getTileProductName(outputNameFormat, macroTile.x, macroTile.y);
-        MosaicProductFactory productFactory = algorithm.getProductFactory();
-        product = productFactory.createProduct(productName, productRect);
         CrsGeoCoding geoCoding = getMosaicGrid().createMacroCRS(macroTile);
+//        getMosaicGrid().getPixelSize();
+
+        MosaicProductFactory productFactory = algorithm.getProductFactory();
+        product = productFactory.createProduct(context.getConfiguration(), macroTile.x, macroTile.y, productRect);
         product.setGeoCoding(geoCoding);
 
-        productFormatter = new ProductFormatter(productName, format, compression);
+        productFormatter = new ProductFormatter(product.getName(), format, compression);
         productFile = productFormatter.createTemporaryProductFile();
         productWriter = createProductWriter(product, productFile, productFormatter.getOutputFormat());
     }

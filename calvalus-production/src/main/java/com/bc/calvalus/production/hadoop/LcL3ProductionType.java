@@ -39,6 +39,7 @@ import org.esa.beam.binning.operator.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -66,6 +67,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
         DateRange mainRange = DateRange.createFromMinMax(productionRequest);
+        String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
+        String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         String inputPath = productionRequest.getString("inputPath");
@@ -73,8 +76,6 @@ public class LcL3ProductionType extends HadoopProductionType {
         String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.getStartDate(), cloudRange.getStopDate(), regionName);
         String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
         if (mainInputFiles.length == 0) {
-            String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
-            String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
             throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
         }
 

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -29,23 +30,37 @@ import java.awt.Rectangle;
  */
 public class DefaultMosaicProductFactory implements MosaicProductFactory {
 
-    private final String[] outputFeatures;
+    private String[] outputFeatures = null;
+
+    public DefaultMosaicProductFactory() {}
 
     public DefaultMosaicProductFactory(String[] outputFeatures) {
         this.outputFeatures = outputFeatures;
     }
 
     @Override
+    public Product createProduct(Configuration configuration, int tileX, int tileY, Rectangle rect) {
+        final String productName = getTileProductName(configuration.get("TBD"), tileX, tileY);
+        return createProduct(productName, rect);
+    }
+
+    @Override
     public Product createProduct(String productName, Rectangle rect) {
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
-        for (String outputFeature : outputFeatures) {
-            Band band = product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
+        if (outputFeatures != null) {
+            for (String outputFeature : outputFeatures) {
+                Band band = product.addBand(outputFeature, ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+            }
         }
         //TODO
         //product.setStartTime(formatterConfig.getStartTime());
         //product.setEndTime(formatterConfig.getEndTime());
         return product;
+    }
+
+    public String getTileProductName(String outputNameFormat, int tileX, int tileY) {
+        return String.format(outputNameFormat, tileY, tileX);
     }
 }

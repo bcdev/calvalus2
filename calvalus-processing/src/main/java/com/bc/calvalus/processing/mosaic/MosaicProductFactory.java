@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
@@ -27,5 +28,9 @@ import java.awt.Rectangle;
  */
 public interface MosaicProductFactory {
 
-    Product createProduct(String productName, Rectangle productRect);
+    Product createProduct(String productName, Rectangle rect);
+    
+    Product createProduct(Configuration configuration, int x, int y, Rectangle productRect);
+
+    String getTileProductName(String outputNameFormat, int x, int y);
 }
