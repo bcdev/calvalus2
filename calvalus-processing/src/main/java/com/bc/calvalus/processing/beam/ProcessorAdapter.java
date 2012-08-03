@@ -120,9 +120,10 @@ public abstract class ProcessorAdapter {
      *
      * @param srcProductRect The region of the source product to be processed, if {@code null} the product will be processed.
      *                       The rectangle can not be empty.
+     * @return true, if the processing succeeded.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract void processSourceProduct(Rectangle srcProductRect) throws IOException;
+    public abstract boolean processSourceProduct(Rectangle srcProductRect) throws IOException;
 
     /**
      * Returns the product resulting from the processing.
@@ -152,9 +153,11 @@ public abstract class ProcessorAdapter {
             Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
             Rectangle sourceRectangle = computeIntersection(regionGeometry);
             if (!sourceRectangle.isEmpty()) {
-                processSourceProduct(sourceRectangle);
+                boolean sucess = processSourceProduct(sourceRectangle);
+                if (sucess) {
+                    processedProduct = openProcessedProduct();
+                }
             }
-            processedProduct = openProcessedProduct();
         }
         return processedProduct;
     }

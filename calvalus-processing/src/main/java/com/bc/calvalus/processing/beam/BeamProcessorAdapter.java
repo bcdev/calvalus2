@@ -54,7 +54,7 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public void processSourceProduct(Rectangle srcProductRect) throws IOException {
+    public boolean processSourceProduct(Rectangle srcProductRect) throws IOException {
         Assert.argument(srcProductRect == null || !srcProductRect.isEmpty(), "srcProductRect can not be empty");
         Configuration conf = getConfiguration();
         String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
@@ -62,12 +62,16 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
 
         Product subsetProduct = createSubset(srcProductRect);
         targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
-        if (targetProduct != null) {
-            getLogger().info(String.format("Processed product width = %d height = %d",
-                                           targetProduct.getSceneRasterWidth(),
-                                           targetProduct.getSceneRasterHeight()));
-            copyTimeCoding(subsetProduct, targetProduct);
+        if (targetProduct == null ||
+                targetProduct.getSceneRasterWidth() == 0 ||
+                targetProduct.getSceneRasterHeight() == 0) {
+            return false;
         }
+        getLogger().info(String.format("Processed product width = %d height = %d",
+                                       targetProduct.getSceneRasterWidth(),
+                                       targetProduct.getSceneRasterHeight()));
+        copyTimeCoding(subsetProduct, targetProduct);
+        return true;
     }
 
     @Override

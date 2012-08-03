@@ -76,13 +76,16 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         try {
             Rectangle sourceRectangle = processorAdapter.computeIntersection(regionGeometry);
+            Product product = null;
             if (!sourceRectangle.isEmpty()) {
                 //processorAdapter.processSourceProduct(sourceRectangle);
                 // TODO for now always process full product. ==> improve
                 // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
-                processorAdapter.processSourceProduct(null);
+                boolean sucess = processorAdapter.processSourceProduct(null);
+                if (!sucess) {
+                    product = processorAdapter.openProcessedProduct();
+                }
             }
-            Product product = processorAdapter.openProcessedProduct();
             if (product == null) {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                 return;

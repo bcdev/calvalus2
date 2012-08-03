@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -9,9 +11,9 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,16 +56,22 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                     return;
                 }
             }
-            Product product = processorAdapter.getProcessedProduct();
-
-            if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
-                LOG.warning("target product is empty, skip writing.");
+            Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+            Rectangle sourceRectangle = processorAdapter.computeIntersection(regionGeometry);
+            if (sourceRectangle.isEmpty()) {
+                LOG.warning("product does not cover region, skip processing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
-                LOG.info(context.getTaskAttemptID() + " target product created");
                 // process input and write target product
-                processorAdapter.saveProcessedProduct(context, outputFilename);
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
+                boolean success = processorAdapter.processSourceProduct(sourceRectangle);
+                if (success) {
+                    LOG.info(context.getTaskAttemptID() + " target product created");
+                    processorAdapter.saveProcessedProduct(context, outputFilename);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
+                } else {
+                    LOG.warning("product does not cover region, skip processing.");
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
+                }
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "BEAM exception: " + e.toString(), e);

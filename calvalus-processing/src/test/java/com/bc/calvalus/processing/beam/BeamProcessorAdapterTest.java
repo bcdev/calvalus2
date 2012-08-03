@@ -41,7 +41,8 @@ public class BeamProcessorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        beamProcessorAdapter.processSourceProduct(null);
+        boolean success = beamProcessorAdapter.processSourceProduct(null);
+        assertTrue(success);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -55,7 +56,8 @@ public class BeamProcessorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        beamProcessorAdapter.processSourceProduct(new Rectangle(10, 20));
+        boolean success = beamProcessorAdapter.processSourceProduct(new Rectangle(10, 20));
+        assertTrue(success);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
@@ -71,7 +73,8 @@ public class BeamProcessorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        beamProcessorAdapter.processSourceProduct(null);
+        boolean success = beamProcessorAdapter.processSourceProduct(null);
+        assertTrue(success);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -103,7 +106,8 @@ public class BeamProcessorAdapterTest {
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
         Rectangle rectangle = beamProcessorAdapter.computeIntersection(null);
-        beamProcessorAdapter.processSourceProduct(rectangle);
+        boolean  success = beamProcessorAdapter.processSourceProduct(rectangle);
+        assertTrue(success);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
