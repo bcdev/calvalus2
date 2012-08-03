@@ -18,14 +18,14 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
@@ -43,69 +43,56 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private Configuration jobConfig;
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException, ProcessorException {
-        jobConfig = context.getConfiguration();
-        ProductFactory productFactory = new ProductFactory(jobConfig);
-        final FileSplit split = (FileSplit) context.getInputSplit();
+        Configuration jobConfig = context.getConfiguration();
 
-        // write initial log entry for runtime measurements
-        LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
-        final long startTime = System.nanoTime();
-
-        Path inputPath = split.getPath();
-        String productName = getProductName(inputPath.getName());
-
-        String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-        String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
-        ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
-        String outputFilename = productFormatter.getOutputFilename();
-        String outputFormat = productFormatter.getOutputFormat();
-
-        if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
-            Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
-            if (FileSystem.get(jobConfig).exists(outputProductPath)) {
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
-                LOG.info("resume: target product already exist, skip processing");
-                final long stopTime = System.nanoTime();
-                LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
-                return;
-            }
-        }
-
-        Product product = productFactory.getProcessedProduct(context.getInputSplit());
-
-        if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
-            productFactory.dispose();
-            LOG.warning("target product is empty, skip writing.");
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
-            return;
-        }
-        product.setName(productName);
-
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         try {
-            File productFile = productFormatter.createTemporaryProductFile();
-            LOG.info("Start writing product to file: " + productFile.getName());
-            context.setStatus("writing");
-            ProductIO.writeProduct(product, productFile, outputFormat, false, new ProductFormatter.ProgressMonitorAdapter(context));
-            LOG.info("Finished writing product.");
-            context.setStatus("copying");
-            productFormatter.compressToHDFS(context, productFile);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
-        } finally {
-            product.dispose();
-            productFactory.dispose();
-            productFormatter.cleanupTempDir();
+            Path inputPath = processorAdapter.getInputPath();
+            String productName = getProductName(jobConfig, inputPath.getName());
 
-            final long stopTime = System.nanoTime();
-            LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
+            String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
+            String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
+            ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
+            String outputFilename = productFormatter.getOutputFilename();
+            String outputFormat = productFormatter.getOutputFormat();
+
+            if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
+                Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
+                if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
+                    LOG.info("resume: target product already exist, skip processing");
+                    return;
+                }
+            }
+            Product product = processorAdapter.getProcessedProduct();
+
+            if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
+                LOG.warning("target product is empty, skip writing.");
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
+            } else {
+                try {
+                    File productFile = productFormatter.createTemporaryProductFile();
+                    LOG.info("Start writing product to file: " + productFile.getName());
+                    context.setStatus("writing");
+                    ProductIO.writeProduct(product, productFile, outputFormat, false, new ProductFormatter.ProgressMonitorAdapter(context));
+                    LOG.info("Finished writing product.");
+                    context.setStatus("copying");
+                    productFormatter.compressToHDFS(context, productFile);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
+                    context.setStatus("");
+                } finally {
+                    productFormatter.cleanupTempDir();
+                }
+            }
+        } finally {
+            processorAdapter.dispose();
         }
-        context.setStatus("");
     }
 
-    private String getProductName(String fileName) {
+    private static String getProductName(Configuration jobConfig, String fileName) {
         String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, null);
         String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null);
         String newProductName = FileUtils.getFilenameWithoutExtension(fileName);

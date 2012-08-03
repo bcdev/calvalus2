@@ -16,7 +16,8 @@
 
 package com.bc.calvalus.processing.prevue;
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
@@ -74,10 +75,11 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
-        final ProductFactory productFactory = new ProductFactory(jobConfig);
-        Product product = productFactory.getProcessedProduct(context.getInputSplit());
+
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        Product product = processorAdapter.getProcessedProduct();
         if (product == null) {
-            productFactory.dispose();
+            processorAdapter.dispose();
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);
             return;
         }
@@ -128,7 +130,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
             throw new IOException(e);
         } finally {
             context.setStatus("");
-            productFactory.dispose();
+            processorAdapter.dispose();
             product.dispose();
         }
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);

@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.BeamProcessorAdapter;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
@@ -89,7 +89,7 @@ public class JobUtilsTest {
 
         // Now check if the full value conversion is ok
 
-        Map<String, Object> operatorParameters = ProductFactory.getOperatorParameterMap(level2OperatorName, level2Parameters);
+        Map<String, Object> operatorParameters = BeamProcessorAdapter.getOperatorParameterMap(level2OperatorName, level2Parameters);
         assertNotNull(operatorParameters);
         assertEquals(2, operatorParameters.size());
 

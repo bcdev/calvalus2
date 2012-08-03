@@ -16,18 +16,16 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.ProductFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Product;
@@ -51,60 +49,43 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final Configuration jobConfig = context.getConfiguration();
-        final L3Config l3Config = L3Config.get(jobConfig);
-        final ProductFactory productFactory = new ProductFactory(jobConfig);
-
+        final L3Config l3Config = L3Config.get(context.getConfiguration());
         final BinningContext ctx = l3Config.createBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
+        final ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
 
-        final FileSplit split = (FileSplit) context.getInputSplit();
-
-        // write initial log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
-        final long startTime = System.nanoTime();
-
-        Product product = productFactory.getProcessedProduct(context.getInputSplit());
-        if (product != null) {
-            try {
-                long numObs = processProduct(product, ctx, spatialBinner, l3Config.getSuperSampling(), context);
+        try {
+            Product product = processorAdapter.getProcessedProduct();
+            if (product != null) {
+                long numObs = SpatialProductBinner.processProduct(product,
+                                                                  spatialBinner,
+                                                                  l3Config.getSuperSampling(),
+                                                                  new ProductSplitProgressMonitor(context));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
                 }
-            } finally {
-                product.dispose();
+            } else {
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
+                LOG.info("Product not used");
             }
-        } else {
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
-            LOG.info("Product not used");
+        } finally {
+            processorAdapter.dispose();
         }
-        productFactory.dispose();
-
-        long stopTime = System.nanoTime();
 
         final Exception[] exceptions = spatialBinner.getExceptions();
         for (Exception exception : exceptions) {
-            String m = MessageFormat.format("Failed to process input slice of split {0}", split);
+            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
             LOG.log(Level.SEVERE, m, exception);
         }
         // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+        LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
+                                      context.getTaskAttemptID(), processorAdapter.getInputPath(),
+                                      spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
     }
-
-    static long processProduct(Product product,
-                               BinningContext ctx,
-                               SpatialBinner spatialBinner,
-                               Integer superSampling,
-                               MapContext mapContext) throws IOException, InterruptedException {
-        return SpatialProductBinner.processProduct(product, spatialBinner, superSampling,
-                new ProductSplitProgressMonitor(mapContext));
-    }
-
 
     private static class SpatialBinEmitter implements SpatialBinConsumer {
         private Context context;
@@ -124,5 +105,4 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             }
         }
     }
-
 }

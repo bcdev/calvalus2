@@ -58,7 +58,7 @@ public class StreamingProductWriter {
         this.progressMonitor = progressMonitor;
     }
 
-    public void writeProduct(Product product, Path outputPath, int tileHeight) throws Exception {
+    public void writeProduct(Product product, Path outputPath, int tileHeight) throws IOException {
         Map<String, Long> indexMap = new HashMap<String, Long>();
 
         SequenceFile.Writer writer = writeHeader(product, outputPath, tileHeight);

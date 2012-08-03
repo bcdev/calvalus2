@@ -16,11 +16,11 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import org.esa.beam.binning.VariableContext;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.core.ProgressMonitor;
@@ -29,7 +29,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.binning.VariableContext;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -62,21 +62,16 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
         final L3Config l3Config = L3Config.get(jobConfig);
-        final ProductFactory productFactory = new ProductFactory(jobConfig);
-        mosaicGrid = MosaicGrid.create(jobConfig);
-        final VariableContext ctx = l3Config.createVariableContext();
-        final FileSplit split = (FileSplit) context.getInputSplit();
 
-        // write initial log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} starts processing of split {1}", context.getTaskAttemptID(), split));
-        final long startTime = System.nanoTime();
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        try {
+            mosaicGrid = MosaicGrid.create(jobConfig);
+            final VariableContext ctx = l3Config.createVariableContext();
 
-        Product product = productFactory.getProcessedProduct(context.getInputSplit());
-        int numTilesProcessed = 0;
-        if (product != null) {
-            try {
+            Product product = processorAdapter.getProcessedProduct();
+            int numTilesProcessed = 0;
+            if (product != null) {
                 if (product.getGeoCoding() == null) {
-                    productFactory.dispose();
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
@@ -87,20 +82,15 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products without tiles").increment(1);
                 }
-            } finally {
-                product.dispose();
+            } else {
+                context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
+                LOG.info("Product not used");
             }
-        } else {
-            context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
-            LOG.info("Product not used");
+            LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} tiless produced)",
+                                          context.getTaskAttemptID(), processorAdapter.getInputPath(), numTilesProcessed));
+        } finally {
+            processorAdapter.dispose();
         }
-        productFactory.dispose();
-
-        long stopTime = System.nanoTime();
-
-        // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} stops processing of split {1} after {2} sec ({3} tiless produced)",
-                                      context.getTaskAttemptID(), split, (stopTime - startTime) / 1E9, numTilesProcessed));
     }
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext) throws IOException, InterruptedException {

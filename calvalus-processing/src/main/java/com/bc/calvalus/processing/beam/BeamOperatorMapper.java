@@ -2,22 +2,16 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
-import com.bc.calvalus.processing.shellexec.ProcessorException;
-import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
-import java.awt.Dimension;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +28,6 @@ import java.util.logging.Logger;
 public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
-    private static final int DEFAULT_TILE_HEIGHT = 64;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
@@ -43,23 +36,13 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
      * @param context task "configuration"
      * @throws java.io.IOException  if installation or process initiation raises it
      * @throws InterruptedException if processing is interrupted externally
-     * @throws com.bc.calvalus.processing.shellexec.ProcessorException
-     *                              if processing fails
      */
     @Override
-    public void run(Context context) throws IOException, InterruptedException, ProcessorException {
+    public void run(Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
-        ProductFactory productFactory = new ProductFactory(jobConfig);
-
-        final FileSplit split = (FileSplit) context.getInputSplit();
-
-        // write initial log entry for runtime measurements
-        LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
-        final long startTime = System.nanoTime();
-
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         try {
-            // parse request
-            Path inputPath = split.getPath();
+            Path inputPath = processorAdapter.getInputPath();
             String inputFilename = inputPath.getName();
             String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
             FileSystem fileSystem = FileSystem.get(jobConfig);
@@ -68,48 +51,25 @@ public class BeamOperatorMapper extends Mapper<NullWritable, NullWritable, Text 
                 if (fileSystem.exists(outputProductPath)) {
                     LOG.info("resume: target product already exist, skip processing");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
-                    writeValidMarkerFile(context, fileSystem, outputFilename);
                     return;
                 }
             }
-            Product targetProduct = productFactory.getProcessedProduct(context.getInputSplit());
+            Product product = processorAdapter.getProcessedProduct();
 
-            if (targetProduct == null || targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
+            if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 LOG.info(context.getTaskAttemptID() + " target product created");
                 // process input and write target product
-                Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
-                int tileHeight = DEFAULT_TILE_HEIGHT;
-                Dimension preferredTileSize = targetProduct.getPreferredTileSize();
-                if (preferredTileSize != null) {
-                    tileHeight = preferredTileSize.height;
-                }
-                ProgressMonitor progressMonitor = new ProductSplitProgressMonitor(context);
-                StreamingProductWriter streamingProductWriter = new StreamingProductWriter(jobConfig, context, progressMonitor);
-                streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
+                processorAdapter.saveProcessedProduct(context, outputFilename);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
-                writeValidMarkerFile(context, fileSystem, outputFilename);
             }
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "BeamOperatorMapper exception: " + e.toString(), e);
-            throw new ProcessorException("BeamOperatorMapper exception: " + e.toString(), e);
+            LOG.log(Level.SEVERE, "BEAM exception: " + e.toString(), e);
+            throw new IOException("BEAM exception: " + e.toString(), e);
         } finally {
-            productFactory.dispose();
-            // write final log entry for runtime measurements
-            final long stopTime = System.nanoTime();
-            LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
-        }
-    }
-
-    private void writeValidMarkerFile(Context context, FileSystem fileSystem, String outputFilename) throws IOException, InterruptedException {
-        if (context.getConfiguration().getBoolean("calvalus.validMarkerFile", false)) {
-            Path validPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename + ".valid");
-            if (!fileSystem.exists(validPath)) {
-                FSDataOutputStream out = fileSystem.create(validPath);
-                out.close();
-            }
+            processorAdapter.dispose();
         }
     }
 }

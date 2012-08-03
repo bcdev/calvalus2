@@ -60,7 +60,7 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
 
         Configuration jobConfig = job.getConfiguration();
 
-        // Note: these are used in ProductFactory.
+        // Note: these are applied in GpfUtils.init().
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "50");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "50");
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");

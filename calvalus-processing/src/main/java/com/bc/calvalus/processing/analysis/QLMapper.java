@@ -17,20 +17,18 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
@@ -75,15 +73,13 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        Configuration jobConfig = context.getConfiguration();
-        ProductFactory productFactory = new ProductFactory(jobConfig);
-        Product product = null;
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         try {
-            InputSplit inputSplit = context.getInputSplit();
-            product = productFactory.getProcessedProduct(inputSplit);
+            Product product = processorAdapter.getProcessedProduct();
             if (product != null) {
-                QLConfig qlConfig = QLConfig.get(jobConfig);
-                String name = FileUtils.getFilenameWithoutExtension(((FileSplit) inputSplit).getPath().getName());
+                Path inputPath = processorAdapter.getInputPath();
+                QLConfig qlConfig = QLConfig.get(context.getConfiguration());
+                String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
                 String qlName = name + "." + qlConfig.imageType;
                 Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
                 OutputStream quickLookOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
@@ -94,10 +90,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 }
             }
         } finally {
-            if (product != null) {
-                product.dispose();
-            }
-            productFactory.dispose();
+            processorAdapter.dispose();
         }
     }
 

@@ -16,8 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -32,12 +31,10 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.logging.Logger;
 
 
 public class MosaicFormatterMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final NumberFormat PART_FILE_NUMBER_FORMAT = NumberFormat.getInstance();
 
     static {
@@ -51,7 +48,7 @@ public class MosaicFormatterMapper extends Mapper<NullWritable, NullWritable, Nu
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         jobConfig = context.getConfiguration();
-        ProductFactory.initGpf(jobConfig, this.getClass().getClassLoader());
+        GpfUtils.init(jobConfig);
 
         final FileSplit split = (FileSplit) context.getInputSplit();
         Path partFile = split.getPath();

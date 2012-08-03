@@ -16,14 +16,14 @@
 
 package com.bc.calvalus.processing.analysis;
 
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -42,22 +42,16 @@ public class GeometryMapper extends Mapper<NullWritable, NullWritable, Text, Tex
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        Configuration jobConfig = context.getConfiguration();
-        ProductFactory productFactory = new ProductFactory(jobConfig);
-        Product product = null;
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         try {
-            product = productFactory.getProcessedProduct(context.getInputSplit());
+            Product product = processorAdapter.getProcessedProduct();
             if (product != null) {
                 Geometry geometry = computeProductGeometry(product);
                 context.write(new Text("1"), new Text(geometry.toString()));
             }
         } finally {
-            if (product != null) {
-                product.dispose();
-            }
-            productFactory.dispose();
+            processorAdapter.dispose();
         }
-
     }
     
     public Geometry computeProductGeometry(Product product) {

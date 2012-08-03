@@ -16,10 +16,9 @@
 
 package com.bc.calvalus.processing.productinventory;
 
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.ProductFactory;
+import com.bc.calvalus.processing.beam.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -42,9 +41,6 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        Configuration jobConfig = context.getConfiguration();
-        ProductFactory productFactory = new ProductFactory(jobConfig);
-
         final FileSplit split = (FileSplit) context.getInputSplit();
         // parse request
         Path inputPath = split.getPath();
@@ -54,10 +50,10 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
             return;
         }
 
+        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
         Product product = null;
         try {
-            String inputFormat = jobConfig.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-            product = productFactory.readProduct(inputPath, inputFormat);
+            product = processorAdapter.getProcessedProduct();
             if (productHasEmptyTiepoints(product)) {
                 report(context, product, false, "Product has empty tie-points", inputPath);
             } else if (productHasEmptyLatLonLines(product)) {
@@ -75,10 +71,7 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
                 report(context, "Failed to read product: " + exception.getMessage(), inputPath);
             }
         } finally {
-            if (product != null) {
-                product.dispose();
-            }
-            productFactory.dispose();
+            processorAdapter.dispose();
         }
     }
 
