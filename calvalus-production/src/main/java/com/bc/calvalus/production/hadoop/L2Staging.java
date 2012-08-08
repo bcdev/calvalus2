@@ -99,6 +99,7 @@ class L2Staging extends ProductionStaging {
                 String productFileName = FileUtils.exchangeExtension(name, extension);
                 File productFile = new File(tmpDir, productFileName);
                 ProductIO.writeProduct(product, productFile, outputFormat, false);
+                product.dispose();
 
                 String zipFileName = FileUtils.exchangeExtension(name, ".zip");
                 zip(tmpDir, new File(stagingDir, zipFileName));
