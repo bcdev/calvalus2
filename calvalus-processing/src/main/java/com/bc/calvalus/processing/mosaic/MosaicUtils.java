@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3Config;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -39,11 +40,14 @@ public class MosaicUtils {
                 Class<?> algorithmClass = Class.forName(type);
                 mosaicAlgorithm = (MosaicAlgorithm) ReflectionUtils.newInstance(algorithmClass, jobConf);
             } catch (ClassNotFoundException ignore) {
+                CalvalusLogger.getLogger().severe("mosaic algorithm class " + type + " not found: " + ignore);
             }
         }
         if (mosaicAlgorithm == null) {
+            CalvalusLogger.getLogger().info("default mosaic algorithm used");
             mosaicAlgorithm = new MeanMosaicAlgorithm();
         }
+
         mosaicAlgorithm.setVariableContext(l3Config.createVariableContext());
         return mosaicAlgorithm;
     }
