@@ -6,10 +6,8 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -32,8 +30,6 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,
             619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
             761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
-
-    static final String[] COUNTER_NAMES = {"valid", "clear_land", "clear_water", "clear_snow_ice", "cloud", "cloud_shadow"};
 
     static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
@@ -123,7 +119,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         band.setSampleCoding(indexCoding);
         band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
-        for (String counter : COUNTER_NAMES) {
+        for (String counter : LcL3Nc4WriterPlugIn.COUNTER_NAMES) {
             band = product.addBand(counter + "_count", ProductData.TYPE_INT16);
             band.setNoDataValue(-1);
             band.setNoDataValueUsed(true);
@@ -139,7 +135,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         //band.setSampleCoding(indexCoding);
         //band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
-        for (int i = 0; i < LCMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
             int bandIndex = i + 1;
             band = product.addBand("sr_" + bandIndex + "_mean", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
@@ -150,7 +146,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         band = product.addBand("vegetation_index_mean", ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
-        for (int i = 0; i < LCMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
             band = product.addBand("sr_" + (i + 1) + "_sigma", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
@@ -166,6 +162,8 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         product.getMetadataRoot().setAttributeString("version", version);
         product.getMetadataRoot().setAttributeInt("tileY", tileY);
         product.getMetadataRoot().setAttributeInt("tileX", tileX);
+
+        System.out.println("number of bands: " + product.getBands().length);
 
         return product;
     }

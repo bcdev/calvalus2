@@ -21,7 +21,9 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.landcover.AbstractLcMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
+import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LcSDR8MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
@@ -79,7 +81,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         }
 
         String cloudL3ConfigXml = getCloudL3Config(productionRequest).toXml();
-        String mainL3ConfigXml = getMainL3Config().toXml();
+        String mainL3ConfigXml = getMainL3Config(productionRequest).toXml();
 
         String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
@@ -116,7 +118,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             if (productionRequest.getBoolean("lcl3.cloud", true)) {
                 // if cloud aggregation is disabled, don't set this property
-                jobConfigSr.set(LCMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+                jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
             }
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
@@ -129,7 +131,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
-            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
+            jobConfigFormat.setIfUnset(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
             jobConfigFormat.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
@@ -248,7 +250,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         return createL3Config(type, maskExpr, varNames);
     }
 
-    static L3Config getMainL3Config() throws ProductionException {
+    static L3Config getMainL3Config(ProductionRequest productionRequest) throws ProductionException {
         // exclude invalid and deep water pixels
         String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4) and dem_alt > -100))";
 
@@ -261,7 +263,9 @@ public class LcL3ProductionType extends HadoopProductionType {
                 "sdr_error_6", "sdr_error_7", "sdr_error_8", "sdr_error_9", "sdr_error_10",
                 "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15",
         };
-        String type = LCMosaicAlgorithm.class.getName();
+        String type = "NetCDF4-LC".equals(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"))
+                ? LcL3Nc4MosaicAlgorithm.class.getName()
+                : LCMosaicAlgorithm.class.getName();
 
         return createL3Config(type, maskExpr, varNames);
     }

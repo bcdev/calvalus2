@@ -33,7 +33,6 @@ import ucar.ma2.ArrayByte;
 
 import java.awt.Dimension;
 import java.io.IOException;
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -41,6 +40,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
+
+    public static final String[] COUNTER_NAMES = { "clear_land", "clear_water", "clear_snow_ice", "cloud", "cloud_shadow" /*, "valid"*/ };
 
     @Override
     public String[] getFormatNames() {
@@ -75,7 +76,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     private class LCMainPart implements ProfileInitPartWriter {
 
         private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-        final String[] COUNTER_NAMES = {"valid", "clear_land", "clear_water", "clear_snow_ice", "cloud", "cloud_shadow"};
+
         final float[] WAVELENGTH = new float[]{
             412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,
             619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
@@ -110,7 +111,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("project", "Climate Change Initiative - European Space Agency");
             writeable.addGlobalAttribute("references", "http://www.esa-landcover-cci.org/");
             writeable.addGlobalAttribute("institution", "Brockmann Consult");
-            writeable.addGlobalAttribute("contact", "lc-cci-info@brockmann-consult.de");
+            writeable.addGlobalAttribute("contact", "info@brockmann-consult.de");
             writeable.addGlobalAttribute("source", source);
             writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-1.0, lc-sr-1.0");  // versions
             writeable.addGlobalAttribute("comment", "");

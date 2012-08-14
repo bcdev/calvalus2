@@ -16,18 +16,24 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
-import com.bc.calvalus.processing.mosaic.*;
+import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
+import com.bc.calvalus.processing.mosaic.MosaicGrid;
+import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
 import org.esa.beam.binning.VariableContext;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.Arrays;
 
 /**

@@ -25,14 +25,36 @@ import org.apache.hadoop.conf.Configurable;
  *
  * @author MarcoZ
  */
-public class LCMosaicAlgorithm extends AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Configurable {
+public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
-    static final String[] COUNTER_NAMES = { "land", "water", "snow", "cloud", "cloud_shadow" };
+    /* TODO: introduce additional band for second period
+    final int VALID_COUNT_INDEX = 6;
+     */
+    static final String[] COUNTER_NAMES = { "land", "water", "snow", "cloud", "cloud_shadow" /*, "valid"*/ };
 
     protected String[] getCounterNames() { return COUNTER_NAMES; }
 
+/*
+    @Override
+    public float[][] getResult() {
+        super.getResult();
+        int numElems = tileSize * tileSize;
+        for (int i = 0; i < numElems; i++) {
+            aggregatedSamples[VALID_COUNT_INDEX][i] =
+                    aggregatedSamples[STATUS_LAND][i]
+                            + aggregatedSamples[STATUS_WATER][i]
+                            + aggregatedSamples[STATUS_SNOW][i]
+                            + aggregatedSamples[STATUS_CLOUD][i]
+                            + aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+        }
+        return aggregatedSamples;
+    }
+*/
+
     @Override
     public MosaicProductFactory getProductFactory() {
-        return new LcMosaicProductFactory();
+        return new LcL3Nc4MosaicProductFactory();
     }
+
+
 }

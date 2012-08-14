@@ -52,7 +52,7 @@ class LcMosaicProductFactory extends DefaultMosaicProductFactory {
             band.setNoDataValue(-1);
             band.setNoDataValueUsed(true);
         }
-        for (int i = 0; i < LCMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
             int bandIndex = i + 1;
             band = product.addBand("sr_" + bandIndex + "_mean", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
@@ -63,7 +63,7 @@ class LcMosaicProductFactory extends DefaultMosaicProductFactory {
         band = product.addBand("ndvi_mean", ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
-        for (int i = 0; i < LCMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
             band = product.addBand("sr_" + (i + 1) + "_sigma", ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);

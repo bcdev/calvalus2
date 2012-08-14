@@ -51,19 +51,19 @@ public class StatusRemapper {
     public int remap(int status) {
         for (int s : statusesToLand) {
             if (s == status) {
-                return LCMosaicAlgorithm.STATUS_LAND;
+                return AbstractLcMosaicAlgorithm.STATUS_LAND;
             }
         }
         return status;
     }
 
     public static int remapStatus(StatusRemapper statusRemapper, int status) {
-        if (status > LCMosaicAlgorithm.STATUS_CLOUD_SHADOW) {
+        if (status > AbstractLcMosaicAlgorithm.STATUS_CLOUD_SHADOW) {
             if (statusRemapper != null) {
                 // re-map e.g. ucl-cloud, ucl-cloud-buffer and schiller-cloud ==> cloud
                 statusRemapper.remap(status);
             } else {
-                return LCMosaicAlgorithm.STATUS_CLOUD;
+                return AbstractLcMosaicAlgorithm.STATUS_CLOUD;
             }
         }
         return status;
