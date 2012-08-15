@@ -13,7 +13,7 @@
     <properties>
         <hadoop.version>0.20.205.0</hadoop.version>
         <calvalus.version>1.4.1-SNAPSHOT</calvalus.version>
-        <beam.version>4.10</beam.version>
+        <beam.version>4.10.3</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -25,9 +25,6 @@
         <!--<module>calvalus-mc</module>-->
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
-
-        <!-- Will be moved to BEAM sooner or later -->
-        <module>beam-binning2</module>
 
         <!-- Plug-ins to Calvalus -->
         <module>calvalus-l2gen</module>
@@ -189,22 +186,22 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-binning2</artifactId>
-                <version>0.6.0</version>
+                <version>0.8.0</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5</version>
+                <version>1.5.1</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1</version>
+                <version>1.1.1</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.2</version>
+                <version>1.2.1</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
