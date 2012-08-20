@@ -16,8 +16,10 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
@@ -53,15 +55,16 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final BinningContext ctx = l3Config.createBinningContext();
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
-        final ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
-
+        final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Level 3", 100);
         try {
-            Product product = processorAdapter.getProcessedProduct();
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   l3Config.getSuperSampling(),
-                                                                  new ProductSplitProgressMonitor(context));
+                                                                  SubProgressMonitor.create(pm, 95));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
@@ -73,6 +76,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 LOG.info("Product not used");
             }
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
 
@@ -82,7 +86,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             LOG.log(Level.SEVERE, m, exception);
         }
         // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
+        LOG.info(MessageFormat.format("Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
                                       context.getTaskAttemptID(), processorAdapter.getInputPath(),
                                       spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
     }

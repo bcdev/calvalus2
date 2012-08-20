@@ -17,8 +17,6 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.ProgressMonitorWrapper;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -137,7 +135,7 @@ public class ProductFormatter {
         LOG.info("Finished writing to HDFS.");
     }
 
-    static void copyAndClose(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
+    public static void copyAndClose(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
         try {
             copy(inputStream, outputStream, progressable);
         } finally {
@@ -182,7 +180,7 @@ public class ProductFormatter {
     }
 
     // copied from Staging
-    static void copy(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
+    public static void copy(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
         byte[] buffer = new byte[64 * 1024];
         while (true) {
             progressable.progress();
@@ -195,7 +193,7 @@ public class ProductFormatter {
         }
     }
 
-    static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws IOException {
+    public static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws IOException {
         Path workOutputPath;
         try {
             workOutputPath = FileOutputFormat.getWorkOutputPath(context);
@@ -207,19 +205,4 @@ public class ProductFormatter {
         return fileSystem.create(workPath, (short) 1);
     }
 
-
-    public static class ProgressMonitorAdapter extends ProgressMonitorWrapper {
-
-        private final Progressable progressable;
-
-        public ProgressMonitorAdapter(Progressable progressable) {
-            super(ProgressMonitor.NULL);
-            this.progressable = progressable;
-        }
-
-        @Override
-        public void internalWorked(double work) {
-            progressable.progress();
-        }
-    }
 }

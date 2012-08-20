@@ -14,14 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.Assert;
+import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  * Adapts different processors ( BEAM GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
  * Usage, simple version:
  * <code>
- *   ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+ *   ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
  *   try {
  *       Product target = processorAdapter.getProcessedProduct();
  *       ....
@@ -63,7 +63,7 @@ import java.util.logging.Logger;
  *
  * If more control is required, further adjust the processed region, ...):
  * <code>
- *   ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+ *   ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
  *   try {
  *       // use points from reference data set to restrict roi even further
  *       Product inputProduct = processorAdapter.getInputProduct();
@@ -93,18 +93,44 @@ public abstract class ProcessorAdapter {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
+    private final MapContext mapContext;
     private final Configuration conf;
     private final InputSplit inputSplit;
 
-    private List<File> productCaches;
     private Product inputProduct;
 
-    public ProcessorAdapter(InputSplit inputSplit, Configuration conf) {
-        this.inputSplit = inputSplit;
-        this.conf = conf;
-        this.productCaches = new ArrayList<File>();
+    public ProcessorAdapter(MapContext mapContext) {
+        this.mapContext = mapContext;
+        this.inputSplit = mapContext.getInputSplit();
+        this.conf = mapContext.getConfiguration();
         Assert.argument(inputSplit instanceof ProductSplit || inputSplit instanceof FileSplit,
                         "input split is neither a FileSplit nor a ProductSplit");
+    }
+
+    public MapContext getMapContext() {
+        return mapContext;
+    }
+
+    public Configuration getConfiguration() {
+        return conf;
+    }
+
+    public Logger getLogger() {
+        return LOG;
+    }
+
+    /**
+     * Returns the names of the products that will we produced by this processor.
+     * This should enable fast processing of missing products.
+     *
+     *
+     * If the names are not predictable {@code null} will be returned and the processing
+     * will always happen.
+     *
+     * @return The name of the resulting product or {@code null}.
+     */
+    public String[] getProcessedProductPathes() {
+        return null;
     }
 
     /**
@@ -115,8 +141,6 @@ public abstract class ProcessorAdapter {
      * <li>performs a "L2" operation (optional)</li>
      * </ul>
      * the resulting product is contained in the adapter and can be opened using {@code #openProcessedProduct}.
-     * <p/>
-     * Currently only GPF operator names are supported.
      *
      * @param srcProductRect The region of the source product to be processed, if {@code null} the product will be processed.
      *                       The rectangle can not be empty.
@@ -131,23 +155,23 @@ public abstract class ProcessorAdapter {
      *
      * @return The processed product
      */
-    public abstract Product openProcessedProduct();
+    public abstract Product openProcessedProduct() throws IOException;
 
     /**
-     * Saves the processed product onto HDFS.
+     * Saves the processed products onto HDFS.
      *
-     * @param mapContext     The hadoop mapping context
-     * @param outputFilename The output filename.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract void saveProcessedProduct(MapContext mapContext, String outputFilename) throws Exception;
+    public abstract void saveProcessedProducts() throws Exception;
 
     /**
      * Convenient method that returns the processed product and does all the necessary steps.
      *
+     * @param pm A progress monitor
      * @return The processed product
      */
-    public Product getProcessedProduct() throws IOException {
+    public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
+        System.out.println("ProcessorAdapter.getProcessedProduct");
         Product processedProduct = openProcessedProduct();
         if (processedProduct == null) {
             Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
@@ -160,10 +184,6 @@ public abstract class ProcessorAdapter {
             }
         }
         return processedProduct;
-    }
-
-    Configuration getConfiguration() {
-        return conf;
     }
 
     /**
@@ -183,10 +203,6 @@ public abstract class ProcessorAdapter {
         }
     }
 
-    Logger getLogger() {
-        return LOG;
-    }
-
     /**
      * Computes the intersection between the input product and the given geometry. If there is no intersection an empty
      * rectangle will be returned. The pixel region will also take information
@@ -197,6 +213,7 @@ public abstract class ProcessorAdapter {
      * @throws IOException
      */
     public Rectangle computeIntersection(Geometry regionGeometry) throws IOException {
+        System.out.println("ProcessorAdapter.computeIntersection");
         Product product = getInputProduct();
         Rectangle pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
@@ -241,6 +258,7 @@ public abstract class ProcessorAdapter {
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product getInputProduct() throws IOException {
+        System.out.println("ProcessorAdapter.getInputProduct");
         if (inputProduct == null) {
             inputProduct = openInputProduct();
         }
@@ -248,11 +266,13 @@ public abstract class ProcessorAdapter {
     }
 
     private Product openInputProduct() throws IOException {
+        System.out.println("ProcessorAdapter.openInputProduct");
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
 
         return readProduct(getInputPath(), inputFormat);
     }
+
 
     /**
      * Reads a product from the distributed file system.
@@ -263,6 +283,7 @@ public abstract class ProcessorAdapter {
      * @throws java.io.IOException If an I/O error occurs
      */
     private Product readProduct(Path inputPath, String inputFormat) throws IOException {
+        System.out.println("ProcessorAdapter.readProduct");
         Configuration configuration = getConfiguration();
         final FileSystem fs = inputPath.getFileSystem(configuration);
         Product product = null;
@@ -279,10 +300,9 @@ public abstract class ProcessorAdapter {
                     final FSDataInputStream in = fs.open(inputPath);
                     input = new FSImageInputStream(in, status.getLen());
                 } else if (canHandle(readerPlugIn, File.class)) {
-                    File productCacheDir = new File(System.getProperty("java.io.tmpdir"), String.format("product-cache-%d", productCaches.size()));
-                    productCacheDir.mkdirs();
-                    productCaches.add(productCacheDir);
-                    File tmpFile = new File(productCacheDir, inputPath.getName());
+                    File inputDir = new File("input");
+                    inputDir.mkdirs();
+                    File tmpFile = new File(inputDir, inputPath.getName());
                     FileUtil.copy(fs, inputPath, tmpFile, false, configuration);
                     input = tmpFile;
                 }
@@ -300,7 +320,6 @@ public abstract class ProcessorAdapter {
                                        product.getSceneRasterHeight()));
         return product;
     }
-
 
     private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
         if (readerPlugIn != null) {
@@ -322,16 +341,6 @@ public abstract class ProcessorAdapter {
         if (inputProduct != null) {
             inputProduct.dispose();
             inputProduct = null;
-        }
-        if (productCaches != null) {
-            for (File cacheDir : productCaches) {
-                try {
-                    FileUtil.fullyDelete(cacheDir);
-                } catch (IOException ignore) {
-                    Debug.trace(ignore);
-                }
-            }
-            productCaches = null;
         }
     }
 }

@@ -63,6 +63,7 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
 
     @Override
     public void done() {
+        mapContext.progress();
     }
 
     @Override

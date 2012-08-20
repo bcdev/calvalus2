@@ -19,8 +19,8 @@ package com.bc.calvalus.processing.ma;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -73,7 +73,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         long t0;
 
         t0 = now();
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         try {
             Rectangle sourceRectangle = processorAdapter.computeIntersection(regionGeometry);
             Product product = null;

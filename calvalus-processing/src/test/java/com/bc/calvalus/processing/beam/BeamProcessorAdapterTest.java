@@ -20,6 +20,8 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.junit.Test;
@@ -119,7 +121,9 @@ public class BeamProcessorAdapterTest {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
-        return new BeamProcessorAdapter(inputSplit, conf) {
+        TaskAttemptID taskid = new TaskAttemptID();
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, inputSplit);
+        return new BeamProcessorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;

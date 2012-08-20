@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.BeamOperatorMapper;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -48,11 +48,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
 
-    public String getProcessorBundle() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
-    }
-
-
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
@@ -74,7 +69,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
-        job.setMapperClass(BeamOperatorMapper.class);
+        job.setMapperClass(L2Mapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
@@ -84,8 +79,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         } else {
             JobUtils.clearAndSetOutputDir(job, getOutputDir());
         }
-        if (getProcessorBundle() != null) {
-            HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
-        }
+        ProcessorFactory.installProcessor(jobConfig);
     }
 }

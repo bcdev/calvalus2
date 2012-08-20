@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -41,10 +42,6 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
     @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
-    }
-
-    public String getProcessorBundle() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
     }
 
     @Override
@@ -81,8 +78,6 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
             JobUtils.clearAndSetOutputDir(job, getOutputDir());
         }
 
-        if (getProcessorBundle() != null) {
-            HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
-        }
+        ProcessorFactory.installProcessor(jobConfig);
     }
 }

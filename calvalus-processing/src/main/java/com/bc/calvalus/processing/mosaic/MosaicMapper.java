@@ -19,11 +19,12 @@ package com.bc.calvalus.processing.mosaic;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -63,19 +64,21 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         final Configuration jobConfig = context.getConfiguration();
         final L3Config l3Config = L3Config.get(jobConfig);
 
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Mosaikking", 100);
         try {
             mosaicGrid = MosaicGrid.create(jobConfig);
             final VariableContext ctx = l3Config.createVariableContext();
 
-            Product product = processorAdapter.getProcessedProduct();
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             int numTilesProcessed = 0;
             if (product != null) {
                 if (product.getGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-                numTilesProcessed = processProduct(product, regionGeometry, ctx, context);
+                numTilesProcessed = processProduct(product, regionGeometry, ctx, context, SubProgressMonitor.create(pm, 95));
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTilesProcessed);
@@ -89,11 +92,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} tiless produced)",
                                           context.getTaskAttemptID(), processorAdapter.getInputPath(), numTilesProcessed));
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
     }
 
-    private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext) throws IOException, InterruptedException {
+    private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext, ProgressMonitor pm) throws IOException, InterruptedException {
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
         if (sourceGeometry == null || sourceGeometry.isEmpty()) {
             LOG.info("Product geometry is empty");
@@ -137,15 +141,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
-        ProgressMonitor progressMonitor = new ProductSplitProgressMonitor(mapContext);
-        progressMonitor.beginTask("Mosaicing", tileIndices.length);
+        pm.beginTask("Tile processing", tileIndices.length);
         for (TileIndexWritable tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
-            progressMonitor.worked(1);
+            pm.worked(1);
         }
-        progressMonitor.done();
+        pm.done();
         return numTilesProcessed;
     }
 

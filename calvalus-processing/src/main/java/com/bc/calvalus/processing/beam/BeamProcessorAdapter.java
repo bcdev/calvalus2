@@ -17,13 +17,13 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.Assert;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
@@ -32,6 +32,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -40,7 +41,9 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * A processor adapter that uses BEAM GPF a {@code Operator} to process an input product.
+ * A processor adapter that uses a BEAM GPF {@code Operator} to process an input product.
+ *
+ * @author MarcoZ
  */
 public class BeamProcessorAdapter extends ProcessorAdapter {
 
@@ -48,9 +51,16 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
 
     private Product targetProduct;
 
-    public BeamProcessorAdapter(InputSplit inputSplit, Configuration conf) {
-        super(inputSplit, conf);
-        GpfUtils.init(conf);
+    public BeamProcessorAdapter(MapContext mapContext) {
+        super(mapContext);
+        GpfUtils.init(mapContext.getConfiguration());
+    }
+
+    @Override
+    public String[] getProcessedProductPathes() {
+        String inputFilename = getInputPath().getName();
+        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+        return new String[]{ outputFilename };
     }
 
     @Override
@@ -80,7 +90,11 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProduct(MapContext mapContext, String outputFilename) throws Exception {
+    public void saveProcessedProducts() throws Exception {
+        MapContext mapContext = getMapContext();
+        String inputFilename = getInputPath().getName();
+        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+
         Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(mapContext), outputFilename);
         int tileHeight = DEFAULT_TILE_HEIGHT;
         Dimension preferredTileSize = targetProduct.getPreferredTileSize();

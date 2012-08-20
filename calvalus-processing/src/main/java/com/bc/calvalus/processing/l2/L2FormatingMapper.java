@@ -18,9 +18,12 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,7 +40,7 @@ import java.util.logging.Logger;
 
 /**
  * A mapper which converts L2 products from the
- * (internal) SequenceFiles into different BAM product formats.
+ * (internal) SequenceFiles into different BEAM product formats.
  */
 public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
@@ -46,10 +49,11 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException, ProcessorException {
-        Configuration jobConfig = context.getConfiguration();
-
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Level 2 format", 100);
         try {
+            Configuration jobConfig = context.getConfiguration();
             Path inputPath = processorAdapter.getInputPath();
             String productName = getProductName(jobConfig, inputPath.getName());
 
@@ -67,7 +71,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                     return;
                 }
             }
-            Product product = processorAdapter.getProcessedProduct();
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
 
             if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
                 LOG.warning("target product is empty, skip writing.");
@@ -77,7 +81,8 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                     File productFile = productFormatter.createTemporaryProductFile();
                     LOG.info("Start writing product to file: " + productFile.getName());
                     context.setStatus("writing");
-                    ProductIO.writeProduct(product, productFile, outputFormat, false, new ProductFormatter.ProgressMonitorAdapter(context));
+
+                    ProductIO.writeProduct(product, productFile, outputFormat, false, SubProgressMonitor.create(pm, 95));
                     LOG.info("Finished writing product.");
                     context.setStatus("copying");
                     productFormatter.compressToHDFS(context, productFile);
@@ -88,6 +93,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                 }
             }
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
     }

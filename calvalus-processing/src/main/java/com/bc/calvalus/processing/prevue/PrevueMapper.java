@@ -16,11 +16,14 @@
 
 package com.bc.calvalus.processing.prevue;
 
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,65 +79,67 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
 
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
-        Product product = processorAdapter.getProcessedProduct();
-        if (product == null) {
-            processorAdapter.dispose();
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);
-            return;
-        }
-
-        RecordSource recordSource = getReferenceRecordSource(maConfig);
-
-
-        DecimalFormat decimalFormat = new DecimalFormat("000");
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Geometry", 100);
         try {
-            for (Record record : recordSource.getRecords()) {
-                context.progress();
-                GeoPos location = record.getLocation();
-                PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
-                if (product.containsPixel(pixelPos)) {
-                    Double id = (Double) record.getAttributeValues()[0];
-                    String idAsString = decimalFormat.format(id);
-                    context.setStatus("ID " + idAsString);
-
-                    ReprojectionOp reprojectionOp;
-                    if (product.getProductType().contains("_FSG_")) {
-                        reprojectionOp = getUtmReprojectionOp(product, location);
-                    } else {
-                        reprojectionOp = getLatLonReprojectionOp(product, location);
-                    }
-                    Product targetProduct = reprojectionOp.getTargetProduct();
-
-                    // NO metadata
-                    targetProduct.getMetadataRoot().getElementGroup().removeAll();
-
-                    Path outputDir = new Path(FileOutputFormat.getOutputPath(context), idAsString);
-                    Path outputPath = new Path(outputDir, product.getName() + ".txt");
-
-                    FileSystem fileSystem = outputPath.getFileSystem(context.getConfiguration());
-                    FSDataOutputStream outputStream = fileSystem.create(outputPath);
-                    Writer writer = new OutputStreamWriter(outputStream);
-
-                    ProductWriter ascii = ProductIO.getProductWriter("BEAM-ASCII");
-                    ascii.writeProductNodes(targetProduct, writer);
-                    ascii.close();
-
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Written ASCII products").increment(1);
-
-                    reprojectionOp.dispose();
-                }
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
+            if (product == null) {
+                processorAdapter.dispose();
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);
+                return;
             }
+            RecordSource recordSource = getReferenceRecordSource(maConfig);
+            handleProduct(product, recordSource, context);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
         } catch (Exception e) {
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Failed products").increment(1);
             throw new IOException(e);
         } finally {
+            pm.done();
             context.setStatus("");
             processorAdapter.dispose();
-            product.dispose();
         }
-        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
+    }
 
+    private void handleProduct(Product product, RecordSource recordSource, Context context) throws Exception {
+        DecimalFormat decimalFormat = new DecimalFormat("000");
+        for (Record record : recordSource.getRecords()) {
+            context.progress();
+            GeoPos location = record.getLocation();
+            PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
+            if (product.containsPixel(pixelPos)) {
+                Double id = (Double) record.getAttributeValues()[0];
+                String idAsString = decimalFormat.format(id);
+                context.setStatus("ID " + idAsString);
+
+                ReprojectionOp reprojectionOp;
+                if (product.getProductType().contains("_FSG_")) {
+                    reprojectionOp = getUtmReprojectionOp(product, location);
+                } else {
+                    reprojectionOp = getLatLonReprojectionOp(product, location);
+                }
+                Product targetProduct = reprojectionOp.getTargetProduct();
+
+                // NO metadata
+                targetProduct.getMetadataRoot().getElementGroup().removeAll();
+
+                Path outputDir = new Path(FileOutputFormat.getOutputPath(context), idAsString);
+                Path outputPath = new Path(outputDir, product.getName() + ".txt");
+
+                FileSystem fileSystem = outputPath.getFileSystem(context.getConfiguration());
+                FSDataOutputStream outputStream = fileSystem.create(outputPath);
+                Writer writer = new OutputStreamWriter(outputStream);
+
+                ProductWriter ascii = ProductIO.getProductWriter("BEAM-ASCII");
+                ascii.writeProductNodes(targetProduct, writer);
+                ascii.close();
+
+                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Written ASCII products").increment(1);
+
+                reprojectionOp.dispose();
+            }
+        }
     }
 
     private ReprojectionOp getLatLonReprojectionOp(Product product, GeoPos location) throws Exception {
@@ -147,8 +152,8 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         reprojectionOp.setParameter("pixelSizeY", 1.0 / 112.0);
         reprojectionOp.setParameter("width", 49);
         reprojectionOp.setParameter("height", 49);
-        reprojectionOp.setParameter("easting", (double)location.getLon());
-        reprojectionOp.setParameter("northing", (double)location.getLat());
+        reprojectionOp.setParameter("easting", (double) location.getLon());
+        reprojectionOp.setParameter("northing", (double) location.getLat());
         return reprojectionOp;
     }
 

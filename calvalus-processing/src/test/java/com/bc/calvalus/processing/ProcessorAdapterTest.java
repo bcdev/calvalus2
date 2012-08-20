@@ -14,12 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing;
 
 import org.junit.Test;
 
 import static com.bc.calvalus.processing.JobUtils.createGeometry;
-import static com.bc.calvalus.processing.beam.ProcessorAdapter.isGlobalCoverageGeometry;
+import static com.bc.calvalus.processing.ProcessorAdapter.isGlobalCoverageGeometry;
 import static org.junit.Assert.*;
 
 /**

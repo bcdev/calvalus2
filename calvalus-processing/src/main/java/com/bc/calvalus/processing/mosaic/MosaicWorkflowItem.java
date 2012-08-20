@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
@@ -39,10 +40,6 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
     @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
-    }
-
-    public String getProcessorBundle() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_L2_BUNDLE);
     }
 
     @Override
@@ -88,9 +85,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(job, getOutputDir());
-        if (getProcessorBundle() != null) {
-            HadoopProcessingService.addBundleToClassPath(getProcessorBundle(), jobConfig);
-        }
+        ProcessorFactory.installProcessor(jobConfig);
     }
 
     static int computeNumReducers(Configuration jobConfig) {

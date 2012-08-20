@@ -16,9 +16,10 @@
 
 package com.bc.calvalus.processing.productinventory;
 
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -50,10 +51,10 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
             return;
         }
 
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         Product product = null;
         try {
-            product = processorAdapter.getProcessedProduct();
+            product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
             if (productHasEmptyTiepoints(product)) {
                 report(context, product, false, "Product has empty tie-points", inputPath);
             } else if (productHasEmptyLatLonLines(product)) {

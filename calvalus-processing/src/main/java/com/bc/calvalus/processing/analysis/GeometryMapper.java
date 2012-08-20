@@ -16,9 +16,12 @@
 
 package com.bc.calvalus.processing.analysis;
 
-import com.bc.calvalus.processing.beam.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.ProcessorAdapterFactory;
+import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.shellexec.ProcessorException;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -42,18 +45,22 @@ public class GeometryMapper extends Mapper<NullWritable, NullWritable, Text, Tex
 
     @Override
     public void run(Context context) throws IOException, InterruptedException, ProcessorException {
-        ProcessorAdapter processorAdapter = ProcessorAdapterFactory.create(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Geometry", 100);
         try {
-            Product product = processorAdapter.getProcessedProduct();
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product != null) {
                 Geometry geometry = computeProductGeometry(product);
+                pm.worked(50);
                 context.write(new Text("1"), new Text(geometry.toString()));
             }
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
     }
-    
+
     public Geometry computeProductGeometry(Product product) {
         try {
             final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
