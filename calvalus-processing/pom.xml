@@ -59,15 +59,6 @@
         </dependency>
 
 
-        <!--  Ceres -->
-
-        <dependency>
-            <groupId>com.bc.ceres</groupId>
-            <artifactId>ceres-metadata</artifactId>
-            <version>0.13.2-SNAPSHOT</version>
-        </dependency>
-
-
         <!--  Hadoop -->
 
         <dependency>
@@ -111,6 +102,19 @@
             <artifactId>junit</artifactId>
         </dependency>
 
+        <!--  JFreeChart -->
+
+        <dependency>
+             <groupId>jfree</groupId>
+             <artifactId>jfreechart</artifactId>
+             <version>1.0.13</version>
+         </dependency>
+         <dependency>
+             <groupId>jfree</groupId>
+             <artifactId>jcommon</artifactId>
+             <version>1.0.16</version>
+         </dependency>
+
     </dependencies>
 
     <build>
@@ -121,8 +125,9 @@
                 <configuration>
                     <descriptors>
                         <descriptor>src/main/assembly/beam.xml</descriptor>
-                        <descriptor>src/main/assembly/job.xml</descriptor>
-                        <descriptor>src/main/assembly/client.xml</descriptor>
+                        <descriptor>src/main/assembly/calvalus.xml</descriptor>
+                        <!--<descriptor>src/main/assembly/job.xml</descriptor>-->
+                        <!--<descriptor>src/main/assembly/client.xml</descriptor>-->
                     </descriptors>
                 </configuration>
             </plugin>
