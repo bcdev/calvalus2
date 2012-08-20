@@ -23,9 +23,7 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -70,16 +68,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String programName = bundle + "-" + executable;
         File cwd = new File(".");
 
-        Path inputPath = getInputPath();
-        File inputDir = new File(cwd, "input");
+        File inputFile = copyProductToLocal(getInputPath());
         File outputDir = new File(cwd, "output");
-        inputDir.mkdirs();
         outputDir.mkdirs();
-        File inputFile = new File(inputDir, inputPath.getName());
-        if (!inputFile.exists()) {
-            FileSystem fs = FileSystem.get(configuration);
-            FileUtil.copy(fs, inputPath, inputFile, false, configuration);
-        }
+
         TemplateProcessor templateProcessor = new TemplateProcessor();
         templateProcessor.velocityContext.put("system", System.getProperties());
         templateProcessor.velocityContext.put("configuration", configuration);

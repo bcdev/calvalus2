@@ -38,53 +38,50 @@ import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.util.Debug;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * Adapts different processors ( BEAM GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
  * Usage, simple version:
  * <code>
- *   ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
- *   try {
- *       Product target = processorAdapter.getProcessedProduct();
- *       ....
- *   } finally {
- *       processorAdapter.dispose();
- *   }
+ * ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
+ * try {
+ * Product target = processorAdapter.getProcessedProduct();
+ * ....
+ * } finally {
+ * processorAdapter.dispose();
+ * }
  * </code>
- *
+ * <p/>
  * If more control is required, further adjust the processed region, ...):
  * <code>
- *   ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
- *   try {
- *       // use points from reference data set to restrict roi even further
- *       Product inputProduct = processorAdapter.getInputProduct();
- *       Geometry roi; // from config
- *       Geometry referenceDataRoi; // from reference data
- *       roi = roi.intersection(referenceDataRoi);
- *
- *       Rectangle srcProductRect = processorAdapter.computeIntersection(roi);
- *       if (!srcProductRect.isEmpty()) {
- *           processorAdapter.processSourceProduct(srcProductRect);
- *
- *           // depending on the requirements:
- *           // save the result to HDFS
- *           processorAdapter.saveProcessedProduct(mapcontext, outputFilename);
- *
- *           // or work with the resulting product
- *           Product processedProduct = processorAdapter.openProcessedProduct();
- *       }
- *   } finally {
- *       processorAdapter.dispose();
- *   }
+ * ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
+ * try {
+ * // use points from reference data set to restrict roi even further
+ * Product inputProduct = processorAdapter.getInputProduct();
+ * Geometry roi; // from config
+ * Geometry referenceDataRoi; // from reference data
+ * roi = roi.intersection(referenceDataRoi);
+ * <p/>
+ * Rectangle srcProductRect = processorAdapter.computeIntersection(roi);
+ * if (!srcProductRect.isEmpty()) {
+ * processorAdapter.processSourceProduct(srcProductRect);
+ * <p/>
+ * // depending on the requirements:
+ * // save the result to HDFS
+ * processorAdapter.saveProcessedProduct(mapcontext, outputFilename);
+ * <p/>
+ * // or work with the resulting product
+ * Product processedProduct = processorAdapter.openProcessedProduct();
+ * }
+ * } finally {
+ * processorAdapter.dispose();
+ * }
  * </code>
  *
  * @author MarcoZ
@@ -122,8 +119,8 @@ public abstract class ProcessorAdapter {
     /**
      * Returns the names of the products that will we produced by this processor.
      * This should enable fast processing of missing products.
-     *
-     *
+     * <p/>
+     * <p/>
      * If the names are not predictable {@code null} will be returned and the processing
      * will always happen.
      *
@@ -285,7 +282,6 @@ public abstract class ProcessorAdapter {
     private Product readProduct(Path inputPath, String inputFormat) throws IOException {
         System.out.println("ProcessorAdapter.readProduct");
         Configuration configuration = getConfiguration();
-        final FileSystem fs = inputPath.getFileSystem(configuration);
         Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
@@ -296,15 +292,9 @@ public abstract class ProcessorAdapter {
                 ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
                 Object input = null;
                 if (canHandle(readerPlugIn, ImageInputStream.class)) {
-                    final FileStatus status = fs.getFileStatus(inputPath);
-                    final FSDataInputStream in = fs.open(inputPath);
-                    input = new FSImageInputStream(in, status.getLen());
+                    input = openImageInputStream(inputPath);
                 } else if (canHandle(readerPlugIn, File.class)) {
-                    File inputDir = new File("input");
-                    inputDir.mkdirs();
-                    File tmpFile = new File(inputDir, inputPath.getName());
-                    FileUtil.copy(fs, inputPath, tmpFile, false, configuration);
-                    input = tmpFile;
+                    input = copyProductToLocal(inputPath);
                 }
 
                 if (input != null) {
@@ -319,6 +309,31 @@ public abstract class ProcessorAdapter {
                                        product.getSceneRasterWidth(),
                                        product.getSceneRasterHeight()));
         return product;
+    }
+
+    /**
+     * Copies the product given to the local input directory for access as a ordinary {@code eFile}.
+     *
+     * @param inputPath     The path to the product in the HDFS.
+     * @return the local file that contains the copy.
+     * @throws IOException
+     */
+    protected File copyProductToLocal(Path inputPath) throws IOException {
+        File inputDir = new File("input");
+        inputDir.mkdirs();
+        File localFile = new File(inputDir, inputPath.getName());
+        if (!localFile.exists()) {
+            FileSystem fs = inputPath.getFileSystem(conf);
+            FileUtil.copy(fs, inputPath, localFile, false, conf);
+        }
+        return localFile;
+    }
+
+    protected Object openImageInputStream(Path inputPath) throws IOException {
+        FileSystem fs = inputPath.getFileSystem(conf);
+        final FileStatus status = fs.getFileStatus(inputPath);
+        final FSDataInputStream in = fs.open(inputPath);
+        return new FSImageInputStream(in, status.getLen());
     }
 
     private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
