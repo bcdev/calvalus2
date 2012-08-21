@@ -2,10 +2,11 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.vividsolutions.jts.geom.Geometry;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,11 +45,13 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
     public void run(Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Level 2 processing", 100);
         try {
             if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
                 LOG.info("resume: testing for target products");
                 FileSystem fileSystem = FileSystem.get(jobConfig);
-                String[] processedProductPaths = processorAdapter.getProcessedProductPathes();
+                String[] processedProductPaths = processorAdapter.getPredictedProductPathes();
                 if (processedProductPaths != null && processedProductPaths.length > 0) {
                     boolean allExist = true;
                     Path outputPath = FileOutputFormat.getOutputPath(context);
@@ -70,17 +73,16 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     }
                 }
             }
-            Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            Rectangle sourceRectangle = processorAdapter.computeIntersection(regionGeometry);
-            if (sourceRectangle.isEmpty()) {
+            Rectangle sourceRectangle = processorAdapter.getInputRectangle();
+            if (sourceRectangle != null  && sourceRectangle.isEmpty()) {
                 LOG.warning("product does not cover region, skip processing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 // process input and write target product
-                boolean success = processorAdapter.processSourceProduct(sourceRectangle);
-                if (success) {
+                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, 50));
+                if (numProducts > 0) {
                     LOG.info(context.getTaskAttemptID() + " target product created");
-                    processorAdapter.saveProcessedProducts();
+                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
                 } else {
                     LOG.warning("product has not been processed.");
@@ -91,6 +93,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
             LOG.log(Level.SEVERE, "BEAM exception: " + e.toString(), e);
             throw new IOException("BEAM exception: " + e.toString(), e);
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
     }

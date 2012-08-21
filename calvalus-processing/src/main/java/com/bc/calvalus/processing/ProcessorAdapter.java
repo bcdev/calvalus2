@@ -48,41 +48,41 @@ import java.util.logging.Logger;
 /**
  * Adapts different processors ( BEAM GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
  * Usage, simple version:
- * <code>
+ * <pre>
  * ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
  * try {
- * Product target = processorAdapter.getProcessedProduct();
- * ....
+ *     Product target = processorAdapter.getProcessedProduct();
+ *     ....
  * } finally {
- * processorAdapter.dispose();
+ *     processorAdapter.dispose();
  * }
- * </code>
+ * </pre>
  * <p/>
  * If more control is required, further adjust the processed region, ...):
- * <code>
+ * <pre>
  * ProcessorAdapter processorAdapter = ProcessorFactory.create(context);
  * try {
- * // use points from reference data set to restrict roi even further
- * Product inputProduct = processorAdapter.getInputProduct();
- * Geometry roi; // from config
- * Geometry referenceDataRoi; // from reference data
- * roi = roi.intersection(referenceDataRoi);
- * <p/>
- * Rectangle srcProductRect = processorAdapter.computeIntersection(roi);
- * if (!srcProductRect.isEmpty()) {
- * processorAdapter.processSourceProduct(srcProductRect);
- * <p/>
- * // depending on the requirements:
- * // save the result to HDFS
- * processorAdapter.saveProcessedProduct(mapcontext, outputFilename);
- * <p/>
- * // or work with the resulting product
- * Product processedProduct = processorAdapter.openProcessedProduct();
- * }
+ *     // use points from reference data set to restrict roi even further
+ *     Product inputProduct = processorAdapter.getInputProduct();
+ *     Geometry roi; // from config
+ *     Geometry referenceDataRoi; // from reference data
+ *     roi = roi.intersection(referenceDataRoi);
+ *
+ *     Rectangle srcProductRect = processorAdapter.computeIntersection(roi);
+ *     if (!srcProductRect.isEmpty()) {
+ *         processorAdapter.processSourceProduct(srcProductRect);
+ *
+ *         // depending on the requirements:
+ *         // save the result to HDFS
+ *         processorAdapter.saveProcessedProducts();
+ *
+ *         // or work with the resulting product
+ *         Product processedProduct = processorAdapter.openProcessedProduct();
+ *     }
  * } finally {
- * processorAdapter.dispose();
+ *     processorAdapter.dispose();
  * }
- * </code>
+ * </pre>
  *
  * @author MarcoZ
  */
@@ -95,6 +95,8 @@ public abstract class ProcessorAdapter {
     private final InputSplit inputSplit;
 
     private Product inputProduct;
+    private Rectangle inputRectangle;
+    private Geometry roiGeometry;
 
     public ProcessorAdapter(MapContext mapContext) {
         this.mapContext = mapContext;
@@ -104,15 +106,15 @@ public abstract class ProcessorAdapter {
                         "input split is neither a FileSplit nor a ProductSplit");
     }
 
-    public MapContext getMapContext() {
+    protected MapContext getMapContext() {
         return mapContext;
     }
 
-    public Configuration getConfiguration() {
+    protected Configuration getConfiguration() {
         return conf;
     }
 
-    public Logger getLogger() {
+    protected Logger getLogger() {
         return LOG;
     }
 
@@ -126,7 +128,7 @@ public abstract class ProcessorAdapter {
      *
      * @return The name of the resulting product or {@code null}.
      */
-    public String[] getProcessedProductPathes() {
+    public String[] getPredictedProductPathes() {
         return null;
     }
 
@@ -134,21 +136,22 @@ public abstract class ProcessorAdapter {
      * Reads and processed a product from the given input split:
      * <ul>
      * <li>read the products</li>
-     * <li>creates a subset taking the rectangle into account (optional)</li>
+     * <li>creates a subset taking the geometries and processing lines into account (optional)</li>
      * <li>performs a "L2" operation (optional)</li>
      * </ul>
-     * the resulting product is contained in the adapter and can be opened using {@code #openProcessedProduct}.
+     * the resulting products are contained in the adapter and can be opened using {@code #openProcessedProduct}.
      *
-     * @param srcProductRect The region of the source product to be processed, if {@code null} the product will be processed.
-     *                       The rectangle can not be empty.
-     * @return true, if the processing succeeded.
+     * @param pm A progress monitor
+     * @return The number of processed products.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract boolean processSourceProduct(Rectangle srcProductRect) throws IOException;
+    public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
 
     /**
      * Returns the product resulting from the processing.
      * Before this method can be called the {@code #processSourceProduct} method must be called.
+     * <p/>
+     * TODO use index to get all processed products
      *
      * @return The processed product
      */
@@ -157,9 +160,10 @@ public abstract class ProcessorAdapter {
     /**
      * Saves the processed products onto HDFS.
      *
+     * @param pm A progress monitor
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract void saveProcessedProducts() throws Exception;
+    public abstract void saveProcessedProducts(ProgressMonitor pm) throws Exception;
 
     /**
      * Convenient method that returns the processed product and does all the necessary steps.
@@ -170,16 +174,26 @@ public abstract class ProcessorAdapter {
     public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
         Product processedProduct = openProcessedProduct();
         if (processedProduct == null) {
-            Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            Rectangle sourceRectangle = computeIntersection(regionGeometry);
-            if (!sourceRectangle.isEmpty()) {
-                boolean sucess = processSourceProduct(sourceRectangle);
-                if (sucess) {
+            Rectangle sourceRectangle = getInputRectangle();
+            if (sourceRectangle == null || !sourceRectangle.isEmpty()) {
+                int numProducts = processSourceProduct(pm);
+                if (numProducts > 0) {
                     processedProduct = openProcessedProduct();
                 }
             }
         }
         return processedProduct;
+    }
+
+    /**
+     * Sets an additional geometry that will be intersected with geometry from the configuration (if any)
+     * to define the region to be processed.
+     *
+     * @param roiGeometry the additional ROI geometry
+     */
+    public void setAdditionalGeometry(Geometry roiGeometry) {
+        this.roiGeometry = roiGeometry;
+        inputRectangle = null;
     }
 
     /**
@@ -200,20 +214,45 @@ public abstract class ProcessorAdapter {
     }
 
     /**
+     * Return the region of the input product that is processed (in pixel coordinates).
+     * This takes the geometries given in the configuration the additionalGeometry and processing lines into account.
+     *
+     * @return The input region to process, or {@code null} if no restriction is given.
+     */
+    public Rectangle getInputRectangle() throws IOException {
+        if (inputRectangle == null) {
+            inputRectangle = computeIntersection(getProcessingGeometry());
+        }
+        return inputRectangle;
+    }
+
+    protected Geometry getProcessingGeometry() {
+        Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        if (regionGeometry != null && roiGeometry != null)
+            return regionGeometry.intersection(roiGeometry);
+        else if (regionGeometry != null) {
+            return regionGeometry;
+        } else if (roiGeometry != null) {
+            return roiGeometry;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Computes the intersection between the input product and the given geometry. If there is no intersection an empty
      * rectangle will be returned. The pixel region will also take information
      * from the {@code ProductSplit} based on an inventory into account.
      *
      * @param regionGeometry The region, can be {@code null}
-     * @return The intersection, never {@code null}
+     * @return The intersection, or {@code null} if no restriction is given.
      * @throws IOException
      */
     public Rectangle computeIntersection(Geometry regionGeometry) throws IOException {
-        Product product = getInputProduct();
-        Rectangle pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+        Rectangle pixelRegion = null;
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
             try {
-                pixelRegion = SubsetOp.computePixelRegion(product, regionGeometry, 1);
+                pixelRegion = SubsetOp.computePixelRegion(getInputProduct(), regionGeometry, 1);
             } catch (Exception e) {
                 // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
                 // in this case ignore this product
@@ -226,6 +265,10 @@ public abstract class ProcessorAdapter {
             final int processStart = productSplit.getProcessStartLine();
             final int processLength = productSplit.getProcessLength();
             if (processLength > 0) {
+                Product product = getInputProduct();
+                if (pixelRegion == null) {
+                    pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+                }
                 final int width = product.getSceneRasterWidth();
                 pixelRegion = pixelRegion.intersection(new Rectangle(0, processStart, width, processLength));
             }
@@ -265,7 +308,6 @@ public abstract class ProcessorAdapter {
 
         return readProduct(getInputPath(), inputFormat);
     }
-
 
     /**
      * Reads a product from the distributed file system.
@@ -309,7 +351,7 @@ public abstract class ProcessorAdapter {
     /**
      * Copies the product given to the local input directory for access as a ordinary {@code eFile}.
      *
-     * @param inputPath     The path to the product in the HDFS.
+     * @param inputPath The path to the product in the HDFS.
      * @return the local file that contains the copy.
      * @throws IOException
      */

@@ -71,14 +71,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             mosaicGrid = MosaicGrid.create(jobConfig);
             final VariableContext ctx = l3Config.createVariableContext();
 
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             int numTilesProcessed = 0;
             if (product != null) {
                 if (product.getGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-                numTilesProcessed = processProduct(product, regionGeometry, ctx, context, SubProgressMonitor.create(pm, 95));
+                numTilesProcessed = processProduct(product, regionGeometry, ctx, context, SubProgressMonitor.create(pm, 50));
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTilesProcessed);

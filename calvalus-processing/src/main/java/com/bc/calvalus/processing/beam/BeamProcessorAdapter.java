@@ -18,9 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.binding.BindingException;
-import com.bc.ceres.core.Assert;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -57,31 +55,31 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public String[] getProcessedProductPathes() {
+    public String[] getPredictedProductPathes() {
         String inputFilename = getInputPath().getName();
         String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
         return new String[]{ outputFilename };
     }
 
     @Override
-    public boolean processSourceProduct(Rectangle srcProductRect) throws IOException {
-        Assert.argument(srcProductRect == null || !srcProductRect.isEmpty(), "srcProductRect can not be empty");
+    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+        pm.setSubTaskName("BEAM Level 2");
         Configuration conf = getConfiguration();
         String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
-        Product subsetProduct = createSubset(srcProductRect);
+        Product subsetProduct = createSubset();
         targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
         if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
                 targetProduct.getSceneRasterHeight() == 0) {
-            return false;
+            return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
                                        targetProduct.getSceneRasterWidth(),
                                        targetProduct.getSceneRasterHeight()));
         copyTimeCoding(subsetProduct, targetProduct);
-        return true;
+        return 1;
     }
 
     @Override
@@ -90,7 +88,7 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProducts() throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
         MapContext mapContext = getMapContext();
         String inputFilename = getInputPath().getName();
         String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
@@ -101,8 +99,7 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
         if (preferredTileSize != null) {
             tileHeight = preferredTileSize.height;
         }
-        ProgressMonitor progressMonitor = new ProductSplitProgressMonitor(mapContext);
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), mapContext, progressMonitor);
+        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), mapContext, pm);
         streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
     }
 
@@ -126,12 +123,16 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
         }
     }
 
-    private Product createSubset(Rectangle srcProductRect) throws IOException {
+    private Product createSubset() throws IOException {
         Product product = getInputProduct();
         // full region
+        Rectangle srcProductRect = getInputRectangle();
         if (srcProductRect == null ||
                 (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
             return product;
+        }
+        if (srcProductRect.isEmpty()) {
+            throw new IllegalStateException("Can not create an empty subset.");
         }
 
         final SubsetOp op = new SubsetOp();

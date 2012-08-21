@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
@@ -31,7 +30,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
-import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,9 +57,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         super(mapContext);
     }
 
-    //TODO maybe return number of processed products
     @Override
-    public boolean processSourceProduct(Rectangle srcProductRect) throws IOException {
+    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+        pm.setSubTaskName("Exec Level 2");
         Configuration configuration = getConfiguration();
         String bundle = configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE);
         String executable = configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR);
@@ -80,7 +78,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         String cmdLine = processVelocityTemplates(templateProcessor, cwd, executable);
         Process process = Runtime.getRuntime().exec(cmdLine);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(getMapContext()); // TODO
         KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext());
 
         new ProcessObserver(process).
@@ -94,7 +91,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         for (int i = 0; i < outputFilesNames.length; i++) {
             outputFiles[i] = new File(cwd, outputFilesNames[i]);
         }
-        return true;
+        return outputFiles.length;
     }
 
     private String processVelocityTemplates(TemplateProcessor templateProcessor, File cwd, final String executable) throws IOException {
@@ -140,7 +137,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProducts() throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
         if (outputFiles != null && outputFiles.length > 0) {
             MapContext mapContext = getMapContext();
             for (File outputFile : outputFiles) {

@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.beam.BeamProcessorInstaller;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorInstaller;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -105,11 +106,14 @@ public class ProcessorFactory {
         final boolean resumeProcessing = conf.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(mapContext);
         try {
+            // most common usage
+            Product product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
+
             // l2 only
             // resume handling
             if (resumeProcessing) {
                 FileSystem fileSystem = FileSystem.get(conf);
-                String[] processedProductPaths = processorAdapter.getProcessedProductPathes();
+                String[] processedProductPaths = processorAdapter.getPredictedProductPathes();
                 if (processedProductPaths != null && processedProductPaths.length > 0) {
                     boolean processedProductExist = true;
                     Path outputPath = FileOutputFormat.getOutputPath(mapContext);
@@ -123,26 +127,21 @@ public class ProcessorFactory {
                     }
                 }
             }
-            Geometry roi = null; // from conf
-
             // MA only: use points from reference data set to restrict roi even further
             Product inputProduct = processorAdapter.getInputProduct();
             Geometry referenceDataRoi = null;
-            roi = roi.intersection(referenceDataRoi);
+            processorAdapter.setAdditionalGeometry(referenceDataRoi);
 
+            // all
+            int processedProducts = processorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            Rectangle sourceRect = processorAdapter.getInputRectangle();
 
-            Rectangle srcProductRect = processorAdapter.computeIntersection(roi);
-            if (!srcProductRect.isEmpty()) {
-                // all
-                processorAdapter.processSourceProduct(srcProductRect);
+            // l2 only
+            processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
 
-                // l2 only
-                processorAdapter.saveProcessedProducts();
-
-                // l3 and ma
-                Product processedProduct = processorAdapter.openProcessedProduct();
-                // do something with the processed product
-            }
+            // l3 and ma
+            Product processedProduct = processorAdapter.openProcessedProduct();
+            // do something with the processed product
         } finally {
             processorAdapter.dispose();
         }

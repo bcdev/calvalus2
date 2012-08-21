@@ -59,12 +59,12 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 3", 100);
         try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product != null) {
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   l3Config.getSuperSampling(),
-                                                                  SubProgressMonitor.create(pm, 95));
+                                                                  SubProgressMonitor.create(pm, 50));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);

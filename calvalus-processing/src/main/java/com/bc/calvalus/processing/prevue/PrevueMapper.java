@@ -83,7 +83,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product == null) {
                 processorAdapter.dispose();
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);

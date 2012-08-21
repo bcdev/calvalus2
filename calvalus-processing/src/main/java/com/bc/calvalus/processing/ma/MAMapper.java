@@ -21,6 +21,9 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -74,22 +77,16 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         t0 = now();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        pm.beginTask("Match-Up analysis", 100);
         try {
-            Rectangle sourceRectangle = processorAdapter.computeIntersection(regionGeometry);
-            Product product = null;
-            if (!sourceRectangle.isEmpty()) {
-                //processorAdapter.processSourceProduct(sourceRectangle);
-                // TODO for now always process full product. ==> improve
-                // Don't create subsets for MA, otherwise we get wrong pixel coordinates!
-                boolean sucess = processorAdapter.processSourceProduct(null);
-                if (!sucess) {
-                    product = processorAdapter.openProcessedProduct();
-                }
-            }
+            //processorAdapter.setAdditionalGeometry(referenceGeometry); TODO
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product == null) {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                 return;
             }
+            Rectangle inputRectangle = processorAdapter.getInputRectangle();  // TODO use this to define product offset
             // Actually wrong name for processed products, but we need the field "source_name" in the export data table
             product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
@@ -144,6 +141,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             t0 = now();
             context.progress();
         } finally {
+            pm.done();
             processorAdapter.dispose();
         }
 

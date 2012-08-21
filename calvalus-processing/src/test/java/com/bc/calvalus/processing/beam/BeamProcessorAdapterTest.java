@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -41,10 +42,10 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        boolean success = beamProcessorAdapter.processSourceProduct(null);
-        assertTrue(success);
+        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        assertEquals(1, numProducts);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -56,10 +57,10 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, new Rectangle(10, 20));
 
-        boolean success = beamProcessorAdapter.processSourceProduct(new Rectangle(10, 20));
-        assertTrue(success);
+        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        assertEquals(1, numProducts);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
@@ -73,10 +74,10 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        boolean success = beamProcessorAdapter.processSourceProduct(null);
-        assertTrue(success);
+        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        assertEquals(1, numProducts);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -90,12 +91,12 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, new Rectangle());
         try {
-            beamProcessorAdapter.processSourceProduct(new Rectangle());
+            beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
             fail();
-        } catch (IllegalArgumentException e) {
-            assertEquals("srcProductRect can not be empty", e.getMessage());
+        } catch (IllegalStateException e) {
+            assertEquals("Can not create an empty subset.", e.getMessage());
         }
     }
 
@@ -108,13 +109,30 @@ public class BeamProcessorAdapterTest {
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
         Rectangle rectangle = beamProcessorAdapter.computeIntersection(null);
-        boolean  success = beamProcessorAdapter.processSourceProduct(rectangle);
-        assertTrue(success);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
-        assertEquals(100, targetProduct.getSceneRasterWidth());
-        assertEquals(20, targetProduct.getSceneRasterHeight());
+        assertEquals(100, rectangle.width);
+        assertEquals(20, rectangle.height);
+    }
+
+    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct, final Rectangle inputRect) {
+        Configuration conf = new Configuration();
+        conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
+        conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
+        TaskAttemptID taskid = new TaskAttemptID();
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, inputSplit);
+        return new BeamProcessorAdapter(mapContext) {
+            @Override
+            public Product getInputProduct() throws IOException {
+                return sourceProduct;
+            }
+
+            @Override
+            public Rectangle getInputRectangle() throws IOException {
+                return inputRect;
+            }
+        };
     }
 
     private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct) {

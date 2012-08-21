@@ -36,12 +36,29 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
 
     @Override
     public void beginTask(String taskName, int totalWork) {
+        setTaskName(taskName);
         this.totalWork = totalWork;
     }
 
     @Override
     public void worked(int delta) {
-        work += delta;
+        internalWorked(delta);
+    }
+
+    @Override
+    public void progress() {
+        mapContext.progress();
+    }
+
+    @Override
+    public void done() {
+        mapContext.setStatus("");
+        mapContext.progress();
+    }
+
+    @Override
+    public void internalWorked(double deltaWork) {
+        work += deltaWork;
         ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
         productSplit.setProgress(Math.min(1.0f,  work / totalWork));
         try {
@@ -53,21 +70,6 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
         } catch (InterruptedException e) {
             // ignore
         }
-    }
-
-
-    @Override
-    public void progress() {
-        mapContext.progress();
-    }
-
-    @Override
-    public void done() {
-        mapContext.progress();
-    }
-
-    @Override
-    public void internalWorked(double work) {
     }
 
     @Override
@@ -86,5 +88,8 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
 
     @Override
     public void setSubTaskName(String subTaskName) {
+        mapContext.setStatus(subTaskName);
     }
+
+
 }
