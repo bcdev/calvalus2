@@ -16,11 +16,11 @@
 
 package com.bc.calvalus.processing.executable;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -81,17 +81,14 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String cmdLine = processVelocityTemplates(templateProcessor, cwd, executable);
         Process process = Runtime.getRuntime().exec(cmdLine);
         ProgressMonitor pm = new ProductSplitProgressMonitor(getMapContext()); // TODO
-        final ProcessObserver processObserver = new ProcessObserver(process, programName, pm);
-        KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext(), pm);
-        processObserver.addHandler(keywordHandler);
-        processObserver.addHandler(new LogHandler(programName, CalvalusLogger.getLogger()));
-        processObserver.startAndWait();
-        pm.done();
+        KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext());
 
-        final int exitCode = process.exitValue();
-        if (exitCode != 0) {
-            throw new IOException(programName + " failed with exit code " + exitCode + ".\nCheck log for more details.");
-        }
+        new ProcessObserver(process).
+                setName(programName).
+                setProgressMonitor(pm).
+                setHandler(keywordHandler).
+                start();
+
         String[] outputFilesNames = keywordHandler.getOutputFiles();
         outputFiles = new File[outputFilesNames.length];
         for (int i = 0; i < outputFilesNames.length; i++) {

@@ -16,10 +16,10 @@
 
 package com.bc.calvalus.processing.executable;
 
+import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.mapreduce.MapContext;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -28,37 +28,37 @@ import java.util.regex.Pattern;
 /**
  * Handler that tries to extract keywords from stdout of a processor
  */
-class KeywordHandler implements ProcessObserver.Handler {
+class KeywordHandler extends ProcessObserver.DefaultHandler {
 
     private final static String PROGRESS_REGEX = "CALVALUS_PROGRESS ([0-9\\.]+)";
     private final static String PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
     private final String programName;
     private final MapContext mapContext;
-    private final ProgressMonitor pm;
     private final Pattern progressPattern;
     private final Pattern productPattern;
     private final List<String> outputFiles;
 
-    private boolean progressSeen;
     private int lastScan = 0;
 
 
-    KeywordHandler(String programName, MapContext mapContext, ProgressMonitor pm) {
+    KeywordHandler(String programName, MapContext mapContext) {
         this.programName = programName;
         this.mapContext = mapContext;
-        this.pm = pm;
         this.progressPattern = Pattern.compile(PROGRESS_REGEX);
         this.productPattern = Pattern.compile(PRODUCT_REGEX);
         this.outputFiles = new ArrayList<String>();
     }
 
+    @Override
+    public void onObservationStarted(ProcessObserver.ObservedProcess process, ProgressMonitor pm) {
+        super.onObservationStarted(process, pm);
+        pm.beginTask(programName, 1000);
+    }
 
-    public void handleLineOnStdoutRead(String line) {
-        mapContext.progress(); //trigger progress
-        if (!progressSeen) {
-            progressSeen = true;
-            pm.beginTask(programName, 1000);
-        }
+    @Override
+    public void onStdoutLineReceived(ProcessObserver.ObservedProcess process, String line, ProgressMonitor pm) {
+        super.onStdoutLineReceived(process, line, pm);
+        mapContext.progress(); //signal activity to Hadoop
 
         Matcher progressMatcher = progressPattern.matcher(line);
         if (progressMatcher.find()) {
@@ -76,8 +76,18 @@ class KeywordHandler implements ProcessObserver.Handler {
     }
 
     @Override
-    public void handleLineOnStderrRead(String line) {
-        mapContext.progress();
+    public void onStderrLineReceived(ProcessObserver.ObservedProcess process, String line, ProgressMonitor pm) {
+        super.onStderrLineReceived(process, line, pm);
+        mapContext.progress(); //signal activity to Hadoop
+    }
+
+    @Override
+    public void onObservationEnded(ProcessObserver.ObservedProcess process, Integer exitCode, ProgressMonitor pm) {
+        super.onObservationEnded(process, exitCode, pm);
+        pm.done();
+        if (exitCode == null || exitCode != 0) {
+            throw new RuntimeException(programName + " failed with exit code " + exitCode + ".\nCheck log for more details.");
+        }
     }
 
     public String[] getOutputFiles() {
