@@ -168,7 +168,6 @@ public abstract class ProcessorAdapter {
      * @return The processed product
      */
     public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
-        System.out.println("ProcessorAdapter.getProcessedProduct");
         Product processedProduct = openProcessedProduct();
         if (processedProduct == null) {
             Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
@@ -210,7 +209,6 @@ public abstract class ProcessorAdapter {
      * @throws IOException
      */
     public Rectangle computeIntersection(Geometry regionGeometry) throws IOException {
-        System.out.println("ProcessorAdapter.computeIntersection");
         Product product = getInputProduct();
         Rectangle pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
@@ -255,7 +253,6 @@ public abstract class ProcessorAdapter {
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product getInputProduct() throws IOException {
-        System.out.println("ProcessorAdapter.getInputProduct");
         if (inputProduct == null) {
             inputProduct = openInputProduct();
         }
@@ -263,7 +260,6 @@ public abstract class ProcessorAdapter {
     }
 
     private Product openInputProduct() throws IOException {
-        System.out.println("ProcessorAdapter.openInputProduct");
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
 
@@ -280,7 +276,6 @@ public abstract class ProcessorAdapter {
      * @throws java.io.IOException If an I/O error occurs
      */
     private Product readProduct(Path inputPath, String inputFormat) throws IOException {
-        System.out.println("ProcessorAdapter.readProduct");
         Configuration configuration = getConfiguration();
         Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
