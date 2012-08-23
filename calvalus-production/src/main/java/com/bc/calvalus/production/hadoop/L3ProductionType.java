@@ -117,7 +117,7 @@ public class L3ProductionType extends HadoopProductionType {
         if (workflow.getItems().length == 0) {
             throw new ProductionException("No input products found for given time range.");
         }
-        if (productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
+        if (outputFormat != null && productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
             Configuration qlJobConfig = createJobConfig(productionRequest);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
