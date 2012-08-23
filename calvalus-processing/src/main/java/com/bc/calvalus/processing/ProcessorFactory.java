@@ -18,6 +18,7 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.beam.BeamProcessorAdapter;
 import com.bc.calvalus.processing.beam.BeamProcessorInstaller;
+import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorInstaller;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -40,41 +41,43 @@ import java.io.IOException;
  */
 public class ProcessorFactory {
 
-    enum ProcessorType {BEAM, EXEC}
+    private static final String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
+
+    enum ProcessorType {BEAM, EXEC, NONE}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
-        ProcessorType processorType = getProcessorType(mapContext.getConfiguration());
+        String processorTypeString = mapContext.getConfiguration().get(CALVALUS_L2_PROCESSOR_TYPE, "NONE");
+        ProcessorType processorType = ProcessorType.valueOf(processorTypeString);
         switch (processorType) {
             case BEAM:
                 return new BeamProcessorAdapter(mapContext);
             case EXEC:
                 return new ExecutableProcessorAdapter(mapContext);
+            case NONE:
+                return new IdentityProcessorAdapter(mapContext);
+
         }
         throw new IllegalArgumentException("Unknown processor type.");
     }
 
     public static void installProcessor(Configuration conf) throws IOException {
-        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE) == null) {
-            return;
+        ProcessorType processorType = ProcessorType.NONE;
+        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE) != null) {
+            processorType = getProcessorType(conf);
+            switch (processorType) {
+                case BEAM:
+                    new BeamProcessorInstaller(conf).install();
+                    break;
+                case EXEC:
+                    new ExecutableProcessorInstaller(conf).install();
+                    break;
+            }
         }
-        ProcessorType processorType = getProcessorType(conf);
-        ProcessorInstaller installer = null;
-        switch (processorType) {
-            case BEAM:
-                installer = new BeamProcessorInstaller(conf);
-                break;
-            case EXEC:
-                installer = new ExecutableProcessorInstaller(conf);
-                break;
-        }
-        installer.install();
+        conf.set(CALVALUS_L2_PROCESSOR_TYPE, processorType.toString());
     }
 
     private static ProcessorType getProcessorType(Configuration conf) throws IOException {
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        if (bundle == null) {
-            throw new IllegalArgumentException("No processor bundle specified.");
-        }
         final FileSystem fileSystem = FileSystem.get(conf);
         final Path bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
         boolean bundleExist = doesBundleExists(bundlePath, fileSystem);

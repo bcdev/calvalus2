@@ -43,22 +43,12 @@ import java.util.Map;
  *
  * @author MarcoZ
  */
-public class BeamProcessorAdapter extends ProcessorAdapter {
-
-    private static final int DEFAULT_TILE_HEIGHT = 64;
+public class BeamProcessorAdapter extends IdentityProcessorAdapter {
 
     private Product targetProduct;
 
     public BeamProcessorAdapter(MapContext mapContext) {
         super(mapContext);
-        GpfUtils.init(mapContext.getConfiguration());
-    }
-
-    @Override
-    public String[] getPredictedProductPathes() {
-        String inputFilename = getInputPath().getName();
-        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-        return new String[]{ outputFilename };
     }
 
     @Override
@@ -89,18 +79,7 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
-        MapContext mapContext = getMapContext();
-        String inputFilename = getInputPath().getName();
-        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-
-        Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(mapContext), outputFilename);
-        int tileHeight = DEFAULT_TILE_HEIGHT;
-        Dimension preferredTileSize = targetProduct.getPreferredTileSize();
-        if (preferredTileSize != null) {
-            tileHeight = preferredTileSize.height;
-        }
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), mapContext, pm);
-        streamingProductWriter.writeProduct(targetProduct, workOutputProductPath, tileHeight);
+        saveTargetProduct(targetProduct, pm);
     }
 
     @Override
@@ -121,29 +100,6 @@ public class BeamProcessorAdapter extends ProcessorAdapter {
                 processedProduct.setEndTime(subsetProduct.getEndTime());
             }
         }
-    }
-
-    private Product createSubset() throws IOException {
-        Product product = getInputProduct();
-        // full region
-        Rectangle srcProductRect = getInputRectangle();
-        if (srcProductRect == null ||
-                (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
-            return product;
-        }
-        if (srcProductRect.isEmpty()) {
-            throw new IllegalStateException("Can not create an empty subset.");
-        }
-
-        final SubsetOp op = new SubsetOp();
-        op.setSourceProduct(product);
-        op.setRegion(srcProductRect);
-        op.setCopyMetadata(false);
-        Product subsetProduct = op.getTargetProduct();
-        getLogger().info(String.format("Created Subset product width = %d height = %d",
-                                       subsetProduct.getSceneRasterWidth(),
-                                       subsetProduct.getSceneRasterHeight()));
-        return subsetProduct;
     }
 
     private static Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
