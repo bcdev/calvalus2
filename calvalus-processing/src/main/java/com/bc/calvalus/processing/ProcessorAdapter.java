@@ -22,7 +22,6 @@ import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.Assert;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -37,7 +36,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
@@ -221,72 +219,16 @@ public abstract class ProcessorAdapter {
      */
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
-            inputRectangle = computeIntersection(getProcessingGeometry());
+            Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiGeometry, inputSplit) {
+                @Override
+                Product getProduct() throws IOException {
+                    return getInputProduct();
+                }
+            };
+            inputRectangle = calculator.computeRect();
         }
         return inputRectangle;
-    }
-
-    protected Geometry getProcessingGeometry() {
-        Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        if (regionGeometry != null && roiGeometry != null)
-            return regionGeometry.intersection(roiGeometry);
-        else if (regionGeometry != null) {
-            return regionGeometry;
-        } else if (roiGeometry != null) {
-            return roiGeometry;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Computes the intersection between the input product and the given geometry. If there is no intersection an empty
-     * rectangle will be returned. The pixel region will also take information
-     * from the {@code ProductSplit} based on an inventory into account.
-     *
-     * @param regionGeometry The region, can be {@code null}
-     * @return The intersection, or {@code null} if no restriction is given.
-     * @throws IOException
-     */
-    public Rectangle computeIntersection(Geometry regionGeometry) throws IOException {
-        Rectangle pixelRegion = null;
-        if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
-            try {
-                pixelRegion = SubsetOp.computePixelRegion(getInputProduct(), regionGeometry, 1);
-            } catch (Exception e) {
-                // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
-                // in this case ignore this product
-                return new Rectangle();
-            }
-        }
-        // adjust region to start/stop line
-        if (inputSplit instanceof ProductSplit) {
-            ProductSplit productSplit = (ProductSplit) inputSplit;
-            final int processStart = productSplit.getProcessStartLine();
-            final int processLength = productSplit.getProcessLength();
-            if (processLength > 0) {
-                Product product = getInputProduct();
-                if (pixelRegion == null) {
-                    pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
-                }
-                final int width = product.getSceneRasterWidth();
-                pixelRegion = pixelRegion.intersection(new Rectangle(0, processStart, width, processLength));
-            }
-        }
-        return pixelRegion;
-    }
-
-    static boolean isGlobalCoverageGeometry(Geometry geometry) {
-        Envelope envelopeInternal = geometry.getEnvelopeInternal();
-        return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
-                && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
-                && eq(envelopeInternal.getMinY(), -90.0, 1E-8)
-                && eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
-    }
-
-    private static boolean eq(double x1, double x2, double eps) {
-        double delta = x1 - x2;
-        return delta > 0 ? delta < eps : -delta < eps;
     }
 
     /**

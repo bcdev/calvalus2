@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
  */
 public class BeamProcessorAdapterTest {
     @Test
-    public void testPassThrough() throws Exception {
+    public void testFullProduct() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
@@ -108,8 +108,8 @@ public class BeamProcessorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 10, 20);
         BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        Rectangle rectangle = beamProcessorAdapter.computeIntersection(null);
         Product targetProduct = beamProcessorAdapter.openProcessedProduct();
+        Rectangle rectangle = beamProcessorAdapter.getInputRectangle();
 
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(100, rectangle.width);
