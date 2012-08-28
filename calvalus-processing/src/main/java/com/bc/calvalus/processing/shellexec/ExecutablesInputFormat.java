@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
  *
  * @author Boe
  */
+@Deprecated
 public class ExecutablesInputFormat extends InputFormat {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

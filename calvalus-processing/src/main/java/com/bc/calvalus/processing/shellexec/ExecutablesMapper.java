@@ -26,6 +26,7 @@ import java.util.logging.Logger;
  *
  * @author Boe
  */
+@Deprecated
 public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /*N1 input name*/, Text /*split output name*/> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

@@ -23,7 +23,8 @@ import java.io.Writer;
  *
  * @author Martin Boettcher
  */
-public class XslTransformer {
+@Deprecated
+class XslTransformer {
 
     private final Transformer transformer;
 

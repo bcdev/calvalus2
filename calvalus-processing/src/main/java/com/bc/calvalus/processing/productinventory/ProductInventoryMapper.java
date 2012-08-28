@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.productinventory;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -41,7 +40,7 @@ import java.io.IOException;
 public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, Text /*product name*/, Text /*inventory entry CSV*/> {
 
     @Override
-    public void run(Context context) throws IOException, InterruptedException, ProcessorException {
+    public void run(Context context) throws IOException, InterruptedException {
         final FileSplit split = (FileSplit) context.getInputSplit();
         // parse request
         Path inputPath = split.getPath();

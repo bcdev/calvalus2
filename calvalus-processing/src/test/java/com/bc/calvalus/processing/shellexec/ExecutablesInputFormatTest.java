@@ -6,9 +6,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.util.io.FileUtils;
 import org.junit.Ignore;
-import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ public class ExecutablesInputFormatTest {
 
 //    @Test
     public void getSplits() throws Exception {
-        final String requestContent = FileUtil.readFile(getAbsPath(REQUEST_PATH));
+        final String requestContent = FileUtils.readText(new File(getAbsPath(REQUEST_PATH)));
         final Job job = new Job(new Configuration(), REQUEST_PATH);
         job.getConfiguration().set("calvalus.request", requestContent);
         final List<FileSplit> splits = new ExecutablesInputFormat().getSplits(job);

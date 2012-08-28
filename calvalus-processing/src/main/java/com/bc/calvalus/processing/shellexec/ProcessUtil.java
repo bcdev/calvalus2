@@ -21,7 +21,8 @@ import java.util.Map;
  * 
  * @author Martin Boettcher
  */
-public class ProcessUtil {
+@Deprecated
+class ProcessUtil {
 
     /**
      * Interface to be implemented by observers that get callbacks for each line of process output.

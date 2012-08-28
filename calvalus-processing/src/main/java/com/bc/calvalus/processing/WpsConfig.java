@@ -16,19 +16,20 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.shellexec.FileUtil;
 import com.bc.calvalus.processing.shellexec.XmlDoc;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.binding.dom.XppDomElement;
 import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.DomReader;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
+import org.esa.beam.util.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathExpressionException;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.Map;
 /**
  * Encapsulation the WPS XML configuration
  */
+@Deprecated
 public class WpsConfig {
     private static final String TYPE_XPATH = "/Execute/Identifier";
     private static final String PROCESSOR_PACKAGE_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.processor.package']/Data/LiteralData";
@@ -227,7 +229,7 @@ public class WpsConfig {
     }
 
     public static WpsConfig createFromFile(String filename) throws IOException {
-        String requestContent = FileUtil.readFile(filename);
+        String requestContent = FileUtils.readText(new File(filename));
         return new WpsConfig(requestContent);
     }
 }

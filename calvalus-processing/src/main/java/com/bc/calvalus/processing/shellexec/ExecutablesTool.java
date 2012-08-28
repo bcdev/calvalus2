@@ -11,10 +11,10 @@ import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.esa.beam.util.io.FileUtils;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -45,6 +45,7 @@ import java.util.logging.Logger;
  *
  * @author Boe
  */
+@Deprecated
 public class ExecutablesTool extends Configured implements Tool {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
@@ -89,7 +90,7 @@ public class ExecutablesTool extends Configured implements Tool {
             requestPath = commandLine.getArgs()[0];
 
             // parse request
-            final String requestContent = FileUtil.readFile(requestPath);  // we need the content later on
+            final String requestContent = FileUtils.readText(new File(requestPath));  // we need the content later on
             final XmlDoc request = new XmlDoc(requestContent);
             final String requestType = request.getString(TYPE_XPATH);
             final String requestPriority = request.getString(PRIORITY_XPATH, "LOW");  // one of VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH

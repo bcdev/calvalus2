@@ -5,7 +5,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import javax.annotation.processing.Processor;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -15,6 +14,7 @@ import java.util.logging.Logger;
  *
  * @author Martin Boettcher
  */
+@Deprecated
 public class ExecutablesInstaller {
 
     private static final Logger LOG = CalvalusLogger.getLogger();

@@ -5,7 +5,8 @@ package com.bc.calvalus.processing.shellexec;
  *
  * @author Martin Boettcher
  */
-public class ProcessorException extends RuntimeException {
+@Deprecated
+class ProcessorException extends RuntimeException {
     public ProcessorException() {
         super();
     }

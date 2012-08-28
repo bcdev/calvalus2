@@ -23,6 +23,7 @@ import java.io.StringReader;
  *
  * @author Martin Boettcher
  */
+@Deprecated
 public class XmlDoc {
 
     final Document doc;

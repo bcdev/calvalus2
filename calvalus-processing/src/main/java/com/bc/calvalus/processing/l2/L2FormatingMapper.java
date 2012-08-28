@@ -21,7 +21,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
-import com.bc.calvalus.processing.shellexec.ProcessorException;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -48,7 +47,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
-    public void run(Mapper.Context context) throws IOException, InterruptedException, ProcessorException {
+    public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 2 format", 100);
