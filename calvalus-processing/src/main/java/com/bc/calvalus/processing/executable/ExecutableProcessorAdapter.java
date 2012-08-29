@@ -69,7 +69,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("outputDir", outputDir);
 
-        addScriptResources(cwd, scriptGenerator, null);
+        addScriptResources(cwd, scriptGenerator, executable);
         scriptGenerator.writeScripts(cwd);
 
         Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine());
