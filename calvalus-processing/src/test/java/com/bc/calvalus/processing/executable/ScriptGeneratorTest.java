@@ -16,14 +16,17 @@
 
 package com.bc.calvalus.processing.executable;
 
-
 import org.junit.Test;
 
-public class ExecutableProcessorAdapterTest {
+import static org.junit.Assert.assertEquals;
 
+public class ScriptGeneratorTest {
 
     @Test
-    public void testFoo() throws Exception {
-        // EMPTY
+    public void testCreateResultName() throws Exception {
+        assertEquals("cmdline", ScriptGenerator.createResultName("l2gen-cmdline.vm", "l2gen"));
+        assertEquals("config.txt", ScriptGenerator.createResultName("l2gen-config.txt.vm", "l2gen"));
+        assertEquals("config.txt", ScriptGenerator.createResultName("l2gen-config.txt", "l2gen"));
     }
+
 }

@@ -21,26 +21,20 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.resource.FileResource;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.io.FileUtils;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
 
 /**
  * A processor adapter that uses an executable to process an input product.
@@ -49,8 +43,6 @@ import java.io.Writer;
  */
 public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
-    private static final String VM_SUFFIX = ".vm";
-    private static final String CMDLINE = "cmdline";
     private File[] outputFiles;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
@@ -62,7 +54,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         pm.setSubTaskName("Exec Level 2");
         Configuration configuration = getConfiguration();
         String bundle = configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        final String executable = configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String programName = bundle + "-" + executable;
         File cwd = new File(".");
 
@@ -70,14 +62,17 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         File outputDir = new File(cwd, "output");
         outputDir.mkdirs();
 
-        TemplateProcessor templateProcessor = new TemplateProcessor();
-        templateProcessor.velocityContext.put("system", System.getProperties());
-        templateProcessor.velocityContext.put("configuration", configuration);
-        templateProcessor.velocityContext.put("inputFile", inputFile);
-        templateProcessor.velocityContext.put("outputDir", outputDir);
+        ScriptGenerator scriptGenerator = new ScriptGenerator(executable);
+        VelocityContext velocityContext = scriptGenerator.getVelocityContext();
+        velocityContext.put("system", System.getProperties());
+        velocityContext.put("configuration", configuration);
+        velocityContext.put("inputFile", inputFile);
+        velocityContext.put("outputDir", outputDir);
 
-        String cmdLine = processVelocityTemplates(templateProcessor, cwd, executable);
-        Process process = Runtime.getRuntime().exec(cmdLine);
+        addScriptResources(cwd, scriptGenerator, null);
+        scriptGenerator.writeScripts(cwd);
+
+        Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine());
         KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext());
 
         new ProcessObserver(process).
@@ -94,38 +89,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return outputFiles.length;
     }
 
-    private String processVelocityTemplates(TemplateProcessor templateProcessor, File cwd, final String executable) throws IOException {
+    private void addScriptResources(File cwd, ScriptGenerator scriptGenerator, final String executable) {
         File[] vmFiles = cwd.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 return name.startsWith(executable);
             }
         });
-        String cmdline = "";
         if (vmFiles != null) {
             for (File vmFile : vmFiles) {
-                String filename = vmFile.getName();
-                String outputFilename = createResultName(filename, executable);
-                File outputFile = new File(cwd, outputFilename);
-                if (filename.endsWith(VM_SUFFIX)) {
-                    templateProcessor.process(vmFile, outputFile);
-                } else {
-                    FileUtil.symLink(filename, outputFilename);
-                }
-                if (outputFilename.equals(CMDLINE)) {
-                    cmdline = FileUtils.readText(outputFile).trim();
-                }
+                System.out.println("adding Resource = " + vmFile);
+                scriptGenerator.addResource(new FileResource(vmFile.getName()));
             }
         }
-        return cmdline;
-    }
-
-    static String createResultName(String name, String executable) {
-        name = name.substring(executable.length() + 1); // strip executable name from the front
-        if (name.endsWith(VM_SUFFIX)) {
-            name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end
-        }
-        return name;
     }
 
     @Override
@@ -148,29 +124,4 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
     }
 
-    static class TemplateProcessor {
-        final VelocityEngine velocityEngine;
-        final VelocityContext velocityContext;
-
-        TemplateProcessor() {
-            velocityEngine = new VelocityEngine();
-            try {
-                velocityEngine.init();
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to initialize velocity engine", e);
-            }
-            velocityContext = new VelocityContext();
-        }
-
-        public void process(File vmFile, File outputFile) throws IOException {
-            Reader inputReader = new FileReader(vmFile);
-            Writer outputWriter = new FileWriter(outputFile);
-            try {
-                velocityEngine.evaluate(velocityContext, outputWriter, "ExecutableProcessorAdapter", inputReader);
-            } finally {
-                outputWriter.close();
-                inputReader.close();
-            }
-        }
-    }
 }
