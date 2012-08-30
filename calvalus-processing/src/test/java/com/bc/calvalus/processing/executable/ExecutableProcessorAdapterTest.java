@@ -19,11 +19,50 @@ package com.bc.calvalus.processing.executable;
 
 import org.junit.Test;
 
+import java.util.Properties;
+
+import static org.junit.Assert.*;
+
 public class ExecutableProcessorAdapterTest {
 
 
     @Test
-    public void testFoo() throws Exception {
-        // EMPTY
+    public void testAsProperties_KeyValue() throws Exception {
+        Properties properties = ExecutableProcessorAdapter.asProperties("key = value1\n  key2   = value3");
+        assertNotNull(properties);
+        assertEquals(2, properties.size());
+
+        String v = properties.getProperty("key");
+        assertNotNull(v);
+        assertEquals("value1", v);
+
+        v = properties.getProperty("key2");
+        assertNotNull(v);
+        assertEquals("value3", v);
+
     }
+
+    @Test
+    public void testAsProperties_XML() throws Exception {
+        Properties properties = ExecutableProcessorAdapter.asProperties(
+                "<parameters>\n" +
+                        "<key>value1</key>\n" +
+                        "<key2>value3</key2>\n" +
+                        "</parameters>"
+        );
+        String s = properties.toString();
+        System.out.println("s = " + s);
+        assertNotNull(properties);
+        assertEquals(2, properties.size());
+
+        String v = properties.getProperty("key");
+        assertNotNull(v);
+        assertEquals("value1", v);
+
+        v = properties.getProperty("key2");
+        assertNotNull(v);
+        assertEquals("value3", v);
+
+    }
+
 }

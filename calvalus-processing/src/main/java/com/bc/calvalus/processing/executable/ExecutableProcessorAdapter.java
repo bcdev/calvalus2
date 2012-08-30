@@ -24,10 +24,20 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.resource.FileResource;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +45,9 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Properties;
 
 /**
  * A processor adapter that uses an executable to process an input product.
@@ -52,10 +65,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("Exec Level 2");
-        Configuration configuration = getConfiguration();
-        String bundle = configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        final String executable = configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String programName = bundle + "-" + executable;
+        Configuration conf = getConfiguration();
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         File cwd = new File(".");
 
         File inputFile = copyProductToLocal(getInputPath());
@@ -65,18 +78,21 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         ScriptGenerator scriptGenerator = new ScriptGenerator(executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
         velocityContext.put("system", System.getProperties());
-        velocityContext.put("configuration", configuration);
+        velocityContext.put("configuration", conf);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("outputDir", outputDir);
+        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
+        velocityContext.put("parameters", asProperties(processorParameters));
 
         addScriptResources(cwd, scriptGenerator, executable);
         scriptGenerator.writeScriptFiles(cwd);
 
         Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine());
-        KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext());
+        String processLogName = bundle + "-" + executable;
+        KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
         new ProcessObserver(process).
-                setName(programName).
+                setName(processLogName).
                 setProgressMonitor(pm).
                 setHandler(keywordHandler).
                 start();
@@ -88,6 +104,52 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
         return outputFiles.length;
     }
+
+
+    /**
+     * Maybe this could be integrated into {@link com.bc.ceres.resource.Resource}
+     */
+    static Properties asProperties(String processorParameters) throws IOException {
+        Properties properties = new Properties();
+        Reader reader = new StringReader(processorParameters);
+        try {
+            if (isXml(processorParameters)) {
+                DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                Document document = documentBuilder.parse(new InputSource(reader));
+                Element documentElement = document.getDocumentElement();
+                documentElement.normalize();
+                NodeList nodeList = documentElement.getChildNodes();
+                if (nodeList != null && nodeList.getLength() > 0) {
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        Node node = nodeList.item(i); //Take the node from the list
+                        NodeList valueNode = node.getChildNodes(); // get the children of the node
+                        if (valueNode.item(0) != null) {
+                            String nodeName = node.getNodeName();
+                            String nodeValue = valueNode.item(0).getNodeValue();
+                            if (nodeName != null && nodeValue != null) {
+                                properties.put(nodeName.trim(), nodeValue.trim());
+                            }
+                        }
+                    }
+                }
+            } else {
+                properties.load(reader);
+            }
+        } catch (ParserConfigurationException e) {
+            throw new IOException(e);
+        } catch (SAXException e) {
+            throw new IOException(e);
+        } finally {
+            reader.close();
+        }
+        return properties;
+    }
+
+    static boolean isXml(String textContent) {
+        String t = textContent.trim();
+        return t.startsWith("<?xml ") || t.startsWith("<?XML ") || (t.startsWith("<") && t.endsWith(">"));
+    }
+
 
     private void addScriptResources(File cwd, ScriptGenerator scriptGenerator, final String executable) {
         File[] vmFiles = cwd.listFiles(new FilenameFilter() {
