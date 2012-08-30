@@ -16,15 +16,12 @@
 
 package com.bc.calvalus.processing.executable;
 
-import com.bc.ceres.resource.FileResource;
 import com.bc.ceres.resource.Resource;
 import com.bc.ceres.resource.ResourceEngine;
-import com.bc.ceres.resource.StringResource;
 import org.apache.velocity.VelocityContext;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -40,13 +37,13 @@ public class ScriptGenerator {
     private static final String CMDLINE = "cmdline";
 
     private final ResourceEngine resourceEngine;
-    private final String executable;
-    private final List<String> resourceNames;
+    private final String executableName;
+    private final List<String> processedResourceNames;
 
-    public ScriptGenerator(String executable) {
-        this.executable = executable;
+    public ScriptGenerator(String executableName) {
+        this.executableName = executableName;
         this.resourceEngine = new ResourceEngine();
-        this.resourceNames = new ArrayList<String>();
+        this.processedResourceNames = new ArrayList<String>();
     }
 
     public VelocityContext getVelocityContext() {
@@ -55,50 +52,49 @@ public class ScriptGenerator {
 
     public void addResource(Resource resource) {
         String path = resource.getPath();
-        System.out.println("path = " + path);
         String name = new File(path).getName();
-        String resultName = createResultName(name, executable);
-        System.out.println("resultName = " + resultName);
-        resourceEngine.processAndAddResource(resultName, resource);
-        resourceNames.add(resultName);
+        String processedName = createProcessedName(name, executableName);
+        if (name.endsWith(VM_SUFFIX)) {
+            resourceEngine.processAndAddResource(processedName, resource);
+        } else {
+            getVelocityContext().put(processedName, resource);
+        }
+        processedResourceNames.add(processedName);
     }
 
     public String getCommandLine() {
-        Resource resource = resourceEngine.getResource(CMDLINE);
-        if (resource != null) {
-            return resource.getContent();
+        if (processedResourceNames.contains(CMDLINE)) {
+            Resource resource = resourceEngine.getResource(CMDLINE);
+            if (resource != null) {
+                return resource.getContent();
+
+            }
         }
-        return "bash";  // TODO
+        throw new NullPointerException("no 'cmdline' resource specified");
     }
 
-    public Resource[] getProcessedResources() {
-        List<Resource> resources = new ArrayList<Resource>(resourceNames.size());
-        for (String resourceName : resourceNames) {
+    public void writeScriptFiles(File cwd) throws IOException {
+        for (String resourceName : processedResourceNames) {
             if (!resourceName.equals(CMDLINE)) {
                 Resource resource = resourceEngine.getResource(resourceName);
-                resources.add(new StringResource(resourceName, resource.getContent()));
+                File scriptFile = new File(cwd, resourceName);
+                writeScript(scriptFile, resource);
             }
-        }
-        return resources.toArray(new Resource[resources.size()]);
-    }
-
-    public void writeScripts(File cwd) throws IOException {
-        Resource[] processedResources = getProcessedResources();
-        for (Resource processedResource : processedResources) {
-            String path = processedResource.getPath();
-            File scriptFile = new File(cwd, path);
-            System.out.println("scriptFile = " + scriptFile.getCanonicalPath());
-            Writer writer = new FileWriter(scriptFile);
-            try {
-                writer.write(processedResource.getContent());
-            } finally {
-                writer.close();
-            }
-            scriptFile.setExecutable(true);
         }
     }
 
-    static String createResultName(String name, String executable) {
+    void writeScript(File scriptFile, Resource resource) throws IOException {
+        System.out.println("scriptFile = " + scriptFile.getCanonicalPath());
+        Writer writer = new FileWriter(scriptFile);
+        try {
+            writer.write(resource.getContent());
+        } finally {
+            writer.close();
+        }
+        scriptFile.setExecutable(true);
+    }
+
+    static String createProcessedName(String name, String executable) {
         name = name.substring(executable.length() + 1); // strip executable name from the front
         if (name.endsWith(VM_SUFFIX)) {
             name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end

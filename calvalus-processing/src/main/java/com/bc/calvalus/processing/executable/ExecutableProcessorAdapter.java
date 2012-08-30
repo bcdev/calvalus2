@@ -70,7 +70,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("outputDir", outputDir);
 
         addScriptResources(cwd, scriptGenerator, executable);
-        scriptGenerator.writeScripts(cwd);
+        scriptGenerator.writeScriptFiles(cwd);
 
         Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine());
         KeywordHandler keywordHandler = new KeywordHandler(programName, getMapContext());
