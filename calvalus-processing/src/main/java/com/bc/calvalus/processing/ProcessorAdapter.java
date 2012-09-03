@@ -34,10 +34,8 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
 
-import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
@@ -261,25 +259,23 @@ public abstract class ProcessorAdapter {
      */
     private Product readProduct(Path inputPath, String inputFormat) throws IOException {
         Configuration configuration = getConfiguration();
-        Product product = null;
+        final Product product;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
         } else {
-            ProductReader productReader = ProductIO.getProductReader(inputFormat != null ? inputFormat : "ENVISAT");
-            if (productReader != null) {
-                ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
-                Object input = null;
-                if (canHandle(readerPlugIn, ImageInputStream.class)) {
-                    input = openImageInputStream(inputPath);
-                } else if (canHandle(readerPlugIn, File.class)) {
-                    input = copyProductToLocal(inputPath);
-                }
-
-                if (input != null) {
-                    product = productReader.readProductNodes(input, null);
+            // first try a fast,direct ImageInputStream
+            Object input = openImageInputStream(inputPath);
+            ProductReader productReader = ProductIO.getProductReaderForInput(input);
+            if (productReader == null) {
+                // try a local file copy
+                input = copyProductToLocal(inputPath);
+                productReader = ProductIO.getProductReaderForInput(input);
+                if (productReader == null) {
+                    throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
                 }
             }
+            product = productReader.readProductNodes(input, null);
         }
         if (product == null) {
             throw new IOException(String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(), inputFormat));
@@ -313,18 +309,6 @@ public abstract class ProcessorAdapter {
         final FileStatus status = fs.getFileStatus(inputPath);
         final FSDataInputStream in = fs.open(inputPath);
         return new FSImageInputStream(in, status.getLen());
-    }
-
-    private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
-        if (readerPlugIn != null) {
-            Class[] inputTypes = readerPlugIn.getInputTypes();
-            for (Class inputType : inputTypes) {
-                if (inputType.isAssignableFrom(inputClass)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
