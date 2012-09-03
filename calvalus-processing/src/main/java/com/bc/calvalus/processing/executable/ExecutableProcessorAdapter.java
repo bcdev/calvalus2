@@ -38,6 +38,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,6 +72,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
         File cwd = new File(".");
 
+        Rectangle inputRectangle = getInputRectangle();
         File inputFile = copyProductToLocal(getInputPath());
         File outputDir = new File(cwd, "output");
         outputDir.mkdirs();
@@ -80,6 +82,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("system", System.getProperties());
         velocityContext.put("configuration", conf);
         velocityContext.put("inputFile", inputFile);
+        velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputDir", outputDir);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
         velocityContext.put("parameters", asProperties(processorParameters));
