@@ -33,7 +33,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
@@ -189,9 +189,13 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         return createL3Config(type, maskExpr, varNames);
     }
 
-    private static L3Config createL3Config(String type, String maskExpr, String[] varNames) {
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type);
-        aggregatorConfig.setVarNames(varNames);
+    private static L3Config createL3Config(String type, String maskExpr, final String[] varNames) {
+        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
+            @Override
+            public String[] getVarNames() {
+                return varNames;
+            }
+        };
 
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr(maskExpr);

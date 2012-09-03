@@ -33,7 +33,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.util.StringUtils;
 
 /**
@@ -142,12 +142,16 @@ public class GLobVegProductionType extends HadoopProductionType {
 
     static L3Config getL3Config() throws ProductionException {
 
-        String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
+        final String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
 
         String type = GlobVegMosaicAlgorithm.class.getName();
 
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type);
-        aggregatorConfig.setVarNames(varNames);
+        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
+            @Override
+            public String[] getVarNames() {
+                return varNames;
+            }
+        };
 
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr("valid_fapar == 1 || valid_lai == 1");

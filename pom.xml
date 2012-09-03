@@ -186,7 +186,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-binning2</artifactId>
-                <version>0.8.0</version>
+                <version>0.8.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -241,7 +241,7 @@
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.0.1</version>
+                <version>1.5.2</version>
             </dependency>
 
             <dependency>
@@ -262,7 +262,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.4.3</version>
+                <version>1.4.2</version>
             </dependency>
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
@@ -285,7 +285,7 @@
             <dependency>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
-                <version>1.2.15</version>
+                <version>1.2.14</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>

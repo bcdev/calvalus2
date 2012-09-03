@@ -24,7 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
-import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.BinningContextImpl;

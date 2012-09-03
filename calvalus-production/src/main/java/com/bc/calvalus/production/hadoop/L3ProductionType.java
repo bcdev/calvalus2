@@ -16,9 +16,12 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.AggregatorConfig;
+import org.esa.beam.binning.AggregatorDescriptor;
+import org.esa.beam.binning.AggregatorDescriptorRegistry;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.StringUtils;
@@ -217,11 +220,22 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            AggregatorConfig aggregatorConfig = new AggregatorConfig(aggregatorName);
-            aggregatorConfig.setVarName(variableName);
-            aggregatorConfig.setPercentage(percentage);
-            aggregatorConfig.setWeightCoeff(weightCoeff);
-            aggregatorConfig.setFillValue(fillValue);
+            AggregatorDescriptorRegistry registry = AggregatorDescriptorRegistry.getInstance();
+            AggregatorDescriptor aggregatorDescriptor = registry.getAggregatorDescriptor(aggregatorName);
+            AggregatorConfig aggregatorConfig = aggregatorDescriptor.createAggregatorConfig();
+            PropertySet propertySet = aggregatorConfig.asPropertySet();
+            if(propertySet.isPropertyDefined("varName")) {
+                propertySet.setValue("varName", variableName);
+            }
+            if(propertySet.isPropertyDefined("percentage")) {
+                propertySet.setValue("percentage", percentage);
+            }
+            if(propertySet.isPropertyDefined("weightCoeff")) {
+                propertySet.setValue("weightCoeff", weightCoeff);
+            }
+            if(propertySet.isPropertyDefined("fillValue")) {
+                propertySet.setValue("fillValue", fillValue);
+            }
             aggregatorConfigs[i] = aggregatorConfig;
         }
         return aggregatorConfigs;

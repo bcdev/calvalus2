@@ -33,7 +33,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.operator.AggregatorConfig;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.util.StringUtils;
 
 /**
@@ -128,8 +128,12 @@ public class LcSeasonalProductionType extends HadoopProductionType {
     static L3Config getMainL3Config() throws ProductionException {
         String type = LCSeasonMosaicAlgorithm.class.getName();
 
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type);
-        aggregatorConfig.setVarNames(new String[0]);
+        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
+            @Override
+            public String[] getVarNames() {
+                return new String[0];
+            }
+        };
 
         L3Config l3Config = new L3Config();
         l3Config.setMaskExpr("");

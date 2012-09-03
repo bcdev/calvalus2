@@ -30,10 +30,12 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.operator.SpatialProductBinner;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,9 +63,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product != null) {
+                HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   l3Config.getSuperSampling(),
+                                                                  addedBands,
                                                                   SubProgressMonitor.create(pm, 50));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
