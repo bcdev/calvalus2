@@ -57,10 +57,12 @@ import java.util.Properties;
  */
 public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
-    private File[] outputFiles;
+    private String[] outputFilesNames;
+    private final File cwd;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
         super(mapContext);
+        this.cwd = new File(".");
     }
 
     @Override
@@ -70,7 +72,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
-        File cwd = new File(".");
 
         Rectangle inputRectangle = getInputRectangle();
         File inputFile = copyProductToLocal(getInputPath());
@@ -100,12 +101,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 setHandler(keywordHandler).
                 start();
 
-        String[] outputFilesNames = keywordHandler.getOutputFiles();
-        outputFiles = new File[outputFilesNames.length];
-        for (int i = 0; i < outputFilesNames.length; i++) {
-            outputFiles[i] = new File(cwd, outputFilesNames[i]);
-        }
-        return outputFiles.length;
+        outputFilesNames = keywordHandler.getOutputFiles();
+        return outputFilesNames.length;
     }
 
 
@@ -171,19 +168,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public Product openProcessedProduct() throws IOException {
-        if (outputFiles != null && outputFiles.length > 0) {
-            return ProductIO.readProduct(outputFiles[0]);
+        if (outputFilesNames != null && outputFilesNames.length > 0) {
+            return ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
         }
         return null;
     }
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
-        if (outputFiles != null && outputFiles.length > 0) {
+        if (outputFilesNames != null && outputFilesNames.length > 0) {
             MapContext mapContext = getMapContext();
-            for (File outputFile : outputFiles) {
-                InputStream inputStream = new BufferedInputStream(new FileInputStream(outputFile));
-                OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFile.getName());
+            for (String outputFileName : outputFilesNames) {
+                InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
                 ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
             }
         }
