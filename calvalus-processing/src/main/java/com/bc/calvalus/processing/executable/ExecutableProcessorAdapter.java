@@ -21,8 +21,10 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.resource.FileResource;
+import com.bc.ceres.resource.ReaderResource;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
@@ -42,12 +44,13 @@ import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -88,7 +91,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
         velocityContext.put("parameters", asProperties(processorParameters));
 
-        addScriptResources(cwd, scriptGenerator, executable);
+        addScriptResources(conf, scriptGenerator);
         scriptGenerator.writeScriptFiles(cwd);
 
         Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine());
@@ -104,7 +107,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         outputFilesNames = keywordHandler.getOutputFiles();
         return outputFilesNames.length;
     }
-
 
     /**
      * Maybe this could be integrated into {@link com.bc.ceres.resource.Resource}
@@ -145,24 +147,20 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return properties;
     }
 
+
     static boolean isXml(String textContent) {
         String t = textContent.trim();
         return t.startsWith("<?xml ") || t.startsWith("<?XML ") || (t.startsWith("<") && t.endsWith(">"));
     }
 
-
-    private void addScriptResources(File cwd, ScriptGenerator scriptGenerator, final String executable) {
-        File[] vmFiles = cwd.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(executable);
-            }
-        });
-        if (vmFiles != null) {
-            for (File vmFile : vmFiles) {
-                System.out.println("adding Resource = " + vmFile);
-                scriptGenerator.addResource(new FileResource(vmFile.getName()));
-            }
+    private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
+        Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
+        FileSystem fs = FileSystem.get(conf);
+        for (String scriptFile : scriptFiles) {
+            Path scriptFilePath = new Path(scriptFile);
+            InputStream inputStream = fs.open(scriptFilePath);
+            Reader reader = new InputStreamReader(inputStream);
+            scriptGenerator.addResource(new ReaderResource(scriptFile, reader));
         }
     }
 

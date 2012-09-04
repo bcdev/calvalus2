@@ -52,7 +52,9 @@ public class ExecutableProcessorInstaller implements ProcessorInstaller {
             final Path bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
             final FileSystem fileSystem = FileSystem.get(configuration);
 
-            checkBundleExists(bundlePath, fileSystem);
+            if (!ProcessorFactory.doesBundleExists(bundlePath, fileSystem)) {
+                throw new IllegalArgumentException("Path to bundle '" + bundlePath + "' does not exist.");
+            }
             addBundleArchives(bundlePath, fileSystem);
             addBundleFiles(executable, bundlePath, fileSystem);
 
@@ -67,19 +69,14 @@ public class ExecutableProcessorInstaller implements ProcessorInstaller {
                 return path.getName().startsWith(executable + "-") && !isArchive(path);
             }
         });
-        for (FileStatus processorFile : processorFiles) {
-            DistributedCache.addCacheFile(addFragmentToPathURI(processorFile.getPath()), configuration);
+        if (processorFiles.length == 0) {
+            throw new IllegalArgumentException("Bundle contains no script files.");
         }
-    }
-
-    private URI addFragmentToPathURI(Path path) {
-        URI uri = path.toUri();
-        String name = path.getName();
-        try {
-            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, name);
-        } catch (URISyntaxException ignore) {
-            throw new IllegalArgumentException("could not add fragment to URI for Path: " + path);
+        String[] scriptFiles = new String[processorFiles.length];
+        for (int i = 0; i < processorFiles.length; i++) {
+            scriptFiles[i] = processorFiles[i].getPath().toString();
         }
+        configuration.setStrings("calvalus.l2.scriptFiles", scriptFiles);
     }
 
     private void addBundleArchives(Path bundlePath, FileSystem fileSystem) throws IOException {
@@ -94,9 +91,13 @@ public class ExecutableProcessorInstaller implements ProcessorInstaller {
         }
     }
 
-    private void checkBundleExists(Path bundlePath, FileSystem fileSystem) throws IOException {
-        if (!ProcessorFactory.doesBundleExists(bundlePath, fileSystem)) {
-            throw new IllegalArgumentException("Path to bundle '" + bundlePath + "' does not exist.");
+    private URI addFragmentToPathURI(Path path) {
+        URI uri = path.toUri();
+        String name = path.getName();
+        try {
+            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, name);
+        } catch (URISyntaxException ignore) {
+            throw new IllegalArgumentException("could not add fragment to URI for Path: " + path);
         }
     }
 
