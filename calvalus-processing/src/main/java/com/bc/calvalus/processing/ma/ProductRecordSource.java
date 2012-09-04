@@ -5,12 +5,14 @@ import com.bc.jexp.ParseException;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A special record source that generates its output records from a {@link Product} and an input record source.
@@ -84,7 +86,20 @@ public class ProductRecordSource implements RecordSource {
         };
     }
 
-    public static RecordTransformer createTransformer(Header header, MAConfig config) {
+    public static RecordTransformer createShiftTransformer(Header header, Rectangle inputRect) {
+        List<String> attributeNames = Arrays.asList(header.getAttributeNames());
+        final int xAttributeIndex = attributeNames.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_X_ATT_NAME);
+        final int yAttributeIndex = attributeNames.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_Y_ATT_NAME);
+        int xOffset = 0;
+        int yOffset = 0;
+        if (inputRect != null) {
+            xOffset = inputRect.x;
+            yOffset = inputRect.y;
+        }
+        return new ProductOffsetTransformer(xAttributeIndex, yAttributeIndex, xOffset, yOffset);
+    }
+
+    public static RecordTransformer createAggregator(Header header, MAConfig config) {
         final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(PIXEL_MASK_ATT_NAME);
         return new RecordAggregator(pixelMaskAttributeIndex, config.getFilteredMeanCoeff());
     }

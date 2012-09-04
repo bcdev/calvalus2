@@ -86,7 +86,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                 return;
             }
-            Rectangle inputRectangle = processorAdapter.getInputRectangle();  // TODO use this to define product offset
+
             // Actually wrong name for processed products, but we need the field "source_name" in the export data table
             product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
@@ -111,13 +111,17 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                    context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
             logAttributeNames(productRecordSource);
 
-            RecordTransformer recordTransformer = ProductRecordSource.createTransformer(productRecordSource.getHeader(), maConfig);
-            RecordFilter recordFilter = ProductRecordSource.createRecordFilter(productRecordSource.getHeader(), maConfig);
+            Header header = productRecordSource.getHeader();
+            Rectangle inputRect = processorAdapter.getInputRectangle();
+            RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
+            RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
+            RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
 
             t0 = now();
             int numMatchUps = 0;
             for (Record extractedRecord : extractedRecords) {
-                Record aggregatedRecord = recordTransformer.transform(extractedRecord);
+                Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
+                Record aggregatedRecord = recordTransformer.transform(shiftedRecord);
                 if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
                     context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
                                   new RecordWritable(aggregatedRecord.getAttributeValues()));
@@ -131,7 +135,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
             if (numMatchUps > 0) {
                 // write header
-                context.write(HEADER_KEY, new RecordWritable(productRecordSource.getHeader().getAttributeNames()));
+                context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames()));
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
             } else {
