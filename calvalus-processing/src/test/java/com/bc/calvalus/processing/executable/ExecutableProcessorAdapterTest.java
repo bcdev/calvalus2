@@ -20,6 +20,7 @@ package com.bc.calvalus.processing.executable;
 import org.junit.Test;
 
 import java.util.Properties;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -32,13 +33,8 @@ public class ExecutableProcessorAdapterTest {
         assertNotNull(properties);
         assertEquals(2, properties.size());
 
-        String v = properties.getProperty("key");
-        assertNotNull(v);
-        assertEquals("value1", v);
-
-        v = properties.getProperty("key2");
-        assertNotNull(v);
-        assertEquals("value3", v);
+        assertEquals("value1", properties.getProperty("key"));
+        assertEquals("value3", properties.getProperty("key2"));
 
     }
 
@@ -46,23 +42,65 @@ public class ExecutableProcessorAdapterTest {
     public void testAsProperties_XML() throws Exception {
         Properties properties = ExecutableProcessorAdapter.asProperties(
                 "<parameters>\n" +
-                        "<key>value1</key>\n" +
-                        "<key2>value3</key2>\n" +
-                        "</parameters>"
+                "  <key>value1</key>\n" +
+                "  <key2>value3</key2>\n" +
+                "</parameters>"
         );
-        String s = properties.toString();
-        System.out.println("s = " + s);
         assertNotNull(properties);
         assertEquals(2, properties.size());
 
-        String v = properties.getProperty("key");
-        assertNotNull(v);
-        assertEquals("value1", v);
+        assertEquals("value1", properties.getProperty("key"));
+        assertEquals("value3", properties.getProperty("key2"));
 
-        v = properties.getProperty("key2");
-        assertNotNull(v);
-        assertEquals("value3", v);
+    }
 
+    @Test
+    public void testAsProperties_XML_WithChilds() throws Exception {
+        Properties properties = ExecutableProcessorAdapter.asProperties(
+                "<parameters>\n" +
+                "  <key>value1</key>\n" +
+                "  <childs>" +
+                "    <ck1>value31</ck1>\n" +
+                "    <ck2>value32</ck2>\n" +
+                "    <ck3>value33</ck3>\n" +
+                "  </childs>" +
+                "</parameters>"
+        );
+        assertNotNull(properties);
+        assertEquals(5, properties.size());
+
+        assertEquals("value1", properties.getProperty("key"));
+        assertEquals("3", properties.getProperty("childs.length"));
+        assertEquals("value31", properties.getProperty("childs.0.ck1"));
+        assertEquals("value32", properties.getProperty("childs.1.ck2"));
+        assertEquals("value33", properties.getProperty("childs.2.ck3"));
+    }
+
+    @Test
+    public void testAsProperties_XML_WithComplexChilds() throws Exception {
+        Properties properties = ExecutableProcessorAdapter.asProperties(
+                "<parameters>\n" +
+                "  <key>value1</key>\n" +
+                "  <childs>" +
+                "    <ck1>" +
+                "       <name>name31</name>" +
+                "       <value>value31</value>" +
+                "    </ck1>\n" +
+                "    <ck2>value32</ck2>\n" +
+                "    <ck3>value33</ck3>\n" +
+                "  </childs>" +
+                "</parameters>"
+        );
+        assertNotNull(properties);
+        assertEquals(7, properties.size());
+
+        assertEquals("value1", properties.getProperty("key"));
+        assertEquals("3", properties.getProperty("childs.length"));
+        assertEquals("2", properties.getProperty("childs.0.ck1.length"));
+        assertEquals("name31", properties.getProperty("childs.0.ck1.0.name"));
+        assertEquals("value31", properties.getProperty("childs.0.ck1.1.value"));
+        assertEquals("value32", properties.getProperty("childs.1.ck2"));
+        assertEquals("value33", properties.getProperty("childs.2.ck3"));
     }
 
 }

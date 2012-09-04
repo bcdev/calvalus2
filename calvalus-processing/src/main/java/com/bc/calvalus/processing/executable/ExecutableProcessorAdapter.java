@@ -19,9 +19,15 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.ceres.binding.dom.DomElement;
+import com.bc.ceres.binding.dom.XppDomElement;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.resource.ReaderResource;
+import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
+import com.thoughtworks.xstream.io.xml.XppDomWriter;
+import com.thoughtworks.xstream.io.xml.XppReader;
+import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,16 +36,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import org.xmlpull.mxp1.MXParser;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -116,35 +114,45 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Reader reader = new StringReader(processorParameters);
         try {
             if (isXml(processorParameters)) {
-                DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-                Document document = documentBuilder.parse(new InputSource(reader));
-                Element documentElement = document.getDocumentElement();
-                documentElement.normalize();
-                NodeList nodeList = documentElement.getChildNodes();
-                if (nodeList != null && nodeList.getLength() > 0) {
-                    for (int i = 0; i < nodeList.getLength(); i++) {
-                        Node node = nodeList.item(i); //Take the node from the list
-                        NodeList valueNode = node.getChildNodes(); // get the children of the node
-                        if (valueNode.item(0) != null) {
-                            String nodeName = node.getNodeName();
-                            String nodeValue = valueNode.item(0).getNodeValue();
-                            if (nodeName != null && nodeValue != null) {
-                                properties.put(nodeName.trim(), nodeValue.trim());
-                            }
-                        }
-                    }
+                DomElement domElement = createDomElement(reader);
+                DomElement[] domElements = domElement.getChildren();
+                for (DomElement element : domElements) {
+                    handleChildElement(properties, element, "");
                 }
             } else {
                 properties.load(reader);
             }
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e);
-        } catch (SAXException e) {
-            throw new IOException(e);
         } finally {
             reader.close();
         }
         return properties;
+    }
+
+    private static void handleChildElement(Properties properties, DomElement element, String prefix) {
+        String name = element.getName();
+        String value = element.getValue();
+        int childCount = element.getChildCount();
+        if (value != null && childCount == 0) {
+            properties.setProperty(prefix + name, value);
+        } else {
+            int childCount1 = element.getChildCount();
+            properties.setProperty(prefix + name + ".length", Integer.toString(childCount1));
+            DomElement[] children = element.getChildren();
+            for (int i = 0; i < children.length; i++) {
+                DomElement child = children[i];
+                String childValue = child.getValue();
+                if (childValue != null)  {
+                    handleChildElement(properties, child, prefix + name + "." + i + ".");
+                }
+            }
+        }
+    }
+
+    private static DomElement createDomElement(Reader reader) {
+        XppDomWriter domWriter = new XppDomWriter();
+        new HierarchicalStreamCopier().copy(new XppReader(reader, new MXParser()), domWriter);
+        XppDom xppDom = domWriter.getConfiguration();
+        return new XppDomElement(xppDom);
     }
 
 
