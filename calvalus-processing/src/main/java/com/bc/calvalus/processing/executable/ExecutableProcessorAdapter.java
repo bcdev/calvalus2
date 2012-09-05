@@ -114,11 +114,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Reader reader = new StringReader(processorParameters);
         try {
             if (isXml(processorParameters)) {
-                DomElement domElement = createDomElement(reader);
-                DomElement[] domElements = domElement.getChildren();
-                for (DomElement element : domElements) {
-                    handleChildElement(properties, element, "");
-                }
+                handleChildElements(properties, createDomElement(reader), "");
             } else {
                 properties.load(reader);
             }
@@ -128,21 +124,33 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return properties;
     }
 
-    private static void handleChildElement(Properties properties, DomElement element, String prefix) {
-        String name = element.getName();
-        String value = element.getValue();
-        int childCount = element.getChildCount();
-        if (value != null && childCount == 0) {
-            properties.setProperty(prefix + name, value);
-        } else {
-            int childCount1 = element.getChildCount();
-            properties.setProperty(prefix + name + ".length", Integer.toString(childCount1));
-            DomElement[] children = element.getChildren();
-            for (int i = 0; i < children.length; i++) {
-                DomElement child = children[i];
-                String childValue = child.getValue();
-                if (childValue != null)  {
-                    handleChildElement(properties, child, prefix + name + "." + i + ".");
+    private static void handleChildElements(Properties properties, DomElement parentDomElements, String prefix) {
+        DomElement[] childElements = parentDomElements.getChildren();
+        if (childElements.length > 0) {
+            if (parentDomElements.getChildren(childElements[0].getName()).length == childElements.length) {
+                // all children have the same name
+                if (!prefix.isEmpty()) {
+                    properties.setProperty(prefix + "length", Integer.toString(childElements.length));
+                }
+                int index = 0;
+                for (DomElement element : childElements) {
+                    String value = element.getValue();
+                    if (value != null && element.getChildCount() == 0) {
+                        properties.setProperty(prefix + Integer.toString(index), value);
+                    } else {
+                        handleChildElements(properties, element, prefix + Integer.toString(index) + ".");
+                    }
+                    index++;
+                }
+            } else {
+                for (DomElement element : childElements) {
+                    String name = element.getName();
+                    String value = element.getValue();
+                    if (value != null && element.getChildCount() == 0) {
+                        properties.setProperty(prefix + name, value);
+                    } else {
+                        handleChildElements(properties, element, prefix + name + ".");
+                    }
                 }
             }
         }

@@ -20,7 +20,6 @@ package com.bc.calvalus.processing.executable;
 import org.junit.Test;
 
 import java.util.Properties;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -47,6 +46,7 @@ public class ExecutableProcessorAdapterTest {
                 "</parameters>"
         );
         assertNotNull(properties);
+        System.out.println("properties = " + properties);
         assertEquals(2, properties.size());
 
         assertEquals("value1", properties.getProperty("key"));
@@ -67,40 +67,42 @@ public class ExecutableProcessorAdapterTest {
                 "</parameters>"
         );
         assertNotNull(properties);
-        assertEquals(5, properties.size());
+        System.out.println("properties = " + properties);
+        assertEquals(4, properties.size());
 
         assertEquals("value1", properties.getProperty("key"));
-        assertEquals("3", properties.getProperty("childs.length"));
-        assertEquals("value31", properties.getProperty("childs.0.ck1"));
-        assertEquals("value32", properties.getProperty("childs.1.ck2"));
-        assertEquals("value33", properties.getProperty("childs.2.ck3"));
+        assertEquals("value31", properties.getProperty("childs.ck1"));
+        assertEquals("value32", properties.getProperty("childs.ck2"));
+        assertEquals("value33", properties.getProperty("childs.ck3"));
     }
 
     @Test
-    public void testAsProperties_XML_WithComplexChilds() throws Exception {
+    public void testAsProperties_XML_WithNestedChilds() throws Exception {
         Properties properties = ExecutableProcessorAdapter.asProperties(
                 "<parameters>\n" +
                 "  <key>value1</key>\n" +
                 "  <childs>" +
-                "    <ck1>" +
+                "    <child>" +
                 "       <name>name31</name>" +
                 "       <value>value31</value>" +
-                "    </ck1>\n" +
-                "    <ck2>value32</ck2>\n" +
-                "    <ck3>value33</ck3>\n" +
+                "    </child>\n" +
+                "    <child>" +
+                "       <name>name32</name>" +
+                "       <value>value32</value>" +
+                "    </child>\n" +
                 "  </childs>" +
                 "</parameters>"
         );
         assertNotNull(properties);
-        assertEquals(7, properties.size());
+        System.out.println("properties = " + properties);
+        assertEquals(6, properties.size());
 
         assertEquals("value1", properties.getProperty("key"));
-        assertEquals("3", properties.getProperty("childs.length"));
-        assertEquals("2", properties.getProperty("childs.0.ck1.length"));
-        assertEquals("name31", properties.getProperty("childs.0.ck1.0.name"));
-        assertEquals("value31", properties.getProperty("childs.0.ck1.1.value"));
-        assertEquals("value32", properties.getProperty("childs.1.ck2"));
-        assertEquals("value33", properties.getProperty("childs.2.ck3"));
+        assertEquals("2", properties.getProperty("childs.length"));
+        assertEquals("name31", properties.getProperty("childs.0.name"));
+        assertEquals("value31", properties.getProperty("childs.0.value"));
+        assertEquals("name32", properties.getProperty("childs.1.name"));
+        assertEquals("value32", properties.getProperty("childs.1.value"));
     }
 
 }
