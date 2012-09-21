@@ -181,7 +181,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         int width = rectangle.width;
         int height = rectangle.height;
         double x = width / 2.0;
-        double y = height / 2;
+        double y = height / 2.0;
 
         repro.setParameter("easting", 0.0);
         repro.setParameter("northing", 0.0);
