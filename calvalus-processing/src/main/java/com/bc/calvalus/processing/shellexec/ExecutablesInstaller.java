@@ -95,7 +95,7 @@ public class ExecutablesInstaller {
         Path archiveDefaultScript = new Path(archiveRootPath, DEFAULT_SCRIPT_FILENAME);
         Path archiveXslScript = new Path(archiveRootPath, xslScriptFilename);
         Path archiveBashScript = new Path(archiveRootPath, bashScriptFilename);
-        //Path archiveScriptWithPackage = new Path(new Path(archiveRootPath,String.valueOf(packageName)).getParent(),scriptFilename);
+        Path archiveScriptWithPackage = new Path(new Path(archiveRootPath, String.valueOf(packageName)).getParent(),scriptFilename);
         Path archiveScript = new Path(archiveRootPath, scriptFilename);
         FileSystem fs = archiveDefaultScript.getFileSystem(context.getConfiguration());
         File installationRootDir = new File(installationRootPath);
@@ -109,24 +109,45 @@ public class ExecutablesInstaller {
         if (! defaultScript.exists() || defaultScript.lastModified() < fs.listStatus(archiveDefaultScript)[0].getModificationTime()) {
             fs.copyToLocalFile(archiveDefaultScript, new Path(defaultScript.getPath()));
         }
-
-        if (packageName != null && packageVersion != null && fs.exists(archiveXslScript)) {
-            // xsl+tgz
-            script = new File(packageDir, xslScriptFilename);
-            maybeInstallScript(xslScriptFilename, archiveXslScript, script, fs);
-        } else if (packageName != null && packageVersion != null && fs.exists(archiveBashScript)) {
-            // sh+tgz
-            script = new File(installationRootDir, bashScriptFilename);
-            maybeInstallScript(bashScriptFilename, archiveBashScript, script, fs);
-        } else if ((packageName == null || packageVersion != null) && fs.exists(archiveScript)) {
-            // sh but no tgz
-            script = new File(installationRootDir, requestType);
-            maybeInstallScript(requestType, archiveScript, script, fs);
+        if (ExecutablesTool.PML_MODE) {
+            if (packageName != null && packageVersion != null && fs.exists(archiveXslScript)) {
+                // xsl+tgz
+                script = new File(packageDir, xslScriptFilename);
+                maybeInstallScript(xslScriptFilename, archiveXslScript, script, fs);
+            } else if (packageName != null && packageVersion != null && fs.exists(archiveBashScript)) {
+                // sh+tgz
+                script = new File(installationRootDir, bashScriptFilename);
+                maybeInstallScript(bashScriptFilename, archiveBashScript, script, fs);
+            } else if ((packageName == null || packageVersion != null) && fs.exists(archiveScript)) {
+                // sh but no tgz
+                script = new File(installationRootDir, requestType);
+                maybeInstallScript(requestType, archiveScript, script, fs);
+            } else {
+                // tgz with sh or xsl in tgz root dir
+                script = new File(packageDir, requestType);
+                if (!script.exists()) {
+                    throw new ProcessorException("file " + script.getPath() + " not found");
+                }
+            }
         } else {
-            // tgz with sh or xsl in tgz root dir
-            script = new File(packageDir, requestType);
-            if (! script.exists()) {
-                throw new ProcessorException("file " + script.getPath() + " not found");
+            if (packageName != null && packageVersion != null && fs.exists(archiveXslScript)) {
+                // xsl+tgz
+                script = new File(packageDir, xslScriptFilename);
+                maybeInstallScript(xslScriptFilename, archiveXslScript, script, fs);
+            } else if (packageName != null && packageVersion != null && fs.exists(archiveScriptWithPackage)) {
+                // sh+tgz
+                script = new File(packageDir, requestType);
+                maybeInstallScript(requestType, archiveScriptWithPackage, script, fs);
+            } else if ((packageName == null || packageVersion != null) && fs.exists(archiveScript)) {
+                // sh but no tgz
+                script = new File(installationRootDir, requestType);
+                maybeInstallScript(requestType, archiveScript, script, fs);
+            } else {
+                // tgz with sh or xsl in tgz root dir
+                script = new File(packageDir, requestType);
+                if (! script.exists()) {
+                    throw new ProcessorException("file " + script.getPath() + " not found");
+                }
             }
         }
         return script;

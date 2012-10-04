@@ -65,15 +65,18 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final ExecutablesInstaller installer =
                     new ExecutablesInstaller(context, archiveRootPath, installationRootPath);
 
-            Path[] localCacheArchives = DistributedCache.getLocalCacheArchives(context.getConfiguration());
-            String packageBase = new File(packageName + "-" + packageVersion).getName();
-            final File packageDir = new File(localCacheArchives[0].toString(), packageBase);
-//            if (packageName != null && packageVersion != null) {
-//                packageDir =
-//                    installer.maybeInstallProcessorPackage(packageName, packageVersion);
-//            } else {
-//                packageDir = new File(".");
-//            }
+            final File packageDir;
+            if (ExecutablesTool.PML_MODE) {
+                Path[] localCacheArchives = DistributedCache.getLocalCacheArchives(context.getConfiguration());
+                String packageBase = new File(packageName + "-" + packageVersion).getName();
+                packageDir = new File(localCacheArchives[0].toString(), packageBase);
+            } else {
+                if (packageName != null && packageVersion != null) {
+                    packageDir = installer.maybeInstallProcessorPackage(packageName, packageVersion);
+                } else {
+                    packageDir = new File(".");
+                }
+            }
 
             final File script =
                 installer.maybeInstallScripts(packageName, packageVersion, requestType, packageDir);
@@ -88,8 +91,11 @@ public class ExecutablesMapper extends Mapper<NullWritable, NullWritable, Text /
             final XslTransformer xslt = new XslTransformer(new File(xslScript.getPath()));
             xslt.setParameter("calvalus.input", split.getPath().toUri());
             if (! script.getPath().endsWith(".xsl")) {
-                xslt.setParameter("calvalus.script", script.getAbsolutePath());
-                LOG.info("calvalus.script " + script.getAbsolutePath());
+                if (ExecutablesTool.PML_MODE) {
+                    xslt.setParameter("calvalus.script", script.getAbsolutePath());
+                } else {
+                    xslt.setParameter("calvalus.script", script.getPath());
+                }
             }
             xslt.setParameter("calvalus.task.id", context.getTaskAttemptID());
             xslt.setParameter("calvalus.package.dir", packageDir.getPath());
