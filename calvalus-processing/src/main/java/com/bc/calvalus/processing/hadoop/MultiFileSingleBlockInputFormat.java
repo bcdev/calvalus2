@@ -34,6 +34,10 @@ import java.util.logging.Logger;
  * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_FAIL_FAST CALVALUS_FAIL_FAST}:
  * If it is "true", an I/O exception will be thrown, otherwise only a message will be logged.
  *
+ * TODO: disabled single block constraint,
+ * TODO: because this is only true for ENVISAT file netCDf files can be larger.
+ * TODO: maybe rename class
+ *
  * @author Martin
  * @author Marco
  * @author Norman
@@ -73,9 +77,10 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                     BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
                     if (blocks != null && blocks.length > 0) {
                         BlockLocation block = blocks[0];
-                        if (blocks.length == 1 && block.getLength() >= fileLength ||
-                                inputFormat.equals("HADOOP-STREAMING") ||
-                                inputPath.getName().toLowerCase().endsWith(".seq")) {
+// TODO disabled (maybe remove)
+//                        if (blocks.length == 1 && block.getLength() >= fileLength ||
+//                                inputFormat.equals("HADOOP-STREAMING") ||
+//                                inputPath.getName().toLowerCase().endsWith(".seq")) {
                             // create a split for the input
                             if (inventory == null) {
                                 // no inventory, process whole product
@@ -92,9 +97,9 @@ public class MultiFileSingleBlockInputFormat extends InputFormat {
                                     splits.add(new ProductSplit(inputPath, fileLength, block.getHosts()));
                                 }
                             }
-                        } else {
-                            reportIOProblem(failFast, String.format("Multiple blocks detected for file '%s'.", inputUrl));
-                        }
+//                        } else {
+//                            reportIOProblem(failFast, String.format("Multiple blocks detected for file '%s'.", inputUrl));
+//                        }
                     } else {
                         reportIOProblem(failFast, String.format("Failed to retrieve block location for file '%s'. Ignoring it.", inputUrl));
                     }
