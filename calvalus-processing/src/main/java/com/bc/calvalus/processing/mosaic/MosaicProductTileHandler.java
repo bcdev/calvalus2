@@ -276,5 +276,14 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
             }
             return names;
         }
+
+        @Override
+        public boolean isFile(String s) {
+            try {
+                return fileSystem.isFile(new Path(s));
+            } catch (IOException ignore) {
+                return false;
+            }
+        }
     }
 }
