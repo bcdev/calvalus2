@@ -31,6 +31,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
@@ -81,63 +82,89 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         pm.beginTask("Match-Up analysis", 100);
         try {
             //processorAdapter.setAdditionalGeometry(referenceGeometry); TODO
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
-            if (product == null) {
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
-                return;
-            }
-
-            // Actually wrong name for processed products, but we need the field "source_name" in the export data table
-            product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
-
-            context.progress();
-            long productOpenTime = (now() - t0);
-            LOG.info(String.format("%s opened product %s, took %s sec",
-                                   context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
-
-            t0 = now();
-            ProductRecordSource productRecordSource;
-            Iterable<Record> extractedRecords;
+            Product inputProduct = processorAdapter.getInputProduct();
+            PixelExtractor testPixelExtractor = new PixelExtractor(referenceRecordSource.getHeader(),
+                                                               inputProduct,
+                                                               maConfig.getMacroPixelSize(),
+                                                               maConfig.getGoodPixelExpression(),
+                                                               maConfig.getMaxTimeDifference(),
+                                                               maConfig.getCopyInput());
+            Iterable<Record> records;
             try {
-                productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
-                extractedRecords = productRecordSource.getRecords();
-                context.progress();
+                records = referenceRecordSource.getRecords();
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-
-            long recordReadTime = (now() - t0);
-            LOG.info(String.format("%s read input records from %s, took %s sec",
-                                   context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
-            logAttributeNames(productRecordSource);
-
-            Header header = productRecordSource.getHeader();
-            Rectangle inputRect = processorAdapter.getInputRectangle();
-            RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
-            RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
-            RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-
-            t0 = now();
-            int numMatchUps = 0;
-            for (Record extractedRecord : extractedRecords) {
-                Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
-                Record aggregatedRecord = recordTransformer.transform(shiftedRecord);
-                if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
-                    context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
-                                  new RecordWritable(aggregatedRecord.getAttributeValues()));
-                    numMatchUps++;
-                    context.progress();
+            boolean containsData = false;
+            for (Record record : records) {
+                PixelPos pixelPos = testPixelExtractor.getPixelPos(record);
+                if (pixelPos != null) {
+                    // TODO optimize: calculate affected rectangle here
+                    containsData = true;
+                    break;
                 }
             }
-            long recordWriteTime = (now() - t0);
-            LOG.info(String.format("%s found %s match-ups, took %s sec",
-                                   context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
 
-            if (numMatchUps > 0) {
-                // write header
-                context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames()));
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
+            if (containsData) {
+                Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
+                if (product == null) {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
+                    return;
+                }
+
+                // Actually wrong name for processed products, but we need the field "source_name" in the export data table
+                product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
+
+                context.progress();
+                long productOpenTime = (now() - t0);
+                LOG.info(String.format("%s opened product %s, took %s sec",
+                                       context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
+
+                t0 = now();
+                ProductRecordSource productRecordSource;
+                Iterable<Record> extractedRecords;
+                try {
+                    productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
+                    extractedRecords = productRecordSource.getRecords();
+                    context.progress();
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to retrieve input records.", e);
+                }
+
+                long recordReadTime = (now() - t0);
+                LOG.info(String.format("%s read input records from %s, took %s sec",
+                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+                logAttributeNames(productRecordSource);
+
+                Header header = productRecordSource.getHeader();
+                Rectangle inputRect = processorAdapter.getInputRectangle();
+                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
+                RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
+                RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
+
+                t0 = now();
+                int numMatchUps = 0;
+                for (Record extractedRecord : extractedRecords) {
+                    Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
+                    Record aggregatedRecord = recordTransformer.transform(shiftedRecord);
+                    if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
+                        context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
+                                      new RecordWritable(aggregatedRecord.getAttributeValues()));
+                        numMatchUps++;
+                        context.progress();
+                    }
+                }
+                long recordWriteTime = (now() - t0);
+                LOG.info(String.format("%s found %s match-ups, took %s sec",
+                                       context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
+                if (numMatchUps > 0) {
+                    // write header
+                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames()));
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
+                } else {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
+                }
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
             }
