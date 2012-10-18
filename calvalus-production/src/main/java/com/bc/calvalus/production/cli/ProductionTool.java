@@ -2,6 +2,7 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -65,10 +66,11 @@ import java.util.Map;
 public class ProductionTool {
 
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
-    private static final String DEFAULT_BEAM_BUNDLE = "beam-4.10-SNAPSHOT";
-    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.2-201201";
 
-    private static final String CALVALUS_SOFTWARE_HOME = "/calvalus/software/0.5";
+    private static final String DEFAULT_BEAM_BUNDLE = HadoopProcessingService.DEFAULT_BEAM_BUNDLE;
+    private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+    private static final String CALVALUS_SOFTWARE_HOME = HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
+
     private static final String BUNDLE_SEPARATOR = "-->";
 
     private static final String TOOL_NAME = "cpt";
@@ -143,7 +145,7 @@ public class ProductionTool {
             }
 
             if (commandLine.hasOption("deploy")) {
-                deployBundleFiles(commandLine.getOptionValue("deploy"), config);
+                deployBundleFiles(commandLine.getOptionValues("deploy"), config);
             }
 
             if (commandLine.hasOption("copy")) {
@@ -294,16 +296,28 @@ public class ProductionTool {
         }
     }
 
-    private void deployBundleFiles(String deployArg, Map<String, String> config) {
-        int pos = deployArg.lastIndexOf(BUNDLE_SEPARATOR);
-        if (pos < 0 || pos == deployArg.length() - BUNDLE_SEPARATOR.length()) {
-            exit("Error: Failed to deploy bundle files: no bundle name given: " + deployArg, 22);
-        } else if (pos == 0) {
-            exit("Error: Failed to deploy bundle files: no files given: " + deployArg, 22);
+    private void deployBundleFiles(String[] deployArgs, Map<String, String> config) {
+        final String bundleName;
+        final Path[] sourcePaths;
+        if (deployArgs.length == 1) {
+            String deployArg = deployArgs[0];
+            int pos = deployArg.lastIndexOf(BUNDLE_SEPARATOR);
+            if (pos < 0 || pos == deployArg.length() - BUNDLE_SEPARATOR.length()) {
+                exit("Error: Failed to deploy bundle files: no bundle name given: " + deployArg, 22);
+            } else if (pos == 0) {
+                exit("Error: Failed to deploy bundle files: no files given: " + deployArg, 22);
+            }
+            bundleName = deployArg.substring(pos + BUNDLE_SEPARATOR.length());
+            String sourcePathsString = deployArg.substring(0, pos);
+            sourcePaths = getSourcePaths(sourcePathsString);
+        } else {
+            bundleName = deployArgs[deployArgs.length - 1];
+            sourcePaths = new Path[deployArgs.length - 1];
+            for (int i = 0; i < deployArgs.length - 1; i++) {
+                sourcePaths[i] = new Path(deployArgs[i]);
+            }
+            ensureLocalPathsExist(sourcePaths);
         }
-        String bundleName = deployArg.substring(pos + BUNDLE_SEPARATOR.length());
-        String sourcePathsString = deployArg.substring(0, pos);
-        Path[] sourcePaths = getSourcePaths(sourcePathsString);
         try {
             FileSystem fs = getHDFS(config);
             copy(sourcePaths, fs, getQualifiedBundlePath(fs, bundleName));
@@ -518,11 +532,12 @@ public class ProductionTool {
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("deploy")
-                                  .hasArg()
+                                  .hasArgs()
                                   .withArgName("FILES-->BUNDLE")
                                   .withDescription("Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
                                                            "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
-                                                           "Use character '"+File.pathSeparator+"' to separate multiple paths in FILES.")
+                                                           "Use character '"+File.pathSeparator+"' to separate multiple paths in FILES. " +
+                                                           "Alternatively a list of files and as last argument the bundle name can be given.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("install")
