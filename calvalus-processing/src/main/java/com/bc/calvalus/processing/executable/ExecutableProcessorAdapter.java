@@ -19,15 +19,9 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.ceres.binding.dom.DomElement;
-import com.bc.ceres.binding.dom.XppDomElement;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.resource.ReaderResource;
-import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
-import com.thoughtworks.xstream.io.xml.XppDomWriter;
-import com.thoughtworks.xstream.io.xml.XppReader;
-import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,7 +30,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
-import org.xmlpull.mxp1.MXParser;
 
 import java.awt.Rectangle;
 import java.io.BufferedInputStream;
@@ -47,9 +40,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Collection;
-import java.util.Properties;
 
 /**
  * A processor adapter that uses an executable to process an input product.
@@ -87,7 +78,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputDir", outputDir);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
-        velocityContext.put("parameters", asProperties(processorParameters));
+        velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
         addScriptResources(conf, scriptGenerator);
         scriptGenerator.writeScriptFiles(cwd);
@@ -104,80 +95,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         outputFilesNames = keywordHandler.getOutputFiles();
         return outputFilesNames.length;
-    }
-
-    /**
-     * Maybe this could be integrated into {@link com.bc.ceres.resource.Resource}
-     */
-    static Properties asProperties(String processorParameters) throws IOException {
-        Properties properties = new Properties();
-        Reader reader = new StringReader(processorParameters);
-        try {
-            if (isXml(processorParameters)) {
-                handleChildElements(properties, createDomElement(reader), "");
-            } else {
-                properties.load(reader);
-            }
-        } finally {
-            reader.close();
-        }
-        return properties;
-    }
-
-    private static void handleChildElements(Properties properties, DomElement parentDomElements, String prefix) {
-        DomElement[] childElements = parentDomElements.getChildren();
-        if (childElements.length > 0) {
-            if (parentDomElements.getChildren(childElements[0].getName()).length == childElements.length) {
-                // all children have the same name
-                if (!prefix.isEmpty()) {
-                    properties.setProperty(prefix + "length", Integer.toString(childElements.length));
-                }
-                int index = 0;
-                for (DomElement element : childElements) {
-                    String value = element.getValue();
-                    if (value != null && element.getChildCount() == 0) {
-                        properties.setProperty(prefix + Integer.toString(index), value);
-                    } else {
-                        handleChildElements(properties, element, prefix + Integer.toString(index) + ".");
-                    }
-                    index++;
-                }
-            } else {
-                for (DomElement element : childElements) {
-                    String name = element.getName();
-                    String value = element.getValue();
-                    if (value != null && element.getChildCount() == 0) {
-                        properties.setProperty(prefix + name, value);
-                    } else {
-                        handleChildElements(properties, element, prefix + name + ".");
-                    }
-                }
-            }
-        }
-    }
-
-    private static DomElement createDomElement(Reader reader) {
-        XppDomWriter domWriter = new XppDomWriter();
-        new HierarchicalStreamCopier().copy(new XppReader(reader, new MXParser()), domWriter);
-        XppDom xppDom = domWriter.getConfiguration();
-        return new XppDomElement(xppDom);
-    }
-
-
-    static boolean isXml(String textContent) {
-        String t = textContent.trim();
-        return t.startsWith("<?xml ") || t.startsWith("<?XML ") || (t.startsWith("<") && t.endsWith(">"));
-    }
-
-    private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
-        FileSystem fs = FileSystem.get(conf);
-        for (String scriptFile : scriptFiles) {
-            Path scriptFilePath = new Path(scriptFile);
-            InputStream inputStream = fs.open(scriptFilePath);
-            Reader reader = new InputStreamReader(inputStream);
-            scriptGenerator.addResource(new ReaderResource(scriptFile, reader));
-        }
     }
 
     @Override
@@ -200,4 +117,14 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
     }
 
+    private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
+        Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
+        FileSystem fs = FileSystem.get(conf);
+        for (String scriptFile : scriptFiles) {
+            Path scriptFilePath = new Path(scriptFile);
+            InputStream inputStream = fs.open(scriptFilePath);
+            Reader reader = new InputStreamReader(inputStream);
+            scriptGenerator.addResource(new ReaderResource(scriptFile, reader));
+        }
+    }
 }

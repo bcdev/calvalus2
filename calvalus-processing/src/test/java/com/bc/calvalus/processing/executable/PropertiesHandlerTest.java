@@ -23,12 +23,11 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-public class ExecutableProcessorAdapterTest {
-
+public class PropertiesHandlerTest {
 
     @Test
     public void testAsProperties_KeyValue() throws Exception {
-        Properties properties = ExecutableProcessorAdapter.asProperties("key = value1\n  key2   = value3");
+        Properties properties = PropertiesHandler.asProperties("key = value1\n  key2   = value3");
         assertNotNull(properties);
         assertEquals(2, properties.size());
 
@@ -39,7 +38,7 @@ public class ExecutableProcessorAdapterTest {
 
     @Test
     public void testAsProperties_XML() throws Exception {
-        Properties properties = ExecutableProcessorAdapter.asProperties(
+        Properties properties = PropertiesHandler.asProperties(
                 "<parameters>\n" +
                 "  <key>value1</key>\n" +
                 "  <key2>value3</key2>\n" +
@@ -56,7 +55,7 @@ public class ExecutableProcessorAdapterTest {
 
     @Test
     public void testAsProperties_XML_WithChilds() throws Exception {
-        Properties properties = ExecutableProcessorAdapter.asProperties(
+        Properties properties = PropertiesHandler.asProperties(
                 "<parameters>\n" +
                 "  <key>value1</key>\n" +
                 "  <childs>" +
@@ -78,7 +77,7 @@ public class ExecutableProcessorAdapterTest {
 
     @Test
     public void testAsProperties_XML_WithNestedChilds() throws Exception {
-        Properties properties = ExecutableProcessorAdapter.asProperties(
+        Properties properties = PropertiesHandler.asProperties(
                 "<parameters>\n" +
                 "  <key>value1</key>\n" +
                 "  <childs>" +
@@ -104,5 +103,4 @@ public class ExecutableProcessorAdapterTest {
         assertEquals("name32", properties.getProperty("childs.1.name"));
         assertEquals("value32", properties.getProperty("childs.1.value"));
     }
-
 }
