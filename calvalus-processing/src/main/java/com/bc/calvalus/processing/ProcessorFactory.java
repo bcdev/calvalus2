@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
@@ -115,19 +114,11 @@ public class ProcessorFactory {
             // l2 only
             // resume handling
             if (resumeProcessing) {
-                FileSystem fileSystem = FileSystem.get(conf);
-                String[] processedProductPaths = processorAdapter.getPredictedProductPathes();
-                if (processedProductPaths != null && processedProductPaths.length > 0) {
-                    boolean processedProductExist = true;
-                    Path outputPath = FileOutputFormat.getOutputPath(mapContext);
-                    for (String processedProductPath : processedProductPaths) {
-                        Path outputProductPath = new Path(outputPath, processedProductPath);
-                        processedProductExist = processedProductExist && fileSystem.exists(outputProductPath);
-                    }
-                    if (processedProductExist) {
-                        // nothing to compute, result exists
-                        return;
-                    }
+                boolean shouldProcess = processorAdapter.shouldProcessInputProduct();
+                if (shouldProcess) {
+                    processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
+                } else {
+                    // nothing to compute, result exists
                 }
             }
             // MA only: use points from reference data set to restrict roi even further

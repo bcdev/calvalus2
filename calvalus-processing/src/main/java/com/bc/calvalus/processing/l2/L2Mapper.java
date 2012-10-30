@@ -8,12 +8,9 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -50,27 +47,11 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         try {
             if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
                 LOG.info("resume: testing for target products");
-                FileSystem fileSystem = FileSystem.get(jobConfig);
-                String[] processedProductPaths = processorAdapter.getPredictedProductPathes();
-                if (processedProductPaths != null && processedProductPaths.length > 0) {
-                    boolean allExist = true;
-                    Path outputPath = FileOutputFormat.getOutputPath(context);
-                    for (String processedProductPath : processedProductPaths) {
-                        Path outputProductPath = new Path(outputPath, processedProductPath);
-                        boolean exists = fileSystem.exists(outputProductPath);
-                        if (exists) {
-                            LOG.info("resume: target product exist: '" + outputProductPath + "'.");
-                        } else {
-                            LOG.info("resume: target product is missing: '" + outputProductPath + "'.");
-                        }
-                        allExist = allExist && exists;
-                    }
-                    if (allExist) {
-                        // nothing to compute, result exists
-                        LOG.info("resume: all target product exist.");
-                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
-                        return;
-                    }
+                if (!processorAdapter.shouldProcessInputProduct()) {
+                    // nothing to compute, result exists
+                    LOG.info("resume: target product exist.");
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
+                    return;
                 }
             }
             Rectangle sourceRectangle = processorAdapter.getInputRectangle();

@@ -117,17 +117,16 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Returns the names of the products that will we produced by this processor.
-     * This should enable fast processing of missing products.
-     * <p/>
-     * <p/>
-     * If the names are not predictable {@code null} will be returned and the processing
-     * will always happen.
+     * Returns whether the adapter should process the current input product.
+     * The adapter should based on information about the input
+     * product see if the corresponding output product already exists.
      *
-     * @return The name of the resulting product or {@code null}.
+     * This should enable fast (re-)processing of missing products.
+     *
+     * @return {@code true}, if the input product should be processed.
      */
-    public String[] getPredictedProductPathes() {
-        return null;
+    public boolean shouldProcessInputProduct() throws IOException {
+        return true;
     }
 
     /**

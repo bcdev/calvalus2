@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -47,10 +48,13 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public String[] getPredictedProductPathes() {
+    public boolean shouldProcessInputProduct() throws IOException {
+        FileSystem fileSystem = FileSystem.get(getConfiguration());
         String inputFilename = getInputPath().getName();
         String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-        return new String[]{ outputFilename };
+        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+        Path outputProductPath = new Path(outputPath, outputFilename);
+        return !fileSystem.exists(outputProductPath);
     }
 
     @Override
