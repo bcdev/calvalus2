@@ -36,6 +36,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
+import java.awt.geom.Area;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -64,9 +65,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
-        // todo - create a RecordFilter using the regionGeometry, add RecordFilter to referenceRecordSource (extend RecordSource API) (nf)
         final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
@@ -81,14 +80,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Match-Up analysis", 100);
         try {
-            //processorAdapter.setAdditionalGeometry(referenceGeometry); TODO
             Product inputProduct = processorAdapter.getInputProduct();
             PixelExtractor testPixelExtractor = new PixelExtractor(referenceRecordSource.getHeader(),
-                                                               inputProduct,
-                                                               maConfig.getMacroPixelSize(),
-                                                               maConfig.getGoodPixelExpression(),
-                                                               maConfig.getMaxTimeDifference(),
-                                                               maConfig.getCopyInput());
+                                                                   inputProduct,
+                                                                   maConfig.getMacroPixelSize(),
+                                                                   maConfig.getGoodPixelExpression(),
+                                                                   maConfig.getMaxTimeDifference(),
+                                                                   maConfig.getCopyInput());
             Iterable<Record> records;
             try {
                 records = referenceRecordSource.getRecords();
@@ -96,16 +94,27 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
             boolean containsData = false;
+            Area area = new Area();
+            int macroPixelSize = maConfig.getMacroPixelSize();
+
             for (Record record : records) {
                 PixelPos pixelPos = testPixelExtractor.getPixelPos(record);
                 if (pixelPos != null) {
-                    // TODO optimize: calculate affected rectangle here
+                    System.out.println("pixelPos = " + pixelPos);
+                    Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
+                                                        (int) pixelPos.y - macroPixelSize / 2,
+                                                        macroPixelSize, macroPixelSize);
+                    area.add(new Area(rectangle));
                     containsData = true;
-                    break;
                 }
             }
+            System.out.println("containsData = " + containsData);
+            System.out.println("area.bounds = " + area.getBounds());
+            System.out.println("area.empty = " + area.isEmpty());
 
-            if (containsData) {
+            if (containsData && !area.isEmpty()) {
+                Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+                processorAdapter.setProcessingRectangle(fullScene.intersection(area.getBounds()));
                 Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
                 if (product == null) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);

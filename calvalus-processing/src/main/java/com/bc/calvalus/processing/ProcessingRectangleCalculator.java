@@ -16,12 +16,12 @@ import java.io.IOException;
 abstract class ProcessingRectangleCalculator {
 
     private final Geometry regionGeometry;
-    private final Geometry roiGeometry;
+    private final Rectangle roiRectangle;
     private final InputSplit inputSplit;
 
-    public ProcessingRectangleCalculator(Geometry regionGeometry, Geometry roiGeometry, InputSplit inputSplit) {
+    public ProcessingRectangleCalculator(Geometry regionGeometry, Rectangle roiRectangle, InputSplit inputSplit) {
         this.regionGeometry = regionGeometry;
-        this.roiGeometry = roiGeometry;
+        this.roiRectangle = roiRectangle;
         this.inputSplit = inputSplit;
     }
 
@@ -38,45 +38,31 @@ abstract class ProcessingRectangleCalculator {
      * @throws IOException
      */
     public Rectangle computeRect() throws IOException {
-        Geometry combinedGeometry = getCombinedGeometry();
-        Rectangle pixelRegion = geometryToPixelRegion(combinedGeometry);
-        if ((pixelRegion == null || !pixelRegion.isEmpty()) && inputSplit instanceof ProductSplit) {
-            pixelRegion = applyProdcutSplit(pixelRegion);
-        }
-        return pixelRegion;
-    }
+        Rectangle geometryRect = getGeometryAsRectangle(regionGeometry);
+        Rectangle productSplitRect = getProductSplitAsRectangle();
 
-    Geometry getCombinedGeometry() {
-        if (regionGeometry != null && roiGeometry != null)
-            return regionGeometry.intersection(roiGeometry);
-        else if (regionGeometry != null) {
-            return regionGeometry;
-        } else if (roiGeometry != null) {
-            return roiGeometry;
-        } else {
-            return null;
-        }
+        Rectangle pixelRegion = intersectionSafe(geometryRect, productSplitRect);
+        return intersectionSafe(pixelRegion, roiRectangle);
     }
 
     /**
-     * adjust region to start/stop line
+     * get rectangle from start/stop line
      */
-    Rectangle applyProdcutSplit(Rectangle pixelRegion) throws IOException {
-        ProductSplit productSplit = (ProductSplit) inputSplit;
-        final int processStart = productSplit.getProcessStartLine();
-        final int processLength = productSplit.getProcessLength();
-        if (processLength > 0) {
-            Product product = getProduct();
-            if (pixelRegion == null) {
-                pixelRegion = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+    Rectangle getProductSplitAsRectangle() throws IOException {
+        if (inputSplit instanceof ProductSplit) {
+            ProductSplit productSplit = (ProductSplit) inputSplit;
+            final int processStart = productSplit.getProcessStartLine();
+            final int processLength = productSplit.getProcessLength();
+            if (processLength > 0) {
+                Product product = getProduct();
+                final int width = product.getSceneRasterWidth();
+                return new Rectangle(0, processStart, width, processLength);
             }
-            final int width = product.getSceneRasterWidth();
-            pixelRegion = pixelRegion.intersection(new Rectangle(0, processStart, width, processLength));
         }
-        return pixelRegion;
+        return null;
     }
 
-    Rectangle geometryToPixelRegion(Geometry regionGeometry) {
+    Rectangle getGeometryAsRectangle(Geometry regionGeometry) {
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
             try {
                 return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
@@ -87,6 +73,16 @@ abstract class ProcessingRectangleCalculator {
             }
         }
         return null;
+    }
+
+    static Rectangle intersectionSafe(Rectangle r1, Rectangle r2) {
+        if (r1 == null) {
+            return r2;
+        } else if (r2 == null) {
+            return r1;
+        } else {
+            return r1.intersection(r2);
+        }
     }
 
     static boolean isGlobalCoverageGeometry(Geometry geometry) {

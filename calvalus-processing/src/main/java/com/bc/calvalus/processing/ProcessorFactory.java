@@ -23,7 +23,6 @@ import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorInstaller;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -123,8 +122,8 @@ public class ProcessorFactory {
             }
             // MA only: use points from reference data set to restrict roi even further
             Product inputProduct = processorAdapter.getInputProduct();
-            Geometry referenceDataRoi = null;
-            processorAdapter.setAdditionalGeometry(referenceDataRoi);
+            Rectangle referenceDataRoi = null;
+            processorAdapter.setProcessingRectangle(referenceDataRoi);
 
             // all
             int processedProducts = processorAdapter.processSourceProduct(ProgressMonitor.NULL);

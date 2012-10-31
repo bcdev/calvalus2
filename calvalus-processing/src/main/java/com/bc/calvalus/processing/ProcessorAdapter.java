@@ -94,7 +94,7 @@ public abstract class ProcessorAdapter {
 
     private Product inputProduct;
     private Rectangle inputRectangle;
-    private Geometry roiGeometry;
+    private Rectangle roiRectangle;
 
     public ProcessorAdapter(MapContext mapContext) {
         this.mapContext = mapContext;
@@ -183,13 +183,14 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Sets an additional geometry that will be intersected with geometry from the configuration (if any)
+     * Sets an additional rectangle in pixel coordinates that will be intersected with
+     * the geometry from the configuration (if any)
      * to define the region to be processed.
      *
-     * @param roiGeometry the additional ROI geometry
+     * @param roiRectangle the additional ROI rectangle
      */
-    public void setAdditionalGeometry(Geometry roiGeometry) {
-        this.roiGeometry = roiGeometry;
+    public void setProcessingRectangle(Rectangle roiRectangle) {
+        this.roiRectangle = roiRectangle;
         inputRectangle = null;
     }
 
@@ -219,7 +220,7 @@ public abstract class ProcessorAdapter {
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
             Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiGeometry, inputSplit) {
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle, inputSplit) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();

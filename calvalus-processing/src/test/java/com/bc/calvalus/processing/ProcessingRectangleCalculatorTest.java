@@ -16,13 +16,12 @@
 
 package com.bc.calvalus.processing;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.esa.beam.framework.datamodel.Product;
 import org.junit.Test;
 
-import java.io.IOException;
+import java.awt.Rectangle;
 
 import static com.bc.calvalus.processing.JobUtils.createGeometry;
+import static com.bc.calvalus.processing.ProcessingRectangleCalculator.intersectionSafe;
 import static com.bc.calvalus.processing.ProcessingRectangleCalculator.isGlobalCoverageGeometry;
 import static org.junit.Assert.*;
 
@@ -40,32 +39,14 @@ public class ProcessingRectangleCalculatorTest {
     }
 
     @Test
-    public void testGetCombinedGeometry() throws Exception {
-        Geometry combinedGeometry = getCalculcator(null, null).getCombinedGeometry();
-        assertNull(combinedGeometry);
-        combinedGeometry = getCalculcator("Polygon((10 10, 10 20, 20 20, 20 10, 10 10))", null).getCombinedGeometry();
-        assertNotNull(combinedGeometry);
-        assertEquals("POLYGON ((10 10, 10 20, 20 20, 20 10, 10 10))", combinedGeometry.toString());
-        combinedGeometry = getCalculcator(null, "Polygon((10 10, 10 20, 20 20, 20 10, 10 10))").getCombinedGeometry();
-        assertNotNull(combinedGeometry);
-        assertEquals("POLYGON ((10 10, 10 20, 20 20, 20 10, 10 10))", combinedGeometry.toString());
-        combinedGeometry = getCalculcator("Polygon((10 10, 10 20, 20 20, 20 10, 10 10))", "Polygon((10 10, 10 20, 20 20, 20 10, 10 10))").getCombinedGeometry();
-        assertNotNull(combinedGeometry);
-        assertEquals("POLYGON ((10 10, 10 20, 20 20, 20 10, 10 10))", combinedGeometry.toString());
-        combinedGeometry = getCalculcator("Polygon((10 15, 10 20, 20 20, 20 15, 10 15))", "Polygon((15 10, 15 20, 20 20, 20 10, 15 10))").getCombinedGeometry();
-        assertNotNull(combinedGeometry);
-        assertEquals("POLYGON ((15 20, 20 20, 20 15, 15 15, 15 20))", combinedGeometry.toString());
+    public void testIntersectionSafe() throws Exception {
+        Rectangle r1 = new Rectangle(30, 30);
+        Rectangle r2 = new Rectangle(10, 10, 30, 30);
+        Rectangle r3 = new Rectangle(10, 10, 20, 20);
+        assertNull(intersectionSafe(null, null));
+        assertSame(r1, intersectionSafe(r1, null));
+        assertSame(r2, intersectionSafe(null, r2));
+        assertEquals(r3, intersectionSafe(r1, r2));
 
-    }
-
-    private ProcessingRectangleCalculator getCalculcator(String wkt1, String wkt2) {
-        Geometry geometry1 = JobUtils.createGeometry(wkt1);
-        Geometry geometry2 = JobUtils.createGeometry(wkt2);
-        return new ProcessingRectangleCalculator(geometry1, geometry2, null) {
-                @Override
-                Product getProduct() throws IOException {
-                    return null;
-                }
-            };
     }
 }
