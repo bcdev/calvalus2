@@ -58,6 +58,36 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
+    public boolean shouldProcessInputProduct() throws IOException {
+        Configuration conf = getConfiguration();
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+
+        ScriptGenerator scriptGenerator = new ScriptGenerator(executable);
+        VelocityContext velocityContext = scriptGenerator.getVelocityContext();
+        velocityContext.put("system", System.getProperties());
+        velocityContext.put("configuration", conf);
+        velocityContext.put("inputPath", getInputPath());
+        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
+        velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
+
+        addScriptResources(conf, scriptGenerator);
+        scriptGenerator.writeScriptFiles(cwd);
+
+        Process process = Runtime.getRuntime().exec(scriptGenerator.getCommandLine("should-process"));
+        String processLogName = bundle + "-" + executable;
+        KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
+
+        new ProcessObserver(process).
+                setName(processLogName).
+                setHandler(keywordHandler).
+                start();
+
+        return keywordHandler.shouldProcess();
+    }
+
+    @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();

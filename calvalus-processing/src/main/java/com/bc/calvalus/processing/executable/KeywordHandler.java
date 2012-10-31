@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  */
 class KeywordHandler extends ProcessObserver.DefaultHandler {
 
+    private final static String KEYWORD_PREFIX = "CALVALUS";
     private final static String PROGRESS_REGEX = "CALVALUS_PROGRESS ([0-9\\.]+)";
     private final static String PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
     private final String programName;
@@ -39,6 +40,7 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
     private final List<String> outputFiles;
 
     private int lastScan = 0;
+    private boolean shouldProcess = true;
 
 
     KeywordHandler(String programName, MapContext mapContext) {
@@ -60,17 +62,23 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         super.onStdoutLineReceived(process, line, pm);
         mapContext.progress(); //signal activity to Hadoop
 
-        Matcher progressMatcher = progressPattern.matcher(line);
-        if (progressMatcher.find()) {
-            float progressValue = Float.parseFloat(progressMatcher.group(1));
+        if (line.startsWith(KEYWORD_PREFIX)) {
+            Matcher progressMatcher = progressPattern.matcher(line);
+            if (progressMatcher.find()) {
+                float progressValue = Float.parseFloat(progressMatcher.group(1));
 
-            int scan = (int) (progressValue * 1000);
-            pm.worked(scan - lastScan);
-            lastScan = scan;
-        } else {
+                int scan = (int) (progressValue * 1000);
+                pm.worked(scan - lastScan);
+                lastScan = scan;
+                return;
+            }
             Matcher productMatcher = productPattern.matcher(line);
             if (productMatcher.find()) {
                 outputFiles.add(productMatcher.group(1).trim());
+                return;
+            }
+            if (line.equalsIgnoreCase("CALVALUS_SHOULD_PROCESS no")) {
+                shouldProcess = false;
             }
         }
     }
@@ -90,7 +98,11 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         }
     }
 
-    public String[] getOutputFiles() {
+    public String[]  getOutputFiles() {
         return outputFiles.toArray(new String[outputFiles.size()]);
+    }
+
+    public boolean shouldProcess() {
+        return shouldProcess;
     }
 }

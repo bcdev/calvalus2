@@ -53,7 +53,7 @@ public class ScriptGenerator {
     public void addResource(Resource resource) {
         String path = resource.getPath();
         String name = new File(path).getName();
-        String processedName = createProcessedName(name, executableName);
+        String processedName = createProcessedResourceName(name, executableName);
         if (name.endsWith(VM_SUFFIX)) {
             resourceEngine.processAndAddResource(processedName, resource);
         } else {
@@ -63,19 +63,27 @@ public class ScriptGenerator {
     }
 
     public String getCommandLine() {
-        if (processedResourceNames.contains(CMDLINE)) {
-            Resource resource = resourceEngine.getResource(CMDLINE);
+        return getCommandLineImpl(CMDLINE);
+    }
+
+    public String getCommandLine(String name) {
+        return getCommandLineImpl(name + "-" + CMDLINE);
+    }
+
+    private String getCommandLineImpl(String cmdlineName) {
+        if (processedResourceNames.contains(cmdlineName)) {
+            Resource resource = resourceEngine.getResource(cmdlineName);
             if (resource != null) {
                 return resource.getContent();
 
             }
         }
-        throw new NullPointerException("no 'cmdline' resource specified");
+        throw new NullPointerException("no 'cmdline' resource '" + cmdlineName + "' specified");
     }
 
     public void writeScriptFiles(File cwd) throws IOException {
         for (String resourceName : processedResourceNames) {
-            if (!resourceName.equals(CMDLINE)) {
+            if (!resourceName.endsWith(CMDLINE)) {
                 Resource resource = resourceEngine.getResource(resourceName);
                 File scriptFile = new File(cwd, resourceName);
                 writeScript(scriptFile, resource);
@@ -85,6 +93,9 @@ public class ScriptGenerator {
 
     void writeScript(File scriptFile, Resource resource) throws IOException {
         System.out.println("scriptFile = " + scriptFile.getCanonicalPath());
+        if (scriptFile.exists()) {
+            scriptFile.delete();
+        }
         Writer writer = new FileWriter(scriptFile);
         try {
             writer.write(resource.getContent());
@@ -94,7 +105,7 @@ public class ScriptGenerator {
         scriptFile.setExecutable(true);
     }
 
-    static String createProcessedName(String name, String executable) {
+    static String createProcessedResourceName(String name, String executable) {
         name = name.substring(executable.length() + 1); // strip executable name from the front
         if (name.endsWith(VM_SUFFIX)) {
             name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end

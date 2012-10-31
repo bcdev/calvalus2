@@ -30,10 +30,13 @@ import static org.junit.Assert.*;
 public class ScriptGeneratorTest {
 
     @Test
-    public void testCreateResultName() throws Exception {
-        assertEquals("cmdline", ScriptGenerator.createProcessedName("l2gen-cmdline.vm", "l2gen"));
-        assertEquals("config.txt", ScriptGenerator.createProcessedName("l2gen-config.txt.vm", "l2gen"));
-        assertEquals("config.txt", ScriptGenerator.createProcessedName("l2gen-config.txt", "l2gen"));
+    public void testCreateProcessedResourceName() throws Exception {
+        assertEquals("cmdline", ScriptGenerator.createProcessedResourceName("l2gen-cmdline.vm", "l2gen"));
+        assertEquals("config.txt", ScriptGenerator.createProcessedResourceName("l2gen-config.txt.vm", "l2gen"));
+        assertEquals("config.txt", ScriptGenerator.createProcessedResourceName("l2gen-config.txt", "l2gen"));
+
+        assertEquals("should-process-cmdline", ScriptGenerator.createProcessedResourceName("l2gen-should-process-cmdline.vm", "l2gen"));
+        assertEquals("should-process.py", ScriptGenerator.createProcessedResourceName("l2gen-should-process.py", "l2gen"));
     }
 
     @Test
@@ -81,9 +84,11 @@ public class ScriptGeneratorTest {
         ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-cmdline.vm", "This is the $variable content"));
+        scriptGenerator.addResource(new StringResource("foo-should-process-cmdline.vm", "This is the $variable content2"));
         Object[] keys = scriptGenerator.getVelocityContext().getKeys();
-        assertEquals(2, keys.length);
+        assertEquals(3, keys.length);
         assertEquals("This is the calvalus content", scriptGenerator.getCommandLine());
+        assertEquals("This is the calvalus content2", scriptGenerator.getCommandLine("should-process"));
     }
 
     @Test(expected = NullPointerException.class)
