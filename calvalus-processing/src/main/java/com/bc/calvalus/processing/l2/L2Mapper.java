@@ -4,15 +4,22 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import com.bc.ceres.metadata.MetadataResourceEngine;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.velocity.VelocityContext;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,7 +62,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 }
             }
             Rectangle sourceRectangle = processorAdapter.getInputRectangle();
-            if (sourceRectangle != null  && sourceRectangle.isEmpty()) {
+            if (sourceRectangle != null && sourceRectangle.isEmpty()) {
                 LOG.warning("product does not cover region, skip processing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
@@ -65,6 +72,8 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     LOG.info(context.getTaskAttemptID() + " target product created");
                     processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
+
+                    processMetadata(context, processorAdapter);
                 } else {
                     LOG.warning("product has not been processed.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not processed").increment(1);
@@ -76,6 +85,37 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         } finally {
             pm.done();
             processorAdapter.dispose();
+        }
+    }
+
+    private void processMetadata(Context context, ProcessorAdapter processorAdapter) throws IOException {
+        Configuration configuration = context.getConfiguration();
+        String templatePath = configuration.get("calvalus.metadata.template");
+        if (templatePath != null) {
+            Path sourcePath = processorAdapter.getInputPath();
+            Path outputPath = processorAdapter.getOutputPath();
+            Product sourceProduct = processorAdapter.getInputProduct();
+            Product targetProduct = processorAdapter.openProcessedProduct();
+
+            HDFSSimpleFileSystem hdfsSimpleFileSystem = new HDFSSimpleFileSystem(context);
+            MetadataResourceEngine metadataResourceEngine = new MetadataResourceEngine(hdfsSimpleFileSystem);
+
+            VelocityContext vcx = metadataResourceEngine.getVelocityContext();
+            vcx.put("system", System.getProperties());
+            vcx.put("softwareName", "Calvalus");
+            vcx.put("softwareVersion", "1.5");
+
+            File targetFile = new File(outputPath.toString());
+            vcx.put("targetFile", targetFile);
+            vcx.put("targetDir", targetFile.getParentFile() != null ? targetFile.getParentFile() : new File("."));
+            vcx.put("targetBaseName", FileUtils.getFilenameWithoutExtension(targetFile));
+            vcx.put("targetName", targetFile.getName());
+            metadataResourceEngine.readRelatedResource("source", sourcePath.toString());
+
+            vcx.put("configuration", configuration);
+            vcx.put("sourceProduct", sourceProduct);
+            vcx.put("targetProduct", targetProduct);
+            metadataResourceEngine.writeRelatedResource(templatePath, outputPath.toString());
         }
     }
 }

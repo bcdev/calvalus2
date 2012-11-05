@@ -163,6 +163,14 @@ public abstract class ProcessorAdapter {
     public abstract void saveProcessedProducts(ProgressMonitor pm) throws Exception;
 
     /**
+     * Return the output path to the processed product.
+     * Can return {@code null} if no output product exist (yet).
+     *
+     * @return The output path of the output product.
+     */
+    public abstract Path getOutputPath() throws IOException;
+
+    /**
      * Convenient method that returns the processed product and does all the necessary steps.
      *
      * @param pm A progress monitor

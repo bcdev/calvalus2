@@ -17,18 +17,12 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.metadata.MetadataResourceEngine;
-import com.bc.ceres.metadata.SimpleFileSystem;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
@@ -42,10 +36,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.Date;
 
 /**
@@ -191,7 +181,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     private void writeMetadata() throws IOException {
         try {
             Configuration configuration = context.getConfiguration();
-                String templatePath = configuration.get("calvalus.metadata.template");
+            String templatePath = configuration.get("calvalus.metadata.template");
             if (templatePath != null) {
                 MetadataResourceEngine metadataEngine = new MetadataResourceEngine(new HDFSSimpleFileSystem(context));
                 String metadataPath = configuration.get("calvalus.metadata.URL");
@@ -234,56 +224,4 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
         return productWriter;
     }
 
-    private static class HDFSSimpleFileSystem implements SimpleFileSystem {
-
-        private final FileSystem fileSystem;
-        private final TaskInputOutputContext<?, ?, ?, ?> context;
-
-        public HDFSSimpleFileSystem(TaskInputOutputContext<?, ?, ?, ?> context) throws IOException {
-            this.context = context;
-            Configuration configuration = context.getConfiguration();
-            fileSystem = FileSystem.get(configuration);
-        }
-
-        @Override
-        public Reader createReader(String path) throws IOException {
-            FSDataInputStream inputStream = fileSystem.open(new Path(path));
-            return new InputStreamReader(inputStream);
-        }
-
-        @Override
-        public Writer createWriter(String path) throws IOException {
-            Path workOutputPath;
-            try {
-                workOutputPath = FileOutputFormat.getWorkOutputPath(context);
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
-            Path workPath = new Path(workOutputPath, path);
-            FSDataOutputStream fsDataOutputStream = fileSystem.create(workPath);
-            return new OutputStreamWriter(fsDataOutputStream);
-        }
-
-        @Override
-        public String[] list(String path) throws IOException {
-            FileStatus[] fileStatuses = fileSystem.listStatus(new Path(path));
-            if (fileStatuses == null) {
-                return null;
-            }
-            String[] names = new String[fileStatuses.length];
-            for (int i = 0; i < fileStatuses.length; i++) {
-                names[i] = fileStatuses[i].getPath().getName();
-            }
-            return names;
-        }
-
-        @Override
-        public boolean isFile(String s) {
-            try {
-                return fileSystem.isFile(new Path(s));
-            } catch (IOException ignore) {
-                return false;
-            }
-        }
-    }
 }

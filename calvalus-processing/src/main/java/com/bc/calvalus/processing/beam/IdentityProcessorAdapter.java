@@ -84,6 +84,11 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
+    public Path getOutputPath() throws IOException {
+        return getWorkOutputPath();
+    }
+
+    @Override
     public void dispose() {
         super.dispose();
         if (targetProduct != null) {
@@ -92,19 +97,26 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
         }
     }
 
-    protected void saveTargetProduct(Product product, ProgressMonitor pm) throws IOException, InterruptedException {
-        MapContext mapContext = getMapContext();
-        String inputFilename = getInputPath().getName();
-        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-
-        Path workOutputProductPath = new Path(FileOutputFormat.getWorkOutputPath(mapContext), outputFilename);
+    protected void saveTargetProduct(Product product, ProgressMonitor pm) throws IOException {
         int tileHeight = DEFAULT_TILE_HEIGHT;
         Dimension preferredTileSize = product.getPreferredTileSize();
         if (preferredTileSize != null) {
             tileHeight = preferredTileSize.height;
         }
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), mapContext, pm);
+        Path workOutputProductPath = getWorkOutputPath();
+        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), getMapContext(), pm);
         streamingProductWriter.writeProduct(product, workOutputProductPath, tileHeight);
+    }
+
+    private Path getWorkOutputPath() throws IOException {
+        String inputFilename = getInputPath().getName();
+        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+
+        try {
+            return new Path(FileOutputFormat.getWorkOutputPath(getMapContext()), outputFilename);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
     }
 
     protected Product createSubset() throws IOException {

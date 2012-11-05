@@ -147,6 +147,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
     }
 
+    @Override
+    public Path getOutputPath() throws IOException {
+        if (outputFilesNames != null && outputFilesNames.length > 0) {
+            try {
+                Path workOutputPath = FileOutputFormat.getWorkOutputPath(getMapContext());
+                return new Path(workOutputPath, outputFilesNames[0]);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+        return null;
+    }
+
     private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
         Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
         FileSystem fs = FileSystem.get(conf);
