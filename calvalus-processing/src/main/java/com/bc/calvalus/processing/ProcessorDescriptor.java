@@ -3,14 +3,17 @@ package com.bc.calvalus.processing;
 import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ProcessorDescriptor {
 
     public static class Variable {
 
         private String name;
+
         private String defaultAggregator;
         private String defaultWeightCoeff;
-
         // empty constructor for XML serialization
         public Variable() {
         }
@@ -32,10 +35,16 @@ public class ProcessorDescriptor {
         public String getDefaultWeightCoeff() {
             return defaultWeightCoeff;
         }
-    }
 
+    }
+    public static class JobParameter {
+
+        private String name;
+        private String value;
+    }
     @Parameter
     private String executableName;
+
     @Parameter
     private String processorName;
     @Parameter
@@ -44,7 +53,6 @@ public class ProcessorDescriptor {
     private String defaultParameters;
     @Parameter
     private String[] outputFormats;
-
     // Short description in XHTML
     @Parameter
     private String descriptionHtml;
@@ -64,6 +72,9 @@ public class ProcessorDescriptor {
 
     @Parameter
     private String outputProductType;
+
+    @Parameter(itemAlias = "jobParameter")
+    private JobParameter[] jobConfig;
 
     // empty constructor for XML serialization
     public ProcessorDescriptor() {
@@ -128,5 +139,13 @@ public class ProcessorDescriptor {
 
     public void setOutputProductType(String outputProductType) {
         this.outputProductType = outputProductType;
+    }
+
+    public Map<String,String> getJobConfiguration() {
+        HashMap<String, String> map = new HashMap<String, String>();
+        for (JobParameter jobParameter : jobConfig) {
+            map.put(jobParameter.name, jobParameter.value);
+        }
+        return map;
     }
 }

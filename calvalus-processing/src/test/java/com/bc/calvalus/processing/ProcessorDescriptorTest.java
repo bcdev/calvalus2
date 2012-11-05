@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -87,6 +88,12 @@ public class ProcessorDescriptorTest {
         assertEquals("chl_conc", outputVariables[1].getName());
         assertEquals("AVG_ML", outputVariables[1].getDefaultAggregator());
         assertEquals("0.5", outputVariables[1].getDefaultWeightCoeff());
+
+        Map<String, String> jobConfig = processorDescriptor.getJobConfiguration();
+        assertNotNull(jobConfig);
+        assertEquals(2, jobConfig.size());
+        assertEquals("value1", jobConfig.get("calvalus.system.param1"));
+        assertEquals("value2", jobConfig.get("calvalus.system.param2"));
     }
 
     private String getResourceAsString(String name) throws IOException {

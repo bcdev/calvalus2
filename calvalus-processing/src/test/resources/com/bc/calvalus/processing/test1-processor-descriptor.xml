@@ -32,4 +32,14 @@ done by the cool folks at Brockmann-Consult.
             <defaultWeightCoeff>0.5</defaultWeightCoeff>
         </outputVariable>
     </outputVariables>
+    <jobConfig>
+        <jobParameter>
+            <name>calvalus.system.param1</name>
+            <value>value1</value>
+        </jobParameter>
+        <jobParameter>
+            <name>calvalus.system.param2</name>
+            <value>value2</value>
+        </jobParameter>
+    </jobConfig>
 </processorDescriptor>
