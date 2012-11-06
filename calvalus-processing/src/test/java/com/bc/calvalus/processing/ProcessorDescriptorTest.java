@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
 public class ProcessorDescriptorTest {
 
     @Test
-    public void testConstructFromXML() throws Exception {
+    public void testConstructFromXML_test1() throws Exception {
         String xml = getResourceAsString("test1-processor-descriptor.xml");
         ProcessorDescriptor processorDescriptor = new ProcessorDescriptor();
 
@@ -91,9 +91,28 @@ public class ProcessorDescriptorTest {
 
         Map<String, String> jobConfig = processorDescriptor.getJobConfiguration();
         assertNotNull(jobConfig);
+        assertEquals(0, jobConfig.size());
+    }
+
+    @Test
+    public void testConstructFromXML_test2() throws Exception {
+        String xml = getResourceAsString("test2-processor-descriptor.xml");
+        ProcessorDescriptor processorDescriptor = new ProcessorDescriptor();
+
+        assertNull(processorDescriptor.getExecutableName());
+
+        new ParameterBlockConverter().convertXmlToObject(xml, processorDescriptor);
+
+        assertNotNull(processorDescriptor.getExecutableName());
+        assertEquals("CoastColour.L2W", processorDescriptor.getExecutableName());
+        assertEquals("MERIS CoastColour", processorDescriptor.getProcessorName());
+
+        Map<String, String> jobConfig = processorDescriptor.getJobConfiguration();
+        assertNotNull(jobConfig);
         assertEquals(2, jobConfig.size());
         assertEquals("value1", jobConfig.get("calvalus.system.param1"));
         assertEquals("value2", jobConfig.get("calvalus.system.param2"));
+
     }
 
     private String getResourceAsString(String name) throws IOException {

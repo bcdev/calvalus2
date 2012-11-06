@@ -143,8 +143,10 @@ public class ProcessorDescriptor {
 
     public Map<String,String> getJobConfiguration() {
         HashMap<String, String> map = new HashMap<String, String>();
-        for (JobParameter jobParameter : jobConfig) {
-            map.put(jobParameter.name, jobParameter.value);
+        if (jobConfig != null) {
+            for (JobParameter jobParameter : jobConfig) {
+                map.put(jobParameter.name, jobParameter.value);
+            }
         }
         return map;
     }
