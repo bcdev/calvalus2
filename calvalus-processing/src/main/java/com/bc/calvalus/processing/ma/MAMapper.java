@@ -98,7 +98,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             for (Record record : records) {
                 PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
                 if (pixelPos != null) {
-                    System.out.println("pixelPos = " + pixelPos);
                     Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
                                                         (int) pixelPos.y - macroPixelSize / 2,
                                                         macroPixelSize, macroPixelSize);
@@ -106,9 +105,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     containsData = true;
                 }
             }
-            System.out.println("containsData = " + containsData);
-            System.out.println("area.bounds = " + area.getBounds());
-            System.out.println("area.empty = " + area.isEmpty());
 
             if (containsData && !area.isEmpty()) {
                 Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
