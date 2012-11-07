@@ -131,6 +131,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecords;
                 try {
+                    //re-create referenceRecordSource to read from the beginning (TODO could be improved)
+                    referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
                     productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
                     extractedRecords = productRecordSource.getRecords();
                     context.progress();
