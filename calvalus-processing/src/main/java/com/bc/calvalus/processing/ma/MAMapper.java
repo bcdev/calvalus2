@@ -81,12 +81,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         pm.beginTask("Match-Up analysis", 100);
         try {
             Product inputProduct = processorAdapter.getInputProduct();
-            PixelExtractor testPixelExtractor = new PixelExtractor(referenceRecordSource.getHeader(),
-                                                                   inputProduct,
-                                                                   maConfig.getMacroPixelSize(),
-                                                                   maConfig.getGoodPixelExpression(),
-                                                                   maConfig.getMaxTimeDifference(),
-                                                                   maConfig.getCopyInput());
+            PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
+                                                                     PixelTimeProvider.create(inputProduct),
+                                                                     maConfig.getMaxTimeDifference(),
+                                                                     referenceRecordSource.getHeader().hasTime());
             Iterable<Record> records;
             try {
                 records = referenceRecordSource.getRecords();
@@ -98,7 +96,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             int macroPixelSize = maConfig.getMacroPixelSize();
 
             for (Record record : records) {
-                PixelPos pixelPos = testPixelExtractor.getPixelPos(record);
+                PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
                 if (pixelPos != null) {
                     System.out.println("pixelPos = " + pixelPos);
                     Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,

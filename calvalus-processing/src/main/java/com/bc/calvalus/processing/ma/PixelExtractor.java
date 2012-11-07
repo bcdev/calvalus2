@@ -24,9 +24,9 @@ public class PixelExtractor {
     private final Product product;
     private final Mask pixelMask;
     private final PixelTimeProvider pixelTimeProvider;
-    private final long maxTimeDifference; // Note: time in ms (NOT h)
     private final int macroPixelSize;
     private final boolean copyInput;
+    private final PixelPosProvider pixelPosProvider;
 
     public PixelExtractor(Header inputHeader,
                           Product product,
@@ -42,11 +42,8 @@ public class PixelExtractor {
         }
         this.macroPixelSize = macroPixelSize;
         this.pixelTimeProvider = PixelTimeProvider.create(product);
-        if (maxTimeDifference != null && inputHeader.hasTime()) {
-            this.maxTimeDifference = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
-        } else {
-            this.maxTimeDifference = 0L;
-        }
+        this.pixelPosProvider = new PixelPosProvider(product, pixelTimeProvider, maxTimeDifference, inputHeader.hasTime());
+
         this.copyInput = copyInput;
 
         // Important note: createHeader() is dependent on a number of field values,
@@ -70,7 +67,7 @@ public class PixelExtractor {
      */
     public Record extract(Record inputRecord) throws IOException {
         Assert.notNull(inputRecord, "inputRecord");
-        final PixelPos pixelPos = getTemporallyAndSpatiallyValidPixelPos(inputRecord);
+        final PixelPos pixelPos = pixelPosProvider.getTemporallyAndSpatiallyValidPixelPos(inputRecord);
         if (pixelPos != null) {
             return extract(inputRecord, pixelPos);
         }
@@ -259,61 +256,7 @@ public class PixelExtractor {
      * @return The pixel position, or {@code null} if no such exist.
      */
     public PixelPos getPixelPos(Record referenceRecord) {
-        return getTemporallyAndSpatiallyValidPixelPos(referenceRecord);
-    }
-
-    private PixelPos getTemporallyAndSpatiallyValidPixelPos(Record referenceRecord) {
-
-        if (testTime()) {
-
-            long minReferenceTime = getMinReferenceTime(referenceRecord);
-            if (minReferenceTime > product.getEndTime().getAsDate().getTime()) {
-                return null;
-            }
-
-            long maxReferenceTime = getMaxReferenceTime(referenceRecord);
-            if (maxReferenceTime < product.getStartTime().getAsDate().getTime()) {
-                return null;
-            }
-
-            PixelPos pixelPos = getSpatiallyValidPixelPos(referenceRecord);
-            if (pixelPos != null) {
-                long pixelTime = pixelTimeProvider.getTime(pixelPos).getTime();
-                if (pixelTime >= minReferenceTime && pixelTime <= maxReferenceTime) {
-                    return pixelPos;
-                }
-            }
-        } else {
-            PixelPos pixelPos = getSpatiallyValidPixelPos(referenceRecord);
-            if (pixelPos != null) {
-                return pixelPos;
-            }
-        }
-        return null;
-    }
-
-    private boolean testTime() {
-        return maxTimeDifference > 0 && pixelTimeProvider != null;
-    }
-
-    private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
-        GeoPos location = referenceRecord.getLocation();
-        if (location == null) {
-            return null;
-        }
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
-        if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
-            return pixelPos;
-        }
-        return null;
-    }
-
-    private long getMinReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() - maxTimeDifference;
-    }
-
-    private long getMaxReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() + maxTimeDifference;
+        return pixelPosProvider.getPixelPos(referenceRecord);
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
@@ -348,37 +291,5 @@ public class PixelExtractor {
         product.getMaskGroup().add(mask);
 
         return mask;
-    }
-
-
-    private static class PixelTimeProvider {
-
-        private final double startMJD;
-        private final double deltaMJD;
-
-        static PixelTimeProvider create(Product product) {
-            final ProductData.UTC startTime = product.getStartTime();
-            final ProductData.UTC endTime = product.getEndTime();
-            final int rasterHeight = product.getSceneRasterHeight();
-            if (startTime != null && endTime != null && rasterHeight > 1) {
-                return new PixelTimeProvider(startTime.getMJD(),
-                                             (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
-            } else {
-                return null;
-            }
-        }
-
-        private PixelTimeProvider(double startMJD, double deltaMJD) {
-            this.startMJD = startMJD;
-            this.deltaMJD = deltaMJD;
-        }
-
-        public Date getTime(PixelPos pixelPos) {
-            return getUTC(pixelPos).getAsDate();
-        }
-
-        private ProductData.UTC getUTC(PixelPos pixelPos) {
-            return new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMJD);
-        }
     }
 }
