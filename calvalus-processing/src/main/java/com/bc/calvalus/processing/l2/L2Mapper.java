@@ -9,6 +9,10 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.metadata.MetadataResourceEngine;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.WKTWriter;
+import com.vividsolutions.jts.io.gml2.GMLWriter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -16,11 +20,14 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.FeatureUtils;
 import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,6 +111,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
             vcx.put("system", System.getProperties());
             vcx.put("softwareName", "Calvalus");
             vcx.put("softwareVersion", "1.5");
+            vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
             File targetFile = new File(outputPath.toString());
             vcx.put("targetFile", targetFile);
@@ -115,6 +123,16 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
             vcx.put("configuration", configuration);
             vcx.put("sourceProduct", sourceProduct);
             vcx.put("targetProduct", targetProduct);
+
+            Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
+            String wkt = new WKTWriter().write(geometry);
+            String gml = new GMLWriter().write(geometry);
+            Envelope envelope = geometry.getEnvelopeInternal();
+
+            vcx.put("targetProductWKT", wkt);
+            vcx.put("targetProductGML", gml);
+            vcx.put("targetProductEnvelope", envelope);
+
             metadataResourceEngine.writeRelatedResource(templatePath, outputPath.toString());
         }
     }
