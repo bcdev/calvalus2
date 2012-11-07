@@ -23,11 +23,11 @@
         </fileSet>
         <fileSet>
             <directory>target</directory>
-            <includes><include>calvalus-processing-1.4.1-SNAPSHOT-job.jar</include></includes>
+            <includes><include>calvalus-processing-1.5-SNAPSHOT-job.jar</include></includes>
             <outputDirectory>lib</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>target/calvalus-processing-1.4.1-SNAPSHOT-beam</directory>
+            <directory>target/calvalus-processing-1.5-SNAPSHOT-beam</directory>
             <includes><include>*.jar</include></includes>
             <outputDirectory>lib/beam</outputDirectory>
         </fileSet>

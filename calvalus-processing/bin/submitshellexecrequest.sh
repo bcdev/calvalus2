@@ -11,10 +11,10 @@ fi
 baseDir="`dirname ${0}`/.."
 baseDir=`( cd $baseDir ; pwd )`
 configDir=${baseDir}/conf
-jobJar=${baseDir}/lib/calvalus-processing-1.4.1-SNAPSHOT-job.jar
+jobJar=${baseDir}/lib/calvalus-processing-1.5-SNAPSHOT-job.jar
 if [ ! -r $jobJar ] ; then
     # maven development environment
-    jobJar=${baseDir}/target/calvalus-processing-1.4.1-SNAPSHOT-job.jar
+    jobJar=${baseDir}/target/calvalus-processing-1.5-SNAPSHOT-job.jar
 fi
 
 request=$1

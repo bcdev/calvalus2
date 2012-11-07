@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * <p/>
  * Call with:
  * <pre>
- *    hadoop jar target/calvalus-experiments-1.4.1-SNAPSHOT-job.jar \
+ *    hadoop jar target/calvalus-experiments-1.5-SNAPSHOT-job.jar \
  *    com.bc.calvalus.processing.shellexec.ExecutablesTool \
  *    l2gen-request.xml \
  *    [-wait=false]
@@ -149,9 +149,9 @@ public class ExecutablesTool extends Configured implements Tool {
 
             // look up job jar either by class (if deployed) or by path (idea)
             //job.setJarByClass(getClass());
-            String pathname = "lib/calvalus-processing-1.4.1-SNAPSHOT-job.jar";
+            String pathname = "lib/calvalus-processing-1.5-SNAPSHOT-job.jar";
             if (!new File(pathname).exists()) {
-                pathname = "calvalus-processing/target/calvalus-processing-1.4.1-SNAPSHOT-job.jar";
+                pathname = "calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-job.jar";
                 if (!new File(pathname).exists()) {
                     throw new IllegalArgumentException("Cannot find job jar");
                 }
