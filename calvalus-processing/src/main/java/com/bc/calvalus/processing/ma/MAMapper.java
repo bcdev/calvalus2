@@ -109,7 +109,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             if (containsData && !area.isEmpty()) {
                 if (!processorAdapter.supportsPullProcessing()) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
-                    processorAdapter.setProcessingRectangle(fullScene.intersection(area.getBounds()));
+                    Rectangle maRectangle = area.getBounds();
+                    maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
+                    processorAdapter.setProcessingRectangle(fullScene.intersection(maRectangle));
                 }
                 Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
                 if (product == null) {
