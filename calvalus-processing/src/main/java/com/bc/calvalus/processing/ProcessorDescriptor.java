@@ -37,11 +37,13 @@ public class ProcessorDescriptor {
         }
 
     }
+
     public static class JobParameter {
 
         private String name;
         private String value;
     }
+
     @Parameter
     private String executableName;
 

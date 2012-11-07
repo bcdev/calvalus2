@@ -78,6 +78,7 @@ public class QLProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
         Configuration jobConfig = createJobConfig(productionRequest);
+        setRequestParameters(jobConfig, productionRequest);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 

@@ -35,10 +35,13 @@ public class HadoopProductionTypeTest {
             }
         };
 
-        Configuration jobConfig = productionType.createJobConfig(new ProductionRequest("X", "eva",
-                                                                                       "calvalus.in", "*.N1",
-                                                                                       "calvalus.hadoop.fs.s3.maxRetries", "16",
-                                                                                       "beam.mem", "6TB"));
+        ProductionRequest productionRequest = new ProductionRequest("X", "eva",
+                                                                    "calvalus.in", "*.N1",
+                                                                    "calvalus.hadoop.fs.s3.maxRetries", "16",
+                                                                    "beam.mem", "6TB");
+        Configuration jobConfig = productionType.createJobConfig(productionRequest);
+        productionType.setRequestParameters(jobConfig, productionRequest);
+
         Assert.assertEquals("X", jobConfig.get(JobConfigNames.CALVALUS_PRODUCTION_TYPE));
         Assert.assertEquals("eva", jobConfig.get(JobConfigNames.CALVALUS_USER));
         Assert.assertEquals("*.N1", jobConfig.get("calvalus.in"));

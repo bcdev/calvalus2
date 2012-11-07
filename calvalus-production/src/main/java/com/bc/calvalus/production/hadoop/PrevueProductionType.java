@@ -77,10 +77,11 @@ public class PrevueProductionType extends HadoopProductionType {
         String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
-        Configuration l2JobConfig = createJobConfig(productionRequest);
-        l2JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-        l2JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        Configuration jobConfig = createJobConfig(productionRequest);
+        setRequestParameters(jobConfig, productionRequest);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new PrevueWorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        return new PrevueWorkflowItem(getProcessingService(), productionName, jobConfig);
     }
 }

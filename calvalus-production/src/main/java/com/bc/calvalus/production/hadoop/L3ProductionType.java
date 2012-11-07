@@ -56,15 +56,7 @@ public class L3ProductionType extends HadoopProductionType {
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
 
-        String processorName = productionRequest.getString("processorName", null);
-        String processorParameters = null;
-        String processorBundle = null;
-        if (processorName != null) {
-            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-            processorBundle = String.format("%s-%s",
-                                            productionRequest.getString("processorBundleName"),
-                                            productionRequest.getString("processorBundleVersion"));
-        }
+        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
 
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
@@ -82,14 +74,14 @@ public class L3ProductionType extends HadoopProductionType {
             String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
             if (l1InputFiles.length > 0) {
                 String singleRangeOutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
+
                 Configuration jobConfig = createJobConfig(productionRequest);
+                setDefaultProcessorParameters(jobConfig, processorProductionRequest);
+                setRequestParameters(jobConfig, productionRequest);
+
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDir);
-                if (processorName != null) {
-                    jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-                    jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-                    jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-                }
+
                 jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -98,6 +90,7 @@ public class L3ProductionType extends HadoopProductionType {
 
                 if (outputFormat != null) {
                     jobConfig = createJobConfig(productionRequest);
+                    setRequestParameters(jobConfig, productionRequest);
                     jobConfig.set(JobConfigNames.CALVALUS_INPUT, singleRangeOutputDir);
                     jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
                     jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
@@ -122,6 +115,7 @@ public class L3ProductionType extends HadoopProductionType {
         }
         if (outputFormat != null && productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
             Configuration qlJobConfig = createJobConfig(productionRequest);
+            setRequestParameters(qlJobConfig, productionRequest);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);

@@ -18,6 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -29,6 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -91,16 +93,25 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected abstract Staging createUnsubmittedStaging(Production production);
 
-    protected final Configuration createJobConfig(ProductionRequest request) {
+    protected final Configuration createJobConfig(ProductionRequest productionRequest) {
         Configuration jobConfig = getProcessingService().createJobConfig();
-        jobConfig.set(JobConfigNames.CALVALUS_USER, request.getUserName());
-        jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, request.getProductionType());
-        initJobConfig(jobConfig, request);
+        jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
+        jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
         return jobConfig;
     }
 
-    protected void initJobConfig(Configuration jobConfig, ProductionRequest request) {
-        setJobConfig(jobConfig, request.getParameters());
+    protected final void setDefaultProcessorParameters(Configuration jobConfig, ProcessorProductionRequest processorProductionRequest) {
+        ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(processingService);
+        Map<String, String> map = Collections.emptyMap();
+        if (processorDescriptor != null) {
+            map = processorDescriptor.getJobConfiguration();
+        }
+        processorProductionRequest.configure(jobConfig);
+        setJobConfig(jobConfig, map);
+    }
+
+    protected final void setRequestParameters(Configuration jobConfig, ProductionRequest productionRequest) {
+        setJobConfig(jobConfig, productionRequest.getParameters());
     }
 
     public static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {

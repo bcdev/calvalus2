@@ -92,6 +92,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         Workflow.Sequential sequence = new Workflow.Sequential();
         if (!successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
+            setRequestParameters(jobConfigSr, productionRequest);
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
             jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
             jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
@@ -103,6 +104,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         if (!successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
+            setRequestParameters(jobConfigFormat, productionRequest);
             jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");

@@ -43,16 +43,6 @@ public class TAProductionType extends HadoopProductionType {
         String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
 
-        String processorName = productionRequest.getString("processorName", null);
-        String processorParameters = null;
-        String processorBundle = null;
-        if (processorName != null) {
-            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-            processorBundle = String.format("%s-%s",
-                                            productionRequest.getString("processorBundleName"),
-                                            productionRequest.getString("processorBundleVersion"));
-        }
-
         String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry();
 
@@ -76,13 +66,10 @@ public class TAProductionType extends HadoopProductionType {
                 String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));
 
                 Configuration l3JobConfig = createJobConfig(productionRequest);
+                setDefaultProcessorParameters(l3JobConfig, new ProcessorProductionRequest(productionRequest));
+                setRequestParameters(l3JobConfig, productionRequest);
                 l3JobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
                 l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l3OutputDir);
-                if (processorName != null) {
-                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-                    l3JobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-                }
                 l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
                 l3JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
                 l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -90,6 +77,7 @@ public class TAProductionType extends HadoopProductionType {
                 L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(), l3JobName, l3JobConfig);
 
                 Configuration taJobConfig = createJobConfig(productionRequest);
+                setRequestParameters(taJobConfig, productionRequest);
                 taJobConfig.set(JobConfigNames.CALVALUS_INPUT, l3OutputDir);
                 taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, taOutputDir);
                 taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);

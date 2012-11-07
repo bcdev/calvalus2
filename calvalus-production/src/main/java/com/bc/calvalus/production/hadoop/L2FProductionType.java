@@ -81,33 +81,18 @@ public class L2FProductionType extends HadoopProductionType {
                                           ProductionRequest productionRequest) throws ProductionException {
 
         Configuration jobConfig = createJobConfig(productionRequest);
+        setDefaultProcessorParameters(jobConfig, new ProcessorProductionRequest(productionRequest));
+        setRequestParameters(jobConfig, productionRequest);
 
         String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
-        String outputDir = getOutputPath(productionRequest, productionId, "");
-
-        String processorName = productionRequest.getString("processorName", null);
-        if (processorName != null) {
-            String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-            jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-            jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        }
-
         jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-
-        String processorBundleName = productionRequest.getString("processorBundleName", null);
-        String processorBundleVersion = productionRequest.getString("processorBundleVersion", null);
-        if (processorBundleName != null && processorBundleVersion != null) {
-            String processorBundle = String.format("%s-%s",
-                                                   processorBundleName,
-                                                   processorBundleVersion);
-            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-        }
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         if (regionGeometry != null) {
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry.toString());
         }
 
+        String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT,"NetCDF"));

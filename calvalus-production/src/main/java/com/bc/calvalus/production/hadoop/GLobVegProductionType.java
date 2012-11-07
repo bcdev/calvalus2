@@ -83,6 +83,7 @@ public class GLobVegProductionType extends HadoopProductionType {
 
         if (!successfullyCompleted(partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
+            setRequestParameters(jobConfig, productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, partsOutputDir);
 
@@ -103,6 +104,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         if (!successfullyCompleted(ncOutputDir)) {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
+            setRequestParameters(jobConfig, productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT, partsOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputNameFormat);

@@ -65,6 +65,7 @@ public class GeometryProductionType extends HadoopProductionType {
 
                 String outputDir = getOutputPath(productionRequest, productionId, "geometries-" + (i + 1));
                 Configuration jobConfig = createJobConfig(productionRequest);
+                setRequestParameters(jobConfig, productionRequest);
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);

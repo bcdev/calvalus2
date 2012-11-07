@@ -42,28 +42,16 @@ public class MAProductionType extends HadoopProductionType {
         String inputFormat = productionRequest.getString("calvalus.input.format", "ENVISAT");
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
-        String processorName = productionRequest.getString("processorName", null);
-        String processorParameters = null;
-        String processorBundle = null;
-        if (processorName != null) {
-            processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-            processorBundle = String.format("%s-%s",
-                                            productionRequest.getString("processorBundleName"),
-                                            productionRequest.getString("processorBundleVersion"));
-        }
+        Configuration maJobConfig = createJobConfig(productionRequest);
+        setDefaultProcessorParameters(maJobConfig, new ProcessorProductionRequest(productionRequest));
+        setRequestParameters(maJobConfig, productionRequest);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String maParametersXml = getMAConfigXml(productionRequest);
 
-        Configuration maJobConfig = createJobConfig(productionRequest);
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
         maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-        if (processorName != null) {
-            maJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-            maJobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-            maJobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-        }
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionName, maJobConfig);
