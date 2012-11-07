@@ -160,6 +160,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return null;
     }
 
+    @Override
+    public boolean supportsPullProcessing() {
+        return false;
+    }
+
     private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
         Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
         FileSystem fs = FileSystem.get(conf);

@@ -107,8 +107,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
 
             if (containsData && !area.isEmpty()) {
-                Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
-                processorAdapter.setProcessingRectangle(fullScene.intersection(area.getBounds()));
+                if (!processorAdapter.supportsPullProcessing()) {
+                    Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+                    processorAdapter.setProcessingRectangle(fullScene.intersection(area.getBounds()));
+                }
                 Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
                 if (product == null) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);

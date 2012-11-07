@@ -89,6 +89,11 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
+    public boolean supportsPullProcessing() {
+        return true;
+    }
+
+    @Override
     public void dispose() {
         super.dispose();
         if (targetProduct != null) {

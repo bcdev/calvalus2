@@ -171,6 +171,13 @@ public abstract class ProcessorAdapter {
     public abstract Path getOutputPath() throws IOException;
 
     /**
+     * Return {code true}, if the processor adapter supports on-demand processing of distinct regions.
+     *
+     * @return {code true}, if pull processing is supported.
+     */
+    public abstract boolean supportsPullProcessing();
+
+    /**
      * Convenient method that returns the processed product and does all the necessary steps.
      *
      * @param pm A progress monitor
