@@ -266,6 +266,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           processorDescriptor.getInputProductTypes(),
                                           processorDescriptor.getOutputProductType(),
+                                          processorDescriptor.getOutputFormats(),
                                           processorDescriptor.getMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()));
     }

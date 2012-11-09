@@ -68,7 +68,7 @@ public class OutputParametersForm extends Composite {
         return parameters;
     }
 
-    private void setAvailableOutputFormats(String... formatNames) {
+    public void setAvailableOutputFormats(String... formatNames) {
         int selectedIndex = outputFormat.getSelectedIndex();
         outputFormat.clear();
         for (String formatName : formatNames) {

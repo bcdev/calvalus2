@@ -18,6 +18,8 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -64,11 +66,18 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         });
 
         l2ConfigForm = new L2ConfigForm(portalContext, processorFilter, true);
+        l2ConfigForm.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
+            }
+        });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm(true);
+        outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
