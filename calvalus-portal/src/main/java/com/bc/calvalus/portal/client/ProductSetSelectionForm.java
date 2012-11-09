@@ -16,6 +16,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,10 +31,11 @@ public class ProductSetSelectionForm extends Composite {
     interface TheUiBinder extends UiBinder<Widget, ProductSetSelectionForm> {
     }
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
-
-
     private static final DtoProductSet[] EMPTY_PRODUCT_SETS = new DtoProductSet[0];
+
     private final PortalContext portal;
+    private final Filter<DtoProductSet> productSetFilter;
+
     private DtoProductSet[] currentProductSets;
     private ProductSetSelectionForm.UpdateProductSetsCallback callback;
 
@@ -59,7 +61,13 @@ public class ProductSetSelectionForm extends Composite {
     Label productSetRegionName;
 
     public ProductSetSelectionForm(PortalContext portal) {
+        this(portal, null);
+    }
+
+    public ProductSetSelectionForm(PortalContext portal, Filter<DtoProductSet> productSetFilter) {
         this.portal = portal;
+        this.productSetFilter = productSetFilter;
+
         initWidget(uiBinder.createAndBindUi(this));
 
         callback = new UpdateProductSetsCallback();
@@ -114,6 +122,16 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     private void updateListBox(DtoProductSet[] newProductSets) {
+        DtoProductSet[] filteredProductSets = newProductSets;
+        if (productSetFilter != null) {
+            ArrayList<DtoProductSet> filtered = new ArrayList<DtoProductSet>(newProductSets.length);
+            for (DtoProductSet productSet : newProductSets) {
+                if (productSetFilter.accept(productSet)) {
+                    filtered.add(productSet);
+                }
+            }
+            filteredProductSets = filtered.toArray(new DtoProductSet[filtered.size()]);
+        }
         DtoProductSet oldSelection = null;
         if (currentProductSets != null) {
             int selectedIndex = productSetListBox.getSelectedIndex();
@@ -121,7 +139,7 @@ public class ProductSetSelectionForm extends Composite {
                 oldSelection = currentProductSets[selectedIndex];
             }
         }
-        currentProductSets = newProductSets;
+        currentProductSets = filteredProductSets;
         productSetListBox.clear();
         int newSelectionIndex = 0;
         boolean productSetChanged = true;

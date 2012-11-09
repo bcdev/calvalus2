@@ -16,6 +16,7 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,6 @@ public class L2ConfigForm extends Composite {
 
     interface TheUiBinder extends UiBinder<Widget, L2ConfigForm> {
     }
-
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
@@ -49,11 +49,23 @@ public class L2ConfigForm extends Composite {
     private final boolean selectionMandatory;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
+        this(portalContext, null, selectionMandatory);
+    }
+
+    public L2ConfigForm(PortalContext portalContext, Filter<DtoProcessorDescriptor> processorFilter, boolean selectionMandatory) {
         this.selectionMandatory = selectionMandatory;
         initWidget(uiBinder.createAndBindUi(this));
 
         processorDescriptors = portalContext.getProcessors();
-
+        if (processorFilter != null) {
+            ArrayList<DtoProcessorDescriptor> filtered = new ArrayList<DtoProcessorDescriptor>(processorDescriptors.length);
+            for (DtoProcessorDescriptor processorDescriptor : processorDescriptors) {
+                if (processorFilter.accept(processorDescriptor)) {
+                    filtered.add(processorDescriptor);
+                }
+            }
+            processorDescriptors = filtered.toArray(new DtoProcessorDescriptor[filtered.size()]);
+        }
 
         FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=xml",
                                          new FormPanel.SubmitHandler() {
