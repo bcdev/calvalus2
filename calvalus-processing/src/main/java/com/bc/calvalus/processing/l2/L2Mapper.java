@@ -14,6 +14,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTWriter;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -99,41 +100,46 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         Configuration configuration = context.getConfiguration();
         String templatePath = configuration.get("calvalus.metadata.template");
         if (templatePath != null) {
-            Path sourcePath = processorAdapter.getInputPath();
-            Path outputPath = processorAdapter.getOutputPath();
-            Product sourceProduct = processorAdapter.getInputProduct();
-            Product targetProduct = processorAdapter.openProcessedProduct();
+            Path path = new Path(templatePath);
+            if (FileSystem.get(configuration).exists(path)) {
+                Path sourcePath = processorAdapter.getInputPath();
+                Path outputPath = processorAdapter.getOutputPath();
+                Product sourceProduct = processorAdapter.getInputProduct();
+                Product targetProduct = processorAdapter.openProcessedProduct();
 
-            HDFSSimpleFileSystem hdfsSimpleFileSystem = new HDFSSimpleFileSystem(context);
-            MetadataResourceEngine metadataResourceEngine = new MetadataResourceEngine(hdfsSimpleFileSystem);
+                HDFSSimpleFileSystem hdfsSimpleFileSystem = new HDFSSimpleFileSystem(context);
+                MetadataResourceEngine metadataResourceEngine = new MetadataResourceEngine(hdfsSimpleFileSystem);
 
-            VelocityContext vcx = metadataResourceEngine.getVelocityContext();
-            vcx.put("system", System.getProperties());
-            vcx.put("softwareName", "Calvalus");
-            vcx.put("softwareVersion", "1.5");
-            vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
+                VelocityContext vcx = metadataResourceEngine.getVelocityContext();
+                vcx.put("system", System.getProperties());
+                vcx.put("softwareName", "Calvalus");
+                vcx.put("softwareVersion", "1.5");
+                vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
-            File targetFile = new File(outputPath.toString());
-            vcx.put("targetFile", targetFile);
-            vcx.put("targetDir", targetFile.getParentFile() != null ? targetFile.getParentFile() : new File("."));
-            vcx.put("targetBaseName", FileUtils.getFilenameWithoutExtension(targetFile));
-            vcx.put("targetName", targetFile.getName());
-            metadataResourceEngine.readRelatedResource("source", sourcePath.toString());
+                File targetFile = new File(outputPath.toString());
+                vcx.put("targetFile", targetFile);
+                vcx.put("targetDir", targetFile.getParentFile() != null ? targetFile.getParentFile() : new File("."));
+                vcx.put("targetBaseName", FileUtils.getFilenameWithoutExtension(targetFile));
+                vcx.put("targetName", targetFile.getName());
+                metadataResourceEngine.readRelatedResource("source", sourcePath.toString());
 
-            vcx.put("configuration", configuration);
-            vcx.put("sourceProduct", sourceProduct);
-            vcx.put("targetProduct", targetProduct);
+                vcx.put("configuration", configuration);
+                vcx.put("sourceProduct", sourceProduct);
+                vcx.put("targetProduct", targetProduct);
 
-            Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
-            String wkt = new WKTWriter().write(geometry);
-            String gml = new GMLWriter().write(geometry);
-            Envelope envelope = geometry.getEnvelopeInternal();
+                Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
+                String wkt = new WKTWriter().write(geometry);
+                String gml = new GMLWriter().write(geometry);
+                Envelope envelope = geometry.getEnvelopeInternal();
 
-            vcx.put("targetProductWKT", wkt);
-            vcx.put("targetProductGML", gml);
-            vcx.put("targetProductEnvelope", envelope);
+                vcx.put("targetProductWKT", wkt);
+                vcx.put("targetProductGML", gml);
+                vcx.put("targetProductEnvelope", envelope);
 
-            metadataResourceEngine.writeRelatedResource(templatePath, outputPath.toString());
+                metadataResourceEngine.writeRelatedResource(templatePath, outputPath.toString());
+            } else {
+                LOG.severe("Template does not exists: " + templatePath);
+            }
         }
     }
 }
