@@ -17,9 +17,10 @@ public class RegionTest extends GWTTestCase {
     }
 
     public void testGetVerticesParsesGeometryWkt() {
-        Region region = new Region("world", "user", "polygon ((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
+        Region region = new Region("world", new String[]{"user"},
+                                   "polygon ((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
         assertEquals("world", region.getName());
-        assertEquals("user", region.getCategory());
+        assertEquals("user", region.getPath()[0]);
         assertEquals("user.world", region.getQualifiedName());
 
         LatLng[] polygon = region.getVertices();
@@ -33,7 +34,7 @@ public class RegionTest extends GWTTestCase {
     }
 
     public void testGetGeometryWktFormatsVertices() {
-        Region region = new Region("world", "user", new LatLng[] {
+        Region region = new Region("world", new String[]{"user"}, new LatLng[]{
                 LatLng.newInstance(-90, -180),
                 LatLng.newInstance(-90, 180),
                 LatLng.newInstance(90, 180),
@@ -41,10 +42,41 @@ public class RegionTest extends GWTTestCase {
                 LatLng.newInstance(-90, -180)
         });
         assertEquals("world", region.getName());
-        assertEquals("user", region.getCategory());
+        assertEquals("user", region.getPath()[0]);
         assertEquals("user.world", region.getQualifiedName());
         assertEquals("POLYGON((-180.0 -90.0,180.0 -90.0,180.0 90.0,-180.0 90.0,-180.0 -90.0))",
                      region.getGeometryWkt());
+    }
+
+    public void testPath() {
+        Region region = new Region("caribbean", new String[]{"marco", "peters", "zuehlke"}, new LatLng[0]);
+        assertEquals("caribbean", region.getName());
+        assertEquals(3, region.getPath().length);
+        assertEquals("marco", region.getPath()[0]);
+        assertEquals("peters", region.getPath()[1]);
+        assertEquals("zuehlke", region.getPath()[2]);
+        assertEquals("marco.peters.zuehlke.caribbean", region.getQualifiedName());
+    }
+
+    public void testSetName() {
+        Region region = new Region("caribbean", new String[]{"marco", "peters", "zuehlke"}, new LatLng[0]);
+        assertEquals("caribbean", region.getName());
+        assertEquals(3, region.getPath().length);
+        assertEquals("marco", region.getPath()[0]);
+        assertEquals("peters", region.getPath()[1]);
+        assertEquals("zuehlke", region.getPath()[2]);
+        assertEquals("marco.peters.zuehlke.caribbean", region.getQualifiedName());
+    }
+
+    public void testSetQualifiedName() {
+        Region region = new Region("caribbean", new String[]{"marco", "peters", "zuehlke"}, new LatLng[0]);
+        String qualifiedName = "abc.def.ghi";
+        region.setQualifiedName(qualifiedName);
+        assertEquals("ghi", region.getName());
+        assertEquals("abc", region.getPath()[0]);
+        assertEquals("def", region.getPath()[1]);
+        assertEquals("abc.def.ghi", region.getQualifiedName());
+
     }
 
     private static void assertEquals(LatLng expected, LatLng vertex) {

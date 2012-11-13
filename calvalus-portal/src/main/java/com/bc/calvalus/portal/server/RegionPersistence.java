@@ -28,17 +28,17 @@ public class RegionPersistence {
         Set<String> regionNames = regionProperties.stringPropertyNames();
         for (String regionFullName : regionNames) {
             int dotPos = regionFullName.indexOf('.');
-            String regionName =  dotPos >= 0 ? regionFullName.substring(dotPos + 1) : regionFullName;
-            String regionCategory =  dotPos >= 0 ? regionFullName.substring(0, dotPos) : "";
+            String[] split = regionFullName.split("\\.");
+            String regionName = split[split.length - 1];
+            String[] regionPath = Arrays.copyOf(split, split.length - 1);
             String regionWKT = regionProperties.getProperty(regionFullName);
-            DtoRegion region = new DtoRegion(regionName, regionCategory, regionWKT);
+            DtoRegion region = new DtoRegion(regionName, regionPath, regionWKT);
             regions.add(region);
         }
         Collections.sort(regions, new Comparator<DtoRegion>() {
             @Override
             public int compare(DtoRegion o1, DtoRegion o2) {
-                int i = o1.getCategory().compareToIgnoreCase(o2.getCategory());
-                return i != 0 ? i : o1.getName().compareToIgnoreCase(o2.getName());
+                return o1.getName().compareToIgnoreCase(o2.getName());
             }
         });
         return regions.toArray(new DtoRegion[regions.size()]);
@@ -67,8 +67,8 @@ public class RegionPersistence {
     private Properties getUserRegions(DtoRegion[] regions) {
         Properties userRegions = new Properties();
         for (DtoRegion region : regions) {
-            if (region.getCategory().equalsIgnoreCase("user")) {
-                String fullName = region.getCategory() + "." + region.getName();
+            if (region.isUserRegion()) {
+                String fullName = region.getQualifiedName();
                 System.out.println("storing region " + fullName + " = " + region.getGeometryWkt());
                 userRegions.put(fullName, region.getGeometryWkt());
             }

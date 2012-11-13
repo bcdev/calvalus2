@@ -1,8 +1,6 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.bc.calvalus.portal.shared.DtoRegion;
-import com.google.gwt.maps.client.overlay.Overlay;
-import com.google.gwt.maps.client.overlay.Polygon;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +20,7 @@ public class RegionConverter {
         ArrayList<Region> regionList = new ArrayList<Region>();
         for (DtoRegion encodedRegion : encodedRegions) {
             regionList.add(new Region(encodedRegion.getName(),
-                                      encodedRegion.getCategory(),
+                                      encodedRegion.getPath(),
                                       encodedRegion.getGeometryWkt()));
         }
         return regionList;
@@ -37,7 +35,7 @@ public class RegionConverter {
         for (int i = 0; i < encodedRegions.length; i++) {
             Region region = regions.get(i);
             encodedRegions[i] = new DtoRegion(region.getName(),
-                                              region.getCategory(),
+                                              region.getPath(),
                                               region.getGeometryWkt());
         }
         return encodedRegions;

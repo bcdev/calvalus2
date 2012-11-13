@@ -7,6 +7,8 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.view.client.ProvidesKey;
 
+import java.util.Arrays;
+
 /**
  * Basically, a named polygon.
  *
@@ -24,40 +26,59 @@ public class Region {
 
     private static int counter;
 
-    private String category;
+    private String[] path;
     private String name;
     private String qualifiedName;
     private String geometryWkt;
     private LatLng[] vertices;
 
     public static Region createUserRegion(LatLng[] polygonVertices) {
-        return new Region("region_" + (++counter), "user", polygonVertices);
+        return new Region("region_" + (++counter), new String[]{"user"}, polygonVertices);
     }
 
-    public Region(String name, String category, String geometryWkt) {
-        this(name, category, geometryWkt, null);
+    public Region(String name, String[] path, String geometryWkt) {
+        this(name, path, geometryWkt, null);
     }
 
-    public Region(String name, String category, LatLng[] vertices) {
-        this(name, category, null, vertices);
+    public Region(String name, String[] path, LatLng[] vertices) {
+        this(name, path, null, vertices);
     }
 
-    private Region(String name, String category, String geometryWkt, LatLng[] vertices) {
+    private Region(String name, String[] path, String geometryWkt, LatLng[] vertices) {
         this.name = name;
-        this.category = category;
+        this.path = path;
         this.geometryWkt = geometryWkt;
         this.vertices = vertices;
     }
 
     public String getQualifiedName() {
         if (qualifiedName == null) {
-            qualifiedName = category + "." + name;
+            StringBuilder sb = new StringBuilder();
+            for (String pathElement : path) {
+                sb.append(pathElement);
+                sb.append(".");
+            }
+            sb.append(name);
+            qualifiedName = sb.toString();
         }
         return qualifiedName;
     }
 
-    public String getCategory() {
-        return category;
+    public void setQualifiedName(String qualifiedName) {
+        int lastDot = qualifiedName.lastIndexOf(".");
+        String name = qualifiedName.substring(lastDot + 1, qualifiedName.length());
+        String[] path = qualifiedName.substring(0, lastDot).split("\\.");
+        setName(name);
+        setPath(path);
+    }
+
+    public String[] getPath() {
+        return path;
+    }
+
+    public void setPath(String[] path) {
+        this.path = path;
+        qualifiedName = null;
     }
 
     public String getName() {
@@ -77,7 +98,7 @@ public class Region {
     }
 
     public boolean isUserRegion() {
-        return getCategory().equals("user");
+        return path != null && path.length > 0 && "user".equals(path[0]);
     }
 
     public LatLng[] getVertices() {
