@@ -27,7 +27,6 @@ public class RegionPersistence {
         ArrayList<DtoRegion> regions = new ArrayList<DtoRegion>();
         Set<String> regionNames = regionProperties.stringPropertyNames();
         for (String regionFullName : regionNames) {
-            int dotPos = regionFullName.indexOf('.');
             String[] split = regionFullName.split("\\.");
             String regionName = split[split.length - 1];
             String[] regionPath = Arrays.copyOf(split, split.length - 1);
