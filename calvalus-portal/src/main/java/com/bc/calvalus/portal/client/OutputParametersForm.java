@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -27,12 +28,23 @@ public class OutputParametersForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
 
-    private final boolean showProductRelatedSettings;
+    private boolean showProductRelatedSettings;
+    private boolean showTailoringRelatedSettings;
+
+    @UiField
+    TextBox productionName;
+
+    @UiField
+    Panel tailoringPanel;
+    @UiField
+    TextArea crsText;
+    @UiField
+    ListBox bandList;
+    @UiField
+    CheckBox quicklooks;
 
     @UiField
     ListBox outputFormat;
-    @UiField
-    TextBox productionName;
     @UiField
     CheckBox autoStaging;
     @UiField
@@ -40,15 +52,18 @@ public class OutputParametersForm extends Composite {
     @UiField
     Panel productRelatedPanel;
 
-    public OutputParametersForm(boolean showProductRelatedSettings) {
-        this.showProductRelatedSettings = showProductRelatedSettings;
+    public OutputParametersForm() {
         initWidget(uiBinder.createAndBindUi(this));
-        if (showProductRelatedSettings) {
-            // todo - get the available output formats from
-            setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
-        } else {
-            productRelatedPanel.setVisible(false);
-        }
+    }
+
+    public void showProductRelatedSettings(boolean show) {
+        showProductRelatedSettings = show;
+        productRelatedPanel.setVisible(showProductRelatedSettings);
+    }
+
+    public void showTailoringRelatedSettings(boolean show) {
+        showTailoringRelatedSettings = show;
+        tailoringPanel.setVisible(showTailoringRelatedSettings);
     }
 
     public void validateForm() throws ValidationException {

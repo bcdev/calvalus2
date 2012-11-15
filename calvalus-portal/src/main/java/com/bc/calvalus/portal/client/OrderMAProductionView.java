@@ -62,7 +62,7 @@ public class OrderMAProductionView extends OrderProductionView {
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
 
-        outputParametersForm = new OutputParametersForm(false);
+        outputParametersForm = new OutputParametersForm();
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");

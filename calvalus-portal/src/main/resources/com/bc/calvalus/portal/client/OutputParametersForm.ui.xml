@@ -7,7 +7,7 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel  width="62em">
+            <g:HTMLPanel width="62em">
                 <h3>Output Parameters</h3>
                 <hr/>
             </g:HTMLPanel>
@@ -22,7 +22,24 @@
                 <p/>
             </g:HTML>
 
-            <g:FlowPanel ui:field="productRelatedPanel">
+            <g:FlowPanel ui:field="tailoringPanel" visible="false">
+                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                    <g:Label>CRS:</g:Label>
+                    <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                </g:HorizontalPanel>
+
+                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                    <g:Label>Band selection:</g:Label>
+                    <g:ListBox ui:field="bandList" multipleSelect="true" visibleItemCount="6"/>
+                </g:HorizontalPanel>
+
+                <g:CheckBox ui:field="quicklooks"
+                            text="Create Quicklooks"
+                            checked="false"/>
+            </g:FlowPanel>
+
+
+            <g:FlowPanel ui:field="productRelatedPanel" visible="false">
                 <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
                     <g:Label>Product file format:</g:Label>
                     <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>

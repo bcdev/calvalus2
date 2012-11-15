@@ -17,14 +17,19 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Demo view that lets users submit a new Freshmon production.
@@ -32,6 +37,7 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderFreshmonProductionView extends OrderProductionView {
+
     public static final String ID = OrderFreshmonProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -47,7 +53,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public boolean accept(DtoProductSet dtoProductSet) {
                 return dtoProductSet.getName().equals("MERIS FSG L1b 2002-2012") ||
-                        dtoProductSet.getProductType().equals("FRESHMON_L2");
+                       dtoProductSet.getProductType().equals("FRESHMON_L2");
             }
         };
         Filter<DtoProcessorDescriptor> processorFilter = new Filter<DtoProcessorDescriptor>() {
@@ -56,6 +62,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
                 return dtoProcessorDescriptor.getBundleName().startsWith("freshmon");
             }
         };
+       final  List<String> bandsToSelect = Arrays.asList("chl_concentration", "ys_absorption", "tsm_concentration", "Kd_490");
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter);
         productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
@@ -69,15 +76,19 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
+                handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
             }
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
-        outputParametersForm = new OutputParametersForm(true);
-        outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
+        outputParametersForm = new OutputParametersForm();
+        outputParametersForm.showProductRelatedSettings(true);
+        outputParametersForm.showTailoringRelatedSettings(true);
+        outputParametersForm.quicklooks.setValue(true);
+        handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
+
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -89,6 +100,20 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
+    }
+
+    private void handleProcessorChanged(DtoProcessorDescriptor processorDescriptor, List<String> bandsToSelect) {
+        outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
+        int index = 0;
+        ListBox bandList = outputParametersForm.bandList;
+        bandList.clear();
+        for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
+            bandList.addItem(variable.getName());
+            if (bandsToSelect.contains(variable.getName())) {
+                bandList.setItemSelected(index, true);
+            }
+            index++;
+        }
     }
 
     @Override
@@ -108,7 +133,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
 
     @Override
     protected String getProductionType() {
-        return "L2";
+        return "L2Plus";
     }
 
     @Override

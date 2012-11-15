@@ -45,7 +45,8 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
-        outputParametersForm = new OutputParametersForm(true);
+        outputParametersForm = new OutputParametersForm();
+        outputParametersForm.showProductRelatedSettings(true);
         outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
 
         VerticalPanel panel = new VerticalPanel();
