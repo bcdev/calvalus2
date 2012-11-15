@@ -27,7 +27,6 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
-import com.google.gwt.view.client.SingleSelectionModel;
 import com.google.gwt.view.client.TreeViewModel;
 
 import java.util.ArrayList;
@@ -165,7 +164,9 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             }
         }
     }
+
     interface CalvalusTreeResource extends CellTree.Resources {
+
         @Source("com/bc/calvalus/portal/client/cellTreeStyle.css")
         CellTree.Style cellTreeStyle();
     }
@@ -180,11 +181,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         // mapWidget.addControl(new SmallMapControl());
         // mapWidget.addControl(new OverviewMapControl());
 
-//        final SelectionModel<Region> regionSelectionModel = new MultiSelectionModel<Region>(Region.KEY_PROVIDER);
-
-        final SelectionModel<Region> regionTreeSelectionModel = new SingleSelectionModel<Region>(Region.KEY_PROVIDER);
         CellTree.Resources res = GWT.create(CalvalusTreeResource.class);
-        RegionTreeViewModel treeViewModel = new RegionTreeViewModel(regionMapModel, regionTreeSelectionModel);
+//        final SelectionModel<Region> regionSelectionModel = new MultiSelectionModel<Region>(Region.KEY_PROVIDER);
+        RegionTreeSelectionModel treeNodeSingleSelectionModel = new RegionTreeSelectionModel();
+        RegionTreeViewModel treeViewModel = new RegionTreeViewModel(regionMapModel, treeNodeSingleSelectionModel);
         regionCellTree = new CellTree(treeViewModel, null, res);
         regionCellTree.setAnimationEnabled(true);
         regionCellTree.setDefaultNodeSize(100);
@@ -208,10 +208,11 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         updatePolygonStyles();
         initWidget(regionSplitLayoutPanel);
-        bind(regionTreeSelectionModel);
+        bind(treeNodeSingleSelectionModel, treeViewModel);
     }
 
-    private void bind(final SelectionModel<Region> regionTreeSelectionModel) {
+    private void bind(final RegionTreeSelectionModel regionTreeSelectionModel,
+                      final RegionTreeViewModel treeViewModel) {
         getRegionModel().addChangeListener(new RegionMapModel.ChangeListener() {
 
             @Override
@@ -238,9 +239,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 if (!adjustingRegionSelection) {
                     try {
                         adjustingRegionSelection = true;
-                        updateRegionSelection(regionTreeSelectionModel, getRegionMapSelectionModel());
+                        RegionMapSelectionModel regionMapSelectionModel = getRegionMapSelectionModel();
+                        updateRegionSelectionInMap(regionTreeSelectionModel, regionMapSelectionModel);
                         updatePolygonStyles();
-                        if (!editable) {
+                        if (!editable && regionMapSelectionModel.getSelectedRegion() != null) {
                             new LocateRegionsAction().run(RegionMapWidget.this);
                         }
                     } finally {
@@ -256,7 +258,8 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                 if (!adjustingRegionSelection) {
                     try {
                         adjustingRegionSelection = true;
-                        updateRegionSelection(getRegionMapSelectionModel(), regionTreeSelectionModel);
+                        updateRegionSelectionInTree(getRegionMapSelectionModel(), regionTreeSelectionModel,
+                                                    treeViewModel);
                         updatePolygonStyles();
                         // todo - scroll to selected region in regionTreeList (nf,mz.mp)
                     } finally {
@@ -311,9 +314,41 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         }
     }
 
-    private void updateRegionSelection(SelectionModel<Region> source, SelectionModel<Region> target) {
-        for (Region region : regionMapModel.getRegionProvider().getList()) {
-            target.setSelected(region, source.isSelected(region));
+    private void updateRegionSelectionInTree(RegionMapSelectionModel source,
+                                             RegionTreeSelectionModel target,
+                                             RegionTreeViewModel treeViewModel) {
+        Region selectedRegion = source.getSelectedRegion();
+        target.clearSelection();
+        TreeNode nodeToSelect = findNodeForRegion(selectedRegion, treeViewModel.getRootNode());
+        if (nodeToSelect != null) {
+            target.setSelected(nodeToSelect, true);
+        }
+    }
+
+    private TreeNode findNodeForRegion(Region region, GroupNode rootNode) {
+        for (TreeNode childNode : rootNode.getChildNodes()) {
+            if (childNode instanceof LeafNode) {
+                LeafNode leafNode = (LeafNode) childNode;
+                if (leafNode.getRegion() == region) {
+                    return leafNode;
+                }
+            } else if (childNode instanceof GroupNode) {
+                TreeNode nodeForRegion = findNodeForRegion(region, (GroupNode) childNode);
+                if(nodeForRegion != null) {
+                    return nodeForRegion;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void updateRegionSelectionInMap(RegionTreeSelectionModel source,
+                                            RegionMapSelectionModel target) {
+        target.clearSelection();
+
+        LeafNode selectedLeafNode = source.getSelectedLeafNode();
+        if (selectedLeafNode != null) {
+            target.setSelected(selectedLeafNode.getRegion(), true);
         }
     }
 
@@ -352,7 +387,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     // todo - how can we enable / disable stuff? (nf)
-
     public boolean isEnabled() {
         return true;
     }
@@ -360,6 +394,50 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     public void setEnabled(boolean value) {
         mapWidget.setVisible(value);
         regionCellTree.setVisible(value);
+    }
+
+    private static class RegionTreeSelectionModel extends SelectionModel.AbstractSelectionModel<TreeNode> {
+
+        private LeafNode selectedNode;
+
+        public RegionTreeSelectionModel() {
+            super(RegionMapWidget.KEY_PROVIDER);
+        }
+
+        @Override
+        public boolean isSelected(TreeNode treeNode) {
+            return selectedNode == treeNode;
+        }
+
+        @Override
+        public void setSelected(TreeNode treeNode, boolean selected) {
+            if (treeNode instanceof LeafNode) {
+                if (selected) {
+                    if (selectedNode != treeNode) {
+                        selectedNode = (LeafNode) treeNode;
+                        fireSelectionChangeEvent();
+                    }
+                } else {
+                    if (selectedNode == treeNode) {
+                        selectedNode = null;
+                        fireSelectionChangeEvent();
+                    }
+                }
+            }
+        }
+
+        public void clearSelection() {
+            if (selectedNode != null) {
+                selectedNode = null;
+                fireSelectionChangeEvent();
+            }
+        }
+
+        public LeafNode getSelectedLeafNode() {
+            return selectedNode;
+        }
+
+
     }
 
     private class MyPolygonLineUpdatedHandler implements PolygonLineUpdatedHandler {
@@ -382,47 +460,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         private final SelectionModel<TreeNode> treeSelectionModel;
         private GroupNode rootNode;
 
-        public RegionTreeViewModel(final RegionMapModel regionMapModel, final SelectionModel<Region> regionSelectionModel) {
+        public RegionTreeViewModel(final RegionMapModel regionMapModel,
+                                   RegionTreeSelectionModel treeNodeSingleSelectionModel) {
             this.regionMapModel = regionMapModel;
-            this.treeSelectionModel = new SingleSelectionModel<TreeNode>(KEY_PROVIDER) {
-                @Override
-                public boolean isSelected(TreeNode treeNode) {
-                    boolean selected = super.isSelected(treeNode);
-                    if (selected && treeNode instanceof LeafNode) {
-                        LeafNode leafNode = (LeafNode) treeNode;
-                        return regionSelectionModel.isSelected(leafNode.getRegion());
-                    }
-                    return false;
-                }
-
-                @Override
-                public void setSelected(TreeNode treeNode, boolean selected) {
-                    super.setSelected(treeNode, selected);
-                    if (treeNode instanceof LeafNode) {
-                        LeafNode leafNode = (LeafNode) treeNode;
-                        regionSelectionModel.setSelected(leafNode.getRegion(), selected);
-                    }
-                }
-            };
-            regionSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-                @Override
-                public void onSelectionChange(SelectionChangeEvent event) {
-                    handle(rootNode.getChildNodes());
-                }
-
-                private void handle(List<TreeNode> childNodes) {
-                    for (TreeNode treeNode : childNodes) {
-                        if (treeNode instanceof GroupNode) {
-                            GroupNode groupNode = (GroupNode) treeNode;
-                            handle(groupNode.getChildNodes());
-                        } else if (treeNode instanceof LeafNode) {
-                            LeafNode leafNode = (LeafNode) treeNode;
-                            boolean selected = regionSelectionModel.isSelected(leafNode.getRegion());
-                            treeSelectionModel.setSelected(leafNode, selected);
-                        }
-                    }
-                }
-            });
+            this.treeSelectionModel = treeNodeSingleSelectionModel;
             buildTree();
             regionMapModel.addChangeListener(new RegionMapModel.ChangeListener() {
                 @Override
@@ -446,6 +487,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                     sb.appendHtmlConstant(value.getName());
                 }
             };
+        }
+
+        public GroupNode getRootNode() {
+            return rootNode;
         }
 
         private void buildTree() {
@@ -489,6 +534,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         public boolean isLeaf(Object value) {
             return value instanceof LeafNode;
         }
+
     }
 
     public static final ProvidesKey<TreeNode> KEY_PROVIDER = new ProvidesKey<TreeNode>() {
