@@ -47,7 +47,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public boolean accept(DtoProductSet dtoProductSet) {
                 return dtoProductSet.getName().equals("MERIS FSG L1b 2002-2012") ||
-                        dtoProductSet.getProductType().equals("MERIS_FUB_L2");
+                        dtoProductSet.getProductType().equals("FRESHMON_L2");
             }
         };
         Filter<DtoProcessorDescriptor> processorFilter = new Filter<DtoProcessorDescriptor>() {
