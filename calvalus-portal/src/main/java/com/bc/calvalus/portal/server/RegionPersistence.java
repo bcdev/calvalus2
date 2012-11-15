@@ -37,7 +37,7 @@ public class RegionPersistence {
         Collections.sort(regions, new Comparator<DtoRegion>() {
             @Override
             public int compare(DtoRegion o1, DtoRegion o2) {
-                return o1.getName().compareToIgnoreCase(o2.getName());
+                return o1.getQualifiedName().compareToIgnoreCase(o2.getQualifiedName());
             }
         });
         return regions.toArray(new DtoRegion[regions.size()]);
@@ -45,7 +45,7 @@ public class RegionPersistence {
 
     public void storeRegions(DtoRegion[] regions) throws IOException {
         Properties userRegions = getUserRegions(regions);
-        File file = getUserRegionFile();
+        File file = getRegionFile(getUserName());
         file.getParentFile().mkdirs();
         FileWriter fileWriter = new FileWriter(file);
         try {
@@ -55,8 +55,8 @@ public class RegionPersistence {
         }
     }
 
-    private File getUserRegionFile() {
-        return new File(System.getProperty("user.home"), ".calvalus/" + getUserName() + "-regions.properties");
+    private static File getRegionFile(String user) {
+        return new File(System.getProperty("user.home"), ".calvalus/" + user + "-regions.properties");
     }
 
     private String getUserName() {
@@ -77,11 +77,18 @@ public class RegionPersistence {
 
     private Properties loadDefaultRegions() throws IOException {
         InputStream stream = getClass().getResourceAsStream("regions.properties");
-        return loadRegions(new InputStreamReader(stream));
+        Properties systemRegions = loadRegions(new InputStreamReader(stream));
+
+        File additionalSystemRegionFile = getRegionFile("SYSTEM");
+        if (additionalSystemRegionFile.exists()) {
+            Properties additionalSystemRegions = loadRegions(new FileReader(additionalSystemRegionFile));
+            systemRegions.putAll(additionalSystemRegions);
+        }
+        return systemRegions;
     }
 
     private Properties loadUserRegions() throws IOException {
-        File userRegionFile = getUserRegionFile();
+        File userRegionFile = getRegionFile(getUserName());
         if (userRegionFile.exists()) {
             return loadRegions(new FileReader(userRegionFile));
         } else {
