@@ -22,53 +22,62 @@
                 <p/>
             </g:HTML>
 
-            <g:FlowPanel ui:field="tailoringPanel" visible="false">
-                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                    <g:Label>CRS:</g:Label>
-                    <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
-                </g:HorizontalPanel>
 
-                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                    <g:Label>Band selection:</g:Label>
-                    <g:ListBox ui:field="bandList" multipleSelect="true" visibleItemCount="6"/>
-                </g:HorizontalPanel>
+            <g:VerticalPanel spacing="2">
+                <g:FlowPanel ui:field="processingTypePanel" visible="false">
+                    <g:VerticalPanel spacing="2">
+                        <g:RadioButton ui:field="processingTypeCluster" name="" text="Process to Cluster-Internal-Format"/>
+                        <g:RadioButton ui:field="processingTypeUser" name=""  text="User product"/>
+                    </g:VerticalPanel>
+                </g:FlowPanel>
+                <g:FlowPanel ui:field="productRelatedPanel" visible="false">
+                    <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                        <g:Label>Product file format:</g:Label>
+                        <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
+                    </g:HorizontalPanel>
+                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                        Note that the available product file formats
+                        may depend on the selected processor.
+                        <p/>
+                    </g:HTML>
 
-                <g:CheckBox ui:field="quicklooks"
-                            text="Create Quicklooks"
-                            checked="false"/>
-            </g:FlowPanel>
+                    <g:CheckBox ui:field="autoStaging"
+                                text="Perform staging step after successful production"
+                                checked="true" visible="false"/>
+                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
+                        Leave unchecked, if output is used as input
+                        for another production step.
+                        <p/>
+                    </g:HTML>
 
+                    <g:CheckBox ui:field="autoDelete"
+                                text="Delete production output after successful staging"
+                                checked="false"
+                                visible="false"/>
+                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
+                        Leave unchecked, if output is used as input
+                        for another production step.
+                        <p/>
+                    </g:HTML>
+                </g:FlowPanel>
 
-            <g:FlowPanel ui:field="productRelatedPanel" visible="false">
-                <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
-                    <g:Label>Product file format:</g:Label>
-                    <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
-                </g:HorizontalPanel>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                    Note that the available product file formats
-                    may depend on the selected processor.
-                    <p/>
-                </g:HTML>
+                <g:FlowPanel ui:field="tailoringPanel" visible="false">
+                    <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                        <g:Label>CRS:</g:Label>
+                        <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                    </g:HorizontalPanel>
 
-                <g:CheckBox ui:field="autoStaging"
-                            text="Perform staging step after successful production"
-                            checked="true"/>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                    Leave unchecked, if output is used as input
-                    for another production step.
-                    <p/>
-                </g:HTML>
+                    <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                        <g:Label>Band selection:</g:Label>
+                        <g:ListBox ui:field="bandList" multipleSelect="true" visibleItemCount="6"/>
+                    </g:HorizontalPanel>
 
-                <g:CheckBox ui:field="autoDelete"
-                            text="Delete production output after successful staging"
-                            checked="false"
-                            visible="false"/>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
-                    Leave unchecked, if output is used as input
-                    for another production step.
-                    <p/>
-                </g:HTML>
-            </g:FlowPanel>
+                    <g:CheckBox ui:field="quicklooks"
+                                text="Create Quicklooks"
+                                checked="false"/>
+                </g:FlowPanel>
+            </g:VerticalPanel>
+
         </g:VerticalPanel>
     </g:HorizontalPanel>
 

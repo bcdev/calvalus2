@@ -1,12 +1,17 @@
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
@@ -30,9 +35,17 @@ public class OutputParametersForm extends Composite {
 
     private boolean showProductRelatedSettings;
     private boolean showTailoringRelatedSettings;
+    private boolean showProcessingTypeSettings;
 
     @UiField
     TextBox productionName;
+
+    @UiField
+    Panel processingTypePanel;
+    @UiField
+    RadioButton processingTypeCluster;
+    @UiField
+    RadioButton processingTypeUser;
 
     @UiField
     Panel tailoringPanel;
@@ -44,26 +57,61 @@ public class OutputParametersForm extends Composite {
     CheckBox quicklooks;
 
     @UiField
+    Panel productRelatedPanel;
+    @UiField
     ListBox outputFormat;
     @UiField
-    CheckBox autoStaging;
+    CheckBox autoStaging; // currently unused
     @UiField
-    CheckBox autoDelete;
-    @UiField
-    Panel productRelatedPanel;
+    CheckBox autoDelete; // currently unused
+
+    static int radioGroupId;
 
     public OutputParametersForm() {
         initWidget(uiBinder.createAndBindUi(this));
+
+        radioGroupId++;
+        processingTypeCluster.setName("processingType"+ radioGroupId);
+        processingTypeUser.setName("processingType"+ radioGroupId);
+        processingTypeUser.setValue(true);
+
+        processingTypeCluster.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> event) {
+                setComponentsEnabled(false);
+            }
+        });
+
+        processingTypeUser.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> event) {
+                setComponentsEnabled(true);
+            }
+        });
     }
 
-    public void showProductRelatedSettings(boolean show) {
-        showProductRelatedSettings = show;
-        productRelatedPanel.setVisible(showProductRelatedSettings);
+    private void setComponentsEnabled(boolean enabled) {
+        crsText.setEnabled(enabled);
+        bandList.setEnabled(enabled);
+        quicklooks.setEnabled(enabled);
+        outputFormat.setEnabled(enabled);
     }
 
-    public void showTailoringRelatedSettings(boolean show) {
-        showTailoringRelatedSettings = show;
-        tailoringPanel.setVisible(showTailoringRelatedSettings);
+    public void showProcessingTypeSettings() {
+        showProcessingTypeSettings = true;
+        processingTypePanel.setVisible(true);
+        productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
+        tailoringPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
+    }
+
+    public void showProductRelatedSettings() {
+        showProductRelatedSettings = true;
+        productRelatedPanel.setVisible(true);
+    }
+
+    public void showTailoringRelatedSettings() {
+        showTailoringRelatedSettings = true;
+        tailoringPanel.setVisible(true);
     }
 
     public void validateForm() throws ValidationException {

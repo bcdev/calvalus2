@@ -37,7 +37,6 @@ import java.util.List;
  * @author Norman
  */
 public class OrderFreshmonProductionView extends OrderProductionView {
-
     public static final String ID = OrderFreshmonProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -84,8 +83,9 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProductRelatedSettings(true);
-        outputParametersForm.showTailoringRelatedSettings(true);
+        outputParametersForm.showProcessingTypeSettings();
+        outputParametersForm.showProductRelatedSettings();
+        outputParametersForm.showTailoringRelatedSettings();
         outputParametersForm.quicklooks.setValue(true);
         handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
 

@@ -65,7 +65,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProductRelatedSettings(true);
+        outputParametersForm.showProductRelatedSettings();
         outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
