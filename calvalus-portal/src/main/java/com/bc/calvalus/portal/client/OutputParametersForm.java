@@ -7,8 +7,6 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -61,7 +59,7 @@ public class OutputParametersForm extends Composite {
     @UiField
     ListBox outputFormat;
     @UiField
-    CheckBox autoStaging; // currently unused
+    CheckBox autoStaging;
     @UiField
     CheckBox autoDelete; // currently unused
 
@@ -71,8 +69,8 @@ public class OutputParametersForm extends Composite {
         initWidget(uiBinder.createAndBindUi(this));
 
         radioGroupId++;
-        processingTypeCluster.setName("processingType"+ radioGroupId);
-        processingTypeUser.setName("processingType"+ radioGroupId);
+        processingTypeCluster.setName("processingType" + radioGroupId);
+        processingTypeUser.setName("processingType" + radioGroupId);
         processingTypeUser.setValue(true);
 
         processingTypeCluster.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
@@ -95,6 +93,7 @@ public class OutputParametersForm extends Composite {
         bandList.setEnabled(enabled);
         quicklooks.setEnabled(enabled);
         outputFormat.setEnabled(enabled);
+        autoStaging.setEnabled(enabled);
     }
 
     public void showProcessingTypeSettings() {
@@ -115,6 +114,9 @@ public class OutputParametersForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
+        if (showTailoringRelatedSettings && bandList.getSelectedIndex() == -1) {
+            throw new ValidationException(bandList, "Output Parameters: One or more bands must be selected.");
+        }
     }
 
     public Map<String, String> getValueMap() {
@@ -123,11 +125,34 @@ public class OutputParametersForm extends Composite {
         if (!prodName.isEmpty()) {
             parameters.put("productionName", prodName);
         }
-        if (showProductRelatedSettings) {
+        if (showProcessingTypeSettings) {
+            if (processingTypeUser.getValue()) {
+                parameters.put("outputFormat", getOutputFormat());
+                parameters.put("autoStaging", autoStaging.getValue() + "");
+                if (showTailoringRelatedSettings) {
+                    parameters.put("crs", crsText.getValue());
+                    parameters.put("quickLooks", quicklooks.getValue() + "");
+                    StringBuilder sb = new StringBuilder();
+                    int itemCount = bandList.getItemCount();
+                    for (int i = 0; i < itemCount; i++) {
+                        if (bandList.isItemSelected(i)) {
+                            if (sb.length() != 0) {
+                                sb.append(",");
+                            }
+                            sb.append(bandList.getItemText(i));
+                        }
+                    }
+                    parameters.put("bandList", sb.toString());
+                }
+            } else {
+                parameters.put("outputFormat", "SEQ");
+            }
+        } else if (showProductRelatedSettings) {
             parameters.put("outputFormat", getOutputFormat());
             parameters.put("autoStaging", autoStaging.getValue() + "");
-            parameters.put("autoDelete", autoDelete.getValue() + "");
         }
+
+
         return parameters;
     }
 

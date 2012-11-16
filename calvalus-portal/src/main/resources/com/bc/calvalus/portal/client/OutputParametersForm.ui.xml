@@ -43,7 +43,7 @@
 
                     <g:CheckBox ui:field="autoStaging"
                                 text="Perform staging step after successful production"
-                                checked="true" visible="false"/>
+                                checked="true"/>
                     <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
                         Leave unchecked, if output is used as input
                         for another production step.
