@@ -1,0 +1,16 @@
+Calvalus
+--------
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-calvalus/*.jar calvalus-1.5-SNAPSHOT
+
+BEAM
+-----
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-beam/*.jar beam-4.10.4-SNAPSHOT
+
+
+
+Sample executable
+-----------------
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --uninstall  test-1.0
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  ../executables/test1/* test-1.0
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e ../executables/copy-request.xml
+
