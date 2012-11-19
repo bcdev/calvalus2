@@ -130,7 +130,7 @@ public class OutputParametersForm extends Composite {
                 parameters.put("outputFormat", getOutputFormat());
                 parameters.put("autoStaging", autoStaging.getValue() + "");
                 if (showTailoringRelatedSettings) {
-                    parameters.put("crs", crsText.getValue());
+                    parameters.put("outputCRS", crsText.getValue());
                     parameters.put("quickLooks", quicklooks.getValue() + "");
                     StringBuilder sb = new StringBuilder();
                     int itemCount = bandList.getItemCount();
@@ -142,7 +142,7 @@ public class OutputParametersForm extends Composite {
                             sb.append(bandList.getItemText(i));
                         }
                     }
-                    parameters.put("bandList", sb.toString());
+                    parameters.put("outputBandList", sb.toString());
                 }
             } else {
                 parameters.put("outputFormat", "SEQ");
