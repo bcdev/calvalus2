@@ -31,10 +31,14 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -56,8 +60,8 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             Path inputPath = processorAdapter.getInputPath();
             String productName = getProductName(jobConfig, inputPath.getName());
 
-            String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-            String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
+            String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT);
+            String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION);
             ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
             String outputFilename = productFormatter.getOutputFilename();
             String outputFormat = productFormatter.getOutputFormat();
@@ -72,16 +76,18 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
             }
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
 
-            if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
-                LOG.warning("target product is empty, skip writing.");
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
-            } else {
+            if (!isProductEmpty(context, product)) {
+                product = outputTailoring(jobConfig, product);
+            }
+
+            if (!isProductEmpty(context, product)) {
                 try {
                     File productFile = productFormatter.createTemporaryProductFile();
                     LOG.info("Start writing product to file: " + productFile.getName());
                     context.setStatus("writing");
 
-                    ProductIO.writeProduct(product, productFile, outputFormat, false, SubProgressMonitor.create(pm, 95));
+                    ProductIO.writeProduct(product, productFile, outputFormat, false,
+                                           SubProgressMonitor.create(pm, 95));
                     LOG.info("Finished writing product.");
                     context.setStatus("copying");
                     productFormatter.compressToHDFS(context, productFile);
@@ -94,6 +100,43 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
         } finally {
             pm.done();
             processorAdapter.dispose();
+        }
+    }
+
+    private Product outputTailoring(Configuration jobConfig, Product product) {
+        String crsWkt = jobConfig.get("outputCRS");
+        boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(crsWkt);
+        String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        String outputBandList = jobConfig.get("outputBandList");
+        boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
+        boolean hasBandList = StringUtils.isNotNullAndNotEmpty(outputBandList);
+
+        // Reproject
+        if (hasCrsWkt) {
+            Map<String, Object> reprojParams = new HashMap<String, Object>();
+            reprojParams.put("crs", crsWkt);
+            product = GPF.createProduct("Reproject", reprojParams, product);
+        }
+
+        // Subset
+        if (hasGeometry || hasBandList) {
+            Map<String, Object> subsetParams = new HashMap<String, Object>();
+            if (hasGeometry && hasCrsWkt) {
+                subsetParams.put("geoRegion", regionGeometry);
+            }
+            subsetParams.put("bandNames", outputBandList);
+            product = GPF.createProduct("Subset", subsetParams, product);
+        }
+        return product;
+    }
+
+    private boolean isProductEmpty(Mapper.Context context, Product product) {
+        if (product == null || product.getSceneRasterWidth() == 0 || product.getSceneRasterHeight() == 0) {
+            LOG.warning("target product is empty, skip writing.");
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
+            return true;
+        } else {
+            return false;
         }
     }
 

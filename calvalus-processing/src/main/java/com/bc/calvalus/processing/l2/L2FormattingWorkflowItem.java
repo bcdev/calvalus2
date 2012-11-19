@@ -54,6 +54,8 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
                 {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
+                {JobConfigNames.CALVALUS_OUTPUT_CRS, null},
+                {JobConfigNames.CALVALUS_OUTPUT_BANDLIST, null},
                 {JobConfigNames.CALVALUS_OUTPUT_REGEX, null},
                 {JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null},
                 {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}

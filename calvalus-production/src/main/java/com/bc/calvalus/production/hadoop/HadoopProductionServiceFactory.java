@@ -54,6 +54,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
+            ProductionType l2PlusProductionType = new L2PlusProductionType(inventoryService, processingService, stagingService);
             ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService, stagingService);
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
@@ -76,6 +77,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
                                              stagingService,
                                              productionStore,
                                              l2ProductionType,
+                                             l2PlusProductionType,
                                              l2fProductionType,
                                              l3ProductionType,
                                              taProductionType,
