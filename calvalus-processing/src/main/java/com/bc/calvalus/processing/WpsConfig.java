@@ -48,7 +48,6 @@ public class WpsConfig {
     private static final String GEOMETRY_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.geometry']/Data/LiteralData";
     private static final String OPERATOR_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l2.parameters']/Data/ComplexData/parameters";
     private static final String L3_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.l3.parameters']/Data/ComplexData";
-    private static final String FORMATTER_PARAMETERS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.formatter.parameters']/Data/ComplexData/parameters";
     private static final String INPUTS_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input']";
     private static final String INPUT_FORMAT_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.input.format']/Data/LiteralData";
     private static final String INPUT_PATTERN_XPATH = "/Execute/DataInputs/Input[Identifier='calvalus.filenamepattern']/Data/LiteralData";
@@ -175,19 +174,6 @@ public class WpsConfig {
     public String getLevel3Parameters() {
         try {
             Node node = requestXmlDoc.getNode(L3_PARAMETERS_XPATH);
-            if (node != null) {
-                return convertToDomElement(node).toXml();
-            } else {
-                return "";
-            }
-        } catch (XPathExpressionException e) {
-            throw new IllegalStateException("Illegal XPath expression: " + e.getMessage(), e);
-        }
-    }
-
-    public String getFormatterParameters() {
-        try {
-            Node node = requestXmlDoc.getNode(FORMATTER_PARAMETERS_XPATH);
             if (node != null) {
                 return convertToDomElement(node).toXml();
             } else {

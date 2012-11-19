@@ -43,7 +43,6 @@ public interface JobConfigNames {
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
 
-    String CALVALUS_FORMATTER_PARAMETERS = "calvalus.formatter.parameters";
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
     String CALVALUS_FAIL_FAST = "calvalus.failFast";

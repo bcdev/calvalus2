@@ -72,7 +72,6 @@ public class L3Formatter {
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L3_PARAMETERS);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MA_PARAMETERS);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_TA_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_FORMATTER_PARAMETERS);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_OUTPUT_DIR);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_USER);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REQUEST);
