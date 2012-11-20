@@ -17,8 +17,8 @@
 package com.bc.calvalus.production.hadoop;
 
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
@@ -27,9 +27,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class LcL3ProductionTypeTest {
 
@@ -136,49 +134,53 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetCloudL3Config() throws Exception {
-        L3Config cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "foo", "bar"));
+        L3Config cloudL3Config = LcL3ProductionType.getCloudL3Config(
+                new ProductionRequest("test", "dummy", "foo", "bar"));
         assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getMaskExpr());
 
-        cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"));
+        cloudL3Config = LcL3ProductionType.getCloudL3Config(
+                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"));
         assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
 
-        cloudL3Config = LcL3ProductionType.getCloudL3Config(new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
-        assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+        cloudL3Config = LcL3ProductionType.getCloudL3Config(
+                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
+        assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)",
+                     cloudL3Config.getMaskExpr());
     }
 
     @Test
     public void testGetLcPeriodName() throws Exception {
         String periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                                   "minDate", "2010-07-01",
-                                                                                   "maxDate", "2010-07-15"));
+                                                                                     "minDate", "2010-07-01",
+                                                                                     "maxDate", "2010-07-15"));
         assertEquals("FR-2010-07-01-15d", periodName);
 
         periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                            "minDate", "2010-07-01",
-                                                                            "maxDate", "2010-07-07"));
+                                                                              "minDate", "2010-07-01",
+                                                                              "maxDate", "2010-07-07"));
         assertEquals("FR-2010-07-01-7d", periodName);
 
         periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                            "minDate", "2010-07-01",
-                                                                            "maxDate", "2010-07-10"));
+                                                                              "minDate", "2010-07-01",
+                                                                              "maxDate", "2010-07-10"));
         assertEquals("FR-2010-07-01-10d", periodName);
 
         periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                            "minDate", "2011-01-01",
-                                                                            "maxDate", "2011-12-31"));
+                                                                              "minDate", "2011-01-01",
+                                                                              "maxDate", "2011-12-31"));
         assertEquals("FR-2011-01-01-365d", periodName);
 
         // periodLength is NOT used
         periodName = LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                            "minDate", "2010-03-02",
-                                                                            "maxDate", "2010-03-12",
-                                                                            "periodLength", "20",
-                                                                            "resolution", "RR"));
+                                                                              "minDate", "2010-03-02",
+                                                                              "maxDate", "2010-03-12",
+                                                                              "periodLength", "20",
+                                                                              "resolution", "RR"));
         assertEquals("RR-2010-03-02-11d", periodName);
 
         try {
             LcL3ProductionType.getLcPeriodName(new ProductionRequest("test", "ewa",
-                                                                   "minDate", "2010-03-02"));
+                                                                     "minDate", "2010-03-02"));
             fail();
         } catch (ProductionException pe) {
             assertEquals("Production parameter 'maxDate' not set.", pe.getMessage());

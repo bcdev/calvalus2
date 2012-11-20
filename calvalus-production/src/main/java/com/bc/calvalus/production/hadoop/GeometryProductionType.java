@@ -16,12 +16,12 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.GeometryWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -29,7 +29,6 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.util.StringUtils;
 
 import java.util.List;
 
@@ -42,37 +41,39 @@ public class GeometryProductionType extends HadoopProductionType {
 
     static final String NAME = "Geometry";
 
-    public GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
+    public GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                  StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Geometries ", productionRequest);
+        String defaultProductionName = createProductionName("Geometries ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 1);
 
         Workflow workflow = new Workflow.Parallel();
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
-            String[] inputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), null);
-            if (inputFiles.length > 0) {
-                String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-                String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
 
-                String outputDir = getOutputPath(productionRequest, productionId, "geometries-" + (i + 1));
-                Configuration jobConfig = createJobConfig(productionRequest);
-                setRequestParameters(jobConfig, productionRequest);
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
-                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-                jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
-                jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+            Configuration jobConfig = createJobConfig(productionRequest);
+            setRequestParameters(jobConfig, productionRequest);
 
-                workflow.add(new GeometryWorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig));
-            }
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
+
+            String outputDir = getOutputPath(productionRequest, productionId, "geometries-" + (i + 1));
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
+            jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+            jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+
+            workflow.add(new GeometryWorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig));
         }
 
         // todo - if autoStaging=true, create sequential workflow and add staging job

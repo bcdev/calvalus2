@@ -111,7 +111,13 @@ public abstract class AbstractInventoryService implements InventoryService {
         Pattern pattern = createPattern(pathPatterns);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         Path qualifiedPath = makeQualified(commonPathPrefix);
-        return collectFiles(qualifiedPath, pattern);
+        List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
+        collectFileStatuses(qualifiedPath, pattern, fileStatuses);
+        String[] result = new String[fileStatuses.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = fileStatuses.get(i).getPath().toString();
+        }
+        return result;
     }
 
     @Override
@@ -127,6 +133,13 @@ public abstract class AbstractInventoryService implements InventoryService {
     @Override
     public boolean removeFile(String path) throws IOException {
         return getFileSystem().delete(makeQualified(path), false);
+    }
+
+    public FileStatus[] globFileStatuses(List<String> pathPatterns) throws IOException {
+        Pattern pattern = createPattern(pathPatterns);
+        String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        Path qualifiedPath = makeQualified(commonPathPrefix);
+        return collectFileStatuses(qualifiedPath, pattern);
     }
 
     private Pattern createPattern(List<String> inputRegexs) {
@@ -151,13 +164,13 @@ public abstract class AbstractInventoryService implements InventoryService {
         return fileSystem.makeQualified(path);
     }
 
-    private String[] collectFiles(Path path, Pattern pattern) throws IOException {
-        List<String> result = new ArrayList<String>(1000);
-        collectFiles(path, pattern, result);
-        return result.toArray(new String[result.size()]);
+    private FileStatus[] collectFileStatuses(Path path, Pattern pattern) throws IOException {
+        List<FileStatus> result = new ArrayList<FileStatus>(1000);
+        collectFileStatuses(path, pattern, result);
+        return result.toArray(new FileStatus[result.size()]);
     }
 
-    private void collectFiles(Path path, Pattern pattern, List<String> result) throws IOException {
+    private void collectFileStatuses(Path path, Pattern pattern, List<FileStatus> result) throws IOException {
         FileStatus[] fileStatuses = fileSystem.listStatus(path);
         if (fileStatuses != null) {
             Matcher matcher = null;
@@ -166,16 +179,16 @@ public abstract class AbstractInventoryService implements InventoryService {
             }
             for (FileStatus fStat : fileStatuses) {
                 if (fStat.isDir()) {
-                    collectFiles(fStat.getPath(), pattern, result);
+                    collectFileStatuses(fStat.getPath(), pattern, result);
                 } else {
                     String fPath = fStat.getPath().toString();
                     if (matcher != null) {
                         matcher.reset(fPath);
                         if (matcher.matches()) {
-                            result.add(fPath);
+                            result.add(fStat);
                         }
                     } else {
-                        result.add(fPath);
+                        result.add(fStat);
                     }
                 }
             }
@@ -253,6 +266,7 @@ public abstract class AbstractInventoryService implements InventoryService {
      * </ol>
      *
      * @param wildcardPath The path containing wildcards.
+     *
      * @return The corresponding regular expression.
      */
     public static String getRegexpForPathGlob(String wildcardPath) {
@@ -264,7 +278,7 @@ public abstract class AbstractInventoryService implements InventoryService {
         for (int i = 0; i < n; i++) {
             char c = wildcardPath.charAt(i);
             if (regexpMetaCharacters.indexOf(c) != -1
-                    && wildcardMetaCharacters.indexOf(c) == -1) {
+                && wildcardMetaCharacters.indexOf(c) == -1) {
                 regexp.append('\\');
                 regexp.append(c);
             } else if (c == '?') {

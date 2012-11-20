@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -29,6 +30,8 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
+
+import java.util.List;
 
 /**
  * A production type used for generating one or more Prevue ASCII subset-products.
@@ -48,7 +51,8 @@ public class PrevueProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(L2ProductionType.createProductionName("Prevue ", productionRequest));
+        final String productionName = productionRequest.getProdcutionName(
+                createProductionName("Prevue ", productionRequest));
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 
@@ -74,12 +78,15 @@ public class PrevueProductionType extends HadoopProductionType {
                                     String productionName,
                                     ProductionRequest productionRequest) throws ProductionException {
 
-        String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
-        String outputDir = getOutputPath(productionRequest, productionId, "");
-
         Configuration jobConfig = createJobConfig(productionRequest);
         setRequestParameters(jobConfig, productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+
+        String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
         return new PrevueWorkflowItem(getProcessingService(), productionName, jobConfig);

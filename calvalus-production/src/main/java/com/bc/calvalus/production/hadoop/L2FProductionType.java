@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -30,6 +31,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
+
+import java.util.List;
 
 /**
  * A production type used for formatting one or more Level-2 products.
@@ -73,7 +76,7 @@ public class L2FProductionType extends HadoopProductionType {
 
     static String createProductionName(ProductionRequest productionRequest) throws ProductionException {
         String prefix = String.format("Level 2 Format %s ", productionRequest.getString("outputFormat", "NetCDF"));
-        return L2ProductionType.createProductionName(prefix, productionRequest);
+        return createProductionName(prefix, productionRequest);
     }
 
     HadoopWorkflowItem createWorkflowItem(String productionId,
@@ -84,8 +87,10 @@ public class L2FProductionType extends HadoopProductionType {
         setDefaultProcessorParameters(jobConfig, new ProcessorProductionRequest(productionRequest));
         setRequestParameters(jobConfig, productionRequest);
 
-        String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         if (regionGeometry != null) {
@@ -95,11 +100,13 @@ public class L2FProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT,"NetCDF"));
+        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
+                JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
         // is in fact dependent on the outputFormat TODO unify
-        String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION,"gz"));
+        String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
+                JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
         return new L2FormattingWorkflowItem(getProcessingService(), productionName, jobConfig);

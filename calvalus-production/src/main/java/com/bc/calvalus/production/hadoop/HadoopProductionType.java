@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -29,9 +30,9 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ import java.util.Map;
  * @author Norman
  */
 public abstract class HadoopProductionType implements ProductionType {
+
     private final String name;
     private final InventoryService inventoryService;
     private final HadoopProcessingService processingService;
@@ -55,6 +57,28 @@ public abstract class HadoopProductionType implements ProductionType {
         this.inventoryService = inventoryService;
         this.processingService = processingService;
         this.stagingService = stagingService;
+    }
+
+    protected static String createProductionName(String prefix, ProductionRequest productionRequest) throws
+                                                                                                     ProductionException {
+        StringBuilder sb = new StringBuilder(prefix);
+        String processorName = productionRequest.getString("processorName", null);
+        if (processorName != null) {
+            sb.append(processorName).append(" ");
+        }
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        if (dateRanges.size() > 0 && dateRanges.get(0).getStartDate() != null && dateRanges.get(
+                0).getStopDate() != null) {
+            DateFormat dateFormat = ProductionRequest.getDateFormat();
+            String start = dateFormat.format(dateRanges.get(0).getStartDate());
+            String stop = dateFormat.format(dateRanges.get(dateRanges.size() - 1).getStopDate());
+            sb.append(start).append(" to ").append(stop).append(" ");
+        }
+        String regionName = productionRequest.getRegionName();
+        if (!regionName.isEmpty()) {
+            sb.append("(").append(regionName).append(") ");
+        }
+        return sb.toString().trim();
     }
 
     public InventoryService getInventoryService() {
@@ -100,7 +124,8 @@ public abstract class HadoopProductionType implements ProductionType {
         return jobConfig;
     }
 
-    protected final void setDefaultProcessorParameters(Configuration jobConfig, ProcessorProductionRequest processorProductionRequest) {
+    protected final void setDefaultProcessorParameters(Configuration jobConfig,
+                                                       ProcessorProductionRequest processorProductionRequest) {
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(processingService);
         Map<String, String> map = Collections.emptyMap();
         if (processorDescriptor != null) {
@@ -114,19 +139,6 @@ public abstract class HadoopProductionType implements ProductionType {
         setJobConfig(jobConfig, productionRequest.getParameters());
     }
 
-    public static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate, Date maxDate, String regionName) throws ProductionException {
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        inputPathResolver.setMinDate(minDate);
-        inputPathResolver.setMaxDate(maxDate);
-        inputPathResolver.setRegionName(regionName);
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
-        try {
-            return inventoryService.globPaths(inputPatterns);
-        } catch (IOException e) {
-            throw new ProductionException("Failed to compute input file list.", e);
-        }
-    }
-
     /**
      * outputPath :=  if parameter "outputPath" set: "${outputPath}": else "${defaultDir}"<br/>
      * defaultDir := "home/${user}/${relDir}"<br/>
@@ -135,6 +147,7 @@ public abstract class HadoopProductionType implements ProductionType {
      * @param productionRequest request
      * @param productionId      production ID
      * @param dirSuffix         suffix to make multiple outputs unique
+     *
      * @return the fully qualified output path
      */
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
@@ -150,18 +163,19 @@ public abstract class HadoopProductionType implements ProductionType {
      * after successfully completing a former job attempt.
      *
      * @param outputDir The output directory
+     *
      * @return true, if "_SUCCESS" exists
      */
     protected boolean successfullyCompleted(String outputDir) {
-         ArrayList<String> globs = new ArrayList<String>();
-         globs.add(outputDir + "/_SUCCESS");
-         try {
-             String[] pathes = inventoryService.globPaths(globs);
-             return pathes.length == 1;
-         } catch (IOException e) {
-             return false;
-         }
-     }
+        ArrayList<String> globs = new ArrayList<String>();
+        globs.add(outputDir + "/_SUCCESS");
+        try {
+            String[] pathes = inventoryService.globPaths(globs);
+            return pathes.length == 1;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
 
     /**

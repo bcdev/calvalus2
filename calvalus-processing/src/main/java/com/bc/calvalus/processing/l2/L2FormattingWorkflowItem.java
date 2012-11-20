@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -35,7 +35,8 @@ import java.io.IOException;
  */
 public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
 
-    public L2FormattingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public L2FormattingWorkflowItem(HadoopProcessingService processingService, String jobName,
+                                    Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -47,7 +48,9 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
@@ -67,7 +70,7 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(L2FormatingMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

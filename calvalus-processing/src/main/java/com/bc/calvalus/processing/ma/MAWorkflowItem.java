@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -49,7 +49,9 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
@@ -80,7 +82,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         // disabled
         jobConfig.setInt("mapred.job.reuse.jvm.num.tasks", 1);
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(MAMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(RecordWritable.class);

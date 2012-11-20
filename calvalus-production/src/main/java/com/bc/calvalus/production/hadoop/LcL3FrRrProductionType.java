@@ -16,15 +16,16 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
-import com.bc.calvalus.production.DateRange;
+import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -37,7 +38,12 @@ import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 /**
  * A production type used for generating one or more lc_cci Level-3 products
@@ -50,7 +56,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
     public static final String NAME = "LCL3FRRR";
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    public LcL3FrRrProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public LcL3FrRrProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                  StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -76,11 +83,14 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeRR = getDateRangeRR(productionRequest, rrDays);
             if (mainRangeRR != null) {
                 String inputPathRR = productionRequest.getString("inputPathRR");
-                String[] mainInputFilesRR = getInputPaths(getInventoryService(), inputPathRR, mainRangeRR.getStartDate(), mainRangeRR.getStopDate(), null);
+                String[] mainInputFilesRR = getInputPaths(getInventoryService(), inputPathRR,
+                                                          mainRangeRR.getStartDate(), mainRangeRR.getStopDate(), null);
                 if (mainInputFilesRR.length == 0) {
                     String date1Str = ProductionRequest.getDateFormat().format(mainRangeRR.getStartDate());
                     String date2Str = ProductionRequest.getDateFormat().format(mainRangeRR.getStopDate());
-                    throw new ProductionException(String.format("No input products found for given time range in RR. [%s - %s]", date1Str, date2Str));
+                    throw new ProductionException(
+                            String.format("No input products found for given time range in RR. [%s - %s]", date1Str,
+                                          date2Str));
                 }
                 System.out.println("mainInputFilesRR.length = " + mainInputFilesRR.length);
                 allInputs.addAll(Arrays.asList(mainInputFilesRR));
@@ -89,11 +99,14 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeFR = getDateRangeFR(productionRequest, rrDays);
             if (mainRangeFR != null) {
                 String inputPathFR = productionRequest.getString("inputPathFR");
-                String[] mainInputFilesFR = getInputPaths(getInventoryService(), inputPathFR, mainRangeFR.getStartDate(), mainRangeFR.getStopDate(), null);
+                String[] mainInputFilesFR = getInputPaths(getInventoryService(), inputPathFR,
+                                                          mainRangeFR.getStartDate(), mainRangeFR.getStopDate(), null);
                 if (mainInputFilesFR.length == 0) {
                     String date1Str = ProductionRequest.getDateFormat().format(mainRangeFR.getStartDate());
                     String date2Str = ProductionRequest.getDateFormat().format(mainRangeFR.getStopDate());
-                    throw new ProductionException(String.format("No input products found for given time range in RR. [%s - %s]", date1Str, date2Str));
+                    throw new ProductionException(
+                            String.format("No input products found for given time range in RR. [%s - %s]", date1Str,
+                                          date2Str));
                 }
                 System.out.println("mainInputFilesFR.length = " + mainInputFilesFR.length);
                 allInputs.addAll(Arrays.asList(mainInputFilesFR));
@@ -107,7 +120,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 setRequestParameters(jobConfigSr, productionRequest);
-                jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(allInputs, ","));
+                jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, StringUtils.join(allInputs, ","));
                 jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
                 jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
@@ -118,18 +131,20 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             }
 
             if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
-                String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s--rrdays%s", groundResultion, period, rr);
+                String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s--rrdays%s", groundResultion, period,
+                                                    rr);
                 Configuration jobConfigFormat = createJobConfig(productionRequest);
                 setRequestParameters(jobConfigFormat, productionRequest);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT_DIR, mainOutputDir);
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
+                jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix + "-v%02dh%02d");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
                 jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigFormat.set("mapred.job.priority", "HIGH");
-                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format " + rr, jobConfigFormat));
+                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format " + rr,
+                                                              jobConfigFormat));
             }
 
             parallel.add(sequence);
@@ -144,6 +159,12 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                               productionRequest,
                               parallel);
 
+    }
+
+    // TODO, at the moment no staging implemented
+    @Override
+    protected Staging createUnsubmittedStaging(Production production) {
+        throw new NotImplementedException("Staging currently not implemented for lc_cci Level3.");
     }
 
     static DateRange getDateRangeRR(ProductionRequest productionRequest, int rrDays) throws ProductionException {
@@ -177,7 +198,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
 
     static L3Config getMainL3Config() throws ProductionException {
         String maskExpr = "(status == 1 or status == 3) and not nan(sdr_1)";
-        String[] varNames = new String[]{"status",
+        String[] varNames = new String[]{
+                "status",
                 "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
                 "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
                 "sdr_11", "sdr_12", "sdr_13", "sdr_14", "sdr_15",
@@ -189,6 +211,20 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         String type = LCMosaicAlgorithm.class.getName();
 
         return createL3Config(type, maskExpr, varNames);
+    }
+
+    static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate,
+                                  Date maxDate, String regionName) throws ProductionException {
+        InputPathResolver inputPathResolver = new InputPathResolver();
+        inputPathResolver.setMinDate(minDate);
+        inputPathResolver.setMaxDate(maxDate);
+        inputPathResolver.setRegionName(regionName);
+        List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
+        try {
+            return inventoryService.globPaths(inputPatterns);
+        } catch (IOException e) {
+            throw new ProductionException("Failed to compute input file list.", e);
+        }
     }
 
     private static L3Config createL3Config(String type, String maskExpr, final String[] varNames) {
@@ -203,12 +239,6 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         l3Config.setMaskExpr(maskExpr);
         l3Config.setAggregatorConfigs(aggregatorConfig);
         return l3Config;
-    }
-
-    // TODO, at the moment no staging implemented
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for lc_cci Level3.");
     }
 
 }

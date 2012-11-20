@@ -65,16 +65,17 @@ public class ProductSetPersistable {
             String path = nullAware(splits[1]);
             Date date1 = asDate(splits[2]);
             Date date2 = asDate(splits[3]);
-            return new ProductSet(null, name, path, date1, date2, null, null);
+            return new ProductSet(null, name, path, date1, date2, "", null);
         } else if (splits.length == 7) {
             String productType = nullAware(splits[0]);
             String name = nullAware(splits[1]);
             String path = nullAware(splits[2]);
             Date date1 = asDate(splits[3]);
             Date date2 = asDate(splits[4]);
-            String regonName = nullAware(splits[5]);
-            String regonWKT = nullAware(splits[6]);
-            return new ProductSet(productType, name, path, date1, date2, regonName, regonWKT);
+            String regionName = nullAware(splits[5]);
+            regionName = regionName == null ? "" : regionName;
+            String regionWKT = nullAware(splits[6]);
+            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT);
         }
         return null;
     }

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -24,7 +25,6 @@ import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicSeasonalWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.LCSeasonMosaicAlgorithm;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -34,7 +34,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.util.StringUtils;
 
 /**
  * A production type used for generating one or more lc_cci Level-3 products.
@@ -45,7 +44,8 @@ public class LcSeasonalProductionType extends HadoopProductionType {
 
     public static final String NAME = "LCL3Seasonal";
 
-    public LcSeasonalProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public LcSeasonalProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                    StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -53,25 +53,11 @@ public class LcSeasonalProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC Seasonal", productionRequest);
+        String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC Seasonal",
+                                                                                 productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange mainRange = DateRange.createFromMinMax(productionRequest);
-
-        String inputPath = productionRequest.getString("inputPath");
-        String regionName = productionRequest.getRegionName();
-        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
-
-        System.out.println("mainInputFiles = " + mainInputFiles.length);
-        for (String mainInputFile : mainInputFiles) {
-            System.out.println("mainInputFile = " + mainInputFile);
-        }
-
-        if (mainInputFiles.length == 0) {
-            String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
-            String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
-            throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
-        }
+        DateRange mainRange = productionRequest.createFromMinMax();
 
         String mainL3ConfigXml = getMainL3Config().toXml();
 
@@ -93,7 +79,11 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         if (!successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(jobConfigSr, productionRequest);
-            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, mainRange.toString());
+
             jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
             jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
@@ -105,15 +95,16 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(jobConfigFormat, productionRequest);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT_DIR, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix + "-v%02dh%02d");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
             jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfigFormat));
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
+                                                          jobConfigFormat));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);

@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -42,7 +42,9 @@ public class GeometryWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
         };
@@ -50,7 +52,7 @@ public class GeometryWorkflowItem extends HadoopWorkflowItem {
 
     protected void configureJob(Job job) throws IOException {
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
 
         job.setMapperClass(GeometryMapper.class);
         job.setMapOutputKeyClass(Text.class);

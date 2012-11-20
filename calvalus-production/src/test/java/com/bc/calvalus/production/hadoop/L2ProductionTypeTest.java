@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.inventory.ProductSet;
@@ -24,7 +25,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -68,7 +67,7 @@ public class L2ProductionTypeTest {
                                                                     "minDate", "2005-01-01",
                                                                     "maxDate", "2005-01-31");
 
-        List<DateRange> dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
         assertNotNull(dateRanges);
         assertEquals(1, dateRanges.size());
         DateRange dateRange = dateRanges.get(0);
@@ -80,7 +79,7 @@ public class L2ProductionTypeTest {
                                                   "minDate", "2005-01-01",
                                                   "maxDate", "2005-02-00");
 
-        dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        dateRanges = productionRequest.getDateRanges();
         assertNotNull(dateRanges);
         assertEquals(1, dateRanges.size());
         dateRange = dateRanges.get(0);
@@ -92,7 +91,7 @@ public class L2ProductionTypeTest {
                                                   "minDate", "2005-02-01",
                                                   "maxDate", "2005-03-00");
 
-        dateRanges = L2ProductionType.getDateRanges(productionRequest);
+        dateRanges = productionRequest.getDateRanges();
         assertNotNull(dateRanges);
         assertEquals(1, dateRanges.size());
         dateRange = dateRanges.get(0);
@@ -136,10 +135,11 @@ public class L2ProductionTypeTest {
                      l2WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))",
                      l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String inputFiles = l2WorkflowItem.getInputFiles();
-        assertEquals("hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03", inputFiles);
+        assertEquals("MER_RR__1P/r03", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS));
+        assertEquals("[null:null]", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES));
+        assertEquals("", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_REGION_NAME));
 
-        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
@@ -151,7 +151,7 @@ public class L2ProductionTypeTest {
                 productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
-        assertNull(productSet.getRegionName());
+        assertEquals("", productSet.getRegionName());
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", productSet.getRegionWKT());
     }
 
@@ -206,42 +206,13 @@ public class L2ProductionTypeTest {
                      l2WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))",
                      l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String inputFiles = l2WorkflowItem.getInputFiles();
-        assertEquals("" +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/02," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/03," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/04," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/05," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/06," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/07," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/08," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/09," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/10," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/11," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/12," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/13," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/14," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/16," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/17," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/18," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/19," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/20," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/21," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/22," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/23," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/24," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/25," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/26," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/27," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/28," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/29," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/30," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
-                     inputFiles);
+        String inputPathPattern = l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
+        assertEquals("MER_RR__1P/r03/${yyyy}/${MM}/${dd}", inputPathPattern);
+        assertEquals("[2005-01-01:2005-01-31]",
+                     l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES));
+        assertEquals("", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_REGION_NAME));
 
-        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
@@ -252,7 +223,7 @@ public class L2ProductionTypeTest {
                 productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
-        assertNull(productSet.getRegionName());
+        assertEquals("", productSet.getRegionName());
         assertEquals("POLYGON ((5 50, 25 50, 25 60, 5 60, 5 50))", productSet.getRegionWKT());
 
     }
@@ -291,14 +262,13 @@ public class L2ProductionTypeTest {
                      l2WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
         assertEquals("POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))",
                      l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        String inputFiles = l2WorkflowItem.getInputFiles();
-        assertEquals("" +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/01," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/15," +
-                             "hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2005/01/31",
-                     inputFiles);
+        String inputPathPattern = l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
+        assertEquals("MER_RR__1P/r03/${yyyy}/${MM}/${dd}", inputPathPattern);
+        assertEquals("[2005-01-01:2005-01-01],[2005-01-15:2005-01-15],[2005-01-31:2005-01-31]",
+                     l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES));
+        assertEquals("Island In The Sun", l2WorkflowItem.getJobConfig().get(JobConfigNames.CALVALUS_INPUT_REGION_NAME));
 
-        L2ProductionType.ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
+        ProductSetSaver productSetSaver = getProductSetSaver(l2WorkflowItem);
         assertNotNull(productSetSaver);
         ProductSet productSet = productSetSaver.getProductSet();
         assertNotNull(productSet);
@@ -316,11 +286,11 @@ public class L2ProductionTypeTest {
 
     }
 
-    private L2ProductionType.ProductSetSaver getProductSetSaver(L2WorkflowItem l2WorkflowItem) {
+    private ProductSetSaver getProductSetSaver(L2WorkflowItem l2WorkflowItem) {
         WorkflowStatusListener[] workflowStatusListeners = l2WorkflowItem.getWorkflowStatusListeners();
         for (WorkflowStatusListener workflowStatusListener : workflowStatusListeners) {
-            if (workflowStatusListener instanceof L2ProductionType.ProductSetSaver) {
-                return (L2ProductionType.ProductSetSaver) workflowStatusListener;
+            if (workflowStatusListener instanceof ProductSetSaver) {
+                return (ProductSetSaver) workflowStatusListener;
             }
         }
         return null;

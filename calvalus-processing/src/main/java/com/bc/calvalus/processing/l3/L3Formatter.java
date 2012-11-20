@@ -16,12 +16,12 @@
 
 package com.bc.calvalus.processing.l3;
 
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.TemporalBinSource;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -47,18 +47,18 @@ public class L3Formatter {
                        ProductData.UTC endTime) throws Exception {
         final TemporalBinSource temporalBinSource = new L3TemporalBinSource(configuration, partsDir);
         Formatter.format(binningContext,
-                temporalBinSource, formatterConfig.getFormatterConfig(),
-                roiGeometry,
-                startTime,
-                endTime,
-                createConfigurationMetadataElement()
+                         temporalBinSource, formatterConfig.getFormatterConfig(),
+                         roiGeometry,
+                         startTime,
+                         endTime,
+                         createConfigurationMetadataElement()
         );
     }
 
     private MetadataElement createConfigurationMetadataElement() {
         MetadataElement configurationElement = new MetadataElement("calvalus.configuration");
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT, ',');
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_DIR, ',');
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_FORMAT);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MIN_DATE);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MAX_DATE);
@@ -85,7 +85,8 @@ public class L3Formatter {
             String[] valueSplits = StringUtils.split(value, new char[]{sep}, true);
             MetadataElement inputPathsElement = new MetadataElement(name);
             for (int i = 0; i < valueSplits.length; i++) {
-                inputPathsElement.addAttribute(new MetadataAttribute(name + "." + i, ProductData.createInstance(valueSplits[i]), true));
+                inputPathsElement.addAttribute(
+                        new MetadataAttribute(name + "." + i, ProductData.createInstance(valueSplits[i]), true));
             }
             parent.addElement(inputPathsElement);
         }

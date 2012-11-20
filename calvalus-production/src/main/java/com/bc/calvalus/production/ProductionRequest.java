@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -10,7 +11,15 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A production request. Production requests are submitted to the backend service.
@@ -92,7 +101,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory String parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public String getString(String name) throws ProductionException {
@@ -104,7 +115,6 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
-     * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public String getString(String name, String def) {
         String value = productionParameters.get(name);
@@ -115,7 +125,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory Boolean parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public boolean getBoolean(String name) throws ProductionException {
@@ -127,6 +139,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Boolean getBoolean(String name, Boolean def) throws ProductionException {
@@ -142,7 +155,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory integer parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public int getInteger(String name) throws ProductionException {
@@ -154,6 +169,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Integer getInteger(String name, Integer def) throws ProductionException {
@@ -165,7 +181,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory single precision parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public float getFloat(String name) throws ProductionException {
@@ -177,6 +195,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Float getFloat(String name, Float def) throws ProductionException {
@@ -193,7 +212,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory double precision parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public double getDouble(String name) throws ProductionException {
@@ -205,6 +226,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Double getDouble(String name, Double def) throws ProductionException {
@@ -220,7 +242,9 @@ public class ProductionRequest implements XmlConvertible {
      * Gets a mandatory date parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public Date getDate(String name) throws ProductionException {
@@ -232,6 +256,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Date getDate(String name, Date def) throws ProductionException {
@@ -260,12 +285,13 @@ public class ProductionRequest implements XmlConvertible {
     }
 
 
-
     /**
      * Gets a mandatory geometry parameter value.
      *
      * @param name The parameter name.
+     *
      * @return The parameter value.
+     *
      * @throws ProductionException If the parameter does not exists or cannot be converted to the requested type.
      */
     public Geometry getGeometry(String name) throws ProductionException {
@@ -277,6 +303,7 @@ public class ProductionRequest implements XmlConvertible {
      *
      * @param name The parameter name.
      * @param def  The parameter default value.
+     *
      * @throws ProductionException If the parameter cannot be converted to the requested type.
      */
     public Geometry getGeometry(String name, Geometry def) throws ProductionException {
@@ -300,13 +327,14 @@ public class ProductionRequest implements XmlConvertible {
     }
 
     public String getRegionName() {
-        return getString("regionName", null);
+        return getString("regionName", "");
     }
 
     public Geometry getRegionGeometry() throws ProductionException {
         Geometry regionGeometry = getRegionGeometry(null);
         if (regionGeometry == null) {
-            throw new ProductionException("Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
+            throw new ProductionException(
+                    "Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
         }
         return regionGeometry;
     }
@@ -334,6 +362,28 @@ public class ProductionRequest implements XmlConvertible {
         } else {
             throw new ProductionException("Parameters 'minLon', 'minLat','maxLon','maxLat' must all be given");
         }
+    }
+
+    public List<DateRange> getDateRanges() throws ProductionException {
+        List<DateRange> dateRangeList = new ArrayList<DateRange>();
+        Date[] dateList = getDates("dateList", null);
+        if (dateList != null) {
+            Arrays.sort(dateList);
+            for (Date date : dateList) {
+                dateRangeList.add(new DateRange(date, date));
+            }
+        } else {
+            Date minDate = getDate("minDate", null);
+            Date maxDate = getDate("maxDate", null);
+            dateRangeList.add(new DateRange(minDate, maxDate));
+        }
+        return dateRangeList;
+    }
+
+    public DateRange createFromMinMax() throws ProductionException {
+        Date minDate = getDate("minDate");
+        Date maxDate = getDate("maxDate");
+        return new DateRange(minDate, maxDate);
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -414,7 +464,8 @@ public class ProductionRequest implements XmlConvertible {
         try {
             return wktReader.read(text);
         } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new ProductionException("Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
+            throw new ProductionException(
+                    "Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
         }
     }
 

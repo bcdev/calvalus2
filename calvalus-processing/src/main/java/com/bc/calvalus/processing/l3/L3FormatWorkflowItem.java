@@ -38,7 +38,7 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
     }
 
     public String getInputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DIR);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
@@ -66,6 +66,7 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
 
         job.setInputFormatClass(L3FormatterInputFormat.class);
         FileInputFormat.setInputPaths(job, getInputDir());
+
         job.setMapperClass(L3FormatterMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

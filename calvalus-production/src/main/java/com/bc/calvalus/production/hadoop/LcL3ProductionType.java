@@ -16,19 +16,19 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
+import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.AbstractLcMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LcSDR8MosaicAlgorithm;
-import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
-import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.StatusRemapper;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -39,7 +39,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,7 +55,8 @@ public class LcL3ProductionType extends HadoopProductionType {
     public static final String NAME = "LCL3";
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                              StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -67,18 +67,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         String defaultProductionName = createLcProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange mainRange = DateRange.createFromMinMax(productionRequest);
-        String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
-        String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
+        DateRange mainRange = productionRequest.createFromMinMax();
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
-
-        String inputPath = productionRequest.getString("inputPath");
-        String regionName = productionRequest.getRegionName();
-        String[] cloudInputFiles = getInputPaths(getInventoryService(), inputPath, cloudRange.getStartDate(), cloudRange.getStopDate(), regionName);
-        String[] mainInputFiles = getInputPaths(getInventoryService(), inputPath, mainRange.getStartDate(), mainRange.getStopDate(), regionName);
-        if (mainInputFiles.length == 0) {
-            throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
-        }
 
         String cloudL3ConfigXml = getCloudL3Config(productionRequest).toXml();
         String mainL3ConfigXml = getMainL3Config(productionRequest).toXml();
@@ -102,7 +92,11 @@ public class LcL3ProductionType extends HadoopProductionType {
         if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(jobConfigCloud, productionRequest);
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(cloudInputFiles, ","));
+
+            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
+
             jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
             jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
@@ -114,7 +108,11 @@ public class LcL3ProductionType extends HadoopProductionType {
         if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(jobConfigSr, productionRequest);
-            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(mainInputFiles, ","));
+
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, mainRange.toString());
+
             jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
             jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
@@ -131,17 +129,20 @@ public class LcL3ProductionType extends HadoopProductionType {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(jobConfigFormat, productionRequest);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT, mainOutputDir);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT_DIR, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix+ "-v%02dh%02d");
+            jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix + "-v%02dh%02d");
             jobConfigFormat.setIfUnset(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
+            String date1Str = ProductionRequest.getDateFormat().format(mainRange.getStartDate());
+            String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
             jobConfigFormat.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfigFormat));
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
+                                                          jobConfigFormat));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -155,14 +156,15 @@ public class LcL3ProductionType extends HadoopProductionType {
                               sequence);
     }
 
-    static String createLcProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
+    static String createLcProductionName(String prefix, ProductionRequest productionRequest) throws
+                                                                                             ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
         sb.append(getLcPeriodName(productionRequest));
         return sb.toString().trim();
     }
 
     static String getLcPeriodName(ProductionRequest productionRequest) throws ProductionException {
-        DateRange minMax = DateRange.createFromMinMax(productionRequest);
+        DateRange minMax = productionRequest.createFromMinMax();
         long diffMillis = minMax.getStopDate().getTime() - minMax.getStartDate().getTime() + L3ProductionType.MILLIS_PER_DAY;
         int periodLength = (int) (diffMillis / L3ProductionType.MILLIS_PER_DAY);
         String minDate = productionRequest.getString("minDate");
@@ -181,7 +183,8 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     // 7, or 10 days periods, that are adjusted to full month
-    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws
+                                                                                                       ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
 
         Date minDate = productionRequest.getDate("minDate");
@@ -219,7 +222,8 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
 
-    static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws ProductionException {
+    static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws
+                                                                                             ProductionException {
         int wings = productionRequest.getInteger("wings", 10);
 
         Calendar calendar = ProductData.UTC.createCalendar();
@@ -243,7 +247,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 sb.append(" or status == ");
                 sb.append(i);
             }
-            maskExpr = "(status == 1 "+ sb.toString() + ") and not nan(sdr_8)";
+            maskExpr = "(status == 1 " + sb.toString() + ") and not nan(sdr_8)";
         } else {
             maskExpr = "status == 1 and not nan(sdr_8)";
         }
@@ -257,7 +261,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         // exclude invalid and deep water pixels
         String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4) and dem_alt > -100))";
 
-        String[] varNames = new String[]{"status",
+        String[] varNames = new String[]{
+                "status",
                 "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
                 "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
                 "sdr_11", "sdr_12", "sdr_13", "sdr_14", "sdr_15",
@@ -267,8 +272,8 @@ public class LcL3ProductionType extends HadoopProductionType {
                 "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15",
         };
         String type = "NetCDF4-LC".equals(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"))
-                ? LcL3Nc4MosaicAlgorithm.class.getName()
-                : LCMosaicAlgorithm.class.getName();
+                      ? LcL3Nc4MosaicAlgorithm.class.getName()
+                      : LCMosaicAlgorithm.class.getName();
 
         return createL3Config(type, maskExpr, varNames);
     }

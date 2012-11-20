@@ -32,11 +32,21 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A form that lets users filter a selected product set by time and region.
@@ -48,6 +58,7 @@ public class ProductSetFilterForm extends Composite {
     private final PortalContext portal;
 
     interface TheUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
+
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -98,8 +109,8 @@ public class ProductSetFilterForm extends Composite {
 
         dateList.setEnabled(false);
         dateList.setValue("2008-06-01\n" +
-                                  "2008-06-02\n" +
-                                  "2008-06-03");
+                          "2008-06-02\n" +
+                          "2008-06-03");
 
         temporalFilterOff.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
@@ -160,15 +171,15 @@ public class ProductSetFilterForm extends Composite {
     public void setProductSet(DtoProductSet productSet) {
         this.productSet = productSet;
         if (this.productSet != null) {
-            if (productSet.getRegionName() == null ||
-                    productSet.getRegionName().equalsIgnoreCase("global") ||
-                    productSet.getRegionWKT() == null) {
+            if (productSet.getRegionName().isEmpty() ||
+                productSet.getRegionName().equalsIgnoreCase("global") ||
+                productSet.getRegionWKT() == null) {
                 // global
                 regionMap.getMapWidget().setZoomLevel(0);
                 regionMap.getMapWidget().panTo(LatLng.newInstance(0.0, 0.0));
             } else {
                 String regionName = productSet.getRegionName();
-                if (regionName != null) {
+                if (!regionName.isEmpty()) {
                     List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
                     for (Region region : regionList) {
                         if (region.getName().equalsIgnoreCase(regionName)) {
@@ -248,16 +259,18 @@ public class ProductSetFilterForm extends Composite {
             if (productSet != null) {
                 if (productSet.getMinDate() != null) {
                     String minDate = DATE_FORMAT.format(productSet.getMinDate());
-                    boolean startDateValid = (minDate.compareTo(startDate) <= 0) ;
+                    boolean startDateValid = (minDate.compareTo(startDate) <= 0);
                     if (!startDateValid) {
-                        throw new ValidationException(this.minDate, "Start date must be equal to or after the product set's start date.");
+                        throw new ValidationException(this.minDate,
+                                                      "Start date must be equal to or after the product set's start date.");
                     }
                 }
                 if (productSet.getMaxDate() != null) {
                     String maxDate = DATE_FORMAT.format(productSet.getMaxDate());
-                    boolean endDateValid = (endDate.compareTo(maxDate) <= 0) ;
+                    boolean endDateValid = (endDate.compareTo(maxDate) <= 0);
                     if (!endDateValid) {
-                        throw new ValidationException(this.maxDate, "End date must be equal to or before the product set's end date.");
+                        throw new ValidationException(this.maxDate,
+                                                      "End date must be equal to or before the product set's end date.");
                     }
                 }
             }
@@ -278,7 +291,8 @@ public class ProductSetFilterForm extends Composite {
 
         if (productSet.getPath().contains("${region}")) {
             if (!spatialFilterByRegion.getValue()) {
-                throw new ValidationException(spatialFilterByRegion, "You have to select a region, because the file set's path requires it.");
+                throw new ValidationException(spatialFilterByRegion,
+                                              "You have to select a region, because the file set's path requires it.");
             }
         }
     }
@@ -322,12 +336,14 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public interface ChangeHandler {
+
         void temporalFilterChanged(Map<String, String> data);
 
         void spatialFilterChanged(Map<String, String> data);
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {
+
         @Override
         public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
             minDate.setEnabled(temporalFilterByDateRange.getValue());

@@ -34,12 +34,13 @@ import java.io.IOException;
  */
 public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String jobName,
+                                        Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
-    public String getInputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
+    String getInputDir() {
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DIR);
     }
 
     @Override
@@ -51,7 +52,7 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, "mosaic-v%02dh%02d"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},

@@ -20,7 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -47,7 +47,9 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MA_PARAMETERS, NO_DEFAULT},
@@ -67,7 +69,7 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(PrevueMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

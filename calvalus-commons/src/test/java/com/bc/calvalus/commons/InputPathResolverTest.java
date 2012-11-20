@@ -14,29 +14,22 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.commons;
 
-import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import static org.junit.Assert.*;
 
 public class InputPathResolverTest {
-
-    @Test
-    public void testPathIsAbsolute() {
-        assertTrue(new Path("/a").isAbsolute());
-        assertFalse(new Path("a").isAbsolute());
-        assertTrue(new Path("file:///a").isAbsolute());
-        assertFalse(new Path("file://a").isAbsolute());
-        assertTrue(new Path("hdfs:///a").isAbsolute());
-        assertFalse(new Path("hdfs://a").isAbsolute());
-    }
 
     @Test
     public void testThatInputIsOutputWithSimpleNameAndNoVars() throws ParseException {
@@ -83,7 +76,8 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatRegionStringIsReplacedMultipleTimes() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${region}/bar/${region}/.*.N1", null, null, "northsea");
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${region}/bar/${region}/.*.N1", null,
+                                                                        null, "northsea");
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/northsea/bar/northsea/.*.N1", pathGlobs.get(0));
@@ -91,7 +85,8 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatDatePartsAreReplaced() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1", date("2005-12-30"), date("2006-01-02"), null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1",
+                                                                        date("2005-12-30"), date("2006-01-02"), null);
         assertNotNull(pathGlobs);
         assertEquals(4, pathGlobs.size());
         assertEquals("/foo/2005/12/30/.*.N1", pathGlobs.get(0));
@@ -102,7 +97,8 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatDatePartsAreReplacedWhenNotGiven() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1", null, null, null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/${dd}/.*.N1", null, null,
+                                                                        null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/.*/.*/.*/.*.N1", pathGlobs.get(0));
@@ -110,7 +106,8 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatGlobsAreUnique() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/.*.N1", date("2005-01-01"), date("2005-01-03"), null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/${yyyy}/${MM}/.*.N1", date("2005-01-01"),
+                                                                        date("2005-01-03"), null);
         assertNotNull(pathGlobs);
         assertEquals(1, pathGlobs.size());
         assertEquals("/foo/2005/01/.*.N1", pathGlobs.get(0));
@@ -118,7 +115,8 @@ public class InputPathResolverTest {
 
     @Test
     public void testThatDatePartsAreConcatenated() throws ParseException {
-        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/MER_RR__1P\\p{Upper}+${yyyy}${MM}${dd}*.N1", date("2005-01-01"), date("2005-01-03"), null);
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns(
+                "/foo/MER_RR__1P\\p{Upper}+${yyyy}${MM}${dd}*.N1", date("2005-01-01"), date("2005-01-03"), null);
         assertNotNull(pathGlobs);
         assertEquals(3, pathGlobs.size());
         assertEquals("/foo/MER_RR__1P\\p{Upper}+20050101*.N1", pathGlobs.get(0));
@@ -127,7 +125,10 @@ public class InputPathResolverTest {
     }
 
     private Date date(String dateAsString) throws ParseException {
-        return ProductData.UTC.createDateFormat("yyyy-MM-dd").parse(dateAsString);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        dateFormat.setCalendar(calendar);
+        return dateFormat.parse(dateAsString);
     }
 
 }

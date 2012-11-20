@@ -1,12 +1,17 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.production.*;
+import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestInventoryService;
+import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -66,8 +71,10 @@ public class L3ProductionTypeTest {
         assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
 
         L3FormatWorkflowItem l3formatWorkflowItem = (L3FormatWorkflowItem) items[1];
-        assertEquals(true, l3formatWorkflowItem.getInputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
-        assertEquals(true, l3formatWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true,
+                     l3formatWorkflowItem.getInputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
+        assertEquals(true,
+                     l3formatWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
     }
 
 

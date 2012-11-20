@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -45,7 +45,9 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
@@ -68,7 +70,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         // to prevent timeouts (Hadoop default is 10000)
         jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
 
 
         job.setMapperClass(MosaicMapper.class);

@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
@@ -9,7 +10,6 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -24,7 +24,6 @@ import org.esa.beam.binning.AggregatorDescriptor;
 import org.esa.beam.binning.AggregatorDescriptorRegistry;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
-import org.esa.beam.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,7 +41,8 @@ public class L3ProductionType extends HadoopProductionType {
 
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
-    public L3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public L3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -50,73 +50,78 @@ public class L3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Level 3 ", productionRequest);
+        String defaultProductionName = createProductionName("Level 3 ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        String inputPath = productionRequest.getString("inputPath");
         List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
 
-        String regionName = productionRequest.getRegionName();
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         String l3ConfigXml = getL3ConfigXml(productionRequest);
-        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
+        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
+                JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
         String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
 
         Workflow workflow = new Workflow.Parallel();
         workflow.setSustainable(false);
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
+
+            String singleRangeOutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
+
+            Configuration jobConfig = createJobConfig(productionRequest);
+            setDefaultProcessorParameters(jobConfig, processorProductionRequest);
+            setRequestParameters(jobConfig, productionRequest);
+
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
+
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDir);
+
+            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                          regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
-            String[] l1InputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
-            if (l1InputFiles.length > 0) {
-                String singleRangeOutputDir = getOutputPath(productionRequest, productionId, "-L3-" + (i + 1));
+            jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+            jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+            WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
 
-                Configuration jobConfig = createJobConfig(productionRequest);
-                setDefaultProcessorParameters(jobConfig, processorProductionRequest);
+            if (outputFormat != null) {
+                jobConfig = createJobConfig(productionRequest);
                 setRequestParameters(jobConfig, productionRequest);
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, singleRangeOutputDir);
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
-                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDir);
+                // is in fact dependent on the outputFormat TODO unify
+                String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
+                        JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
                 jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-                jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+                jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                              regionGeometry != null ? regionGeometry.toString() : "");
                 jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
                 jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-                WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
 
-                if (outputFormat != null) {
-                    jobConfig = createJobConfig(productionRequest);
-                    setRequestParameters(jobConfig, productionRequest);
-                    jobConfig.set(JobConfigNames.CALVALUS_INPUT, singleRangeOutputDir);
-                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
-
-                    // is in fact dependent on the outputFormat TODO unify
-                    String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
-                    jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
-
-                    jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-                    jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
-                    jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
-                    jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-
-                    WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(), productionName + " Format " + date1Str, jobConfig);
-                    item = new Workflow.Sequential(item, formatItem);
-                }
-                workflow.add(item);
+                WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+                                                                   productionName + " Format " + date1Str, jobConfig);
+                item = new Workflow.Sequential(item, formatItem);
             }
+            workflow.add(item);
         }
         if (workflow.getItems().length == 0) {
             throw new ProductionException("No input products found for given time range.");
         }
-        if (outputFormat != null && productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
+        if (outputFormat != null && productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS,
+                                                                null) != null) {
             Configuration qlJobConfig = createJobConfig(productionRequest);
             setRequestParameters(qlJobConfig, productionRequest);
-            qlJobConfig.set(JobConfigNames.CALVALUS_INPUT, outputDir);
+            qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, outputDir + "/[^_].*");
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
@@ -142,7 +147,8 @@ public class L3ProductionType extends HadoopProductionType {
                                getStagingService().getStagingDir());
     }
 
-    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws ProductionException {
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws
+                                                                                                       ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
         Date[] dateList = productionRequest.getDates("dateList", null);
 
@@ -154,7 +160,8 @@ public class L3ProductionType extends HadoopProductionType {
             Date minDate = productionRequest.getDate("minDate");
             Date maxDate = productionRequest.getDate("maxDate");
             int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
-            int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength", periodLength); // unit=days
+            int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength",
+                                                                       periodLength); // unit=days
 
             final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
             final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
@@ -218,16 +225,16 @@ public class L3ProductionType extends HadoopProductionType {
             AggregatorDescriptor aggregatorDescriptor = registry.getAggregatorDescriptor(aggregatorName);
             AggregatorConfig aggregatorConfig = aggregatorDescriptor.createAggregatorConfig();
             PropertySet propertySet = aggregatorConfig.asPropertySet();
-            if(propertySet.isPropertyDefined("varName")) {
+            if (propertySet.isPropertyDefined("varName")) {
                 propertySet.setValue("varName", variableName);
             }
-            if(propertySet.isPropertyDefined("percentage")) {
+            if (propertySet.isPropertyDefined("percentage")) {
                 propertySet.setValue("percentage", percentage);
             }
-            if(propertySet.isPropertyDefined("weightCoeff")) {
+            if (propertySet.isPropertyDefined("weightCoeff")) {
                 propertySet.setValue("weightCoeff", weightCoeff);
             }
-            if(propertySet.isPropertyDefined("fillValue")) {
+            if (propertySet.isPropertyDefined("fillValue")) {
                 propertySet.setValue("fillValue", fillValue);
             }
             aggregatorConfigs[i] = aggregatorConfig;

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -24,7 +25,6 @@ import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.globveg.GlobVegMosaicAlgorithm;
-import com.bc.calvalus.production.DateRange;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -34,7 +34,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.util.StringUtils;
 
 /**
  * A production type used for generating one or more GLobVeg Level-3 products.
@@ -45,7 +44,8 @@ public class GLobVegProductionType extends HadoopProductionType {
 
     public static final String NAME = "GLobVeg";
 
-    public GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                 StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -53,19 +53,10 @@ public class GLobVegProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("GLobVeg L3 ", productionRequest);
+        String defaultProductionName = createGlobVegProductionName("GLobVeg L3 ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        DateRange dateRange = DateRange.createFromMinMax(productionRequest);
-
-        String inputPath = productionRequest.getString("inputPath");
-        String regionName = productionRequest.getRegionName();
-        String[] inputFiles = getInputPaths(getInventoryService(), inputPath, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
-        if (inputFiles.length == 0) {
-            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
-            throw new ProductionException(String.format("No input products found for given time range. [%s - %s]", date1Str, date2Str));
-        }
+        DateRange dateRange = productionRequest.createFromMinMax();
 
         String processorName = productionRequest.getString("processorName", null);
         String processorBundle = productionRequest.getString("processorBundle", null);
@@ -84,7 +75,11 @@ public class GLobVegProductionType extends HadoopProductionType {
         if (!successfullyCompleted(partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(jobConfig, productionRequest);
-            jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
+
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, partsOutputDir);
 
             if (processorName != null) {
@@ -105,7 +100,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(jobConfig, productionRequest);
-            jobConfig.set(JobConfigNames.CALVALUS_INPUT, partsOutputDir);
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, partsOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputNameFormat);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
@@ -118,7 +113,8 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.setInt("calvalus.mosaic.macroTileSize", 10);
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
             jobConfig.set("mapred.job.priority", "HIGH");
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfig));
+            sequence.add(
+                    new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfig));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -132,17 +128,18 @@ public class GLobVegProductionType extends HadoopProductionType {
                               sequence);
     }
 
-    static String createProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
+    private static String createGlobVegProductionName(String prefix, ProductionRequest productionRequest) throws
+                                                                                                          ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
         sb.append(getGlobVegPeriodName(productionRequest));
         return sb.toString().trim();
     }
 
-    static String getGlobVegPeriodName(ProductionRequest productionRequest) throws ProductionException {
+    private static String getGlobVegPeriodName(ProductionRequest productionRequest) throws ProductionException {
         return productionRequest.getString("minDate").replaceAll("-", "");
     }
 
-    static L3Config getL3Config() throws ProductionException {
+    private static L3Config getL3Config() throws ProductionException {
 
         final String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
 

@@ -33,6 +33,7 @@ import static org.junit.Assert.*;
  * @author MarcoZ
  */
 public class MAWorkflowItemTest {
+
     @Test
     public void testCreateJob() throws Exception {
         HadoopProcessingService processingService = new HadoopProcessingService(new JobClient(new JobConf()));
@@ -42,7 +43,7 @@ public class MAWorkflowItemTest {
 
         String jobName = "MaTestJob";
         Configuration jobConfig = processingService.createJobConfig();
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, "file1,file2");
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, "file1,file2");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, "out_004");
         jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());

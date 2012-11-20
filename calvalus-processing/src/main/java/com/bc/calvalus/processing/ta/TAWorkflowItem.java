@@ -45,7 +45,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     }
 
     public String getInputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT_DIR);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_TA_PARAMETERS, NO_DEFAULT},
@@ -95,6 +95,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     }
 
     private class InputDirCleaner implements WorkflowStatusListener {
+
         private final Job job;
 
         public InputDirCleaner(Job job) {
@@ -104,7 +105,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         @Override
         public void handleStatusChanged(WorkflowStatusEvent event) {
             if (event.getSource() == TAWorkflowItem.this
-                    && event.getNewStatus().getState() == ProcessState.COMPLETED) {
+                && event.getNewStatus().getState() == ProcessState.COMPLETED) {
                 clearInputDir(job);
             }
         }

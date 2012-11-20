@@ -1,10 +1,16 @@
 package com.bc.calvalus.production;
 
-import com.vividsolutions.jts.geom.*;
+import com.bc.calvalus.commons.DateRange;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import org.junit.Test;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -173,7 +179,7 @@ public class ProductionRequestTest {
     @Test
     public void testDateListParsing() throws ParseException, ProductionException {
         String dateList = "2002-03-19\n2003-02-28\t\t2002-05-21 " +
-                "\n2002-11-13     2003-01-15 2002-04-28 2003-04-29\n\t 2003-04-30 ";
+                          "\n2002-11-13     2003-01-15 2002-04-28 2003-04-29\n\t 2003-04-30 ";
         ProductionRequest productionRequest = new ProductionRequest("L2", "ewa", "dateList", dateList);
 
 
@@ -188,6 +194,34 @@ public class ProductionRequestTest {
         assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-02-28"), dates[5]);
         assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-04-29"), dates[6]);
         assertEquals(ProductionRequest.DATE_FORMAT.parse("2003-04-30"), dates[7]);
+    }
+
+    @Test
+    public void testCreateFromMinMax_wrongUsage() throws Exception {
+        try {
+            new ProductionRequest("test", "dummy").createFromMinMax();
+            fail();
+        } catch (ProductionException pe) {
+            assertEquals("Production parameter 'minDate' not set.", pe.getMessage());
+        }
+        try {
+            new ProductionRequest("test", "dummy", "minDate", "2001-02-03").createFromMinMax();
+            fail();
+        } catch (ProductionException pe) {
+            assertEquals("Production parameter 'maxDate' not set.", pe.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateFromMinMax() throws Exception {
+        ProductionRequest productionRequest = new ProductionRequest("test", "dummy", "minDate", "2001-02-03", "maxDate",
+                                                                    "2002-04-06");
+        DateRange dateRange = productionRequest.createFromMinMax();
+        assertNotNull(dateRange);
+        assertNotNull(dateRange.getStartDate());
+        assertNotNull(dateRange.getStopDate());
+        assertEquals("2001-02-03", ProductionRequest.getDateFormat().format(dateRange.getStartDate()));
+        assertEquals("2002-04-06", ProductionRequest.getDateFormat().format(dateRange.getStopDate()));
     }
 
 

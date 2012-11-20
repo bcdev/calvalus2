@@ -26,7 +26,6 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +36,7 @@ import java.util.List;
  * @author Norman
  */
 public class OrderFreshmonProductionView extends OrderProductionView {
+
     public static final String ID = OrderFreshmonProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -61,7 +61,8 @@ public class OrderFreshmonProductionView extends OrderProductionView {
                 return dtoProcessorDescriptor.getBundleName().startsWith("freshmon");
             }
         };
-       final  List<String> bandsToSelect = Arrays.asList("chl_concentration", "ys_absorption", "tsm_concentration", "Kd_490");
+        final List<String> bandsToSelect = Arrays.asList("chl_concentration", "ys_absorption", "tsm_concentration",
+                                                         "Kd_490");
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter);
         productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
@@ -103,16 +104,18 @@ public class OrderFreshmonProductionView extends OrderProductionView {
     }
 
     private void handleProcessorChanged(DtoProcessorDescriptor processorDescriptor, List<String> bandsToSelect) {
-        outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
-        int index = 0;
         ListBox bandList = outputParametersForm.bandList;
         bandList.clear();
-        for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
-            bandList.addItem(variable.getName());
-            if (bandsToSelect.contains(variable.getName())) {
-                bandList.setItemSelected(index, true);
+        if (processorDescriptor != null) {
+            outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
+            int index = 0;
+            for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
+                bandList.addItem(variable.getName());
+                if (bandsToSelect.contains(variable.getName())) {
+                    bandList.setItemSelected(index, true);
+                }
+                index++;
             }
-            index++;
         }
     }
 

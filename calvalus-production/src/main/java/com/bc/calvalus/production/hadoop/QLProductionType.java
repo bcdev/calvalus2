@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -30,6 +31,8 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.util.List;
+
 /**
  * A production type used for creating quick-look-images.
  *
@@ -39,17 +42,18 @@ public class QLProductionType extends HadoopProductionType {
 
     static final String NAME = "QL";
 
-    public QLProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) {
+    public QLProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Quick look generation ", productionRequest);
+        String defaultProductionName = createProductionName("Quick look generation ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        WorkflowItem workflowItem = createWorkflowItem(productionId, productionName,  productionRequest);
+        WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -74,12 +78,15 @@ public class QLProductionType extends HadoopProductionType {
                                     String productionName,
                                     ProductionRequest productionRequest) throws ProductionException {
 
-        String[] inputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
-        String outputDir = getOutputPath(productionRequest, productionId, "");
-
         Configuration jobConfig = createJobConfig(productionRequest);
         setRequestParameters(jobConfig, productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(inputFiles, ","));
+
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+
+        String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
         return new QLWorkflowItem(getProcessingService(), productionName, jobConfig);

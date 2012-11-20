@@ -20,7 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -32,11 +32,12 @@ import java.io.IOException;
  */
 public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicSeasonalWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public MosaicSeasonalWorkflowItem(HadoopProcessingService processingService, String jobName,
+                                      Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
-   @Override
+    @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
     }
@@ -45,7 +46,9 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT}
         };
     }
@@ -61,7 +64,7 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         // to prevent timeouts (Hadoop default is 10000)
         jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
 
         job.setMapperClass(MosaicSeasonalMapper.class);

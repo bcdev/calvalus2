@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.MultiFileSingleBlockInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -39,10 +39,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         super(processingService, jobName, jobConfig);
     }
 
-    public String getInputFiles() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
-    }
-
     @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
@@ -51,7 +47,9 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, NO_DEFAULT},
@@ -68,7 +66,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
-        job.setInputFormatClass(MultiFileSingleBlockInputFormat.class);
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(L2Mapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

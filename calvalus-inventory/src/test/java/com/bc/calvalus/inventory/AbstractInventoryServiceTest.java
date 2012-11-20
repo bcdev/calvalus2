@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.inventory;
 
+import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
 
@@ -25,8 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 
 /**
@@ -47,7 +47,8 @@ public class AbstractInventoryServiceTest {
         assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/MER_.*.N1")));
 
         assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/ef", "ab/cd/gh")));
-        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/gh", "ab/cd/ef", "ab/cd/ef/gh")));
+        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(
+                Arrays.asList("ab/cd/gh", "ab/cd/ef", "ab/cd/ef/gh")));
         assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/.*", "ab/cd/.*")));
 
         assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("", "bcd")));
@@ -70,17 +71,31 @@ public class AbstractInventoryServiceTest {
     }
 
     @Test
+    public void testPathIsAbsolute() {
+        assertTrue(new Path("/a").isAbsolute());
+        assertFalse(new Path("a").isAbsolute());
+        assertTrue(new Path("file:///a").isAbsolute());
+        assertFalse(new Path("file://a").isAbsolute());
+        assertTrue(new Path("hdfs:///a").isAbsolute());
+        assertFalse(new Path("hdfs://a").isAbsolute());
+    }
+
+
+    @Test
     public void testReadProductSetFromCsv() throws Exception {
         String csv = "MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31\n" +
-                "MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31\n" +
-                "MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31\n";
-        List<ProductSet> productSets = AbstractInventoryService.readProductSetFromCsv(new ByteArrayInputStream(csv.getBytes()));
+                     "MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31\n" +
+                     "MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31\n";
+        List<ProductSet> productSets = AbstractInventoryService.readProductSetFromCsv(
+                new ByteArrayInputStream(csv.getBytes()));
         assertNotNull(productSets);
         assertEquals(3, productSets.size());
         assertEquals("MERIS RR L1b 2004", productSets.get(1).getName());
         assertEquals("eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1", productSets.get(1).getPath());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"), productSets.get(1).getMinDate());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"), productSets.get(1).getMaxDate());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"),
+                     productSets.get(1).getMinDate());
+        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"),
+                     productSets.get(1).getMaxDate());
     }
 
     @Test
@@ -140,10 +155,18 @@ public class AbstractInventoryServiceTest {
 
     }
 
-    private void testGetRegexpForPathGlob(String testGlob, String expectedRegexp, String testPath, boolean expectedMatch) {
+    private void testGetRegexpForPathGlob(String testGlob, String expectedRegexp, String testPath,
+                                          boolean expectedMatch) {
         String regex = AbstractInventoryService.getRegexpForPathGlob(testGlob);
         assertEquals(expectedRegexp, regex);
         assertEquals(expectedMatch, Pattern.matches(regex, testPath));
     }
 
+    @Test
+    public void testPatternMatching() throws Exception {
+        String regex = "foo/[^_.].*";
+        assertTrue("foo/abc".matches(regex));
+        assertFalse("foo/_abc".matches(regex));
+        assertFalse("foo/.abc".matches(regex));
+    }
 }

@@ -20,11 +20,10 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.mosaic.DirectoryFileInputFormat;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
@@ -38,10 +37,6 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         super(processingService, jobName, jobConfig);
     }
 
-    public String getInputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT);
-    }
-
     @Override
     public String getOutputDir() {
         return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
@@ -50,7 +45,9 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
+                {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_RESUME_PROCESSING, "true"},
                 {JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, NO_DEFAULT},
@@ -60,8 +57,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
 
     protected void configureJob(Job job) throws IOException {
 
-        job.setInputFormatClass(DirectoryFileInputFormat.class);
-        FileInputFormat.setInputPaths(job, getInputDir());
+        job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(QLMapper.class);
 
         job.setNumReduceTasks(0);

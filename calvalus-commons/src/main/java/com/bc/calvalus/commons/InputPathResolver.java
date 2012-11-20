@@ -14,11 +14,17 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.production.hadoop;
+package com.bc.calvalus.commons;
 
-import org.esa.beam.framework.datamodel.ProductData;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Transforms input path patterns into input path regular-expressions.
@@ -77,9 +83,9 @@ public class InputPathResolver {
 
             if (minDate != null && maxDate != null) {
                 Set<String> globSet = new HashSet<String>(517);
-                Calendar calendar = ProductData.UTC.createCalendar();
+                Calendar calendar = createCalendar();
                 calendar.setTime(minDate);
-                Calendar stopCal = ProductData.UTC.createCalendar();
+                Calendar stopCal = createCalendar();
                 stopCal.setTime(maxDate);
                 do {
                     String glob = pattern.replace("${yyyy}", String.format("%tY", calendar));
@@ -101,7 +107,12 @@ public class InputPathResolver {
         return globList;
     }
 
-    public static List<String> getInputPathPatterns(String inputPathPattern, Date minDate, Date maxDate, String regionName) {
+    private Calendar createCalendar() {
+        return GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+    }
+
+    public static List<String> getInputPathPatterns(String inputPathPattern, Date minDate, Date maxDate,
+                                                    String regionName) {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);

@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -15,6 +16,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.util.List;
+
 /**
  * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
  * given regions.
@@ -26,7 +29,8 @@ public class MAProductionType extends HadoopProductionType {
 
     public static final String NAME = "MA";
 
-    public MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService, StagingService stagingService) throws ProductionException {
+    public MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) throws ProductionException {
         super(NAME, inventoryService, processingService, stagingService);
     }
 
@@ -34,12 +38,9 @@ public class MAProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = L2ProductionType.createProductionName("Match-up extraction ", productionRequest);
+        String defaultProductionName = createProductionName("Match-up extraction ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-
-        String[] l1InputFiles = L2ProductionType.getInputFiles(getInventoryService(), productionRequest);
-        String inputFormat = productionRequest.getString("calvalus.input.format", "ENVISAT");
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         Configuration maJobConfig = createJobConfig(productionRequest);
@@ -49,11 +50,15 @@ public class MAProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String maParametersXml = getMAConfigXml(productionRequest);
 
-        maJobConfig.set(JobConfigNames.CALVALUS_INPUT, StringUtils.join(l1InputFiles, ","));
-        maJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        maJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        maJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+        maJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+
         maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
-        maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
+        maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                        regionGeometry != null ? regionGeometry.toString() : "");
         MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionName, maJobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -70,8 +75,8 @@ public class MAProductionType extends HadoopProductionType {
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
         return new CopyStaging(production,
-                             getProcessingService().getJobClient().getConf(),
-                             getStagingService().getStagingDir());
+                               getProcessingService().getJobClient().getConf(),
+                               getStagingService().getStagingDir());
     }
 
     static String getMAConfigXml(ProductionRequest productionRequest) throws ProductionException {
