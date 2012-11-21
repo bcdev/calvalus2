@@ -1,3 +1,7 @@
+Preparation
+-----------
+Ensure no jobs are running which have been started from the portal (user == cvop)
+
 Building
 --------
 mvn clean install
