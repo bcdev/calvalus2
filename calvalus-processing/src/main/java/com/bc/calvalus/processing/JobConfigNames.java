@@ -51,7 +51,6 @@ public interface JobConfigNames {
 
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
-    String CALVALUS_FAIL_FAST = "calvalus.failFast";
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";
     String CALVALUS_REGION_NAME = "calvalus.regionName";

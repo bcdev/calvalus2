@@ -74,7 +74,7 @@ public class L2PlusProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        return new L2Staging(production,
+        return new CopyStaging(production,
                              getProcessingService().getJobClient().getConf(),
                              getStagingService().getStagingDir());
     }

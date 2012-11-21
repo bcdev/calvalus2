@@ -1,3 +1,9 @@
+Building
+--------
+mvn clean install
+(cd calvalus-processing; mvn assembly:assembly)
+(cd calvalus-production; mvn assembly:assembly)
+
 Calvalus
 --------
 java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-calvalus/*.jar calvalus-1.5-SNAPSHOT
@@ -6,6 +12,31 @@ BEAM
 -----
 java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-beam/*.jar beam-4.10.4-SNAPSHOT
 
+
+WAR (for the portal)
+--------------------
+(cd calvalus-portal/target; scp calvalus-portal-1.5-SNAPSHOT.war cvop@bcvm03: )
+ssh cvop@bcvm03
+cd /opt/apache-tomcat-7.0.11/bin/
+./shutdown.sh
+
+# save staging
+cd ../webapps/calvalus/
+mv staging/ ../../temp/
+
+# redeploy
+cd ..
+rm -rf calvalus calvalus.war
+mv /home/cvop/calvalus-portal-1.5-SNAPSHOT.war calvalus.war
+
+# restart
+cd ../bin/
+./startup.sh
+
+# restore staging
+cd ../webapps/calvalus/
+rm -rf staging/
+mv ../../temp/staging .
 
 
 Sample executable

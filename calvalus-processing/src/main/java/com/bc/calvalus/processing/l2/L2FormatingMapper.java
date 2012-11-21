@@ -104,10 +104,10 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
     }
 
     private Product outputTailoring(Configuration jobConfig, Product product) {
-        String crsWkt = jobConfig.get("outputCRS");
+        String crsWkt = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS);
         boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(crsWkt);
         String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        String outputBandList = jobConfig.get("outputBandList");
+        String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
         boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
         boolean hasBandList = StringUtils.isNotNullAndNotEmpty(outputBandList);
 
