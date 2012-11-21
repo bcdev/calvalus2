@@ -41,6 +41,8 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_PREFIX = "calvalus.output.prefix";
     String CALVALUS_OUTPUT_NAMEFORMAT = "calvalus.output.nameformat";
 
+    String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
+
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
@@ -49,7 +51,6 @@ public interface JobConfigNames {
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
 
-    String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";

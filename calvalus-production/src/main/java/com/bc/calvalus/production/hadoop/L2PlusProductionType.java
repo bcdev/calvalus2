@@ -75,8 +75,8 @@ public class L2PlusProductionType extends HadoopProductionType {
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
         return new CopyStaging(production,
-                             getProcessingService().getJobClient().getConf(),
-                             getStagingService().getStagingDir());
+                               getProcessingService().getJobClient().getConf(),
+                               getStagingService().getStagingDir());
     }
 
 
@@ -87,6 +87,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                                             ProductionRequest productionRequest) throws ProductionException {
 
         Configuration formatJobConfig = createJobConfig(productionRequest);
+        setRequestParameters(formatJobConfig, productionRequest);
 
         String pathPattern = createPathPattern(formattingInputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, pathPattern);
@@ -118,7 +119,6 @@ public class L2PlusProductionType extends HadoopProductionType {
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
         setDefaultProcessorParameters(l2JobConfig, processorProductionRequest);
         setRequestParameters(l2JobConfig, productionRequest);
-
 
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());

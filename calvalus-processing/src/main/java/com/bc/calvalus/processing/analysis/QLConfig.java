@@ -25,33 +25,35 @@ import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 /**
  * Configuration for quick look generation
  */
-class QLConfig {
-    @Parameter
-    int subSamplingX;
-    @Parameter
-    int subSamplingY;
+public class QLConfig {
 
     @Parameter
-    String[] RGBAExpressions;
+    private int subSamplingX;
     @Parameter
-    double[] v1;
-    @Parameter
-    double[] v2;
+    private int subSamplingY;
 
     @Parameter
-    String bandName;
+    private String[] RGBAExpressions;
     @Parameter
-    String cpdURL;
+    private double[] v1;
+    @Parameter
+    private double[] v2;
 
     @Parameter
-    String imageType;
+    private String bandName;
     @Parameter
-    String overlayURL;
+    private String cpdURL;
+
+    @Parameter
+    private String imageType;
+    @Parameter
+    private String overlayURL;
 
     public static QLConfig get(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS);
         if (xml == null) {
-            throw new IllegalArgumentException("Missing configuration '" + JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS + "'");
+            throw new IllegalArgumentException(
+                    "Missing configuration '" + JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS + "'");
         }
         try {
             return fromXml(xml);
@@ -62,5 +64,41 @@ class QLConfig {
 
     public static QLConfig fromXml(String xml) throws BindingException {
         return new ParameterBlockConverter().convertXmlToObject(xml, new QLConfig());
+    }
+
+    public int getSubSamplingX() {
+        return subSamplingX;
+    }
+
+    public int getSubSamplingY() {
+        return subSamplingY;
+    }
+
+    public String[] getRGBAExpressions() {
+        return RGBAExpressions;
+    }
+
+    public double[] getV1() {
+        return v1;
+    }
+
+    public double[] getV2() {
+        return v2;
+    }
+
+    public String getBandName() {
+        return bandName;
+    }
+
+    public String getCpdURL() {
+        return cpdURL;
+    }
+
+    public String getImageType() {
+        return imageType;
+    }
+
+    public String getOverlayURL() {
+        return overlayURL;
     }
 }

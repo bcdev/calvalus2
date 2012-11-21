@@ -66,7 +66,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         } catch (Throwable e) {
             // ignore as it is most likely already set
             String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
-                                               "This may not be a problem because it is most likely already set.",
+                                       "This may not be a problem because it is most likely already set.",
                                        e.getMessage());
             CalvalusLogger.getLogger().fine(msg);
         }
@@ -83,7 +83,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 Path inputPath = processorAdapter.getInputPath();
                 QLConfig qlConfig = QLConfig.get(context.getConfiguration());
                 String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
-                String qlName = name + "." + qlConfig.imageType;
+                String qlName = name + "." + qlConfig.getImageType();
                 Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
                 OutputStream quickLookOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
                 try {
@@ -98,22 +98,24 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    private static void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws IOException {
+    public static void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws
+                                                                                                           IOException {
 
-        if (qlConfig.subSamplingX > 0 || qlConfig.subSamplingY > 0) {
+        if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
-            subsetParams.put("subSamplingX", qlConfig.subSamplingX);
-            subsetParams.put("subSamplingY", qlConfig.subSamplingY);
+            subsetParams.put("subSamplingX", qlConfig.getSubSamplingX());
+            subsetParams.put("subSamplingY", qlConfig.getSubSamplingY());
             product = GPF.createProduct("Subset", subsetParams, product);
         }
         BandImageMultiLevelSource multiLevelSource;
-        if (qlConfig.RGBAExpressions != null && qlConfig.RGBAExpressions.length > 0) {
+        if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
             String[] rgbaExpressions;
-            if (qlConfig.RGBAExpressions.length == 4) {
-                rgbaExpressions = qlConfig.RGBAExpressions;
-            } else if (qlConfig.RGBAExpressions.length == 3) {
+            if (qlConfig.getRGBAExpressions().length == 4) {
+                rgbaExpressions = qlConfig.getRGBAExpressions();
+            } else if (qlConfig.getRGBAExpressions().length == 3) {
                 rgbaExpressions = new String[4];
-                System.arraycopy(qlConfig.RGBAExpressions, 0, rgbaExpressions, 0, qlConfig.RGBAExpressions.length);
+                System.arraycopy(qlConfig.getRGBAExpressions(), 0, rgbaExpressions, 0,
+                                 qlConfig.getRGBAExpressions().length);
                 rgbaExpressions[3] = "";
             } else {
                 throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
@@ -129,19 +131,19 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 band.setNoDataValueUsed(true);
             }
             multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
-            if (qlConfig.v1 != null && qlConfig.v2 != null && qlConfig.v1.length == qlConfig.v2.length) {
+            if (qlConfig.getV1() != null && qlConfig.getV2() != null && qlConfig.getV1().length == qlConfig.getV2().length) {
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
                 RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
-                for (int i = 0; i < qlConfig.v1.length; i++) {
-                    rgbChannelDef.setMinDisplaySample(i, qlConfig.v1[i]);
-                    rgbChannelDef.setMaxDisplaySample(i, qlConfig.v2[i]);
+                for (int i = 0; i < qlConfig.getV1().length; i++) {
+                    rgbChannelDef.setMinDisplaySample(i, qlConfig.getV1()[i]);
+                    rgbChannelDef.setMaxDisplaySample(i, qlConfig.getV2()[i]);
                 }
             }
-        } else if (qlConfig.bandName != null) {
-            Band band = product.getBand(qlConfig.bandName);
+        } else if (qlConfig.getBandName() != null) {
+            Band band = product.getBand(qlConfig.getBandName());
             multiLevelSource = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
-            if (qlConfig.cpdURL != null) {
-                InputStream inputStream = new URL(qlConfig.cpdURL).openStream();
+            if (qlConfig.getCpdURL() != null) {
+                InputStream inputStream = new URL(qlConfig.getCpdURL()).openStream();
                 try {
                     ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
                     ImageInfo imageInfo = multiLevelSource.getImageInfo();
@@ -171,15 +173,16 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        collectionLayer.getChildren().add(0, landMask);
 //        collectionLayer.getChildren().add(1, coastlineMask);
 
-        if (qlConfig.overlayURL != null) {
-            InputStream inputStream = new URL(qlConfig.overlayURL).openStream();
+        if (qlConfig.getOverlayURL() != null) {
+            InputStream inputStream = new URL(qlConfig.getOverlayURL()).openStream();
             BufferedImage bufferedImage = ImageIO.read(inputStream);
             final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
             collectionLayer.getChildren().add(0, overlayLayer);
         }
         boolean useAlpha = useAlpha(qlConfig);
         int imageType = useAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
-        BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(), imageType);
+        BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(),
+                                                        imageType);
         BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
         Viewport viewport = rendering.getViewport();
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
@@ -193,11 +196,11 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         collectionLayer.render(rendering);
         BufferedImage image = rendering.getImage();
-        ImageIO.write(image, qlConfig.imageType, outputStream);
+        ImageIO.write(image, qlConfig.getImageType(), outputStream);
     }
 
     private static boolean useAlpha(QLConfig qlConfig) {
-        return !"bmp".equals(qlConfig.imageType) && !"jpeg".equals(qlConfig.imageType);
+        return !"bmp".equals(qlConfig.getImageType()) && !"jpeg".equals(qlConfig.getImageType());
     }
 
     private static boolean isModelYAxisDown(ImageLayer imageLayer) {
@@ -214,7 +217,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         final int numPoints = propertyMap.getPropertyInt("numPoints");
         if (numPoints < 2) {
             throw new IOException("The selected file contains less than\n" +
-                                          "two colour points.");
+                                  "two colour points.");
         }
         final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[numPoints];
         double lastSample = 0;
