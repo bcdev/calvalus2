@@ -124,19 +124,18 @@ public abstract class HadoopProductionType implements ProductionType {
         return jobConfig;
     }
 
-    protected final void setDefaultProcessorParameters(Configuration jobConfig,
-                                                       ProcessorProductionRequest processorProductionRequest) {
+    protected final void setDefaultProcessorParameters(ProcessorProductionRequest processorProductionRequest,
+                                                       Configuration jobConfig) {
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(processingService);
         Map<String, String> map = Collections.emptyMap();
         if (processorDescriptor != null) {
             map = processorDescriptor.getJobConfiguration();
         }
-        processorProductionRequest.configure(jobConfig);
-        setJobConfig(jobConfig, map);
+        setJobConfig(map, jobConfig);
     }
 
-    protected final void setRequestParameters(Configuration jobConfig, ProductionRequest productionRequest) {
-        setJobConfig(jobConfig, productionRequest.getParameters());
+    protected final void setRequestParameters(ProductionRequest productionRequest, Configuration jobConfig) {
+        setJobConfig(productionRequest.getParameters(), jobConfig);
     }
 
     /**
@@ -190,10 +189,10 @@ public abstract class HadoopProductionType implements ProductionType {
      * <li>If the name if of any other form, the parameter will be ignored.</li>
      * </ol>
      *
-     * @param jobConfig  A Hadoop job configuration.
      * @param parameters The parameters.
+     * @param jobConfig  A Hadoop job configuration.
      */
-    public static void setJobConfig(Configuration jobConfig, Map<String, String> parameters) {
+    public static void setJobConfig(Map<String, String> parameters, Configuration jobConfig) {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String name = entry.getKey();
             if (name.startsWith("calvalus.hadoop.")) {

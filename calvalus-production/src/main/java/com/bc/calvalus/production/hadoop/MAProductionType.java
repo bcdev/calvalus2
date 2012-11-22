@@ -44,8 +44,10 @@ public class MAProductionType extends HadoopProductionType {
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
         Configuration maJobConfig = createJobConfig(productionRequest);
-        setDefaultProcessorParameters(maJobConfig, new ProcessorProductionRequest(productionRequest));
-        setRequestParameters(maJobConfig, productionRequest);
+        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, maJobConfig);
+        setRequestParameters(productionRequest, maJobConfig);
+        processorProductionRequest.configureProcessor(maJobConfig);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String maParametersXml = getMAConfigXml(productionRequest);

@@ -84,8 +84,10 @@ public class L2FProductionType extends HadoopProductionType {
                                           ProductionRequest productionRequest) throws ProductionException {
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        setDefaultProcessorParameters(jobConfig, new ProcessorProductionRequest(productionRequest));
-        setRequestParameters(jobConfig, productionRequest);
+        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, jobConfig);
+        setRequestParameters(productionRequest, jobConfig);
+        processorProductionRequest.configureProcessor(jobConfig);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));

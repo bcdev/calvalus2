@@ -79,7 +79,7 @@ public class QLProductionType extends HadoopProductionType {
                                     ProductionRequest productionRequest) throws ProductionException {
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        setRequestParameters(jobConfig, productionRequest);
+        setRequestParameters(productionRequest, jobConfig);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));

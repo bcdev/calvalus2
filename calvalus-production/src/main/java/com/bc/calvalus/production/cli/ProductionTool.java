@@ -65,7 +65,8 @@ import java.util.Map;
  */
 public class ProductionTool {
 
-    private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(), "calvalus.config").getPath();
+    private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(),
+                                                               "calvalus.config").getPath();
 
     private static final String DEFAULT_BEAM_BUNDLE = HadoopProcessingService.DEFAULT_BEAM_BUNDLE;
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
@@ -94,11 +95,11 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
-                || commandLine.hasOption("uninstall")
-                || commandLine.hasOption("install")
-                || commandLine.hasOption("kill")
-                || commandLine.hasOption("copy")
-                || commandLine.hasOption("help");
+                                  || commandLine.hasOption("uninstall")
+                                  || commandLine.hasOption("install")
+                                  || commandLine.hasOption("kill")
+                                  || commandLine.hasOption("copy")
+                                  || commandLine.hasOption("help");
         List argList = commandLine.getArgList();
         if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
@@ -158,7 +159,8 @@ public class ProductionTool {
             }
 
             HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
-            productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(), new File("."));
+            productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(),
+                                                                new File("."));
 
             if (commandLine.hasOption("kill")) {
                 cancelProduction(productionService, commandLine.getOptionValue("kill"), config);
@@ -203,7 +205,9 @@ public class ProductionTool {
         }
     }
 
-    private Production orderProduction(ProductionService productionService, ProductionRequest request) throws ProductionException, InterruptedException {
+    private Production orderProduction(ProductionService productionService, ProductionRequest request) throws
+                                                                                                       ProductionException,
+                                                                                                       InterruptedException {
         say("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
@@ -212,11 +216,12 @@ public class ProductionTool {
         return production;
     }
 
-    private void cancelProduction(ProductionService productionService, String productionId, Map<String, String> config) throws ProductionException, InterruptedException {
+    private void cancelProduction(ProductionService productionService, String productionId,
+                                  Map<String, String> config) throws ProductionException, InterruptedException {
         if (productionId.startsWith("job_")) {
             say("Killing Hadoop job '" + productionId + "'...");
             Configuration hadoopConfig = new Configuration();
-            HadoopProductionType.setJobConfig(hadoopConfig, config);
+            HadoopProductionType.setJobConfig(config, hadoopConfig);
             try {
                 JobClient jobClient = new JobClient(new JobConf(hadoopConfig));
                 RunningJob job = jobClient.getJob(productionId);
@@ -238,13 +243,15 @@ public class ProductionTool {
         }
     }
 
-    private void stageProduction(ProductionService productionService, Production production) throws ProductionException, InterruptedException {
+    private void stageProduction(ProductionService productionService, Production production) throws ProductionException,
+                                                                                                    InterruptedException {
         say("Staging results...");
         productionService.stageProductions(production.getId());
         observeStagingStatus(productionService, production);
     }
 
-    private void observeStagingStatus(ProductionService productionService, Production production) throws InterruptedException {
+    private void observeStagingStatus(ProductionService productionService, Production production) throws
+                                                                                                  InterruptedException {
         while (!production.getStagingStatus().isDone()) {
             Thread.sleep(500);
             productionService.updateStatuses();
@@ -261,7 +268,8 @@ public class ProductionTool {
         }
     }
 
-    private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
+    private void observeProduction(ProductionService productionService, Production production) throws
+                                                                                               InterruptedException {
         while (!production.getProcessingStatus().getState().isDone()) {
             Thread.sleep(1000);
             productionService.updateStatuses();
@@ -382,7 +390,8 @@ public class ProductionTool {
         say(bundleNames.length + " bundle(s) uninstalled.");
     }
 
-    private void installBundle(Path sourcePath, FileSystem hdfs, Path bundlePath, Configuration hadoopConfig) throws IOException {
+    private void installBundle(Path sourcePath, FileSystem hdfs, Path bundlePath, Configuration hadoopConfig) throws
+                                                                                                              IOException {
         DirCopy.copyDir(new File(sourcePath.toString()), hdfs, bundlePath, hadoopConfig);
         say("+ " + bundlePath.getName() + " installed");
     }
@@ -410,7 +419,7 @@ public class ProductionTool {
     }
 
     private void copy(Path[] sourcePaths, FileSystem fs, Path destinationPath) throws IOException {
-        say("Copying " + sourcePaths.length + " local file(s) to "+destinationPath+"...");
+        say("Copying " + sourcePaths.length + " local file(s) to " + destinationPath + "...");
         Path qualifiedDestinationPath = fs.makeQualified(destinationPath);
         for (Path sourcePath : sourcePaths) {
             say("+ " + sourcePath.getName());
@@ -480,7 +489,7 @@ public class ProductionTool {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp(TOOL_NAME + " [OPTION]... REQUEST",
                                 "\nThe Calvalus production tool submits a production REQUEST to a Calvalus production system. REQUEST must be a plain text XML file " +
-                                        "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
+                                "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
                                 TOOL_OPTIONS,
                                 "", false);
     }
@@ -509,51 +518,56 @@ public class ProductionTool {
                                   .withLongOpt("calvalus")
                                   .hasArg()
                                   .withArgName("NAME")
-                                  .withDescription("The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
+                                  .withDescription(
+                                          "The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
                                   .create("C"));
         options.addOption(OptionBuilder
                                   .withLongOpt("beam")
                                   .hasArg()
                                   .withArgName("NAME")
-                                  .withDescription("The name of the BEAM software bundle used for the production. Defaults to '" + DEFAULT_BEAM_BUNDLE + "'.")
+                                  .withDescription(
+                                          "The name of the BEAM software bundle used for the production. Defaults to '" + DEFAULT_BEAM_BUNDLE + "'.")
                                   .create("B"));
         options.addOption(OptionBuilder
                                   .withLongOpt("config")
                                   .hasArg()
                                   .withArgName("FILE")
-                                  .withDescription("The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
+                                  .withDescription(
+                                          "The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
                                   .create("c"));
         options.addOption(OptionBuilder
                                   .withLongOpt("copy")
                                   .hasArgs()
                                   .withArgName("FILES")
-                                  .withDescription("Copies FILES to '/calvalus/home/<user>' before any request is executed." +
-                                                           "Use character '"+File.pathSeparator+"' to separate paths in FILES.")
+                                  .withDescription(
+                                          "Copies FILES to '/calvalus/home/<user>' before any request is executed." +
+                                          "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("deploy")
                                   .hasArgs()
                                   .withArgName("FILES-->BUNDLE")
-                                  .withDescription("Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
-                                                           "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
-                                                           "Use character '"+File.pathSeparator+"' to separate multiple paths in FILES. " +
-                                                           "Alternatively a list of files and as last argument the bundle name can be given.")
+                                  .withDescription(
+                                          "Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
+                                          "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
+                                          "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
+                                          "Alternatively a list of files and as last argument the bundle name can be given.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("install")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
-                                                           "on Calvalus before any request is executed." +
-                                                           "Use character '"+File.pathSeparator+"' to separate multiple entries in BUNDLES.")
+                                                   "on Calvalus before any request is executed." +
+                                                   "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("uninstall")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
-                                                           "from Calvalus before any request is executed." +
-                                                           "Use character ',' to separate multiple entries in BUNDLES.")
+                                                   "from Calvalus before any request is executed." +
+                                                   "Use character ',' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("kill")

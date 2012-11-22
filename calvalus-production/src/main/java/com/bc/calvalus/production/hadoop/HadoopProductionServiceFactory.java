@@ -24,6 +24,7 @@ import java.util.Map;
  * Creates a hadoop production service.
  */
 public class HadoopProductionServiceFactory implements ProductionServiceFactory {
+
     private static final String DEFAULT_PRODUCTIONS_DB_NAME = "calvalus-database";
 
     @Override
@@ -54,23 +55,32 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
             }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
-            ProductionType l2PlusProductionType = new L2PlusProductionType(inventoryService, processingService, stagingService);
-            ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService, stagingService);
+            ProductionType l2PlusProductionType = new L2PlusProductionType(inventoryService, processingService,
+                                                                           stagingService);
+            ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService,
+                                                                     stagingService);
             ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
             ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
             ProductionType maProductionType = new MAProductionType(inventoryService, processingService, stagingService);
 
-            ProductionType pvProductionType = new InventoryProductionType(inventoryService, processingService, stagingService);
+            ProductionType pvProductionType = new InventoryProductionType(inventoryService, processingService,
+                                                                          stagingService);
             ProductionType qlProductionType = new QLProductionType(inventoryService, processingService, stagingService);
-            ProductionType pgProductionType = new GeometryProductionType(inventoryService, processingService, stagingService);
+            ProductionType pgProductionType = new GeometryProductionType(inventoryService, processingService,
+                                                                         stagingService);
 
-            ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService, stagingService);
-            ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService, stagingService);
-            ProductionType lcl3SeasonalProductionType = new LcSeasonalProductionType(inventoryService, processingService, stagingService);
+            ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService,
+                                                                       stagingService);
+            ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService,
+                                                                               stagingService);
+            ProductionType lcl3SeasonalProductionType = new LcSeasonalProductionType(inventoryService,
+                                                                                     processingService, stagingService);
 
-            ProductionType prevueProductionType = new PrevueProductionType(inventoryService, processingService, stagingService);
+            ProductionType prevueProductionType = new PrevueProductionType(inventoryService, processingService,
+                                                                           stagingService);
 
-            ProductionType globVegProductionType = new GLobVegProductionType(inventoryService, processingService, stagingService);
+            ProductionType globVegProductionType = new GLobVegProductionType(inventoryService, processingService,
+                                                                             stagingService);
 
             return new ProductionServiceImpl(inventoryService,
                                              processingService,
@@ -97,7 +107,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
 
     private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {
         Configuration jobConfiguration = new Configuration();
-        HadoopProductionType.setJobConfig(jobConfiguration, serviceConfiguration);
+        HadoopProductionType.setJobConfig(serviceConfiguration, jobConfiguration);
         return jobConfiguration;
     }
 

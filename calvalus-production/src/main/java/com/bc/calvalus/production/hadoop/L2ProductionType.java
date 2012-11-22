@@ -72,8 +72,9 @@ public class L2ProductionType extends HadoopProductionType {
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
-        setDefaultProcessorParameters(l2JobConfig, processorProductionRequest);
-        setRequestParameters(l2JobConfig, productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, l2JobConfig);
+        setRequestParameters(productionRequest, l2JobConfig);
+        processorProductionRequest.configureProcessor(l2JobConfig);
 
         Geometry geometry = productionRequest.getRegionGeometry(null);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));

@@ -59,7 +59,7 @@ public class GeometryProductionType extends HadoopProductionType {
             DateRange dateRange = dateRanges.get(i);
 
             Configuration jobConfig = createJobConfig(productionRequest);
-            setRequestParameters(jobConfig, productionRequest);
+            setRequestParameters(productionRequest, jobConfig);
 
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());

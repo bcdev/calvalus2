@@ -20,13 +20,8 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.apache.hadoop.conf.Configuration;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * The part of a production request dealing with the requested processor.
@@ -52,7 +47,7 @@ public class ProcessorProductionRequest {
         return null;
     }
 
-    public void configure(Configuration jobConfig) {
+    public void configureProcessor(Configuration jobConfig) {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
@@ -67,7 +62,8 @@ public class ProcessorProductionRequest {
         try {
             BundleDescriptor[] bundles = processingService.getBundles("");
             for (BundleDescriptor bundle : bundles) {
-                if (bundle.getBundleName().equals(processorBundleName) && bundle.getBundleVersion().equals(processorBundleVersion)) {
+                if (bundle.getBundleName().equals(processorBundleName) && bundle.getBundleVersion().equals(
+                        processorBundleVersion)) {
                     ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
                     for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
                         if (processorDescriptor.getExecutableName().equals(processorName)) {

@@ -91,7 +91,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         Workflow.Sequential sequence = new Workflow.Sequential();
         if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
-            setRequestParameters(jobConfigCloud, productionRequest);
+            setRequestParameters(productionRequest, jobConfigCloud);
 
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
@@ -107,7 +107,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         }
         if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
-            setRequestParameters(jobConfigSr, productionRequest);
+            setRequestParameters(productionRequest, jobConfigSr);
 
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
@@ -128,7 +128,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
-            setRequestParameters(jobConfigFormat, productionRequest);
+            setRequestParameters(productionRequest, jobConfigFormat);
             jobConfigFormat.set(JobConfigNames.CALVALUS_INPUT_DIR, mainOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_DIR, ncOutputDir);
             jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix + "-v%02dh%02d");

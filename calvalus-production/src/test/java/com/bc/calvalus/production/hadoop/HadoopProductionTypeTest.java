@@ -18,11 +18,13 @@ import org.junit.Test;
  * @author Norman Fomferra
  */
 public class HadoopProductionTypeTest {
+
     @Test
     public void testThatCalavlusNamesGoIntoJobConfig() throws Exception {
         HadoopProductionType productionType = new HadoopProductionType("X",
                                                                        new TestInventoryService(),
-                                                                       new HadoopProcessingService(new JobClient(new JobConf())),
+                                                                       new HadoopProcessingService(
+                                                                               new JobClient(new JobConf())),
                                                                        new TestStagingService()) {
             @Override
             protected Staging createUnsubmittedStaging(Production production) {
@@ -40,7 +42,7 @@ public class HadoopProductionTypeTest {
                                                                     "calvalus.hadoop.fs.s3.maxRetries", "16",
                                                                     "beam.mem", "6TB");
         Configuration jobConfig = productionType.createJobConfig(productionRequest);
-        productionType.setRequestParameters(jobConfig, productionRequest);
+        productionType.setRequestParameters(productionRequest, jobConfig);
 
         Assert.assertEquals("X", jobConfig.get(JobConfigNames.CALVALUS_PRODUCTION_TYPE));
         Assert.assertEquals("eva", jobConfig.get(JobConfigNames.CALVALUS_USER));

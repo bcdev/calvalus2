@@ -63,8 +63,10 @@ public class TAProductionType extends HadoopProductionType {
             String taOutputDir = getOutputPath(productionRequest, productionId, "-TA-" + (i + 1));
 
             Configuration l3JobConfig = createJobConfig(productionRequest);
-            setDefaultProcessorParameters(l3JobConfig, new ProcessorProductionRequest(productionRequest));
-            setRequestParameters(l3JobConfig, productionRequest);
+            ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+            setDefaultProcessorParameters(processorProductionRequest, l3JobConfig);
+            setRequestParameters(productionRequest, l3JobConfig);
+            processorProductionRequest.configureProcessor(l3JobConfig);
 
             l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
@@ -79,7 +81,7 @@ public class TAProductionType extends HadoopProductionType {
             L3WorkflowItem l3WorkflowItem = new L3WorkflowItem(getProcessingService(), l3JobName, l3JobConfig);
 
             Configuration taJobConfig = createJobConfig(productionRequest);
-            setRequestParameters(taJobConfig, productionRequest);
+            setRequestParameters(productionRequest, taJobConfig);
             taJobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, l3OutputDir);
             taJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, taOutputDir);
             taJobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);

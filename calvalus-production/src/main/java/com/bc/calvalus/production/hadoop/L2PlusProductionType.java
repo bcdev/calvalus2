@@ -91,8 +91,8 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                                                                    ProductionException {
 
         Configuration formatJobConfig = createJobConfig(productionRequest);
-        setDefaultProcessorParameters(formatJobConfig, processorProductionRequest);
-        setRequestParameters(formatJobConfig, productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, formatJobConfig);
+        setRequestParameters(productionRequest, formatJobConfig);
 
         String pathPattern = createPathPattern(formattingInputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, pathPattern);
@@ -123,8 +123,9 @@ public class L2PlusProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
-        setDefaultProcessorParameters(l2JobConfig, processorProductionRequest);
-        setRequestParameters(l2JobConfig, productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, l2JobConfig);
+        setRequestParameters(productionRequest, l2JobConfig);
+        processorProductionRequest.configureProcessor(l2JobConfig);
 
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
