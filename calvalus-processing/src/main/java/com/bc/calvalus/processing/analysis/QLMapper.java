@@ -155,12 +155,12 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 band.setNoDataValueUsed(true);
             }
             multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
-            if (qlConfig.getV1() != null && qlConfig.getV2() != null && qlConfig.getV1().length == qlConfig.getV2().length) {
+            if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null && qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
                 RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
-                for (int i = 0; i < qlConfig.getV1().length; i++) {
-                    rgbChannelDef.setMinDisplaySample(i, qlConfig.getV1()[i]);
-                    rgbChannelDef.setMaxDisplaySample(i, qlConfig.getV2()[i]);
+                for (int i = 0; i < qlConfig.getRGBAMinSamples().length; i++) {
+                    rgbChannelDef.setMinDisplaySample(i, qlConfig.getRGBAMinSamples()[i]);
+                    rgbChannelDef.setMaxDisplaySample(i, qlConfig.getRGBAMaxSamples()[i]);
                 }
             }
         } else if (qlConfig.getBandName() != null) {

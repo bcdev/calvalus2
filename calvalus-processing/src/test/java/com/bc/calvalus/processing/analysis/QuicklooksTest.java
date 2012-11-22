@@ -17,8 +17,8 @@ public class QuicklooksTest {
         sb.append("<subSamplingX>3</subSamplingX>\n");
         sb.append("<subSamplingY>5</subSamplingY>\n");
         sb.append("<RGBAExpressions>var2 + log(var3), complicated expression, 1-3 + 5,constant</RGBAExpressions>\n");
-        sb.append("<v1>0.45,1.34,5,77</v1>\n");
-        sb.append("<v2>23,5.0007,.456</v2>\n");
+        sb.append("<RGBAMinSamples>0.45,1.34,5,77</RGBAMinSamples>\n");
+        sb.append("<RGBAMaxSamples>23,5.0007,.456</RGBAMaxSamples>\n");
         sb.append("<bandName>chl_conc</bandName>\n");
         sb.append("<cpdURL>http://www.allMycpds.com/chl.cpd</cpdURL>\n");
         sb.append("<imageType>SpecialType</imageType>\n");
@@ -35,13 +35,13 @@ public class QuicklooksTest {
         assertEquals(" complicated expression", rgbaExpressions[1]);
         assertEquals(" 1-3 + 5", rgbaExpressions[2]);
         assertEquals("constant", rgbaExpressions[3]);
-        double[] v1Values = qlConfig.getV1();
+        double[] v1Values = qlConfig.getRGBAMinSamples();
         assertEquals(4, v1Values.length);
         assertEquals(0.45, v1Values[0], 1.0e-8);
         assertEquals(1.34, v1Values[1], 1.0e-8);
         assertEquals(5, v1Values[2], 1.0e-8);
         assertEquals(77, v1Values[3], 1.0e-8);
-        double[] v2Values = qlConfig.getV2();
+        double[] v2Values = qlConfig.getRGBAMaxSamples();
         assertEquals(3, v2Values.length);
         assertEquals(23, v2Values[0], 1.0e-8);
         assertEquals(5.0007, v2Values[1], 1.0e-8);

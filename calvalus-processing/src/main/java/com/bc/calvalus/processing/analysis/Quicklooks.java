@@ -44,27 +44,25 @@ public class Quicklooks {
     public static class QLConfig {
 
         @Parameter
+        private String imageType;
+
+        @Parameter
         private int subSamplingX;
         @Parameter
         private int subSamplingY;
 
         @Parameter
         private String[] RGBAExpressions;
-
-        // todo - rename to MinSample of RGB-Channel
         @Parameter
-        private double[] v1;
-        // todo - rename to MaxSample of RGB-Channel
+        private double[] RGBAMinSamples;
         @Parameter
-        private double[] v2;
+        private double[] RGBAMaxSamples;
 
         @Parameter
         private String bandName;
         @Parameter
         private String cpdURL;
 
-        @Parameter
-        private String imageType;
         @Parameter
         private String overlayURL;
 
@@ -80,12 +78,12 @@ public class Quicklooks {
             return RGBAExpressions;
         }
 
-        public double[] getV1() {
-            return v1;
+        public double[] getRGBAMinSamples() {
+            return RGBAMinSamples;
         }
 
-        public double[] getV2() {
-            return v2;
+        public double[] getRGBAMaxSamples() {
+            return RGBAMaxSamples;
         }
 
         public String getBandName() {
