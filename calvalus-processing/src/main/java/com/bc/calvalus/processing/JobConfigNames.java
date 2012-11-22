@@ -41,6 +41,7 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_PREFIX = "calvalus.output.prefix";
     String CALVALUS_OUTPUT_NAMEFORMAT = "calvalus.output.nameformat";
 
+    String CALVALUS_OUTPUT_QUICKLOOKS = "calvalus.output.quicklooks";
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";

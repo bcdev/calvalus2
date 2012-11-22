@@ -46,8 +46,9 @@ public class L2PlusProductionType extends HadoopProductionType {
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
 
+        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
         HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
-                                                                 productionRequest);
+                                                                 productionRequest, processorProductionRequest);
         WorkflowItem workflowItem = processingItem;
         String outputDir = processingItem.getOutputDir();
 
@@ -55,7 +56,8 @@ public class L2PlusProductionType extends HadoopProductionType {
         if (outputFormat != null && !outputFormat.equals("SEQ")) {
             String formattingInputDir = outputDir;
             HadoopWorkflowItem formattingItem = createFormattingItem(productionId, productionName, dateRanges,
-                                                                     formattingInputDir, productionRequest);
+                                                                     formattingInputDir, productionRequest,
+                                                                     processorProductionRequest);
             outputDir = formattingItem.getOutputDir();
             workflowItem = new Workflow.Sequential(processingItem, formattingItem);
         }
@@ -84,9 +86,12 @@ public class L2PlusProductionType extends HadoopProductionType {
                                             String productionName,
                                             List<DateRange> dateRanges,
                                             String formattingInputDir,
-                                            ProductionRequest productionRequest) throws ProductionException {
+                                            ProductionRequest productionRequest,
+                                            ProcessorProductionRequest processorProductionRequest) throws
+                                                                                                   ProductionException {
 
         Configuration formatJobConfig = createJobConfig(productionRequest);
+        setDefaultProcessorParameters(formatJobConfig, processorProductionRequest);
         setRequestParameters(formatJobConfig, productionRequest);
 
         String pathPattern = createPathPattern(formattingInputDir);
@@ -100,23 +105,24 @@ public class L2PlusProductionType extends HadoopProductionType {
         Geometry regionGeom = productionRequest.getRegionGeometry(null);
         formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                             regionGeom != null ? regionGeom.toString() : "");
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS"));
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, productionRequest.getString("outputBandList"));
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, productionRequest.getString("outputBandList", ""));
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS,
+                            productionRequest.getString("quicklooks", "false"));
 
         return new L2FormattingWorkflowItem(getProcessingService(), productionName, formatJobConfig);
     }
 
-    private HadoopWorkflowItem createProcessingItem(String productionId,
-                                                    String productionName,
-                                                    List<DateRange> dateRanges,
-                                                    ProductionRequest productionRequest) throws ProductionException {
+    private HadoopWorkflowItem createProcessingItem(String productionId, String productionName,
+                                                    List<DateRange> dateRanges, ProductionRequest productionRequest,
+                                                    ProcessorProductionRequest processorProductionRequest) throws
+                                                                                                           ProductionException {
 
         productionRequest.ensureParameterSet("processorName");
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
         Configuration l2JobConfig = createJobConfig(productionRequest);
-        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
         setDefaultProcessorParameters(l2JobConfig, processorProductionRequest);
         setRequestParameters(l2JobConfig, productionRequest);
 

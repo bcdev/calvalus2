@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -84,12 +85,25 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                 try {
                     File productFile = productFormatter.createTemporaryProductFile();
                     LOG.info("Start writing product to file: " + productFile.getName());
-                    context.setStatus("writing");
+                    context.setStatus("Writing");
 
                     ProductIO.writeProduct(product, productFile, outputFormat, false,
-                                           SubProgressMonitor.create(pm, 95));
+                                           SubProgressMonitor.create(pm, 90));
                     LOG.info("Finished writing product.");
-                    context.setStatus("copying");
+
+                    context.setStatus("Quicklooks");
+                    LOG.info("Creating quicklooks.");
+                    if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
+                        if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
+                            QLMapper.createQuicklooks(product, processorAdapter.getInputPath(), context);
+                        } else {
+                            LOG.warning("Missing parameters for quicklook generation.");
+                        }
+                    }
+                    pm.worked(5);
+                    LOG.info("Finished creating quicklooks.");
+
+                    context.setStatus("Copying");
                     productFormatter.compressToHDFS(context, productFile);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
                     context.setStatus("");

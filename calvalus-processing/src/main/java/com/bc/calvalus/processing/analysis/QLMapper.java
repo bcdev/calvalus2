@@ -53,11 +53,15 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * A mapper for generating quick-looks of products.
  */
 public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
+
+
+    public static final Logger LOGGER = CalvalusLogger.getLogger();
 
     static {
         try {
@@ -68,7 +72,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
                                        "This may not be a problem because it is most likely already set.",
                                        e.getMessage());
-            CalvalusLogger.getLogger().fine(msg);
+            LOGGER.fine(msg);
         }
     }
 
@@ -80,17 +84,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                Path inputPath = processorAdapter.getInputPath();
-                QLConfig qlConfig = QLConfig.get(context.getConfiguration());
-                String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
-                String qlName = name + "." + qlConfig.getImageType();
-                Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
-                OutputStream quickLookOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
-                try {
-                    createQuicklookImage(product, quickLookOutputStream, qlConfig);
-                } finally {
-                    quickLookOutputStream.close();
-                }
+                createQuicklooks(product, processorAdapter.getInputPath(), context);
             }
         } finally {
             pm.done();
@@ -98,8 +92,38 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklookImage(Product product, OutputStream outputStream, QLConfig qlConfig) throws
-                                                                                                           IOException {
+    public static void createQuicklooks(Product product, Path inputPath, Mapper.Context context) throws
+                                                                                                 IOException,
+                                                                                                 InterruptedException {
+        Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+        for (Quicklooks.QLConfig config : configs) {
+            String bandName = config.getBandName();
+            if (bandName == null) {
+                bandName = "RGB";
+            }
+            OutputStream quickLookOutputStream = createQuicklookOutputStream(context, inputPath, bandName, config);
+            try {
+                createQuicklookImage(product, quickLookOutputStream, config);
+            } finally {
+                quickLookOutputStream.close();
+            }
+
+        }
+    }
+
+    private static OutputStream createQuicklookOutputStream(Mapper.Context context, Path inputPath,
+                                                            String bandName, Quicklooks.QLConfig qlConfig)
+            throws IOException, InterruptedException {
+
+        String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
+        String qlName = name + "_" + bandName + "." + qlConfig.getImageType();
+        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
+        return path.getFileSystem(context.getConfiguration()).create(path);
+    }
+
+    private static void createQuicklookImage(Product product, OutputStream outputStream,
+                                             Quicklooks.QLConfig qlConfig) throws
+                                                                           IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
@@ -141,23 +165,35 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             }
         } else if (qlConfig.getBandName() != null) {
             Band band = product.getBand(qlConfig.getBandName());
+            String cpdURL = qlConfig.getCpdURL();
+            if (band == null) {
+                String msg = String.format("Could not create quicklook. Product does not contain band '%s'",
+                                           qlConfig.getBandName());
+                LOGGER.warning(msg);
+                return;
+            }
+            if (cpdURL == null) {
+                String msg = String.format("Could not create quicklook. No CPD-URL given for band '%s'",
+                                           qlConfig.getBandName());
+                LOGGER.warning(msg);
+                return;
+
+            }
             multiLevelSource = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
-            if (qlConfig.getCpdURL() != null) {
-                InputStream inputStream = new URL(qlConfig.getCpdURL()).openStream();
-                try {
-                    ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
-                    ImageInfo imageInfo = multiLevelSource.getImageInfo();
-                    if (band.getIndexCoding() != null) {
-                        imageInfo.setColors(colorPaletteDef.getColors());
-                    } else {
-                        Stx stx = band.getStx();
-                        imageInfo.setColorPaletteDef(colorPaletteDef,
-                                                     stx.getMinimum(),
-                                                     stx.getMaximum(), false);
-                    }
-                } finally {
-                    inputStream.close();
+            InputStream inputStream = new URL(cpdURL).openStream();
+            try {
+                ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
+                ImageInfo imageInfo = multiLevelSource.getImageInfo();
+                if (band.getIndexCoding() != null) {
+                    imageInfo.setColors(colorPaletteDef.getColors());
+                } else {
+                    Stx stx = band.getStx();
+                    imageInfo.setColorPaletteDef(colorPaletteDef,
+                                                 stx.getMinimum(),
+                                                 stx.getMaximum(), false);
                 }
+            } finally {
+                inputStream.close();
             }
         } else {
             throw new IllegalArgumentException("Neither RGB nor band information given");
@@ -166,12 +202,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         CollectionLayer collectionLayer = new CollectionLayer();
         collectionLayer.getChildren().add(imageLayer);
-//        Layer landMask = MaskLayerType.createLayer(rgbBands[0], product.getMaskGroup().get("l1p_cc_land"));
-//        landMask.setVisible(true);
-//        Layer coastlineMask = MaskLayerType.createLayer(rgbBands[0], product.getMaskGroup().get("l1p_cc_coastline"));
-//        coastlineMask.setVisible(true);
-//        collectionLayer.getChildren().add(0, landMask);
-//        collectionLayer.getChildren().add(1, coastlineMask);
 
         if (qlConfig.getOverlayURL() != null) {
             InputStream inputStream = new URL(qlConfig.getOverlayURL()).openStream();
@@ -199,8 +229,8 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         ImageIO.write(image, qlConfig.getImageType(), outputStream);
     }
 
-    private static boolean useAlpha(QLConfig qlConfig) {
-        return !"bmp".equals(qlConfig.getImageType()) && !"jpeg".equals(qlConfig.getImageType());
+    private static boolean useAlpha(Quicklooks.QLConfig qlConfig) {
+        return !"bmp".equalsIgnoreCase(qlConfig.getImageType()) && !"jpeg".equalsIgnoreCase(qlConfig.getImageType());
     }
 
     private static boolean isModelYAxisDown(ImageLayer imageLayer) {
@@ -210,7 +240,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     /**
      * Taken from  ColorPaletteDef. modified to use InputStream
      */
-    public static ColorPaletteDef loadColorPaletteDef(InputStream inputStream) throws IOException {
+    private static ColorPaletteDef loadColorPaletteDef(InputStream inputStream) throws IOException {
         final PropertyMap propertyMap = new PropertyMap();
         propertyMap.getProperties().load(inputStream);
 

@@ -7,12 +7,13 @@ import static org.junit.Assert.*;
 /**
  * @author Marco Peters
  */
-public class QLConfigTest {
+public class QuicklooksTest {
 
     @Test
-    public void testFromXml() throws Exception {
+    public void testReadSingleConfig() throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append("<QLConfig>\n");
+        sb.append("<quicklooks>\n");
+        sb.append("<config>\n");
         sb.append("<subSamplingX>3</subSamplingX>\n");
         sb.append("<subSamplingY>5</subSamplingY>\n");
         sb.append("<RGBAExpressions>var2 + log(var3), complicated expression, 1-3 + 5,constant</RGBAExpressions>\n");
@@ -22,9 +23,10 @@ public class QLConfigTest {
         sb.append("<cpdURL>http://www.allMycpds.com/chl.cpd</cpdURL>\n");
         sb.append("<imageType>SpecialType</imageType>\n");
         sb.append("<overlayURL>file://C:\\User\\home\\overlay.png</overlayURL>\n");
-        sb.append("</QLConfig>\n");
+        sb.append("</config>\n");
+        sb.append("</quicklooks>\n");
         String xml = sb.toString();
-        QLConfig qlConfig = QLConfig.fromXml(xml);
+        Quicklooks.QLConfig qlConfig = Quicklooks.fromXml(xml).getConfigs()[0];
         assertEquals(3, qlConfig.getSubSamplingX());
         assertEquals(5, qlConfig.getSubSamplingY());
         String[] rgbaExpressions = qlConfig.getRGBAExpressions();
@@ -50,4 +52,33 @@ public class QLConfigTest {
         assertEquals("file://C:\\User\\home\\overlay.png", qlConfig.getOverlayURL());
 
     }
+
+    @Test
+    public void testReadSeveralConfigs() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<quicklooks>\n");
+        sb.append("<config>\n");
+        sb.append("<subSamplingX>3</subSamplingX>\n");
+        sb.append("<subSamplingY>5</subSamplingY>\n");
+        sb.append("<bandName>chl_conc</bandName>\n");
+        sb.append("<cpdURL>http://www.allMycpds.com/chl.cpd</cpdURL>\n");
+        sb.append("<imageType>SpecialType</imageType>\n");
+        sb.append("<overlayURL>file://C:\\User\\home\\overlay.png</overlayURL>\n");
+        sb.append("</config>\n");
+        sb.append("<config>\n");
+        sb.append("<bandName>alpha</bandName>\n");
+        sb.append("<cpdURL>http://www.allMycpds.com/alpha.cpd</cpdURL>\n");
+        sb.append("<imageType>PNG</imageType>\n");
+        sb.append("</config>\n");
+        sb.append("</quicklooks>\n");
+        String xml = sb.toString();
+
+        Quicklooks quicklooks = Quicklooks.fromXml(xml);
+        Quicklooks.QLConfig[] configs = quicklooks.getConfigs();
+        assertEquals(2, configs.length);
+        assertEquals("chl_conc", configs[0].getBandName());
+        assertEquals("alpha", configs[1].getBandName());
+
+    }
+
 }
