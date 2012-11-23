@@ -26,6 +26,7 @@ import java.util.Map;
 public class OutputParametersForm extends Composite {
 
     interface TheUiBinder extends UiBinder<Widget, OutputParametersForm> {
+
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -131,7 +132,7 @@ public class OutputParametersForm extends Composite {
                 parameters.put("autoStaging", autoStaging.getValue() + "");
                 if (showTailoringRelatedSettings) {
                     parameters.put("outputCRS", crsText.getValue());
-                    parameters.put("quickLooks", quicklooks.getValue() + "");
+                    parameters.put("quicklooks", quicklooks.getValue() + "");
                     StringBuilder sb = new StringBuilder();
                     int itemCount = bandList.getItemCount();
                     for (int i = 0; i < itemCount; i++) {

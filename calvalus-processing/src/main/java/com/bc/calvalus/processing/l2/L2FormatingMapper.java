@@ -92,16 +92,16 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                     LOG.info("Finished writing product.");
 
                     context.setStatus("Quicklooks");
-                    LOG.info("Creating quicklooks.");
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
                         if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
+                            LOG.info("Creating quicklooks.");
                             QLMapper.createQuicklooks(product, processorAdapter.getInputPath(), context);
+                            LOG.info("Finished creating quicklooks.");
                         } else {
                             LOG.warning("Missing parameters for quicklook generation.");
                         }
                     }
                     pm.worked(5);
-                    LOG.info("Finished creating quicklooks.");
 
                     context.setStatus("Copying");
                     productFormatter.compressToHDFS(context, productFile);
