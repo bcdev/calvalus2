@@ -52,8 +52,6 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
-                {JobConfigNames.CALVALUS_L2_OPERATOR, null},
-                {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
                 {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
@@ -83,6 +81,7 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
             JobUtils.clearAndSetOutputDir(job, getOutputDir());
         }
 
+        // for bundle only
         ProcessorFactory.installProcessor(jobConfig);
     }
 }

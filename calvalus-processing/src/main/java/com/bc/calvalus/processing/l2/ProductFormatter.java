@@ -70,6 +70,7 @@ public class ProductFormatter {
             outputExtension = ".tif";
         } else if (outputFormat.equals("Multi-GeoTIFF")) {
             outputExtension = ".tif";
+            outputCompression = "dir";
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
@@ -120,18 +121,32 @@ public class ProductFormatter {
     }
 
     public void compressToHDFS(TaskInputOutputContext<?, ?, ?, ?> context, File productFile) throws IOException {
-        OutputStream outputStream = createOutputStream(context, outputFilename);
+
         if ("zip".equals(outputCompression)) {
             LOG.info("Creating ZIP archive on HDFS.");
+            OutputStream outputStream = createOutputStream(context, outputFilename);
             zip(tmpDir, outputStream, context);
         } else if ("gz".equals(outputCompression)) {
             LOG.info("Creating GZ file on HDFS.");
             InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
+            OutputStream outputStream = createOutputStream(context, outputFilename);
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
             copyAndClose(inputStream, gzipOutputStream, context);
+        } else if ("dir".equals(outputCompression)) {
+            LOG.info("Copying content of tmpDir to HDFS.");
+            File[] files = tmpDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    LOG.info("Copying file " + file.getName() + " to HDFS.");
+                    InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+                    OutputStream outputStream = createOutputStream(context, file.getName());
+                    copyAndClose(inputStream, outputStream, context);
+                }
+            }
         } else {
             LOG.info("Copying file to HDFS.");
             InputStream inputStream = new BufferedInputStream(new FileInputStream(productFile));
+            OutputStream outputStream = createOutputStream(context, outputFilename);
             copyAndClose(inputStream, outputStream, context);
         }
         LOG.info("Finished writing to HDFS.");

@@ -19,8 +19,8 @@ package com.bc.calvalus.processing.l2;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.analysis.QLMapper;
+import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -53,7 +53,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
-        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProcessorAdapter processorAdapter = new IdentityProcessorAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 2 format", 100);
         try {
@@ -75,7 +75,7 @@ public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWr
                     return;
                 }
             }
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
+            Product product = processorAdapter.getInputProduct();
 
             if (!isProductEmpty(context, product)) {
                 product = outputTailoring(jobConfig, product);

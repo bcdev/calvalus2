@@ -94,6 +94,12 @@ public class L2PlusProductionType extends HadoopProductionType {
         setDefaultProcessorParameters(processorProductionRequest, formatJobConfig);
         setRequestParameters(productionRequest, formatJobConfig);
 
+
+        String processorBundle = processorProductionRequest.getProcessorBundle();
+        if (processorBundle != null) {
+            formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+        }
+
         String pathPattern = createPathPattern(formattingInputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, pathPattern);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
