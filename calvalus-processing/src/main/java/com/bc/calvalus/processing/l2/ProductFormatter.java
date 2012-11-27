@@ -68,6 +68,8 @@ public class ProductFormatter {
             outputFormat = "NetCDF-BEAM"; // use NetCDF with BEAM extensions
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
+        } else if (outputFormat.equals("Multi-GeoTIFF")) {
+            outputExtension = ".tif";
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
@@ -135,7 +137,8 @@ public class ProductFormatter {
         LOG.info("Finished writing to HDFS.");
     }
 
-    public static void copyAndClose(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
+    public static void copyAndClose(InputStream inputStream, OutputStream outputStream,
+                                    Progressable progressable) throws IOException {
         try {
             copy(inputStream, outputStream, progressable);
         } finally {
@@ -180,7 +183,8 @@ public class ProductFormatter {
     }
 
     // copied from Staging
-    public static void copy(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws IOException {
+    public static void copy(InputStream inputStream, OutputStream outputStream, Progressable progressable) throws
+                                                                                                           IOException {
         byte[] buffer = new byte[64 * 1024];
         while (true) {
             progressable.progress();
@@ -193,7 +197,8 @@ public class ProductFormatter {
         }
     }
 
-    public static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws IOException {
+    public static OutputStream createOutputStream(TaskInputOutputContext<?, ?, ?, ?> context, String filename) throws
+                                                                                                               IOException {
         Path workOutputPath;
         try {
             workOutputPath = FileOutputFormat.getWorkOutputPath(context);
