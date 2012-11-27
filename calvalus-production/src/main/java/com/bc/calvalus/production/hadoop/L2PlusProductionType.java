@@ -102,6 +102,7 @@ public class L2PlusProductionType extends HadoopProductionType {
 
         String pathPattern = createPathPattern(formattingInputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, pathPattern);
+        formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
         String formatOutputDir = getOutputPath(productionRequest, productionId, "-output");

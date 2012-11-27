@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.analysis.QLMapper;
+import com.bc.calvalus.processing.beam.BeamProcessorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
@@ -76,27 +77,34 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     return;
                 }
             }
-            Product product = processorAdapter.getInputProduct();
+            Product targetProduct = processorAdapter.getInputProduct();
 
-            if (!isProductEmpty(context, product)) {
-                product = outputTailoring(jobConfig, product);
+            if (!isProductEmpty(context, targetProduct)) {
+                targetProduct = outputTailoring(jobConfig, targetProduct);
+                BeamProcessorAdapter.copyTimeCoding(processorAdapter.getInputProduct(), targetProduct);
             }
 
-            if (!isProductEmpty(context, product)) {
+            if (!isProductEmpty(context, targetProduct)) {
                 try {
                     File productFile = productFormatter.createTemporaryProductFile();
                     LOG.info("Start writing product to file: " + productFile.getName());
                     context.setStatus("Writing");
 
-                    ProductIO.writeProduct(product, productFile, outputFormat, false,
-                                           SubProgressMonitor.create(pm, 90));
+                    ProductIO.writeProduct(targetProduct, productFile, outputFormat, false,
+                                           SubProgressMonitor.create(pm, 80));
                     LOG.info("Finished writing product.");
+
+                    context.setStatus("Copying");
+                    productFormatter.compressToHDFS(context, productFile);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
+                    pm.worked(10);
+
 
                     context.setStatus("Quicklooks");
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
                         if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
                             LOG.info("Creating quicklooks.");
-                            QLMapper.createQuicklooks(product, inputPath, context);
+                            QLMapper.createQuicklooks(targetProduct, inputPath, context);
                             LOG.info("Finished creating quicklooks.");
                         } else {
                             LOG.warning("Missing parameters for quicklook generation.");
@@ -108,18 +116,16 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
                         LOG.info("Creating metadata.");
                         Path outputPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
+                        System.out.println("inputPath = " + inputPath.toString());
+                        System.out.println("outputPath = " + outputPath.toString());
                         L2Mapper.processMetadata(context,
-                                                 inputPath.toString(), product,
-                                                 outputPath.toString(), product);
+                                                 inputPath.toString(), targetProduct,
+                                                 outputPath.toString(), targetProduct);
                         LOG.info("Finished creating metadata.");
                     }
                     pm.worked(5);
-
-                    context.setStatus("Copying");
-                    productFormatter.compressToHDFS(context, productFile);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
-                    context.setStatus("");
                 } finally {
+                    context.setStatus("");
                     productFormatter.cleanupTempDir();
                 }
             }

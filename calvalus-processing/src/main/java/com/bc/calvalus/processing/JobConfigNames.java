@@ -57,7 +57,6 @@ public interface JobConfigNames {
 
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";
-    String CALVALUS_REGION_NAME = "calvalus.regionName";
     String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
     String CALVALUS_USER = "calvalus.user";
     String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";

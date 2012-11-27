@@ -62,7 +62,7 @@ public class L3Formatter {
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_FORMAT);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MIN_DATE);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MAX_DATE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_NAME);
+        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_GEOMETRY);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
         addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_BEAM_BUNDLE);

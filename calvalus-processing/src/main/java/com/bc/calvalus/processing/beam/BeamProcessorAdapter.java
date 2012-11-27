@@ -84,13 +84,13 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
         }
     }
 
-    private void copyTimeCoding(Product subsetProduct, Product processedProduct) {
-        if (processedProduct != subsetProduct) {
-            if (processedProduct.getStartTime() == null) {
-                processedProduct.setStartTime(subsetProduct.getStartTime());
+    public static void copyTimeCoding(Product sourceProduct, Product targetProduct) {
+        if (targetProduct != sourceProduct) {
+            if (targetProduct.getStartTime() == null) {
+                targetProduct.setStartTime(sourceProduct.getStartTime());
             }
-            if (processedProduct.getEndTime() == null) {
-                processedProduct.setEndTime(subsetProduct.getEndTime());
+            if (targetProduct.getEndTime() == null) {
+                targetProduct.setEndTime(sourceProduct.getEndTime());
             }
         }
     }
