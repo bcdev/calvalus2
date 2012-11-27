@@ -36,7 +36,7 @@ import java.util.Map;
  *
  * @author MarcoZ
  */
-public class BeamProcessorAdapter extends IdentityProcessorAdapter {
+public class BeamProcessorAdapter extends SubsetProcessorAdapter {
 
     private Product targetProduct;
 
@@ -54,8 +54,8 @@ public class BeamProcessorAdapter extends IdentityProcessorAdapter {
         Product subsetProduct = createSubset();
         targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
         if (targetProduct == null ||
-                targetProduct.getSceneRasterWidth() == 0 ||
-                targetProduct.getSceneRasterHeight() == 0) {
+            targetProduct.getSceneRasterWidth() == 0 ||
+            targetProduct.getSceneRasterHeight() == 0) {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
@@ -110,7 +110,8 @@ public class BeamProcessorAdapter extends IdentityProcessorAdapter {
         return product;
     }
 
-    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws BindingException {
+    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws
+                                                                                                            BindingException {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }

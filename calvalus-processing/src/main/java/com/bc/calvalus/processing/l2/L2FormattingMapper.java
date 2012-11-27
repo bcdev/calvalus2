@@ -20,7 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.analysis.QLMapper;
-import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
+import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -53,7 +53,8 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
-        ProcessorAdapter processorAdapter = new IdentityProcessorAdapter(context);
+        // todo - replace by an IdentityAdapter or something similar
+        ProcessorAdapter processorAdapter = new SubsetProcessorAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 2 format", 100);
         try {
@@ -95,11 +96,22 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
                         if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
                             LOG.info("Creating quicklooks.");
-                            QLMapper.createQuicklooks(product, processorAdapter.getInputPath(), context);
+                            QLMapper.createQuicklooks(product, inputPath, context);
                             LOG.info("Finished creating quicklooks.");
                         } else {
                             LOG.warning("Missing parameters for quicklook generation.");
                         }
+                    }
+                    pm.worked(5);
+
+                    context.setStatus("Metadata");
+                    if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
+                        LOG.info("Creating metadata.");
+                        Path outputPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
+                        L2Mapper.processMetadata(context,
+                                                 inputPath.toString(), product,
+                                                 outputPath.toString(), product);
+                        LOG.info("Finished creating metadata.");
                     }
                     pm.worked(5);
 

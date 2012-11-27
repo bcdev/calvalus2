@@ -50,6 +50,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
      * Mapper implementation method. See class comment.
      *
      * @param context task "configuration"
+     *
      * @throws java.io.IOException  if installation or process initiation raises it
      * @throws InterruptedException if processing is interrupted externally
      */
@@ -81,7 +82,12 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
 
-                    processMetadata(context, processorAdapter);
+                    processMetadata(context,
+                                    processorAdapter.getInputPath().toString(),
+                                    processorAdapter.getInputProduct(),
+                                    processorAdapter.getOutputPath().toString(),
+                                    processorAdapter.openProcessedProduct()
+                    );
                 } else {
                     LOG.warning("product has not been processed.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not processed").increment(1);
@@ -96,17 +102,14 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         }
     }
 
-    private void processMetadata(Context context, ProcessorAdapter processorAdapter) throws IOException {
-        Configuration configuration = context.getConfiguration();
-        String templatePath = configuration.get("calvalus.metadata.template");
+    static void processMetadata(Mapper.Context context,
+                                String sourcePath, Product sourceProduct,
+                                String targetPath, Product targetProduct) throws IOException {
+        Configuration jobConfig = context.getConfiguration();
+        String templatePath = jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE);
         if (templatePath != null) {
             Path path = new Path(templatePath);
-            if (FileSystem.get(configuration).exists(path)) {
-                Path sourcePath = processorAdapter.getInputPath();
-                Path outputPath = processorAdapter.getOutputPath();
-                Product sourceProduct = processorAdapter.getInputProduct();
-                Product targetProduct = processorAdapter.openProcessedProduct();
-
+            if (FileSystem.get(jobConfig).exists(path)) {
                 HDFSSimpleFileSystem hdfsSimpleFileSystem = new HDFSSimpleFileSystem(context);
                 MetadataResourceEngine metadataResourceEngine = new MetadataResourceEngine(hdfsSimpleFileSystem);
 
@@ -116,14 +119,13 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("softwareVersion", "1.5");
                 vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
-                File targetFile = new File(outputPath.toString());
+                File targetFile = new File(targetPath);
                 vcx.put("targetFile", targetFile);
-                vcx.put("targetDir", targetFile.getParentFile() != null ? targetFile.getParentFile() : new File("."));
                 vcx.put("targetBaseName", FileUtils.getFilenameWithoutExtension(targetFile));
                 vcx.put("targetName", targetFile.getName());
-                metadataResourceEngine.readRelatedResource("source", sourcePath.toString());
+                metadataResourceEngine.readRelatedResource("source", sourcePath);
 
-                vcx.put("configuration", configuration);
+                vcx.put("configuration", jobConfig);
                 vcx.put("sourceProduct", sourceProduct);
                 vcx.put("targetProduct", targetProduct);
 
@@ -136,7 +138,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("targetProductGML", gml);
                 vcx.put("targetProductEnvelope", envelope);
 
-                metadataResourceEngine.writeRelatedResource(templatePath, outputPath.toString());
+                metadataResourceEngine.writeRelatedResource(templatePath, targetPath);
             } else {
                 LOG.severe("Template does not exists: " + templatePath);
             }

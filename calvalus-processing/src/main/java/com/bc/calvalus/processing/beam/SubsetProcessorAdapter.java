@@ -36,13 +36,13 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class IdentityProcessorAdapter extends ProcessorAdapter {
+public class SubsetProcessorAdapter extends ProcessorAdapter {
 
     private static final int DEFAULT_TILE_HEIGHT = 64;
 
     private Product targetProduct;
 
-    public IdentityProcessorAdapter(MapContext mapContext) {
+    public SubsetProcessorAdapter(MapContext mapContext) {
         super(mapContext);
         GpfUtils.init(mapContext.getConfiguration());
     }
@@ -59,12 +59,12 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
-        pm.setSubTaskName("L2 Identity");
+        pm.setSubTaskName("L2 Subset");
 
         targetProduct = createSubset();
         if (targetProduct == null ||
-                targetProduct.getSceneRasterWidth() == 0 ||
-                targetProduct.getSceneRasterHeight() == 0) {
+            targetProduct.getSceneRasterWidth() == 0 ||
+            targetProduct.getSceneRasterHeight() == 0) {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
@@ -109,7 +109,8 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
             tileHeight = preferredTileSize.height;
         }
         Path workOutputProductPath = getWorkOutputPath();
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), getMapContext(), pm);
+        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), getMapContext(),
+                                                                                   pm);
         streamingProductWriter.writeProduct(product, workOutputProductPath, tileHeight);
     }
 
@@ -129,7 +130,7 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
         // full region
         Rectangle srcProductRect = getInputRectangle();
         if (srcProductRect == null ||
-                (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
+            (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
             return product;
         }
         if (srcProductRect.isEmpty()) {
