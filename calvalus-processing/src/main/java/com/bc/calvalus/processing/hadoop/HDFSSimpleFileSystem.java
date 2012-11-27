@@ -54,8 +54,6 @@ public class HDFSSimpleFileSystem implements SimpleFileSystem {
 
     @Override
     public Writer createWriter(String path) throws IOException {
-        System.out.println("HDFSSimpleFileSystem.createWriter");
-        System.out.println("path = [" + path + "]");
         Path workOutputPath;
         try {
             workOutputPath = FileOutputFormat.getWorkOutputPath(context);
@@ -63,7 +61,6 @@ public class HDFSSimpleFileSystem implements SimpleFileSystem {
             throw new IOException(e);
         }
         Path workPath = new Path(workOutputPath, path);
-        System.out.println("workPath = " + workPath);
         FSDataOutputStream fsDataOutputStream = fileSystem.create(workPath);
         return new OutputStreamWriter(fsDataOutputStream);
     }

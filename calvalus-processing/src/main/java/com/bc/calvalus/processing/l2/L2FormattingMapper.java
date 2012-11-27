@@ -116,8 +116,6 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
                         LOG.info("Creating metadata.");
                         Path outputPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
-                        System.out.println("inputPath = " + inputPath.toString());
-                        System.out.println("outputPath = " + outputPath.toString());
                         L2Mapper.processMetadata(context,
                                                  inputPath.toString(), targetProduct,
                                                  outputPath.toString(), targetProduct);
