@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * A mapper which converts L2 products from the
  * (internal) SequenceFiles into different BEAM product formats.
  */
-public class L2FormatingMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
+public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();

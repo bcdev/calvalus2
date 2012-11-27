@@ -69,7 +69,7 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
-        job.setMapperClass(L2FormatingMapper.class);
+        job.setMapperClass(L2FormattingMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
