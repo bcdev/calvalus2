@@ -18,9 +18,9 @@ package com.bc.calvalus.processing.l2;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-public class L2FormatingMapperTest {
+public class L2FormattingMapperTest {
 
     @Test
     public void testGetNewProductname() throws Exception {
@@ -29,14 +29,17 @@ public class L2FormatingMapperTest {
         assertEquals("MER_SDR_1P2000", newName("L2_of_MER_RR__1P2000", "L2_of_MER_RR_(.+)", "MER_SDR$1"));
         assertEquals("MER_RR__1P2000_cc", newName("L2_of_MER_RR__1P2000", "L2_of_(.+)", "$1_cc"));
         //cc
-        assertEquals("MER_RR__CCL1P_20060708_1234567", newName("L2_of_MER_RR__1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
-        assertEquals("MER_FSG_CCL1P_20060708_1234567", newName("L2_of_MER_FSG_1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
+        assertEquals("MER_RR__CCL1P_20060708_1234567",
+                     newName("L2_of_MER_RR__1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
+        assertEquals("MER_FSG_CCL1P_20060708_1234567",
+                     newName("L2_of_MER_FSG_1PNMAP20060708_1234567", "L2_of_(MER_..._)1.....(.+)", "$1CCL1P_$2"));
 
         //lc sdr
-        assertEquals("MER_FSG_SDR_20050708_112233_042", newName("L2_of_MER_FSG_1PNUPA20050708_112233_042", "L2_of_(MER_FSG)_1.....(.+)", "$1_SDR_$2"));
+        assertEquals("MER_FSG_SDR_20050708_112233_042",
+                     newName("L2_of_MER_FSG_1PNUPA20050708_112233_042", "L2_of_(MER_FSG)_1.....(.+)", "$1_SDR_$2"));
     }
 
     private static String newName(String productName, String regex, String replacement) {
-        return L2FormatingMapper.getNewProductName(productName, regex, replacement);
+        return L2FormattingMapper.getNewProductName(productName, regex, replacement);
     }
 }
