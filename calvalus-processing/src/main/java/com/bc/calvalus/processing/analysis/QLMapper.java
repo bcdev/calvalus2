@@ -47,12 +47,14 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -101,18 +103,25 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             if (bandName == null) {
                 bandName = "RGB";
             }
-            OutputStream quickLookOutputStream = createQuicklookOutputStream(context, inputPath, bandName, config);
             try {
-                createQuicklookImage(product, quickLookOutputStream, config);
-            } finally {
-                quickLookOutputStream.close();
-            }
+                RenderedImage quicklookImage = createImage(product, config);
+                if (quicklookImage != null) {
+                    OutputStream outputStream = createOutputStream(context, inputPath, bandName, config);
+                    try {
+                        ImageIO.write(quicklookImage, config.getImageType(), outputStream);
 
+                    } finally {
+                        outputStream.close();
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Could not create quicklook image '" + bandName + "'.", e);
+            }
         }
     }
 
-    private static OutputStream createQuicklookOutputStream(Mapper.Context context, Path inputPath,
-                                                            String bandName, Quicklooks.QLConfig qlConfig)
+    private static OutputStream createOutputStream(Mapper.Context context, Path inputPath,
+                                                   String bandName, Quicklooks.QLConfig qlConfig)
             throws IOException, InterruptedException {
 
         String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
@@ -121,9 +130,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         return path.getFileSystem(context.getConfiguration()).create(path);
     }
 
-    private static void createQuicklookImage(Product product, OutputStream outputStream,
-                                             Quicklooks.QLConfig qlConfig) throws
-                                                                           IOException {
+    private static RenderedImage createImage(Product product, Quicklooks.QLConfig qlConfig) throws IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
@@ -170,13 +177,13 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 String msg = String.format("Could not create quicklook. Product does not contain band '%s'",
                                            qlConfig.getBandName());
                 LOGGER.warning(msg);
-                return;
+                return null;
             }
             if (cpdURL == null) {
                 String msg = String.format("Could not create quicklook. No CPD-URL given for band '%s'",
                                            qlConfig.getBandName());
                 LOGGER.warning(msg);
-                return;
+                return null;
 
             }
             multiLevelSource = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
@@ -225,8 +232,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
 
         collectionLayer.render(rendering);
-        BufferedImage image = rendering.getImage();
-        ImageIO.write(image, qlConfig.getImageType(), outputStream);
+        return rendering.getImage();
     }
 
     private static boolean useAlpha(Quicklooks.QLConfig qlConfig) {
