@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                version="1.0">
+                version="2.0">
 
-    <xsl:output method="xhtml" encoding="iso-8859-1" indent="no"/>
+    <xsl:output method="xhtml" encoding="UTF-8" indent="no"/>
 
     <xsl:template match="listing">
         <html>
@@ -13,16 +13,16 @@
                 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
                 <style>
                     body {
-                        font-family : Calibri,Verdana,Arial,sans-serif;
-                        color : black;
-                        background-color : white;
+                    font-family : Calibri,Verdana,Arial,sans-serif;
+                    color : black;
+                    background-color : white;
                     }
                     b {
-                        color : white;
-                        background-color : #0086b2;
+                    color : white;
+                    background-color : #0086b2;
                     }
                     a {
-                        color : black;
+                    color : black;
                     }
                 </style>
             </head>
