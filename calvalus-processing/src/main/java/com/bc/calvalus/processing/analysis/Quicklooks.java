@@ -60,6 +60,8 @@ public class Quicklooks {
 
         @Parameter
         private String bandName;
+        @Parameter(defaultValue = "false")
+        private boolean appendBandName;
         @Parameter
         private String cpdURL;
 
@@ -100,6 +102,10 @@ public class Quicklooks {
 
         public String getOverlayURL() {
             return overlayURL;
+        }
+
+        public boolean isAppendBandName() {
+            return appendBandName;
         }
     }
 }

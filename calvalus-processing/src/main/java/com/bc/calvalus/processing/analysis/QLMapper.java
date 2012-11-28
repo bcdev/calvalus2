@@ -79,14 +79,15 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     }
 
     @Override
-    public void run(Context context) throws IOException, InterruptedException {
+    public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Image generation", 100);
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                createQuicklooks(product, processorAdapter.getInputPath(), context);
+                String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
+                createQuicklooks(product, productName, context);
             }
         } finally {
             pm.done();
@@ -94,9 +95,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklooks(Product product, Path inputPath, Mapper.Context context) throws
-                                                                                                 IOException,
-                                                                                                 InterruptedException {
+    public static void createQuicklooks(Product product, String productName, Mapper.Context context) {
         Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
         for (Quicklooks.QLConfig config : configs) {
             String bandName = config.getBandName();
@@ -106,7 +105,13 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             try {
                 RenderedImage quicklookImage = createImage(product, config);
                 if (quicklookImage != null) {
-                    OutputStream outputStream = createOutputStream(context, inputPath, bandName, config);
+                    String fileName = null;
+                    if (config.isAppendBandName()) {
+                        fileName = productName + "_" + bandName + "." + config.getImageType();
+                    } else {
+                        fileName = productName + "." + config.getImageType();
+                    }
+                    OutputStream outputStream = createOutputStream(context, fileName);
                     try {
                         ImageIO.write(quicklookImage, config.getImageType(), outputStream);
 
@@ -120,13 +125,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    private static OutputStream createOutputStream(Mapper.Context context, Path inputPath,
-                                                   String bandName, Quicklooks.QLConfig qlConfig)
-            throws IOException, InterruptedException {
+    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws Exception {
 
-        String name = FileUtils.getFilenameWithoutExtension(inputPath.getName());
-        String qlName = name + "_" + bandName + "." + qlConfig.getImageType();
-        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), qlName);
+        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
         return path.getFileSystem(context.getConfiguration()).create(path);
     }
 

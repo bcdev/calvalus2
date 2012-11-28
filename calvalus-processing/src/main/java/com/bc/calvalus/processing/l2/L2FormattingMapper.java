@@ -104,7 +104,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
                         if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
                             LOG.info("Creating quicklooks.");
-                            QLMapper.createQuicklooks(targetProduct, inputPath, context);
+                            QLMapper.createQuicklooks(targetProduct, productName, context);
                             LOG.info("Finished creating quicklooks.");
                         } else {
                             LOG.warning("Missing parameters for quicklook generation.");
