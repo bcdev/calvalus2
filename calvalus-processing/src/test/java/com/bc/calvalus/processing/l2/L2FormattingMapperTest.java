@@ -37,6 +37,12 @@ public class L2FormattingMapperTest {
         //lc sdr
         assertEquals("MER_FSG_SDR_20050708_112233_042",
                      newName("L2_of_MER_FSG_1PNUPA20050708_112233_042", "L2_of_(MER_FSG)_1.....(.+)", "$1_SDR_$2"));
+
+        // freshmon
+        assertEquals("CHL_Northsea_BC_20060708_123456",
+                     newName("L2_of_MER_RR__1PNMAP20060708_123456_0815", "L2_of_MER_..._1.....(........_......).*",
+                             "CHL_Northsea_BC_$1"));
+
     }
 
     private static String newName(String productName, String regex, String replacement) {

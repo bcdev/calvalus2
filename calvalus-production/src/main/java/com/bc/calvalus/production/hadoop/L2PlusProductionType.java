@@ -55,10 +55,34 @@ public class L2PlusProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", null);
         if (outputFormat != null && !outputFormat.equals("SEQ")) {
             String formattingInputDir = outputDir;
-            HadoopWorkflowItem formattingItem = createFormattingItem(productionId, productionName, dateRanges,
-                                                                     formattingInputDir, productionRequest,
-                                                                     processorProductionRequest);
-            outputDir = formattingItem.getOutputDir();
+            String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
+            outputDir = formattingOutputDir;
+
+            Workflow.Parallel formattingItem = new Workflow.Parallel();
+            String outputBandList = productionRequest.getString("outputBandList", "");
+            if (outputFormat.equals("Multi-GeoTIFF")) {
+                for (String bandName : StringUtils.csvToArray(outputBandList)) {
+                    HadoopWorkflowItem item = createFormattingItem(productionName + " Format: " + bandName,
+                                                                   dateRanges,
+                                                                   formattingInputDir, formattingOutputDir,
+                                                                   productionRequest,
+                                                                   processorProductionRequest, bandName, "GeoTIFF");
+                    boolean FRESHMON = true;
+                    if (FRESHMON) {
+                        // TODO generalize
+                        Configuration jobConfig = item.getJobConfig();
+                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX, "L2_of_MER_..._1.....(........_......).*");
+                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT,
+                                      String.format("%s_%s_BC_$1", bandName, productionRequest.getRegionName()));
+                    }
+                    formattingItem.add(item);
+                }
+            } else {
+                formattingItem.add(createFormattingItem(productionName + " Format", dateRanges,
+                                                        formattingInputDir, formattingOutputDir, productionRequest,
+                                                        processorProductionRequest, outputBandList,
+                                                        outputFormat));
+            }
             workflowItem = new Workflow.Sequential(processingItem, formattingItem);
         }
 
@@ -82,13 +106,14 @@ public class L2PlusProductionType extends HadoopProductionType {
     }
 
 
-    HadoopWorkflowItem createFormattingItem(String productionId,
-                                            String productionName,
+    HadoopWorkflowItem createFormattingItem(String productionName,
                                             List<DateRange> dateRanges,
                                             String formattingInputDir,
+                                            String formattingOutputDir,
                                             ProductionRequest productionRequest,
-                                            ProcessorProductionRequest processorProductionRequest) throws
-                                                                                                   ProductionException {
+                                            ProcessorProductionRequest processorProductionRequest, String bandList,
+                                            String outputFormat) throws
+                                                                 ProductionException {
 
         Configuration formatJobConfig = createJobConfig(productionRequest);
         setDefaultProcessorParameters(processorProductionRequest, formatJobConfig);
@@ -105,15 +130,14 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
-        String formatOutputDir = getOutputPath(productionRequest, productionId, "-output");
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, formatOutputDir);
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, productionRequest.getString("outputFormat"));
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, formattingOutputDir);
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
         Geometry regionGeom = productionRequest.getRegionGeometry(null);
         formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                             regionGeom != null ? regionGeom.toString() : "");
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, productionRequest.getString("outputBandList", ""));
+        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, bandList);
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS,
                             productionRequest.getString("quicklooks", "false"));
 

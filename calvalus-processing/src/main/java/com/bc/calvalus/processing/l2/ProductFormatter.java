@@ -68,9 +68,6 @@ public class ProductFormatter {
             outputFormat = "NetCDF-BEAM"; // use NetCDF with BEAM extensions
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
-        } else if (outputFormat.equals("Multi-GeoTIFF")) {
-            outputExtension = ".tif";
-            outputCompression = "dir";
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
@@ -133,6 +130,7 @@ public class ProductFormatter {
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
             copyAndClose(inputStream, gzipOutputStream, context);
         } else if ("dir".equals(outputCompression)) {
+            // currently unused, but might be useful in the future
             LOG.info("Copying content of tmpDir to HDFS.");
             File[] files = tmpDir.listFiles();
             if (files != null) {
