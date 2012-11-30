@@ -141,14 +141,13 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
                     try {
                         Integer epsgCode = CRS.lookupEpsgCode(mapCRS, false);
-                        vcx.put("epsgCode", "EPSG:" + epsgCode);
+                        vcx.put("epsgCode", epsgCode);
                     } catch (FactoryException ignore) {
                     }
 
                     if (geoCoding.getImageToMapTransform() instanceof AffineTransform2D) {
                         AffineTransform2D affineTransform2D = (AffineTransform2D) geoCoding.getImageToMapTransform();
                         double resolution = affineTransform2D.getScaleX();
-                        vcx.put("resolution", String.format("%.4f", resolution));
 
                         Unit<?> unit = mapCRS.getCoordinateSystem().getAxis(0).getUnit();
                         String unitSymbol = unit.toString();
@@ -156,6 +155,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                             unitSymbol = "degree";
                         }
                         vcx.put("resolutionUnit", unitSymbol);
+                        vcx.put("resolution", String.format("%.4f", resolution));
                     }
                 }
 
