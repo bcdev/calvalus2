@@ -2,8 +2,10 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -45,27 +47,19 @@ public class L2ConfigForm extends Composite {
     @UiField
     Label processorBundleName;
 
-    private DtoProcessorDescriptor[] processorDescriptors;
     private final boolean selectionMandatory;
+    private final Filter<DtoProcessorDescriptor> processorFilter;
+    private final DtoProcessorDescriptor[] allProcessors;
+    private DtoProcessorDescriptor[] processorDescriptors;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, null, selectionMandatory);
     }
 
     public L2ConfigForm(PortalContext portalContext, Filter<DtoProcessorDescriptor> processorFilter, boolean selectionMandatory) {
+        this.processorFilter = processorFilter;
         this.selectionMandatory = selectionMandatory;
         initWidget(uiBinder.createAndBindUi(this));
-
-        processorDescriptors = portalContext.getProcessors();
-        if (processorFilter != null) {
-            ArrayList<DtoProcessorDescriptor> filtered = new ArrayList<DtoProcessorDescriptor>(processorDescriptors.length);
-            for (DtoProcessorDescriptor processorDescriptor : processorDescriptors) {
-                if (processorFilter.accept(processorDescriptor)) {
-                    filtered.add(processorDescriptor);
-                }
-            }
-            processorDescriptors = filtered.toArray(new DtoProcessorDescriptor[filtered.size()]);
-        }
 
         FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=xml",
                                          new FormPanel.SubmitHandler() {
@@ -86,27 +80,8 @@ public class L2ConfigForm extends Composite {
                                              }
                                          }
         );
-
-
-        setProcessorDescriptor(getProcessorDescriptor());
-
-        initProcessorList();
-    }
-
-    private void initProcessorList() {
-        if (!selectionMandatory) {
-            processorList.addItem("<none>");
-        }
-
-        for (DtoProcessorDescriptor processor : processorDescriptors) {
-            String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
-            this.processorList.addItem(label);
-        }
-
-        if (processorDescriptors.length > 0) {
-            processorList.setSelectedIndex(0);
-        }
-
+        allProcessors = portalContext.getProcessors();
+        updateProcessorList();
         processorList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
@@ -114,7 +89,47 @@ public class L2ConfigForm extends Composite {
             }
         });
 
+        setProcessorDescriptor(getProcessorDescriptor());
         updateProcessorDetails();
+    }
+
+    public void updateProcessorList() {
+        DtoProcessorDescriptor[] filteredProcessorDesc = allProcessors;
+        if (processorFilter != null) {
+            ArrayList<DtoProcessorDescriptor> filtered = new ArrayList<DtoProcessorDescriptor>(allProcessors.length);
+            for (DtoProcessorDescriptor productSet : allProcessors) {
+                if (processorFilter.accept(productSet)) {
+                    filtered.add(productSet);
+                }
+            }
+            filteredProcessorDesc = filtered.toArray(new DtoProcessorDescriptor[filtered.size()]);
+        }
+        DtoProcessorDescriptor oldSelection = null;
+        if (processorDescriptors != null) {
+            int selectedIndex = processorList.getSelectedIndex();
+            if (selectedIndex != -1) {
+                oldSelection = processorDescriptors[selectionMandatory ? selectedIndex : selectedIndex - 1];
+            }
+        }
+        processorDescriptors = filteredProcessorDesc;
+        processorList.clear();
+        if (!selectionMandatory) {
+            processorList.addItem("<none>");
+        }
+        int newSelectionIndex = 0;
+        boolean productSetChanged = true;
+        for (DtoProcessorDescriptor processor : processorDescriptors) {
+            String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
+            processorList.addItem(label);
+            if (oldSelection != null && oldSelection.equals(processor)) {
+                newSelectionIndex = processorList.getItemCount() - 1;
+                productSetChanged = false;
+            }
+        }
+        processorList.setSelectedIndex(selectionMandatory ? newSelectionIndex : newSelectionIndex + 1);
+        if (productSetChanged) {
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
+        }
     }
 
     private void updateProcessorDetails() {

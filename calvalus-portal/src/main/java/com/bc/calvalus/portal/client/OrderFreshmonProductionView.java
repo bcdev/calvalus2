@@ -57,8 +57,20 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         };
         Filter<DtoProcessorDescriptor> processorFilter = new Filter<DtoProcessorDescriptor>() {
             @Override
-            public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
-                return dtoProcessorDescriptor.getBundleName().startsWith("freshmon");
+            public boolean accept(DtoProcessorDescriptor processorDescriptor) {
+                if (processorDescriptor.getBundleName().startsWith("freshmon")) {
+                    DtoProductSet productSet = productSetSelectionForm.getProductSet();
+                    String productType = productSet.getProductType();
+                    if (productType != null) {
+                        String[] inputProductTypes = processorDescriptor.getInputProductTypes();
+                        for (String inputProductType : inputProductTypes) {
+                            if (inputProductType.equals(productType)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
             }
         };
         final List<String> bandsToSelect = Arrays.asList("chl_concentration", "ys_absorption", "tsm_concentration",
@@ -69,6 +81,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
+                l2ConfigForm.updateProcessorList();
             }
         });
 
