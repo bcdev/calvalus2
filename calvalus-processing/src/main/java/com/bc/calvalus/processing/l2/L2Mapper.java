@@ -20,14 +20,20 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.velocity.VelocityContext;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.FeatureUtils;
 import org.esa.beam.util.io.FileUtils;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.operation.transform.AffineTransform2D;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -121,13 +127,46 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
 
                 File targetFile = new File(targetPath);
                 vcx.put("targetFile", targetFile);
-                vcx.put("targetBaseName", FileUtils.getFilenameWithoutExtension(targetFile));
+                String targetBaseName = FileUtils.getFilenameWithoutExtension(targetFile);
+                vcx.put("targetBaseName", targetBaseName);
                 vcx.put("targetName", targetFile.getName());
-                metadataResourceEngine.readRelatedResource("source", sourcePath);
+                vcx.put("targetSize", Math.round(targetFile.length() / (1024.0f * 1024.0f)));
 
                 vcx.put("configuration", jobConfig);
                 vcx.put("sourceProduct", sourceProduct);
                 vcx.put("targetProduct", targetProduct);
+                GeoCoding geoCoding = targetProduct.getGeoCoding();
+                Integer epsgCode = null;
+                if (geoCoding != null) {
+                    CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
+                    try {
+                        epsgCode = CRS.lookupEpsgCode(mapCRS, false);
+                    } catch (FactoryException ignore) {
+                    }
+
+                    if (geoCoding.getImageToMapTransform() instanceof AffineTransform2D) {
+                        AffineTransform2D affineTransform2D = (AffineTransform2D) geoCoding.getImageToMapTransform();
+                        double resolution = affineTransform2D.getScaleX();
+                        vcx.put("resolution", resolution);
+                        vcx.put("resolutionUnit", mapCRS.getCoordinateSystem().getAxis(0).getUnit());
+                    }
+                }
+                vcx.put("epsgCode", epsgCode);
+
+                DateFormat dateFormat = ProductData.UTC.createDateFormat("/YYYY/MM/DD/");
+                ProductData.UTC startTime = targetProduct.getStartTime();
+                if (startTime != null) {
+                    if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
+                        if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
+                            String qlName = targetBaseName + ".png";
+                            String qlPath = dateFormat.format(startTime.getAsDate()) + qlName;
+                            vcx.put("quicklookPath", qlPath);
+                        }
+                    }
+
+                    vcx.put("archivePath", dateFormat.format(startTime.getAsDate()) + targetFile.getName());
+                }
+
 
                 Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
                 String wkt = new WKTWriter().write(geometry);
@@ -137,6 +176,8 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("targetProductWKT", wkt);
                 vcx.put("targetProductGML", gml);
                 vcx.put("targetProductEnvelope", envelope);
+
+                metadataResourceEngine.readRelatedResource("source", sourcePath);
 
                 metadataResourceEngine.writeRelatedResource(templatePath, targetPath);
             } else {
