@@ -30,7 +30,6 @@ import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import javax.measure.unit.SI;
 import javax.measure.unit.Unit;
 import java.awt.Rectangle;
 import java.io.File;
@@ -153,7 +152,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
 
                         Unit<?> unit = mapCRS.getCoordinateSystem().getAxis(0).getUnit();
                         String unitSymbol = unit.toString();
-                        if (SI.RADIAN.equals(unit)) {
+                        if ("°".equals(unitSymbol)) {
                             unitSymbol = "degree";
                         }
                         vcx.put("resolutionUnit", unitSymbol);
