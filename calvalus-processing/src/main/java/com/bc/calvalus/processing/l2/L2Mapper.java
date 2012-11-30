@@ -126,8 +126,6 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("softwareVersion", "1.5");
                 vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
-                vcx.put("sourceName", new File(sourcePath).getName());
-
                 File targetFile = new File(targetPath);
                 vcx.put("targetFile", targetFile);
                 String targetBaseName = FileUtils.getFilenameWithoutExtension(targetFile);
