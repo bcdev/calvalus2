@@ -29,7 +29,6 @@ import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 import com.google.gwt.view.client.TreeViewModel;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -319,22 +318,26 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                                              RegionTreeViewModel treeViewModel) {
         Region selectedRegion = source.getSelectedRegion();
         target.clearSelection();
-        TreeNode nodeToSelect = findNodeForRegion(selectedRegion, treeViewModel.getRootNode());
+        TreeNode nodeToSelect = findNodeForRegion(selectedRegion, treeViewModel.getRootNode(), false);
         if (nodeToSelect != null) {
             target.setSelected(nodeToSelect, true);
         }
     }
 
-    private TreeNode findNodeForRegion(Region region, GroupNode rootNode) {
-        for (TreeNode childNode : rootNode.getChildNodes()) {
+    private static TreeNode findNodeForRegion(Region region, GroupNode rootNode, boolean returnParent) {
+        for (TreeNode childNode : rootNode.getChildNodes().getList()) {
             if (childNode instanceof LeafNode) {
                 LeafNode leafNode = (LeafNode) childNode;
                 if (leafNode.getRegion() == region) {
-                    return leafNode;
+                    if (returnParent) {
+                        return rootNode;
+                    } else {
+                        return leafNode;
+                    }
                 }
             } else if (childNode instanceof GroupNode) {
-                TreeNode nodeForRegion = findNodeForRegion(region, (GroupNode) childNode);
-                if(nodeForRegion != null) {
+                TreeNode nodeForRegion = findNodeForRegion(region, (GroupNode) childNode, returnParent);
+                if (nodeForRegion != null) {
                     return nodeForRegion;
                 }
             }
@@ -456,29 +459,49 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private static class RegionTreeViewModel implements TreeViewModel {
 
         private final Cell<TreeNode> cell;
-        private final RegionMapModel regionMapModel;
         private final SelectionModel<TreeNode> treeSelectionModel;
-        private GroupNode rootNode;
+        private final GroupNode rootNode = new GroupNode("");
 
-        public RegionTreeViewModel(final RegionMapModel regionMapModel,
-                                   RegionTreeSelectionModel treeNodeSingleSelectionModel) {
-            this.regionMapModel = regionMapModel;
-            this.treeSelectionModel = treeNodeSingleSelectionModel;
-            buildTree();
+        public RegionTreeViewModel(RegionMapModel regionMapModel, RegionTreeSelectionModel regionTreeSelectionModel) {
+            this.treeSelectionModel = regionTreeSelectionModel;
+            for (Region region : regionMapModel.getRegionProvider().getList()) {
+                addRegion(rootNode, region);
+            }
+
             regionMapModel.addChangeListener(new RegionMapModel.ChangeListener() {
                 @Override
                 public void onRegionAdded(RegionMapModel.ChangeEvent event) {
-                    buildTree();
+                    addRegion(rootNode, event.getRegion());
                 }
 
                 @Override
                 public void onRegionRemoved(RegionMapModel.ChangeEvent event) {
-                    buildTree();
+                    Region region = event.getRegion();
+                    TreeNode parentNodeForRegion = findNodeForRegion(region, rootNode, true);
+                    if (parentNodeForRegion instanceof GroupNode) {
+                        GroupNode parentNode = (GroupNode) parentNodeForRegion;
+                        List<TreeNode> nodeList = parentNode.getChildNodes().getList();
+                        for (TreeNode childNode : nodeList) {
+                            if (childNode instanceof LeafNode) {
+                                LeafNode node = (LeafNode) childNode;
+                                if (node.region == region) {
+                                    nodeList.remove(childNode);
+                                    parentNode.getChildNodes().refresh();
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 @Override
                 public void onRegionChanged(RegionMapModel.ChangeEvent event) {
-                    buildTree();
+                    Region region = event.getRegion();
+                    TreeNode parentNodeForRegion = findNodeForRegion(region, rootNode, true);
+                    if (parentNodeForRegion instanceof GroupNode) {
+                        GroupNode parentNode = (GroupNode) parentNodeForRegion;
+                        parentNode.getChildNodes().refresh();
+                    }
                 }
             });
             cell = new AbstractCell<TreeNode>() {
@@ -493,36 +516,34 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             return rootNode;
         }
 
-        private void buildTree() {
-            rootNode = new GroupNode("");
-            List<Region> regions = regionMapModel.getRegionProvider().getList();
-            for (Region region : regions) {
-                GroupNode currentNode = rootNode;
-                for (String pathElem : region.getPath()) {
-                    GroupNode childNode = null;
-                    for (TreeNode aNode : currentNode.getChildNodes()) {
-                        if (aNode.getName().equals(pathElem) && aNode instanceof GroupNode) {
-                            childNode = (GroupNode) aNode;
-                            break;
-                        }
+        private static void addRegion(GroupNode rootNode, Region region) {
+            GroupNode currentNode = rootNode;
+            for (String pathElem : region.getPath()) {
+                GroupNode childNode = null;
+                for (TreeNode aNode : currentNode.getChildNodes().getList()) {
+                    if (aNode.getName().equals(pathElem) && aNode instanceof GroupNode) {
+                        childNode = (GroupNode) aNode;
+                        break;
                     }
-                    if (childNode == null) {
-                        childNode = new GroupNode(pathElem);
-                        currentNode.getChildNodes().add(childNode);
-                    }
-                    currentNode = childNode;
                 }
-                currentNode.getChildNodes().add(new LeafNode(region));
+                if (childNode == null) {
+                    childNode = new GroupNode(pathElem);
+                    currentNode.getChildNodes().getList().add(childNode);
+                    currentNode.getChildNodes().refresh();
+                }
+                currentNode = childNode;
             }
+            currentNode.getChildNodes().getList().add(new LeafNode(region));
+            currentNode.getChildNodes().refresh();
         }
 
         @Override
         public <T> NodeInfo<?> getNodeInfo(T value) {
             ListDataProvider<TreeNode> dataProvider = null;
             if (value == null) {
-                dataProvider = new ListDataProvider<TreeNode>(rootNode.getChildNodes());
+                dataProvider = rootNode.getChildNodes();
             } else if (value instanceof GroupNode) {
-                dataProvider = new ListDataProvider<TreeNode>(((GroupNode) value).getChildNodes());
+                dataProvider = ((GroupNode) value).getChildNodes();
             }
             if (dataProvider != null) {
                 return new DefaultNodeInfo<TreeNode>(dataProvider, cell, treeSelectionModel, null);
@@ -545,18 +566,17 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     };
 
     private static interface TreeNode {
-
         String getName();
     }
 
     private static class GroupNode implements TreeNode {
 
         private final String name;
-        private final List<TreeNode> childNodes;
+        private final ListDataProvider<TreeNode> childNodes;
 
         private GroupNode(String name) {
             this.name = name;
-            childNodes = new ArrayList<TreeNode>();
+            childNodes = new ListDataProvider<TreeNode>();
         }
 
         @Override
@@ -564,7 +584,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             return name;
         }
 
-        public List<TreeNode> getChildNodes() {
+        public ListDataProvider<TreeNode> getChildNodes() {
             return childNodes;
         }
     }

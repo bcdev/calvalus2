@@ -56,7 +56,7 @@ public class RenameRegionAction extends AbstractMapAction {
                     return;
                 }
                 selectedRegion.setQualifiedName(qualifiedName);
-                regionMap.getRegionModel().getRegionProvider().refresh();
+                regionMap.getRegionModel().fireRegionChanged(regionMap, selectedRegion);
                 super.onOk();
             }
         };
