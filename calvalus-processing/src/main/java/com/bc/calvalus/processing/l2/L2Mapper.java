@@ -30,6 +30,8 @@ import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import javax.measure.unit.SI;
+import javax.measure.unit.Unit;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
@@ -130,28 +132,33 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 String targetBaseName = FileUtils.getFilenameWithoutExtension(targetFile);
                 vcx.put("targetBaseName", targetBaseName);
                 vcx.put("targetName", targetFile.getName());
-                vcx.put("targetSize", Math.round(targetFile.length() / (1024.0f * 1024.0f)));
+                vcx.put("targetSize", String.format("%.1f", targetProduct.getRawStorageSize() / (1024.0f * 1024.0f)));
 
                 vcx.put("configuration", jobConfig);
                 vcx.put("sourceProduct", sourceProduct);
                 vcx.put("targetProduct", targetProduct);
                 GeoCoding geoCoding = targetProduct.getGeoCoding();
-                Integer epsgCode = null;
                 if (geoCoding != null) {
                     CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
                     try {
-                        epsgCode = CRS.lookupEpsgCode(mapCRS, false);
+                        Integer epsgCode = CRS.lookupEpsgCode(mapCRS, false);
+                        vcx.put("epsgCode", "EPSG:" + epsgCode);
                     } catch (FactoryException ignore) {
                     }
 
                     if (geoCoding.getImageToMapTransform() instanceof AffineTransform2D) {
                         AffineTransform2D affineTransform2D = (AffineTransform2D) geoCoding.getImageToMapTransform();
                         double resolution = affineTransform2D.getScaleX();
-                        vcx.put("resolution", resolution);
-                        vcx.put("resolutionUnit", mapCRS.getCoordinateSystem().getAxis(0).getUnit());
+                        vcx.put("resolution", String.format("%.4f", resolution));
+
+                        Unit<?> unit = mapCRS.getCoordinateSystem().getAxis(0).getUnit();
+                        String unitSymbol = unit.toString();
+                        if (SI.RADIAN.equals(unit)) {
+                            unitSymbol = "degree";
+                        }
+                        vcx.put("resolutionUnit", unitSymbol);
                     }
                 }
-                vcx.put("epsgCode", epsgCode);
 
                 DateFormat dateFormat = ProductData.UTC.createDateFormat("/yyyy/MM/dd/");
                 ProductData.UTC startTime = targetProduct.getStartTime();
