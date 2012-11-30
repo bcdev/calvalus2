@@ -40,6 +40,10 @@ public class ProcessorProductionRequest {
         this.processorBundleVersion = productionRequest.getString("processorBundleVersion", null);
     }
 
+    public String getProcessorName() {
+        return processorName;
+    }
+
     public String getProcessorBundle() {
         if (processorBundleName != null && processorBundleVersion != null) {
             return String.format("%s-%s", processorBundleName, processorBundleVersion);

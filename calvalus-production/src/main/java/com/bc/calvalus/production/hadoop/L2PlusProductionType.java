@@ -2,7 +2,6 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -54,10 +53,14 @@ public class L2PlusProductionType extends HadoopProductionType {
             FRESHMON = true;  // TODO generalize
         }
 
-        HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
-                                                                 productionRequest, processorProductionRequest);
-        WorkflowItem workflowItem = processingItem;
-        String outputDir = processingItem.getOutputDir();
+        String outputDir = "";
+        Workflow.Sequential l2fWorkflowItem = new Workflow.Sequential();
+        if (!processorProductionRequest.getProcessorName().equals("Formatting")) {
+            HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
+                                                                     productionRequest, processorProductionRequest);
+            outputDir = processingItem.getOutputDir();
+            l2fWorkflowItem.add(processingItem);
+        }
 
         String outputFormat = productionRequest.getString("outputFormat", null);
         if (outputFormat != null && !outputFormat.equals("SEQ")) {
@@ -89,7 +92,10 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                         processorProductionRequest, outputBandList,
                                                         outputFormat));
             }
-            workflowItem = new Workflow.Sequential(processingItem, formattingItem);
+            l2fWorkflowItem.add(formattingItem);
+        }
+        if (l2fWorkflowItem.getItems().length == 0) {
+            throw new ProductionException("Neither Processing nor Formatting selected.");
         }
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
@@ -101,7 +107,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              workflowItem);
+                              l2fWorkflowItem);
     }
 
     @Override
