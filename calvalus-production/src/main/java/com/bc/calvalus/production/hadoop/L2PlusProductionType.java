@@ -47,6 +47,13 @@ public class L2PlusProductionType extends HadoopProductionType {
         List<DateRange> dateRanges = productionRequest.getDateRanges();
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+        String processorBundle = processorProductionRequest.getProcessorBundle();
+
+        boolean FRESHMON = false;
+        if (processorBundle.toLowerCase().startsWith("freshmon")) {
+            FRESHMON = true;  // TODO generalize
+        }
+
         HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
                                                                  productionRequest, processorProductionRequest);
         WorkflowItem workflowItem = processingItem;
@@ -67,7 +74,6 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                                    formattingInputDir, formattingOutputDir,
                                                                    productionRequest,
                                                                    processorProductionRequest, bandName, "GeoTIFF");
-                    boolean FRESHMON = true;
                     if (FRESHMON) {
                         // TODO generalize
                         Configuration jobConfig = item.getJobConfig();
