@@ -153,7 +153,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 }
                 vcx.put("epsgCode", epsgCode);
 
-                DateFormat dateFormat = ProductData.UTC.createDateFormat("/YYYY/MM/DD/");
+                DateFormat dateFormat = ProductData.UTC.createDateFormat("/yyyy/MM/dd/");
                 ProductData.UTC startTime = targetProduct.getStartTime();
                 if (startTime != null) {
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
