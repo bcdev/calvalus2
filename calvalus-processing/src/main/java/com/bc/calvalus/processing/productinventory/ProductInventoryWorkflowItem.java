@@ -72,6 +72,6 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(ProductInventoryReducer.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
     }
 }

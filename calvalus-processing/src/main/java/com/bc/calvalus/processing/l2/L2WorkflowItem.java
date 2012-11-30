@@ -75,7 +75,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         if (resumeProcessing) {
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         } else {
-            JobUtils.clearAndSetOutputDir(job, getOutputDir());
+            JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         }
         ProcessorFactory.installProcessor(jobConfig);
     }

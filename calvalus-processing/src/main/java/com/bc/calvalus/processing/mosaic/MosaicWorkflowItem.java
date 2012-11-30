@@ -86,7 +86,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         ProcessorFactory.installProcessor(jobConfig);
     }
 

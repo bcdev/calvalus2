@@ -79,7 +79,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         SequenceFileInputFormat.addInputPath(job, new Path(getInputDir()));
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job.setMapperClass(TAMapper.class);
@@ -112,7 +112,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
         private void clearInputDir(Job job) {
             try {
-                JobUtils.clearDir(job, getInputDir());
+                JobUtils.clearDir(getInputDir(), job);
             } catch (IOException e) {
                 // todo - nf/** 19.04.2011: log error
             }

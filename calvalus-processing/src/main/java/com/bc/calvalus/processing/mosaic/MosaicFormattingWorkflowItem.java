@@ -78,7 +78,7 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
         if (resumeProcessing) {
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         } else {
-            JobUtils.clearAndSetOutputDir(job, getOutputDir());
+            JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         }
     }
 }

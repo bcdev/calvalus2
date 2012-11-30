@@ -80,6 +80,6 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
     }
 }

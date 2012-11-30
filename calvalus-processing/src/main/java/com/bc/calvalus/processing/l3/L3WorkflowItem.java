@@ -100,7 +100,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(L3TemporalBin.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         ProcessorFactory.installProcessor(jobConfig);
     }
 

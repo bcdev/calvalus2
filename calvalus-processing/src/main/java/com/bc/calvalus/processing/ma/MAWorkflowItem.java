@@ -92,7 +92,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(job, getOutputDir());
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         ProcessorFactory.installProcessor(jobConfig);
     }
 

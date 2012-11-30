@@ -48,12 +48,12 @@ public class JobUtils {
         }
     }
 
-    public static void clearAndSetOutputDir(Job job, String outputDir) throws IOException {
-        final Path outputPath = clearDir(job, outputDir);
+    public static void clearAndSetOutputDir(String outputDir, Job job) throws IOException {
+        final Path outputPath = clearDir(outputDir, job);
         FileOutputFormat.setOutputPath(job, outputPath);
     }
 
-    public static Path clearDir(Job job, String dir) throws IOException {
+    public static Path clearDir(String dir, Job job) throws IOException {
         return clearDir(dir, job.getConfiguration());
     }
 
