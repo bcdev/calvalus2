@@ -31,6 +31,14 @@
             <artifactId>calvalus-inventory</artifactId>
         </dependency>
 
+        <!--  Ceres -->
+        <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
+        commons-lang:commons-lang of org.apache.velocity:velocity into the BEAM assembly -->
+        <dependency>
+            <groupId>com.bc.ceres</groupId>
+            <artifactId>ceres-metadata</artifactId>
+        </dependency>
+
         <!--  BEAM -->
 
         <dependency>
@@ -125,7 +133,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2</version>
+                <version>2.4</version>
                 <configuration>
                     <descriptors>
                         <descriptor>src/main/assembly/beam.xml</descriptor>

@@ -14,6 +14,7 @@
         <hadoop.version>0.20.205.0</hadoop.version>
         <calvalus.version>1.5-SNAPSHOT</calvalus.version>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
+        <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -169,6 +170,15 @@
                 <groupId>com.bc.calvalus</groupId>
                 <artifactId>calvalus-exchange</artifactId>
                 <version>${calvalus.version}</version>
+            </dependency>
+
+            <!--  Ceres -->
+            <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
+            commons-lang:commons-lang of org.apache.velocity:velocity into the BEAM assembly -->
+            <dependency>
+                <groupId>com.bc.ceres</groupId>
+                <artifactId>ceres-metadata</artifactId>
+                <version>${ceres.version}</version>
             </dependency>
 
             <!--  BEAM -->

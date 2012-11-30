@@ -20,7 +20,9 @@
                 <include>org.esa.beam:beam-envisat-reader</include>
                 <include>org.esa.beam:beam-geotiff</include>
                 <include>org.esa.beam:beam-netcdf</include>
+                <include>com.bc.ceres:ceres-metadata</include>
             </includes>
+
             <excludes>
                 <exclude>org.esa.beam:beam-ui</exclude>
             </excludes>
