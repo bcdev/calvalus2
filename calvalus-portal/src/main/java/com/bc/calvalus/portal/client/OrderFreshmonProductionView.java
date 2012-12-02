@@ -97,7 +97,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProcessingTypeSettings();
+        outputParametersForm.showProcessingFormatSettings();
         outputParametersForm.showProductRelatedSettings();
         outputParametersForm.showTailoringRelatedSettings();
         outputParametersForm.quicklooks.setValue(true);

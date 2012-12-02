@@ -24,11 +24,11 @@
 
 
             <g:VerticalPanel spacing="2">
-                <g:FlowPanel ui:field="processingTypePanel" visible="false">
+                <g:FlowPanel ui:field="processingFormatPanel" visible="false">
                     <g:VerticalPanel spacing="2">
-                        <g:RadioButton ui:field="processingTypeCluster" name=""
+                        <g:RadioButton ui:field="processingFormatCluster" name=""
                                        text="Process to Cluster-Internal-Format"/>
-                        <g:RadioButton ui:field="processingTypeUser" name="" text="User product"/>
+                        <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
                     </g:VerticalPanel>
                 </g:FlowPanel>
                 <g:FlowPanel ui:field="productRelatedPanel" visible="false">

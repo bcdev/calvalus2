@@ -34,17 +34,17 @@ public class OutputParametersForm extends Composite {
 
     private boolean showProductRelatedSettings;
     private boolean showTailoringRelatedSettings;
-    private boolean showProcessingTypeSettings;
+    private boolean showProcessingFormatSettings;
 
     @UiField
     TextBox productionName;
 
     @UiField
-    Panel processingTypePanel;
+    Panel processingFormatPanel;
     @UiField
-    RadioButton processingTypeCluster;
+    RadioButton processingFormatCluster;
     @UiField
-    RadioButton processingTypeUser;
+    RadioButton processingFormatUser;
 
     @UiField
     Panel tailoringPanel;
@@ -70,18 +70,18 @@ public class OutputParametersForm extends Composite {
         initWidget(uiBinder.createAndBindUi(this));
 
         radioGroupId++;
-        processingTypeCluster.setName("processingType" + radioGroupId);
-        processingTypeUser.setName("processingType" + radioGroupId);
-        processingTypeUser.setValue(true);
+        processingFormatCluster.setName("processingFormat" + radioGroupId);
+        processingFormatUser.setName("processingFormat" + radioGroupId);
+        processingFormatUser.setValue(true);
 
-        processingTypeCluster.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+        processingFormatCluster.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
                 setComponentsEnabled(false);
             }
         });
 
-        processingTypeUser.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+        processingFormatUser.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
                 setComponentsEnabled(true);
@@ -97,9 +97,9 @@ public class OutputParametersForm extends Composite {
         autoStaging.setEnabled(enabled);
     }
 
-    public void showProcessingTypeSettings() {
-        showProcessingTypeSettings = true;
-        processingTypePanel.setVisible(true);
+    public void showProcessingFormatSettings() {
+        showProcessingFormatSettings = true;
+        processingFormatPanel.setVisible(true);
         productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
         tailoringPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
     }
@@ -126,8 +126,8 @@ public class OutputParametersForm extends Composite {
         if (!prodName.isEmpty()) {
             parameters.put("productionName", prodName);
         }
-        if (showProcessingTypeSettings) {
-            if (processingTypeUser.getValue()) {
+        if (showProcessingFormatSettings) {
+            if (processingFormatUser.getValue()) {
                 parameters.put("outputFormat", getOutputFormat());
                 parameters.put("autoStaging", autoStaging.getValue() + "");
                 if (showTailoringRelatedSettings) {
