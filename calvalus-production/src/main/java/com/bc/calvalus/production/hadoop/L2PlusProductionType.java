@@ -53,20 +53,23 @@ public class L2PlusProductionType extends HadoopProductionType {
             FRESHMON = true;  // TODO generalize
         }
 
-        String outputDir = "";
+        String globalOutputDir = "";
+        String formattingInputDir;
         Workflow.Sequential l2fWorkflowItem = new Workflow.Sequential();
-        if (!processorProductionRequest.getProcessorName().equals("Formatting")) {
+        if (processorProductionRequest.getProcessorName().equals("Formatting")) {
+            formattingInputDir = productionRequest.getString("inputPath");
+        } else {
             HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
                                                                      productionRequest, processorProductionRequest);
-            outputDir = processingItem.getOutputDir();
+            globalOutputDir = processingItem.getOutputDir();
+            formattingInputDir = createPathPattern(globalOutputDir);
             l2fWorkflowItem.add(processingItem);
         }
 
         String outputFormat = productionRequest.getString("outputFormat", null);
         if (outputFormat != null && !outputFormat.equals("SEQ")) {
-            String formattingInputDir = outputDir;
             String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
-            outputDir = formattingOutputDir;
+            globalOutputDir = formattingOutputDir;
 
             Workflow.Parallel formattingItem = new Workflow.Parallel();
             String outputBandList = productionRequest.getString("outputBandList", "");
@@ -103,7 +106,7 @@ public class L2PlusProductionType extends HadoopProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              outputDir,
+                              globalOutputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,
@@ -137,8 +140,7 @@ public class L2PlusProductionType extends HadoopProductionType {
             formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         }
 
-        String pathPattern = createPathPattern(formattingInputDir);
-        formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, pathPattern);
+        formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, formattingInputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
