@@ -92,14 +92,15 @@ public class ProductionServiceImpl implements ProductionService {
         logger.info("type: " + productionRequest.getProductionType());
         logger.info("parameters: " + productionRequest.getParameters());
 
-        ProductionType productionType = findProductionType(productionRequest);
         synchronized (this) {
-            Production production = productionType.createProduction(productionRequest);
+            Production production = null;
             try {
+                ProductionType productionType = findProductionType(productionRequest);
+                production = productionType.createProduction(productionRequest);
                 production.getWorkflow().submit();
-            } catch (WorkflowException e) {
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                throw new ProductionException(String.format("Failed to submit production '%s': %s", production.getId(), e.getMessage()), e);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                throw new ProductionException(String.format("Failed to submit production: %s", t.getMessage()), t);
             }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
