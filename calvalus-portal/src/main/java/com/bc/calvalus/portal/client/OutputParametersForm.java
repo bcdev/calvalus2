@@ -49,6 +49,8 @@ public class OutputParametersForm extends Composite {
     @UiField
     Panel tailoringPanel;
     @UiField
+    CheckBox enableTailoring;
+    @UiField
     TextArea crsText;
     @UiField
     ListBox bandList;
@@ -87,14 +89,27 @@ public class OutputParametersForm extends Composite {
                 setComponentsEnabled(true);
             }
         });
+        enableTailoring.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> event) {
+                setTailoringComponentsEnabled(event.getValue());
+            }
+        });
+        setTailoringComponentsEnabled(false);
     }
 
     private void setComponentsEnabled(boolean enabled) {
-        crsText.setEnabled(enabled);
-        bandList.setEnabled(enabled);
-        quicklooks.setEnabled(enabled);
+        enableTailoring.setEnabled(enabled);
+        setTailoringComponentsEnabled(enabled);
         outputFormat.setEnabled(enabled);
         autoStaging.setEnabled(enabled);
+    }
+
+
+    private void setTailoringComponentsEnabled(boolean enabled) {
+        crsText.setEnabled(enabled && enableTailoring.getValue());
+        bandList.setEnabled(enabled && enableTailoring.getValue());
+        quicklooks.setEnabled(enabled && enableTailoring.getValue());
     }
 
     public void showProcessingFormatSettings(boolean showProcessingFormatSettings) {
@@ -135,7 +150,7 @@ public class OutputParametersForm extends Composite {
             if (processingFormatUser.getValue()) {
                 parameters.put("outputFormat", getOutputFormat());
                 parameters.put("autoStaging", autoStaging.getValue() + "");
-                if (showTailoringRelatedSettings) {
+                if (showTailoringRelatedSettings && enableTailoring.isEnabled()) {
                     parameters.put("outputCRS", crsText.getValue());
                     parameters.put("quicklooks", quicklooks.getValue() + "");
                     StringBuilder sb = new StringBuilder();

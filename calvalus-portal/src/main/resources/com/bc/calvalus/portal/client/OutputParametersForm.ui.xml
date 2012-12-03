@@ -42,9 +42,6 @@
                         <p/>
                     </g:HTML>
 
-                    <g:CheckBox ui:field="autoStaging"
-                                text="Perform staging step after successful production"
-                                checked="true"/>
                     <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
                         Leave unchecked, if output is used as input
                         for another production step.
@@ -62,11 +59,26 @@
                     </g:HTML>
                 </g:FlowPanel>
 
+                <g:HTML>
+                    <br/>
+                </g:HTML>
+
+                <g:CheckBox ui:field="enableTailoring"
+                            text="Enable Tailoring"
+                            checked="false"/>
                 <g:FlowPanel ui:field="tailoringPanel" visible="false">
-                    <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                        <g:Label>CRS:</g:Label>
-                        <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
-                    </g:HorizontalPanel>
+                    <g:VerticalPanel>
+                        <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                            <g:Label>CRS:</g:Label>
+                            <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                        </g:HorizontalPanel>
+                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                            Use WKT or EPSG codes (Format: EPSG:&lt;code&gt;) to specify map-projection.
+                            <br/>
+                            Leave empty for un-projected output.
+                            <p/>
+                        </g:HTML>
+                    </g:VerticalPanel>
 
                     <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
                         <g:Label>Band selection:</g:Label>
@@ -77,6 +89,14 @@
                                 text="Create Quicklooks"
                                 checked="false"/>
                 </g:FlowPanel>
+
+                <g:HTML>
+                    <br/>
+                </g:HTML>
+
+                <g:CheckBox ui:field="autoStaging"
+                            text="Perform staging step after successful production"
+                            checked="true"/>
             </g:VerticalPanel>
 
         </g:VerticalPanel>
