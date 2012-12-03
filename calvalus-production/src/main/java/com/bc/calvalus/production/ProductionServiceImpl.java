@@ -4,10 +4,13 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
@@ -276,6 +279,7 @@ public class ProductionServiceImpl implements ProductionService {
     private String getUserGlob(String userName, String dirPath) {
         return getUserPath(userName, dirPath) + "/.*";
     }
+
     private String getUserPath(String userName, String dirPath) {
         String path;
         if (dirPath.isEmpty() || "/".equals(dirPath)) {
@@ -305,6 +309,7 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
+        delteWorkflowOutput(production.getWorkflow());
         try {
             stagingService.deleteTree(production.getStagingPath());
         } catch (IOException e) {
@@ -313,5 +318,18 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-
+    private void delteWorkflowOutput(WorkflowItem workflowItem) {
+        if (workflowItem instanceof HadoopWorkflowItem) {
+            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
+            try {
+                JobUtils.clearDir(hadoopWorkflowItem.getOutputDir(), hadoopWorkflowItem.getJobConfig());
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed to delete output dir " + hadoopWorkflowItem.getOutputDir(), e);
+            }
+        } else {
+            for (WorkflowItem item : workflowItem.getItems()) {
+                delteWorkflowOutput(item);
+            }
+        }
+    }
 }

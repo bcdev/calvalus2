@@ -60,7 +60,9 @@ public class JobUtils {
     public static Path clearDir(String dir, Configuration configuration) throws IOException {
         final Path dirPath = new Path(dir);
         final FileSystem fileSystem = dirPath.getFileSystem(configuration);
-        fileSystem.delete(dirPath, true);
+        if (fileSystem.exists(dirPath)) {
+            fileSystem.delete(dirPath, true);
+        }
         return dirPath;
     }
 }
