@@ -300,7 +300,9 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             }
         }
         Region selectedRegion = regionMapSelectionModel.getSelectedRegion();
-        updatePolygonStyle(selectedRegion, ensurePolygonPresent(selectedRegion), true);
+        if (selectedRegion != null) {
+            updatePolygonStyle(selectedRegion, ensurePolygonPresent(selectedRegion), true);
+        }
     }
 
     private void updatePolygonStyle(Region region, Polygon polygon, boolean selected) {
