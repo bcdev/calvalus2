@@ -277,7 +277,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             regionMap.put(polygon, region);
             polygonMap.put(region, polygon);
             mapWidget.addOverlay(polygon);
-            updatePolygonStyle(region, polygon);
+            updatePolygonStyle(region, polygon, regionMapSelectionModel.isSelected(region));
         }
         return polygon;
     }
@@ -295,12 +295,15 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private void updatePolygonStyles() {
         List<Region> regionList = regionMapModel.getRegionProvider().getList();
         for (Region region : regionList) {
-            updatePolygonStyle(region, ensurePolygonPresent(region));
+            if (!regionMapSelectionModel.isSelected(region)) {
+                updatePolygonStyle(region, ensurePolygonPresent(region), false);
+            }
         }
+        Region selectedRegion = regionMapSelectionModel.getSelectedRegion();
+        updatePolygonStyle(selectedRegion, ensurePolygonPresent(selectedRegion), true);
     }
 
-    private void updatePolygonStyle(Region region, Polygon polygon) {
-        boolean selected = regionMapSelectionModel.isSelected(region);
+    private void updatePolygonStyle(Region region, Polygon polygon, boolean selected) {
         polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
         polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
         if (editable && region.isUserRegion()) {
