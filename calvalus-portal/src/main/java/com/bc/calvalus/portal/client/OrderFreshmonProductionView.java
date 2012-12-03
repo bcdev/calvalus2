@@ -52,7 +52,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public boolean accept(DtoProductSet dtoProductSet) {
                 return dtoProductSet.getName().equals("MERIS FSG L1b 2002-2012") ||
-                       dtoProductSet.getProductType().equals("FRESHMON_L2");
+                        dtoProductSet.getProductType().equals("FRESHMON_L2");
             }
         };
         Filter<DtoProcessorDescriptor> processorFilter = new Filter<DtoProcessorDescriptor>() {
@@ -89,7 +89,9 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
+                DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getProcessorDescriptor();
+                handleProcessorChanged(processorDescriptor, bandsToSelect);
+                outputParametersForm.showProcessingFormatSettings(processorDescriptor.isFormattingRequired());
             }
         });
 
@@ -97,7 +99,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProcessingFormatSettings();
+        outputParametersForm.showProcessingFormatSettings(true);
         outputParametersForm.showProductRelatedSettings();
         outputParametersForm.showTailoringRelatedSettings();
         outputParametersForm.quicklooks.setValue(true);

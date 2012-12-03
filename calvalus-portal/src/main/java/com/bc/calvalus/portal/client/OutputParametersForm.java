@@ -97,11 +97,16 @@ public class OutputParametersForm extends Composite {
         autoStaging.setEnabled(enabled);
     }
 
-    public void showProcessingFormatSettings() {
-        showProcessingFormatSettings = true;
-        processingFormatPanel.setVisible(true);
-        productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
-        tailoringPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
+    public void showProcessingFormatSettings(boolean showProcessingFormatSettings) {
+        this.showProcessingFormatSettings = showProcessingFormatSettings;
+        processingFormatPanel.setVisible(showProcessingFormatSettings);
+        if (showProcessingFormatSettings) {
+            productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
+            tailoringPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
+        } else {
+            productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "0em");
+            tailoringPanel.getElement().getStyle().setProperty("marginLeft", "0em");
+        }
     }
 
     public void showProductRelatedSettings() {

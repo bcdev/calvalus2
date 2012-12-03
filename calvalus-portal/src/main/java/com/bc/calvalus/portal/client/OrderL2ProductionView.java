@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -38,7 +39,9 @@ public class OrderL2ProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
+                DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getProcessorDescriptor();
+                outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
+                outputParametersForm.showProcessingFormatSettings(processorDescriptor.isFormattingRequired());
             }
         });
 
@@ -46,7 +49,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProcessingFormatSettings();
+        outputParametersForm.showProcessingFormatSettings(true);
         outputParametersForm.showProductRelatedSettings();
         outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
 

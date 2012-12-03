@@ -75,6 +75,10 @@ public class ProcessorDescriptor {
     @Parameter
     private String outputProductType;
 
+    @Parameter(defaultValue = "true")
+    private boolean formattingRequired;
+
+
     @Parameter(itemAlias = "jobParameter")
     private JobParameter[] jobConfig;
 
@@ -117,6 +121,10 @@ public class ProcessorDescriptor {
 
     public String[] getOutputFormats() {
         return outputFormats;
+    }
+
+    public boolean isFormattingRequired() {
+        return formattingRequired;
     }
 
     public String getDescriptionHtml() {
