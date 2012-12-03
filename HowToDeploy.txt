@@ -31,6 +31,7 @@ mv staging/ ../../temp/
 # redeploy
 cd ..
 rm -rf calvalus calvalus.war
+rm -rf ../work/Catalina/localhost/calvalus/
 mv /home/cvop/calvalus-portal-1.5-SNAPSHOT.war calvalus.war
 
 # restart
