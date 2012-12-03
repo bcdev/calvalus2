@@ -184,9 +184,8 @@ public class L2PlusProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String pathPattern = createPathPattern(outputDir);
         String regionWKT = regionGeom != null ? regionGeom.toString() : null;
-        ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(
-                getProcessingService());
-        ProductSet productSet = new ProductSet(getResultingProductionType(processorDescriptor),
+        ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        ProductSet productSet = new ProductSet(getResultingProductionType(processorDesc),
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT);
 
