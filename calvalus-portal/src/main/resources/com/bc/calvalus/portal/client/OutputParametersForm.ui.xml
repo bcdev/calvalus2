@@ -65,7 +65,8 @@
 
                 <g:CheckBox ui:field="enableTailoring"
                             text="Enable Tailoring"
-                            checked="false"/>
+                            checked="false"
+                            visible="false"/>
                 <g:FlowPanel ui:field="tailoringPanel" visible="false">
                     <g:VerticalPanel>
                         <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
@@ -88,11 +89,10 @@
                     <g:CheckBox ui:field="quicklooks"
                                 text="Create Quicklooks"
                                 checked="false"/>
+                    <g:HTML>
+                        <br/>
+                    </g:HTML>
                 </g:FlowPanel>
-
-                <g:HTML>
-                    <br/>
-                </g:HTML>
 
                 <g:CheckBox ui:field="autoStaging"
                             text="Perform staging step after successful production"

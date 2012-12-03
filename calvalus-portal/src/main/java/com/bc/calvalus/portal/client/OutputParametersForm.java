@@ -132,6 +132,7 @@ public class OutputParametersForm extends Composite {
     public void showTailoringRelatedSettings() {
         showTailoringRelatedSettings = true;
         tailoringPanel.setVisible(true);
+        enableTailoring.setVisible(true);
     }
 
     public void validateForm() throws ValidationException {
