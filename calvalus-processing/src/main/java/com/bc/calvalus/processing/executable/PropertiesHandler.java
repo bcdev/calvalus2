@@ -6,6 +6,7 @@ import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
+import org.esa.beam.util.StringUtils;
 import org.xmlpull.mxp1.MXParser;
 
 import java.io.IOException;
@@ -23,15 +24,17 @@ public class PropertiesHandler {
 
     static Properties asProperties(String processorParameters) throws IOException {
         Properties properties = new Properties();
-        Reader reader = new StringReader(processorParameters);
-        try {
-            if (isXml(processorParameters)) {
-                handleChildElements(properties, createDomElement(reader), "");
-            } else {
-                properties.load(reader);
+        if (StringUtils.isNotNullAndNotEmpty(processorParameters)) {
+            Reader reader = new StringReader(processorParameters);
+            try {
+                if (isXml(processorParameters)) {
+                    handleChildElements(properties, createDomElement(reader), "");
+                } else {
+                    properties.load(reader);
+                }
+            } finally {
+                reader.close();
             }
-        } finally {
-            reader.close();
         }
         return properties;
     }
