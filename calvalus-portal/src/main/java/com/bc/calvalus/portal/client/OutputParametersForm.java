@@ -7,6 +7,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -52,6 +53,10 @@ public class OutputParametersForm extends Composite {
     CheckBox enableTailoring;
     @UiField
     TextArea crsText;
+    @UiField
+    CheckBox replaceNans;
+    @UiField
+    DoubleBox replaceValue;
     @UiField
     ListBox bandList;
     @UiField
@@ -108,7 +113,8 @@ public class OutputParametersForm extends Composite {
 
     private void setTailoringComponentsEnabled(boolean enabled) {
         crsText.setEnabled(enabled && enableTailoring.getValue());
-        bandList.setEnabled(enabled && enableTailoring.getValue());
+        replaceNans.setEnabled(enabled && enableTailoring.getValue());
+        replaceValue.setEnabled(enabled && enableTailoring.getValue());
         quicklooks.setEnabled(enabled && enableTailoring.getValue());
     }
 
@@ -150,10 +156,12 @@ public class OutputParametersForm extends Composite {
         if (showProcessingFormatSettings) {
             if (processingFormatUser.getValue()) {
                 parameters.put("outputFormat", getOutputFormat());
-                parameters.put("autoStaging", autoStaging.getValue() + "");
+                parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
                 if (showTailoringRelatedSettings && enableTailoring.isEnabled()) {
+                    parameters.put("replaceNans", String.valueOf(replaceNans.getValue()));
+                    parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
                     parameters.put("outputCRS", crsText.getValue());
-                    parameters.put("quicklooks", quicklooks.getValue() + "");
+                    parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
                     StringBuilder sb = new StringBuilder();
                     int itemCount = bandList.getItemCount();
                     for (int i = 0; i < itemCount; i++) {
@@ -171,7 +179,7 @@ public class OutputParametersForm extends Composite {
             }
         } else if (showProductRelatedSettings) {
             parameters.put("outputFormat", getOutputFormat());
-            parameters.put("autoStaging", autoStaging.getValue() + "");
+            parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
         }
 
 

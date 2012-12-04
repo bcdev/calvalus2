@@ -145,6 +145,10 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         if (hasCrsWkt) {
             Map<String, Object> reprojParams = new HashMap<String, Object>();
             reprojParams.put("crs", crsWkt);
+            if (jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE) != null) {
+                double replacement = jobConfig.getFloat(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE, 0);
+                reprojParams.put("noDataValue", replacement);
+            }
             product = GPF.createProduct("Reproject", reprojParams, product);
         }
 

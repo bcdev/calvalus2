@@ -34,6 +34,7 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
     String CALVALUS_OUTPUT_FORMAT = "calvalus.output.format";
     String CALVALUS_OUTPUT_COMPRESSION = "calvalus.output.compression";
+    String CALVALUS_OUTPUT_REPLACE_NAN_VALUE = "calvalus.output.replaceNanValue";
     String CALVALUS_OUTPUT_CRS = "calvalus.output.crs";
     String CALVALUS_OUTPUT_BANDLIST = "calvalus.output.bandList";
     String CALVALUS_OUTPUT_REGEX = "calvalus.output.regex";
