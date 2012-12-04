@@ -319,6 +319,10 @@ public abstract class ProcessorAdapter {
         getLogger().info(String.format("Opened product width = %d height = %d",
                                        product.getSceneRasterWidth(),
                                        product.getSceneRasterHeight()));
+        ProductReader productReader = product.getProductReader();
+        if (productReader != null) {
+            getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
+        }
         return product;
     }
 

@@ -29,6 +29,7 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
@@ -130,7 +131,15 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
-            return ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            getLogger().info(String.format("Opened product width = %d height = %d",
+                                           product.getSceneRasterWidth(),
+                                           product.getSceneRasterHeight()));
+            ProductReader productReader = product.getProductReader();
+            if (productReader != null) {
+                getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
+            }
+            return product;
         }
         return null;
     }
