@@ -71,14 +71,20 @@
                     <g:VerticalPanel>
                         <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
                             <g:Label>CRS:</g:Label>
-                            <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                            <g:VerticalPanel spacing="2">
+                                <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    Use WKT or EPSG codes (Format: EPSG:&lt;code&gt;) to specify map-projection.
+                                    <br/>
+                                    Use VISAT or the
+                                    <a href="http://www.epsg-registry.org/" target="_blank">EPSG-Registry</a>
+                                    to find the correct code.
+                                    <br/>
+                                    Leave empty for un-projected output.
+                                    <p/>
+                                </g:HTML>
+                            </g:VerticalPanel>
                         </g:HorizontalPanel>
-                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                            Use WKT or EPSG codes (Format: EPSG:&lt;code&gt;) to specify map-projection.
-                            <br/>
-                            Leave empty for un-projected output.
-                            <p/>
-                        </g:HTML>
                     </g:VerticalPanel>
 
                     <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
