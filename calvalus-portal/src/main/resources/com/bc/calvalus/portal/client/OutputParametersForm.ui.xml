@@ -81,7 +81,6 @@
                                     to find the correct code.
                                     <br/>
                                     Leave empty for un-projected output.
-                                    <p/>
                                 </g:HTML>
                             </g:VerticalPanel>
                         </g:HorizontalPanel>
@@ -94,6 +93,9 @@
                                 Only applied if the output is reprojected.
                             </g:HTML>
                         </g:HorizontalPanel>
+                        <g:HTML>
+                            <br/>
+                        </g:HTML>
                     </g:VerticalPanel>
 
                     <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
