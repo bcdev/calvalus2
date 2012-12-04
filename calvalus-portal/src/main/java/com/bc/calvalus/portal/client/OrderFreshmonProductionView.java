@@ -39,6 +39,8 @@ public class OrderFreshmonProductionView extends OrderProductionView {
 
     public static final String ID = OrderFreshmonProductionView.class.getName();
 
+    private static final String[] DEFAULT_BAND_SELECTION = new String[]{"CHL", "CDM", "TSM", "KDS"};
+
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private L2ConfigForm l2ConfigForm;
@@ -52,7 +54,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public boolean accept(DtoProductSet dtoProductSet) {
                 return dtoProductSet.getName().equals("MERIS FSG L1b 2002-2012") ||
-                        dtoProductSet.getProductType().equals("FRESHMON_L2");
+                       dtoProductSet.getProductType().equals("FRESHMON_L2");
             }
         };
         Filter<DtoProcessorDescriptor> processorFilter = new Filter<DtoProcessorDescriptor>() {
@@ -73,8 +75,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
                 return false;
             }
         };
-        final List<String> bandsToSelect = Arrays.asList("chl_concentration", "ys_absorption", "tsm_concentration",
-                                                         "Kd_490");
+        final List<String> bandsToSelect = Arrays.asList(DEFAULT_BAND_SELECTION);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter);
         productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
