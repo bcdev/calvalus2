@@ -34,7 +34,6 @@ import javax.measure.unit.Unit;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -159,18 +158,11 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     }
                 }
 
-                DateFormat dateFormat = ProductData.UTC.createDateFormat("/yyyy/MM/dd/");
-                ProductData.UTC startTime = targetProduct.getStartTime();
-                if (startTime != null) {
-                    if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
-                        if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
-                            String qlName = targetBaseName + ".png";
-                            String qlPath = dateFormat.format(startTime.getAsDate()) + qlName;
-                            vcx.put("quicklookPath", qlPath);
-                        }
+                if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
+                    if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
+                        String qlName = targetBaseName + ".png";
+                        vcx.put("quicklookName", qlName);
                     }
-
-                    vcx.put("archivePath", dateFormat.format(startTime.getAsDate()) + targetFile.getName());
                 }
 
 
