@@ -112,10 +112,11 @@ public class OutputParametersForm extends Composite {
 
 
     private void setTailoringComponentsEnabled(boolean enabled) {
-        crsText.setEnabled(enabled && enableTailoring.getValue());
-        replaceNans.setEnabled(enabled && enableTailoring.getValue());
-        replaceValue.setEnabled(enabled && enableTailoring.getValue());
-        quicklooks.setEnabled(enabled && enableTailoring.getValue());
+        boolean enableComponent = enabled && enableTailoring.getValue();
+        crsText.setEnabled(enableComponent);
+        replaceNans.setEnabled(enableComponent);
+        replaceValue.setEnabled(enableComponent);
+        quicklooks.setEnabled(enableComponent);
     }
 
     public void showProcessingFormatSettings(boolean showProcessingFormatSettings) {
@@ -157,7 +158,7 @@ public class OutputParametersForm extends Composite {
             if (processingFormatUser.getValue()) {
                 parameters.put("outputFormat", getOutputFormat());
                 parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
-                if (showTailoringRelatedSettings && enableTailoring.isEnabled()) {
+                if (showTailoringRelatedSettings && enableTailoring.getValue()) {
                     parameters.put("replaceNans", String.valueOf(replaceNans.getValue()));
                     parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
                     parameters.put("outputCRS", crsText.getValue());
