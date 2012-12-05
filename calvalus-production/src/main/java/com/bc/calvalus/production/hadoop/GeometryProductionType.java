@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
@@ -39,11 +40,17 @@ import java.util.List;
  */
 public class GeometryProductionType extends HadoopProductionType {
 
-    static final String NAME = "Geometry";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new GeometryProductionType(inventory, processing, staging);
+        }
+    }
+
+    GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
                                   StagingService stagingService) {
-        super(NAME, inventoryService, processingService, stagingService);
+        super("Geometry", inventoryService, processingService, stagingService);
     }
 
     @Override

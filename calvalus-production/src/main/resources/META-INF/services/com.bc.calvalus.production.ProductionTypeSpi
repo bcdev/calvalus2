@@ -1,0 +1,14 @@
+com.bc.calvalus.production.hadoop.L2PlusProductionType$Spi
+com.bc.calvalus.production.hadoop.L2FProductionType$Spi
+com.bc.calvalus.production.hadoop.LcL3ProductionType$Spi
+com.bc.calvalus.production.hadoop.GeometryProductionType$Spi
+com.bc.calvalus.production.hadoop.InventoryProductionType$Spi
+com.bc.calvalus.production.hadoop.LcL3FrRrProductionType$Spi
+com.bc.calvalus.production.hadoop.GLobVegProductionType$Spi
+com.bc.calvalus.production.hadoop.QLProductionType$Spi
+com.bc.calvalus.production.hadoop.LcSeasonalProductionType$Spi
+com.bc.calvalus.production.hadoop.TAProductionType$Spi
+com.bc.calvalus.production.hadoop.L3ProductionType$Spi
+com.bc.calvalus.production.hadoop.MAProductionType$Spi
+com.bc.calvalus.production.hadoop.PrevueProductionType$Spi
+com.bc.calvalus.production.hadoop.L2ProductionType$Spi

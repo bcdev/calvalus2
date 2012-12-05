@@ -9,6 +9,7 @@ import com.bc.calvalus.processing.ma.MAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
@@ -27,11 +28,17 @@ import java.util.List;
  */
 public class MAProductionType extends HadoopProductionType {
 
-    public static final String NAME = "MA";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                            StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new MAProductionType(inventory, processing, staging);
+        }
+    }
+
+    MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) {
+        super("MA", inventoryService, processingService, stagingService);
     }
 
     @Override

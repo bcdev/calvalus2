@@ -29,6 +29,7 @@ import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -53,12 +54,19 @@ import java.util.List;
  */
 public class LcL3FrRrProductionType extends HadoopProductionType {
 
-    public static final String NAME = "LCL3FRRR";
+    public static class Spi extends HadoopProductionType.Spi {
+
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new LcL3FrRrProductionType(inventory, processing, staging);
+        }
+    }
+
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    public LcL3FrRrProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                  StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+    LcL3FrRrProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                  StagingService stagingService) {
+        super("LCL3FRRR", inventoryService, processingService, stagingService);
     }
 
     @Override

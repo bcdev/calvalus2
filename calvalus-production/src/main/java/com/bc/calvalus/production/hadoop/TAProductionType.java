@@ -11,6 +11,7 @@ import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -27,11 +28,17 @@ import java.util.List;
  */
 public class TAProductionType extends HadoopProductionType {
 
-    public static final String NAME = "TA";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public TAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                            StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new TAProductionType(inventory, processing, staging);
+        }
+    }
+
+    TAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                            StagingService stagingService) {
+        super("TA", inventoryService, processingService, stagingService);
     }
 
     @Override

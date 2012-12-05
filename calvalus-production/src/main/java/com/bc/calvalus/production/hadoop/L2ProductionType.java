@@ -10,6 +10,7 @@ import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -27,11 +28,17 @@ import java.util.List;
  */
 public class L2ProductionType extends HadoopProductionType {
 
-    static final String NAME = "L2";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new L2ProductionType(inventory, processing, staging);
+        }
+    }
+
+    L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
                             StagingService stagingService) {
-        super(NAME, inventoryService, processingService, stagingService);
+        super("L2", inventoryService, processingService, stagingService);
     }
 
     @Override

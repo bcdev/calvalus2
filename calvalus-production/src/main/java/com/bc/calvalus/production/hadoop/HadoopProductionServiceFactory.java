@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
@@ -7,6 +8,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
@@ -18,7 +20,9 @@ import org.apache.hadoop.mapred.JobConf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * Creates a hadoop production service.
@@ -38,9 +42,9 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClient jobClient = new JobClient(jobConf);
-            HdfsInventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
-            HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
-            ProductionStore productionStore = null;
+            final InventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
+            final HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
+            final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {
                 productionStore = new MemoryProductionStore();
             } else {
@@ -54,55 +58,27 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
                                                             !databaseExists);
             }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
-            ProductionType l2ProductionType = new L2ProductionType(inventoryService, processingService, stagingService);
-            ProductionType l2PlusProductionType = new L2PlusProductionType(inventoryService, processingService,
-                                                                           stagingService);
-            ProductionType l2fProductionType = new L2FProductionType(inventoryService, processingService,
-                                                                     stagingService);
-            ProductionType l3ProductionType = new L3ProductionType(inventoryService, processingService, stagingService);
-            ProductionType taProductionType = new TAProductionType(inventoryService, processingService, stagingService);
-            ProductionType maProductionType = new MAProductionType(inventoryService, processingService, stagingService);
-
-            ProductionType pvProductionType = new InventoryProductionType(inventoryService, processingService,
-                                                                          stagingService);
-            ProductionType qlProductionType = new QLProductionType(inventoryService, processingService, stagingService);
-            ProductionType pgProductionType = new GeometryProductionType(inventoryService, processingService,
-                                                                         stagingService);
-
-            ProductionType lcl3ProductionType = new LcL3ProductionType(inventoryService, processingService,
-                                                                       stagingService);
-            ProductionType lcl3frrrProductionType = new LcL3FrRrProductionType(inventoryService, processingService,
-                                                                               stagingService);
-            ProductionType lcl3SeasonalProductionType = new LcSeasonalProductionType(inventoryService,
-                                                                                     processingService, stagingService);
-
-            ProductionType prevueProductionType = new PrevueProductionType(inventoryService, processingService,
-                                                                           stagingService);
-
-            ProductionType globVegProductionType = new GLobVegProductionType(inventoryService, processingService,
-                                                                             stagingService);
-
+            ProductionType[] productionTypes = getProductionTypes(inventoryService, processingService, stagingService);
             return new ProductionServiceImpl(inventoryService,
                                              processingService,
                                              stagingService,
                                              productionStore,
-                                             l2ProductionType,
-                                             l2PlusProductionType,
-                                             l2fProductionType,
-                                             l3ProductionType,
-                                             taProductionType,
-                                             maProductionType,
-                                             pvProductionType,
-                                             lcl3ProductionType,
-                                             lcl3frrrProductionType,
-                                             lcl3SeasonalProductionType,
-                                             qlProductionType,
-                                             pgProductionType,
-                                             prevueProductionType,
-                                             globVegProductionType);
+                                             productionTypes);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
+    }
+
+    private static ProductionType[] getProductionTypes(InventoryService inventoryService,
+                                  HadoopProcessingService processingService,
+                                  StagingService stagingService) {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        ServiceLoader<ProductionTypeSpi> productionTypes = ServiceLoader.load(ProductionTypeSpi.class, contextClassLoader);
+        ArrayList<ProductionType> list = new ArrayList<ProductionType>();
+        for (ProductionTypeSpi productionType : productionTypes) {
+            list.add(productionType.create(inventoryService, processingService, stagingService));
+        }
+        return list.toArray(new ProductionType[list.size()]);
     }
 
     private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {

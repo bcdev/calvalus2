@@ -32,6 +32,7 @@ import com.bc.calvalus.processing.mosaic.landcover.StatusRemapper;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -52,12 +53,19 @@ import java.util.List;
  */
 public class LcL3ProductionType extends HadoopProductionType {
 
-    public static final String NAME = "LCL3";
+    public static class Spi extends HadoopProductionType.Spi {
+
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new LcL3ProductionType(inventory, processing, staging);
+        }
+    }
+
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    public LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                              StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+    LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                              StagingService stagingService) {
+        super("LCL3", inventoryService, processingService, stagingService);
     }
 
     @Override
@@ -195,7 +203,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         calendarMax.setTime(maxDate);
 
         long time = minDate.getTime();
-        for (int i = 0; ; i++) {
+        while (true) {
             Calendar calendar1 = ProductData.UTC.createCalendar();
             Calendar calendar2 = ProductData.UTC.createCalendar();
             calendar1.setTimeInMillis(time);

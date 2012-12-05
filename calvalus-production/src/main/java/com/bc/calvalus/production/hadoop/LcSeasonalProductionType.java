@@ -28,6 +28,7 @@ import com.bc.calvalus.processing.mosaic.landcover.LCSeasonMosaicAlgorithm;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -42,11 +43,17 @@ import org.esa.beam.binning.AggregatorConfig;
  */
 public class LcSeasonalProductionType extends HadoopProductionType {
 
-    public static final String NAME = "LCL3Seasonal";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public LcSeasonalProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                    StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new LcSeasonalProductionType(inventory, processing, staging);
+        }
+    }
+
+    LcSeasonalProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                    StagingService stagingService) {
+        super("LCL3Seasonal", inventoryService, processingService, stagingService);
     }
 
     @Override

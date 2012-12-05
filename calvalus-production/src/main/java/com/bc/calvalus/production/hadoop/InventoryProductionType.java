@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.productinventory.ProductInventoryWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
@@ -40,11 +41,17 @@ import java.util.List;
  */
 public class InventoryProductionType extends HadoopProductionType {
 
-    static final String NAME = "Inventory";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public InventoryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new InventoryProductionType(inventory, processing, staging);
+        }
+    }
+
+    InventoryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
                                    StagingService stagingService) {
-        super(NAME, inventoryService, processingService, stagingService);
+        super("Inventory", inventoryService, processingService, stagingService);
     }
 
     @Override

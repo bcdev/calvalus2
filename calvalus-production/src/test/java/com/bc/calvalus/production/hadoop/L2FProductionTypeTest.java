@@ -25,17 +25,17 @@ import static org.junit.Assert.*;
 public class L2FProductionTypeTest {
     @Test
     public void testCreateProductionName() throws Exception {
-        ProductionRequest productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("L2F", "ewa",
                                                                     "minDate", "2005-01-01",
                                                                     "maxDate", "2005-01-31");
         String productionName = L2FProductionType.createProductionName(productionRequest);
         assertEquals("Level 2 Format NetCDF 2005-01-01 to 2005-01-31", productionName);
 
-        productionRequest = new ProductionRequest(L2ProductionType.NAME, "ewa",
-                                                                    "minDate", "2005-01-01",
-                                                                    "maxDate", "2005-12-31",
-                                                                    "regionName", "northsea",
-                                                                    "outputFormat", "GeoTIFF");
+        productionRequest = new ProductionRequest("L2F", "ewa",
+                                                  "minDate", "2005-01-01",
+                                                  "maxDate", "2005-12-31",
+                                                  "regionName", "northsea",
+                                                  "outputFormat", "GeoTIFF");
         productionName = L2FProductionType.createProductionName(productionRequest);
         assertEquals("Level 2 Format GeoTIFF 2005-01-01 to 2005-12-31 (northsea)", productionName);
     }

@@ -28,6 +28,7 @@ import com.bc.calvalus.processing.mosaic.globveg.GlobVegMosaicAlgorithm;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -42,11 +43,17 @@ import org.esa.beam.binning.AggregatorConfig;
  */
 public class GLobVegProductionType extends HadoopProductionType {
 
-    public static final String NAME = "GLobVeg";
+    public static class Spi extends HadoopProductionType.Spi {
 
-    public GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                 StagingService stagingService) throws ProductionException {
-        super(NAME, inventoryService, processingService, stagingService);
+        @Override
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+            return new GLobVegProductionType(inventory, processing, staging);
+        }
+    }
+
+    GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                 StagingService stagingService) {
+        super("GLobVeg", inventoryService, processingService, stagingService);
     }
 
     @Override

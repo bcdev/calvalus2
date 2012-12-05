@@ -38,7 +38,7 @@ public class TAProductionTypeTest {
         assertNotNull(production);
         assertEquals("Trend analysis BandMaths 2010-06-01 to 2010-06-15 (wonderland)", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
-        assertEquals(true, production.getId().contains("_" + TAProductionType.NAME + "_"));
+        assertEquals(true, production.getId().contains("_" + "TA" + "_"));
         assertNotNull(production.getWorkflow());
         assertNotNull(production.getWorkflow().getItems());
         assertEquals(5, production.getWorkflow().getItems().length);
@@ -86,7 +86,7 @@ public class TAProductionTypeTest {
     }
 
     static ProductionRequest createValidTAProductionRequest() {
-        return new ProductionRequest(TAProductionType.NAME, "ewa",
+        return new ProductionRequest("TA", "ewa",
                                      // GeneralLevel 3 parameters
                                      "inputPath", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",

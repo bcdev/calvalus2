@@ -46,7 +46,7 @@ public class L3ProductionTypeTest {
         assertNotNull(production);
         assertEquals("Level 3 BandMaths 2010-06-15 to 2010-08-15", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
-        assertEquals(true, production.getId().contains("_" + L3ProductionType.NAME + "_"));
+        assertEquals(true, production.getId().contains("_" + "L3" + "_"));
         assertNotNull(production.getWorkflow());
         assertNotNull(production.getWorkflow().getItems());
         assertEquals(3, production.getWorkflow().getItems().length);
@@ -108,7 +108,7 @@ public class L3ProductionTypeTest {
 
     @Test
     public void testGetDatePairList_MinMax() throws ProductionException, ParseException {
-        ProductionRequest productionRequest = new ProductionRequest(L3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
                                                                     "minDate", "2010-06-15",
                                                                     "maxDate", "2010-08-15",
                                                                     "periodLength", "20",
@@ -128,7 +128,7 @@ public class L3ProductionTypeTest {
 
     @Test
     public void testGetDatePairList_DateList() throws ProductionException, ParseException {
-        ProductionRequest productionRequest = new ProductionRequest(L3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
                                                                     "dateList", "2010-06-15 2010-07-01 2010-07-19 ");
 
         List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
@@ -149,7 +149,7 @@ public class L3ProductionTypeTest {
     }
 
     static ProductionRequest createValidL3ProductionRequest() {
-        return new ProductionRequest(L3ProductionType.NAME, "ewa",
+        return new ProductionRequest("L3", "ewa",
                                      // GeneralLevel 3 parameters
                                      "inputPath", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",

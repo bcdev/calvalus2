@@ -33,7 +33,7 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetDatePairList_period7() throws ProductionException, ParseException {
-        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("LCL3", "ewa",
                                                                     "minDate", "2010-06-01",
                                                                     "maxDate", "2010-06-30",
                                                                     "periodLength", "7");
@@ -56,7 +56,7 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetDatePairList_period10() throws ProductionException, ParseException {
-        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("LCL3", "ewa",
                                                                     "minDate", "2010-06-01",
                                                                     "maxDate", "2010-08-31",
                                                                     "periodLength", "10");
@@ -93,7 +93,7 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetDatePairList_period15() throws ProductionException, ParseException {
-        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("LCL3", "ewa",
                                                                     "minDate", "2010-07-01",
                                                                     "maxDate", "2010-07-31",
                                                                     "periodLength", "15");
@@ -110,7 +110,7 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetWingsRange() throws Exception {
-        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa", "wings", "10");
+        ProductionRequest productionRequest = new ProductionRequest("LCL3", "ewa", "wings", "10");
 
         DateRange dateRange = new DateRange(asDate("2010-06-01"), asDate("2010-06-10"));
 
@@ -122,7 +122,7 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testgetDateRange() throws Exception {
-        ProductionRequest productionRequest = new ProductionRequest(LcL3ProductionType.NAME, "ewa",
+        ProductionRequest productionRequest = new ProductionRequest("LCL3", "ewa",
                                                                     "minDate", "2010-07-01",
                                                                     "periodLength", "15");
 
