@@ -153,7 +153,7 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
         if (productionRequest.getBoolean("replaceNans", false)) {
             formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE,
-                                productionRequest.getString("replaceValue", null));
+                                String.valueOf(productionRequest.getDouble("replaceValue", 0.0)));
         }
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, bandList);
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS,
