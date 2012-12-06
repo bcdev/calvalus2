@@ -34,13 +34,14 @@ public class L2PlusProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing,
+                                     StagingService staging) {
             return new L2PlusProductionType(inventory, processing, staging);
         }
     }
 
     L2PlusProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                StagingService stagingService) {
+                         StagingService stagingService) {
         super("L2Plus", inventoryService, processingService, stagingService);
     }
 
@@ -80,7 +81,7 @@ public class L2PlusProductionType extends HadoopProductionType {
 
             Workflow.Parallel formattingItem = new Workflow.Parallel();
             String outputBandList = productionRequest.getString("outputBandList", "");
-            if (outputFormat.equals("Multi-GeoTIFF")) {
+            if (outputFormat.equals("Multi-GeoTIFF") && !outputBandList.isEmpty()) {
                 for (String bandName : StringUtils.csvToArray(outputBandList)) {
                     HadoopWorkflowItem item = createFormattingItem(productionName + " Format: " + bandName,
                                                                    dateRanges,
