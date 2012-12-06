@@ -116,6 +116,7 @@ public class OutputParametersForm extends Composite {
         crsText.setEnabled(enableComponent);
         replaceNans.setEnabled(enableComponent);
         replaceValue.setEnabled(enableComponent);
+        bandList.setEnabled(enableComponent);
         quicklooks.setEnabled(enableComponent);
     }
 
