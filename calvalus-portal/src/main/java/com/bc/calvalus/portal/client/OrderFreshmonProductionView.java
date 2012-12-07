@@ -32,8 +32,6 @@ import java.util.List;
 
 /**
  * Demo view that lets users submit a new Freshmon production.
- *
- * @author Norman
  */
 public class OrderFreshmonProductionView extends OrderProductionView {
 
@@ -101,9 +99,10 @@ public class OrderFreshmonProductionView extends OrderProductionView {
 
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showProcessingFormatSettings(true);
-        outputParametersForm.showProductRelatedSettings();
-        outputParametersForm.showTailoringRelatedSettings();
+        outputParametersForm.showProductRelatedSettings(true);
+        outputParametersForm.showTailoringRelatedSettings(true);
         outputParametersForm.quicklooks.setValue(true);
+        outputParametersForm.replaceValue.setValue(0.0);
         handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
 
 

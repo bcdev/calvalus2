@@ -103,23 +103,6 @@ public class OutputParametersForm extends Composite {
         setTailoringComponentsEnabled(false);
     }
 
-    private void setComponentsEnabled(boolean enabled) {
-        enableTailoring.setEnabled(enabled);
-        setTailoringComponentsEnabled(enabled);
-        outputFormat.setEnabled(enabled);
-        autoStaging.setEnabled(enabled);
-    }
-
-
-    private void setTailoringComponentsEnabled(boolean enabled) {
-        boolean enableComponent = enabled && enableTailoring.getValue();
-        crsText.setEnabled(enableComponent);
-        replaceNans.setEnabled(enableComponent);
-        replaceValue.setEnabled(enableComponent);
-        bandList.setEnabled(enableComponent);
-        quicklooks.setEnabled(enableComponent);
-    }
-
     public void showProcessingFormatSettings(boolean showProcessingFormatSettings) {
         this.showProcessingFormatSettings = showProcessingFormatSettings;
         processingFormatPanel.setVisible(showProcessingFormatSettings);
@@ -132,15 +115,15 @@ public class OutputParametersForm extends Composite {
         }
     }
 
-    public void showProductRelatedSettings() {
-        showProductRelatedSettings = true;
-        productRelatedPanel.setVisible(true);
+    public void showProductRelatedSettings(boolean show) {
+        showProductRelatedSettings = show;
+        productRelatedPanel.setVisible(show);
     }
 
-    public void showTailoringRelatedSettings() {
-        showTailoringRelatedSettings = true;
-        tailoringPanel.setVisible(true);
-        enableTailoring.setVisible(true);
+    public void showTailoringRelatedSettings(boolean show) {
+        showTailoringRelatedSettings = show;
+        tailoringPanel.setVisible(show);
+        enableTailoring.setVisible(show);
     }
 
     public void validateForm() throws ValidationException {
@@ -184,7 +167,6 @@ public class OutputParametersForm extends Composite {
             parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
         }
 
-
         return parameters;
     }
 
@@ -199,6 +181,23 @@ public class OutputParametersForm extends Composite {
         } else {
             outputFormat.setSelectedIndex(0);
         }
+    }
+
+    private void setComponentsEnabled(boolean enabled) {
+        enableTailoring.setEnabled(enabled);
+        setTailoringComponentsEnabled(enabled);
+        outputFormat.setEnabled(enabled);
+        autoStaging.setEnabled(enabled);
+    }
+
+
+    private void setTailoringComponentsEnabled(boolean enabled) {
+        boolean enableComponent = enabled && enableTailoring.getValue();
+        crsText.setEnabled(enableComponent);
+        replaceNans.setEnabled(enableComponent);
+        replaceValue.setEnabled(enableComponent);
+        bandList.setEnabled(enableComponent);
+        quicklooks.setEnabled(enableComponent);
     }
 
     private String getOutputFormat() {

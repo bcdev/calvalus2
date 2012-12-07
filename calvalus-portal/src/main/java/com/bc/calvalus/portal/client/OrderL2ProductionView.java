@@ -16,6 +16,7 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderL2ProductionView extends OrderProductionView {
+
     public static final String ID = OrderL2ProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -50,7 +51,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showProcessingFormatSettings(true);
-        outputParametersForm.showProductRelatedSettings();
+        outputParametersForm.showProductRelatedSettings(true);
         outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
 
         VerticalPanel panel = new VerticalPanel();
