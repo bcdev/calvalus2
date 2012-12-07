@@ -4,7 +4,12 @@ import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
 import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
-import com.google.gwt.cell.client.*;
+import com.google.gwt.cell.client.ButtonCell;
+import com.google.gwt.cell.client.Cell;
+import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.ClickableTextCell;
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.ValueUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -12,15 +17,29 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
+import com.google.gwt.user.cellview.client.ColumnSortList;
+import com.google.gwt.user.cellview.client.Header;
+import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.RangeChangeEvent;
-import com.google.gwt.view.client.SelectionModel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Demo view that shows the list of productions taking place
@@ -29,6 +48,7 @@ import java.util.*;
  * @author Norman
  */
 public class ManageProductionsView extends PortalView {
+
     public static final String ID = ManageProductionsView.class.getName();
 
     private static final int UPDATE_PERIOD_MILLIS = 2000;
@@ -41,10 +61,9 @@ public class ManageProductionsView extends PortalView {
     private static final String BEAM_NAME = "BEAM 4.10";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
-            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+                                            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
 
     private FlexTable widget;
-    private SelectionModel<DtoProduction> selectionModel;
     private CellTable<DtoProduction> productionTable;
     private boolean selectAll;
     private Set<DtoProduction> selectedProductions;
@@ -58,16 +77,15 @@ public class ManageProductionsView extends PortalView {
             }
         };
 
-        // selectionModel = new MultiSelectionModel<DtoProduction>(keyProvider);
         selectedProductions = new HashSet<DtoProduction>();
 
         productionTable = new CellTable<DtoProduction>(keyProvider);
         productionTable.setWidth("100%");
-        //productionTable.setSelectionModel(selectionModel);
 
         // Attach a column sort handler to the ListDataProvider to sort the list.
         List<DtoProduction> dtoProductionList = getPortal().getProductions().getList();
-        ColumnSortEvent.ListHandler<DtoProduction> sortHandler = new ColumnSortEvent.ListHandler<DtoProduction>(dtoProductionList);
+        ColumnSortEvent.ListHandler<DtoProduction> sortHandler = new ColumnSortEvent.ListHandler<DtoProduction>(
+                dtoProductionList);
         productionTable.addColumnSortHandler(sortHandler);
 
         CheckboxCell cell = new CheckboxCell(true, true);
@@ -99,7 +117,8 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
-        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(new CheckboxCell(false, false)) {
+        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(
+                new CheckboxCell(false, false)) {
             @Override
             public Boolean getValue(DtoProduction production) {
                 return selectedProductions.contains(production);
@@ -251,7 +270,7 @@ public class ManageProductionsView extends PortalView {
             public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
                 String result = getResult(production);
                 if (result != null) {
-                    if (result.startsWith("#")) {
+                    if (result.startsWith("#")) { // means auto staging
                         sb.appendHtmlConstant(result.substring(1) + "<br/>");
                     } else {
                         super.render(context, production, sb);
@@ -331,18 +350,18 @@ public class ManageProductionsView extends PortalView {
         }
 
         if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-                && production.getStagingStatus().getState() == DtoProcessState.UNKNOWN
-                && production.isAutoStaging()) {
+            && production.getStagingStatus().getState() == DtoProcessState.UNKNOWN
+            && production.isAutoStaging()) {
             return "#Auto-staging";
         }
 
         if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-                && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
+            && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
         if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return STAGE;
         }
 
@@ -354,7 +373,7 @@ public class ManageProductionsView extends PortalView {
             return null;
         }
         if (production.getProcessingStatus().isDone()
-                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return RESTART;
         } else {
             return CANCEL;
@@ -412,9 +431,9 @@ public class ManageProductionsView extends PortalView {
 
     private void cancelProduction(DtoProduction production) {
         boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
-                                                 "This operation cannot be undone.\n" +
-                                                 "\n" +
-                                                 "Do you wish to continue?");
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -439,10 +458,10 @@ public class ManageProductionsView extends PortalView {
         }
 
         boolean confirm = Window.confirm(toDeleteList.size() + " production(s) will be deleted and\n" +
-                                                 "associated files will be removed from server.\n" +
-                                                 "This operation cannot be undone.\n" +
-                                                 "\n" +
-                                                 "Do you wish to continue?");
+                                         "associated files will be removed from server.\n" +
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -472,7 +491,8 @@ public class ManageProductionsView extends PortalView {
         } else if (state == DtoProcessState.SCHEDULED) {
             return "SCHEDULED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.RUNNING) {
-            return "RUNNING (" + getProgressText(status.getProgress()) + ")" + (message.isEmpty() ? "" : (": " + message));
+            return "RUNNING (" + getProgressText(
+                    status.getProgress()) + ")" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.COMPLETED) {
             return "COMPLETED" + (message.isEmpty() ? "" : (": " + message));
         } else if (state == DtoProcessState.CANCELLED) {
@@ -503,6 +523,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     private class ProductionActionUpdater implements FieldUpdater<DtoProduction, String> {
+
         @Override
         public void update(int index, DtoProduction production, String value) {
             if (RESTART.equals(value)) {
@@ -519,6 +540,7 @@ public class ManageProductionsView extends PortalView {
     }
 
     private class DeleteProductionsAction implements ClickHandler {
+
         @Override
         public void onClick(ClickEvent event) {
             deleteProductions(new ArrayList<DtoProduction>(selectedProductions));
