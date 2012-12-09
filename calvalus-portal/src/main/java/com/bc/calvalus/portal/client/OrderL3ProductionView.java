@@ -7,7 +7,11 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L3 production.
@@ -15,6 +19,7 @@ import java.util.*;
  * @author Norman
  */
 public class OrderL3ProductionView extends OrderProductionView {
+
     public static final String ID = OrderL3ProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -65,7 +70,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProductRelatedSettings();
+        outputParametersForm.showProductRelatedSettings(true);
         outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "GeoTIFF");
 
         updateTemporalParameters(productSetFilterForm.getValueMap());

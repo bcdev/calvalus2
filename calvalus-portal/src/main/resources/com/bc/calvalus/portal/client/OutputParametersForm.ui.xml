@@ -22,7 +22,6 @@
                 <p/>
             </g:HTML>
 
-
             <g:VerticalPanel spacing="2">
                 <g:FlowPanel ui:field="processingFormatPanel" visible="false">
                     <g:VerticalPanel spacing="2">
@@ -88,7 +87,7 @@
                             <g:CheckBox ui:field="replaceNans"
                                         text="Replace NaN values by"
                                         checked="false"/>
-                            <g:DoubleBox ui:field="replaceValue" visibleLength="10" text="0.0"/>
+                            <g:DoubleBox ui:field="replaceValue" visibleLength="10"/>
                             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
                                 Only applied if the output is reprojected.
                             </g:HTML>

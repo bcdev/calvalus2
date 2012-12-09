@@ -34,13 +34,14 @@ public class L2PlusProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
+        public ProductionType create(InventoryService inventory, HadoopProcessingService processing,
+                                     StagingService staging) {
             return new L2PlusProductionType(inventory, processing, staging);
         }
     }
 
     L2PlusProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                StagingService stagingService) {
+                         StagingService stagingService) {
         super("L2Plus", inventoryService, processingService, stagingService);
     }
 
@@ -81,20 +82,26 @@ public class L2PlusProductionType extends HadoopProductionType {
             Workflow.Parallel formattingItem = new Workflow.Parallel();
             String outputBandList = productionRequest.getString("outputBandList", "");
             if (outputFormat.equals("Multi-GeoTIFF")) {
-                for (String bandName : StringUtils.csvToArray(outputBandList)) {
-                    HadoopWorkflowItem item = createFormattingItem(productionName + " Format: " + bandName,
-                                                                   dateRanges,
-                                                                   formattingInputDir, formattingOutputDir,
-                                                                   productionRequest,
-                                                                   processorProductionRequest, bandName, "GeoTIFF");
-                    if (FRESHMON) {
-                        // TODO generalize
-                        Configuration jobConfig = item.getJobConfig();
-                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX, "L2_of_MER_..._1.....(........_......).*");
-                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT,
-                                      String.format("%s_%s_BC_$1", bandName, productionRequest.getRegionName()));
+                if (!outputBandList.isEmpty()) {
+                    for (String bandName : StringUtils.csvToArray(outputBandList)) {
+                        HadoopWorkflowItem item = createFormattingItem(productionName + " Format: " + bandName,
+                                                                       dateRanges,
+                                                                       formattingInputDir, formattingOutputDir,
+                                                                       productionRequest,
+                                                                       processorProductionRequest, bandName, "GeoTIFF");
+                        if (FRESHMON) {
+                            // TODO generalize
+                            Configuration jobConfig = item.getJobConfig();
+                            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX,
+                                          "L2_of_MER_..._1.....(........_......).*");
+                            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT,
+                                          String.format("%s_%s_BC_$1", bandName, productionRequest.getRegionName()));
+                        }
+                        formattingItem.add(item);
                     }
-                    formattingItem.add(item);
+                } else {
+                    throw new ProductionException(
+                            "If Multi-GeoTiff is specified as format also bands must be selected");
                 }
             } else {
                 formattingItem.add(createFormattingItem(productionName + " Format", dateRanges,
