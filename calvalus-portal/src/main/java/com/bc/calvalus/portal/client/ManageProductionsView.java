@@ -117,24 +117,177 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
-        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(
-                new CheckboxCell(false, false)) {
+        Column<DtoProduction, Boolean> checkColumn = createCheckBoxColumn();
+        Column<DtoProduction, String> idColumn = createProductionIDColumn(sortHandler);
+        TextColumn<DtoProduction> userColumn = createUserColumn(sortHandler);
+        TextColumn<DtoProduction> productionStatusColumn = createProductionStatusColum(sortHandler);
+        TextColumn<DtoProduction> productionTimeColumn = createProductionTimeColumn(sortHandler);
+        TextColumn<DtoProduction> stagingStatusColumn = createStagingStatusColumn(sortHandler);
+        Column<DtoProduction, String> actionColumn = createActionColumn();
+        Column<DtoProduction, String> resultColumn = createResultColumn();
+
+        productionTable.addColumn(checkColumn, checkAllHeader);
+        productionTable.addColumn(idColumn, "Production");
+        productionTable.addColumn(userColumn, "User");
+        productionTable.addColumn(productionStatusColumn, "Processing Status");
+        productionTable.addColumn(productionTimeColumn, "Processing Time");
+        productionTable.addColumn(stagingStatusColumn, "Staging Status");
+        productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        productionTable.addColumn(resultColumn, "Result");
+
+        // Connect the table to the data provider.
+        getPortal().getProductions().addDataDisplay(productionTable);
+        ColumnSortList.ColumnSortInfo sortInfo = new ColumnSortList.ColumnSortInfo(idColumn, false);
+        productionTable.getColumnSortList().push(sortInfo);
+
+        // Create a Pager to control the table.
+        SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
+        SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, false, 0, true);
+        pager.setDisplay(productionTable);
+
+        final CheckBox allUsers = new CheckBox("Show productions of all users");
+        allUsers.setValue(!getPortal().isProductionListFiltered());
+        allUsers.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
-            public Boolean getValue(DtoProduction production) {
-                return selectedProductions.contains(production);
-            }
-        };
-        checkColumn.setFieldUpdater(new FieldUpdater<DtoProduction, Boolean>() {
-            @Override
-            public void update(int index, DtoProduction production, Boolean value) {
-                if (Boolean.TRUE.equals(value)) {
-                    selectedProductions.add(production);
-                } else {
-                    selectedProductions.remove(production);
-                }
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                getPortal().setProductionListFiltered(!allUsers.getValue());
             }
         });
 
+        widget = new FlexTable();
+        widget.setWidth("100%");
+        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT);
+        widget.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        widget.getFlexCellFormatter().setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        widget.getFlexCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        widget.setCellSpacing(4);
+        widget.setWidget(0, 0, allUsers);
+        widget.setWidget(1, 0, productionTable);
+        widget.setWidget(2, 0, pager);
+        widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
+        widget.setWidget(4, 0, new HTML(BEAM_HTML));
+
+        fireSortListEvent();
+    }
+
+    private Column<DtoProduction, String> createResultColumn() {
+        Column<DtoProduction, String> resultColumn = new Column<DtoProduction, String>(new ButtonCell()) {
+            @Override
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
+                String result = getResult(production);
+                if (result != null) {
+                    if (result.startsWith("#")) { // means auto staging
+                        sb.appendHtmlConstant(result.substring(1) + "<br/>");
+                    } else {
+                        super.render(context, production, sb);
+                    }
+                } else {
+                    sb.appendHtmlConstant("<br/>");
+                }
+            }
+
+            @Override
+            public String getValue(DtoProduction production) {
+                return getResult(production);
+            }
+        };
+        resultColumn.setFieldUpdater(new ProductionActionUpdater());
+        return resultColumn;
+    }
+
+    private Column<DtoProduction, String> createActionColumn() {
+        Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
+            @Override
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
+                String action = getAction(production);
+                if (action != null) {
+                    super.render(context, production, sb);
+                } else {
+                    sb.appendHtmlConstant("<br/>");
+                }
+            }
+
+            @Override
+            public String getValue(DtoProduction production) {
+                return getAction(production);
+            }
+        };
+        actionColumn.setFieldUpdater(new ProductionActionUpdater());
+        return actionColumn;
+    }
+
+    private TextColumn<DtoProduction> createStagingStatusColumn(
+            ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
+        TextColumn<DtoProduction> stagingStatusColumn = new TextColumn<DtoProduction>() {
+            @Override
+            public String getValue(DtoProduction production) {
+                return getStatusText(production.getStagingStatus());
+            }
+        };
+        stagingStatusColumn.setSortable(true);
+        sortHandler.setComparator(stagingStatusColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getStagingStatus().getState().compareTo(p2.getStagingStatus().getState());
+            }
+        });
+        return stagingStatusColumn;
+    }
+
+    private TextColumn<DtoProduction> createProductionTimeColumn(
+            ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
+        TextColumn<DtoProduction> productionTimeColumn = new TextColumn<DtoProduction>() {
+            @Override
+            public String getValue(DtoProduction production) {
+                return getTimeText(production.getProcessingStatus().getProcessingSeconds());
+            }
+        };
+        productionTimeColumn.setSortable(true);
+        sortHandler.setComparator(productionTimeColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                Integer p1Sec = p1.getProcessingStatus().getProcessingSeconds();
+                Integer p2Sec = p2.getProcessingStatus().getProcessingSeconds();
+                return p1Sec.compareTo(p2Sec);
+            }
+        });
+        return productionTimeColumn;
+    }
+
+    private TextColumn<DtoProduction> createProductionStatusColum(
+            ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
+        TextColumn<DtoProduction> productionStatusColumn = new TextColumn<DtoProduction>() {
+            @Override
+            public String getValue(DtoProduction production) {
+                return getStatusText(production.getProcessingStatus());
+            }
+        };
+        productionStatusColumn.setSortable(true);
+        sortHandler.setComparator(productionStatusColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getProcessingStatus().getState().compareTo(p2.getProcessingStatus().getState());
+            }
+        });
+        return productionStatusColumn;
+    }
+
+    private TextColumn<DtoProduction> createUserColumn(ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
+        TextColumn<DtoProduction> userColumn = new TextColumn<DtoProduction>() {
+            @Override
+            public String getValue(DtoProduction production) {
+                return production.getUser();
+            }
+        };
+        userColumn.setSortable(true);
+        sortHandler.setComparator(userColumn, new Comparator<DtoProduction>() {
+            public int compare(DtoProduction p1, DtoProduction p2) {
+                return p1.getUser().compareTo(p2.getUser());
+            }
+        });
+        return userColumn;
+    }
+
+    private Column<DtoProduction, String> createProductionIDColumn(
+            ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
         Column<DtoProduction, String> idColumn = new Column<DtoProduction, String>(new ClickableTextCell()) {
             @Override
             public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
@@ -192,144 +345,28 @@ public class ManageProductionsView extends PortalView {
                 return p1.getId().compareTo(p2.getId());
             }
         });
+        return idColumn;
+    }
 
-        TextColumn<DtoProduction> userColumn = new TextColumn<DtoProduction>() {
+    private Column<DtoProduction, Boolean> createCheckBoxColumn() {
+        Column<DtoProduction, Boolean> checkColumn = new Column<DtoProduction, Boolean>(
+                new CheckboxCell(false, false)) {
             @Override
-            public String getValue(DtoProduction production) {
-                return production.getUser();
+            public Boolean getValue(DtoProduction production) {
+                return selectedProductions.contains(production);
             }
         };
-        userColumn.setSortable(true);
-        sortHandler.setComparator(userColumn, new Comparator<DtoProduction>() {
-            public int compare(DtoProduction p1, DtoProduction p2) {
-                return p1.getUser().compareTo(p2.getUser());
-            }
-        });
-
-        TextColumn<DtoProduction> productionStatusColumn = new TextColumn<DtoProduction>() {
+        checkColumn.setFieldUpdater(new FieldUpdater<DtoProduction, Boolean>() {
             @Override
-            public String getValue(DtoProduction production) {
-                return getStatusText(production.getProcessingStatus());
-            }
-        };
-        productionStatusColumn.setSortable(true);
-        sortHandler.setComparator(productionStatusColumn, new Comparator<DtoProduction>() {
-            public int compare(DtoProduction p1, DtoProduction p2) {
-                return p1.getProcessingStatus().getState().compareTo(p2.getProcessingStatus().getState());
-            }
-        });
-
-        TextColumn<DtoProduction> productionTimeColumn = new TextColumn<DtoProduction>() {
-            @Override
-            public String getValue(DtoProduction production) {
-                return getTimeText(production.getProcessingStatus().getProcessingSeconds());
-            }
-        };
-        productionTimeColumn.setSortable(true);
-        sortHandler.setComparator(productionTimeColumn, new Comparator<DtoProduction>() {
-            public int compare(DtoProduction p1, DtoProduction p2) {
-                Integer p1Sec = p1.getProcessingStatus().getProcessingSeconds();
-                Integer p2Sec = p2.getProcessingStatus().getProcessingSeconds();
-                return p1Sec.compareTo(p2Sec);
-            }
-        });
-
-        TextColumn<DtoProduction> stagingStatusColumn = new TextColumn<DtoProduction>() {
-            @Override
-            public String getValue(DtoProduction production) {
-                return getStatusText(production.getStagingStatus());
-            }
-        };
-        stagingStatusColumn.setSortable(true);
-        sortHandler.setComparator(stagingStatusColumn, new Comparator<DtoProduction>() {
-            public int compare(DtoProduction p1, DtoProduction p2) {
-                return p1.getStagingStatus().getState().compareTo(p2.getStagingStatus().getState());
-            }
-        });
-
-        Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
-            @Override
-            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
-                String action = getAction(production);
-                if (action != null) {
-                    super.render(context, production, sb);
+            public void update(int index, DtoProduction production, Boolean value) {
+                if (Boolean.TRUE.equals(value)) {
+                    selectedProductions.add(production);
                 } else {
-                    sb.appendHtmlConstant("<br/>");
+                    selectedProductions.remove(production);
                 }
             }
-
-            @Override
-            public String getValue(DtoProduction production) {
-                return getAction(production);
-            }
-        };
-        actionColumn.setFieldUpdater(new ProductionActionUpdater());
-
-        Column<DtoProduction, String> resultColumn = new Column<DtoProduction, String>(new ButtonCell()) {
-            @Override
-            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
-                String result = getResult(production);
-                if (result != null) {
-                    if (result.startsWith("#")) { // means auto staging
-                        sb.appendHtmlConstant(result.substring(1) + "<br/>");
-                    } else {
-                        super.render(context, production, sb);
-                    }
-                } else {
-                    sb.appendHtmlConstant("<br/>");
-                }
-            }
-
-            @Override
-            public String getValue(DtoProduction production) {
-                return getResult(production);
-            }
-        };
-        resultColumn.setFieldUpdater(new ProductionActionUpdater());
-
-        productionTable.addColumn(checkColumn, checkAllHeader);
-        productionTable.addColumn(idColumn, "Production");
-        productionTable.addColumn(userColumn, "User");
-        productionTable.addColumn(productionStatusColumn, "Processing Status");
-        productionTable.addColumn(productionTimeColumn, "Processing Time");
-        productionTable.addColumn(stagingStatusColumn, "Staging Status");
-        productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        productionTable.addColumn(resultColumn, "Result");
-
-        // Connect the table to the data provider.
-        getPortal().getProductions().addDataDisplay(productionTable);
-        ColumnSortList.ColumnSortInfo sortInfo = new ColumnSortList.ColumnSortInfo(idColumn, false);
-        productionTable.getColumnSortList().push(sortInfo);
-
-        // Create a Pager to control the table.
-        SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
-        SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, false, 0, true);
-        pager.setDisplay(productionTable);
-
-        final CheckBox allUsers = new CheckBox("Show productions of all users");
-        allUsers.setValue(!getPortal().isProductionListFiltered());
-        allUsers.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                getPortal().setProductionListFiltered(!allUsers.getValue());
-            }
         });
-
-        widget = new FlexTable();
-        widget.setWidth("100%");
-        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT);
-        widget.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        widget.getFlexCellFormatter().setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
-        widget.getFlexCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
-        widget.setCellSpacing(4);
-        widget.setWidget(0, 0, allUsers);
-        widget.setWidget(1, 0, productionTable);
-        widget.setWidget(2, 0, pager);
-        widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
-        widget.setWidget(4, 0, new HTML(BEAM_HTML));
-
-        fireSortListEvent();
+        return checkColumn;
     }
 
     public static String getProgressText(float progress) {
