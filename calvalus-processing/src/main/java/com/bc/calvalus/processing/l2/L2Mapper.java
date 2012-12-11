@@ -28,7 +28,9 @@ import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.util.InternationalString;
 
 import javax.measure.unit.Unit;
 import java.awt.Rectangle;
@@ -141,6 +143,9 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     try {
                         Integer epsgCode = CRS.lookupEpsgCode(mapCRS, false);
                         vcx.put("epsgCode", epsgCode);
+                        CRSAuthorityFactory authorityFactory = CRS.getAuthorityFactory(true);
+                        InternationalString epsgDescription = authorityFactory.getDescriptionText(epsgCode.toString());
+                        vcx.put("epsgDescription", epsgDescription);
                     } catch (FactoryException ignore) {
                     }
 
