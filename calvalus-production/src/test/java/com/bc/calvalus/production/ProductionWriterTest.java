@@ -39,7 +39,7 @@ public class ProductionWriterTest {
         String xml = productionWriter.asXML();
 
         assertNotNull(xml);
-        assertEquals(332, xml.length());
+        assertEquals(320, xml.length());
         assertTrue(xml.contains("<id>9A3F</id>"));
         assertTrue(xml.contains("<name>Toasting</name>"));
     }
