@@ -142,10 +142,13 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
                     try {
                         Integer epsgCode = CRS.lookupEpsgCode(mapCRS, false);
-                        vcx.put("epsgCode", epsgCode);
-                        CRSAuthorityFactory authorityFactory = CRS.getAuthorityFactory(true);
-                        InternationalString epsgDescription = authorityFactory.getDescriptionText(epsgCode.toString());
-                        vcx.put("epsgDescription", epsgDescription);
+                        if (epsgCode != null) {
+                            vcx.put("epsgCode", epsgCode);
+                            CRSAuthorityFactory authorityFactory = CRS.getAuthorityFactory(true);
+                            InternationalString epsgDescription = authorityFactory.getDescriptionText(
+                                    epsgCode.toString());
+                            vcx.put("epsgDescription", epsgDescription);
+                        }
                     } catch (FactoryException ignore) {
                     }
 
