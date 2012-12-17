@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class DtoProcessorDescriptor implements IsSerializable {
+
     private String executableName;
     private String processorName;
     private String processorVersion;
@@ -20,7 +21,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String[] outputFormats;
     private String defaultMaskExpression;
     private DtoProcessorVariable[] processorVariables;
-    private boolean isFormattingRequired;
+    private boolean isFormattingMandatory;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -38,7 +39,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String[] inputProductTypes,
                                   String outputProductType,
                                   String[] outputFormats,
-                                  boolean isFormattingRequired,
+                                  boolean isFormattingMandatory,
                                   String defaultMaskExpression,
                                   DtoProcessorVariable[] processorVariables) {
         this.executableName = executableName;
@@ -51,7 +52,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.inputProductTypes = inputProductTypes;
         this.outputProductType = outputProductType;
         this.outputFormats = outputFormats;
-        this.isFormattingRequired = isFormattingRequired;
+        this.isFormattingMandatory = isFormattingMandatory;
         this.defaultMaskExpression = defaultMaskExpression;
         this.processorVariables = processorVariables;
     }
@@ -104,7 +105,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         return defaultMaskExpression;
     }
 
-    public boolean isFormattingRequired() {
-        return isFormattingRequired;
+    public boolean isFormattingMandatory() {
+        return isFormattingMandatory;
     }
 }

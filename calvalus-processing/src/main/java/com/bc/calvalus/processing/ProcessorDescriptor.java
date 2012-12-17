@@ -14,6 +14,7 @@ public class ProcessorDescriptor {
 
         private String defaultAggregator;
         private String defaultWeightCoeff;
+
         // empty constructor for XML serialization
         public Variable() {
         }
@@ -75,8 +76,8 @@ public class ProcessorDescriptor {
     @Parameter
     private String outputProductType;
 
-    @Parameter(defaultValue = "true")
-    private boolean formattingRequired;
+    @Parameter(defaultValue = "false")
+    private boolean formattingMandatory;
 
 
     @Parameter(itemAlias = "jobParameter")
@@ -90,7 +91,7 @@ public class ProcessorDescriptor {
                                String processorName,
                                String processorVersion,
                                String defaultParameters,
-                               Variable ... outputVariables) {
+                               Variable... outputVariables) {
 
         Assert.notNull(executableName, "executableName");
         Assert.notNull(processorName, "processorName");
@@ -123,8 +124,8 @@ public class ProcessorDescriptor {
         return outputFormats;
     }
 
-    public boolean isFormattingRequired() {
-        return formattingRequired;
+    public boolean isFormattingMandatory() {
+        return formattingMandatory;
     }
 
     public String getDescriptionHtml() {
@@ -151,7 +152,7 @@ public class ProcessorDescriptor {
         this.outputProductType = outputProductType;
     }
 
-    public Map<String,String> getJobConfiguration() {
+    public Map<String, String> getJobConfiguration() {
         HashMap<String, String> map = new HashMap<String, String>();
         if (jobConfig != null) {
             for (JobParameter jobParameter : jobConfig) {

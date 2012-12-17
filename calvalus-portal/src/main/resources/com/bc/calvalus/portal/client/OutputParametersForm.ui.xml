@@ -23,14 +23,14 @@
             </g:HTML>
 
             <g:VerticalPanel spacing="2">
-                <g:FlowPanel ui:field="processingFormatPanel" visible="false">
+                <g:FlowPanel ui:field="processingFormatPanel">
                     <g:VerticalPanel spacing="2">
                         <g:RadioButton ui:field="processingFormatCluster" name=""
                                        text="Process to Cluster-Internal-Format"/>
                         <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
                     </g:VerticalPanel>
                 </g:FlowPanel>
-                <g:FlowPanel ui:field="productRelatedPanel" visible="false">
+                <g:FlowPanel ui:field="productRelatedPanel">
                     <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
                         <g:Label>Product file format:</g:Label>
                         <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
@@ -41,21 +41,6 @@
                         <p/>
                     </g:HTML>
 
-                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
-                        Leave unchecked, if output is used as input
-                        for another production step.
-                        <p/>
-                    </g:HTML>
-
-                    <g:CheckBox ui:field="autoDelete"
-                                text="Delete production output after successful staging"
-                                checked="false"
-                                visible="false"/>
-                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
-                        Leave unchecked, if output is used as input
-                        for another production step.
-                        <p/>
-                    </g:HTML>
                 </g:FlowPanel>
 
                 <g:HTML>
@@ -113,6 +98,16 @@
                 <g:CheckBox ui:field="autoStaging"
                             text="Perform staging step after successful production"
                             checked="true"/>
+                <g:CheckBox ui:field="autoDelete"
+                            text="Delete production output after successful staging"
+                            checked="false"
+                            visible="false"/>
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
+                    Leave unchecked, if output is used as input
+                    for another production step.
+                    <p/>
+                </g:HTML>
+
             </g:VerticalPanel>
 
         </g:VerticalPanel>

@@ -90,7 +90,6 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             public void onChange(ChangeEvent event) {
                 DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getProcessorDescriptor();
                 handleProcessorChanged(processorDescriptor, bandsToSelect);
-                outputParametersForm.showProcessingFormatSettings(processorDescriptor.isFormattingRequired());
             }
         });
 
@@ -98,8 +97,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProcessingFormatSettings(true);
-        outputParametersForm.showProductRelatedSettings(true);
+        outputParametersForm.showFormatSelectionPanel(true);
         outputParametersForm.showTailoringRelatedSettings(true);
         outputParametersForm.quicklooks.setValue(true);
         outputParametersForm.replaceValue.setValue(0.0);
@@ -122,6 +120,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         ListBox bandList = outputParametersForm.bandList;
         bandList.clear();
         if (processorDescriptor != null) {
+            outputParametersForm.showFormatSelectionPanel(!processorDescriptor.isFormattingMandatory());
             outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
             int index = 0;
             for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {

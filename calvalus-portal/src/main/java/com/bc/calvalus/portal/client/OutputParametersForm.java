@@ -32,11 +32,6 @@ public class OutputParametersForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-
-    private boolean showProductRelatedSettings;
-    private boolean showTailoringRelatedSettings;
-    private boolean showProcessingFormatSettings;
-
     @UiField
     TextBox productionName;
 
@@ -103,31 +98,26 @@ public class OutputParametersForm extends Composite {
         setTailoringComponentsEnabled(false);
     }
 
-    public void showProcessingFormatSettings(boolean showProcessingFormatSettings) {
-        this.showProcessingFormatSettings = showProcessingFormatSettings;
-        processingFormatPanel.setVisible(showProcessingFormatSettings);
-        if (showProcessingFormatSettings) {
+    public void showFormatSelectionPanel(boolean show) {
+        if (show) {
+            processingFormatPanel.setVisible(show);
             productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
             tailoringPanel.getElement().getStyle().setProperty("marginLeft", "1.5em");
         } else {
+            processingFormatUser.setValue(true);
+            processingFormatPanel.setVisible(show);
             productRelatedPanel.getElement().getStyle().setProperty("marginLeft", "0em");
             tailoringPanel.getElement().getStyle().setProperty("marginLeft", "0em");
         }
     }
 
-    public void showProductRelatedSettings(boolean show) {
-        showProductRelatedSettings = show;
-        productRelatedPanel.setVisible(show);
-    }
-
     public void showTailoringRelatedSettings(boolean show) {
-        showTailoringRelatedSettings = show;
         tailoringPanel.setVisible(show);
         enableTailoring.setVisible(show);
     }
 
     public void validateForm() throws ValidationException {
-        if (showTailoringRelatedSettings && bandList.getSelectedIndex() == -1) {
+        if (enableTailoring.getValue() && bandList.getSelectedIndex() == -1) {
             throw new ValidationException(bandList, "Output Parameters: One or more bands must be selected.");
         }
     }
@@ -138,34 +128,31 @@ public class OutputParametersForm extends Composite {
         if (!prodName.isEmpty()) {
             parameters.put("productionName", prodName);
         }
-        if (showProcessingFormatSettings) {
-            if (processingFormatUser.getValue()) {
-                parameters.put("outputFormat", getOutputFormat());
-                parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
-                if (showTailoringRelatedSettings && enableTailoring.getValue()) {
-                    parameters.put("replaceNans", String.valueOf(replaceNans.getValue()));
-                    parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
-                    parameters.put("outputCRS", crsText.getValue());
-                    parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
-                    StringBuilder sb = new StringBuilder();
-                    int itemCount = bandList.getItemCount();
-                    for (int i = 0; i < itemCount; i++) {
-                        if (bandList.isItemSelected(i)) {
-                            if (sb.length() != 0) {
-                                sb.append(",");
-                            }
-                            sb.append(bandList.getItemText(i));
-                        }
-                    }
-                    parameters.put("outputBandList", sb.toString());
-                }
-            } else {
-                parameters.put("outputFormat", "SEQ");
-            }
-        } else if (showProductRelatedSettings) {
+        if (processingFormatUser.getValue()) {
             parameters.put("outputFormat", getOutputFormat());
             parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
+        } else {
+            parameters.put("outputFormat", "SEQ");
+            parameters.put("autoStaging", "false");
         }
+        if (enableTailoring.getValue()) {
+            parameters.put("replaceNans", String.valueOf(replaceNans.getValue()));
+            parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
+            parameters.put("outputCRS", crsText.getValue());
+            parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
+            StringBuilder sb = new StringBuilder();
+            int itemCount = bandList.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (bandList.isItemSelected(i)) {
+                    if (sb.length() != 0) {
+                        sb.append(",");
+                    }
+                    sb.append(bandList.getItemText(i));
+                }
+            }
+            parameters.put("outputBandList", sb.toString());
+        }
+
 
         return parameters;
     }

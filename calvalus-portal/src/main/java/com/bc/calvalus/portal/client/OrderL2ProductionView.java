@@ -42,7 +42,7 @@ public class OrderL2ProductionView extends OrderProductionView {
             public void onChange(ChangeEvent event) {
                 DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getProcessorDescriptor();
                 outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
-                outputParametersForm.showProcessingFormatSettings(processorDescriptor.isFormattingRequired());
+                outputParametersForm.showFormatSelectionPanel(processorDescriptor.isFormattingMandatory());
             }
         });
 
@@ -50,8 +50,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showProcessingFormatSettings(true);
-        outputParametersForm.showProductRelatedSettings(true);
+        outputParametersForm.showFormatSelectionPanel(true);
         outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getProcessorDescriptor().getOutputFormats());
 
         VerticalPanel panel = new VerticalPanel();
