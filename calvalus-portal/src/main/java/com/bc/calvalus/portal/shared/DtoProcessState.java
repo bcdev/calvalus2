@@ -1,11 +1,13 @@
 package com.bc.calvalus.portal.shared;
 
+import com.google.gwt.user.client.rpc.IsSerializable;
+
 /**
  * GWT-serializable version of the {@link com.bc.calvalus.commons.ProcessState} class.
  *
  * @author Norman
  */
-public enum DtoProcessState {
+public enum DtoProcessState implements IsSerializable {
     /**
      * Indicates an unknown state, e.g. could not be retrieved.
      */
