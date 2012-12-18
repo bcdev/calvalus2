@@ -145,9 +145,12 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                         if (epsgCode != null) {
                             vcx.put("epsgCode", epsgCode);
                             CRSAuthorityFactory authorityFactory = CRS.getAuthorityFactory(true);
-                            InternationalString epsgDescription = authorityFactory.getDescriptionText(
+                            InternationalString descriptionText = authorityFactory.getDescriptionText(
                                     epsgCode.toString());
-                            vcx.put("epsgDescription", epsgDescription);
+                            if (descriptionText != null) {
+                                String epsgDescription = descriptionText.toString();
+                                vcx.put("epsgDescription", epsgDescription);
+                            }
                         }
                     } catch (FactoryException ignore) {
                     }
