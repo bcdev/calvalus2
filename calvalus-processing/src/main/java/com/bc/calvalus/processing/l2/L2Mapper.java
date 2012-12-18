@@ -148,7 +148,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                             InternationalString descriptionText = authorityFactory.getDescriptionText(
                                     epsgCode.toString());
                             if (descriptionText != null) {
-                                String epsgDescription = descriptionText.toString();
+                                String epsgDescription = "EPSG:" + descriptionText.toString();
                                 vcx.put("epsgDescription", epsgDescription);
                             }
                         }
