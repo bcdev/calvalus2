@@ -1,13 +1,15 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
 
@@ -276,4 +278,16 @@ public class ProductionServiceImplTest {
         assertEquals(true, productionStoreMock.isClosed());
     }
 
+    @Test
+    public void testRegularExpression() throws Exception {
+        Pattern pattern = Pattern.compile("(.*)@(.*):(.*)");
+        Matcher matcher = pattern.matcher("freshmon@freshmon-csw:/data/postprocessing/entries");
+        assertEquals(3, matcher.groupCount());
+        assertEquals(true, matcher.find());
+        assertEquals("freshmon@freshmon-csw:/data/postprocessing/entries", matcher.group(0));
+        assertEquals("freshmon", matcher.group(1));
+        assertEquals("freshmon-csw", matcher.group(2));
+        assertEquals("/data/postprocessing/entries", matcher.group(3));
+
+    }
 }

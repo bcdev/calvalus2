@@ -11,17 +11,24 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A ProductionService implementation that delegates to a Hadoop cluster.
@@ -44,6 +51,8 @@ public class ProductionServiceImpl implements ProductionService {
     private final Map<String, Action> productionActionMap;
     private final Map<String, Staging> productionStagingsMap;
     private final Logger logger;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     public ProductionServiceImpl(InventoryService inventoryService,
                                  ProcessingService processingService,
@@ -96,7 +105,7 @@ public class ProductionServiceImpl implements ProductionService {
         logger.info("parameters: " + productionRequest.getParameters());
 
         synchronized (this) {
-            Production production = null;
+            Production production;
             try {
                 ProductionType productionType = findProductionType(productionRequest);
                 production = productionType.createProduction(productionRequest);
@@ -126,8 +135,75 @@ public class ProductionServiceImpl implements ProductionService {
             }
         }
         if (count < productionIds.length) {
-            throw new ProductionException(String.format("Only %d of %d production(s) have been staged.", count, productionIds.length));
+            throw new ProductionException(
+                    String.format("Only %d of %d production(s) have been staged.", count, productionIds.length));
         }
+    }
+
+
+    @Override
+    public synchronized void scpProduction(final String productionId, final String scpPath) throws
+                                                                                            ProductionException {
+
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ScpTo scpTo = null;
+                    try {
+
+                        Pattern pattern = Pattern.compile("(.*)@(.*):(.*)");
+                        Matcher matcher = pattern.matcher(scpPath);
+                        if (!matcher.find()) {
+                            throw new ProductionException("Could not parse scpPath!");
+                        }
+                        String user = matcher.group(1);
+                        String host = matcher.group(2);
+                        String remoteFilePath = matcher.group(3);
+
+                        scpTo = new ScpTo(user, host);
+                        scpTo.connect();
+                        Production production = getProduction(productionId);
+                        ProductionType type = findProductionType(production.getProductionRequest());
+                        if (!(type instanceof HadoopProductionType)) {
+                            return;
+                        }
+                        HadoopProductionType hadoopProductionType = (HadoopProductionType) type;
+                        File stagingBaseDir = hadoopProductionType.getStagingService().getStagingDir();
+                        final File inputDir = new File(stagingBaseDir, production.getStagingPath());
+
+                        File[] listToCopy = inputDir.listFiles(new FilenameFilter() {
+                            @Override
+                            public boolean accept(File dir, String name) {
+                                return !name.startsWith(inputDir.getName());
+                            }
+                        });
+                        logger.info("Starting to copy via scp");
+                        if (listToCopy != null) {
+                            logger.info("Copying " + listToCopy.length + " file(s)");
+                            int tenthPart = listToCopy.length / 10;
+                            for (int i = 0; i < listToCopy.length; i++) {
+                                File file = listToCopy[i];
+                                scpTo.copy(file.getCanonicalPath(), remoteFilePath);
+                                if (i % tenthPart == 0) {
+                                    logger.info("Copied " + i + " of " + listToCopy.length + " file(s)");
+                                }
+                            }
+
+                        }
+                    } finally {
+                        if (scpTo != null) {
+                            scpTo.disconnect();
+                        }
+                        logger.info("Finished copying via scp");
+
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+        });
+
     }
 
     @Override
@@ -172,8 +248,9 @@ public class ProductionServiceImpl implements ProductionService {
             }
         }
         if (count < productionIds.length) {
-            throw new ProductionException(String.format("Only %d of %d production(s) have been killed. See server log for details.",
-                                                        count, productionIds.length));
+            throw new ProductionException(
+                    String.format("Only %d of %d production(s) have been killed. See server log for details.",
+                                  count, productionIds.length));
         }
     }
 
@@ -211,9 +288,9 @@ public class ProductionServiceImpl implements ProductionService {
         // Copy result to staging area
         for (Production production : productions) {
             if (production.isAutoStaging()
-                    && production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                    && production.getStagingStatus().getState() == ProcessState.UNKNOWN
-                    && productionStagingsMap.get(production.getId()) == null) {
+                && production.getProcessingStatus().getState() == ProcessState.COMPLETED
+                && production.getStagingStatus().getState() == ProcessState.UNKNOWN
+                && productionStagingsMap.get(production.getId()) == null) {
                 try {
                     stageProductionResults(production);
                 } catch (ProductionException e) {
@@ -236,6 +313,7 @@ public class ProductionServiceImpl implements ProductionService {
         try {
             try {
                 stagingService.close();
+                executorService.shutdown();
             } finally {
                 try {
                     processingService.close();

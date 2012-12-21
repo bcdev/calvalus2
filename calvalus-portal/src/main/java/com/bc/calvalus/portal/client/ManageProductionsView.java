@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -15,6 +16,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
@@ -31,6 +33,8 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.RangeChangeEvent;
@@ -38,7 +42,9 @@ import com.google.gwt.view.client.RangeChangeEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,15 +59,15 @@ public class ManageProductionsView extends PortalView {
 
     private static final int UPDATE_PERIOD_MILLIS = 2000;
 
-    private static final String RESTART = "Restart";
-    private static final String CANCEL = "Cancel";
-    private static final String STAGE = "Stage";
-    private static final String DOWNLOAD = "Download";
-
     private static final String BEAM_NAME = "BEAM 4.10";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
                                             "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+
+    static final String RESTART = "Restart";
+    static final String CANCEL = "Cancel";
+    static final String STAGE = "Stage";
+    static final String DOWNLOAD = "Download";
 
     private FlexTable widget;
     private CellTable<DtoProduction> productionTable;
@@ -92,14 +98,12 @@ public class ManageProductionsView extends PortalView {
         Header<Boolean> checkAllHeader = new Header<Boolean>(cell) {
             @Override
             public Boolean getValue() {
-                GWT.log("checkAllHeader.getValue() = " + selectAll);
                 return selectAll;
             }
         };
         checkAllHeader.setUpdater(new ValueUpdater<Boolean>() {
             @Override
             public void update(Boolean value) {
-                GWT.log("checkAllHeader.update(" + value + ")");
                 if (Boolean.TRUE.equals(value)) {
                     selectAll = true;
                     selectedProductions.addAll(productionTable.getVisibleItems());
@@ -124,7 +128,8 @@ public class ManageProductionsView extends PortalView {
         TextColumn<DtoProduction> productionTimeColumn = createProductionTimeColumn(sortHandler);
         TextColumn<DtoProduction> stagingStatusColumn = createStagingStatusColumn(sortHandler);
         Column<DtoProduction, String> actionColumn = createActionColumn();
-        Column<DtoProduction, String> resultColumn = createResultColumn();
+        Column<DtoProduction, String> stageColumn = createStageColumn();
+        Column<DtoProduction, String> downloadColumn = createDownloadColumn();
 
         productionTable.addColumn(checkColumn, checkAllHeader);
         productionTable.addColumn(idColumn, "Production");
@@ -133,7 +138,8 @@ public class ManageProductionsView extends PortalView {
         productionTable.addColumn(productionTimeColumn, "Processing Time");
         productionTable.addColumn(stagingStatusColumn, "Staging Status");
         productionTable.addColumn(actionColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        productionTable.addColumn(resultColumn, "Result");
+        productionTable.addColumn(stageColumn, "Result");
+        productionTable.addColumn(downloadColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
 
         // Connect the table to the data provider.
         getPortal().getProductions().addDataDisplay(productionTable);
@@ -171,11 +177,41 @@ public class ManageProductionsView extends PortalView {
         fireSortListEvent();
     }
 
-    private Column<DtoProduction, String> createResultColumn() {
+    private Column<DtoProduction, String> createStageColumn() {
         Column<DtoProduction, String> resultColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
             public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
-                String result = getResult(production);
+                StageType stageType = getStageType(production);
+                switch (stageType) {
+                    case NO_STAGING:
+                        sb.appendHtmlConstant("<br/>");
+                        break;
+                    case AUTO_STAGING:
+                        sb.appendHtmlConstant(stageType.getText() + "<br/>");
+                        break;
+                    case STAGE:
+                    case MULTI_STAGE:
+                        super.render(context, production, sb);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown StageType");
+                }
+            }
+
+            @Override
+            public String getValue(DtoProduction production) {
+                return getStageType(production).getText();
+            }
+        };
+        resultColumn.setFieldUpdater(new ProductionActionUpdater());
+        return resultColumn;
+    }
+
+    private Column<DtoProduction, String> createDownloadColumn() {
+        Column<DtoProduction, String> resultColumn = new Column<DtoProduction, String>(new ButtonCell()) {
+            @Override
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
+                String result = getDownloadText(production);
                 if (result != null) {
                     if (result.startsWith("#")) { // means auto staging
                         sb.appendHtmlConstant(result.substring(1) + "<br/>");
@@ -189,7 +225,7 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(DtoProduction production) {
-                return getResult(production);
+                return getDownloadText(production);
             }
         };
         resultColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -381,29 +417,46 @@ public class ManageProductionsView extends PortalView {
         }
     }
 
-    static String getResult(DtoProduction production) {
-        if (production.getDownloadPath() == null) {
-            return null;
-        }
+    @Override
+    public PortalContext getPortal() {
+        return super.getPortal();
+    }
 
+    static StageType getStageType(DtoProduction production) {
         if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
             && production.getStagingStatus().getState() == DtoProcessState.UNKNOWN
             && production.isAutoStaging()) {
-            return "#Auto-staging";
+            return StageType.AUTO_STAGING;
         }
 
-        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
+        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED) {
+            if (production.getAdditionalStagingPaths() == null && production.getDownloadPath() != null
+                && (production.getStagingStatus().getState() == DtoProcessState.UNKNOWN
+                    || production.getStagingStatus().getState() == DtoProcessState.CANCELLED
+                    || production.getStagingStatus().getState() == DtoProcessState.ERROR)) {
+                return StageType.STAGE;
+            }
+        }
+
+        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED) {
+            if (production.getAdditionalStagingPaths() != null) {
+                return StageType.MULTI_STAGE;
+            }
+        }
+
+        return StageType.NO_STAGING;
+    }
+
+    static String getDownloadText(DtoProduction production) {
+        if (production.getDownloadPath() != null
+            && production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
             && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
-        if (production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-            && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
-            return STAGE;
-        }
-
         return null;
     }
+
 
     static String getAction(DtoProduction production) {
         if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
@@ -452,8 +505,23 @@ public class ManageProductionsView extends PortalView {
         Window.open(GWT.getHostPageBaseURL() + production.getDownloadPath(), "_blank", "");
     }
 
+    private void stageProduction(DtoProduction production, String scpPath) {
+        BackendServiceAsync backendService = getPortal().getBackendService();
+        backendService.scpProduction(production.getId(), scpPath, new AsyncCallback<Void>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Server-side Staging Error", caught.getMessage());
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                // ok, result will be at destination
+            }
+        });
+    }
+
     private void stageProduction(DtoProduction production) {
-        getPortal().getBackendService().stageProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
+        AsyncCallback<Void> callback = new AsyncCallback<Void>() {
             @Override
             public void onSuccess(Void ignored) {
                 // ok, result will display soon
@@ -463,7 +531,8 @@ public class ManageProductionsView extends PortalView {
             public void onFailure(Throwable caught) {
                 Dialog.error("Server-side Staging Error", caught.getMessage());
             }
-        });
+        };
+        getPortal().getBackendService().stageProductions(new String[]{production.getId()}, callback);
     }
 
     private void cancelProduction(DtoProduction production) {
@@ -475,7 +544,7 @@ public class ManageProductionsView extends PortalView {
             return;
         }
 
-        getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, new AsyncCallback<Void>() {
+        AsyncCallback<Void> callback = new AsyncCallback<Void>() {
             @Override
             public void onSuccess(Void ignored) {
                 // ok, result will display soon
@@ -485,7 +554,8 @@ public class ManageProductionsView extends PortalView {
             public void onFailure(Throwable caught) {
                 Dialog.error("Server-side Cancellation Error", caught.getMessage());
             }
-        });
+        };
+        getPortal().getBackendService().cancelProductions(new String[]{production.getId()}, callback);
     }
 
     private void deleteProductions(final List<DtoProduction> toDeleteList) {
@@ -507,7 +577,7 @@ public class ManageProductionsView extends PortalView {
         for (int i = 0; i < productionIds.length; i++) {
             productionIds[i] = toDeleteList.get(i).getId();
         }
-        getPortal().getBackendService().deleteProductions(productionIds, new AsyncCallback<Void>() {
+        AsyncCallback<Void> callback = new AsyncCallback<Void>() {
             @Override
             public void onSuccess(Void ignored) {
                 // ok, result will display soon
@@ -517,7 +587,8 @@ public class ManageProductionsView extends PortalView {
             public void onFailure(Throwable caught) {
                 Dialog.error("Server-side Deletion Error", caught.getMessage());
             }
-        });
+        };
+        getPortal().getBackendService().deleteProductions(productionIds, callback);
     }
 
     private static String getStatusText(DtoProcessStatus status) {
@@ -570,10 +641,61 @@ public class ManageProductionsView extends PortalView {
             } else if (DOWNLOAD.equals(value)) {
                 downloadProduction(production);
             } else if (STAGE.equals(value)) {
-                stageProduction(production);
+                String[] stagingPaths = production.getAdditionalStagingPaths();
+                if (stagingPaths != null && stagingPaths.length > 0) {
+                    showStageDialog(production);
+                } else {
+                    stageProduction(production);
+                }
+
             }
         }
 
+    }
+
+    private void showStageDialog(final DtoProduction production) {
+        String[] stagingPaths = production.getAdditionalStagingPaths();
+        final Map<RadioButton, String> buttonMap = new LinkedHashMap<RadioButton, String>();
+        RadioButton stageButton = new RadioButton("selection", "Default Staging");
+        boolean isDownloadable = getDownloadText(production) != null;
+        stageButton.setValue(!isDownloadable);
+        stageButton.setEnabled(!isDownloadable);
+        buttonMap.put(stageButton, "");
+        for (int i = 0; i < stagingPaths.length; i++) {
+            String stagingPath = stagingPaths[i].trim();
+            SafeHtml label = SafeHtmlUtils.fromSafeConstant("Stage to <i>" + stagingPath + "</i>");
+            RadioButton additionalStageButton = new RadioButton("selection", label);
+            if (i == 0) {
+                additionalStageButton.setValue(isDownloadable);
+            }
+            additionalStageButton.setEnabled(isDownloadable);
+            buttonMap.put(additionalStageButton, stagingPath);
+        }
+
+        VerticalPanel dialogContent = new VerticalPanel();
+        for (RadioButton radioButton : buttonMap.keySet()) {
+            dialogContent.add(radioButton);
+        }
+
+        Dialog dialog = new Dialog("Select Staging", dialogContent, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+            @Override
+            protected void onHide() {
+                if (ButtonType.OK == getSelectedButtonType()) {
+                    for (RadioButton radioButton : buttonMap.keySet()) {
+                        if (radioButton.getValue()) {
+                            String stagePath = buttonMap.get(radioButton);
+                            if (!stagePath.isEmpty()) {
+                                stageProduction(production, stagePath);
+                            } else {
+                                stageProduction(production);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        dialog.show();
     }
 
     private class DeleteProductionsAction implements ClickHandler {

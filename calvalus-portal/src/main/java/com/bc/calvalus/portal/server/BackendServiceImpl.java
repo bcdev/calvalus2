@@ -251,6 +251,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public void scpProduction(final String productionId, final String remotePath) throws BackendServiceException {
+        try {
+            productionService.scpProduction(productionId, remotePath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
     public String[] listUserFiles(String dirPath) throws BackendServiceException {
         try {
             return productionService.listUserFiles(getUserName(), dirPath);
@@ -311,11 +320,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private DtoProduction convert(Production production) {
+        ProductionRequest productionRequest = production.getProductionRequest();
+        String[] additionalStagingPaths = null;
+        try {
+            String additionalStagingPathsString = productionRequest.getParameter("additionalStagingPaths", false);
+            if (additionalStagingPathsString != null) {
+                additionalStagingPaths = additionalStagingPathsString.split(",");
+            }
+        } catch (ProductionException e) {
+            log("Could not retrieve 'additionalStagingPaths' parameter.", e);
+            additionalStagingPaths = null;
+        }
         return new DtoProduction(production.getId(),
                                  production.getName(),
-                                 production.getProductionRequest().getUserName(),
+                                 productionRequest.getUserName(),
                                  production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
                                  backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
+                                 additionalStagingPaths,
                                  production.isAutoStaging(),
                                  convert(production.getProcessingStatus(), production.getWorkflow()),
                                  convert(production.getStagingStatus()));

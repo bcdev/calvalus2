@@ -101,7 +101,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                     }
                 } else {
                     throw new ProductionException(
-                            "If Multi-GeoTiff is specified as format also bands must be selected");
+                            "If Multi-GeoTiff is specified as format also tailoring must be enabled and bands must be selected");
                 }
             } else {
                 formattingItem.add(createFormattingItem(productionName + " Format", dateRanges,

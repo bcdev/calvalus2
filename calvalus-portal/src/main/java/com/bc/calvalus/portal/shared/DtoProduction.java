@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Norman
  */
 public class DtoProduction implements IsSerializable {
+
     String id;
     String name;
     String user;
@@ -16,6 +17,7 @@ public class DtoProduction implements IsSerializable {
     boolean autoStaging;
     DtoProcessStatus processingStatus;
     DtoProcessStatus stagingStatus;
+    private String[] additionalStagingPaths;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -28,6 +30,7 @@ public class DtoProduction implements IsSerializable {
                          String user,
                          String archivePath,
                          String downloadPath,
+                         String[] additionalStagingPaths,
                          boolean autoStaging,
                          DtoProcessStatus processingStatus,
                          DtoProcessStatus stagingStatus) {
@@ -51,6 +54,7 @@ public class DtoProduction implements IsSerializable {
         this.user = user;
         this.archivePath = archivePath;
         this.downloadPath = downloadPath;
+        this.additionalStagingPaths = additionalStagingPaths;
         this.autoStaging = autoStaging;
         this.processingStatus = processingStatus;
         this.stagingStatus = stagingStatus;
@@ -76,6 +80,10 @@ public class DtoProduction implements IsSerializable {
         return downloadPath;
     }
 
+    public String[] getAdditionalStagingPaths() {
+        return additionalStagingPaths;
+    }
+
     public boolean isAutoStaging() {
         return autoStaging;
     }
@@ -99,12 +107,12 @@ public class DtoProduction implements IsSerializable {
     @Override
     public String toString() {
         return "Production{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", downloadPath=" + downloadPath +
-                ", processingStatus=" + processingStatus +
-                ", stagingStatus=" + stagingStatus +
-                '}';
+               "id='" + id + '\'' +
+               ", name='" + name + '\'' +
+               ", downloadPath=" + downloadPath +
+               ", processingStatus=" + processingStatus +
+               ", stagingStatus=" + stagingStatus +
+               '}';
     }
 
 }

@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("backend")
 public interface BackendServiceAsync {
+
     void loadRegions(String filter, AsyncCallback<DtoRegion[]> callback);
 
     void storeRegions(DtoRegion[] regions, AsyncCallback<Void> callback);
@@ -31,4 +32,7 @@ public interface BackendServiceAsync {
     void deleteProductions(String[] productionIds, AsyncCallback<Void> callback);
 
     void stageProductions(String[] productionIds, AsyncCallback<Void> callback);
+
+    void scpProduction(String productionId, String remotePath, AsyncCallback<Void> callback);
+
 }

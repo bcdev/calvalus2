@@ -16,7 +16,9 @@ public interface ProductionService {
      * Gets all known product sets.
      *
      * @param filter A filter expression (not yet used).
+     *
      * @return The product sets.
+     *
      * @throws ProductionException If a service error occurred.
      */
     ProductSet[] getProductSets(String filter) throws ProductionException;
@@ -24,9 +26,10 @@ public interface ProductionService {
     /**
      * Gets all known processors.
      *
-     *
      * @param filter A filter expression (not yet used).
+     *
      * @return The processors.
+     *
      * @throws ProductionException If a service error occurred.
      */
     BundleDescriptor[] getBundles(String filter) throws ProductionException;
@@ -35,7 +38,9 @@ public interface ProductionService {
      * Gets all known productions.
      *
      * @param filter A filter expression (not yet used).
+     *
      * @return The productions.
+     *
      * @throws ProductionException If a service error occurred.
      */
     Production[] getProductions(String filter) throws ProductionException;
@@ -44,7 +49,9 @@ public interface ProductionService {
      * Gets the production for the given ID.
      *
      * @param id The production ID.
+     *
      * @return The production, or {@code null} if none with the given ID was found.
+     *
      * @throws ProductionException If a service error occurred.
      */
     Production getProduction(String id) throws ProductionException;
@@ -53,7 +60,9 @@ public interface ProductionService {
      * Orders a new productions.
      *
      * @param request The request.
+     *
      * @return The response.
+     *
      * @throws ProductionException If a service error occurred.
      */
     ProductionResponse orderProduction(ProductionRequest request) throws ProductionException;
@@ -62,6 +71,7 @@ public interface ProductionService {
      * Requests cancellation of productions with given IDs.
      *
      * @param productionIds The production IDs.
+     *
      * @throws ProductionException If a service error occurred.
      */
     void cancelProductions(String... productionIds) throws ProductionException;
@@ -70,6 +80,7 @@ public interface ProductionService {
      * Requests deletion of productions with given IDs.
      *
      * @param productionIds The production IDs.
+     *
      * @throws ProductionException If a service error occurred.
      */
     void deleteProductions(String... productionIds) throws ProductionException;
@@ -78,9 +89,25 @@ public interface ProductionService {
      * Requests stating of productions with given IDs.
      *
      * @param productionIds The production IDs.
+     *
      * @throws ProductionException If a service error occurred.
      */
     void stageProductions(String... productionIds) throws ProductionException;
+
+    /**
+     * Requests to copy the production with given ID via scp to a remote host.
+     *
+     * @param productionId The production ID.
+     * @param remotePath   The path specify the remote destination.<br/>
+     *                     It must be given in the following format:
+     *                     {@code <username>@<hostname>:<destinationPath>}.<br/>
+     *                     On the remote host the public key of the current user be registered and the
+     *                     private key must be located in the file {@code <user_home>/.ssh/id_rsa}
+     *
+     * @throws ProductionException If a service error occurred.
+     */
+    void scpProduction(String productionId, String remotePath) throws ProductionException;
+
 
     // todo - actually the service shall update itself on a regular basis (nf)
 
@@ -101,28 +128,36 @@ public interface ProductionService {
     /**
      * Lists files within the user's file space in the inventory.
      *
-     * @param userName  The name of an authorised user.
-     * @param glob A glob that may contain
+     * @param userName The name of an authorised user.
+     * @param glob     A glob that may contain
+     *
      * @return The listing of files.
+     *
      * @throws ProductionException If an error occured.
      */
     String[] listUserFiles(String userName, String glob) throws ProductionException;
 
     /**
      * Creates a file from the user's file space in the inventory.
-     * @param userName  The name of an authorised user.
-     * @param path  A relative path into the user's file space.
-     * @return  An output stream.
+     *
+     * @param userName The name of an authorised user.
+     * @param path     A relative path into the user's file space.
+     *
+     * @return An output stream.
+     *
      * @throws ProductionException If an error occured.
      */
     OutputStream addUserFile(String userName, String path) throws ProductionException;
 
     /**
      * Deletes a file from the user's file space in the inventory.
-     * @param userName  The name of an authorised user.
-     * @param path  A relative path into the user's file space.
-     * @throws ProductionException If an error occured (file exists, but can't be removed).
+     *
+     * @param userName The name of an authorised user.
+     * @param path     A relative path into the user's file space.
+     *
      * @return true, if the file could be found and removed.
+     *
+     * @throws ProductionException If an error occured (file exists, but can't be removed).
      */
     boolean removeUserFile(String userName, String path) throws ProductionException;
 }

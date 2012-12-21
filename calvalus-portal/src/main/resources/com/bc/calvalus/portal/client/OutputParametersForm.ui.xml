@@ -84,7 +84,7 @@
 
                     <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
                         <g:Label>Band selection:</g:Label>
-                        <g:ListBox ui:field="bandList" multipleSelect="true" visibleItemCount="6"/>
+                        <g:ListBox ui:field="bandListBox" multipleSelect="true" visibleItemCount="6"/>
                     </g:HorizontalPanel>
 
                     <g:CheckBox ui:field="quicklooks"

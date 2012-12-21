@@ -117,7 +117,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
     }
 
     private void handleProcessorChanged(DtoProcessorDescriptor processorDescriptor, List<String> bandsToSelect) {
-        ListBox bandList = outputParametersForm.bandList;
+        ListBox bandList = outputParametersForm.bandListBox;
         bandList.clear();
         if (processorDescriptor != null) {
             outputParametersForm.showFormatSelectionPanel(!processorDescriptor.isFormattingMandatory());
@@ -180,6 +180,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
+        parameters.put("additionalStagingPaths", "freshmon@freshmon-csw:/data/postprocessing/entries/");
         return parameters;
     }
 }

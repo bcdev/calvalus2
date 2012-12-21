@@ -53,7 +53,7 @@ public class OutputParametersForm extends Composite {
     @UiField
     DoubleBox replaceValue;
     @UiField
-    ListBox bandList;
+    ListBox bandListBox;
     @UiField
     CheckBox quicklooks;
 
@@ -117,8 +117,8 @@ public class OutputParametersForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        if (enableTailoring.getValue() && bandList.getSelectedIndex() == -1) {
-            throw new ValidationException(bandList, "Output Parameters: One or more bands must be selected.");
+        if (enableTailoring.getValue() && bandListBox.getSelectedIndex() == -1) {
+            throw new ValidationException(bandListBox, "Output Parameters: One or more bands must be selected.");
         }
     }
 
@@ -140,21 +140,25 @@ public class OutputParametersForm extends Composite {
             parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
             parameters.put("outputCRS", crsText.getValue());
             parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
-            StringBuilder sb = new StringBuilder();
-            int itemCount = bandList.getItemCount();
-            for (int i = 0; i < itemCount; i++) {
-                if (bandList.isItemSelected(i)) {
-                    if (sb.length() != 0) {
-                        sb.append(",");
-                    }
-                    sb.append(bandList.getItemText(i));
-                }
-            }
-            parameters.put("outputBandList", sb.toString());
+            parameters.put("outputBandList", createBandListString());
         }
 
 
         return parameters;
+    }
+
+    private String createBandListString() {
+        StringBuilder sb = new StringBuilder();
+        int itemCount = bandListBox.getItemCount();
+        for (int i = 0; i < itemCount; i++) {
+            if (bandListBox.isItemSelected(i)) {
+                if (sb.length() != 0) {
+                    sb.append(",");
+                }
+                sb.append(bandListBox.getItemText(i));
+            }
+        }
+        return sb.toString();
     }
 
     public void setAvailableOutputFormats(String... formatNames) {
@@ -183,7 +187,7 @@ public class OutputParametersForm extends Composite {
         crsText.setEnabled(enableComponent);
         replaceNans.setEnabled(enableComponent);
         replaceValue.setEnabled(enableComponent);
-        bandList.setEnabled(enableComponent);
+        bandListBox.setEnabled(enableComponent);
         quicklooks.setEnabled(enableComponent);
     }
 

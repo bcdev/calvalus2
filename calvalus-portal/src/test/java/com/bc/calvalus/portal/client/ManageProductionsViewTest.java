@@ -7,9 +7,7 @@ import junit.framework.TestCase;
 
 import static com.bc.calvalus.portal.shared.DtoProcessState.*;
 
-public class ManageProductionsViewTest  extends TestCase {
-
-
+public class ManageProductionsViewTest extends TestCase {
 
     public void testGetAction() {
         assertEquals(null, getAction(UNKNOWN, UNKNOWN));
@@ -25,32 +23,54 @@ public class ManageProductionsViewTest  extends TestCase {
         assertEquals("Restart", getAction(COMPLETED, ERROR));
     }
 
-    public void testGetResult() {
-        assertEquals(null, getResult(UNKNOWN, UNKNOWN));
-        assertEquals(null, getResult(SCHEDULED, UNKNOWN));
-        assertEquals(null, getResult(RUNNING, UNKNOWN));
-        assertEquals("Stage", getResult(COMPLETED, UNKNOWN));
-        assertEquals(null, getResult(CANCELLED, UNKNOWN));
-        assertEquals(null, getResult(ERROR, UNKNOWN));
-        assertEquals(null, getResult(COMPLETED, SCHEDULED));
-        assertEquals(null, getResult(COMPLETED, RUNNING));
-        assertEquals("Download", getResult(COMPLETED, COMPLETED));
-        assertEquals("Stage", getResult(COMPLETED, CANCELLED));
-        assertEquals("Stage", getResult(COMPLETED, ERROR));
+    public void testGetStageType() {
+        String[] additionalStagingPaths = null;
+        assertEquals(StageType.NO_STAGING, getStageType(UNKNOWN, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(SCHEDULED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(RUNNING, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.STAGE, getStageType(COMPLETED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(CANCELLED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(ERROR, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(COMPLETED, SCHEDULED, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(COMPLETED, RUNNING, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(COMPLETED, COMPLETED, additionalStagingPaths));
+        assertEquals(StageType.STAGE, getStageType(COMPLETED, CANCELLED, additionalStagingPaths));
+        assertEquals(StageType.STAGE, getStageType(COMPLETED, ERROR, additionalStagingPaths));
+
     }
 
-    public void testGetResultAutoStaging() {
-        assertEquals(null, getResultAutoStaging(UNKNOWN, UNKNOWN));
-        assertEquals(null, getResultAutoStaging(SCHEDULED, UNKNOWN));
-        assertEquals(null, getResultAutoStaging(RUNNING, UNKNOWN));
-        assertEquals("#Auto-staging", getResultAutoStaging(COMPLETED, UNKNOWN));
-        assertEquals(null, getResultAutoStaging(CANCELLED, UNKNOWN));
-        assertEquals(null, getResultAutoStaging(ERROR, UNKNOWN));
-        assertEquals(null, getResultAutoStaging(COMPLETED, SCHEDULED));
-        assertEquals(null, getResultAutoStaging(COMPLETED, RUNNING));
-        assertEquals("Download", getResultAutoStaging(COMPLETED, COMPLETED));
-        assertEquals("Stage", getResultAutoStaging(COMPLETED, CANCELLED));
-        assertEquals("Stage", getResultAutoStaging(COMPLETED, ERROR));
+    public void testGetMultiStageType() {
+        String[] additionalStagingPaths = new String[]{"one/path", "second/path"};
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, CANCELLED, additionalStagingPaths));
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, ERROR, additionalStagingPaths));
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, SCHEDULED, additionalStagingPaths));
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, RUNNING, additionalStagingPaths));
+        assertEquals(StageType.MULTI_STAGE, getStageType(COMPLETED, COMPLETED, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(UNKNOWN, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(SCHEDULED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(RUNNING, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(CANCELLED, UNKNOWN, additionalStagingPaths));
+        assertEquals(StageType.NO_STAGING, getStageType(ERROR, UNKNOWN, additionalStagingPaths));
+    }
+
+    public void testGetAutoStageType() {
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(UNKNOWN, UNKNOWN));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(SCHEDULED, UNKNOWN));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(RUNNING, UNKNOWN));
+        assertEquals(StageType.AUTO_STAGING, getResultAutoStaging(COMPLETED, UNKNOWN));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(CANCELLED, UNKNOWN));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(ERROR, UNKNOWN));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(COMPLETED, SCHEDULED));
+        assertEquals(StageType.NO_STAGING, getResultAutoStaging(COMPLETED, RUNNING));
+        assertEquals(StageType.STAGE, getResultAutoStaging(COMPLETED, CANCELLED));
+        assertEquals(StageType.STAGE, getResultAutoStaging(COMPLETED, ERROR));
+    }
+
+    public void testGetDownloadText() {
+        assertEquals(null, getDownloadText(COMPLETED, RUNNING));
+        assertEquals(null, getDownloadText(COMPLETED, CANCELLED));
+        assertEquals("Download", getDownloadText(COMPLETED, COMPLETED));
     }
 
     public void testGetTimeText() {
@@ -69,27 +89,35 @@ public class ManageProductionsViewTest  extends TestCase {
         assertEquals("57.5%", ManageProductionsView.getProgressText(0.5758F));  // no rounding!
         assertEquals("99.9%", ManageProductionsView.getProgressText(0.9999F));
         assertEquals("100.0%", ManageProductionsView.getProgressText(1F));
-
     }
 
     private String getAction(DtoProcessState productionState, DtoProcessState stagingState) {
-        return ManageProductionsView.getAction(createProduction(productionState, stagingState, false));
+        return ManageProductionsView.getAction(createProduction(productionState, stagingState, false,
+                                                                null));
     }
 
-    private String getResult(DtoProcessState productionState, DtoProcessState stagingState) {
-        return ManageProductionsView.getResult(createProduction(productionState, stagingState, false));
+    private StageType getStageType(DtoProcessState productionState,
+                                   DtoProcessState stagingState, String[] additionalStagingPaths) {
+        DtoProduction production = createProduction(productionState, stagingState, false, additionalStagingPaths);
+        return ManageProductionsView.getStageType(production);
     }
 
-    private String getResultAutoStaging(DtoProcessState productionState, DtoProcessState stagingState) {
-        return ManageProductionsView.getResult(createProduction(productionState, stagingState, true));
+    private String getDownloadText(DtoProcessState productionState, DtoProcessState stagingState) {
+        return ManageProductionsView.getDownloadText(createProduction(productionState, stagingState, false,
+                                                                      null));
     }
 
-    private DtoProduction createProduction(DtoProcessState productionState, DtoProcessState stagingState, boolean autoStaging) {
-        return new DtoProduction("id", "name", "user", "outputPath", "stagingPath", autoStaging,
-                                new DtoProcessStatus(productionState),
-                                new DtoProcessStatus(stagingState));
+    private StageType getResultAutoStaging(DtoProcessState productionState,
+                                           DtoProcessState stagingState) {
+        return ManageProductionsView.getStageType(createProduction(productionState, stagingState, true,
+                                                                   null));
     }
 
+    private DtoProduction createProduction(DtoProcessState productionState, DtoProcessState stagingState,
+                                           boolean autoStaging, String[] additionalStagingPaths) {
+        return new DtoProduction("id", "name", "user", "outputPath", "stagingPath", additionalStagingPaths, autoStaging,
+                                 new DtoProcessStatus(productionState), new DtoProcessStatus(stagingState));
+    }
 
 
 }
