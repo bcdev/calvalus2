@@ -117,8 +117,15 @@ public class OutputParametersForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        if (enableTailoring.getValue() && bandListBox.getSelectedIndex() == -1) {
-            throw new ValidationException(bandListBox, "Output Parameters: One or more bands must be selected.");
+        if (enableTailoring.getValue()) {
+            if (bandListBox.getSelectedIndex() == -1) {
+                throw new ValidationException(bandListBox, "Output Parameters: One or more bands must be selected.");
+            }
+            if ("Multi-GeoTIFF".equals(getOutputFormat()) && crsText.getValue().trim().isEmpty()) {
+                throw new ValidationException(crsText,
+                                              "Output Parameters: If Multi-GeoTIFF is selected as output format " +
+                                              "also a CRS must be specified.");
+            }
         }
     }
 

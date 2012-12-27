@@ -100,6 +100,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         outputParametersForm.showFormatSelectionPanel(true);
         outputParametersForm.showTailoringRelatedSettings(true);
         outputParametersForm.quicklooks.setValue(true);
+        outputParametersForm.replaceNans.setValue(true);
         outputParametersForm.replaceValue.setValue(0.0);
         handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
 
