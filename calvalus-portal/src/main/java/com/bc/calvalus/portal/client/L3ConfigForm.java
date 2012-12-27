@@ -23,15 +23,25 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
+import static com.bc.calvalus.portal.client.L3ConfigUtils.*;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -48,17 +58,22 @@ public class L3ConfigForm extends Composite {
     private final List<String> variableNames;
     private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
     private static final DtoProcessorVariable[] MER_L1B;
+
     static {
         MER_L1B = new DtoProcessorVariable[15];
         for (int i = 0; i < MER_L1B.length; i++) {
-            MER_L1B[i] = new DtoProcessorVariable("radiance_" + (i+1), "AVG", "1.0");
+            MER_L1B[i] = new DtoProcessorVariable("radiance_" + (i + 1), "AVG", "1.0");
         }
     }
 
     interface TheUiBinder extends UiBinder<Widget, L3ConfigForm> {
+
     }
 
+    private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
+
     public static class Variable {
+
         static int lastId = 0;
         Integer id = ++lastId;
         String name = "";
@@ -68,7 +83,6 @@ public class L3ConfigForm extends Composite {
         Double weightCoeff = 1.0;
     }
 
-    private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
     TextBox maskExpr;
@@ -295,7 +309,8 @@ public class L3ConfigForm extends Composite {
 
         boolean compositingPeriodLengthValid = compositingPeriodLength.getValue() >= 1 && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
         if (!compositingPeriodLengthValid) {
-            throw new ValidationException(compositingPeriodLength, "Compositing period length must be >= 1 and less or equal to than period");
+            throw new ValidationException(compositingPeriodLength,
+                                          "Compositing period length must be >= 1 and less or equal to than period");
         }
 
         boolean resolutionValid = resolution.getValue() > 0.0;

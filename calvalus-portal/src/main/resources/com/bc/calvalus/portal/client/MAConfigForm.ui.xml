@@ -1,7 +1,6 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
-             xmlns:g='urn:import:com.google.gwt.user.client.ui'
-        >
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
     <ui:style src="style.css"/>
 
@@ -18,7 +17,7 @@
                 <g:VerticalPanel spacing="2">
                     <g:Label>In-situ and point data files:</g:Label>
 
-                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8" width="20em" />
+                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
                         <g:Button ui:field='removeRecordSourceButton' text="Remove"/>
@@ -62,15 +61,17 @@
                             </td>
                         </tr>
                         <tr>
-                        <td colspan="2">
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" >
-                                The grouping column must be a name in the header of the selected in-situ / point data file.
-                                All records that have same values in this column will be grouped together for further analysis.
-                                Note that the column name identification is letter case sensitive.
-                                <p/>
-                            </g:HTML>
-                        </td>
-                    </tr>
+                            <td colspan="2">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    The grouping column must be a name in the header of the selected in-situ / point
+                                    data file.
+                                    All records that have same values in this column will be grouped together for
+                                    further analysis.
+                                    Note that the column name identification is letter case sensitive.
+                                    <p/>
+                                </g:HTML>
+                            </td>
+                        </tr>
                     </table>
                 </g:HTMLPanel>
             </g:HorizontalPanel>
