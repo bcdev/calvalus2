@@ -5,8 +5,8 @@ Ensure no jobs are running which have been started from the portal (user == cvop
 Building
 --------
 mvn clean install
-(cd calvalus-processing; mvn assembly:assembly)
-(cd calvalus-production; mvn assembly:assembly)
+(cd calvalus-processing; mvn -Dmaven.test.skip=true assembly:assembly)
+(cd calvalus-production; mvn -Dmaven.test.skip=true assembly:assembly)
 
 Calvalus
 --------
@@ -41,6 +41,7 @@ mv /home/cvop/calvalus-portal-1.5-SNAPSHOT.war calvalus.war
 # restart
 cd ../bin/
 ./startup.sh
+tail -f ../logs/catalina.out
 
 # restore staging
 cd ../webapps/calvalus/
