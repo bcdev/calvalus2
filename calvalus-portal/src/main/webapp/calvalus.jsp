@@ -1,4 +1,3 @@
-<%@ taglib prefix="bean" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 
 <%@page language="java" import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
