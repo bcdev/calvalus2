@@ -192,27 +192,87 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
                 <version>${beam.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-binning2</artifactId>
                 <version>0.8.1-SNAPSHOT</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
                 <version>1.5.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
                 <version>1.1.2-SNAPSHOT</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
                 <version>1.2.1</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
                         <artifactId>beam-visat</artifactId>
@@ -244,13 +304,45 @@
                         <groupId>org.eclipse.jdt</groupId>
                         <artifactId>core</artifactId>
                     </exclusion>
+                    <exclusion>
+                      <groupId>org.mortbay.jetty</groupId>
+                      <artifactId>jetty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                      <groupId>org.mortbay.jetty</groupId>
+                      <artifactId>jetty-util</artifactId>
+                    </exclusion>
+                    <exclusion>
+                      <groupId>tomcat</groupId>
+                      <artifactId>jasper-runtime</artifactId>
+                    </exclusion>
+                    <exclusion>
+                      <groupId>tomcat</groupId>
+                      <artifactId>jasper-compiler</artifactId>
+                    </exclusion>
+                    <exclusion>
+                      <groupId>org.mortbay.jetty</groupId>
+                      <artifactId>jsp-api-2.1</artifactId>
+                    </exclusion>
+                    <exclusion>
+                      <groupId>org.mortbay.jetty</groupId>
+                      <artifactId>jsp-2.1</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-el</groupId>
+                        <artifactId>commons-el</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
+
+            <!-- not used currently
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-test</artifactId>
                 <version>${hadoop.version}</version>
+                <scope>test</scope>
             </dependency>
+            -->
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
 
