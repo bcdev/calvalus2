@@ -26,6 +26,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
@@ -77,6 +79,8 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void kill() throws WorkflowException {
         try {
+            Logger.getAnonymousLogger().fine("Killing Job: " + getJobName() + " - " + jobId.getJtIdentifier());
+            Logger.getAnonymousLogger().log(Level.FINE, "", new Throwable());
             if (jobId != null) {
                 processingService.killJob(jobId);
             }
@@ -97,12 +101,14 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void submit() throws WorkflowException {
         try {
-            Job job = getProcessingService().createJob(jobName, jobConfig);
+            Logger.getAnonymousLogger().info("Submitting Job: " + getJobName());
+            Job job = getProcessingService().createJob(getJobName(), jobConfig);
             configureJob(job);
             validateJob(job);
             JobID jobId = submitJob(job);
             setJobId(jobId);
-        } catch (IOException e) {
+        } catch (Throwable e) {
+            Logger.getAnonymousLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
     }
@@ -131,9 +137,11 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE),
+                             configuration);
         // Add BEAM modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE), configuration);
+        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE),
+                             configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
