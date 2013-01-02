@@ -41,7 +41,7 @@ mv /home/cvop/calvalus-portal-1.5-SNAPSHOT.war calvalus.war
 # restart
 cd ../bin/
 ./startup.sh
-tail -f ../logs/catalina.out
+tail -5f ../logs/catalina.out
 
 # restore staging
 cd ../webapps/calvalus/
