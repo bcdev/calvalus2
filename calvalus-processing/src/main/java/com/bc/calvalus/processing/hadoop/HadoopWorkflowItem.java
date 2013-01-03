@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
@@ -27,7 +28,6 @@ import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
 
@@ -79,9 +79,8 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void kill() throws WorkflowException {
         try {
-            Logger.getAnonymousLogger().fine("Killing Job: " + getJobName() + " - " + jobId.getJtIdentifier());
-            Logger.getAnonymousLogger().log(Level.FINE, "", new Throwable());
             if (jobId != null) {
+                CalvalusLogger.getLogger().fine("Killing Job: " + getJobName() + " - " + jobId.getJtIdentifier());
                 processingService.killJob(jobId);
             }
         } catch (IOException e) {
@@ -101,14 +100,14 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void submit() throws WorkflowException {
         try {
-            Logger.getAnonymousLogger().info("Submitting Job: " + getJobName());
+            CalvalusLogger.getLogger().info("Submitting Job: " + getJobName());
             Job job = getProcessingService().createJob(getJobName(), jobConfig);
             configureJob(job);
             validateJob(job);
             JobID jobId = submitJob(job);
             setJobId(jobId);
         } catch (Throwable e) {
-            Logger.getAnonymousLogger().log(Level.SEVERE, e.getMessage(), e);
+            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
         }
     }
