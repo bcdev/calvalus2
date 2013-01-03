@@ -1,0 +1,1588 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dimap_Document name="MER_FSG_1PNUPA20080601_for_QL.dim">
+    <Metadata_Id>
+        <METADATA_FORMAT version="2.11.0">DIMAP</METADATA_FORMAT>
+        <METADATA_PROFILE>BEAM-DATAMODEL-V1</METADATA_PROFILE>
+    </Metadata_Id>
+    <Dataset_Id>
+        <DATASET_SERIES>BEAM-PRODUCT</DATASET_SERIES>
+        <DATASET_NAME>MER_FSG_1PNUPA20080601_for_QL</DATASET_NAME>
+    </Dataset_Id>
+    <Production>
+        <DATASET_PRODUCER_NAME />
+        <PRODUCT_TYPE>MER_FSG_CCL1P_FLH_MCI</PRODUCT_TYPE>
+    </Production>
+    <Coordinate_Reference_System>
+        <WKT>
+             GEOGCS["WGS84(DD)", 
+               DATUM["WGS84", 
+                 SPHEROID["WGS84", 6378137.0, 298.257223563]], 
+               PRIMEM["Greenwich", 0.0], 
+               UNIT["degree", 0.017453292519943295], 
+               AXIS["Geodetic longitude", EAST], 
+               AXIS["Geodetic latitude", NORTH]]
+        </WKT>
+    </Coordinate_Reference_System>
+    <Geoposition>
+        <IMAGE_TO_MODEL_TRANSFORM>0.0036163015756756067,0.0,0.0,-0.0036163015756756067,13.665648460388184,58.8615837097168</IMAGE_TO_MODEL_TRANSFORM>
+    </Geoposition>
+    <Flag_Coding name="l1_flags">
+        <Flag>
+            <Flag_Name>COSMETIC</Flag_Name>
+            <Flag_Index>1</Flag_Index>
+            <Flag_description>Pixel is cosmetic</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>DUPLICATED</Flag_Name>
+            <Flag_Index>2</Flag_Index>
+            <Flag_description>Pixel has been duplicated (filled in)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>GLINT_RISK</Flag_Name>
+            <Flag_Index>4</Flag_Index>
+            <Flag_description>Pixel has glint risk</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>SUSPECT</Flag_Name>
+            <Flag_Index>8</Flag_Index>
+            <Flag_description>Pixel is suspect</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>LAND_OCEAN</Flag_Name>
+            <Flag_Index>16</Flag_Index>
+            <Flag_description>Pixel is over land, not ocean</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>BRIGHT</Flag_Name>
+            <Flag_Index>32</Flag_Index>
+            <Flag_description>Pixel is bright</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>COASTLINE</Flag_Name>
+            <Flag_Index>64</Flag_Index>
+            <Flag_description>Pixel is part of a coastline</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>INVALID</Flag_Name>
+            <Flag_Index>128</Flag_Index>
+            <Flag_description>Pixel is invalid</Flag_description>
+        </Flag>
+    </Flag_Coding>
+    <Flag_Coding name="aot_flags">
+        <Flag>
+            <Flag_Name>bad_aerosol_model</Flag_Name>
+            <Flag_Index>1</Flag_Index>
+            <Flag_description />
+        </Flag>
+        <Flag>
+            <Flag_Name>bad_aot_model</Flag_Name>
+            <Flag_Index>2</Flag_Index>
+            <Flag_description />
+        </Flag>
+        <Flag>
+            <Flag_Name>high_turbid_water</Flag_Name>
+            <Flag_Index>4</Flag_Index>
+            <Flag_description />
+        </Flag>
+        <Flag>
+            <Flag_Name>sunglint</Flag_Name>
+            <Flag_Index>8</Flag_Index>
+            <Flag_description />
+        </Flag>
+        <Flag>
+            <Flag_Name>cloud</Flag_Name>
+            <Flag_Index>16</Flag_Index>
+            <Flag_description />
+        </Flag>
+    </Flag_Coding>
+    <Flag_Coding name="l1p_flags">
+        <Flag>
+            <Flag_Name>CC_LAND</Flag_Name>
+            <Flag_Index>1</Flag_Index>
+            <Flag_description>Pixel masked as land</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_COASTLINE</Flag_Name>
+            <Flag_Index>2</Flag_Index>
+            <Flag_description>Pixel masked as coastline</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_CLOUD</Flag_Name>
+            <Flag_Index>4</Flag_Index>
+            <Flag_description>Pixel masked as cloud</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_CLOUD_AMBIGUOUS</Flag_Name>
+            <Flag_Index>8</Flag_Index>
+            <Flag_description>Pixel masked as ambiguous cloud</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_CLOUD_BUFFER</Flag_Name>
+            <Flag_Index>16</Flag_Index>
+            <Flag_description>Pixel masked as cloud buffer</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_CLOUD_SHADOW</Flag_Name>
+            <Flag_Index>32</Flag_Index>
+            <Flag_description>Pixel masked as cloud shadow</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_SNOW_ICE</Flag_Name>
+            <Flag_Index>64</Flag_Index>
+            <Flag_description>Pixel masked as snow/ice</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_MIXEDPIXEL</Flag_Name>
+            <Flag_Index>128</Flag_Index>
+            <Flag_description>Potential land pixel</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CC_GLINTRISK</Flag_Name>
+            <Flag_Index>256</Flag_Index>
+            <Flag_description>Risk that pixel is under glint</Flag_description>
+        </Flag>
+    </Flag_Coding>
+    <Flag_Coding name="result_flags">
+        <Flag>
+            <Flag_Name>LEVEL1b_MASKED</Flag_Name>
+            <Flag_Index>1</Flag_Index>
+            <Flag_description>Pixel was a priori masked out</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CHL_IN</Flag_Name>
+            <Flag_Index>2</Flag_Index>
+            <Flag_description>CHL retrieval failure (input)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>CHL_OUT</Flag_Name>
+            <Flag_Index>4</Flag_Index>
+            <Flag_description>CHL retrieval failure (output)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>YEL_IN</Flag_Name>
+            <Flag_Index>8</Flag_Index>
+            <Flag_description>YEL retrieval failure (input)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>YEL_OUT</Flag_Name>
+            <Flag_Index>16</Flag_Index>
+            <Flag_description>YEL retrieval failure (output)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>TSM_IN</Flag_Name>
+            <Flag_Index>32</Flag_Index>
+            <Flag_description>TSM retrieval failure (input)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>TSM_OUT</Flag_Name>
+            <Flag_Index>64</Flag_Index>
+            <Flag_description>TSM retrieval failure (output)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>ATM_IN</Flag_Name>
+            <Flag_Index>128</Flag_Index>
+            <Flag_description>Atmospheric correction failure (input)</Flag_description>
+        </Flag>
+        <Flag>
+            <Flag_Name>ATM_OUT</Flag_Name>
+            <Flag_Index>256</Flag_Index>
+            <Flag_description>Atmospheric correction failure (output)</Flag_description>
+        </Flag>
+    </Flag_Coding>
+    <Raster_Dimensions>
+        <NCOLS>1098</NCOLS>
+        <NROWS>366</NROWS>
+        <NBANDS>8</NBANDS>
+    </Raster_Dimensions>
+    <Data_Access>
+        <DATA_FILE_FORMAT>ENVI</DATA_FILE_FORMAT>
+        <DATA_FILE_FORMAT_DESC>ENVI File Format</DATA_FILE_FORMAT_DESC>
+        <DATA_FILE_ORGANISATION>BAND_SEPARATE</DATA_FILE_ORGANISATION>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/l1_flags.hdr" />
+            <BAND_INDEX>0</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/aot_flags.hdr" />
+            <BAND_INDEX>1</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/l1p_flags.hdr" />
+            <BAND_INDEX>2</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/result_flags.hdr" />
+            <BAND_INDEX>3</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/CHL.hdr" />
+            <BAND_INDEX>4</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/CDM.hdr" />
+            <BAND_INDEX>5</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/TSM.hdr" />
+            <BAND_INDEX>6</BAND_INDEX>
+        </Data_File>
+        <Data_File>
+            <DATA_FILE_PATH href="MER_FSG_1PNUPA20080601_for_QL.data/KDS.hdr" />
+            <BAND_INDEX>7</BAND_INDEX>
+        </Data_File>
+    </Data_Access>
+    <Masks>
+        <Mask type="Maths">
+            <NAME value="coastline" />
+            <DESCRIPTION value="Pixel is part of a coastline" />
+            <COLOR red="0" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="l1_flags.COASTLINE" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="land" />
+            <DESCRIPTION value="Pixel is over land, not ocean" />
+            <COLOR red="51" green="153" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.75" />
+            <EXPRESSION value="l1_flags.LAND_OCEAN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="water" />
+            <DESCRIPTION value="Pixel is over ocean, not land" />
+            <COLOR red="153" green="153" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.75" />
+            <EXPRESSION value="NOT l1_flags.LAND_OCEAN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="cosmetic" />
+            <DESCRIPTION value="Pixel is cosmetic" />
+            <COLOR red="204" green="153" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1_flags.COSMETIC" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="duplicated" />
+            <DESCRIPTION value="Pixel has been duplicated (filled in)" />
+            <COLOR red="255" green="200" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1_flags.DUPLICATED" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="glint_risk" />
+            <DESCRIPTION value="Pixel has glint risk" />
+            <COLOR red="255" green="0" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1_flags.GLINT_RISK" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="suspect" />
+            <DESCRIPTION value="Pixel is suspect" />
+            <COLOR red="204" green="102" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1_flags.SUSPECT" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="bright" />
+            <DESCRIPTION value="Pixel is bright" />
+            <COLOR red="255" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1_flags.BRIGHT" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="invalid" />
+            <DESCRIPTION value="Pixel is invalid" />
+            <COLOR red="255" green="0" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="l1_flags.INVALID" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_land" />
+            <DESCRIPTION value="Land flag" />
+            <COLOR red="89" green="89" blue="89" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="l1p_flags.CC_LAND" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_coastline" />
+            <DESCRIPTION value="Coastline flag" />
+            <COLOR red="0" green="0" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="l1p_flags.CC_COASTLINE" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_cloud" />
+            <DESCRIPTION value="Cloud flag" />
+            <COLOR red="255" green="255" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="l1p_flags.CC_CLOUD" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_cloud_ambiguous" />
+            <DESCRIPTION value="Ambiguous Cloud flag" />
+            <COLOR red="255" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_CLOUD_AMBIGUOUS" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_cloud_buffer" />
+            <DESCRIPTION value="Cloud buffer flag" />
+            <COLOR red="255" green="0" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_CLOUD_BUFFER" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_cloud_shadow" />
+            <DESCRIPTION value="Cloud shadow flag" />
+            <COLOR red="0" green="0" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_CLOUD_SHADOW" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_snow_ice" />
+            <DESCRIPTION value="Snow/Ice flag" />
+            <COLOR red="0" green="255" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_SNOW_ICE" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_mixedpixel" />
+            <DESCRIPTION value="Potential land pixel" />
+            <COLOR red="0" green="124" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_MIXEDPIXEL" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="l1p_cc_glintrisk" />
+            <DESCRIPTION value="Risk that pixel is under glint" />
+            <COLOR red="255" green="175" blue="175" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="l1p_flags.CC_GLINTRISK" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="level1b_masked" />
+            <DESCRIPTION value="Pixel was a priori masked out" />
+            <COLOR red="0" green="255" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.0" />
+            <EXPRESSION value="result_flags.LEVEL1b_MASKED" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="chl_in" />
+            <DESCRIPTION value="CHL retrieval failure (input)" />
+            <COLOR red="0" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.CHL_IN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="chl_out" />
+            <DESCRIPTION value="CHL retrieval failure (output)" />
+            <COLOR red="0" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.CHL_OUT" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="yel_in" />
+            <DESCRIPTION value="YEL retrieval failure (input)" />
+            <COLOR red="255" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.YEL_IN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="yel_out" />
+            <DESCRIPTION value="YEL retrieval failure (output)" />
+            <COLOR red="255" green="255" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.YEL_OUT" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="tsm_in" />
+            <DESCRIPTION value="TSM retrieval failure (input)" />
+            <COLOR red="255" green="200" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.TSM_IN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="tsm_out" />
+            <DESCRIPTION value="TSM retrieval failure (output)" />
+            <COLOR red="255" green="200" blue="0" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.TSM_OUT" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="atm_in" />
+            <DESCRIPTION value="Atmospheric correction failure (input)" />
+            <COLOR red="0" green="0" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.ATM_IN" />
+        </Mask>
+        <Mask type="Maths">
+            <NAME value="atm_out" />
+            <DESCRIPTION value="Atmospheric correction failure (output)" />
+            <COLOR red="0" green="0" blue="255" alpha="255" />
+            <TRANSPARENCY value="0.5" />
+            <EXPRESSION value="result_flags.ATM_OUT" />
+        </Mask>
+    </Masks>
+    <Image_Interpretation>
+        <Spectral_Band_Info>
+            <BAND_INDEX>0</BAND_INDEX>
+            <BAND_DESCRIPTION>Level 1b classification and quality flags</BAND_DESCRIPTION>
+            <BAND_NAME>l1_flags</BAND_NAME>
+            <DATA_TYPE>uint8</DATA_TYPE>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <FLAG_CODING_NAME>l1_flags</FLAG_CODING_NAME>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>0.0</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>1</BAND_INDEX>
+            <BAND_DESCRIPTION />
+            <BAND_NAME>aot_flags</BAND_NAME>
+            <DATA_TYPE>uint8</DATA_TYPE>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <FLAG_CODING_NAME>aot_flags</FLAG_CODING_NAME>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>0.0</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>2</BAND_INDEX>
+            <BAND_DESCRIPTION>CC L1P pixel classification</BAND_DESCRIPTION>
+            <BAND_NAME>l1p_flags</BAND_NAME>
+            <DATA_TYPE>int16</DATA_TYPE>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <FLAG_CODING_NAME>l1p_flags</FLAG_CODING_NAME>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>0.0</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>3</BAND_INDEX>
+            <BAND_DESCRIPTION>FUB/WeW WATER plugin specific flags</BAND_DESCRIPTION>
+            <BAND_NAME>result_flags</BAND_NAME>
+            <DATA_TYPE>uint16</DATA_TYPE>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <FLAG_CODING_NAME>result_flags</FLAG_CODING_NAME>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>0.0</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>4</BAND_INDEX>
+            <BAND_DESCRIPTION>Chlorophyll 2 content</BAND_DESCRIPTION>
+            <BAND_NAME>CHL</BAND_NAME>
+            <DATA_TYPE>float32</DATA_TYPE>
+            <PHYSICAL_UNIT>mg/m^3</PHYSICAL_UNIT>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>NaN</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>5</BAND_INDEX>
+            <BAND_DESCRIPTION>Yellow substance</BAND_DESCRIPTION>
+            <BAND_NAME>CDM</BAND_NAME>
+            <DATA_TYPE>float32</DATA_TYPE>
+            <PHYSICAL_UNIT>1/m</PHYSICAL_UNIT>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>NaN</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>6</BAND_INDEX>
+            <BAND_DESCRIPTION>Total suspended matter</BAND_DESCRIPTION>
+            <BAND_NAME>TSM</BAND_NAME>
+            <DATA_TYPE>float32</DATA_TYPE>
+            <PHYSICAL_UNIT>g/m^3</PHYSICAL_UNIT>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>NaN</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+        <Spectral_Band_Info>
+            <BAND_INDEX>7</BAND_INDEX>
+            <BAND_DESCRIPTION>Downwelling irradiance attenuation coefficient at wavelength 490.</BAND_DESCRIPTION>
+            <BAND_NAME>KDS</BAND_NAME>
+            <DATA_TYPE>float32</DATA_TYPE>
+            <PHYSICAL_UNIT>m^-1</PHYSICAL_UNIT>
+            <SOLAR_FLUX>0.0</SOLAR_FLUX>
+            <BAND_WAVELEN>0.0</BAND_WAVELEN>
+            <BANDWIDTH>0.0</BANDWIDTH>
+            <SCALING_FACTOR>1.0</SCALING_FACTOR>
+            <SCALING_OFFSET>0.0</SCALING_OFFSET>
+            <LOG10_SCALED>false</LOG10_SCALED>
+            <NO_DATA_VALUE_USED>true</NO_DATA_VALUE_USED>
+            <NO_DATA_VALUE>NaN</NO_DATA_VALUE>
+        </Spectral_Band_Info>
+    </Image_Interpretation>
+    <Dataset_Sources>
+        <MDElem name="metadata">
+            <MDElem name="MPH">
+                <MDATTR name="PRODUCT" type="ascii">MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721.N1</MDATTR>
+                <MDATTR name="PROC_STAGE" type="ascii">N</MDATTR>
+                <MDATTR name="REF_DOC" type="ascii">PO-RS-MDA-GS-2009_11_5A</MDATTR>
+                <MDATTR name="ACQUISITION_STATION" type="ascii">PDHS-K</MDATTR>
+                <MDATTR name="PROC_CENTER" type="ascii">UK-PAC</MDATTR>
+                <MDATTR name="PROC_TIME" type="ascii">14-FEB-2012 13:44:06.000000</MDATTR>
+                <MDATTR name="SOFTWARE_VER" type="ascii">MERIS/5.05</MDATTR>
+                <MDATTR name="SENSING_START" type="ascii">01-JUN-2008 09:13:50.983599</MDATTR>
+                <MDATTR name="SENSING_STOP" type="ascii">01-JUN-2008 09:20:53.354799</MDATTR>
+                <MDATTR name="PHASE" type="ascii">2</MDATTR>
+                <MDATTR name="CYCLE" type="int32">69</MDATTR>
+                <MDATTR name="REL_ORBIT" type="int32">79</MDATTR>
+                <MDATTR name="ABS_ORBIT" type="int32">32698</MDATTR>
+                <MDATTR name="STATE_VECTOR_TIME" type="ascii">01-JUN-2008 09:14:00.000000</MDATTR>
+                <MDATTR name="DELTA_UT1" unit="s" type="float64">-0.429221</MDATTR>
+                <MDATTR name="X_POSITION" unit="m" type="float64">952629.854</MDATTR>
+                <MDATTR name="Y_POSITION" unit="m" type="float64">1265008.36</MDATTR>
+                <MDATTR name="Z_POSITION" unit="m" type="float64">6976722.771</MDATTR>
+                <MDATTR name="X_VELOCITY" unit="m/s" type="float64">7340.538456</MDATTR>
+                <MDATTR name="Y_VELOCITY" unit="m/s" type="float64">1219.937693</MDATTR>
+                <MDATTR name="Z_VELOCITY" unit="m/s" type="float64">-1220.786165</MDATTR>
+                <MDATTR name="VECTOR_SOURCE" type="ascii">FR</MDATTR>
+                <MDATTR name="UTC_SBT_TIME" type="ascii">01-JUN-2008 05:50:46.951512</MDATTR>
+                <MDATTR name="SAT_BINARY_TIME" type="uint32">3283664896</MDATTR>
+                <MDATTR name="CLOCK_STEP" unit="ps" type="uint32">3906250455</MDATTR>
+                <MDATTR name="LEAP_UTC" type="ascii">31-DEC-2005 23:59:59.000000</MDATTR>
+                <MDATTR name="LEAP_SIGN" type="int32">1</MDATTR>
+                <MDATTR name="LEAP_ERR" type="int8">0</MDATTR>
+                <MDATTR name="PRODUCT_ERR" type="int8">1</MDATTR>
+                <MDATTR name="TOT_SIZE" unit="bytes" type="uint32">1852871891</MDATTR>
+                <MDATTR name="SPH_SIZE" unit="bytes" type="int32">10782</MDATTR>
+                <MDATTR name="NUM_DSD" type="int32">33</MDATTR>
+                <MDATTR name="DSD_SIZE" unit="bytes" type="int32">280</MDATTR>
+                <MDATTR name="NUM_DATA_SETS" type="int32">22</MDATTR>
+            </MDElem>
+            <MDElem name="SPH">
+                <MDATTR name="SPH_DESCRIPTOR" type="ascii">MER_FSG_1P SPECIFIC HEADER</MDATTR>
+                <MDATTR name="STRIPLINE_CONTINUITY_INDICATOR" type="int32">0</MDATTR>
+                <MDATTR name="SLICE_POSITION" type="int32">1</MDATTR>
+                <MDATTR name="NUM_SLICES" type="int32">1</MDATTR>
+                <MDATTR name="FIRST_LINE_TIME" type="ascii">01-JUN-2008 09:13:50.983599</MDATTR>
+                <MDATTR name="LAST_LINE_TIME" type="ascii">01-JUN-2008 09:20:53.354799</MDATTR>
+                <MDATTR name="FIRST_FIRST_LAT" unit="10-6degN" type="int32">73600270</MDATTR>
+                <MDATTR name="FIRST_FIRST_LONG" unit="10-6degE" type="int32">68024562</MDATTR>
+                <MDATTR name="FIRST_MID_LAT" unit="10-6degN" type="int32">77677002</MDATTR>
+                <MDATTR name="FIRST_MID_LONG" unit="10-6degE" type="int32">54742826</MDATTR>
+                <MDATTR name="FIRST_LAST_LAT" unit="10-6degN" type="int32">80577790</MDATTR>
+                <MDATTR name="FIRST_LAST_LONG" unit="10-6degE" type="int32">31405355</MDATTR>
+                <MDATTR name="LAST_FIRST_LAT" unit="10-6degN" type="int32">48262550</MDATTR>
+                <MDATTR name="LAST_FIRST_LONG" unit="10-6degE" type="int32">27230017</MDATTR>
+                <MDATTR name="LAST_MID_LAT" unit="10-6degN" type="int32">49940629</MDATTR>
+                <MDATTR name="LAST_MID_LONG" unit="10-6degE" type="int32">19670496</MDATTR>
+                <MDATTR name="LAST_LAST_LAT" unit="10-6degN" type="int32">51093996</MDATTR>
+                <MDATTR name="LAST_LAST_LONG" unit="10-6degE" type="int32">11655935</MDATTR>
+                <MDATTR name="TRANS_ERR_FLAG" type="int8">1</MDATTR>
+                <MDATTR name="FORMAT_ERR_FLAG" type="int8">1</MDATTR>
+                <MDATTR name="DATABASE_FLAG" type="int8">0</MDATTR>
+                <MDATTR name="COARSE_ERR_FLAG" type="int8">0</MDATTR>
+                <MDATTR name="ECMWF_TYPE" type="int8">1</MDATTR>
+                <MDATTR name="NUM_TRANS_ERR" type="int32">17</MDATTR>
+                <MDATTR name="NUM_FORMAT_ERR" type="int32">184322</MDATTR>
+                <MDATTR name="TRANS_ERR_THRESH" unit="%" type="float64">0.0</MDATTR>
+                <MDATTR name="FORMAT_ERR_THRESH" unit="%" type="float64">0.0</MDATTR>
+                <MDATTR name="NUM_BANDS" type="int32">15</MDATTR>
+                <MDATTR name="BAND_WAVELEN" unit="10-3nm" type="int32" elems="15">412691,442559,489882,509819,559694,619601,664573,680821,708329,753371,761508,778409,864876,884944,900000</MDATTR>
+                <MDATTR name="BANDWIDTH" unit="10-3nm" type="int32" elems="15">9937,9946,9957,9961,9970,9979,9985,7488,9992,7495,3744,15010,20047,10018,10020</MDATTR>
+                <MDATTR name="INST_FOV" unit="10-6deg" type="int32">19159</MDATTR>
+                <MDATTR name="PROC_MODE" type="int8">1</MDATTR>
+                <MDATTR name="OFFSET_COMP" type="int8">1</MDATTR>
+                <MDATTR name="LINE_TIME_INTERVAL" unit="10-6s" type="int32">43997</MDATTR>
+                <MDATTR name="LINE_LENGTH" unit="samples" type="int32">4481</MDATTR>
+                <MDATTR name="LINES_PER_TIE_PT" type="int32">64</MDATTR>
+                <MDATTR name="SAMPLES_PER_TIE_PT" type="int32">64</MDATTR>
+                <MDATTR name="COLUMN_SPACING" unit="m" type="float64">260.0</MDATTR>
+            </MDElem>
+            <MDElem name="DSD">
+                <MDElem name="DSD.1">
+                    <MDATTR name="DATASET_NAME" type="ascii">Quality ADS</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">A</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">12029</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">627</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">19</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">33</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.2">
+                    <MDATTR name="DATASET_NAME" type="ascii">Scaling Factor GADS</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">G</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">12656</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">292</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">1</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">292</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.3">
+                    <MDATTR name="DATASET_NAME" type="ascii">Tie points ADS</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">A</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">12948</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">538013</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">151</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">3563</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.4">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(1)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">550961</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.5">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(2)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">86719936</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.6">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(3)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">172888911</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.7">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(4)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">259057886</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.8">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(5)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">345226861</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.9">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(6)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">431395836</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.10">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(7)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">517564811</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.11">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(8)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">603733786</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.12">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(9)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">689902761</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.13">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(10)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">776071736</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.14">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(11)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">862240711</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.15">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(12)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">948409686</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.16">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(13)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1034578661</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.17">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(14)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1120747636</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.18">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiance MDS(15)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1206916611</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.19">
+                    <MDATTR name="DATASET_NAME" type="ascii">Flags MDS(16)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1293085586</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">129191056</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">13456</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.20">
+                    <MDATTR name="DATASET_NAME" type="ascii">Corrected Longitude MDS(17)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1422276642</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">172213137</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">17937</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.21">
+                    <MDATTR name="DATASET_NAME" type="ascii">Corrected Latitude MDS(18)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1594489779</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">172213137</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">17937</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.22">
+                    <MDATTR name="DATASET_NAME" type="ascii">Altitude MDS(19)</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">M</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">1766702916</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">86168975</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">9601</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">8975</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.23">
+                    <MDATTR name="DATASET_NAME" type="ascii">Level 0</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">MER_FR__0CNPDK20080601_091351_000005072069_00079_32698_6715.N1</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.24">
+                    <MDATTR name="DATASET_NAME" type="ascii">Instrument data product</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">MER_INS_AXVIEC20050708_134312_20050101_000000_20150101_000000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.25">
+                    <MDATTR name="DATASET_NAME" type="ascii">L1b proc. control parameters</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">MER_CP1_AXVIEC20050607_065745_20020321_193100_20120321_193100</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.26">
+                    <MDATTR name="DATASET_NAME" type="ascii">Radiometric calibration</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">MER_RAC_AXVIEC20061009_084736_20061009_220000_20161009_220000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.27">
+                    <MDATTR name="DATASET_NAME" type="ascii">Digital Elevation Model</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">AUX_DEM_AXVIEC20031201_000000_20031201_000000_20200101_000000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.28">
+                    <MDATTR name="DATASET_NAME" type="ascii">Digital Roughness Model</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">MER_DRM_AXVIEC20020122_083343_20020101_000000_20200101_000000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.29">
+                    <MDATTR name="DATASET_NAME" type="ascii">Coast-line/Land/Ocean</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">AUX_LSM_AXVIEC20080218_104630_20020101_000000_20200101_000000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.30">
+                    <MDATTR name="DATASET_NAME" type="ascii">ECMWF Environment data</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">AUX_ECA_AXNECM20080601_190113_20080601_090000_20080601_210000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.31">
+                    <MDATTR name="DATASET_NAME" type="ascii">ENVISAT-1 Orbit State Vector</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">AUX_FRO_AXVPDS20080604_010112_20080531_221000_20080603_005000</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.32">
+                    <MDATTR name="DATASET_NAME" type="ascii">ENVISAT-1 Platform Attitude</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">AUX_ATT_AXVIEC20020924_131534_20020703_120000_20781231_235959</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+                <MDElem name="DSD.33">
+                    <MDATTR name="DATASET_NAME" type="ascii">High Resolution DEM</MDATTR>
+                    <MDATTR name="DATASET_TYPE" type="ascii">R</MDATTR>
+                    <MDATTR name="FILE_NAME" type="ascii">Getasse30</MDATTR>
+                    <MDATTR name="OFFSET" type="uint32">0</MDATTR>
+                    <MDATTR name="SIZE" type="uint32">0</MDATTR>
+                    <MDATTR name="NUM_RECORDS" type="int32">0</MDATTR>
+                    <MDATTR name="RECORD_SIZE" type="int32">0</MDATTR>
+                </MDElem>
+            </MDElem>
+            <MDElem name="history">
+                <MDElem name="SubsetInfo">
+                    <MDATTR name="SourceProduct.name" type="ascii">MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_smallSubset</MDATTR>
+                    <MDATTR name="SubSampling.x" type="int32" mode="rw">1</MDATTR>
+                    <MDATTR name="SubSampling.y" type="int32" mode="rw">1</MDATTR>
+                    <MDATTR name="SubRegion.x" type="int32" mode="rw">0</MDATTR>
+                    <MDATTR name="SubRegion.y" type="int32" mode="rw">231</MDATTR>
+                    <MDATTR name="SubRegion.width" type="int32" mode="rw">834</MDATTR>
+                    <MDATTR name="SubRegion.height" type="int32" mode="rw">365</MDATTR>
+                    <MDATTR name="ProductNodeName.1" type="ascii">radiance_1</MDATTR>
+                    <MDATTR name="ProductNodeName.2" type="ascii">radiance_2</MDATTR>
+                    <MDATTR name="ProductNodeName.3" type="ascii">radiance_3</MDATTR>
+                    <MDATTR name="ProductNodeName.4" type="ascii">radiance_4</MDATTR>
+                    <MDATTR name="ProductNodeName.5" type="ascii">radiance_5</MDATTR>
+                    <MDATTR name="ProductNodeName.6" type="ascii">radiance_6</MDATTR>
+                    <MDATTR name="ProductNodeName.7" type="ascii">radiance_7</MDATTR>
+                    <MDATTR name="ProductNodeName.8" type="ascii">radiance_8</MDATTR>
+                    <MDATTR name="ProductNodeName.9" type="ascii">radiance_9</MDATTR>
+                    <MDATTR name="ProductNodeName.10" type="ascii">radiance_10</MDATTR>
+                    <MDATTR name="ProductNodeName.11" type="ascii">radiance_11</MDATTR>
+                    <MDATTR name="ProductNodeName.12" type="ascii">radiance_12</MDATTR>
+                    <MDATTR name="ProductNodeName.13" type="ascii">radiance_13</MDATTR>
+                    <MDATTR name="ProductNodeName.14" type="ascii">radiance_14</MDATTR>
+                    <MDATTR name="ProductNodeName.15" type="ascii">radiance_15</MDATTR>
+                    <MDATTR name="ProductNodeName.16" type="ascii">l1_flags</MDATTR>
+                    <MDATTR name="ProductNodeName.17" type="ascii">detector_index</MDATTR>
+                    <MDATTR name="ProductNodeName.18" type="ascii">corr_longitude</MDATTR>
+                    <MDATTR name="ProductNodeName.19" type="ascii">corr_latitude</MDATTR>
+                    <MDATTR name="ProductNodeName.20" type="ascii">altitude</MDATTR>
+                    <MDATTR name="ProductNodeName.21" type="ascii">latitude</MDATTR>
+                    <MDATTR name="ProductNodeName.22" type="ascii">longitude</MDATTR>
+                    <MDATTR name="ProductNodeName.23" type="ascii">dem_alt</MDATTR>
+                    <MDATTR name="ProductNodeName.24" type="ascii">dem_rough</MDATTR>
+                    <MDATTR name="ProductNodeName.25" type="ascii">lat_corr</MDATTR>
+                    <MDATTR name="ProductNodeName.26" type="ascii">lon_corr</MDATTR>
+                    <MDATTR name="ProductNodeName.27" type="ascii">sun_zenith</MDATTR>
+                    <MDATTR name="ProductNodeName.28" type="ascii">sun_azimuth</MDATTR>
+                    <MDATTR name="ProductNodeName.29" type="ascii">view_zenith</MDATTR>
+                    <MDATTR name="ProductNodeName.30" type="ascii">view_azimuth</MDATTR>
+                    <MDATTR name="ProductNodeName.31" type="ascii">zonal_wind</MDATTR>
+                    <MDATTR name="ProductNodeName.32" type="ascii">merid_wind</MDATTR>
+                    <MDATTR name="ProductNodeName.33" type="ascii">atm_press</MDATTR>
+                    <MDATTR name="ProductNodeName.34" type="ascii">ozone</MDATTR>
+                    <MDATTR name="ProductNodeName.35" type="ascii">rel_hum</MDATTR>
+                    <MDATTR name="ProductNodeName.36" type="ascii">MPH</MDATTR>
+                    <MDATTR name="ProductNodeName.37" type="ascii">SPH</MDATTR>
+                    <MDATTR name="ProductNodeName.38" type="ascii">DSD</MDATTR>
+                    <MDATTR name="ProductNodeName.39" type="ascii">history</MDATTR>
+                    <MDElem name="SubsetInfo">
+                        <MDATTR name="SourceProduct.name" type="ascii">MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_subset</MDATTR>
+                        <MDATTR name="SubSampling.x" type="int32" mode="rw">1</MDATTR>
+                        <MDATTR name="SubSampling.y" type="int32" mode="rw">1</MDATTR>
+                        <MDATTR name="SubRegion.x" type="int32" mode="rw">0</MDATTR>
+                        <MDATTR name="SubRegion.y" type="int32" mode="rw">450</MDATTR>
+                        <MDATTR name="SubRegion.width" type="int32" mode="rw">1111</MDATTR>
+                        <MDATTR name="SubRegion.height" type="int32" mode="rw">781</MDATTR>
+                        <MDATTR name="ProductNodeName.1" type="ascii">radiance_1</MDATTR>
+                        <MDATTR name="ProductNodeName.2" type="ascii">radiance_2</MDATTR>
+                        <MDATTR name="ProductNodeName.3" type="ascii">radiance_3</MDATTR>
+                        <MDATTR name="ProductNodeName.4" type="ascii">radiance_4</MDATTR>
+                        <MDATTR name="ProductNodeName.5" type="ascii">radiance_5</MDATTR>
+                        <MDATTR name="ProductNodeName.6" type="ascii">radiance_6</MDATTR>
+                        <MDATTR name="ProductNodeName.7" type="ascii">radiance_7</MDATTR>
+                        <MDATTR name="ProductNodeName.8" type="ascii">radiance_8</MDATTR>
+                        <MDATTR name="ProductNodeName.9" type="ascii">radiance_9</MDATTR>
+                        <MDATTR name="ProductNodeName.10" type="ascii">radiance_10</MDATTR>
+                        <MDATTR name="ProductNodeName.11" type="ascii">radiance_11</MDATTR>
+                        <MDATTR name="ProductNodeName.12" type="ascii">radiance_12</MDATTR>
+                        <MDATTR name="ProductNodeName.13" type="ascii">radiance_13</MDATTR>
+                        <MDATTR name="ProductNodeName.14" type="ascii">radiance_14</MDATTR>
+                        <MDATTR name="ProductNodeName.15" type="ascii">radiance_15</MDATTR>
+                        <MDATTR name="ProductNodeName.16" type="ascii">l1_flags</MDATTR>
+                        <MDATTR name="ProductNodeName.17" type="ascii">detector_index</MDATTR>
+                        <MDATTR name="ProductNodeName.18" type="ascii">corr_longitude</MDATTR>
+                        <MDATTR name="ProductNodeName.19" type="ascii">corr_latitude</MDATTR>
+                        <MDATTR name="ProductNodeName.20" type="ascii">altitude</MDATTR>
+                        <MDATTR name="ProductNodeName.21" type="ascii">latitude</MDATTR>
+                        <MDATTR name="ProductNodeName.22" type="ascii">longitude</MDATTR>
+                        <MDATTR name="ProductNodeName.23" type="ascii">dem_alt</MDATTR>
+                        <MDATTR name="ProductNodeName.24" type="ascii">dem_rough</MDATTR>
+                        <MDATTR name="ProductNodeName.25" type="ascii">lat_corr</MDATTR>
+                        <MDATTR name="ProductNodeName.26" type="ascii">lon_corr</MDATTR>
+                        <MDATTR name="ProductNodeName.27" type="ascii">sun_zenith</MDATTR>
+                        <MDATTR name="ProductNodeName.28" type="ascii">sun_azimuth</MDATTR>
+                        <MDATTR name="ProductNodeName.29" type="ascii">view_zenith</MDATTR>
+                        <MDATTR name="ProductNodeName.30" type="ascii">view_azimuth</MDATTR>
+                        <MDATTR name="ProductNodeName.31" type="ascii">zonal_wind</MDATTR>
+                        <MDATTR name="ProductNodeName.32" type="ascii">merid_wind</MDATTR>
+                        <MDATTR name="ProductNodeName.33" type="ascii">atm_press</MDATTR>
+                        <MDATTR name="ProductNodeName.34" type="ascii">ozone</MDATTR>
+                        <MDATTR name="ProductNodeName.35" type="ascii">rel_hum</MDATTR>
+                        <MDATTR name="ProductNodeName.36" type="ascii">MPH</MDATTR>
+                        <MDATTR name="ProductNodeName.37" type="ascii">SPH</MDATTR>
+                        <MDATTR name="ProductNodeName.38" type="ascii">DSD</MDATTR>
+                        <MDATTR name="ProductNodeName.39" type="ascii">history</MDATTR>
+                        <MDElem name="SubsetInfo">
+                            <MDATTR name="SourceProduct.name" type="ascii">MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721.N1</MDATTR>
+                            <MDATTR name="SubSampling.x" type="int32" mode="rw">1</MDATTR>
+                            <MDATTR name="SubSampling.y" type="int32" mode="rw">1</MDATTR>
+                            <MDATTR name="SubRegion.x" type="int32" mode="rw">0</MDATTR>
+                            <MDATTR name="SubRegion.y" type="int32" mode="rw">7890</MDATTR>
+                            <MDATTR name="SubRegion.width" type="int32" mode="rw">4481</MDATTR>
+                            <MDATTR name="SubRegion.height" type="int32" mode="rw">1711</MDATTR>
+                            <MDATTR name="ProductNodeName.1" type="ascii">radiance_1</MDATTR>
+                            <MDATTR name="ProductNodeName.2" type="ascii">radiance_2</MDATTR>
+                            <MDATTR name="ProductNodeName.3" type="ascii">radiance_3</MDATTR>
+                            <MDATTR name="ProductNodeName.4" type="ascii">radiance_4</MDATTR>
+                            <MDATTR name="ProductNodeName.5" type="ascii">radiance_5</MDATTR>
+                            <MDATTR name="ProductNodeName.6" type="ascii">radiance_6</MDATTR>
+                            <MDATTR name="ProductNodeName.7" type="ascii">radiance_7</MDATTR>
+                            <MDATTR name="ProductNodeName.8" type="ascii">radiance_8</MDATTR>
+                            <MDATTR name="ProductNodeName.9" type="ascii">radiance_9</MDATTR>
+                            <MDATTR name="ProductNodeName.10" type="ascii">radiance_10</MDATTR>
+                            <MDATTR name="ProductNodeName.11" type="ascii">radiance_11</MDATTR>
+                            <MDATTR name="ProductNodeName.12" type="ascii">radiance_12</MDATTR>
+                            <MDATTR name="ProductNodeName.13" type="ascii">radiance_13</MDATTR>
+                            <MDATTR name="ProductNodeName.14" type="ascii">radiance_14</MDATTR>
+                            <MDATTR name="ProductNodeName.15" type="ascii">radiance_15</MDATTR>
+                            <MDATTR name="ProductNodeName.16" type="ascii">l1_flags</MDATTR>
+                            <MDATTR name="ProductNodeName.17" type="ascii">detector_index</MDATTR>
+                            <MDATTR name="ProductNodeName.18" type="ascii">corr_longitude</MDATTR>
+                            <MDATTR name="ProductNodeName.19" type="ascii">corr_latitude</MDATTR>
+                            <MDATTR name="ProductNodeName.20" type="ascii">altitude</MDATTR>
+                            <MDATTR name="ProductNodeName.21" type="ascii">latitude</MDATTR>
+                            <MDATTR name="ProductNodeName.22" type="ascii">longitude</MDATTR>
+                            <MDATTR name="ProductNodeName.23" type="ascii">dem_alt</MDATTR>
+                            <MDATTR name="ProductNodeName.24" type="ascii">dem_rough</MDATTR>
+                            <MDATTR name="ProductNodeName.25" type="ascii">lat_corr</MDATTR>
+                            <MDATTR name="ProductNodeName.26" type="ascii">lon_corr</MDATTR>
+                            <MDATTR name="ProductNodeName.27" type="ascii">sun_zenith</MDATTR>
+                            <MDATTR name="ProductNodeName.28" type="ascii">sun_azimuth</MDATTR>
+                            <MDATTR name="ProductNodeName.29" type="ascii">view_zenith</MDATTR>
+                            <MDATTR name="ProductNodeName.30" type="ascii">view_azimuth</MDATTR>
+                            <MDATTR name="ProductNodeName.31" type="ascii">zonal_wind</MDATTR>
+                            <MDATTR name="ProductNodeName.32" type="ascii">merid_wind</MDATTR>
+                            <MDATTR name="ProductNodeName.33" type="ascii">atm_press</MDATTR>
+                            <MDATTR name="ProductNodeName.34" type="ascii">ozone</MDATTR>
+                            <MDATTR name="ProductNodeName.35" type="ascii">rel_hum</MDATTR>
+                            <MDATTR name="ProductNodeName.36" type="ascii">MPH</MDATTR>
+                            <MDATTR name="ProductNodeName.37" type="ascii">SPH</MDATTR>
+                            <MDATTR name="ProductNodeName.38" type="ascii">DSD</MDATTR>
+                            <MDATTR name="ProductNodeName.39" type="ascii">Quality_ADS</MDATTR>
+                            <MDATTR name="ProductNodeName.40" type="ascii">Scaling_Factor_GADS</MDATTR>
+                            <MDATTR name="ProductNodeName.41" type="ascii">Tie_points_ADS</MDATTR>
+                        </MDElem>
+                    </MDElem>
+                </MDElem>
+            </MDElem>
+            <MDElem name="Processing_Graph">
+                <MDElem name="node.0">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.CorrectRadiometry$13BE256B5F0</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.CorrectRadiometry</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Performs radiometric corrections on MERIS L1b data products.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marc Bouvet (ESTEC); Marco Peters, Ralf Quast, Thomas Storm, Marco Zuehlke (Brockmann Consult)</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.1</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2011 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">file:/C:/Users/Marco/EOData/FreshMon/MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset.dim</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="doRadToRefl" type="ascii">false</MDATTR>
+                        <MDATTR name="doCalibration" type="ascii">true</MDATTR>
+                        <MDATTR name="doSmile" type="ascii">true</MDATTR>
+                        <MDATTR name="doEqualization" type="ascii">true</MDATTR>
+                        <MDATTR name="reproVersion" type="ascii">REPROCESSING_3</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.1">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.IcolCorrectedRadiances$13BE256BE40</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.IcolCorrectedRadiances</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Writes the AE corrected radiances to output product.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="gascor" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="ae_aerosol" type="ascii" mode="rw">Meris.AEAerosolCase2$13BE256BCFF</MDATTR>
+                        <MDATTR name="refl" type="ascii" mode="rw">Meris.IcolCorrectBand11And15$13BE256BE1C</MDATTR>
+                        <MDATTR name="aemaskAerosol" type="ascii" mode="rw">AEMask$13BE256BB89</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters" />
+                </MDElem>
+                <MDElem name="node.2">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.GaseousCorrection</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">MERIS L2 gaseous absorbtion correction.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="rhotoa" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="exportTg" type="ascii">true</MDATTR>
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                        <MDATTR name="correctWater" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.3">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.CloudClassification</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">MERIS L2 cloud classification.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="rhotoa" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="ctp" type="ascii" mode="rw">Meris.CloudTopPressureOp$13BE256B947</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                        <MDATTR name="l2CloudDetection" type="ascii">true</MDATTR>
+                        <MDATTR name="l2Pressures" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.4">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.Rad2Refl</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Converts radiances into reflectances.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.5">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.CloudTopPressureOp$13BE256B947</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.CloudTopPressureOp</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Computes cloud top pressure with FUB NN.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007-2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="straylightCorr" type="ascii">false</MDATTR>
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.6">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.AEAerosolCase2$13BE256BCFF</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.AEAerosolCase2</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Contribution of aerosol to the adjacency effect.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="ae_ray" type="ascii" mode="rw">AERayleigh$13BE256BC78</MDATTR>
+                        <MDATTR name="zmaxCloud" type="ascii" mode="rw">Zmax$13BE256BBD2</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="zmax" type="ascii" mode="rw">Zmax$13BE256BBBF</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="cloudLandMask" type="ascii" mode="rw">CLFlags$13BE256BA4E</MDATTR>
+                        <MDATTR name="aemask" type="ascii" mode="rw">AEMask$13BE256BB89</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="userAlpha" type="ascii">-1.0</MDATTR>
+                        <MDATTR name="userAot" type="ascii">0.2</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                        <MDATTR name="icolAerosolForWater" type="ascii">true</MDATTR>
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                        <MDATTR name="reshapedConvolution" type="ascii">true</MDATTR>
+                        <MDATTR name="iaerConv" type="ascii">10</MDATTR>
+                        <MDATTR name="userAerosolReferenceWavelength" type="ascii">550.0</MDATTR>
+                        <MDATTR name="exportSeparateDebugBands" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.7">
+                    <MDATTR name="id" type="ascii" mode="rw">AERayleigh$13BE256BC78</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">AERayleigh</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Contribution of rayleigh to the adjacency effect.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="rhoNg" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                        <MDATTR name="zmaxCloud" type="ascii" mode="rw">Zmax$13BE256BBD2</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="zmax" type="ascii" mode="rw">Zmax$13BE256BBBF</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="refl" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                        <MDATTR name="ray1b" type="ascii" mode="rw">Meris.BrrCloud$13BE256BBF2</MDATTR>
+                        <MDATTR name="cloudLandMask" type="ascii" mode="rw">CLFlags$13BE256BA4E</MDATTR>
+                        <MDATTR name="aemask" type="ascii" mode="rw">AEMask$13BE256BB70</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="openclConvolution" type="ascii">false</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                        <MDATTR name="cloudExpression" type="ascii">cloud_classif_flags.F_CLOUD</MDATTR>
+                        <MDATTR name="instrument" type="ascii">MERIS</MDATTR>
+                        <MDATTR name="reshapedConvolution" type="ascii">true</MDATTR>
+                        <MDATTR name="exportSeparateDebugBands" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.8">
+                    <MDATTR name="id" type="ascii" mode="rw">Zmax$13BE256BBD2</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Zmax</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Zmax computation for land or cloud contribution in AE correction.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007-2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="distance" type="ascii" mode="rw">CloudDistance$13BE256BBAE</MDATTR>
+                        <MDATTR name="ae_mask" type="ascii" mode="rw">AEMask$13BE256BB70</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="distanceBandName" type="ascii">cloud_distance</MDATTR>
+                        <MDATTR name="aeMaskExpression" type="ascii">ae_mask_rayleigh.aep</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.9">
+                    <MDATTR name="id" type="ascii" mode="rw">CloudDistance$13BE256BBAE</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">CloudDistance</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Cloud distance computation.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters" />
+                </MDElem>
+                <MDElem name="node.10">
+                    <MDATTR name="id" type="ascii" mode="rw">AEMask$13BE256BB70</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">AEMask</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Adjacency mask computation.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="correctionMode" type="ascii">0</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                        <MDATTR name="aeArea" type="ascii">COASTAL_OCEAN</MDATTR>
+                        <MDATTR name="reshapedConvolution" type="ascii">true</MDATTR>
+                        <MDATTR name="coastlineExpression" type="ascii">l1_flags.COASTLINE</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.11">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.Icol.LandClassification</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">MERIS L2 land/water reclassification.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="gascor" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                        <MDATTR name="rhotoa" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                        <MDATTR name="useAdvancedLandWaterMask" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.12">
+                    <MDATTR name="id" type="ascii" mode="rw">Zmax$13BE256BBBF</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Zmax</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Zmax computation for land or cloud contribution in AE correction.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007-2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="ae_mask" type="ascii" mode="rw">AEMask$13BE256BB70</MDATTR>
+                        <MDATTR name="distance" type="ascii" mode="rw">CoastDistance$13BE256BBA4</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="distanceBandName" type="ascii">coast_distance</MDATTR>
+                        <MDATTR name="aeMaskExpression" type="ascii">ae_mask_rayleigh.aep</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.13">
+                    <MDATTR name="id" type="ascii" mode="rw">CoastDistance$13BE256BBA4</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">CoastDistance</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Coast distance computation.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Olaf Danne, Marco Zuehlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="numDistances" type="ascii">2</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                        <MDATTR name="correctOverLand" type="ascii">false</MDATTR>
+                        <MDATTR name="waterExpression" type="ascii">land_classif_flags.F_LOINLD</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.14">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.BrrCloud$13BE256BBF2</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.BrrCloud</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Sets BRR values to RS proposal in case of clouds.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="brr" type="ascii" mode="rw">Meris.RayleighCorrection$13BE256BB53</MDATTR>
+                        <MDATTR name="refl" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters" />
+                </MDElem>
+                <MDElem name="node.15">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.RayleighCorrection$13BE256BB53</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.RayleighCorrection</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">MERIS L2 rayleigh correction.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="input" type="ascii" mode="rw">Meris.IcolFresnelCoeff$13BE256BB35</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="correctWater" type="ascii">true</MDATTR>
+                        <MDATTR name="exportRayCoeffs" type="ascii">true</MDATTR>
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                        <MDATTR name="exportRhoR" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.16">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.IcolFresnelCoeff$13BE256BB35</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.IcolFresnelCoeff</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Fresnel Coefficient computation.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="input" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="copyAllTiePoints" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.17">
+                    <MDATTR name="id" type="ascii" mode="rw">CLFlags$13BE256BA4E</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">CLFlags</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Provides product with cloud/land masks given as 0.0/1.0.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="cloudExpression" type="ascii">cloud_classif_flags.F_CLOUD</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.18">
+                    <MDATTR name="id" type="ascii" mode="rw">AEMask$13BE256BB89</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">AEMask</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Adjacency mask computation.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="correctionMode" type="ascii">1</MDATTR>
+                        <MDATTR name="landExpression" type="ascii">land_classif_flags.F_LANDCONS || land_classif_flags.F_ICE</MDATTR>
+                        <MDATTR name="aeArea" type="ascii">COASTAL_OCEAN</MDATTR>
+                        <MDATTR name="reshapedConvolution" type="ascii">true</MDATTR>
+                        <MDATTR name="coastlineExpression" type="ascii">l1_flags.COASTLINE</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.19">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.IcolCorrectBand11And15$13BE256BE1C</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.IcolCorrectBand11And15</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Corrects MERIS band 11 and 15 and writes to output product.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="corrRad" type="ascii" mode="rw">Meris.IcolCorrectedReflectances$13BE256BD30</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="refl" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters" />
+                </MDElem>
+                <MDElem name="node.20">
+                    <MDATTR name="id" type="ascii" mode="rw">Meris.IcolCorrectedReflectances$13BE256BD30</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meris.IcolCorrectedReflectances</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Corrects for the adjacency effect and computes rho TOA.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zühlke</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="ae_ray" type="ascii" mode="rw">AERayleigh$13BE256BC78</MDATTR>
+                        <MDATTR name="gascor" type="ascii" mode="rw">Meris.GaseousCorrection$13BE256B961</MDATTR>
+                        <MDATTR name="ae_aerosol" type="ascii" mode="rw">Meris.AEAerosolCase2$13BE256BCFF</MDATTR>
+                        <MDATTR name="land" type="ascii" mode="rw">Meris.Icol.LandClassification$13BE256BA35</MDATTR>
+                        <MDATTR name="cloud" type="ascii" mode="rw">Meris.CloudClassification$13BE256B952</MDATTR>
+                        <MDATTR name="rhotoa" type="ascii" mode="rw">Meris.Rad2Refl$13BE256B834</MDATTR>
+                        <MDATTR name="l1b" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                        <MDATTR name="aemaskAerosol" type="ascii" mode="rw">AEMask$13BE256BB89</MDATTR>
+                        <MDATTR name="aemaskRayleigh" type="ascii" mode="rw">AEMask$13BE256BB70</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="exportRhoToa" type="ascii">true</MDATTR>
+                        <MDATTR name="icolAerosolCase2" type="ascii">true</MDATTR>
+                        <MDATTR name="exportAlphaAot" type="ascii">true</MDATTR>
+                        <MDATTR name="exportAeAerosol" type="ascii">true</MDATTR>
+                        <MDATTR name="icolAerosolForWater" type="ascii">true</MDATTR>
+                        <MDATTR name="exportAeRayleigh" type="ascii">true</MDATTR>
+                        <MDATTR name="exportRhoToaAerosol" type="ascii">true</MDATTR>
+                        <MDATTR name="exportRhoToaRayleigh" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.21">
+                    <MDATTR name="id" type="ascii" mode="rw">icol.Meris$13BE256BE4E</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">icol.Meris</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Performs a correction of the adjacency effect for MERIS L1b data.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke, Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.1</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2007-2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">product:MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="useAdvancedLandWaterMask" type="ascii">true</MDATTR>
+                        <MDATTR name="userAot" type="ascii">0.2</MDATTR>
+                        <MDATTR name="useUserCtp" type="ascii">false</MDATTR>
+                        <MDATTR name="exportAeAerosol" type="ascii">true</MDATTR>
+                        <MDATTR name="exportSeparateDebugBands" type="ascii">false</MDATTR>
+                        <MDATTR name="productType" type="ascii">0</MDATTR>
+                        <MDATTR name="exportRhoToaRayleigh" type="ascii">true</MDATTR>
+                        <MDATTR name="userAlpha" type="ascii">-1.0</MDATTR>
+                        <MDATTR name="userCtp" type="ascii">1013.0</MDATTR>
+                        <MDATTR name="icolAerosolCase2" type="ascii">true</MDATTR>
+                        <MDATTR name="aeArea" type="ascii">COASTAL_OCEAN</MDATTR>
+                        <MDATTR name="exportAlphaAot" type="ascii">true</MDATTR>
+                        <MDATTR name="icolAerosolForWater" type="ascii">true</MDATTR>
+                        <MDATTR name="exportAeRayleigh" type="ascii">true</MDATTR>
+                        <MDATTR name="userAerosolReferenceWavelength" type="ascii">550.0</MDATTR>
+                        <MDATTR name="exportRhoToaAerosol" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.22">
+                    <MDATTR name="id" type="ascii" mode="rw">CoastColour.L1P$13BE256C21D</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">CoastColour.L1P</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Computes a refinement of top of atmosphere radiance and pixel characterization information.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Peters, Norman Fomferra</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.6.2</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2011 Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">file:/C:/Users/Marco/EOData/FreshMon/MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset.dim</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="doCalibration" type="ascii">true</MDATTR>
+                        <MDATTR name="brightTestWavelength" type="ascii">865</MDATTR>
+                        <MDATTR name="doSmile" type="ascii">true</MDATTR>
+                        <MDATTR name="doIcol" type="ascii">true</MDATTR>
+                        <MDATTR name="brightTestThreshold" type="ascii">0.03</MDATTR>
+                        <MDATTR name="doEqualization" type="ascii">true</MDATTR>
+                        <MDATTR name="useIdepix" type="ascii">true</MDATTR>
+                        <MDATTR name="algorithm" type="ascii">CoastColour</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.23">
+                    <MDATTR name="id" type="ascii" mode="rw">FUB.Water$13BE256C3C2</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">FUB.Water</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">FUB/WeW WATER Processor GPF-Operator</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Thomas Schroeder, Michael Schaale</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">2.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">Institute for Space Sciences (WeW), Freie Universitaet Berlin</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">Meris.IcolCorrectedRadiances$13BE256BE40</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="expression" type="ascii">not glint_risk and not bright and not invalid and not suspect</MDATTR>
+                        <MDATTR name="computeYS" type="ascii">true</MDATTR>
+                        <MDATTR name="computeTSM" type="ascii">true</MDATTR>
+                        <MDATTR name="computeCHL" type="ascii">true</MDATTR>
+                        <MDATTR name="computeAtmCorr" type="ascii">true</MDATTR>
+                        <MDATTR name="checkWhetherSuspectIsValid" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.24">
+                    <MDATTR name="id" type="ascii" mode="rw">FreshMon.L2$13BE256C3E3</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">FreshMon.L2</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Performs CoastColour.L1P and FUB Water processor in a chain.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Peters</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">0.8</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">file:/C:/Users/Marco/EOData/FreshMon/MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset.dim</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="expression" type="ascii">not glint_risk and not bright and not invalid and not suspect</MDATTR>
+                        <MDATTR name="validExpressionKD3" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.ATM_OUT</MDATTR>
+                        <MDATTR name="validExpressionKD2" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.ATM_OUT</MDATTR>
+                        <MDATTR name="computeCHL" type="ascii">true</MDATTR>
+                        <MDATTR name="computeTSM" type="ascii">true</MDATTR>
+                        <MDATTR name="validExpressionCHL" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.CHL_OUT</MDATTR>
+                        <MDATTR name="doIcol" type="ascii">true</MDATTR>
+                        <MDATTR name="brightTestWavelength" type="ascii">865</MDATTR>
+                        <MDATTR name="computeCDM" type="ascii">true</MDATTR>
+                        <MDATTR name="algorithm" type="ascii">CoastColour</MDATTR>
+                        <MDATTR name="computeSD1" type="ascii">false</MDATTR>
+                        <MDATTR name="computeKDS" type="ascii">true</MDATTR>
+                        <MDATTR name="computeSD2" type="ascii">false</MDATTR>
+                        <MDATTR name="validExpressionSD2" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.ATM_OUT</MDATTR>
+                        <MDATTR name="validExpressionSD1" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.ATM_OUT</MDATTR>
+                        <MDATTR name="computeAtmCorr" type="ascii">true</MDATTR>
+                        <MDATTR name="validExpressionTSM" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.TSM_OUT</MDATTR>
+                        <MDATTR name="validExpressionKDS" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.ATM_OUT</MDATTR>
+                        <MDATTR name="doCalibration" type="ascii">true</MDATTR>
+                        <MDATTR name="doSmile" type="ascii">true</MDATTR>
+                        <MDATTR name="doEqualization" type="ascii">true</MDATTR>
+                        <MDATTR name="brightTestThreshold" type="ascii">0.03</MDATTR>
+                        <MDATTR name="validExpressionCDM" type="ascii">!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and !l1p_flags.CC_CLOUD and !result_flags.YEL_OUT</MDATTR>
+                        <MDATTR name="useIdepix" type="ascii">true</MDATTR>
+                        <MDATTR name="computeKD2" type="ascii">false</MDATTR>
+                        <MDATTR name="computeKD3" type="ascii">false</MDATTR>
+                        <MDATTR name="checkWhetherSuspectIsValid" type="ascii">true</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.25">
+                    <MDATTR name="id" type="ascii" mode="rw">Reproject$13C007BA499</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Reproject</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Reprojection of a source product to a target Coordinate Reference System.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Z�hlke, Marco Peters, Ralf Quast, Norman Fomferra</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2009 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="source" type="ascii" mode="rw">file:/C:/Users/Marco/EOData/FreshMon/MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset_FreshMon.dim</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="pixelSizeY" type="ascii" />
+                        <MDATTR name="crs" type="ascii">GEOGCS["WGS84(DD)", &#xD;
+  DATUM["WGS84", &#xD;
+    SPHEROID["WGS84", 6378137.0, 298.257223563]], &#xD;
+  PRIMEM["Greenwich", 0.0], &#xD;
+  UNIT["degree", 0.017453292519943295], &#xD;
+  AXIS["Geodetic longitude", EAST], &#xD;
+  AXIS["Geodetic latitude", NORTH]]</MDATTR>
+                        <MDATTR name="orientation" type="ascii">0.0</MDATTR>
+                        <MDATTR name="pixelSizeX" type="ascii" />
+                        <MDATTR name="width" type="ascii" />
+                        <MDATTR name="addDeltaBands" type="ascii">false</MDATTR>
+                        <MDATTR name="elevationModelName" type="ascii" />
+                        <MDATTR name="easting" type="ascii" />
+                        <MDATTR name="height" type="ascii" />
+                        <MDATTR name="resampling" type="ascii">Nearest</MDATTR>
+                        <MDATTR name="wktFile" type="ascii" />
+                        <MDATTR name="referencePixelY" type="ascii" />
+                        <MDATTR name="tileSizeY" type="ascii" />
+                        <MDATTR name="tileSizeX" type="ascii" />
+                        <MDATTR name="noDataValue" type="ascii">NaN</MDATTR>
+                        <MDATTR name="referencePixelX" type="ascii" />
+                        <MDATTR name="includeTiePointGrids" type="ascii">false</MDATTR>
+                        <MDATTR name="northing" type="ascii" />
+                        <MDATTR name="orthorectify" type="ascii">false</MDATTR>
+                    </MDElem>
+                </MDElem>
+            </MDElem>
+        </MDElem>
+    </Dataset_Sources>
+</Dimap_Document>
