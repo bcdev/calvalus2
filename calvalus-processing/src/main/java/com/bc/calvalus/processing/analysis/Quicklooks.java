@@ -6,6 +6,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
+import java.awt.Color;
+
 /**
  * @author Marco Peters
  */
@@ -45,6 +47,8 @@ public class Quicklooks {
 
         @Parameter
         private String imageType;
+        @Parameter(defaultValue = "0,0,0")
+        private Color backgroundColor;
 
         @Parameter
         private int subSamplingX;
@@ -72,6 +76,10 @@ public class Quicklooks {
 
         public String getImageType() {
             return imageType;
+        }
+
+        public Color getBackgroundColor() {
+            return backgroundColor;
         }
 
         public int getSubSamplingX() {
@@ -112,6 +120,34 @@ public class Quicklooks {
 
         public boolean isLegendEnabled() {
             return legendEnabled;
+        }
+
+        public void setBandName(String bandName) {
+            this.bandName = bandName;
+        }
+
+        public void setImageType(String imageType) {
+            this.imageType = imageType;
+        }
+
+        public void setBackgroundColor(Color backgroundColor) {
+            this.backgroundColor = backgroundColor;
+        }
+
+        public void setCpdURL(String cpdURL) {
+            this.cpdURL = cpdURL;
+        }
+
+        public void setMaskOverlays(String[] maskOverlays) {
+            this.maskOverlays = maskOverlays;
+        }
+
+        public void setLegendEnabled(boolean legendEnabled) {
+            this.legendEnabled = legendEnabled;
+        }
+
+        public void setOverlayURL(String overlayURL) {
+            this.overlayURL = overlayURL;
         }
     }
 }

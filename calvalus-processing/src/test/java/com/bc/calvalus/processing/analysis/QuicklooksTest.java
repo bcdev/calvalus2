@@ -22,6 +22,7 @@ public class QuicklooksTest {
         sb.append("<bandName>chl_conc</bandName>\n");
         sb.append("<cpdURL>http://www.allMycpds.com/chl.cpd</cpdURL>\n");
         sb.append("<imageType>SpecialType</imageType>\n");
+        sb.append("<backgroundColor>10,20,30,128</backgroundColor>\n");
         sb.append("<overlayURL>file://C:\\User\\home\\overlay.png</overlayURL>\n");
         sb.append("<maskOverlays>land,cloud,coastline</maskOverlays>\n");
         sb.append("</config>\n");
@@ -50,6 +51,10 @@ public class QuicklooksTest {
         assertEquals("chl_conc", qlConfig.getBandName());
         assertEquals("http://www.allMycpds.com/chl.cpd", qlConfig.getCpdURL());
         assertEquals("SpecialType", qlConfig.getImageType());
+        assertEquals(10, qlConfig.getBackgroundColor().getRed());
+        assertEquals(20, qlConfig.getBackgroundColor().getGreen());
+        assertEquals(30, qlConfig.getBackgroundColor().getBlue());
+        assertEquals(128, qlConfig.getBackgroundColor().getAlpha());
         assertEquals("file://C:\\User\\home\\overlay.png", qlConfig.getOverlayURL());
         assertEquals(3, qlConfig.getMaskOverlays().length);
         assertEquals("land", qlConfig.getMaskOverlays()[0]);

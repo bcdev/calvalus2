@@ -132,7 +132,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         return path.getFileSystem(context.getConfiguration()).create(path);
     }
 
-    private static RenderedImage createImage(Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    static RenderedImage createImage(Product product, Quicklooks.QLConfig qlConfig) throws IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
@@ -212,7 +212,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
         final ImageLayer imageLayer = new ImageLayer(multiLevelSource);
 
-        boolean useAlpha = useAlpha(qlConfig);
+        boolean canUseAlpha = canUseAlpha(qlConfig);
         CollectionLayer collectionLayer = new CollectionLayer();
 
         List<Layer> layerChildren = collectionLayer.getChildren();
@@ -220,7 +220,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
         }
         if (qlConfig.isLegendEnabled()) {
-            addLegend(masterBand, imageLayer, useAlpha, layerChildren);
+            addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
         }
         if (qlConfig.getMaskOverlays() != null) {
             addMaskOverlays(product, qlConfig.getMaskOverlays(), masterBand, layerChildren);
@@ -228,7 +228,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         layerChildren.add(imageLayer);
 
 
-        int imageType = useAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
+        int imageType = canUseAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
         BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(),
                                                         imageType);
         BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
@@ -236,11 +236,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
         viewport.zoom(collectionLayer.getModelBounds());
 
-        if (!useAlpha) {
-            final Graphics2D graphics = rendering.getGraphics();
-            graphics.setColor(Color.BLACK);
-            graphics.fillRect(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
-        }
+        final Graphics2D graphics = rendering.getGraphics();
+        graphics.setColor(qlConfig.getBackgroundColor());
+        graphics.fillRect(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
 
         collectionLayer.render(rendering);
         return rendering.getImage();
@@ -280,7 +278,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    private static boolean useAlpha(Quicklooks.QLConfig qlConfig) {
+    private static boolean canUseAlpha(Quicklooks.QLConfig qlConfig) {
         return !"bmp".equalsIgnoreCase(qlConfig.getImageType()) && !"jpeg".equalsIgnoreCase(qlConfig.getImageType());
     }
 
@@ -318,38 +316,4 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         paletteDef.setAutoDistribute(propertyMap.getPropertyBool("autoDistribute", false));
         return paletteDef;
     }
-
-
-//    public static void main(String[] args) throws IOException {
-//
-//        SystemUtils.init3rdPartyLibs(Thread.currentThread().getContextClassLoader());
-//        JAI.enableDefaultTileCache();
-//        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(512 * 1024 * 1014);
-//        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-//
-//        File arg = new File(args[0]);
-//        Product product = null;
-//        try {
-//            product = ProductIO.readProduct(arg, "NetCDF4-BEAM");
-//            if (product != null) {
-//                QLConfig qlConfig = new QLConfig();
-//                qlConfig.imageType = "jpeg";
-//                qlConfig.RGBAExpressions = new String[]{"radiance_7_mean", "radiance_5_mean", "radiance_3_mean"};
-//
-//                String qlName = "TEST." + qlConfig.imageType;
-//                OutputStream quickLookOutputStream = new FileOutputStream(new File(arg.getParentFile(), qlName));
-//
-//                try {
-//                    createQuicklookImage(product, quickLookOutputStream, qlConfig);
-//                } finally {
-//                    quickLookOutputStream.close();
-//                }
-//            }
-//        } finally {
-//            if (product != null) {
-//                product.dispose();
-//            }
-//        }
-//    }
-
 }
