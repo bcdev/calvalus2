@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.commons.ProcessStatus;
@@ -5,6 +21,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
+import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
@@ -277,6 +294,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    private String[] convert(String[] strings) {
+        if (strings == null) {
+            return new String[0];
+        } else {
+            return strings;
+        }
+    }
+
     private DtoProductSet convert(ProductSet productSet) {
         return new DtoProductSet(productSet.getProductType(),
                                  productSet.getName(),
@@ -296,12 +321,29 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           bundleName,
                                           bundleVersion,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
-                                          processorDescriptor.getInputProductTypes(),
+                                          convert(processorDescriptor.getInputProductTypes()),
                                           processorDescriptor.getOutputProductType(),
-                                          processorDescriptor.getOutputFormats(),
+                                          convert(processorDescriptor.getOutputFormats()),
                                           processorDescriptor.isFormattingMandatory(),
                                           processorDescriptor.getMaskExpression(),
-                                          convert(processorDescriptor.getOutputVariables()));
+                                          convert(processorDescriptor.getOutputVariables()),
+                                          convert(processorDescriptor.getParameterDescriptors()));
+    }
+
+    private DtoParameterDescriptor[] convert(ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors) {
+        if (parameterDescriptors == null) {
+            return new DtoParameterDescriptor[0];
+        }
+        DtoParameterDescriptor[] dtoParameterDescriptors = new DtoParameterDescriptor[parameterDescriptors.length];
+        for (int i = 0; i < parameterDescriptors.length; i++) {
+            ProcessorDescriptor.ParameterDescriptor parameterDescriptor = parameterDescriptors[i];
+            dtoParameterDescriptors[i] = new DtoParameterDescriptor(parameterDescriptor.getName(),
+                                                                    parameterDescriptor.getType(),
+                                                                    parameterDescriptor.getDescription(),
+                                                                    parameterDescriptor.getDefaultValue(),
+                                                                    convert(parameterDescriptor.getValueSet()));
+        }
+        return dtoParameterDescriptors;
     }
 
     private DtoProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
@@ -311,10 +353,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         DtoProcessorVariable[] processorVariables = new DtoProcessorVariable[outputVariables.length];
         for (int i = 0; i < outputVariables.length; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
-            DtoProcessorVariable dtoProcessorVariable = new DtoProcessorVariable(outputVariable.getName(),
-                                                                                 outputVariable.getDefaultAggregator(),
-                                                                                 outputVariable.getDefaultWeightCoeff());
-            processorVariables[i] = dtoProcessorVariable;
+            processorVariables[i] = new DtoProcessorVariable(outputVariable.getName(),
+                                                             outputVariable.getDefaultAggregator(),
+                                                             outputVariable.getDefaultWeightCoeff());
         }
         return processorVariables;
     }
@@ -336,7 +377,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productionRequest.getUserName(),
                                  production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
                                  backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
-                                 additionalStagingPaths,
+                                 convert(additionalStagingPaths),
                                  production.isAutoStaging(),
                                  convert(production.getProcessingStatus(), production.getWorkflow()),
                                  convert(production.getStagingStatus()));

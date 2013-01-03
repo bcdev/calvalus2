@@ -92,6 +92,8 @@ public class ProcessorDescriptorTest {
         Map<String, String> jobConfig = processorDescriptor.getJobConfiguration();
         assertNotNull(jobConfig);
         assertEquals(0, jobConfig.size());
+
+        assertNull(processorDescriptor.getParameterDescriptors());
     }
 
     @Test
@@ -112,6 +114,26 @@ public class ProcessorDescriptorTest {
         assertEquals(2, jobConfig.size());
         assertEquals("value1", jobConfig.get("calvalus.system.param1"));
         assertEquals("value2", jobConfig.get("calvalus.system.param2"));
+
+        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processorDescriptor.getParameterDescriptors();
+        assertNotNull(parameterDescriptors);
+        assertEquals(2, parameterDescriptors.length);
+
+        ProcessorDescriptor.ParameterDescriptor parameterDescriptor = parameterDescriptors[0];
+        assertNotNull(parameterDescriptor);
+        assertEquals("doSmile", parameterDescriptor.getName());
+        assertEquals("boolean", parameterDescriptor.getType());
+        assertEquals("Correct smile effect", parameterDescriptor.getDescription());
+        assertEquals("true", parameterDescriptor.getDefaultValue());
+        assertNull(parameterDescriptor.getValueSet());
+
+        parameterDescriptor = parameterDescriptors[1];
+        assertNotNull(parameterDescriptor);
+        assertEquals("mode", parameterDescriptor.getName());
+        assertEquals("string", parameterDescriptor.getType());
+        assertEquals("Correction mode", parameterDescriptor.getDescription());
+        assertEquals("simple", parameterDescriptor.getDefaultValue());
+        assertArrayEquals(new String[]{"simple", "complex"}, parameterDescriptor.getValueSet());
 
     }
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
@@ -60,13 +76,13 @@ public class OrderTAProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
             }
         });
 
 
         l3ConfigForm = new L3ConfigForm();
-        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getProcessorDescriptor());
+        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
         l3ConfigForm.resolution.setEnabled(false);
         l3ConfigForm.superSampling.setEnabled(false);
         l3ConfigForm.steppingPeriodLength.setValue(32);

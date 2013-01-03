@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.inventory.InventoryService;
@@ -29,13 +45,32 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
 
         InventoryService inventoryService = new LocalInventoryService();
 
-        LocalProcessingService processingService = new LocalProcessingService(
-                new BundleDescriptor("beam-meris-case2r","1.5-SNAPSHOT",
-                                     new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5-SNAPSHOT", "a=2\nb=5",
+        ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5-SNAPSHOT", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
                                                                                               "0.5"),
                                                              new ProcessorDescriptor.Variable("tsm_conc", "AVG",
-                                                                                              "1.0")),
+                                                                                              "1.0"));
+        case2r.setParameterDescriptors(
+                new ProcessorDescriptor.ParameterDescriptor("doSmile", "boolean", "Correct smile effect", "true", null),
+                new ProcessorDescriptor.ParameterDescriptor("doRadiometric", "boolean", "Correct radiometric effect", "false", null),
+                new ProcessorDescriptor.ParameterDescriptor("validExpressionCHL", "string",
+                                                            "Valid expression additionally applied",
+                                                            "!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and\n" +
+                                                                    "!l1p_flags.CC_CLOUD and !result_flags.CHL_OUT", null),
+                new ProcessorDescriptor.ParameterDescriptor("idepixAlgo", "string", "Idepix cloud algorithm", "GlobAlbedo",
+                                                            new String[]{"CoastColour", "GlobAlbedo", "QWG"}),
+                new ProcessorDescriptor.ParameterDescriptor("correctBands", "stringArray", "Which bands should be corrected",
+                                                            "490",
+                                                            new String[]{"412", "442", "490", "510", "560", "620", "665"}),
+                new ProcessorDescriptor.ParameterDescriptor("outputBands", "stringArray", "Which bands should be in the output",
+                                                            "490, 510, 560",
+                                                            new String[]{"412", "442", "490", "510", "560", "620", "665"})
+
+        );
+
+        LocalProcessingService processingService = new LocalProcessingService(
+                new BundleDescriptor("beam-meris-case2r", "1.5-SNAPSHOT",
+                                     case2r,
                                      new ProcessorDescriptor("pc1-1", "MERIS Glint", "1.2-SNAPSHOT", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
                                                                                               "0.5"),
@@ -56,27 +91,26 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                 new BundleDescriptor("beam-meris-case2r", "1.3-marco3",
                                      new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.3-marco3", "a=3\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
-                new BundleDescriptor("beam-meris-qaa","1.2-SNAPSHOT",
-                new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.2-SNAPSHOT", "u = 2\nv = 5",
-                                        new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
-                new BundleDescriptor("beam-meris-qaa","1.1.3",
-                new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.1.3",
-                                        "u = 2\nv = 7",
-                                        new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
-                new BundleDescriptor("beam-meris-qaa","1.0.1",
-                new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.0.1",
-                                        "u = 1\nv = 2",
-                                        new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
-                                        new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")))
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa", "1.2-SNAPSHOT",
+                                     new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.2-SNAPSHOT", "u = 2\nv = 5",
+                                                             new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa", "1.1.3",
+                                     new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.1.3",
+                                                             "u = 2\nv = 7",
+                                                             new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                new BundleDescriptor("beam-meris-qaa", "1.0.1",
+                                     new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.0.1",
+                                                             "u = 1\nv = 2",
+                                                             new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")))
         );
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
 
 
-
-         // todo - get the database connect info from configuration
+        // todo - get the database connect info from configuration
         String dbName = "test-productions";
         File databaseFile = new File(localContextDir, dbName);
         File databaseLogFile = new File(localContextDir, dbName + ".log");

@@ -2,7 +2,7 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
-    <ui:style src="style.css"/>
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
 
     <g:VerticalPanel spacing="2">
 
@@ -30,8 +30,12 @@
                 <g:TextArea ui:field="processorParametersArea"
                             characterWidth="72"
                             visibleLines="8"/>
+
                 <g:FormPanel ui:field="uploadForm" method="POST">
-                    <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+                    <g:HorizontalPanel spacing="2">
+                        <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+                        <g:Button ui:field='editParametersButton' text="Edit Parameters"/>
+                    </g:HorizontalPanel>
                 </g:FormPanel>
             </g:VerticalPanel>
 

@@ -42,4 +42,19 @@ done by the cool folks at Brockmann-Consult.
             <value>value2</value>
         </jobParameter>
     </jobConfig>
+    <parameterDescriptors>
+        <parameterDescriptor>
+            <name>doSmile</name>
+            <type>boolean</type>
+            <description>Correct smile effect</description>
+            <defaultValue>true</defaultValue>
+        </parameterDescriptor>
+        <parameterDescriptor>
+            <name>mode</name>
+            <type>string</type>
+            <description>Correction mode</description>
+            <defaultValue>simple</defaultValue>
+            <valueSet>simple,complex</valueSet>
+        </parameterDescriptor>
+    </parameterDescriptors>
 </processorDescriptor>

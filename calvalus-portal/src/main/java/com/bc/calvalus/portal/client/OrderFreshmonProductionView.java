@@ -88,7 +88,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getProcessorDescriptor();
+                DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
                 handleProcessorChanged(processorDescriptor, bandsToSelect);
             }
         });
@@ -102,7 +102,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         outputParametersForm.quicklooks.setValue(true);
         outputParametersForm.replaceNans.setValue(true);
         outputParametersForm.replaceValue.setValue(0.0);
-        handleProcessorChanged(l2ConfigForm.getProcessorDescriptor(), bandsToSelect);
+        handleProcessorChanged(l2ConfigForm.getSelectedProcessorDescriptor(), bandsToSelect);
 
 
         VerticalPanel panel = new VerticalPanel();
