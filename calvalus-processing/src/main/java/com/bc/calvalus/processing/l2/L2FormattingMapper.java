@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.analysis.QLMapper;
+import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.beam.BeamProcessorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
@@ -80,45 +81,32 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             Product targetProduct = processorAdapter.getInputProduct();
 
             if (!isProductEmpty(context, targetProduct)) {
-                targetProduct = outputTailoring(jobConfig, targetProduct);
+                targetProduct = doReprojection(jobConfig, targetProduct);
+                Map<String, Object> geoSubsetParameter = createGeoSubsetParameter(jobConfig);
+                if (!geoSubsetParameter.isEmpty()) {
+                    targetProduct = GPF.createProduct("Subset", geoSubsetParameter, targetProduct);
+                }
                 BeamProcessorAdapter.copyTimeCoding(processorAdapter.getInputProduct(), targetProduct);
-            }
 
-            if (!isProductEmpty(context, targetProduct)) {
                 try {
-                    File productFile = productFormatter.createTemporaryProductFile();
-                    LOG.info("Start writing product to file: " + productFile.getName());
-                    context.setStatus("Writing");
-
-                    ProductIO.writeProduct(targetProduct, productFile, outputFormat, false,
-                                           SubProgressMonitor.create(pm, 80));
-                    LOG.info("Finished writing product.");
-
-                    context.setStatus("Copying");
-                    productFormatter.compressToHDFS(context, productFile);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
-                    pm.worked(10);
-
-
                     context.setStatus("Quicklooks");
                     if (jobConfig.getBoolean(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS, false)) {
                         if (jobConfig.get(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS) != null) {
-                            LOG.info("Creating quicklooks.");
-                            QLMapper.createQuicklooks(targetProduct, productName, context);
-                            LOG.info("Finished creating quicklooks.");
+                            writeQuicklooks(context, jobConfig, productName, targetProduct);
                         } else {
                             LOG.warning("Missing parameters for quicklook generation.");
                         }
                     }
                     pm.worked(5);
 
+                    context.setStatus("Writing");
+                    targetProduct = writeProductFile(targetProduct, productFormatter, context, jobConfig,
+                                                     outputFormat, pm);
+                    pm.worked(10);
+
                     context.setStatus("Metadata");
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
-                        LOG.info("Creating metadata.");
-                        Path outputPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
-                        L2Mapper.processMetadata(context,
-                                                 inputPath.toString(), targetProduct,
-                                                 outputPath.toString(), targetProduct);
+                        writeMetadatafile(targetProduct, inputPath, outputFilename, context);
                         LOG.info("Finished creating metadata.");
                     }
                     pm.worked(5);
@@ -133,15 +121,64 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         }
     }
 
-    private Product outputTailoring(Configuration jobConfig, Product product) {
+    private void writeMetadatafile(Product targetProduct, Path inputPath, String outputFilename,
+                                   Mapper.Context context) throws IOException, InterruptedException {
+        LOG.info("Creating metadata.");
+        Path outputPath = new Path(FileOutputFormat.getWorkOutputPath(context), outputFilename);
+        L2Mapper.processMetadata(context,
+                                 inputPath.toString(), targetProduct,
+                                 outputPath.toString(), targetProduct);
+    }
+
+    private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
+                                     Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
+                                                                                                       IOException {
+        Map<String, Object> bandSubsetParameter = createBandSubsetParameter(jobConfig);
+        if (!bandSubsetParameter.isEmpty()) {
+            targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
+        }
+
+        File productFile = productFormatter.createTemporaryProductFile();
+        LOG.info("Start writing product to file: " + productFile.getName());
+
+        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false,
+                               SubProgressMonitor.create(pm, 80));
+        LOG.info("Finished writing product.");
+
+        context.setStatus("Copying");
+        productFormatter.compressToHDFS(context, productFile);
+        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
+        return targetProduct;
+    }
+
+    private void writeQuicklooks(Mapper.Context context, Configuration jobConfig, String productName,
+                                 Product targetProduct) {
+        LOG.info("Creating quicklooks.");
+        String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
+        String[] bandNames = outputBandList.split(",");
+        for (String bandName : bandNames) {
+            Quicklooks.QLConfig qlConfig = getQuicklookConfig(context, bandName);
+            if (qlConfig != null) {
+                QLMapper.createQuicklook(targetProduct, productName, context, qlConfig);
+            }
+        }
+        LOG.info("Finished creating quicklooks.");
+    }
+
+    private Quicklooks.QLConfig getQuicklookConfig(Mapper.Context context, String bandName) {
+        Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+        for (Quicklooks.QLConfig config : configs) {
+            if (bandName.equalsIgnoreCase(config.getBandName())) {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    private Product doReprojection(Configuration jobConfig, Product product) {
         String crsWkt = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS);
         boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(crsWkt);
-        String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
-        boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
-        boolean hasBandList = StringUtils.isNotNullAndNotEmpty(outputBandList);
 
-        // Reproject
         if (hasCrsWkt) {
             Map<String, Object> reprojParams = new HashMap<String, Object>();
             reprojParams.put("crs", crsWkt);
@@ -151,17 +188,33 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             }
             product = GPF.createProduct("Reproject", reprojParams, product);
         }
-
-        // Subset
-        if (hasGeometry || hasBandList) {
-            Map<String, Object> subsetParams = new HashMap<String, Object>();
-            if (hasGeometry && hasCrsWkt) {
-                subsetParams.put("geoRegion", regionGeometry);
-            }
-            subsetParams.put("bandNames", outputBandList);
-            product = GPF.createProduct("Subset", subsetParams, product);
-        }
         return product;
+    }
+
+    private Map<String, Object> createGeoSubsetParameter(Configuration jobConfig) {
+        String crsWkt = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS);
+        boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(crsWkt);
+        String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
+
+        Map<String, Object> subsetParams = new HashMap<String, Object>();
+        // do only the subset if the product is reprojected, otherwise input
+        // and output region would be the same
+        if (hasGeometry && hasCrsWkt) {
+            subsetParams.put("geoRegion", regionGeometry);
+        }
+        return subsetParams;
+    }
+
+    private Map<String, Object> createBandSubsetParameter(Configuration jobConfig) {
+        String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
+        boolean hasBandList = StringUtils.isNotNullAndNotEmpty(outputBandList);
+
+        Map<String, Object> subsetParams = new HashMap<String, Object>();
+        if (hasBandList) {
+            subsetParams.put("bandNames", outputBandList);
+        }
+        return subsetParams;
     }
 
     private boolean isProductEmpty(Mapper.Context context, Product product) {
@@ -178,11 +231,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, null);
         String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null);
         String newProductName = FileUtils.getFilenameWithoutExtension(fileName);
-        LOG.info("Product name: " + newProductName);
         if (regex != null && replacement != null) {
             newProductName = getNewProductName(newProductName, regex, replacement);
         }
-        LOG.info("New product name: " + newProductName);
         return newProductName;
     }
 

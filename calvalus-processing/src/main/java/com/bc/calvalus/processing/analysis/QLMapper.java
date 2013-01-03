@@ -23,6 +23,7 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
+import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
@@ -34,11 +35,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.ImageLegend;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RGBChannelDef;
 import org.esa.beam.framework.datamodel.RGBImageProfile;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.glayer.MaskLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.util.PropertyMap;
 import org.esa.beam.util.io.FileUtils;
@@ -46,6 +51,7 @@ import org.esa.beam.util.io.FileUtils;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -53,6 +59,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -95,38 +102,32 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklooks(Product product, String productName, Mapper.Context context) {
+    public static void createQuicklooks(Product product, String imageFileName, Mapper.Context context) {
         Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
         for (Quicklooks.QLConfig config : configs) {
-            String bandName = config.getBandName();
-            if (bandName == null) {
-                bandName = "RGB";
-            }
-            try {
-                RenderedImage quicklookImage = createImage(product, config);
-                if (quicklookImage != null) {
-                    String fileName = null;
-                    if (config.isAppendBandName()) {
-                        fileName = productName + "_" + bandName + "." + config.getImageType();
-                    } else {
-                        fileName = productName + "." + config.getImageType();
-                    }
-                    OutputStream outputStream = createOutputStream(context, fileName);
-                    try {
-                        ImageIO.write(quicklookImage, config.getImageType(), outputStream);
+            createQuicklook(product, imageFileName, context, config);
+        }
+    }
 
-                    } finally {
-                        outputStream.close();
-                    }
+    public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
+                                       Quicklooks.QLConfig config) {
+        try {
+            RenderedImage quicklookImage = createImage(product, config);
+            if (quicklookImage != null) {
+                OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                try {
+                    ImageIO.write(quicklookImage, config.getImageType(), outputStream);
+                } finally {
+                    outputStream.close();
                 }
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Could not create quicklook image '" + bandName + "'.", e);
+            } else {
             }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not create quicklook image '" + config.getBandName() + "'.", e);
         }
     }
 
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws Exception {
-
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
         return path.getFileSystem(context.getConfiguration()).create(path);
     }
@@ -140,6 +141,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             product = GPF.createProduct("Subset", subsetParams, product);
         }
         BandImageMultiLevelSource multiLevelSource;
+        Band masterBand;
         if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
             String[] rgbaExpressions;
             if (qlConfig.getRGBAExpressions().length == 4) {
@@ -158,12 +160,14 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     product.getBand(RGBImageProfile.GREEN_BAND_NAME),
                     product.getBand(RGBImageProfile.BLUE_BAND_NAME),
             };
+            masterBand = rgbBands[0];
             for (Band band : rgbBands) {
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
             }
             multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
-            if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null && qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
+            if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null &&
+                qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
                 RGBChannelDef rgbChannelDef = imageInfo.getRgbChannelDef();
                 for (int i = 0; i < qlConfig.getRGBAMinSamples().length; i++) {
@@ -172,9 +176,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 }
             }
         } else if (qlConfig.getBandName() != null) {
-            Band band = product.getBand(qlConfig.getBandName());
+            masterBand = product.getBand(qlConfig.getBandName());
             String cpdURL = qlConfig.getCpdURL();
-            if (band == null) {
+            if (masterBand == null) {
                 String msg = String.format("Could not create quicklook. Product does not contain band '%s'",
                                            qlConfig.getBandName());
                 LOGGER.warning(msg);
@@ -187,15 +191,15 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 return null;
 
             }
-            multiLevelSource = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
+            multiLevelSource = BandImageMultiLevelSource.create(masterBand, ProgressMonitor.NULL);
             InputStream inputStream = new URL(cpdURL).openStream();
             try {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
-                if (band.getIndexCoding() != null) {
+                if (masterBand.getIndexCoding() != null) {
                     imageInfo.setColors(colorPaletteDef.getColors());
                 } else {
-                    Stx stx = band.getStx();
+                    Stx stx = masterBand.getStx();
                     imageInfo.setColorPaletteDef(colorPaletteDef,
                                                  stx.getMinimum(),
                                                  stx.getMaximum(), false);
@@ -208,16 +212,22 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
         final ImageLayer imageLayer = new ImageLayer(multiLevelSource);
 
-        CollectionLayer collectionLayer = new CollectionLayer();
-        collectionLayer.getChildren().add(imageLayer);
-
-        if (qlConfig.getOverlayURL() != null) {
-            InputStream inputStream = new URL(qlConfig.getOverlayURL()).openStream();
-            BufferedImage bufferedImage = ImageIO.read(inputStream);
-            final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
-            collectionLayer.getChildren().add(0, overlayLayer);
-        }
         boolean useAlpha = useAlpha(qlConfig);
+        CollectionLayer collectionLayer = new CollectionLayer();
+
+        List<Layer> layerChildren = collectionLayer.getChildren();
+        if (qlConfig.getOverlayURL() != null) {
+            addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
+        }
+        if (qlConfig.isLegendEnabled()) {
+            addLegend(masterBand, imageLayer, useAlpha, layerChildren);
+        }
+        if (qlConfig.getMaskOverlays() != null) {
+            addMaskOverlays(product, qlConfig.getMaskOverlays(), masterBand, layerChildren);
+        }
+        layerChildren.add(imageLayer);
+
+
         int imageType = useAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
         BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(),
                                                         imageType);
@@ -234,6 +244,40 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         collectionLayer.render(rendering);
         return rendering.getImage();
+    }
+
+    private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
+                                                                                                        IOException {
+        InputStream inputStream = new URL(overlayURL).openStream();
+        BufferedImage bufferedImage = ImageIO.read(inputStream);
+        final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
+        layerChildren.add(overlayLayer);
+    }
+
+    private static void addLegend(Band masterBand, ImageLayer imageLayer, boolean useAlpha, List<Layer> layerChildren) {
+        ImageLegend imageLegend = new ImageLegend(masterBand.getImageInfo(), masterBand);
+        String unit = masterBand.getUnit() == null ? "" : " [" + masterBand.getUnit() + "]";
+        imageLegend.setHeaderText(masterBand.getName() + unit);
+        imageLegend.setBackgroundTransparency(0.6f);
+        imageLegend.setBackgroundTransparencyEnabled(useAlpha);
+        imageLegend.setAntialiasing(true);
+
+        AffineTransform imageToModelTransform = imageLayer.getImageToModelTransform();
+        BufferedImage legend = imageLegend.createImage();
+        imageToModelTransform.translate(masterBand.getSceneRasterWidth() - legend.getWidth(),
+                                        masterBand.getSceneRasterHeight() - legend.getHeight());
+        final ImageLayer overlayLayer = new ImageLayer(legend, imageToModelTransform, 1);
+        layerChildren.add(overlayLayer);
+    }
+
+    private static void addMaskOverlays(Product product, String[] maskOverlays, Band masterBand,
+                                        List<Layer> layerChildren) {
+        ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+        for (String maskOverlay : maskOverlays) {
+            Layer layer = MaskLayerType.createLayer(masterBand, maskGroup.get(maskOverlay));
+            layer.setVisible(true);
+            layerChildren.add(layer);
+        }
     }
 
     private static boolean useAlpha(Quicklooks.QLConfig qlConfig) {

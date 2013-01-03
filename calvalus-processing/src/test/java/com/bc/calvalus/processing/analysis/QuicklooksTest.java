@@ -23,6 +23,7 @@ public class QuicklooksTest {
         sb.append("<cpdURL>http://www.allMycpds.com/chl.cpd</cpdURL>\n");
         sb.append("<imageType>SpecialType</imageType>\n");
         sb.append("<overlayURL>file://C:\\User\\home\\overlay.png</overlayURL>\n");
+        sb.append("<maskOverlays>land,cloud,coastline</maskOverlays>\n");
         sb.append("</config>\n");
         sb.append("</quicklooks>\n");
         String xml = sb.toString();
@@ -50,6 +51,10 @@ public class QuicklooksTest {
         assertEquals("http://www.allMycpds.com/chl.cpd", qlConfig.getCpdURL());
         assertEquals("SpecialType", qlConfig.getImageType());
         assertEquals("file://C:\\User\\home\\overlay.png", qlConfig.getOverlayURL());
+        assertEquals(3, qlConfig.getMaskOverlays().length);
+        assertEquals("land", qlConfig.getMaskOverlays()[0]);
+        assertEquals("cloud", qlConfig.getMaskOverlays()[1]);
+        assertEquals("coastline", qlConfig.getMaskOverlays()[2]);
 
     }
 

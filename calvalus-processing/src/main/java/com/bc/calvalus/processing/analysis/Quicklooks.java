@@ -58,15 +58,21 @@ public class Quicklooks {
         @Parameter
         private double[] RGBAMaxSamples;
 
-        @Parameter
+        @Parameter(defaultValue = "RGB")
         private String bandName;
-        @Parameter(defaultValue = "false")
-        private boolean appendBandName;
         @Parameter
         private String cpdURL;
 
         @Parameter
         private String overlayURL;
+        @Parameter
+        private String[] maskOverlays;
+        @Parameter(defaultValue = "false")
+        private boolean legendEnabled;
+
+        public String getImageType() {
+            return imageType;
+        }
 
         public int getSubSamplingX() {
             return subSamplingX;
@@ -96,16 +102,16 @@ public class Quicklooks {
             return cpdURL;
         }
 
-        public String getImageType() {
-            return imageType;
-        }
-
         public String getOverlayURL() {
             return overlayURL;
         }
 
-        public boolean isAppendBandName() {
-            return appendBandName;
+        public String[] getMaskOverlays() {
+            return maskOverlays;
+        }
+
+        public boolean isLegendEnabled() {
+            return legendEnabled;
         }
     }
 }
