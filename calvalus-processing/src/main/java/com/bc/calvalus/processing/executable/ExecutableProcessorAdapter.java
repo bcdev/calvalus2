@@ -109,6 +109,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputDir", outputDir);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
+        velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
         addScriptResources(conf, scriptGenerator);
