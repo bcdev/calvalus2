@@ -1,11 +1,13 @@
 package com.bc.calvalus.production.store;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.ceres.binding.BindingException;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 /**
  * A persistent store for productions that uses an SQL database.
@@ -57,7 +60,9 @@ public class SqlProductionStore implements ProductionStore {
      * @param password          The database user' password.
      * @param init              If {@code true}, the database initialisation SQL script {@code calvalus-init.sql} will be run.
      *                          If {@code false}, {@link #update()} will be called immediately after the store has been created.
+     *
      * @return A new production store.
+     *
      * @throws ProductionException If an error occurs.
      */
 
@@ -78,7 +83,7 @@ public class SqlProductionStore implements ProductionStore {
             SqlProductionStore store = new SqlProductionStore(processingService, connection);
             if (init) {
                 store.init();
-            }else {
+            } else {
                 store.update();
             }
             return store;
@@ -157,7 +162,7 @@ public class SqlProductionStore implements ProductionStore {
 
             for (String productionId : cachedProductions.keySet()) {
                 if (!addedProductionIds.contains(productionId) &&
-                        !removedProductionIds.contains(productionId)) {
+                    !removedProductionIds.contains(productionId)) {
                     updateProductionStatus(cachedProductions.get(productionId));
                 }
             }
@@ -216,10 +221,17 @@ public class SqlProductionStore implements ProductionStore {
         String stagingMessage = resultSet.getString("staging_message");
         String stagingPath = resultSet.getString("staging_path");
         boolean autoStaging = resultSet.getBoolean("auto_staging");
-        // todo
-        // String requestXml = resultSet.getString("request_xml");
-        // ProductionRequest productionRequest = ProductionRequest.fromXml(requestXml);
+
+        String requestXml = resultSet.getString("request_xml");
         ProductionRequest productionRequest = new ProductionRequest(productionType, userName);
+        if (requestXml != null) {
+            try {
+                productionRequest = ProductionRequest.fromXml(requestXml);
+            } catch (BindingException e) {
+                CalvalusLogger.getLogger().log(Level.WARNING, "Could not retrieve production request from database.",
+                                               e);
+            }
+        }
         Object[] jobIds = parseJobIds(processingService, jobIdList);
         ProcessStatus processStatus = new ProcessStatus(ProcessState.valueOf(procState),
                                                         procProgress,
@@ -246,34 +258,34 @@ public class SqlProductionStore implements ProductionStore {
     private void insertProduction(Production production) throws SQLException {
         if (insertProductionStmt == null) {
             insertProductionStmt = connection.prepareStatement("INSERT INTO production " +
-                                                                       "(" +
-                                                                       "production_id, " +
-                                                                       "production_name, " +
-                                                                       "production_type, " +
-                                                                       "production_user, " +
-                                                                       "job_id_list, " +
-                                                                       "submit_time, " +
-                                                                       "start_time, " +
-                                                                       "stop_time, " +
-                                                                       "processing_state, " +
-                                                                       "processing_progress, " +
-                                                                       "processing_message, " +
-                                                                       "output_path, " +
-                                                                       "staging_state, " +
-                                                                       "staging_progress, " +
-                                                                       "staging_message, " +
-                                                                       "staging_path, " +
-                                                                       "auto_staging, " +
-                                                                       "request_xml" +
-                                                                       ") " +
-                                                                       " VALUES " +
-                                                                       "(" +
-                                                                       "?, ?, ?, ?, " +
-                                                                       "?, ?, ?, ?, " +
-                                                                       "?, ?, ?, ?, " +
-                                                                       "?, ?, ?, ?, " +
-                                                                       "?, ?" +
-                                                                       ")");
+                                                               "(" +
+                                                               "production_id, " +
+                                                               "production_name, " +
+                                                               "production_type, " +
+                                                               "production_user, " +
+                                                               "job_id_list, " +
+                                                               "submit_time, " +
+                                                               "start_time, " +
+                                                               "stop_time, " +
+                                                               "processing_state, " +
+                                                               "processing_progress, " +
+                                                               "processing_message, " +
+                                                               "output_path, " +
+                                                               "staging_state, " +
+                                                               "staging_progress, " +
+                                                               "staging_message, " +
+                                                               "staging_path, " +
+                                                               "auto_staging, " +
+                                                               "request_xml" +
+                                                               ") " +
+                                                               " VALUES " +
+                                                               "(" +
+                                                               "?, ?, ?, ?, " +
+                                                               "?, ?, ?, ?, " +
+                                                               "?, ?, ?, ?, " +
+                                                               "?, ?, ?, ?, " +
+                                                               "?, ?" +
+                                                               ")");
         }
         insertProductionStmt.clearParameters();
         insertProductionStmt.setString(1, production.getId());
@@ -300,15 +312,15 @@ public class SqlProductionStore implements ProductionStore {
     private void updateProductionStatus(Production production) throws SQLException {
         if (updateProductionStmt == null) {
             updateProductionStmt = connection.prepareStatement("UPDATE production SET " +
-                                                                       "start_time=?, " +
-                                                                       "stop_time=?, " +
-                                                                       "processing_state=?, " +
-                                                                       "processing_progress=?, " +
-                                                                       "processing_message=?, " +
-                                                                       "staging_state=?, " +
-                                                                       "staging_progress=?, " +
-                                                                       "staging_message=? " +
-                                                                       " WHERE production_id=?");
+                                                               "start_time=?, " +
+                                                               "stop_time=?, " +
+                                                               "processing_state=?, " +
+                                                               "processing_progress=?, " +
+                                                               "processing_message=?, " +
+                                                               "staging_state=?, " +
+                                                               "staging_progress=?, " +
+                                                               "staging_message=? " +
+                                                               " WHERE production_id=?");
         }
         updateProductionStmt.clearParameters();
         updateProductionStmt.setTimestamp(1, toSqlTimestamp(production.getWorkflow().getStartTime()));
@@ -333,7 +345,8 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private void init() throws SQLException, IOException {
-        InputStreamReader streamReader = new InputStreamReader(SqlProductionStore.class.getResourceAsStream("calvalus-store.sql"));
+        InputStreamReader streamReader = new InputStreamReader(
+                SqlProductionStore.class.getResourceAsStream("calvalus-store.sql"));
         try {
             SqlReader sqlReader = new SqlReader(streamReader);
             sqlReader.executeAll(connection);

@@ -162,6 +162,7 @@ public class SqlProductionStoreTest {
         assertNotNull(production1.getProductionRequest());
         assertEquals("X", production1.getProductionRequest().getProductionType());
         assertEquals("eva", production1.getProductionRequest().getUserName());
+        assertEquals("1", production1.getProductionRequest().getParameter("a", true));
         assertNotNull(production1.getWorkflow());
         assertEquals(new Date(1315153761000L), production1.getWorkflow().getSubmitTime());
         assertEquals(new Date(1315153764000L), production1.getWorkflow().getStartTime());
@@ -172,41 +173,50 @@ public class SqlProductionStoreTest {
     }
 
     private SqlProductionStore openStore(boolean init) throws ProductionException {
-       return SqlProductionStore.create(new TestProcessingService(),
-                                        "org.hsqldb.jdbcDriver",
-                                        "jdbc:hsqldb:mem:calvalus-test",
-                                        "SA", "", init);
+        return SqlProductionStore.create(new TestProcessingService(),
+                                         "org.hsqldb.jdbcDriver",
+                                         "jdbc:hsqldb:mem:calvalus-test",
+                                         "SA", "", init);
     }
 
     private static Production createProduction1() {
-        Production production = new Production("pid1", "pname1", "home/ewa/tmp6455", "/out/spath1", true, new ProductionRequest("X", "eva", "a", "1"),
-                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job1", "job2"},
+        Production production = new Production("pid1", "pname1", "home/ewa/tmp6455", "/out/spath1", true,
+                                               new ProductionRequest("X", "eva", "a", "1"),
+                                               new ProxyWorkflow(new TestProcessingService(),
+                                                                 new Object[]{"job1", "job2"},
                                                                  new Date(1315153761000L),
                                                                  new Date(1315153764000L),
                                                                  null,
-                                                                 new ProcessStatus(ProcessState.SCHEDULED, 0.0F, "Under way")));
+                                                                 new ProcessStatus(ProcessState.SCHEDULED, 0.0F,
+                                                                                   "Under way")));
         production.setStagingStatus(new ProcessStatus(ProcessState.UNKNOWN, 0.0F, "Not yet started"));
         return production;
     }
 
     private static Production createProduction2() {
-        Production production = new Production("pid2", "pname2", null, "/out/spath2", true, new ProductionRequest("X", "eva", "a", "6"),
-                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job4", "job5"},
+        Production production = new Production("pid2", "pname2", null, "/out/spath2", true,
+                                               new ProductionRequest("X", "eva", "a", "6"),
+                                               new ProxyWorkflow(new TestProcessingService(),
+                                                                 new Object[]{"job4", "job5"},
                                                                  new Date(1315153961000L),
                                                                  new Date(1315153964000L),
                                                                  null,
-                                                                 new ProcessStatus(ProcessState.RUNNING, 0.4F, "In progress")));
+                                                                 new ProcessStatus(ProcessState.RUNNING, 0.4F,
+                                                                                   "In progress")));
         production.setStagingStatus(new ProcessStatus(ProcessState.UNKNOWN, 0.0F, "Not yet started"));
         return production;
     }
 
     private static Production createProduction3() {
-        Production production = new Production("pid3", "pname3", "home/ewa/tmp6457", "/out/spath3", true, new ProductionRequest("X", "eva", "a", "3"),
-                                               new ProxyWorkflow(new TestProcessingService(), new Object[]{"job6", "job7"},
+        Production production = new Production("pid3", "pname3", "home/ewa/tmp6457", "/out/spath3", true,
+                                               new ProductionRequest("X", "eva", "a", "3"),
+                                               new ProxyWorkflow(new TestProcessingService(),
+                                                                 new Object[]{"job6", "job7"},
                                                                  new Date(1315153961000L),
                                                                  new Date(1315153964000L),
                                                                  null,
-                                                                 new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Processed")));
+                                                                 new ProcessStatus(ProcessState.COMPLETED, 1.0F,
+                                                                                   "Processed")));
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, "Staged"));
         return production;
     }

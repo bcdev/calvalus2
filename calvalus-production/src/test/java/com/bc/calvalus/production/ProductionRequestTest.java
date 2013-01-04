@@ -224,5 +224,41 @@ public class ProductionRequestTest {
         assertEquals("2002-04-06", ProductionRequest.getDateFormat().format(dateRange.getStopDate()));
     }
 
+    @Test
+    public void testToXml() throws Exception {
+        ProductionRequest productionRequest = new ProductionRequest("test", "dummy", "minDate", "2001-02-03", "maxDate",
+                                                                    "2002-04-06");
+        String xmlString = productionRequest.toXml();
+        assertEquals("<parameters>\n" +
+                     "  <productionType>test</productionType>\n" +
+                     "  <userName>dummy</userName>\n" +
+                     "  <productionParameters>\n" +
+                     "    <maxDate>2002-04-06</maxDate>\n" +
+                     "    <minDate>2001-02-03</minDate>\n" +
+                     "  </productionParameters>\n" +
+                     "</parameters>", xmlString);
+    }
 
+    @Test
+    public void testFromXml() throws Exception {
+        ProductionRequest productionRequest = ProductionRequest.fromXml("<parameters>\n" +
+                                                                        "  <productionType>test</productionType>\n" +
+                                                                        "  <userName>dummy</userName>\n" +
+                                                                        "  <productionParameters>\n" +
+                                                                        "    <maxDate>2002-04-06</maxDate>\n" +
+                                                                        "    <minDate>2001-02-03</minDate>\n" +
+                                                                        "  </productionParameters>\n" +
+                                                                        "</parameters>");
+        DateRange dateRange = productionRequest.createFromMinMax();
+        assertNotNull(dateRange);
+        assertNotNull(dateRange.getStartDate());
+        assertNotNull(dateRange.getStopDate());
+        assertEquals("2001-02-03", ProductionRequest.getDateFormat().format(dateRange.getStartDate()));
+        assertEquals("2002-04-06", ProductionRequest.getDateFormat().format(dateRange.getStopDate()));
+    }
+
+    @Test
+    public void testFromXmlWithNull() throws Exception {
+        assertNull(ProductionRequest.fromXml(null));
+    }
 }
