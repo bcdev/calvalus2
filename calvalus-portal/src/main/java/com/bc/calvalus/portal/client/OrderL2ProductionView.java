@@ -56,9 +56,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
-                outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
-                outputParametersForm.showFormatSelectionPanel(processorDescriptor.isFormattingMandatory());
+                handleProcessorChanged();
             }
         });
 
@@ -66,8 +64,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         outputParametersForm = new OutputParametersForm();
-        outputParametersForm.showFormatSelectionPanel(true);
-        outputParametersForm.setAvailableOutputFormats(l2ConfigForm.getSelectedProcessorDescriptor().getOutputFormats());
+        handleProcessorChanged();
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -79,6 +76,14 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
+    }
+
+    private void handleProcessorChanged() {
+        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
+        if (processorDescriptor != null) {
+            outputParametersForm.showFormatSelectionPanel(!processorDescriptor.isFormattingMandatory());
+            outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
+        }
     }
 
     @Override
