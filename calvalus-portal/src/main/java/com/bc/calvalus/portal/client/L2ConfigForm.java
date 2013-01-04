@@ -36,9 +36,11 @@ import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
@@ -236,12 +238,18 @@ public class L2ConfigForm extends Composite {
 
         @Override
         public void onClick(ClickEvent event) {
-            DtoProcessorDescriptor selectedProcessorDescriptor = getSelectedProcessorDescriptor();
-            final DtoParameterDescriptor[] parameterDescriptors = selectedProcessorDescriptor.getParameterDescriptors();
+            DtoProcessorDescriptor processor = getSelectedProcessorDescriptor();
+            final DtoParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
             ensureParameterWidgetsCreated(parameterDescriptors);
+            FlexTable tableWidget = createTableWidget(parameterDescriptors);
 
-            final Dialog dialog = new Dialog("Edit Parameters",
-                                             createTableWidget(parameterDescriptors),
+            ScrollPanel scrollPanel = new ScrollPanel(tableWidget);
+            scrollPanel.setWidth("800px");
+            scrollPanel.setHeight("640px");
+
+            String title = "Edit Parameters for " + processor.getProcessorName() + " v" + processor.getProcessorVersion();
+            final Dialog dialog = new Dialog(title,
+                                             scrollPanel,
                                              Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
@@ -255,20 +263,27 @@ public class L2ConfigForm extends Composite {
         private FlexTable createTableWidget(DtoParameterDescriptor[] parameterDescriptors) {
             FlexTable paramTable = new FlexTable();
             FlexTable.FlexCellFormatter flexCellFormatter = paramTable.getFlexCellFormatter();
-            paramTable.setCellSpacing(5);
+            paramTable.setCellSpacing(3);
             int row = 0;
             for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
                 paramTable.setWidget(row, 0, new HTML(parameterDescriptor.getName() + ":"));
                 flexCellFormatter.setVerticalAlignment(row, 0, HasVerticalAlignment.ALIGN_TOP);
+                flexCellFormatter.setHorizontalAlignment(row, 0, HasHorizontalAlignment.ALIGN_LEFT);
                 paramTable.setWidget(row, 1, parameterDescriptorWidgets.get(parameterDescriptor));
+                flexCellFormatter.setVerticalAlignment(row, 1, HasVerticalAlignment.ALIGN_TOP);
+                flexCellFormatter.setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
                 String description = parameterDescriptor.getDescription();
                 if (description != null && !description.isEmpty()) {
                     paramTable.setWidget(row, 2, new HTML(description));
                     flexCellFormatter.addStyleName(row, 2, style.explanatoryLabel());
                     flexCellFormatter.setVerticalAlignment(row, 2, HasVerticalAlignment.ALIGN_TOP);
+                    flexCellFormatter.setHorizontalAlignment(row, 2, HasHorizontalAlignment.ALIGN_LEFT);
                 }
                 row++;
             }
+            paramTable.getColumnFormatter().setWidth(0, "20%");
+            paramTable.getColumnFormatter().setWidth(1, "30%");
+            paramTable.getColumnFormatter().setWidth(2, "50%");
             return paramTable;
         }
 
@@ -354,7 +369,12 @@ public class L2ConfigForm extends Composite {
 
         private TextBox createTextBox(String defaultValue) {
             TextBox textBox = new TextBox();
-            textBox.setValue(defaultValue);
+            if (defaultValue != null) {
+                textBox.setValue(defaultValue);
+                if (textBox.getVisibleLength() < defaultValue.length()) {
+                    textBox.setVisibleLength(36);
+                }
+            }
             return textBox;
         }
 
