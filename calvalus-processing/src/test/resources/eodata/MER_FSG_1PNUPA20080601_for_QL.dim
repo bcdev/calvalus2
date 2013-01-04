@@ -231,6 +231,36 @@
             <BAND_INDEX>7</BAND_INDEX>
         </Data_File>
     </Data_Access>
+    <Image_Display>
+        <Band_Statistics>
+            <BAND_INDEX>4</BAND_INDEX>
+            <STX_MIN>0.2285718470811844</STX_MIN>
+            <STX_MAX>41.20328140258789</STX_MAX>
+            <STX_MEAN>2.6235583006560512</STX_MEAN>
+            <STX_STD_DEV>2.0863458976564866</STX_STD_DEV>
+            <STX_RES_LEVEL>2</STX_RES_LEVEL>
+            <HISTOGRAM>25,105,154,86,74,30,39,17,29,27,41,38,50,53,64,78,80,91,85,86,89,85,88,85,92,86,73,88,70,66,81,73,60,67,47,37,35,43,40,35,28,35,39,27,28,35,27,26,24,26,23,25,19,11,22,18,8,17,15,15,11,15,4,13,8,14,12,14,7,14,8,10,7,12,4,9,8,7,6,5,6,6,14,2,4,4,4,6,4,7,3,6,1,3,3,2,4,1,3,1,3,1,4,2,3,0,4,0,2,0,1,2,1,1,1,0,1,0,0,1,1,1,0,0,0,0,0,1,0,3,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1</HISTOGRAM>
+            <NUM_COLORS>256</NUM_COLORS>
+            <Color_Palette_Point>
+                <SAMPLE>0.3086005766817834</SAMPLE>
+                <COLOR red="0" green="0" blue="0" alpha="255" />
+            </Color_Palette_Point>
+            <Color_Palette_Point>
+                <SAMPLE>3.4697353959054453</SAMPLE>
+                <COLOR red="128" green="128" blue="128" alpha="255" />
+            </Color_Palette_Point>
+            <Color_Palette_Point>
+                <SAMPLE>6.630870215129107</SAMPLE>
+                <COLOR red="255" green="255" blue="255" alpha="255" />
+            </Color_Palette_Point>
+            <NO_DATA_COLOR red="0" green="0" blue="0" alpha="0" />
+            <HISTOGRAM_MATCHING>None</HISTOGRAM_MATCHING>
+        </Band_Statistics>
+        <Mask_Usage>
+            <BAND_INDEX>4</BAND_INDEX>
+            <OVERLAY names="l1p_cc_coastline,l1p_cc_cloud,l1p_cc_land" />
+        </Mask_Usage>
+    </Image_Display>
     <Masks>
         <Mask type="Maths">
             <NAME value="coastline" />
@@ -298,14 +328,14 @@
         <Mask type="Maths">
             <NAME value="l1p_cc_land" />
             <DESCRIPTION value="Land flag" />
-            <COLOR red="89" green="89" blue="89" alpha="255" />
+            <COLOR red="51" green="51" blue="51" alpha="255" />
             <TRANSPARENCY value="0.0" />
             <EXPRESSION value="l1p_flags.CC_LAND" />
         </Mask>
         <Mask type="Maths">
             <NAME value="l1p_cc_coastline" />
             <DESCRIPTION value="Coastline flag" />
-            <COLOR red="0" green="0" blue="0" alpha="255" />
+            <COLOR red="192" green="192" blue="192" alpha="255" />
             <TRANSPARENCY value="0.0" />
             <EXPRESSION value="l1p_flags.CC_COASTLINE" />
         </Mask>
@@ -1555,7 +1585,6 @@
                         <MDATTR name="source" type="ascii" mode="rw">file:/C:/Users/Marco/EOData/FreshMon/MER_FSG_1PNUPA20080601_091350_000004222069_00079_32698_5721_tinySubset_FreshMon.dim</MDATTR>
                     </MDElem>
                     <MDElem name="parameters">
-                        <MDATTR name="pixelSizeY" type="ascii" />
                         <MDATTR name="crs" type="ascii">GEOGCS["WGS84(DD)", &#xD;
   DATUM["WGS84", &#xD;
     SPHEROID["WGS84", 6378137.0, 298.257223563]], &#xD;
@@ -1564,21 +1593,10 @@
   AXIS["Geodetic longitude", EAST], &#xD;
   AXIS["Geodetic latitude", NORTH]]</MDATTR>
                         <MDATTR name="orientation" type="ascii">0.0</MDATTR>
-                        <MDATTR name="pixelSizeX" type="ascii" />
-                        <MDATTR name="width" type="ascii" />
                         <MDATTR name="addDeltaBands" type="ascii">false</MDATTR>
-                        <MDATTR name="elevationModelName" type="ascii" />
-                        <MDATTR name="easting" type="ascii" />
-                        <MDATTR name="height" type="ascii" />
                         <MDATTR name="resampling" type="ascii">Nearest</MDATTR>
-                        <MDATTR name="wktFile" type="ascii" />
-                        <MDATTR name="referencePixelY" type="ascii" />
-                        <MDATTR name="tileSizeY" type="ascii" />
-                        <MDATTR name="tileSizeX" type="ascii" />
                         <MDATTR name="noDataValue" type="ascii">NaN</MDATTR>
-                        <MDATTR name="referencePixelX" type="ascii" />
                         <MDATTR name="includeTiePointGrids" type="ascii">false</MDATTR>
-                        <MDATTR name="northing" type="ascii" />
                         <MDATTR name="orthorectify" type="ascii">false</MDATTR>
                     </MDElem>
                 </MDElem>

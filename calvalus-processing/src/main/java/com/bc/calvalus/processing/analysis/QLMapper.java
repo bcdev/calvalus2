@@ -21,10 +21,12 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.Layer;
+import com.bc.ceres.glayer.LayerTypeRegistry;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
@@ -46,6 +48,7 @@ import org.esa.beam.framework.datamodel.RGBImageProfile;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.glayer.MaskLayerType;
+import org.esa.beam.glayer.NoDataLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.util.PropertyMap;
 import org.esa.beam.util.io.FileUtils;
@@ -218,7 +221,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             throw new IllegalArgumentException("Neither RGB nor band information given");
         }
         final ImageLayer imageLayer = new ImageLayer(multiLevelSource);
-
         boolean canUseAlpha = canUseAlpha(qlConfig);
         CollectionLayer collectionLayer = new CollectionLayer();
         List<Layer> layerChildren = collectionLayer.getChildren();
@@ -283,6 +285,14 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         final ImageLayer logoLayer = new ImageLayer(logo, logoI2M, 1);
 
         layerChildren.add(0, logoLayer);
+
+        NoDataLayerType layerType = LayerTypeRegistry.getLayerType(NoDataLayerType.class);
+        PropertySet container = layerType.createLayerConfig(null);
+        container.setValue(NoDataLayerType.PROPERTY_NAME_COLOR, Color.BLACK);
+        container.setValue(NoDataLayerType.PROPERTY_NAME_RASTER, masterBand);
+        final Layer noDataLayer = layerType.createLayer(null, container);
+        noDataLayer.setVisible(true);
+        layerChildren.add(noDataLayer); // add layer as background
     }
 
     private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws

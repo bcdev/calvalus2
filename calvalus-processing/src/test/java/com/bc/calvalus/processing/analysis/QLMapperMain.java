@@ -34,9 +34,9 @@ public class QLMapperMain {
         Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
         qlConfig.setBandName("CHL");
         qlConfig.setImageType("png");
-        qlConfig.setBackgroundColor(new Color(16, 16, 16, 255));
+        qlConfig.setBackgroundColor(new Color(255, 255, 255, 255));
         qlConfig.setCpdURL(QLMapper.class.getResource(CHL_CPD).toExternalForm());
-        qlConfig.setMaskOverlays(new String[]{"l1p_cc_land", "l1p_cc_coastline", "l1p_cc_cloud"});
+        qlConfig.setMaskOverlays(new String[]{"l1p_cc_land", "l1p_cc_cloud", "l1p_cc_coastline"});
         qlConfig.setLegendEnabled(true);
         qlConfig.setOverlayURL(QLMapper.class.getResource(FRESHMON_LOGO).toExternalForm());
 
