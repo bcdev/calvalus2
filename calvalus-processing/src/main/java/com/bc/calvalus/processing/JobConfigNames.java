@@ -51,6 +51,8 @@ public interface JobConfigNames {
 
     String CALVALUS_METADATA_TEMPLATE = "calvalus.metadata.template";
 
+    String CALVALUS_PROJECT_NAME = "calvalus.project.name";
+
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";

@@ -54,12 +54,6 @@ public class L2PlusProductionType extends HadoopProductionType {
         List<DateRange> dateRanges = productionRequest.getDateRanges();
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
-        String processorBundle = processorProductionRequest.getProcessorBundle();
-
-        boolean FRESHMON = false;
-        if (processorBundle.toLowerCase().startsWith("freshmon")) {
-            FRESHMON = true;  // TODO generalize
-        }
 
         String globalOutputDir = "";
         String formattingInputDir;
@@ -89,9 +83,9 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                                        formattingInputDir, formattingOutputDir,
                                                                        productionRequest,
                                                                        processorProductionRequest, bandName, "GeoTIFF");
-                        if (FRESHMON) {
-                            // TODO generalize
-                            Configuration jobConfig = item.getJobConfig();
+                        Configuration jobConfig = item.getJobConfig();
+                        // TODO generalize
+                        if ("FRESHMON".equalsIgnoreCase(jobConfig.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
                             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX,
                                           "L2_of_MER_..._1.....(........_......).*");
                             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT,

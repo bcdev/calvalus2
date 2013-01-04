@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
@@ -27,6 +28,7 @@ import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -49,9 +51,13 @@ import org.esa.beam.util.PropertyMap;
 import org.esa.beam.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.Interpolation;
+import javax.media.jai.operator.ScaleDescriptor;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -112,7 +118,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
                                        Quicklooks.QLConfig config) {
         try {
-            RenderedImage quicklookImage = createImage(product, config);
+            RenderedImage quicklookImage = createImage(context.getConfiguration(), product, config);
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
                 try {
@@ -132,7 +138,8 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         return path.getFileSystem(context.getConfiguration()).create(path);
     }
 
-    static RenderedImage createImage(Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    static RenderedImage createImage(Configuration configuration, Product product, Quicklooks.QLConfig qlConfig) throws
+                                                                                                                 IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
@@ -214,34 +221,68 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         boolean canUseAlpha = canUseAlpha(qlConfig);
         CollectionLayer collectionLayer = new CollectionLayer();
-
         List<Layer> layerChildren = collectionLayer.getChildren();
-        if (qlConfig.getOverlayURL() != null) {
-            addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
-        }
-        if (qlConfig.isLegendEnabled()) {
-            addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
-        }
+
+        layerChildren.add(0, imageLayer);
+
         if (qlConfig.getMaskOverlays() != null) {
             addMaskOverlays(product, qlConfig.getMaskOverlays(), masterBand, layerChildren);
         }
-        layerChildren.add(imageLayer);
+
+        // TODO generalize
+        if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
+            addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
+        } else {
+            if (qlConfig.getOverlayURL() != null) {
+                addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
+            }
+            if (qlConfig.isLegendEnabled()) {
+                addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
+            }
+        }
 
 
+        Rectangle2D modelBounds = collectionLayer.getModelBounds();
+        Rectangle2D imageBounds = imageLayer.getModelToImageTransform().createTransformedShape(
+                modelBounds).getBounds2D();
         int imageType = canUseAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
-        BufferedImage bufferedImage = new BufferedImage(product.getSceneRasterWidth(), product.getSceneRasterHeight(),
-                                                        imageType);
+        BufferedImage bufferedImage = new BufferedImage((int) imageBounds.getWidth(),
+                                                        (int) imageBounds.getHeight(), imageType);
+
         BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
         Viewport viewport = rendering.getViewport();
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
-        viewport.zoom(collectionLayer.getModelBounds());
+        viewport.zoom(modelBounds);
 
         final Graphics2D graphics = rendering.getGraphics();
         graphics.setColor(qlConfig.getBackgroundColor());
-        graphics.fillRect(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
+        graphics.fill(imageBounds);
 
         collectionLayer.render(rendering);
         return rendering.getImage();
+    }
+
+    private static void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
+                                           boolean canUseAlpha, List<Layer> layerChildren) throws IOException {
+        BufferedImage legend = createImageLegend(masterBand, canUseAlpha, ImageLegend.VERTICAL);
+        RenderedImage logo = ImageIO.read(new URL(qlConfig.getOverlayURL()).openStream());
+        float scale = (float) legend.getWidth() / (float) logo.getWidth();
+        RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+                                                  RenderingHints.VALUE_ANTIALIAS_ON);
+        logo = ScaleDescriptor.create(logo, scale, scale, 0.0f, 0.0f,
+                                      Interpolation.getInstance(Interpolation.INTERP_NEAREST), hints);
+
+        AffineTransform legendI2M = imageLayer.getImageToModelTransform();
+        legendI2M.translate(masterBand.getSceneRasterWidth() + 10, logo.getHeight());
+        final ImageLayer legendLayer = new ImageLayer(legend, legendI2M, 1);
+
+        layerChildren.add(0, legendLayer);
+
+        AffineTransform logoI2M = imageLayer.getImageToModelTransform();
+        logoI2M.translate(masterBand.getSceneRasterWidth() + 10, 0);
+        final ImageLayer logoLayer = new ImageLayer(logo, logoI2M, 1);
+
+        layerChildren.add(0, logoLayer);
     }
 
     private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
@@ -249,23 +290,27 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         InputStream inputStream = new URL(overlayURL).openStream();
         BufferedImage bufferedImage = ImageIO.read(inputStream);
         final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
-        layerChildren.add(overlayLayer);
+        layerChildren.add(0, overlayLayer);
     }
 
     private static void addLegend(Band masterBand, ImageLayer imageLayer, boolean useAlpha, List<Layer> layerChildren) {
-        ImageLegend imageLegend = new ImageLegend(masterBand.getImageInfo(), masterBand);
-        String unit = masterBand.getUnit() == null ? "" : " [" + masterBand.getUnit() + "]";
-        imageLegend.setHeaderText(masterBand.getName() + unit);
-        imageLegend.setBackgroundTransparency(0.6f);
-        imageLegend.setBackgroundTransparencyEnabled(useAlpha);
-        imageLegend.setAntialiasing(true);
+        BufferedImage legend = createImageLegend(masterBand, useAlpha, ImageLegend.VERTICAL);
 
         AffineTransform imageToModelTransform = imageLayer.getImageToModelTransform();
-        BufferedImage legend = imageLegend.createImage();
         imageToModelTransform.translate(masterBand.getSceneRasterWidth() - legend.getWidth(),
                                         masterBand.getSceneRasterHeight() - legend.getHeight());
         final ImageLayer overlayLayer = new ImageLayer(legend, imageToModelTransform, 1);
-        layerChildren.add(overlayLayer);
+        layerChildren.add(0, overlayLayer);
+    }
+
+    private static BufferedImage createImageLegend(Band masterBand, boolean useAlpha, int orientation) {
+        ImageLegend imageLegend = new ImageLegend(masterBand.getImageInfo(), masterBand);
+        imageLegend.setHeaderText(masterBand.getName());
+        imageLegend.setOrientation(orientation);
+        imageLegend.setBackgroundTransparency(0.6f);
+        imageLegend.setBackgroundTransparencyEnabled(useAlpha);
+        imageLegend.setAntialiasing(true);
+        return imageLegend.createImage();
     }
 
     private static void addMaskOverlays(Product product, String[] maskOverlays, Band masterBand,
@@ -274,7 +319,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         for (String maskOverlay : maskOverlays) {
             Layer layer = MaskLayerType.createLayer(masterBand, maskGroup.get(maskOverlay));
             layer.setVisible(true);
-            layerChildren.add(layer);
+            layerChildren.add(0, layer);
         }
     }
 
