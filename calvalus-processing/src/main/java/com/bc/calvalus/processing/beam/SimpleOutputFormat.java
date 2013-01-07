@@ -16,10 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
-import com.bc.calvalus.processing.JobConfigNames;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileAlreadyExistsException;
 import org.apache.hadoop.mapred.InvalidJobConfException;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
@@ -44,23 +41,14 @@ public class SimpleOutputFormat<K, V> extends FileOutputFormat<K, V> {
     /**
      * The specification is the following:
      * <ol>
-     * <li>The output directory has to be set.</li>
-     * <li>Only in resume mode this director can exits.</li>
+     * <li>The output path must to be set.</li>
      * </ol>
      */
     @Override
     public void checkOutputSpecs(JobContext job) throws IOException {
-        // Ensure that the output directory is set
-        Path outDir = getOutputPath(job);
-        if (outDir == null) {
-            throw new InvalidJobConfException("Output directory not set.");
-        }
-        // Ensure that output directory is not already there, if not in "resume mode"
-        Configuration jobConfig = job.getConfiguration();
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        boolean exists = outDir.getFileSystem(jobConfig).exists(outDir);
-        if (exists && !resumeProcessing) {
-            throw new FileAlreadyExistsException("Output directory " + outDir + " already exists");
+        // Ensure that the output path is set
+        if (getOutputPath(job) == null) {
+            throw new InvalidJobConfException("Output path not set.");
         }
     }
 
