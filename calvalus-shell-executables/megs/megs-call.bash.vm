@@ -9,13 +9,12 @@ set -m
 
 PACKAGE_DIR=./megs-8.0.tar.gz/megs-8.0
 
-]]#
+# append newline to modifiers.db
+echo >> modifiers.db
 
-cat > modifiers.db <<EOF
-$parameterText
-EOF
-
-#[[
+echo "=================="
+cat modifiers.db
+echo "=================="
 
 # TODO inputRectangle
 # TODO rr/fr/fsg
@@ -67,6 +66,14 @@ echo "calling MEGS ..."
 outputfile=`head -1 files/l2_rr.prd | cut -d'=' -f2 | sed s/\"//g`
 mv files/l2_rr.prd ${outputfile}
 echo "CALVALUS_OUTPUT_PRODUCT ${outputfile}"
+
+# for retrieving internal files
+#outFileBase=$(basename ${outputfile} .N1)
+#for baf in files/*.baf
+#do
+#  mv -v $baf ${outFileBase}_$(basename $baf)
+#  echo "CALVALUS_OUTPUT_PRODUCT ${outFileBase}_$(basename $baf)"
+#done
 ]]#
 
 

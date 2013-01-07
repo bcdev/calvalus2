@@ -13,7 +13,7 @@ function handle_progress() {
 }
 
 while true; do
-  sleep 60
+  sleep 20
   handle_progress "$(tail -n 5 status.txt|grep comment)"
 done
  
