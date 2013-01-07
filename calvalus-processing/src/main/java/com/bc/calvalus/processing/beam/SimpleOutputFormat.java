@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * A output format that only provides an output directory into which the job can writes its results.
+ * A output format that only provides an output directory into which the job can write its results.
  * In contrast to the {@link org.apache.hadoop.mapreduce.lib.output.NullOutputFormat},
  * it provides a {@link org.apache.hadoop.mapreduce.OutputCommitter}
  *
@@ -84,6 +84,7 @@ public class SimpleOutputFormat<K, V> extends FileOutputFormat<K, V> {
     }
 
     private class SimpleOutputCommitter extends FileOutputCommitter {
+
         public SimpleOutputCommitter(Path outputPath, TaskAttemptContext context) throws IOException {
             super(outputPath, context);
         }
@@ -91,8 +92,8 @@ public class SimpleOutputFormat<K, V> extends FileOutputFormat<K, V> {
         @Override
         public void cleanupJob(JobContext context) throws IOException {
             // Do nothing intentionally !!
-            // The super class removes the whole "_temporay"-directory.
-            // this leads to data loss if multiple job use the sme output directory.
+            // The super class removes the whole "_temporary"-directory.
+            // this leads to data loss if multiple job use the same output directory.
         }
     }
 }
