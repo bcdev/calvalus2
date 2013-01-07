@@ -28,7 +28,7 @@
         <module>calvalus-commons</module>
 
         <!-- Plug-ins to Calvalus -->
-        <module>calvalus-l2gen</module>
+        <module>calvalus-shell-executables</module>
         <!--<module>calvalus-matchup</module>-->
         <!--<module>calvalus-trend</module>-->
 

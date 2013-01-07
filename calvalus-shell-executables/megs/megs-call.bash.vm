@@ -1,0 +1,73 @@
+#!/bin/bash
+
+inputFile="$inputFile"
+
+#[[
+
+set -e
+set -m
+
+PACKAGE_DIR=./megs-8.0.tar.gz/megs-8.0
+
+]]#
+
+cat > modifiers.db <<EOF
+$parameterText
+EOF
+
+#[[
+
+# TODO inputRectangle
+# TODO rr/fr/fsg
+
+
+# make the required directories
+mkdir -p files
+
+(cd files
+# link in the database files
+for f in $(ls ../${PACKAGE_DIR}/aux_data/database/)
+do
+  ln -s ../${PACKAGE_DIR}/aux_data/database/$f $f
+done
+
+# link in the ADF files
+PRD_DIR=../${PACKAGE_DIR}/aux_data/megs
+ln -s "$PRD_DIR/aeroclim/20/aeroclim.20.08.prd" aeroclim.prd
+ln -s "$PRD_DIR/atmosphere/34/atmosphere.34.03.01.prd" atmosphere.prd
+ln -s "$PRD_DIR/case1/63/case1.63.02.01.prd" case1.prd
+ln -s "$PRD_DIR/case2/46/case2.46.02.02.prd" case2.prd
+ln -s "$PRD_DIR/conf_map/20/conf_map.20.00.prd" conf_map.prd
+ln -s "$PRD_DIR/cloud/41/cloud.41.02.prd" cloud.prd
+ln -s "$PRD_DIR/landaero/44/landaero.44.03.01.prd" landaero.prd
+ln -s "$PRD_DIR/oceanaero/42/oceanaero.42.04.03.prd" oceanaer.prd
+ln -s "$PRD_DIR/lv2conf/43/lv2conf.43.01.03.prd" lv2conf.prd
+ln -s "$PRD_DIR/vapour/22/vapour.22.00.prd" vapour.prd
+ln -s "$PRD_DIR/vegetation/33/vegetation.33.01.prd" vegetation.prd
+
+# link the Resource files
+for f in fLOV.dat globcolour_config.txt ang_net.net atm_net_back.net atm_net_for.net wat_net_back.net wat_net_for.net
+do
+  ln -s ../${PACKAGE_DIR}/aux_data/resources/$f $f
+done
+)
+
+# move the  input file
+mv ${inputFile} files/l1_rr.prd
+
+echo "starting progress monitoring ..."
+./reportprogress.bash &
+trap 'kill %1' EXIT
+
+echo "calling MEGS ..."
+# call MEGS executable wrapper for automatic cleanup on failure.
+./${PACKAGE_DIR}/bin/megs.sh
+
+# rename result file
+outputfile=`head -1 files/l2_rr.prd | cut -d'=' -f2 | sed s/\"//g`
+mv files/l2_rr.prd ${outputfile}
+echo "CALVALUS_OUTPUT_PRODUCT ${outputfile}"
+]]#
+
+
+# TODO directory structure by date

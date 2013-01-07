@@ -1,0 +1,57 @@
+#!/bin/bash
+#[[
+inputFile=${1}
+inFileName=$(basename $inputFile)
+outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
+
+SEADAS=./seadas-6.3.tar.gz/seadas-6.3
+L2GEN_ENV=${SEADAS}/config/seadas.env
+L2GEN_BIN=${SEADAS}/run/bin/linux_64/l2gen
+GETANC_BIN=${SEADAS}/run/scripts/getanc.py
+
+. $L2GEN_ENV
+
+d="myparams"
+touch ${d}.anc
+]]#
+
+#if ($inputRectangle)
+
+#set( $Double = 0.0 )
+
+#set( $Dspixl = $inputRectangle.x + 1 )
+#set( $spixl = $Double.valueOf($Dspixl).intValue() )
+
+#set( $Depixl = $inputRectangle.x + $inputRectangle.width )
+#set( $epixl = $Double.valueOf($Depixl).intValue() )
+
+#set( $Dsline = $inputRectangle.y + 1 )
+#set( $sline = $Double.valueOf($Dsline).intValue() )
+
+#set( $Deline = $inputRectangle.y + $inputRectangle.height )
+#set( $eline = $Double.valueOf($Deline).intValue() )
+
+echo "spixl=$spixl" >> ${d}.anc
+echo "epixl=$epixl" >> ${d}.anc
+echo "sline=$sline" >> ${d}.anc
+echo "eline=$eline" >> ${d}.anc
+#end
+
+#[[
+cat ${d}.anc
+
+function handle_progress() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ Processing\ scan\ #\ +[0-9]+\ +\(([0-9]+)\ +of\ +([0-9]+)\)\ +after ]]; then
+    a1=${BASH_REMATCH[1]}
+    a2=${BASH_REMATCH[2]}
+    progress=$(echo "scale=3; ${a1} / ${a2}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" $progress
+  fi
+}
+
+echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=${d}.anc
+${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=${d}.anc | while read x ; do handle_progress "$x" ; done
+echo CALVALUS_OUTPUT_PRODUCT ${outFile}
+]]#
