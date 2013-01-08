@@ -1,21 +1,39 @@
-#set( $productWidth = 1121 )
+#if ($inputFile.name.startsWith("MER_RR__1"))
+    #set( $productWidth = 1121 )
+    #set( $mode = "0" )
+#elseif($inputFile.name.startsWith("MER_RRG_1"))
+    #set( $productWidth = 1121 )
+    #set( $mode = "100" )
+#elseif($inputFile.name.startsWith("MER_FR__1"))
+    #set( $productWidth = 1121 )
+    #set( $mode = "1" )
+#elseif($inputFile.name.startsWith("MER_FRS_1"))
+    #set( $productWidth = 4484 )
+    #set( $mode = "11" )
+#elseif($inputFile.name.startsWith("MER_FRG_1"))
+    #set( $productWidth = 1121 )
+    #set( $mode = "101" )
+#elseif($inputFile.name.startsWith("MER_FSG_1"))
+    #set( $productWidth = 4484 )
+    #set( $mode = "111" )
+#end
 #if ($inputRectangle)
-  #set( $Double = 0.0 )
-  #set( $blockStartX = ($productWidth - ($inputRectangle.x + $inputRectangle.width)) / 32 )
-  #set( $first_col_bloc = $Double.valueOf($blockStartX).intValue() + 1 )
-  #set( $blockStartY = $inputRectangle.y / 64 )
-  #set( $first_lin_bloc = $Double.valueOf($blockStartY).intValue() + 1 )
-  #set( $blockCountX = (($productWidth - $inputRectangle.x) / 32) - $blockStartX + 1 )
-  #set( $n_col_bloc = $Double.valueOf($blockCountX).intValue() )
-  #set( $blockCountY = (($inputRectangle.y + $inputRectangle.height) / 64) - $blockStartY + 1 )
-  #set( $n_lin_bloc = $Double.valueOf($blockCountY).intValue() )
-  #set( $switch_zone = "1" )
+    #set( $Double = 0.0 )
+    #set( $blockStartX = ($productWidth - ($inputRectangle.x + $inputRectangle.width)) / 32 )
+    #set( $first_col_bloc = $Double.valueOf($blockStartX).intValue() + 1 )
+    #set( $blockStartY = $inputRectangle.y / 64 )
+    #set( $first_lin_bloc = $Double.valueOf($blockStartY).intValue() + 1 )
+    #set( $blockCountX = (($productWidth - $inputRectangle.x) / 32) - $blockStartX + 1 )
+    #set( $n_col_bloc = $Double.valueOf($blockCountX).intValue() )
+    #set( $blockCountY = (($inputRectangle.y + $inputRectangle.height) / 64) - $blockStartY + 1 )
+    #set( $n_lin_bloc = $Double.valueOf($blockCountY).intValue() )
+    #set( $switch_zone = "1" )
 #else
-  #set( $first_col_bloc = "1" )
-  #set( $first_lin_bloc = "1" )
-  #set( $n_col_bloc = "1" )
-  #set( $n_lin_bloc = "1" )
-  #set( $switch_zone = "0" )
+    #set( $first_col_bloc = "1" )
+    #set( $first_lin_bloc = "1" )
+    #set( $n_col_bloc = "1" )
+    #set( $n_lin_bloc = "1" )
+    #set( $switch_zone = "0" )
 #end
 bshow comment show programming messages
 bshow format integer(3)
@@ -52,7 +70,7 @@ mode comment Simulation Mode (resolution is full if odd, reduced if even) (autom
 mode format  integer
 mode module  level1 level2
 mode range   [0,5]
-mode value 0
+mode value $mode
 ozone comment Default value for total ozone content in Level 2 processing (used only if user_aux_dat[3]=1)
 ozone format real*8
 ozone module level2

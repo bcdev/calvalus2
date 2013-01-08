@@ -1,6 +1,8 @@
 #!/bin/bash
 
-#status comment 3073 15041 1057 1121
+# example status line:
+# status comment 3073 15041 1057 1121
+
 function handle_progress() {
   line=$1
   echo $line
