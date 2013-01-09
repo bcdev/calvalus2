@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
@@ -57,7 +73,7 @@ public class L2PlusProductionType extends HadoopProductionType {
 
         String globalOutputDir = "";
         String formattingInputDir;
-        Workflow.Sequential l2fWorkflowItem = new Workflow.Sequential();
+        Workflow.Sequential l2WorkflowItem = new Workflow.Sequential();
         if (processorProductionRequest.getProcessorName().equals("Formatting")) {
             formattingInputDir = productionRequest.getString("inputPath");
         } else {
@@ -65,11 +81,17 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                                      productionRequest, processorProductionRequest);
             globalOutputDir = processingItem.getOutputDir();
             formattingInputDir = createPathPattern(globalOutputDir);
-            l2fWorkflowItem.add(processingItem);
+            l2WorkflowItem.add(processingItem);
         }
 
         String outputFormat = productionRequest.getString("outputFormat", null);
-        if (outputFormat != null && !outputFormat.equals("SEQ")) {
+
+        ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        boolean isFormattingRequired = processorDescriptor != null &&
+                processorDescriptor.getFormatting() != ProcessorDescriptor.FormattingType.IMPLICIT;
+        boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
+
+        if (isFormattingRequired && isFormattingRequested) {
             String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
             globalOutputDir = formattingOutputDir;
 
@@ -103,9 +125,9 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                         processorProductionRequest, outputBandList,
                                                         outputFormat));
             }
-            l2fWorkflowItem.add(formattingItem);
+            l2WorkflowItem.add(formattingItem);
         }
-        if (l2fWorkflowItem.getItems().length == 0) {
+        if (l2WorkflowItem.getItems().length == 0) {
             throw new ProductionException("Neither Processing nor Formatting selected.");
         }
 
@@ -118,7 +140,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              l2fWorkflowItem);
+                              l2WorkflowItem);
     }
 
     @Override

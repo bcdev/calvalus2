@@ -24,6 +24,135 @@ import java.util.Map;
 
 public class ProcessorDescriptor {
 
+    @Parameter
+    private String executableName;
+
+    @Parameter
+    private String processorName;
+    @Parameter
+    private String processorVersion;
+    @Parameter
+    private String defaultParameters;
+    @Parameter
+    private String[] outputFormats;
+    // Short description in XHTML
+    @Parameter
+    private String descriptionHtml;
+
+    @Parameter
+    private String outputVariableDefaultMaskExpr;
+
+    @Deprecated
+    @Parameter
+    private String validMaskExpression;
+
+    @Parameter(itemAlias = "outputVariable")
+    private Variable[] outputVariables;
+
+    @Parameter
+    private String[] inputProductTypes;
+
+    @Parameter
+    private String outputProductType;
+
+    @Parameter(defaultValue = "OPTIONAL")
+    private FormattingType formatting;
+
+    @Parameter(itemAlias = "jobParameter")
+    private JobParameter[] jobConfig;
+
+    @Parameter(itemAlias = "parameterDescriptor")
+    private ParameterDescriptor[] parameterDescriptors;
+
+    // empty constructor for XML serialization
+    public ProcessorDescriptor() {
+    }
+
+    public ProcessorDescriptor(String executableName,
+                               String processorName,
+                               String processorVersion,
+                               String defaultParameters,
+                               Variable... outputVariables) {
+
+        Assert.notNull(executableName, "executableName");
+        Assert.notNull(processorName, "processorName");
+        Assert.notNull(processorVersion, "processorVersion");
+        Assert.notNull(defaultParameters, "defaultParameters");
+        this.executableName = executableName;
+        this.processorName = processorName;
+        this.processorVersion = processorVersion;
+        this.defaultParameters = defaultParameters;
+        this.outputVariables = outputVariables;
+    }
+
+    public String getExecutableName() {
+        return executableName;
+    }
+
+    public String getProcessorName() {
+        return processorName;
+    }
+
+    public String getProcessorVersion() {
+        return processorVersion;
+    }
+
+    public String getDefaultParameters() {
+        return defaultParameters;
+    }
+
+    public String[] getOutputFormats() {
+        return outputFormats;
+    }
+
+    public FormattingType getFormatting() {
+        return formatting;
+    }
+
+    public String getDescriptionHtml() {
+        return descriptionHtml;
+    }
+
+    public String getMaskExpression() {
+        return outputVariableDefaultMaskExpr != null ? outputVariableDefaultMaskExpr : validMaskExpression;
+    }
+
+    public Variable[] getOutputVariables() {
+        return outputVariables;
+    }
+
+    public String[] getInputProductTypes() {
+        return inputProductTypes;
+    }
+
+    public String getOutputProductType() {
+        return outputProductType;
+    }
+
+    public Map<String, String> getJobConfiguration() {
+        HashMap<String, String> map = new HashMap<String, String>();
+        if (jobConfig != null) {
+            for (JobParameter jobParameter : jobConfig) {
+                map.put(jobParameter.name, jobParameter.value);
+            }
+        }
+        return map;
+    }
+
+    public ParameterDescriptor[] getParameterDescriptors() {
+        return parameterDescriptors;
+    }
+
+    // only used in tests
+
+    public void setOutputProductType(String outputProductType) {
+        this.outputProductType = outputProductType;
+    }
+
+    public void setParameterDescriptors(ParameterDescriptor...parameterDescriptors) {
+        this.parameterDescriptors = parameterDescriptors;
+    }
+
     public static class Variable {
 
         private String name;
@@ -101,133 +230,9 @@ public class ProcessorDescriptor {
         }
     }
 
-    @Parameter
-    private String executableName;
-
-    @Parameter
-    private String processorName;
-    @Parameter
-    private String processorVersion;
-    @Parameter
-    private String defaultParameters;
-    @Parameter
-    private String[] outputFormats;
-    // Short description in XHTML
-    @Parameter
-    private String descriptionHtml;
-
-    @Parameter
-    private String outputVariableDefaultMaskExpr;
-
-    @Deprecated
-    @Parameter
-    private String validMaskExpression;
-
-    @Parameter(itemAlias = "outputVariable")
-    private Variable[] outputVariables;
-
-    @Parameter
-    private String[] inputProductTypes;
-
-    @Parameter
-    private String outputProductType;
-
-    @Parameter(defaultValue = "false")
-    private boolean formattingMandatory;
-
-
-    @Parameter(itemAlias = "jobParameter")
-    private JobParameter[] jobConfig;
-
-    @Parameter(itemAlias = "parameterDescriptor")
-    private ParameterDescriptor[] parameterDescriptors;
-
-    // empty constructor for XML serialization
-    public ProcessorDescriptor() {
-    }
-
-    public ProcessorDescriptor(String executableName,
-                               String processorName,
-                               String processorVersion,
-                               String defaultParameters,
-                               Variable... outputVariables) {
-
-        Assert.notNull(executableName, "executableName");
-        Assert.notNull(processorName, "processorName");
-        Assert.notNull(processorVersion, "processorVersion");
-        Assert.notNull(defaultParameters, "defaultParameters");
-        this.executableName = executableName;
-        this.processorName = processorName;
-        this.processorVersion = processorVersion;
-        this.defaultParameters = defaultParameters;
-        this.outputVariables = outputVariables;
-    }
-
-    public String getExecutableName() {
-        return executableName;
-    }
-
-    public String getProcessorName() {
-        return processorName;
-    }
-
-    public String getProcessorVersion() {
-        return processorVersion;
-    }
-
-    public String getDefaultParameters() {
-        return defaultParameters;
-    }
-
-    public String[] getOutputFormats() {
-        return outputFormats;
-    }
-
-    public boolean isFormattingMandatory() {
-        return formattingMandatory;
-    }
-
-    public String getDescriptionHtml() {
-        return descriptionHtml;
-    }
-
-    public String getMaskExpression() {
-        return outputVariableDefaultMaskExpr != null ? outputVariableDefaultMaskExpr : validMaskExpression;
-    }
-
-    public Variable[] getOutputVariables() {
-        return outputVariables;
-    }
-
-    public String[] getInputProductTypes() {
-        return inputProductTypes;
-    }
-
-    public String getOutputProductType() {
-        return outputProductType;
-    }
-
-    public Map<String, String> getJobConfiguration() {
-        HashMap<String, String> map = new HashMap<String, String>();
-        if (jobConfig != null) {
-            for (JobParameter jobParameter : jobConfig) {
-                map.put(jobParameter.name, jobParameter.value);
-            }
-        }
-        return map;
-    }
-
-    public ParameterDescriptor[] getParameterDescriptors() {
-        return parameterDescriptors;
-    }
-
-    // only used in tests
-
-    public void setOutputProductType(String outputProductType) {
-        this.outputProductType = outputProductType;
-    }
-
-    public void setParameterDescriptors(ParameterDescriptor...parameterDescriptors) {
-        this.parameterDescriptors = parameterDescriptors;
+    public enum FormattingType {
+        IMPLICIT,  // MEGS, l2gen
+        OPTIONAL,  // BEAM Operator -> Sequential or NetCDF or DIMAP or ...
+        MANDATORY  // Formatting -> NetCDF or DIMAP
     }
 }

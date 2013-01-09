@@ -12,6 +12,7 @@
             <descriptionHtml>
                 <![CDATA[<p>Performs MEGS processing.</p>]]>
             </descriptionHtml>
+            <formatting>IMPLICIT</formatting>
             <inputProductTypes>MERIS_L1B</inputProductTypes>
             <outputProductType>MERIS_L2</outputProductType>
             <validMaskExpression>true</validMaskExpression>

@@ -81,7 +81,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     private void handleProcessorChanged() {
         DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
-            outputParametersForm.showFormatSelectionPanel(!processorDescriptor.isFormattingMandatory());
+            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
             outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
         }
     }
@@ -103,7 +103,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     @Override
     protected String getProductionType() {
-        return "L2";
+        return "L2Plus";
     }
 
     @Override

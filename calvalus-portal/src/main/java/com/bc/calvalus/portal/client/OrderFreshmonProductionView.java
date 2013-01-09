@@ -121,7 +121,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         ListBox bandList = outputParametersForm.bandListBox;
         bandList.clear();
         if (processorDescriptor != null) {
-            outputParametersForm.showFormatSelectionPanel(!processorDescriptor.isFormattingMandatory());
+            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
             outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
             int index = 0;
             for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {

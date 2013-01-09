@@ -38,7 +38,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String defaultMaskExpression;
     private DtoProcessorVariable[] processorVariables;
     private DtoParameterDescriptor[] parameterDescriptors;
-    private boolean isFormattingMandatory;
+    private String formattingType;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -56,7 +56,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String[] inputProductTypes,
                                   String outputProductType,
                                   String[] outputFormats,
-                                  boolean isFormattingMandatory,
+                                  String formattingType,
                                   String defaultMaskExpression,
                                   DtoProcessorVariable[] processorVariables,
                                   DtoParameterDescriptor[] parameterDescriptors) {
@@ -70,7 +70,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.inputProductTypes = inputProductTypes;
         this.outputProductType = outputProductType;
         this.outputFormats = outputFormats;
-        this.isFormattingMandatory = isFormattingMandatory;
+        this.formattingType = formattingType;
         this.defaultMaskExpression = defaultMaskExpression;
         this.processorVariables = processorVariables;
         this.parameterDescriptors = parameterDescriptors;
@@ -124,8 +124,8 @@ public class DtoProcessorDescriptor implements IsSerializable {
         return defaultMaskExpression;
     }
 
-    public boolean isFormattingMandatory() {
-        return isFormattingMandatory;
+    public String getFormattingType() {
+        return formattingType;
     }
 
     public DtoParameterDescriptor[] getParameterDescriptors() {

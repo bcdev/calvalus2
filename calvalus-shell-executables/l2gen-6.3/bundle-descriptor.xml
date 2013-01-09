@@ -8,10 +8,10 @@
             <processorName>l2gen L2 Processing</processorName>
             <processorVersion>6.3</processorVersion>
             <defaultParameters><![CDATA[]]></defaultParameters>
-            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
-            <formattingRequired>false</formattingRequired>
+            <outputFormats>HDF</outputFormats>
+            <formatting>IMPLICIT</formatting>
             <descriptionHtml>
-                <![CDATA[<p>Performs CoastColour.L1P and FUB Water processor in a chain.</p>]]>
+                <![CDATA[<p>Performs seadas l2gen processing.</p>]]>
             </descriptionHtml>
             <inputProductTypes>MERIS_L1B</inputProductTypes>
             <outputProductType>SEADAS_L2GEN</outputProductType>

@@ -69,7 +69,7 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    public static final String VERSION = "Calvalus version 1.5 (built on 2012-11-07)";
+    public static final String VERSION = "Calvalus version 1.5 (built on 2013-01-09)";
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
@@ -324,7 +324,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           convert(processorDescriptor.getInputProductTypes()),
                                           processorDescriptor.getOutputProductType(),
                                           convert(processorDescriptor.getOutputFormats()),
-                                          processorDescriptor.isFormattingMandatory(),
+                                          processorDescriptor.getFormatting().toString(),
                                           processorDescriptor.getMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()),
                                           convert(processorDescriptor.getParameterDescriptors()));
