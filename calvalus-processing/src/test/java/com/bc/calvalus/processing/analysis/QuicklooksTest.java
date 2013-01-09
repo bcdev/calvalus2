@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.processing.analysis;
 
 import org.junit.Test;
@@ -80,14 +96,17 @@ public class QuicklooksTest {
         sb.append("<cpdURL>http://www.allMycpds.com/alpha.cpd</cpdURL>\n");
         sb.append("<imageType>PNG</imageType>\n");
         sb.append("</config>\n");
+        sb.append("<config>\n");
+        sb.append("</config>\n");
         sb.append("</quicklooks>\n");
         String xml = sb.toString();
 
         Quicklooks quicklooks = Quicklooks.fromXml(xml);
         Quicklooks.QLConfig[] configs = quicklooks.getConfigs();
-        assertEquals(2, configs.length);
+        assertEquals(3, configs.length);
         assertEquals("chl_conc", configs[0].getBandName());
         assertEquals("alpha", configs[1].getBandName());
+        assertEquals("RGB", configs[2].getBandName());
 
     }
 
