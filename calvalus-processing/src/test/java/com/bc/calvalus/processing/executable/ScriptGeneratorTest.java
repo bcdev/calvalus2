@@ -87,8 +87,8 @@ public class ScriptGeneratorTest {
         scriptGenerator.addResource(new StringResource("foo-should-process-wrapper", "This is the other content"));
         Object[] keys = scriptGenerator.getVelocityContext().getKeys();
         assertEquals(3, keys.length);
-        assertEquals("wrapper", scriptGenerator.getCommandLine());
-        assertEquals("should-process-wrapper", scriptGenerator.getCommandLine("should-process"));
+        assertEquals("./wrapper", scriptGenerator.getCommandLine());
+        assertEquals("./should-process-wrapper", scriptGenerator.getCommandLine("should-process"));
     }
 
     @Test

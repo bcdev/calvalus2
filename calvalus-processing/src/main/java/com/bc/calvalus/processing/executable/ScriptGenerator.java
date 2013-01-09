@@ -67,7 +67,7 @@ public class ScriptGenerator {
         if (processedResourceNames.contains(CMDLINE)) {
             return getCommandLineImpl(CMDLINE);
         } else if (processedResourceNames.contains(WRAPPER)) {
-            return WRAPPER;
+            return "./" + WRAPPER;
         }
         throw new NullPointerException("no 'cmdline' resource '" + CMDLINE + "' specified");
     }
@@ -76,7 +76,7 @@ public class ScriptGenerator {
         if (processedResourceNames.contains(name + "-" + CMDLINE)) {
             return getCommandLineImpl(name + "-" + CMDLINE);
         } else if (processedResourceNames.contains(name + "-" + WRAPPER)) {
-            return name + "-" + WRAPPER;
+            return "./" + name + "-" + WRAPPER;
         }
         throw new NullPointerException("no 'cmdline' resource '" + name + "' specified");
     }
