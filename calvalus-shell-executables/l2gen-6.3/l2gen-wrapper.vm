@@ -1,6 +1,8 @@
 #!/bin/bash
+
+inputFile="$inputFile"
+
 #[[
-inputFile=${1}
 inFileName=$(basename $inputFile)
 outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
 
