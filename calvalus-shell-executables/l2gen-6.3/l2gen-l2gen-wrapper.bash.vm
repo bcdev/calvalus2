@@ -11,8 +11,8 @@ GETANC_BIN=${SEADAS}/run/scripts/getanc.py
 
 . $L2GEN_ENV
 
-d="myparams"
-touch ${d}.anc
+touch myparams.anc
+
 ]]#
 
 #if ($inputRectangle)
@@ -31,14 +31,99 @@ touch ${d}.anc
 #set( $Deline = $inputRectangle.y + $inputRectangle.height )
 #set( $eline = $Double.valueOf($Deline).intValue() )
 
-echo "spixl=$spixl" >> ${d}.anc
-echo "epixl=$epixl" >> ${d}.anc
-echo "sline=$sline" >> ${d}.anc
-echo "eline=$eline" >> ${d}.anc
+echo "spixl=$spixl" >> myparams.anc
+echo "epixl=$epixl" >> myparams.anc
+echo "sline=$sline" >> myparams.anc
+echo "eline=$eline" >> myparams.anc
 #end
 
 #[[
-cat ${d}.anc
+
+# get AUX data files 
+f=$(basename $inputFile) 
+s=`date -d "${f:14:4}-${f:18:2}-${f:20:2} ${f:23:2}:${f:25:2}:${f:27:2}Z" -u +%s`
+d=`date -d @$s -u +%Y%j%H%M%S`
+h=`date -d @$s -u +%H`
+
+h1=$((((1$h-100)/6)*6))
+d1="`date -d @$s -u +%Y%j``printf %02d ${h1}`"
+
+s2=$(($s + 21599))
+h21=`date -d @$s2 -u +%H`
+h22=$((((1$h21-100)/6)*6))
+d2="`date -d @$s2 -u +%Y%j``printf %02d ${h22}`"
+
+s3=$(($s + 21600))
+h31=`date -d @$s3 -u +%H`
+h32=$((((1$h31-100)/6)*6))
+d3="`date -d @$s3 -u +%Y%j``printf %02d ${h32}`"
+
+s4=$(($s - 43200))
+d4="`date -d @$s4 -u +%Y%j`00"
+
+d5="`date -d @$s -u +%Y%j`00"
+
+s6=$(($s + 43200))
+d6="`date -d @$s6 -u +%Y%j`00"
+
+icefile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_SEAICE_*|awk '{ print $8 }'`
+if [ "$icefile" != "" ]; then
+  if [ ! -e `basename $icefile` ]; then
+    hadoop fs -copyToLocal $icefile .
+  fi
+  echo "icefile=`basename $icefile`" >> myparams.anc
+fi
+met1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d1:0:4}/${d1:4:3}/?${d1}_*MET*|awk '{ print $8 }'`
+if [ "$met1" != "" ]; then
+  if [ ! -e `basename $met1` ]; then
+    hadoop fs -copyToLocal $met1 .
+  fi
+  echo "met1=`basename $met1`" >> myparams.anc
+fi
+met2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d2:0:4}/${d2:4:3}/?${d2}_*MET*|awk '{ print $8 }'`
+if [ "$met2" != "" ]; then
+  if [ ! -e `basename $met2` ]; then
+    hadoop fs -copyToLocal $met2 .
+  fi
+  echo "met2=`basename $met2`" >> myparams.anc
+fi
+met3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d3:0:4}/${d3:4:3}/?${d3}_*MET*|awk '{ print $8 }'`
+if [ "$met3" != "" ]; then
+  if [ ! -e `basename $met3` ]; then
+    hadoop fs -copyToLocal $met3 .
+  fi
+  echo "met3=`basename $met3`" >> myparams.anc
+fi
+ozone1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d4:0:4}/${d4:4:3}/?${d4}_O3_*|awk '{ print $8 }'`
+if [ "$ozone1" != "" ]; then
+  if [ ! -e `basename $ozone1` ]; then
+    hadoop fs -copyToLocal $ozone1 .
+  fi
+  echo "ozone1=`basename $ozone1`" >> myparams.anc
+fi
+ozone2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_O3_*|awk '{ print $8 }'`
+if [ "$ozone2" != "" ]; then
+  if [ ! -e `basename $ozone2` ]; then
+    hadoop fs -copyToLocal $ozone2 .
+  fi
+  echo "ozone2=`basename $ozone2`" >> myparams.anc
+fi
+ozone3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d6:0:4}/${d6:4:3}/?${d6}_O3_*|awk '{ print $8 }'`
+if [ "$ozone3" != "" ]; then
+  if [ ! -e `basename $ozone3` ]; then
+    hadoop fs -copyToLocal $ozone3 .
+  fi
+  echo "ozone3=`basename $ozone3`" >> myparams.anc
+fi
+sstfile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5:0:7}_SST_*|awk '{ print $8 }'`
+if [ "$sstfile" != "" ]; then
+  if [ ! -e `basename $sstfile` ]; then
+    hadoop fs -copyToLocal $sstfile .
+  fi
+  echo "sstfile=`basename $sstfile`" >> myparams.anc
+fi
+
+cat myparams.anc
 
 function handle_progress() {
   line=$1
@@ -51,7 +136,7 @@ function handle_progress() {
   fi
 }
 
-echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=${d}.anc
-${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=${d}.anc | while read x ; do handle_progress "$x" ; done
+echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=myparams.anc
+${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=myparams.anc | while read x ; do handle_progress "$x" ; done
 echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#
