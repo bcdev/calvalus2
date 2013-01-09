@@ -10,14 +10,17 @@ mvn clean install
 
 Calvalus
 --------
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --uninstall calvalus-1.5-SNAPSHOT
 java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-calvalus/*.jar calvalus-1.5-SNAPSHOT
 
 for lc-cci
 ----------
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --uninstall  calvalus-1.5-SNAPSHOT-lc
 java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-calvalus/*.jar calvalus-1.5-SNAPSHOT-lc
 
 BEAM
 -----
+java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --uninstall beam-4.10.4-SNAPSHOT
 java -jar calvalus-production/target/calvalus-production-1.5-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-beam/*.jar beam-4.10.4-SNAPSHOT
 
 
