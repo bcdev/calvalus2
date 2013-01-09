@@ -35,6 +35,7 @@ public class ScriptGenerator {
 
     private static final String VM_SUFFIX = ".vm";
     private static final String CMDLINE = "cmdline";
+    private static final String WRAPPER = "wrapper";
 
     private final ResourceEngine resourceEngine;
     private final String executableName;
@@ -63,22 +64,29 @@ public class ScriptGenerator {
     }
 
     public String getCommandLine() {
-        return getCommandLineImpl(CMDLINE);
+        if (processedResourceNames.contains(CMDLINE)) {
+            return getCommandLineImpl(CMDLINE);
+        } else if (processedResourceNames.contains(WRAPPER)) {
+            return WRAPPER;
+        }
+        throw new NullPointerException("no 'cmdline' resource '" + CMDLINE + "' specified");
     }
 
     public String getCommandLine(String name) {
-        return getCommandLineImpl(name + "-" + CMDLINE);
+        if (processedResourceNames.contains(name + "-" + CMDLINE)) {
+            return getCommandLineImpl(name + "-" + CMDLINE);
+        } else if (processedResourceNames.contains(name + "-" + WRAPPER)) {
+            return name + "-" + WRAPPER;
+        }
+        throw new NullPointerException("no 'cmdline' resource '" + name + "' specified");
     }
 
     private String getCommandLineImpl(String cmdlineName) {
-        if (processedResourceNames.contains(cmdlineName)) {
-            Resource resource = resourceEngine.getResource(cmdlineName);
-            if (resource != null) {
-                return resource.getContent();
-
-            }
+        Resource resource = resourceEngine.getResource(cmdlineName);
+        if (resource != null) {
+            return resource.getContent();
         }
-        throw new NullPointerException("no 'cmdline' resource '" + cmdlineName + "' specified");
+        return null;
     }
 
     public void writeScriptFiles(File cwd) throws IOException {

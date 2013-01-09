@@ -80,6 +80,18 @@ public class ScriptGeneratorTest {
     }
 
     @Test
+    public void testGetCommandlineWithWrapperScript() throws Exception {
+        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
+        scriptGenerator.getVelocityContext().put("variable", "calvalus");
+        scriptGenerator.addResource(new StringResource("foo-wrapper.vm", "This is the $variable content"));
+        scriptGenerator.addResource(new StringResource("foo-should-process-wrapper", "This is the other content"));
+        Object[] keys = scriptGenerator.getVelocityContext().getKeys();
+        assertEquals(3, keys.length);
+        assertEquals("wrapper", scriptGenerator.getCommandLine());
+        assertEquals("should-process-wrapper", scriptGenerator.getCommandLine("should-process"));
+    }
+
+    @Test
     public void testGetCommandline() throws Exception {
         ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
