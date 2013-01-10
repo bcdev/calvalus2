@@ -30,6 +30,7 @@ PACKAGE_DIR=./megs-8.0.tar.gz/megs-8.0
 # append newline to modifiers.db
 echo >> modifiers.db
 
+# for debugging purpose
 echo "=================="
 cat modifiers.db
 echo "=================="
