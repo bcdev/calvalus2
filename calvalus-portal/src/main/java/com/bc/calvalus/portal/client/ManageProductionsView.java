@@ -692,7 +692,7 @@ public class ManageProductionsView extends PortalView {
         VerticalPanel dialogContent = new VerticalPanel();
         SafeHtmlBuilder htmlBuilder = new SafeHtmlBuilder();
         htmlBuilder.appendHtmlConstant("<b>Be careful!</b></br>");
-        htmlBuilder.appendHtmlConstant("If you activate an other staging than the default it is most likely that the " +
+        htmlBuilder.appendHtmlConstant("If you activate another staging than the default it is most likely that the " +
                                        "result is immediately published and publicly available.</br>");
         htmlBuilder.appendHtmlConstant("<hr>");
         htmlBuilder.appendHtmlConstant("</br>");
