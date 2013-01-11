@@ -50,6 +50,7 @@ import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ProvidesKey;
@@ -657,12 +658,12 @@ public class ManageProductionsView extends PortalView {
             } else if (DOWNLOAD.equals(value)) {
                 downloadProduction(production);
             } else if (STAGE.equals(value)) {
-                String[] stagingPaths = production.getAdditionalStagingPaths();
-                if (stagingPaths.length > 0) {
-                    showStageDialog(production);
-                } else {
-                    stageProduction(production);
-                }
+//                String[] stagingPaths = production.getAdditionalStagingPaths();
+                showStageDialog(production);
+//                if (stagingPaths.length > 0) {
+//                } else {
+//                    stageProduction(production);
+//                }
 
             }
         }
@@ -689,11 +690,21 @@ public class ManageProductionsView extends PortalView {
         }
 
         VerticalPanel dialogContent = new VerticalPanel();
+        SafeHtmlBuilder htmlBuilder = new SafeHtmlBuilder();
+        htmlBuilder.appendHtmlConstant("<b>Be careful!</b></br>");
+        htmlBuilder.appendHtmlConstant("If you activate an other staging than the default it is most likely that the " +
+                                       "result is immediately published and publicly available.</br>");
+        htmlBuilder.appendHtmlConstant("<hr>");
+        htmlBuilder.appendHtmlConstant("</br>");
+        dialogContent.add(new HTML(htmlBuilder.toSafeHtml()));
         for (RadioButton radioButton : buttonMap.keySet()) {
             dialogContent.add(radioButton);
         }
+        ScrollPanel scrollPanel = new ScrollPanel(dialogContent);
+        scrollPanel.setWidth("500px");
+        scrollPanel.setHeight("200px");
 
-        Dialog dialog = new Dialog("Select Staging", dialogContent, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+        Dialog dialog = new Dialog("Select Staging", scrollPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
             @Override
             protected void onHide() {
                 if (ButtonType.OK == getSelectedButtonType()) {
