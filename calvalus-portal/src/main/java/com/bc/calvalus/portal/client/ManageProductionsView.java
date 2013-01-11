@@ -658,12 +658,12 @@ public class ManageProductionsView extends PortalView {
             } else if (DOWNLOAD.equals(value)) {
                 downloadProduction(production);
             } else if (STAGE.equals(value)) {
-//                String[] stagingPaths = production.getAdditionalStagingPaths();
-                showStageDialog(production);
-//                if (stagingPaths.length > 0) {
-//                } else {
-//                    stageProduction(production);
-//                }
+                String[] stagingPaths = production.getAdditionalStagingPaths();
+                if (stagingPaths.length > 0) {
+                    showStageDialog(production);
+                } else {
+                    stageProduction(production);
+                }
 
             }
         }
