@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
  * @author Norman
  */
 public class BeamProcessorAdapterTest {
+
     @Test
     public void testFullProduct() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -57,7 +58,8 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, new Rectangle(10, 20));
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+                                                                           new Rectangle(10, 20));
 
         int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
@@ -91,7 +93,8 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, new Rectangle());
+        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+                                                                           new Rectangle());
         try {
             beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
             fail();
@@ -116,8 +119,11 @@ public class BeamProcessorAdapterTest {
         assertEquals(20, rectangle.height);
     }
 
-    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct, final Rectangle inputRect) {
+    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct,
+                                                               final Rectangle inputRect) {
         Configuration conf = new Configuration();
+        conf.set(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, "0");
+        conf.set(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, "0");
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
@@ -135,7 +141,8 @@ public class BeamProcessorAdapterTest {
         };
     }
 
-    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct) {
+    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit,
+                                                               final Product sourceProduct) {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
