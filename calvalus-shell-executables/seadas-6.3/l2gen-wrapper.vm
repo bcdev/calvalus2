@@ -3,6 +3,9 @@
 inputFile="$inputFile"
 
 #[[
+set -e
+set -m
+
 inFileName=$(basename $inputFile)
 outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
 
