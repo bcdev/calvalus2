@@ -20,78 +20,48 @@
             <outputVariables>
                 <outputVariable>
                     <name>chlor_a</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>pic</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>poc</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>angstrom</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Kd_490</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_413</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_443</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_490</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_510</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_560</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_620</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_665</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>Rrs_681</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>cdom_index</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 <outputVariable>
                     <name>l2_flags</name>
-                    <defaultAggregator>AVG</defaultAggregator>
-                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
                 
             </outputVariables>
