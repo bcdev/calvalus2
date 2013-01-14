@@ -59,7 +59,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public boolean shouldProcessInputProduct() throws IOException {
+    public boolean skipProcessingInputProduct() throws IOException {
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
@@ -70,7 +70,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("system", System.getProperties());
         velocityContext.put("configuration", conf);
         velocityContext.put("inputPath", getInputPath());
-        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
+        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
         addScriptResources(conf, scriptGenerator);
@@ -85,7 +85,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 setHandler(keywordHandler).
                 start();
 
-        return keywordHandler.shouldProcess();
+        return !keywordHandler.skipProcessing();
     }
 
     @Override
@@ -98,8 +98,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         Rectangle inputRectangle = getInputRectangle();
         File inputFile = copyProductToLocal(getInputPath());
-        File outputDir = new File(cwd, "output");
-        outputDir.mkdirs();
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -107,8 +105,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("configuration", conf);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
-        velocityContext.put("outputDir", outputDir);
-        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()).toString());
+        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 

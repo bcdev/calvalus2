@@ -32,23 +32,28 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
 
     private final static String KEYWORD_PREFIX = "CALVALUS";
     private final static String PROGRESS_REGEX = "CALVALUS_PROGRESS ([0-9\\.]+)";
-    private final static String PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
+    private final static String INPUT_PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
+    private final static String OUTPUT_PRODUCT_REGEX = "CALVALUS_INPUT_PRODUCT (.+)$";
     private final String programName;
     private final MapContext mapContext;
     private final Pattern progressPattern;
-    private final Pattern productPattern;
+    private final Pattern outputProductPattern;
+    private final Pattern inputProductPattern;
     private final List<String> outputFiles;
+    private final List<String> inputFiles;
 
     private int lastScan = 0;
-    private boolean shouldProcess = true;
+    private boolean skipProcessing = false;
 
 
     KeywordHandler(String programName, MapContext mapContext) {
         this.programName = programName;
         this.mapContext = mapContext;
         this.progressPattern = Pattern.compile(PROGRESS_REGEX);
-        this.productPattern = Pattern.compile(PRODUCT_REGEX);
+        this.outputProductPattern = Pattern.compile(OUTPUT_PRODUCT_REGEX);
+        this.inputProductPattern = Pattern.compile(INPUT_PRODUCT_REGEX);
         this.outputFiles = new ArrayList<String>();
+        this.inputFiles = new ArrayList<String>();
     }
 
     @Override
@@ -72,13 +77,18 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
                 lastScan = scan;
                 return;
             }
-            Matcher productMatcher = productPattern.matcher(line);
-            if (productMatcher.find()) {
-                outputFiles.add(productMatcher.group(1).trim());
+            Matcher outputProductMatcher = outputProductPattern.matcher(line);
+            if (outputProductMatcher.find()) {
+                outputFiles.add(outputProductMatcher.group(1).trim());
                 return;
             }
-            if (line.equalsIgnoreCase("CALVALUS_SHOULD_PROCESS no")) {
-                shouldProcess = false;
+            Matcher inputProductMatcher = inputProductPattern.matcher(line);
+            if (inputProductMatcher.find()) {
+                inputFiles.add(inputProductMatcher.group(1).trim());
+                return;
+            }
+            if (line.equalsIgnoreCase("CALVALUS_SKIP_PROCESSING yes")) {
+                skipProcessing = true;
             }
         }
     }
@@ -98,11 +108,15 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         }
     }
 
+    public String[]  getInputFiles() {
+        return inputFiles.toArray(new String[inputFiles.size()]);
+    }
+
     public String[]  getOutputFiles() {
         return outputFiles.toArray(new String[outputFiles.size()]);
     }
 
-    public boolean shouldProcess() {
-        return shouldProcess;
+    public boolean skipProcessing() {
+        return skipProcessing;
     }
 }

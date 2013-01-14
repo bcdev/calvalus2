@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -71,7 +87,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         try {
             if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
                 LOG.info("resume: testing for target products");
-                if (!processorAdapter.shouldProcessInputProduct()) {
+                if (processorAdapter.skipProcessingInputProduct()) {
                     // nothing to compute, result exists
                     LOG.info("resume: target product exist.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);

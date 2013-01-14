@@ -117,16 +117,16 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Returns whether the adapter should process the current input product.
+     * Returns whether the adapter skip processing of the current input product.
      * The adapter should based on information about the input
      * product see if the corresponding output product already exists.
      *
      * This should enable fast (re-)processing of missing products.
      *
-     * @return {@code true}, if the input product should be processed.
+     * @return {@code true}, if the input product should not be processed.
      */
-    public boolean shouldProcessInputProduct() throws IOException {
-        return true;
+    public boolean skipProcessingInputProduct() throws IOException {
+        return false;
     }
 
     /**
@@ -346,9 +346,7 @@ public abstract class ProcessorAdapter {
      * @throws IOException
      */
     protected File copyProductToLocal(Path inputPath) throws IOException {
-        File inputDir = new File("input");
-        inputDir.mkdirs();
-        File localFile = new File(inputDir, inputPath.getName());
+        File localFile = new File(".", inputPath.getName());
         if (!localFile.exists()) {
             FileSystem fs = inputPath.getFileSystem(conf);
             FileUtil.copy(fs, inputPath, localFile, false, conf);

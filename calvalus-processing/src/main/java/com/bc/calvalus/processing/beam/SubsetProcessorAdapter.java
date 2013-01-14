@@ -48,13 +48,13 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public boolean shouldProcessInputProduct() throws IOException {
+    public boolean skipProcessingInputProduct() throws IOException {
         FileSystem fileSystem = FileSystem.get(getConfiguration());
         String inputFilename = getInputPath().getName();
         String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
         Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         Path outputProductPath = new Path(outputPath, outputFilename);
-        return !fileSystem.exists(outputProductPath);
+        return fileSystem.exists(outputProductPath);
     }
 
     @Override

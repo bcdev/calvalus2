@@ -113,11 +113,11 @@ public class ProcessorFactory {
             // l2 only
             // resume handling
             if (resumeProcessing) {
-                boolean shouldProcess = processorAdapter.shouldProcessInputProduct();
-                if (shouldProcess) {
-                    processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
-                } else {
+                boolean skipProcessing = processorAdapter.skipProcessingInputProduct();
+                if (skipProcessing) {
                     // nothing to compute, result exists
+                } else {
+                    processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
                 }
             }
             // MA only: use points from reference data set to restrict roi even further
