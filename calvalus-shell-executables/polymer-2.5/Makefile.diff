@@ -1,0 +1,31 @@
+--- Makefile.orig	2012-12-21 16:23:33.000000000 +0100
++++ Makefile	2013-01-14 16:36:07.000000000 +0100
+@@ -6,7 +6,7 @@
+ LEVEL1_MERIS=yes
+ DEBUG=no
+ 
+-FLAGS = -Wall -I/usr/include/hdf/
++FLAGS = -Wall -I/home/marcoz/Workspace/OC/build/include -L/home/marcoz/Workspace/OC/build/lib
+ 
+ ifeq ($(DEBUG),yes)
+ 	FLAGS += -DVERBOSE # verbose mode
+@@ -32,8 +32,9 @@
+ #  LIBS += $(wildcard /usr/lib/libdf.a /usr/lib64/hdf/libdf.a)
+ LIBS = -lgsl -lgslcblas -ljpeg -lz -ldf -lmfhdf
+ ifeq ($(NETCDF),yes)
+-	LIBS += -lnetcdf
++	LIBS += -lhdf5_hl -lhdf5 -lnetcdf
+ endif
++SLIBS = -Wl,--start-group $(LIBS) -Wl,--end-group
+ 
+ EXEC = polymer
+ LIBNAME = libpolymer.a
+@@ -103,7 +104,7 @@
+ 
+ exe: init $(EPR_OBJ) $(OBJ_EXE) $(OBJ)
+ 	@echo Building executable...
+-	$(CPPCOMP) -o $(EXEC) $(CPPFLAGS) $(OBJ) $(OBJ_EXE) $(EPR_OBJ) $(LIBS)
++	$(CPPCOMP) --verbose -o $(EXEC) $(CPPFLAGS) $(OBJ) $(OBJ_EXE) $(EPR_OBJ) $(SLIBS)
+ 
+ $(DIROBJ)/%.o: $(DIRSRC)/%.cpp $(DIRSRC)/%.h
+ 	@mkdir -p $(dir $@)

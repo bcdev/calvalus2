@@ -1,0 +1,62 @@
+#!/bin/bash
+
+inFile="$inputFile"
+
+#[[
+set -e
+set -m
+
+minimumsize=100
+actualsize=$(du -b parameters.txt | cut -f 1)
+if [ $actualsize -lt $minimumsize ]; then
+    echo parameters.txt is too small, replacing with defaults
+    cp default-parameters.txt parameters.txt
+fi
+# append newline
+echo >> parameters.txt
+
+]]#
+
+#if ($inputRectangle)
+
+#set( $Double = 0.0 )
+
+#set( $Dsline = $inputRectangle.y )
+#set( $sline = $Double.valueOf($Dsline).intValue() )
+
+#set( $Deline = $inputRectangle.y + $inputRectangle.height )
+#set( $eline = $Double.valueOf($Deline).intValue() )
+
+echo PROCESS_ROWS $sline $eline  >> parameters.txt
+#end
+
+#[[
+POLYMER=./polymer-2.5.tar.gz
+
+# create links to auxdata
+ln -sf ${POLYMER}/auxdata .
+ln -sf ${POLYMER}/data .
+ln -sf ${POLYMER}/LUTS .
+ln -sf ${POLYMER}/rayleigh .
+ln -sf ${POLYMER}/smile .
+
+# append input,output to parameters.txt
+inFileName=$(basename $inFile)
+outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
+echo INPUT_FILE $inFile >> parameters.txt
+echo OUTPUT_FILE $outFile >> parameters.txt
+
+function handle_progress() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ Processing\ block\ 1x([0-9]+)\ /\ 1x([0-9]+) ]]; then
+    a1=${BASH_REMATCH[1]}
+    a2=${BASH_REMATCH[2]}
+    progress=$(echo "scale=3; ${a1} / ${a2}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" $progress
+  fi
+}
+
+${POLYMER}/polymer parameters.txt | while read x ; do handle_progress "$x" ; done
+echo CALVALUS_OUTPUT_PRODUCT ${outFile}
+]]#
