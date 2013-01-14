@@ -133,7 +133,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
                                      Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
                                                                                                        IOException {
-        Map<String, Object> bandSubsetParameter = createBandSubsetParameter(jobConfig);
+        Map<String, Object> bandSubsetParameter = createBandSubsetParameter(targetProduct, jobConfig);
         if (!bandSubsetParameter.isEmpty()) {
             targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
         }
@@ -206,13 +206,26 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         return subsetParams;
     }
 
-    private Map<String, Object> createBandSubsetParameter(Configuration jobConfig) {
+    static Map<String, Object> createBandSubsetParameter(Product targetProduct, Configuration jobConfig) {
         String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
         boolean hasBandList = StringUtils.isNotNullAndNotEmpty(outputBandList);
-
         Map<String, Object> subsetParams = new HashMap<String, Object>();
         if (hasBandList) {
-            subsetParams.put("bandNames", outputBandList);
+            String[] bandNames = outputBandList.split(",");
+            StringBuilder sb = new StringBuilder();
+            for (String bandName : bandNames) {
+                if (targetProduct.containsBand(bandName)) {
+                    if (sb.length() > 0) {
+                        sb.append(",");
+                    }
+                    sb.append(bandName);
+                } else {
+                    String msgPattern = "Band '%s' shall be included in the output product but is not contained in " +
+                                        "the processed product. Check if processing options are set appropriate?";
+                    throw new IllegalStateException(String.format(msgPattern, bandName));
+                }
+            }
+            subsetParams.put("bandNames", sb.toString());
         }
         return subsetParams;
     }

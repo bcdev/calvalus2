@@ -16,7 +16,13 @@
 
 package com.bc.calvalus.processing.l2;
 
+import com.bc.calvalus.processing.JobConfigNames;
+import org.apache.hadoop.mapred.JobConf;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -42,6 +48,36 @@ public class L2FormattingMapperTest {
         assertEquals("CHL_Northsea_BC_20060708_123456",
                      newName("L2_of_MER_RR__1PNMAP20060708_123456_0815", "L2_of_MER_..._1.....(........_......).*",
                              "CHL_Northsea_BC_$1"));
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCreateBandSubsetParameterWhenBandIsMissing() throws Exception {
+        JobConf jobConfig = new JobConf();
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, "Band_1,Band_2,Band_3");
+        Product targetProduct = new Product("name", "type", 10, 10);
+        targetProduct.addBand("Band_1", ProductData.TYPE_INT16);
+        targetProduct.addBand("Band_3", ProductData.TYPE_INT16);
+        L2FormattingMapper.createBandSubsetParameter(targetProduct, jobConfig);
+    }
+
+    @Test
+    public void testCreateBandSubsetParameter() throws Exception {
+        JobConf jobConfig = new JobConf();
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, "Band_1,Band_2,Band_3");
+        Product targetProduct = new Product("name", "type", 10, 10);
+        targetProduct.addBand("Band_1", ProductData.TYPE_INT16);
+        targetProduct.addBand("Band_2", ProductData.TYPE_INT16);
+        targetProduct.addBand("Band_3", ProductData.TYPE_INT16);
+        Map<String, Object> bandSubsetParameter = L2FormattingMapper.createBandSubsetParameter(targetProduct,
+                                                                                               jobConfig);
+        String names = (String) bandSubsetParameter.get("bandNames");
+        assertNotNull(names);
+        String[] bandNames = names.split(",");
+        assertEquals(3, bandNames.length);
+        assertEquals("Band_1", bandNames[0]);
+        assertEquals("Band_2", bandNames[1]);
+        assertEquals("Band_3", bandNames[2]);
 
     }
 
