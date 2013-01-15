@@ -25,7 +25,7 @@ inputFile="$inputFile"
 set -e
 set -m
 
-PACKAGE_DIR=./megs-8.0.tar.gz/megs-8.0
+PACKAGE_DIR=./megs-8.0/megs-8.0
 
 # append newline to modifiers.db
 echo >> modifiers.db

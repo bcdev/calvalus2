@@ -9,7 +9,7 @@ set -m
 inFileName=$(basename $inputFile)
 outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
 
-SEADAS=./seadas-6.3.tar.gz/seadas-6.3
+SEADAS=./seadas-6.3/seadas-6.3
 L2GEN_ENV=${SEADAS}/config/seadas.env
 L2GEN_BIN=${SEADAS}/run/bin/linux_64/l2gen
 GETANC_BIN=${SEADAS}/run/scripts/getanc.py

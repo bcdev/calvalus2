@@ -87,25 +87,34 @@ public class ExecutableProcessorInstaller implements ProcessorInstaller {
             }
         });
         for (FileStatus archive : archives) {
-            DistributedCache.addCacheArchive(addFragmentToPathURI(archive.getPath()), configuration);
+            DistributedCache.addCacheArchive(convertPathToURI(archive.getPath()), configuration);
         }
     }
 
-    private URI addFragmentToPathURI(Path path) {
+    private URI convertPathToURI(Path path) {
         URI uri = path.toUri();
-        String name = path.getName();
+        String linkName = stripArchiveExtension(path.getName());
         try {
-            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, name);
+            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, linkName);
         } catch (URISyntaxException ignore) {
             throw new IllegalArgumentException("could not add fragment to URI for Path: " + path);
         }
     }
 
+    static String stripArchiveExtension(String archiveName) {
+        if (archiveName.endsWith(".tgz") || archiveName.endsWith(".tar") || archiveName.endsWith(".zip") ) {
+            return archiveName.substring(0, archiveName.length() - 4);
+        } else if (archiveName.endsWith(".tar.gz")) {
+            return archiveName.substring(0, archiveName.length() - 7);
+        }
+        return null;
+    }
+
     /**
      * Hadoop can handle archives with the following extensions: zip, tar, tar.gz, tgz
      */
-    private boolean isArchive(Path path) {
-        String filename = path.getName();
+    static boolean isArchive(Path archivePath) {
+        String filename = archivePath.getName();
         return filename.endsWith(".tgz") || filename.endsWith(".tar.gz") ||
                 filename.endsWith(".tar") || filename.endsWith(".zip");
     }
