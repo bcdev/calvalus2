@@ -40,7 +40,7 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
     private final Pattern outputProductPattern;
     private final Pattern inputProductPattern;
     private final List<String> outputFiles;
-    private final List<String> inputFiles;
+    private String inputFile = null;
 
     private int lastScan = 0;
     private boolean skipProcessing = false;
@@ -53,7 +53,6 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         this.outputProductPattern = Pattern.compile(OUTPUT_PRODUCT_REGEX);
         this.inputProductPattern = Pattern.compile(INPUT_PRODUCT_REGEX);
         this.outputFiles = new ArrayList<String>();
-        this.inputFiles = new ArrayList<String>();
     }
 
     @Override
@@ -84,7 +83,7 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
             }
             Matcher inputProductMatcher = inputProductPattern.matcher(line);
             if (inputProductMatcher.find()) {
-                inputFiles.add(inputProductMatcher.group(1).trim());
+                inputFile = inputProductMatcher.group(1).trim();
                 return;
             }
             if (line.equalsIgnoreCase("CALVALUS_SKIP_PROCESSING yes")) {
@@ -108,8 +107,8 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         }
     }
 
-    public String[]  getInputFiles() {
-        return inputFiles.toArray(new String[inputFiles.size()]);
+    public String getInputFile() {
+        return inputFile;
     }
 
     public String[]  getOutputFiles() {

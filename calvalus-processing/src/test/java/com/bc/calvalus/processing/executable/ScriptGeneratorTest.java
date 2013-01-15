@@ -41,7 +41,7 @@ public class ScriptGeneratorTest {
 
     @Test
     public void testAddResource_WithoutVariables() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
+        ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, "foo");
         scriptGenerator.addResource(new StringResource("foo-script", "This is the script content"));
         Object[] keys = scriptGenerator.getVelocityContext().getKeys();
         assertEquals(1, keys.length);
@@ -54,7 +54,7 @@ public class ScriptGeneratorTest {
 
     @Test
     public void testAddResource_WithVariableAndProcessing() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
+        ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, "foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script.vm", "This is the $variable content"));
         Object[] keys = scriptGenerator.getVelocityContext().getKeys();
@@ -69,7 +69,7 @@ public class ScriptGeneratorTest {
      */
     @Test
     public void testAddResource_WithVariableAndWithoutProcessing() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
+        ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, "foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script", "This is the $variable content"));
         Object[] keys = scriptGenerator.getVelocityContext().getKeys();
@@ -77,40 +77,6 @@ public class ScriptGeneratorTest {
         Resource scriptResource = (Resource) scriptGenerator.getVelocityContext().get("script");
         assertNotNull(scriptResource);
         assertEquals("This is the $variable content", scriptResource.getContent());
-    }
-
-    @Test
-    public void testGetCommandlineWithWrapperScript() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
-        scriptGenerator.getVelocityContext().put("variable", "calvalus");
-        scriptGenerator.addResource(new StringResource("foo-wrapper.vm", "This is the $variable content"));
-        scriptGenerator.addResource(new StringResource("foo-should-process-wrapper", "This is the other content"));
-        Object[] keys = scriptGenerator.getVelocityContext().getKeys();
-        assertEquals(3, keys.length);
-        assertEquals("./wrapper", scriptGenerator.getCommandLine());
-        assertEquals("./should-process-wrapper", scriptGenerator.getCommandLine("should-process"));
-    }
-
-    @Test
-    public void testGetCommandline() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
-        scriptGenerator.getVelocityContext().put("variable", "calvalus");
-        scriptGenerator.addResource(new StringResource("foo-cmdline.vm", "This is the $variable content"));
-        scriptGenerator.addResource(new StringResource("foo-should-process-cmdline.vm", "This is the $variable content2"));
-        Object[] keys = scriptGenerator.getVelocityContext().getKeys();
-        assertEquals(3, keys.length);
-        assertEquals("This is the calvalus content", scriptGenerator.getCommandLine());
-        assertEquals("This is the calvalus content2", scriptGenerator.getCommandLine("should-process"));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testGetCommandline_Failing() throws Exception {
-        ScriptGenerator scriptGenerator = new ScriptGenerator("foo");
-        scriptGenerator.getVelocityContext().put("variable", "calvalus");
-        scriptGenerator.addResource(new StringResource("foo-file.vm", "This is the $variable content"));
-        Object[] keys = scriptGenerator.getVelocityContext().getKeys();
-        assertEquals(2, keys.length);
-        assertEquals("This is the calvalus content", scriptGenerator.getCommandLine());
     }
 
     @Test
@@ -150,7 +116,7 @@ public class ScriptGeneratorTest {
         List<Resource> resources = new ArrayList<Resource>();
 
         public TracingScriptGenerator(String executableName) {
-            super(executableName);
+            super(ScriptGenerator.Step.PROCESS, executableName);
         }
 
         @Override

@@ -28,20 +28,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generates the script to call the executable processor.
+ * Generates the step to call the executable processor.
  * Evaluates the given templates using Velocity.
  */
 public class ScriptGenerator {
 
-    private static final String VM_SUFFIX = ".vm";
-    private static final String CMDLINE = "cmdline";
-    private static final String WRAPPER = "wrapper";
+    enum Step {
+        PREPARE {
+            @Override
+            boolean shouldWriteResource(String resourceName) {
+                return resourceName.equals("prepare");
+            }
+        },
+        PROCESS {
+            @Override
+            boolean shouldWriteResource(String resourceName) {
+                return !resourceName.equals("prepare") && !resourceName.equals("finalize");
+            }
+        },
+        FINALIZE {
+            @Override
+            boolean shouldWriteResource(String resourceName) {
+                return resourceName.equals("finalize");
+            }
+        };
 
+        abstract boolean shouldWriteResource(String resourceName);
+
+    }
+    private static final String VM_SUFFIX = ".vm";
     private final ResourceEngine resourceEngine;
+    private final Step step;
     private final String executableName;
     private final List<String> processedResourceNames;
 
-    public ScriptGenerator(String executableName) {
+    public ScriptGenerator(Step step, String executableName) {
+        this.step = step;
         this.executableName = executableName;
         this.resourceEngine = new ResourceEngine();
         this.processedResourceNames = new ArrayList<String>();
@@ -63,35 +85,14 @@ public class ScriptGenerator {
         processedResourceNames.add(processedName);
     }
 
-    public String getCommandLine() {
-        if (processedResourceNames.contains(CMDLINE)) {
-            return getCommandLineImpl(CMDLINE);
-        } else if (processedResourceNames.contains(WRAPPER)) {
-            return "./" + WRAPPER;
-        }
-        throw new NullPointerException("no 'cmdline' resource '" + CMDLINE + "' specified");
-    }
-
-    public String getCommandLine(String name) {
-        if (processedResourceNames.contains(name + "-" + CMDLINE)) {
-            return getCommandLineImpl(name + "-" + CMDLINE);
-        } else if (processedResourceNames.contains(name + "-" + WRAPPER)) {
-            return "./" + name + "-" + WRAPPER;
-        }
-        throw new NullPointerException("no 'cmdline' resource '" + name + "' specified");
-    }
-
-    private String getCommandLineImpl(String cmdlineName) {
-        Resource resource = resourceEngine.getResource(cmdlineName);
-        if (resource != null) {
-            return resource.getContent();
-        }
-        return null;
+    public boolean hasStepScript() {
+        return processedResourceNames.contains(step.toString().toLowerCase());
     }
 
     public void writeScriptFiles(File cwd) throws IOException {
+        System.out.println("writing files for step = " + step);
         for (String resourceName : processedResourceNames) {
-            if (!resourceName.endsWith(CMDLINE)) {
+            if (step.shouldWriteResource(resourceName)) {
                 Resource resource = resourceEngine.getResource(resourceName);
                 File scriptFile = new File(cwd, resourceName);
                 writeScript(scriptFile, resource);
@@ -100,7 +101,7 @@ public class ScriptGenerator {
     }
 
     void writeScript(File scriptFile, Resource resource) throws IOException {
-        System.out.println("scriptFile = " + scriptFile.getCanonicalPath());
+        System.out.println("file = " + scriptFile.getCanonicalPath());
         if (scriptFile.exists()) {
             scriptFile.delete();
         }
