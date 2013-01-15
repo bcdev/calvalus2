@@ -1,6 +1,7 @@
 #!/bin/bash
 
 inFile="$inputFile"
+inFileName="$inputFile.name"
 
 #[[
 set -e
@@ -41,7 +42,6 @@ ln -sf ${POLYMER}/rayleigh .
 ln -sf ${POLYMER}/smile .
 
 # append input,output to parameters.txt
-inFileName=$(basename $inFile)
 outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
 echo INPUT_FILE $inFile >> parameters.txt
 echo OUTPUT_FILE $outFile >> parameters.txt

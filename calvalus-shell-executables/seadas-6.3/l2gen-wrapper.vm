@@ -1,12 +1,12 @@
 #!/bin/bash
 
 inputFile="$inputFile"
+inFileName="$inputFile.name"
 
 #[[
 set -e
 set -m
 
-inFileName=$(basename $inputFile)
 outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
 
 SEADAS=./seadas-6.3/seadas-6.3
@@ -48,7 +48,7 @@ echo "eline=$eline" >> parameters.anc
 #[[
 
 # get AUX data files 
-f=$(basename $inputFile) 
+f=$inFileName
 s=`date -d "${f:14:4}-${f:18:2}-${f:20:2} ${f:23:2}:${f:25:2}:${f:27:2}Z" -u +%s`
 d=`date -d @$s -u +%Y%j%H%M%S`
 h=`date -d @$s -u +%H`
