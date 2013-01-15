@@ -80,7 +80,7 @@ public class ScriptGeneratorTest {
     }
 
     @Test
-    public void testWriteScriptFiles_WithProcessing() throws Exception {
+    public void testWriteScriptFiles_WithVelocityProcessing() throws Exception {
         TracingScriptGenerator scriptGenerator = new TracingScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script.vm", "This is the $variable content"));
@@ -94,10 +94,10 @@ public class ScriptGeneratorTest {
     }
 
     /**
-     * No processing because the file does not end with ".vm"
+     * No Velocity processing because the file does not end with ".vm"
      */
     @Test
-    public void testWriteScriptFiles_WithoutProcessing() throws Exception {
+    public void testWriteScriptFiles_WithoutVelocityProcessing() throws Exception {
         TracingScriptGenerator scriptGenerator = new TracingScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script", "This is the $variable content"));
@@ -110,13 +110,70 @@ public class ScriptGeneratorTest {
         assertEquals("This is the $variable content", scriptGenerator.resources.get(0).getContent());
     }
 
+    @Test
+    public void testWriteScriptFiles_Prepare() throws Exception {
+        TracingScriptGenerator scriptGenerator = new TracingScriptGenerator(ScriptGenerator.Step.PREPARE, "foo");
+        scriptGenerator.addResource(new StringResource("foo-prepare.vm", "This is the prepare script"));
+        scriptGenerator.addResource(new StringResource("foo-process.vm", "This is the process script"));
+        scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
+        scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
+        scriptGenerator.writeScriptFiles(new File("."));
+
+        assertEquals(1, scriptGenerator.fileNames.size());
+        assertEquals(1, scriptGenerator.resources.size());
+        assertEquals("prepare", scriptGenerator.fileNames.get(0));
+        assertEquals("foo-prepare.vm", scriptGenerator.resources.get(0).getPath());
+        assertEquals("This is the prepare script", scriptGenerator.resources.get(0).getContent());
+    }
+
+    @Test
+    public void testWriteScriptFiles_Process() throws Exception {
+        TracingScriptGenerator scriptGenerator = new TracingScriptGenerator(ScriptGenerator.Step.PROCESS, "foo");
+        scriptGenerator.addResource(new StringResource("foo-prepare.vm", "This is the prepare script"));
+        scriptGenerator.addResource(new StringResource("foo-process.vm", "This is the process script"));
+        scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
+        scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
+        scriptGenerator.writeScriptFiles(new File("."));
+
+        assertEquals(2, scriptGenerator.fileNames.size());
+        assertEquals(2, scriptGenerator.resources.size());
+
+        assertEquals("process", scriptGenerator.fileNames.get(0));
+        assertEquals("foo-process.vm", scriptGenerator.resources.get(0).getPath());
+        assertEquals("This is the process script", scriptGenerator.resources.get(0).getContent());
+
+        assertEquals("misc.txt", scriptGenerator.fileNames.get(1));
+        assertEquals("foo-misc.txt", scriptGenerator.resources.get(1).getPath());
+        assertEquals("misc data", scriptGenerator.resources.get(1).getContent());
+    }
+
+    @Test
+    public void testWriteScriptFiles_Finalize() throws Exception {
+        TracingScriptGenerator scriptGenerator = new TracingScriptGenerator(ScriptGenerator.Step.FINALIZE, "foo");
+        scriptGenerator.addResource(new StringResource("foo-prepare.vm", "This is the prepare script"));
+        scriptGenerator.addResource(new StringResource("foo-process.vm", "This is the process script"));
+        scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
+        scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
+
+        scriptGenerator.writeScriptFiles(new File("."));
+
+        assertEquals(1, scriptGenerator.fileNames.size());
+        assertEquals(1, scriptGenerator.resources.size());
+        assertEquals("finalize", scriptGenerator.fileNames.get(0));
+        assertEquals("foo-finalize.vm", scriptGenerator.resources.get(0).getPath());
+        assertEquals("This is the finalize script", scriptGenerator.resources.get(0).getContent());
+    }
 
     private static class TracingScriptGenerator extends ScriptGenerator {
         List<String> fileNames = new ArrayList<String>();
         List<Resource> resources = new ArrayList<Resource>();
 
         public TracingScriptGenerator(String executableName) {
-            super(ScriptGenerator.Step.PROCESS, executableName);
+            this(ScriptGenerator.Step.PROCESS, executableName);
+        }
+
+        public TracingScriptGenerator(ScriptGenerator.Step step, String executableName) {
+            super(step, executableName);
         }
 
         @Override
