@@ -181,7 +181,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
-        parameters.put("additionalStagingPaths", "freshmon@freshmon-csw:/data/postprocessing/entries/");
+        parameters.put("additionalStagingPaths", "freshmon@freshmon-csw:/data/dissemination/entries/");
         return parameters;
     }
 }
