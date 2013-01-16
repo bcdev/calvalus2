@@ -107,7 +107,6 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                     context.setStatus("Metadata");
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
                         writeMetadatafile(targetProduct, inputPath, outputFilename, context);
-                        LOG.info("Finished creating metadata.");
                     }
                     pm.worked(5);
                 } finally {
@@ -128,6 +127,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         L2Mapper.processMetadata(context,
                                  inputPath.toString(), targetProduct,
                                  outputPath.toString(), targetProduct);
+        LOG.info("Finished creating metadata.");
     }
 
     private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,

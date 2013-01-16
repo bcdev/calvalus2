@@ -106,12 +106,13 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                     processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
 
-                    processMetadata(context,
-                                    processorAdapter.getInputPath().toString(),
-                                    processorAdapter.getInputProduct(),
-                                    processorAdapter.getOutputPath().toString(),
-                                    processorAdapter.openProcessedProduct()
-                    );
+                    if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
+                        processMetadata(context,
+                                        processorAdapter.getInputPath().toString(),
+                                        processorAdapter.getInputProduct(),
+                                        processorAdapter.getOutputPath().toString(),
+                                        processorAdapter.openProcessedProduct());
+                    }
                 } else {
                     LOG.warning("product has not been processed.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not processed").increment(1);
