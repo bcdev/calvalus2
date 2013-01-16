@@ -32,8 +32,8 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
 
     private final static String KEYWORD_PREFIX = "CALVALUS";
     private final static String PROGRESS_REGEX = "CALVALUS_PROGRESS ([0-9\\.]+)";
-    private final static String INPUT_PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
-    private final static String OUTPUT_PRODUCT_REGEX = "CALVALUS_INPUT_PRODUCT (.+)$";
+    private final static String INPUT_PRODUCT_REGEX = "CALVALUS_INPUT_PRODUCT (.+)$";
+    private final static String OUTPUT_PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
     private final String programName;
     private final MapContext mapContext;
     private final Pattern progressPattern;
