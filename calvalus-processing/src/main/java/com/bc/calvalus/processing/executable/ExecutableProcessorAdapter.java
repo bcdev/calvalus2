@@ -92,7 +92,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setHandler(keywordHandler).
                     start();
             inputFileName = keywordHandler.getInputFile();
-            return !keywordHandler.skipProcessing();
+            return keywordHandler.skipProcessing();
         } else {
             return false;
         }
