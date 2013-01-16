@@ -53,7 +53,6 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MA_PARAMETERS, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "true"},
         };
     }
 

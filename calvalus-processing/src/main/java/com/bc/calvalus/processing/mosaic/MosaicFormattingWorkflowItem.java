@@ -57,7 +57,6 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, "mosaic-v%02dh%02d"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF"},
                 {JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
         };
     }
 
@@ -73,12 +72,6 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        // TODO add resume processing
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        if (resumeProcessing) {
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        } else {
-            JobUtils.clearAndSetOutputDir(getOutputDir(), job);
-        }
+        FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
     }
 }
