@@ -124,7 +124,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                 // NO metadata
                 targetProduct.getMetadataRoot().getElementGroup().removeAll();
 
-                Path outputDir = new Path(FileOutputFormat.getOutputPath(context), idAsString);
+                Path outputDir = new Path(FileOutputFormat.getWorkOutputPath(context), idAsString);
                 Path outputPath = new Path(outputDir, product.getName() + ".txt");
 
                 FileSystem fileSystem = outputPath.getFileSystem(context.getConfiguration());
