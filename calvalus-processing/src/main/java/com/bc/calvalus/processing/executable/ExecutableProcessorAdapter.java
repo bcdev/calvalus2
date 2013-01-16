@@ -84,7 +84,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
-            String processLogName = bundle + "-" + executable;
+            String processLogName = bundle + "-" + executable + "-prepare";
             KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
             new ProcessObserver(process).
@@ -104,7 +104,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
 
         Rectangle inputRectangle = getInputRectangle();
         File inputFile;
@@ -133,7 +133,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
-        String processLogName = bundle + "-" + executable;
+        String processLogName = bundle + "-" + executable + "-process";
         KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
         new ProcessObserver(process).
@@ -192,7 +192,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 cmdArray[cmdArray.length-1] = outputPath.toString();
 
                 Process process = Runtime.getRuntime().exec(cmdArray);
-                String processLogName = bundle + "-" + executable;
+                String processLogName = bundle + "-" + executable + "-finalize";
                 KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
                 new ProcessObserver(process).
