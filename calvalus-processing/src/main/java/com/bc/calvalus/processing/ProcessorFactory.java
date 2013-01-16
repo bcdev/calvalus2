@@ -104,36 +104,25 @@ public class ProcessorFactory {
      */
     public static void apiUsageExample(MapContext mapContext) throws Exception {
         Configuration conf = mapContext.getConfiguration();
-        final boolean resumeProcessing = conf.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(mapContext);
         try {
-            // most common usage
-            Product product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
-
-            // l2 only
-            // resume handling
-            if (resumeProcessing) {
-                boolean skipProcessing = processorAdapter.skipProcessingInputProduct();
-                if (skipProcessing) {
+            // L2, including handing of processing of missing products
+            processorAdapter.prepareProcessing();
+            if (!conf.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
+                if (processorAdapter.canSkipInputProduct()) {
                     // nothing to compute, result exists
-                } else {
-                    processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
+                    return;
                 }
             }
-            // MA only: use points from reference data set to restrict roi even further
-            Product inputProduct = processorAdapter.getInputProduct();
-            Rectangle referenceDataRoi = null;
-            processorAdapter.setProcessingRectangle(referenceDataRoi);
-
-            // all
-            int processedProducts = processorAdapter.processSourceProduct(ProgressMonitor.NULL);
-            Rectangle sourceRect = processorAdapter.getInputRectangle();
-
-            // l2 only
+            processorAdapter.processSourceProduct(ProgressMonitor.NULL);
             processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
 
-            // l3 and ma
-            Product processedProduct = processorAdapter.openProcessedProduct();
+            // MA only: use points from reference data set to restrict roi even further
+            Product inputProduct = processorAdapter.getInputProduct();
+            Rectangle referenceDataRoi = null; // calculated by client
+            processorAdapter.setProcessingRectangle(referenceDataRoi);
+
+            Product product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
             // do something with the processed product
         } finally {
             processorAdapter.dispose();

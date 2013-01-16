@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -57,7 +56,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_L2_OPERATOR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
+                {JobConfigNames.CALVALUS_PROCESS_ALL, "false"}
         };
     }
 
@@ -73,12 +72,7 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        if (resumeProcessing) {
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        } else {
-            JobUtils.clearAndSetOutputDir(getOutputDir(), job);
-        }
+        FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         ProcessorFactory.installProcessor(jobConfig);
     }
 }

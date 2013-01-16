@@ -53,6 +53,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     private final File cwd;
     private String[] outputFilesNames;
     private String inputFileName;
+    private boolean skipProcessing = false;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
         super(mapContext);
@@ -60,7 +61,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public boolean skipProcessingInputProduct() throws IOException {
+    public void prepareProcessing() throws IOException {
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
@@ -92,10 +93,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setHandler(keywordHandler).
                     start();
             inputFileName = keywordHandler.getInputFile();
-            return keywordHandler.skipProcessing();
-        } else {
-            return false;
+            skipProcessing = keywordHandler.skipProcessing();
         }
+    }
+
+    @Override
+    public boolean canSkipInputProduct() throws IOException {
+        return skipProcessing;
     }
 
     @Override

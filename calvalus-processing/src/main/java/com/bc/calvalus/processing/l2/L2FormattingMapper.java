@@ -70,13 +70,15 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             String outputFilename = productFormatter.getOutputFilename();
             String outputFormat = productFormatter.getOutputFormat();
 
-            if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
+            if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
+                LOG.info("process missing: testing if target product exist");
                 Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
                 if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                    LOG.info("process missing: target product exist, nothing to compute");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
-                    LOG.info("resume: target product already exist, skip processing");
                     return;
                 }
+                LOG.info("process missing: target product does not exist");
             }
             Product targetProduct = processorAdapter.getInputProduct();
 

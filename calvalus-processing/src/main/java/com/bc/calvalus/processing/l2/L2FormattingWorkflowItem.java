@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -62,7 +61,7 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_OUTPUT_BANDLIST, null},
                 {JobConfigNames.CALVALUS_OUTPUT_REGEX, null},
                 {JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null},
-                {JobConfigNames.CALVALUS_RESUME_PROCESSING, "false"}
+                {JobConfigNames.CALVALUS_PROCESS_ALL, "false"}
         };
     }
 
@@ -76,14 +75,7 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        // TODO add resume processing
-        boolean resumeProcessing = jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false);
-        if (resumeProcessing) {
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        } else {
-            JobUtils.clearAndSetOutputDir(getOutputDir(), job);
-        }
-
+        FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         // for bundle only
         ProcessorFactory.installProcessor(jobConfig);
     }

@@ -85,14 +85,15 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 2 processing", 100);
         try {
-            if (jobConfig.getBoolean(JobConfigNames.CALVALUS_RESUME_PROCESSING, false)) {
-                LOG.info("resume: testing for target products");
-                if (processorAdapter.skipProcessingInputProduct()) {
-                    // nothing to compute, result exists
-                    LOG.info("resume: target product exist.");
+            processorAdapter.prepareProcessing();
+            if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
+                LOG.info("process missing: testing if target product exist");
+                if (processorAdapter.canSkipInputProduct()) {
+                    LOG.info("process missing: target product exist, nothing to compute");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
                     return;
                 }
+                LOG.info("process missing: target product does not exist");
             }
             Rectangle sourceRectangle = processorAdapter.getInputRectangle();
             if (sourceRectangle != null && sourceRectangle.isEmpty()) {
@@ -119,8 +120,8 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 }
             }
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "BEAM exception: " + e.toString(), e);
-            throw new IOException("BEAM exception: " + e.toString(), e);
+            LOG.log(Level.SEVERE, "Processing exception: " + e.toString(), e);
+            throw new IOException("Processing exception: " + e.toString(), e);
         } finally {
             pm.done();
             processorAdapter.dispose();

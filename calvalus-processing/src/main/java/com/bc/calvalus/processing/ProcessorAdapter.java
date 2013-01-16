@@ -117,15 +117,25 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Returns whether the adapter skip processing of the current input product.
-     * The adapter should based on information about the input
-     * product see if the corresponding output product already exists.
-     *
+     * Prepares the processing.
+     * The default implementation does nothing.
+     */
+    public void prepareProcessing() throws IOException {
+
+    }
+
+    /**
+     * Returns whether the adapter can skip processing the current input product.
+     * The adapters answer should be based on information about the input
+     * product and whether the corresponding output product already exists.
+     * <p/>
+     * Before this method is called prepare processing has to be invoked!
+     * <p/>
      * This should enable fast (re-)processing of missing products.
      *
      * @return {@code true}, if the input product should not be processed.
      */
-    public boolean skipProcessingInputProduct() throws IOException {
+    public boolean canSkipInputProduct() throws IOException {
         return false;
     }
 
@@ -137,6 +147,9 @@ public abstract class ProcessorAdapter {
      * <li>performs a "L2" operation (optional)</li>
      * </ul>
      * the resulting products are contained in the adapter and can be opened using {@code #openProcessedProduct}.
+     * <p/>
+     * Before this method is called prepare processing has to be invoked!
+     * <p/>
      *
      * @param pm A progress monitor
      * @return The number of processed products.
@@ -188,6 +201,7 @@ public abstract class ProcessorAdapter {
         if (processedProduct == null) {
             Rectangle sourceRectangle = getInputRectangle();
             if (sourceRectangle == null || !sourceRectangle.isEmpty()) {
+                prepareProcessing();
                 int numProducts = processSourceProduct(pm);
                 if (numProducts > 0) {
                     processedProduct = openProcessedProduct();
