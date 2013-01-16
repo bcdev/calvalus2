@@ -6,14 +6,15 @@ set -e
 inputPath="$1"
 outputPath="$2"
 
+filename=$(basename "${inputPath}")
+targetFilename=Complex_copy_of_${filename}
+
 echo inputPath $inputPath
 echo outputPath $outputPath
+echo targetFilename $targetFilename
+echo filename $filename
 
-filename=Complex_copy_of_$(basename "${inputPath}")
-echo $filename
-
-hadoop fs -ls $outputPath/$filename 2> /dev/null
-if [ $? = 0 ]; then
+if hadoop fs -ls $outputPath/$targetFilename; then
   # output exist
   echo CALVALUS_SKIP_PROCESSING yes
 else
