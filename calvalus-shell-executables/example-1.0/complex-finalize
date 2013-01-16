@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -m
+set -e
+
+outputFile=$1
+outputPath=$2
+
+echo outputFile $outputFile
+echo outputPath $outputPath
+
+filename=$(basename "${outputFile}")
+echo $filename
+
+echo hadoop fs -put $outputFile $outputPath/$filename
+hadoop fs -put $outputFile $outputPath/$filename

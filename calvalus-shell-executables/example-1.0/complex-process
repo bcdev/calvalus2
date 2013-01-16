@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -m
+set -e
+
+inputFile=$1
+outputFile=Complex_copy_of_$(basename ${inputFile})
+
+cp $inputFile $outputFile
+
+echo CALVALUS_OUTPUT_PRODUCT $outputFile

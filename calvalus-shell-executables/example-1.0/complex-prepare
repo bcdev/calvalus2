@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -m
+set -e
+
+inputPath="$1"
+outputPath="$2"
+
+echo inputPath $inputPath
+echo outputPath $outputPath
+
+filename=Complex_copy_of_$(basename "${inputPath}")
+echo $filename
+
+hadoop fs -ls $outputPath/$filename 2> /dev/null
+if [ $? = 0 ]; then
+  # output exist
+  echo CALVALUS_SKIP_PROCESSING yes
+else
+  # to be processes, retrieve input
+  echo copying $inputPath to local filesystem
+  hadoop fs -get $inputPath $filename
+  echo CALVALUS_INPUT_PRODUCT $filename
+fi

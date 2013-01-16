@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -m
+set -e
+
+inputFile=$1
+outputFile=Simple_copy_of_$(basename ${inputFile})
+
+echo CALVALUS_PROGRESS 0.1
+sleep 10
+
+echo CALVALUS_PROGRESS 0.2
+sleep 10
+
+cp $inputFile $outputFile
+echo CALVALUS_PROGRESS 1.0
+sleep 10
+
+echo CALVALUS_OUTPUT_PRODUCT $outputFile
