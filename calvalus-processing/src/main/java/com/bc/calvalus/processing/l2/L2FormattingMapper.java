@@ -84,9 +84,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
             if (!isProductEmpty(context, targetProduct)) {
                 targetProduct = doReprojection(jobConfig, targetProduct);
-                Map<String, Object> geoSubsetParameter = createGeoSubsetParameter(jobConfig);
-                if (!geoSubsetParameter.isEmpty()) {
-                    targetProduct = GPF.createProduct("Subset", geoSubsetParameter, targetProduct);
+                Map<String, Object> spatialSubsetParameter = createSpatialSubsetParameter(jobConfig);
+                if (!spatialSubsetParameter.isEmpty()) {
+                    targetProduct = GPF.createProduct("Subset", spatialSubsetParameter, targetProduct);
                 }
                 BeamProcessorAdapter.copyTimeCoding(processorAdapter.getInputProduct(), targetProduct);
 
@@ -193,16 +193,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         return product;
     }
 
-    private Map<String, Object> createGeoSubsetParameter(Configuration jobConfig) {
-        String crsWkt = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS);
-        boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(crsWkt);
+    private Map<String, Object> createSpatialSubsetParameter(Configuration jobConfig) {
         String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
 
         Map<String, Object> subsetParams = new HashMap<String, Object>();
-        // do only the subset if the product is reprojected, otherwise input
-        // and output region would be the same
-        if (hasGeometry && hasCrsWkt) {
+        if (hasGeometry) {
             subsetParams.put("geoRegion", regionGeometry);
         }
         return subsetParams;
