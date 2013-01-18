@@ -105,6 +105,15 @@ public class L2FProductionType extends HadoopProductionType {
         if (regionGeometry != null) {
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry.toString());
         }
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
+        if (productionRequest.getString("replaceNanValue", null) != null) {
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE,
+                                String.valueOf(productionRequest.getDouble("replaceNanValue", 0.0)));
+        }
+        String outputBandList = productionRequest.getString("outputBandList", "");
+        if (!outputBandList.isEmpty()) {
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_BANDLIST, outputBandList);
+        }
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
