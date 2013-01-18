@@ -72,7 +72,7 @@
                             <g:CheckBox ui:field="replaceNans"
                                         text="Replace NaN values by"
                                         checked="false"/>
-                            <g:DoubleBox ui:field="replaceValue" visibleLength="10"/>
+                            <g:DoubleBox ui:field="replaceNanValue" visibleLength="10"/>
                             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
                                 Only applied if the output is reprojected.
                             </g:HTML>
