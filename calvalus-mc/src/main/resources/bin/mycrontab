@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+# Create a backup archive
+0 1,7,12,20 * * * cd ~; tar czf ~/backup/dfs-name.tgz ~/dfs/name/
+# Put the archive in the rotation
+10 1,7,12,20 * * * cd ~; mkdir -p ~/backup/archive/; ~/backup/rotate.bash ~/backup/dfs-name.tgz ~/backup/archive 300 > ~/backup/rotate.log 2>&1
