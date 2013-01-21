@@ -35,6 +35,7 @@ fi
 timestamp=$(date --utc +%Y-%m-%dT%H:%M:%S)
 
 srcFileName="$(basename "${srcFilePath}")"
+srcFileBase=${srcFileName%.tgz}
 destFileName="${timestamp}.${srcFileName}"
 
 mv "${srcFilePath}" "${destDir}/${destFileName}"
@@ -45,7 +46,7 @@ countFailed=0
 countDeleted=0
 
 # Count files that are valid, and keep only the latest $copies of them
-for file in $(ls -1tr "${destDir}/"*".tgz" | sort -r); do
+for file in $(ls -1tr "${destDir}/"*"${srcFileBase}.tgz" | sort -r); do
     if [ '!' -e "${file}" ]; then
         #added this because of strange behavior... sometimes file is absolute
         file="${destDir}/${file}"
