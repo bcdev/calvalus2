@@ -21,7 +21,7 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.AbstractLcMosaicAlgorithm;
@@ -38,7 +38,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.util.ArrayList;
@@ -78,8 +77,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         DateRange mainRange = productionRequest.createFromMinMax();
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
-        String cloudL3ConfigXml = getCloudL3Config(productionRequest).toXml();
-        String mainL3ConfigXml = getMainL3Config(productionRequest).toXml();
+        String cloudMosaicConfigXml = getCloudMosaicConfig(productionRequest).toXml();
+        String mainMosaicConfigXml = getMainMosaicConfig(productionRequest).toXml();
 
         String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
@@ -106,7 +105,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
 
             jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
-            jobConfigCloud.set(JobConfigNames.CALVALUS_L3_PARAMETERS, cloudL3ConfigXml);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, cloudMosaicConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
@@ -122,7 +121,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, mainRange.toString());
 
             jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-            jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigSr.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mainMosaicConfigXml);
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             if (productionRequest.getBoolean("lcl3.cloud", true)) {
                 // if cloud aggregation is disabled, don't set this property
@@ -146,7 +145,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             String date2Str = ProductionRequest.getDateFormat().format(mainRange.getStopDate());
             jobConfigFormat.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-            jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+            jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mainMosaicConfigXml);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
@@ -244,7 +243,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         return new DateRange(date1, date2);
     }
 
-    static L3Config getCloudL3Config(ProductionRequest productionRequest) throws ProductionException {
+    static MosaicConfig getCloudMosaicConfig(ProductionRequest productionRequest) throws ProductionException {
         String asLandText = productionRequest.getString("calvalus.lc.remapAsLand", null);
         String maskExpr;
         if (asLandText != null) {
@@ -262,10 +261,10 @@ public class LcL3ProductionType extends HadoopProductionType {
         String[] varNames = new String[]{"status", "sdr_8"};
         String type = LcSDR8MosaicAlgorithm.class.getName();
 
-        return createL3Config(type, maskExpr, varNames);
+        return new MosaicConfig(type, maskExpr, varNames);
     }
 
-    static L3Config getMainL3Config(ProductionRequest productionRequest) throws ProductionException {
+    static MosaicConfig getMainMosaicConfig(ProductionRequest productionRequest) throws ProductionException {
         // exclude invalid and deep water pixels
         String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4) and dem_alt > -100))";
 
@@ -283,22 +282,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                       ? LcL3Nc4MosaicAlgorithm.class.getName()
                       : LCMosaicAlgorithm.class.getName();
 
-        return createL3Config(type, maskExpr, varNames);
-    }
-
-    private static L3Config createL3Config(String type, String maskExpr, final String[] varNames) {
-
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
-            @Override
-            public String[] getVarNames() {
-                return varNames;
-            }
-        };
-
-        L3Config l3Config = new L3Config();
-        l3Config.setMaskExpr(maskExpr);
-        l3Config.setAggregatorConfigs(aggregatorConfig);
-        return l3Config;
+        return new MosaicConfig(type, maskExpr, varNames);
     }
 
     // TODO, at the moment no staging implemented

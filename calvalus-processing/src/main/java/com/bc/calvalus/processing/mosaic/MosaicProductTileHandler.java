@@ -65,8 +65,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
         String outputNameFormat = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, null);
 
         MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
-
-        MosaicAlgorithm algorithm = MosaicUtils.createAlgorithm(jobConfig);
+        MosaicAlgorithm algorithm = MosaicConfig.createAlgorithm(jobConfig);
 
         return new MosaicProductTileHandler(context, mosaicGrid, outputNameFormat, algorithm, format, compression);
     }
