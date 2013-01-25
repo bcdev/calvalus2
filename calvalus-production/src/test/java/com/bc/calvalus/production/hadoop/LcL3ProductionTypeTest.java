@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
@@ -134,18 +134,18 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetCloudL3Config() throws Exception {
-        L3Config cloudL3Config = LcL3ProductionType.getCloudL3Config(
+        MosaicConfig cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
                 new ProductionRequest("test", "dummy", "foo", "bar"));
-        assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+        assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
-        cloudL3Config = LcL3ProductionType.getCloudL3Config(
+        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
                 new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"));
-        assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getMaskExpr());
+        assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
-        cloudL3Config = LcL3ProductionType.getCloudL3Config(
+        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
                 new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
         assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)",
-                     cloudL3Config.getMaskExpr());
+                     cloudL3Config.getValidMaskExpression());
     }
 
     @Test

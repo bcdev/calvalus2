@@ -21,7 +21,7 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.globveg.GlobVegMosaicAlgorithm;
@@ -34,7 +34,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
 
 /**
  * A production type used for generating one or more GLobVeg Level-3 products.
@@ -69,7 +68,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         String processorBundle = productionRequest.getString("processorBundle", null);
         String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
 
-        String l3ConfigXml = getL3Config().toXml();
+        String mosaicConfigXml = getMosaicConfig().toXml();
 
         String period = getGlobVegPeriodName(productionRequest);
         String partsOutputDir = getOutputPath(productionRequest, productionId, period + "-parts");
@@ -95,7 +94,7 @@ public class GLobVegProductionType extends HadoopProductionType {
                 jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
             }
 
-            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            jobConfig.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfig.setInt("calvalus.mosaic.macroTileSize", 10);
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
@@ -112,7 +111,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputNameFormat);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
-            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            jobConfig.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -146,23 +145,11 @@ public class GLobVegProductionType extends HadoopProductionType {
         return productionRequest.getString("minDate").replaceAll("-", "");
     }
 
-    private static L3Config getL3Config() throws ProductionException {
-
-        final String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
-
+    private static MosaicConfig getMosaicConfig() throws ProductionException {
         String type = GlobVegMosaicAlgorithm.class.getName();
-
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
-            @Override
-            public String[] getVarNames() {
-                return varNames;
-            }
-        };
-
-        L3Config l3Config = new L3Config();
-        l3Config.setMaskExpr("valid_fapar == 1 || valid_lai == 1");
-        l3Config.setAggregatorConfigs(aggregatorConfig);
-        return l3Config;
+        String maskExpr = "valid_fapar == 1 || valid_lai == 1";
+        String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
+        return new MosaicConfig(type, maskExpr, varNames);
     }
 
     // TODO, at the moment no staging implemented

@@ -22,7 +22,6 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
@@ -62,14 +61,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration jobConfig = context.getConfiguration();
-        final L3Config l3Config = L3Config.get(jobConfig);
+        final MosaicConfig mosaicConfig = MosaicConfig.get(jobConfig);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Mosaikking", 100);
         try {
             mosaicGrid = MosaicGrid.create(jobConfig);
-            final VariableContext ctx = l3Config.createVariableContext();
+            final VariableContext ctx = mosaicConfig.createVariableContext();
 
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             int numTilesProcessed = 0;

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
@@ -51,7 +67,7 @@ public class OutputParametersForm extends Composite {
     @UiField
     CheckBox replaceNans;
     @UiField
-    DoubleBox replaceValue;
+    DoubleBox replaceNanValue;
     @UiField
     ListBox bandListBox;
     @UiField
@@ -143,8 +159,9 @@ public class OutputParametersForm extends Composite {
             parameters.put("autoStaging", "false");
         }
         if (enableTailoring.getValue()) {
-            parameters.put("replaceNans", String.valueOf(replaceNans.getValue()));
-            parameters.put("replaceValue", String.valueOf(replaceValue.getValue()));
+            if (replaceNans.getValue()) {
+                parameters.put("replaceNanValue", String.valueOf(replaceNanValue.getValue()));
+            }
             parameters.put("outputCRS", crsText.getValue());
             parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
             parameters.put("outputBandList", createBandListString());
@@ -193,7 +210,7 @@ public class OutputParametersForm extends Composite {
         boolean enableComponent = enabled && enableTailoring.getValue();
         crsText.setEnabled(enableComponent);
         replaceNans.setEnabled(enableComponent);
-        replaceValue.setEnabled(enableComponent);
+        replaceNanValue.setEnabled(enableComponent);
         bandListBox.setEnabled(enableComponent);
         quicklooks.setEnabled(enableComponent);
     }

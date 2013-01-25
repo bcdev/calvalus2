@@ -52,7 +52,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, NO_DEFAULT}
         };
     }

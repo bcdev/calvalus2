@@ -1,0 +1,18 @@
+# m h dom mon dow command
+#
+# back up processing system instances
+2 1,7,12,20 * * * bash -c 'i=freshmon-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+4 1,7,12,20 * * * bash -c 'i=idepix-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+6 1,7,12,20 * * * bash -c 'i=cc-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+8 1,7,12,20 * * * bash -c 'i=lc-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+10 1,7,12,20 * * * bash -c 'i=oc-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+12 1,7,12,20 * * * bash -c 'i=prevue-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+14 1,7,12,20 * * * bash -c 'i=fronts-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+16 1,7,12,20 * * * bash -c 'i=globveg-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,etc,src,special-requests}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'
+#
+# back up the HDFS name space
+30 1,7,12,20 * * * ( cd ~; tar czf backup/dfs-name.tgz dfs/name; mkdir -p backup/archive; backup/rotate.bash backup/dfs-name.tgz backup/archive 300 ) >> backup/backup-dfs-name.log 2>&1
+#
+# ensure proper replication of bundles and aux
+50 1,7,12,20 * * * ( hadoop fsck /calvalus/software; hadoop fs -setrep -R 4 /calvalus/software ) >> backup/hdfs-replication-check.log 2>&1
+52 1,7,12,20 * * * ( hadoop fsck /calvalus/auxiliary; hadoop fs -setrep -R 3 /calvalus/auxiliary ) >> backup/hdfs-replication-check.log 2>&1

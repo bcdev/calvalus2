@@ -48,7 +48,7 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
     @Override
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
-        algorithm = MosaicUtils.createAlgorithm(jobConf);
+        algorithm = MosaicConfig.createAlgorithm(jobConf);
     }
 
     @Override

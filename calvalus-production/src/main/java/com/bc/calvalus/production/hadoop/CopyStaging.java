@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
@@ -20,6 +36,7 @@ import java.io.File;
  */
 class CopyStaging extends ProductionStaging {
 
+    private static final long GIGABYTE = 1024L * 1024L * 1024L;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
@@ -44,19 +61,22 @@ class CopyStaging extends ProductionStaging {
 
         // Simply copy entire content of remoteOutputDir
         FileStatus[] fileStatuses = fileSystem.globStatus(new Path(remoteOutputDir, "*.*"));
-        Path[] paths = FileUtil.stat2Paths(fileStatuses);
-        if (paths != null) {
-            for (int i = 0; i < paths.length; i++) {
-                Path path = paths[i];
+        long totalFilesSize = 0L;
+        if (fileStatuses != null) {
+            for (int i = 0; i < fileStatuses.length; i++) {
+                FileStatus fileStatus = fileStatuses[i];
+                Path path = fileStatus.getPath();
                 FileUtil.copy(fileSystem,
                               path,
                               new File(stagingDir, path.getName()),
                               false, hadoopConfiguration);
-                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / paths.length, path.getName()));
+                totalFilesSize += fileStatus.getLen();
+                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / fileStatuses.length, path.getName()));
             }
         }
-
-        zip(stagingDir, new File(stagingDir, stagingDir.getName() + ".zip"));
+         if (totalFilesSize < 2L * GIGABYTE) {
+            zip(stagingDir, new File(stagingDir, stagingDir.getName() + ".zip"));
+         }
 
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
     }

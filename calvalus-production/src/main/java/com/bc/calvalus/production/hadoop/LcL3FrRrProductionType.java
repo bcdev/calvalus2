@@ -22,7 +22,7 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
@@ -35,7 +35,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
 
@@ -76,7 +75,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC ", productionRequest);
         final String productionName = productionRequest.getProdcutionName(defaultProductionName);
 
-        String mainL3ConfigXml = getMainL3Config().toXml();
+        String mosaicConfigXml = getMosaicConfig().toXml();
         String period = LcL3ProductionType.getLcPeriodName(productionRequest);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
@@ -130,7 +129,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 setRequestParameters(productionRequest, jobConfigSr);
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, StringUtils.join(allInputs, ","));
                 jobConfigSr.set(JobConfigNames.CALVALUS_OUTPUT_DIR, mainOutputDir);
-                jobConfigSr.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+                jobConfigSr.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
@@ -148,7 +147,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_NAMEFORMAT, outputPrefix + "-v%02dh%02d");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4");
                 jobConfigFormat.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "");
-                jobConfigFormat.set(JobConfigNames.CALVALUS_L3_PARAMETERS, mainL3ConfigXml);
+                jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
                 jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigFormat.set("mapred.job.priority", "HIGH");
                 sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format " + rr,
@@ -204,7 +203,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         return new DateRange(calendar.getTime(), calendar2.getTime());
     }
 
-    static L3Config getMainL3Config() throws ProductionException {
+    static MosaicConfig getMosaicConfig() throws ProductionException {
+        String type = LCMosaicAlgorithm.class.getName();
         String maskExpr = "(status == 1 or status == 3) and not nan(sdr_1)";
         String[] varNames = new String[]{
                 "status",
@@ -216,9 +216,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 "sdr_error_6", "sdr_error_7", "sdr_error_8", "sdr_error_9", "sdr_error_10",
                 "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15",
         };
-        String type = LCMosaicAlgorithm.class.getName();
-
-        return createL3Config(type, maskExpr, varNames);
+        return new MosaicConfig(type, maskExpr, varNames);
     }
 
     static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate,
@@ -234,19 +232,4 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             throw new ProductionException("Failed to compute input file list.", e);
         }
     }
-
-    private static L3Config createL3Config(String type, String maskExpr, final String[] varNames) {
-        AggregatorConfig aggregatorConfig = new AggregatorConfig(type) {
-            @Override
-            public String[] getVarNames() {
-                return varNames;
-            }
-        };
-
-        L3Config l3Config = new L3Config();
-        l3Config.setMaskExpr(maskExpr);
-        l3Config.setAggregatorConfigs(aggregatorConfig);
-        return l3Config;
-    }
-
 }
