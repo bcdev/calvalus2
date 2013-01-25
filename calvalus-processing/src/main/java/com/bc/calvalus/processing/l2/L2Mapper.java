@@ -55,6 +55,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Processor adapter for L2 operators.
@@ -197,7 +199,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
 
                 Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
                 String wkt = new WKTWriter().write(geometry);
-                String gml = new GMLWriter().write(geometry);
+                String gml = getGML(geometry);
                 Envelope envelope = geometry.getEnvelopeInternal();
 
                 vcx.put("targetProductWKT", wkt);
@@ -211,5 +213,14 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 LOG.severe("Template does not exists: " + templatePath);
             }
         }
+    }
+
+    static String getGML(Geometry geometry) {
+        // to many white-spaces break the display of the geometry in a GeoServer
+        String gmlString = new GMLWriter().write(geometry);
+        Pattern pattern = Pattern.compile("\\s{2,}"); // 2 or more succeeding white-spaces
+        Matcher matcher = pattern.matcher(gmlString);
+
+        return matcher.replaceAll(" ");
     }
 }
