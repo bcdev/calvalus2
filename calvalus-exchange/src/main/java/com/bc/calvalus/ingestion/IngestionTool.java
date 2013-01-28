@@ -19,8 +19,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.MessageFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -39,6 +44,10 @@ public class IngestionTool extends Configured implements Tool {
     //static final String DEFAULT_PATTERN = "<type>.*\.N1";
 
     private static Options options;
+    public static final SimpleDateFormat YEAR_MONTH_DAY_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
+    public static final SimpleDateFormat YEAR_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyyyDDD");
+    public static final SimpleDateFormat YEAR2_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyDDD");
+
     static {
         options = new Options();
         options.addOption("p", "producttype", true, "product type of uploaded files, defaults to " + DEFAULT_PRODUCT_TYPE);
@@ -47,6 +56,10 @@ public class IngestionTool extends Configured implements Tool {
         options.addOption("b", "blocksize", true, "block size in MB for uploaded files, defaults to file size");
         options.addOption("f", "filenamepattern", true, "regular expression matching filenames, defaults to 'type.*\\.N1'");
         options.addOption("v", "verify", false, "verify existence and size to avoid double copying, defaults to false");
+
+        YEAR_MONTH_DAY_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        YEAR_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        YEAR2_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public static void main(String[] args) throws Exception {
@@ -108,7 +121,7 @@ public class IngestionTool extends Configured implements Tool {
 
             // loop over input files
             for (File sourceFile : sourceFiles) {
-                String archivePath = getArchivePath(sourceFile.getName(), productType, revision);
+                String archivePath = getArchivePath(sourceFile.getName(), productType, revision, pattern);
 
                 // calculate block size to cover complete N1
                 // blocksize must be a multiple of checksum size
@@ -183,21 +196,79 @@ public class IngestionTool extends Configured implements Tool {
     /**
      * Implements the archiving "rule"
      *
+     *
      * @param fileName a file name
      * @param productType the product type
      * @param revision the revision
+     * @param pattern
      * @return   an archive path
      */
-    static String getArchivePath(String fileName, String productType, String revision) {
-        String subPath = getDatePath(fileName);
+    static String getArchivePath(String fileName, String productType, String revision, Pattern pattern) {
+        String subPath = getDatePath(fileName, productType, pattern);
         return String.format("/calvalus/eodata/%s/%s/%s", productType, revision, subPath);
     }
 
-    static String getDatePath(String fileName) {
-        return String.format("%s/%s/%s",
-                             fileName.substring(14, 18),
-                             fileName.substring(18, 20),
-                             fileName.substring(20, 22));  
+    /**
+     * Parses file name, determines acquisition date, and constructs subdirectoy path year/month/day,
+     * either using the provided pattern if it contains groups or a product type specific pattern
+     * if the product type is known
+     * <pre>
+     *  MER_RR__1PRACR20060530_130506_000026432048_00110_22208_0000.N1
+     *  NSS.GHRR.NM.D06365.S1409.E1554.B2348788.WI.gz
+     *  A2012280012500.L1A_LAC.bz2
+     * </pre>
+     * @param fileName     file name that contains the concrete date in some encoding
+     * @param productType  product type for default pattern selection
+     * @param pattern      pattern used if it contains groups in parenthesis for year, month and day or for year and day of year
+     * @return             directory path year/mont/day, "." if neither type is known nor pattern contains groups
+     * @throws IllegalArgumentException  if pattern does not match
+     */
+    static String getDatePath(String fileName, String productType, Pattern pattern) {
+        int numberOfParenthesis = countChars(pattern.pattern(), '(');
+        if (numberOfParenthesis >= 2) {
+            Matcher matcher = pattern.matcher(fileName);
+            if (! matcher.matches()) {
+                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not match file name " + fileName);
+            }
+            if (matcher.groupCount() == 3) {
+                return String.format("%s/%s/%s", matcher.group(1), matcher.group(2), matcher.group(3));
+            } else if (matcher.groupCount() == 2 && matcher.group(1).length() == 4 && matcher.group(2).length() == 3) {
+                Date date = null;
+                try {
+                    date = YEAR_DAY_OF_YEAR_FORMAT.parse(matcher.group(1) + matcher.group(2));
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("file name " + fileName + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
+                }
+                return YEAR_MONTH_DAY_FORMAT.format(date);
+            } else if (matcher.groupCount() == 2 && matcher.group(1).length() == 2 && matcher.group(2).length() == 3) {
+                Date date = null;
+                try {
+                    date = YEAR2_DAY_OF_YEAR_FORMAT.parse(matcher.group(1) + matcher.group(2));
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("file name " + fileName + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
+                }
+                return YEAR_MONTH_DAY_FORMAT.format(date);
+            } else {
+                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not contain recognised date in file name " + fileName);
+            }
+        } else if ("MER_RR__1P".equals(productType) || "MER_FRS_1P".equals(productType)) {
+            return String.format("%s/%s/%s",
+                                 fileName.substring(14, 18),
+                                 fileName.substring(18, 20),
+                                 fileName.substring(20, 22));
+        } else {
+            return ".";
+        }
+    }
+
+    private static int countChars(String s, char c) {
+        int count = 0;
+        for (char i : s.toCharArray()) {
+            if (i == c) {
+                ++count;
+            }
+        }
+        return count;
     }
 
 //    static class ProductFilenameFilter implements FilenameFilter {
