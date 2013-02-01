@@ -216,6 +216,7 @@ public class IngestionTool extends Configured implements Tool {
      *  MER_RR__1PRACR20060530_130506_000026432048_00110_22208_0000.N1
      *  NSS.GHRR.NM.D06365.S1409.E1554.B2348788.WI.gz
      *  A2012280012500.L1A_LAC.bz2
+     *  V2KRNP____20070501F083.ZIP
      * </pre>
      * @param fileName     file name that contains the concrete date in some encoding
      * @param productType  product type for default pattern selection
@@ -223,7 +224,7 @@ public class IngestionTool extends Configured implements Tool {
      * @return             directory path year/mont/day, "." if neither type is known nor pattern contains groups
      * @throws IllegalArgumentException  if pattern does not match
      */
-    static String getDatePath(String fileName, String productType, Pattern pattern) {
+    static String getDatePath(String fileName, String productType, Pattern pattern) throws IllegalArgumentException {
         int numberOfParenthesis = countChars(pattern.pattern(), '(');
         if (numberOfParenthesis >= 2) {
             Matcher matcher = pattern.matcher(fileName);
@@ -250,6 +251,18 @@ public class IngestionTool extends Configured implements Tool {
                 return YEAR_MONTH_DAY_FORMAT.format(date);
             } else {
                 throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not contain recognised date in file name " + fileName);
+            }
+        } else if (productType != null && productType.startsWith("MODIS")) {
+            try {
+                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(fileName.substring(1,8)));
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("file name " + fileName + " does not contain recognised date for MODIS default pattern");
+            }
+        } else if (productType != null && productType.startsWith("SPOT_VGT")) {
+            try {
+                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(fileName.substring(10,18)));
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("file name " + fileName + " does not contain recognised date for SPOT_VGT default pattern");
             }
         } else if ("MER_RR__1P".equals(productType) || "MER_FRS_1P".equals(productType)) {
             return String.format("%s/%s/%s",
