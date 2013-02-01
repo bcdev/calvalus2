@@ -4,15 +4,15 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>1.5</version>
+    <version>1.5-cdh4</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>0.20.205.0</hadoop.version>
-        <calvalus.version>1.5</calvalus.version>
+        <hadoop.version>2.0.0-mr1-cdh4.1.2</hadoop.version>
+        <calvalus.version>1.5-cdh4</calvalus.version>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,7 +63,14 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+        </repository>
     </repositories>
 
     <build>
@@ -297,7 +304,7 @@
 
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-core</artifactId>
+                <artifactId>hadoop-client</artifactId>
                 <version>${hadoop.version}</version>
                 <exclusions>
                     <exclusion>
@@ -394,7 +401,6 @@
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
                 <version>1.2.14</version>
-                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.mail</groupId>
