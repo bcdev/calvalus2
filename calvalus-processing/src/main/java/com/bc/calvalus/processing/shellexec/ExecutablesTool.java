@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.processing.shellexec;
 
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -37,7 +53,7 @@ import java.util.logging.Logger;
  * <p/>
  * Call with:
  * <pre>
- *    hadoop jar target/calvalus-experiments-1.5-SNAPSHOT-job.jar \
+ *    hadoop jar target/calvalus-experiments-1.5-job.jar \
  *    com.bc.calvalus.processing.shellexec.ExecutablesTool \
  *    l2gen-request.xml \
  *    [-wait=false]
@@ -149,9 +165,9 @@ public class ExecutablesTool extends Configured implements Tool {
 
             // look up job jar either by class (if deployed) or by path (idea)
             //job.setJarByClass(getClass());
-            String pathname = "lib/calvalus-processing-1.5-SNAPSHOT-job.jar";
+            String pathname = "lib/calvalus-processing-1.5-job.jar";
             if (!new File(pathname).exists()) {
-                pathname = "calvalus-processing/target/calvalus-processing-1.5-SNAPSHOT-job.jar";
+                pathname = "calvalus-processing/target/calvalus-processing-1.5-job.jar";
                 if (!new File(pathname).exists()) {
                     throw new IllegalArgumentException("Cannot find job jar");
                 }

@@ -45,7 +45,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
 
         InventoryService inventoryService = new LocalInventoryService();
 
-        ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5-SNAPSHOT", "a=2\nb=5",
+        ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
                                                                                               "0.5"),
                                                              new ProcessorDescriptor.Variable("tsm_conc", "AVG",
@@ -69,7 +69,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
         );
 
         LocalProcessingService processingService = new LocalProcessingService(
-                new BundleDescriptor("beam-meris-case2r", "1.5-SNAPSHOT",
+                new BundleDescriptor("beam-meris-case2r", "1.5",
                                      case2r,
                                      new ProcessorDescriptor("pc1-1", "MERIS Glint", "1.2-SNAPSHOT", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML",
