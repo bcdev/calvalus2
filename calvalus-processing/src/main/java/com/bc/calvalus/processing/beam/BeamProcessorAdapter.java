@@ -52,10 +52,11 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
         Product subsetProduct = createSubset();
-        int minWidth = Integer.parseInt(conf.get(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH));
-        int minHeight = Integer.parseInt(conf.get(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT));
-        if (subsetProduct.getSceneRasterWidth() < minWidth &&
-            subsetProduct.getSceneRasterHeight() < minHeight) {
+        String miniWidthConfig = conf.get(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH);
+        String minHeightConfig = conf.get(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT);
+        int minWidth = miniWidthConfig != null ? Integer.parseInt(miniWidthConfig) : 0;
+        int minHeight = minHeightConfig != null ? Integer.parseInt(minHeightConfig) : 0;
+        if (subsetProduct.getSceneRasterWidth() < minWidth && subsetProduct.getSceneRasterHeight() < minHeight) {
             String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
                                 "It will be suppressed from the processing.";
             getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
