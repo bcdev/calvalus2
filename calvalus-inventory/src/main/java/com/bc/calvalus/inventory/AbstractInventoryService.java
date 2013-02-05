@@ -54,7 +54,10 @@ public abstract class AbstractInventoryService implements InventoryService {
         if (!getFileSystem().exists(databasePath)) {
             databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
         }
-        return readProductSets(new Path[]{databasePath});
+        if (getFileSystem().exists(databasePath)) {
+            return readProductSets(new Path[]{databasePath});
+        }
+        return new ProductSet[0];
     }
 
     private ProductSet[] loadProcessed(String username) throws IOException {
