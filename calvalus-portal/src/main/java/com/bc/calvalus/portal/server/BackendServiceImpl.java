@@ -421,6 +421,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private BackendServiceException convert(ProductionException e) {
+        log(e.getMessage(), e);
         return new BackendServiceException(e.getMessage(), e);
     }
 
