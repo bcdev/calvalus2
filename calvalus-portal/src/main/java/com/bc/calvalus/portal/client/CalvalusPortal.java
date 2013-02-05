@@ -85,6 +85,14 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }
         });
+//        Maps.loadMapsApi("AIzaSyBgiOBI1gox188s5Pl4E1jNfwiMdwtp0IM", "2", false, new Runnable() {
+//            public void run() {
+//                backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
+//                backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
+//                backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
+//                backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
+//            }
+//        });
     }
 
     @Override
@@ -158,7 +166,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 new OrderMAProductionView(this),
                 new OrderL3ProductionView(this),
                 new OrderTAProductionView(this),
-                new OrderFreshmonProductionView(this),
+//                new OrderFreshmonProductionView(this),
                 new ManageRegionsView(this),
                 manageProductionsView,
         };

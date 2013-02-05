@@ -124,6 +124,7 @@
                     <!-- Location of the develop-mode web application structure (gwt:run). -->
                     <hostedWebapp>target/www</hostedWebapp>
                     <compileReport>true</compileReport>
+<!--                    <style>DETAILED</style>  -->
                 </configuration>
             </plugin>
 
