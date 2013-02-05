@@ -67,7 +67,11 @@ public class HDFSSimpleFileSystem implements SimpleFileSystem {
 
     @Override
     public String[] list(String path) throws IOException {
-        FileStatus[] fileStatuses = fileSystem.listStatus(new Path(path));
+        Path f = new Path(path);
+        if (!fileSystem.exists(f)) {
+            return null;
+        }
+        FileStatus[] fileStatuses = fileSystem.listStatus(f);
         if (fileStatuses == null) {
             return null;
         }

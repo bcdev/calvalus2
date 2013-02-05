@@ -174,25 +174,29 @@ public abstract class AbstractInventoryService implements InventoryService {
     }
 
     private void collectFileStatuses(Path path, Pattern pattern, List<FileStatus> result) throws IOException {
+        if (!fileSystem.exists(path)) {
+            return;
+        }
         FileStatus[] fileStatuses = fileSystem.listStatus(path);
-        if (fileStatuses != null) {
-            Matcher matcher = null;
-            if (pattern != null) {
-                matcher = pattern.matcher("");
-            }
-            for (FileStatus fStat : fileStatuses) {
-                if (fStat.isDir()) {
-                    collectFileStatuses(fStat.getPath(), pattern, result);
-                } else {
-                    String fPath = fStat.getPath().toString();
-                    if (matcher != null) {
-                        matcher.reset(fPath);
-                        if (matcher.matches()) {
-                            result.add(fStat);
-                        }
-                    } else {
+        if (fileStatuses == null) {
+            return;
+        }
+        Matcher matcher = null;
+        if (pattern != null) {
+            matcher = pattern.matcher("");
+        }
+        for (FileStatus fStat : fileStatuses) {
+            if (fStat.isDir()) {
+                collectFileStatuses(fStat.getPath(), pattern, result);
+            } else {
+                String fPath = fStat.getPath().toString();
+                if (matcher != null) {
+                    matcher.reset(fPath);
+                    if (matcher.matches()) {
                         result.add(fStat);
                     }
+                } else {
+                    result.add(fStat);
                 }
             }
         }
