@@ -91,6 +91,7 @@ public class OrderTAProductionView extends OrderProductionView {
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         outputParametersForm = new OutputParametersForm();
+        outputParametersForm.setAvailableOutputFormats("Report");
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
