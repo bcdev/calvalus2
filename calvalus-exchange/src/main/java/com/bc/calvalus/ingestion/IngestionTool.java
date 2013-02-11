@@ -87,8 +87,8 @@ public class IngestionTool extends Configured implements Tool {
                 blockSizeParameter = Long.parseLong(commandLine.getOptionValue("blocksize"));
             }
             final String filenamePattern;
-            if (commandLine.hasOption("filenamePattern")) {
-                filenamePattern = commandLine.getOptionValue("filenamePattern");
+            if (commandLine.hasOption("filenamepattern")) {
+                filenamePattern = commandLine.getOptionValue("filenamepattern");
             } else {
                 filenamePattern = productType + ".*\\.N1";
             }
