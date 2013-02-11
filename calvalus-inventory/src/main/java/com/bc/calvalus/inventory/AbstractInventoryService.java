@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2013 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.inventory;
 
 import org.apache.hadoop.fs.FileStatus;
@@ -54,7 +70,10 @@ public abstract class AbstractInventoryService implements InventoryService {
         if (!getFileSystem().exists(databasePath)) {
             databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
         }
-        return readProductSets(new Path[]{databasePath});
+        if (getFileSystem().exists(databasePath)) {
+            return readProductSets(new Path[]{databasePath});
+        }
+        return new ProductSet[0];
     }
 
     private ProductSet[] loadProcessed(String username) throws IOException {
