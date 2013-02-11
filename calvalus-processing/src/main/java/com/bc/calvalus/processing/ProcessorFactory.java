@@ -95,8 +95,12 @@ public class ProcessorFactory {
     }
 
     public static boolean doesBundleExists(Path bundlePath, FileSystem fileSystem) throws IOException {
-        FileStatus bundleStatus = fileSystem.getFileStatus(bundlePath);
-        return bundleStatus != null && bundleStatus.isDir();
+        if (fileSystem.exists(bundlePath))  {
+            FileStatus bundleStatus = fileSystem.getFileStatus(bundlePath);
+            return bundleStatus != null && bundleStatus.isDir();
+        } else {
+            return false;
+        }
     }
 
     /**
