@@ -39,6 +39,8 @@ import java.util.Arrays;
 /**
  * The algorithm, for lc_cci..
  *
+ * TODO adopt to SPOT-VGT products
+ *
  * @author MarcoZ
  */
 public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {

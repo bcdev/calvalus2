@@ -33,6 +33,6 @@ public class LCMosaicAlgorithm extends AbstractLcMosaicAlgorithm implements Mosa
 
     @Override
     public MosaicProductFactory getProductFactory() {
-        return new LcMosaicProductFactory();
+        return new LcMosaicProductFactory(getOutputFeatures());
     }
 }

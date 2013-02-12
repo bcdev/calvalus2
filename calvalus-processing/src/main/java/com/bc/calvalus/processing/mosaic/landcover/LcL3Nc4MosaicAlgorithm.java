@@ -53,7 +53,7 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm implements
 
     @Override
     public MosaicProductFactory getProductFactory() {
-        return new LcL3Nc4MosaicProductFactory();
+        return new LcL3Nc4MosaicProductFactory(getOutputFeatures());
     }
 
 

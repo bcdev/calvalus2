@@ -43,6 +43,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private int tileSize;
     private StatusRemapper statusRemapper;
     private Configuration jobConf;
+    private String sensor;
 
     @Override
     public void init(TileIndexWritable tileIndex) {
@@ -61,11 +62,11 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             status = StatusRemapper.remapStatus(statusRemapper, status);
             if (status == STATUS_LAND) {
                 // Since we have seen LAND now, accumulate LAND SDRs
-                float sdr8 = samples[varIndexes[1]][i];
-                if (!Float.isNaN(sdr8)) {
+                float sdr = samples[varIndexes[1]][i];
+                if (!Float.isNaN(sdr)) {
                     aggregatedSamples[0][i]++;
-                    aggregatedSamples[1][i] += sdr8;
-                    aggregatedSamples[2][i] += sdr8 * sdr8;
+                    aggregatedSamples[1][i] += sdr;
+                    aggregatedSamples[2][i] += sdr * sdr;
                 }
             }
         }
@@ -79,15 +80,15 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             result[0][i] = Float.NaN;
             float count = aggregatedSamples[0][i];
             if (count >= 2) {
-                float sdr8Sum = aggregatedSamples[1][i];
-                float sdr8SqrSum = aggregatedSamples[2][i];
+                float sdrSum = aggregatedSamples[1][i];
+                float sdrSqrSum = aggregatedSamples[2][i];
 
-                float sdr8Mean = sdr8Sum / count;
-                float sdr8Sigma = (float) Math.sqrt(sdr8SqrSum / count - sdr8Mean * sdr8Mean);
-                float cloudValue2 = sdr8Sigma / sdr8Mean;
+                float sdrMean = sdrSum / count;
+                float sdrSigma = (float) Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
+                float cloudValue2 = sdrSigma / sdrMean;
                 if (cloudValue2 > 0.2f) {
-                    float sdr8CloudDetector = Math.min(sdr8Mean * 1.35f, sdr8Mean + sdr8Sigma);
-                    result[0][i] = sdr8CloudDetector;
+                    float sdrCloudDetector = Math.min(sdrMean * 1.35f, sdrMean + sdrSigma);
+                    result[0][i] = sdrCloudDetector;
                 }
             }
         }
@@ -97,6 +98,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
+        sensor = jobConf.get("calvalus.lc.sensor", "MERIS");
     }
 
     @Override
@@ -122,10 +124,14 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         return new DefaultMosaicProductFactory(getOutputFeatures());
     }
 
-    private static int[] createVariableIndexes(VariableContext varCtx) {
+    private int[] createVariableIndexes(VariableContext varCtx) {
         int[] varIndexes = new int[2];
         varIndexes[0] = getVariableIndex(varCtx, "status");
-        varIndexes[1] = getVariableIndex(varCtx, "sdr_8");
+        if (sensor.equals("MERIS")) {
+            varIndexes[1] = getVariableIndex(varCtx, "sdr_8");
+        } else {
+            varIndexes[1] = getVariableIndex(varCtx, "sdr_B0");
+        }
         return varIndexes;
     }
 
@@ -138,6 +144,6 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private static String[] createOutputFeatureNames() {
-        return new String[]{"sdr_8_cloud_detector"};
+        return new String[]{"sdr_cloud_detector"};
     }
 }

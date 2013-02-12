@@ -38,6 +38,10 @@ public class DefaultMosaicProductFactory implements MosaicProductFactory {
         this.outputFeatures = outputFeatures;
     }
 
+    public String[] getOutputFeatures() {
+        return outputFeatures;
+    }
+
     @Override
     public Product createProduct(Configuration configuration, int tileX, int tileY, Rectangle rect) {
         final String productName = getTileProductName(configuration.get("calvalus.output.nameformat"), tileX, tileY);

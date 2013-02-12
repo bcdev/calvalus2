@@ -4,15 +4,12 @@ import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import ucar.unidata.geoloc.projection.UtmCoordinateConversion;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 /**
@@ -33,7 +30,7 @@ public class WriterTester {
         final MosaicGrid mosaicGrid = MosaicGrid.create(configuration);
         final Rectangle macroTileRectangle = mosaicGrid.getMacroTileRectangle(5, 7);
 
-        final MosaicProductFactory lcMosaicProductFactory = new LcL3Nc4MosaicProductFactory();
+        final MosaicProductFactory lcMosaicProductFactory = new LcL3Nc4MosaicProductFactory(new String[]{"sdr_test"});
         final Product testproduct = lcMosaicProductFactory.createProduct(configuration, 5, 7, macroTileRectangle);
         testproduct.setGeoCoding(mosaicGrid.createMacroCRS(new Point(5, 7)));
         // fill with fake data

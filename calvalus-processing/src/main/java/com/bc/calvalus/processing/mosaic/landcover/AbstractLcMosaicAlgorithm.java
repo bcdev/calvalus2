@@ -39,6 +39,8 @@ import java.util.Arrays;
  */
 abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
+    private static final String[] SPOT_BAND_SUFFIXES = {"B0", "B2", "B3", "MIR"};
+
     abstract protected String[] getCounterNames();
 
     protected final int SDR_OFFSET = getCounterNames().length + 1;
@@ -53,7 +55,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     static final int STATUS_CLOUD = 4;
     static final int STATUS_CLOUD_SHADOW = 5;
 
-    static final int NUM_SDR_BANDS = 15;
+    static final int NUM_SDR_BANDS_MERIS = 15;
+    static final int NUM_SDR_BANDS_VGT = 4;
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
     protected int[] varIndexes;
@@ -65,17 +68,21 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     protected int tileSize;
     protected int variableCount;
 
+    protected String sensor;
+    protected int numSDRBands;
+    protected int sdrCloudBandIndex;
+
     protected Configuration jobConf;
     protected SequenceFile.Reader reader;
-    protected TileIndexWritable sdr8Key;
-    protected TileDataWritable sdr8Data;
-    protected float[][] sdr8DataSamples;
+    protected TileIndexWritable sdrCloudKey;
+    protected TileDataWritable sdrCloudData;
+    protected float[][] sdrCloudDataSamples;
 
 
     @Override
     public void setVariableContext(VariableContext variableContext) {
-        varIndexes = createVariableIndexes(variableContext, NUM_SDR_BANDS);
-        outputFeatures = createOutputFeatureNames(NUM_SDR_BANDS);
+        varIndexes = createVariableIndexes(variableContext, numSDRBands);
+        outputFeatures = createOutputFeatureNames(numSDRBands);
         variableCount = outputFeatures.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
         statusRemapper = StatusRemapper.create(jobConf);
@@ -92,26 +99,26 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         if (reader == null && jobConf.get(CALVALUS_LC_SDR8_MEAN) != null) {
             openSdr8MeanReader(getPartition(tileIndex));
         }
-        readSdr8MeanData(tileIndex);
+        readSdrCloudMeanData(tileIndex);
     }
 
-    protected void readSdr8MeanData(TileIndexWritable tileIndex) throws IOException {
+    protected void readSdrCloudMeanData(TileIndexWritable tileIndex) throws IOException {
         if (reader != null) {
-            sdr8DataSamples = null;
-            if (sdr8Key.equals(tileIndex)) {
-                reader.getCurrentValue(sdr8Data);
-                sdr8DataSamples = sdr8Data.getSamples();
-            } else if (sdr8Key.compareTo(tileIndex) == 1) {
-                // sdr8Key > tileIndex
+            sdrCloudDataSamples = null;
+            if (sdrCloudKey.equals(tileIndex)) {
+                reader.getCurrentValue(sdrCloudData);
+                sdrCloudDataSamples = sdrCloudData.getSamples();
+            } else if (sdrCloudKey.compareTo(tileIndex) == 1) {
+                // sdrCloudKey > tileIndex
             } else {
-                // sdr8Key < tileIndex
-                while (reader.next(sdr8Key)) {
-                    if (sdr8Key.equals(tileIndex)) {
-                        reader.getCurrentValue(sdr8Data);
-                        sdr8DataSamples = sdr8Data.getSamples();
+                // sdrCloudKey < tileIndex
+                while (reader.next(sdrCloudKey)) {
+                    if (sdrCloudKey.equals(tileIndex)) {
+                        reader.getCurrentValue(sdrCloudData);
+                        sdrCloudDataSamples = sdrCloudData.getSamples();
                         break;
-                    } else if (sdr8Key.compareTo(tileIndex) == 1) {
-                        // sdr8Key > tileIndex
+                    } else if (sdrCloudKey.compareTo(tileIndex) == 1) {
+                        // sdrCloudKey > tileIndex
                         break;
                     }
                 }
@@ -139,8 +146,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             }
             status = StatusRemapper.remapStatus(statusRemapper, status);
 
-            if (status == STATUS_LAND && sdr8DataSamples != null) {
-                status = temporalCloudCheck(samples[varIndexes[8]][i], sdr8DataSamples[0][i]);
+            if (status == STATUS_LAND && sdrCloudDataSamples != null) {
+                status = temporalCloudCheck(samples[varIndexes[sdrCloudBandIndex]][i], sdrCloudDataSamples[0][i]);
             }
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
@@ -213,7 +220,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                 wSum = aggregatedSamples[status][i];
             }
             if (wSum != 0f) {
-                for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {  // sdr + ndvi + sdr_error
+                for (int j = 0; j < numSDRBands + numSDRBands + 1; j++) {  // sdr + ndvi + sdr_error
                     aggregatedSamples[SDR_OFFSET + j][i] /= wSum;
                 }
             } else {
@@ -235,6 +242,14 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     @Override
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
+        sensor = jobConf.get("calvalus.lc.sensor", "MERIS");
+        if (sensor.equals("MERIS")) {
+            numSDRBands = NUM_SDR_BANDS_MERIS;
+            sdrCloudBandIndex = 8;
+        } else {
+            numSDRBands = NUM_SDR_BANDS_VGT;
+            sdrCloudBandIndex = 1;
+        }
     }
 
     protected void openSdr8MeanReader(int partition) throws IOException {
@@ -247,8 +262,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         Path path = new Path(sdr8MeanDir, fileName);
         FileSystem fs = path.getFileSystem(jobConf);
         reader = new SequenceFile.Reader(fs, path, jobConf);
-        sdr8Key = new TileIndexWritable();
-        sdr8Data = new TileDataWritable();
+        sdrCloudKey = new TileIndexWritable();
+        sdrCloudData = new TileDataWritable();
     }
 
     @Override
@@ -257,7 +272,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     protected void clearSDR(int i, float value) {
-        for (int j = 0; j < NUM_SDR_BANDS + NUM_SDR_BANDS + 1; j++) {
+        for (int j = 0; j < numSDRBands + numSDRBands + 1; j++) {
             aggregatedSamples[SDR_OFFSET + j][i] = value;
         }
     }
@@ -265,12 +280,12 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     protected void addSdrs(float[][] samples, int i) {
         final int sdrObservationOffset = 1; // status
         int sdrOffset = SDR_OFFSET;
-        for (int j = 0; j < NUM_SDR_BANDS + 1; j++) { // sdr + ndvi
+        for (int j = 0; j < numSDRBands + 1; j++) { // sdr + ndvi
             aggregatedSamples[sdrOffset + j][i] += samples[varIndexes[sdrObservationOffset + j]][i];
         }
-        sdrOffset += NUM_SDR_BANDS + 1;
-        for (int j = 0; j < NUM_SDR_BANDS; j++) { // sdr_error
-            final int varIndex = varIndexes[sdrObservationOffset + NUM_SDR_BANDS + 1 + j];
+        sdrOffset += numSDRBands + 1;
+        for (int j = 0; j < numSDRBands; j++) { // sdr_error
+            final int varIndex = varIndexes[sdrObservationOffset + numSDRBands + 1 + j];
             float sdrErrorMeasurement = samples[varIndex][i];
             aggregatedSamples[sdrOffset + j][i] += (sdrErrorMeasurement * sdrErrorMeasurement);
         }
@@ -294,16 +309,18 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         }
     }
 
-    protected static int[] createVariableIndexes(VariableContext varCtx, int numBands) {
+    protected int[] createVariableIndexes(VariableContext varCtx, int numBands) {
         int[] varIndexes = new int[3 + numBands + 1 + numBands];
         int j = 0;
         varIndexes[j++] = getVariableIndex(varCtx, "status");
         for (int i = 0; i < numBands; i++) {
-            varIndexes[j++] = getVariableIndex(varCtx, "sdr_" + (i + 1));
+            String bandSuffix = sensor.equals("MERIS") ? Integer.toString(i + 1) : SPOT_BAND_SUFFIXES[i];
+            varIndexes[j++] = getVariableIndex(varCtx, "sdr_" + bandSuffix);
         }
         varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
         for (int i = 0; i < numBands; i++) {
-            varIndexes[j++] = getVariableIndex(varCtx, "sdr_error_" + (i + 1));
+            String bandSuffix = sensor.equals("MERIS") ? Integer.toString(i + 1) : SPOT_BAND_SUFFIXES[i];
+            varIndexes[j++] = getVariableIndex(varCtx, "sdr_error_" + bandSuffix);
         }
         return varIndexes;
     }
@@ -324,11 +341,13 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             featureNames[j++] = counter + "_count";
         }
         for (int i = 0; i < numBands; i++) {
-            featureNames[j++] = "sr_" + (i + 1) + "_mean";
+            String bandSuffix = sensor.equals("MERIS") ? Integer.toString(i + 1) : SPOT_BAND_SUFFIXES[i];
+            featureNames[j++] = "sr_" + bandSuffix + "_mean";
         }
         featureNames[j++] = "ndvi_mean";
         for (int i = 0; i < numBands; i++) {
-            featureNames[j++] = "sr_" + (i + 1) + "_sigma";
+            String bandSuffix = sensor.equals("MERIS") ? Integer.toString(i + 1) : SPOT_BAND_SUFFIXES[i];
+            featureNames[j++] = "sr_" + bandSuffix + "_sigma";
         }
         return featureNames;
     }
