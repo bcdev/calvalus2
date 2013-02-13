@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>1.5</version>
+    <version>1.6-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>0.20.205.0</hadoop.version>
-        <calvalus.version>1.5</calvalus.version>
+        <calvalus.version>1.6-SNAPSHOT</calvalus.version>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
