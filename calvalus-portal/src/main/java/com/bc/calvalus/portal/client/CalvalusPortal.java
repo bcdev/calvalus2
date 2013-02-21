@@ -11,7 +11,7 @@ import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.google.gwt.maps.client.Maps;
+import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
@@ -77,14 +77,20 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
          * IMPORTANT NOTE: The Maps API key has been generated for the site http://www.brockmann-consult.de/calvalus
          * (see http://code.google.com/intl/de-DE/apis/maps/signup.html)
          */
-        Maps.loadMapsApi("ABQIAAAAoao5tcl7_u-gWl5HesZlmxSaer1-qP4ShOWPxJ58G8ekwdxdChSvOI8heCGc9YiMEXrF-nwn0BHQ_A", "2", false, new Runnable() {
+        Runnable runnable = new Runnable() {
             public void run() {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
                 backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }
-        });
+        };
+        // load all the libs for use in the maps
+        ArrayList<LoadApi.LoadLibrary> loadLibraries = new ArrayList<LoadApi.LoadLibrary>();
+        loadLibraries.add(LoadApi.LoadLibrary.DRAWING);
+        loadLibraries.add(LoadApi.LoadLibrary.GEOMETRY);
+
+        LoadApi.go(runnable, loadLibraries, false);
     }
 
     @Override

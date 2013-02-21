@@ -17,8 +17,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.geom.LatLngBounds;
+import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.maps.client.base.LatLngBounds;
+import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
@@ -237,7 +238,8 @@ public class L3ConfigForm extends Composite {
 
     public void updateSpatialParameters(Region selectedRegion) {
         if (selectedRegion != null) {
-            regionBounds = selectedRegion.createPolygon().getBounds();
+            Polygon polygon = selectedRegion.createPolygon();
+            regionBounds = Region.getBounds(polygon);
         } else {
             regionBounds = LatLngBounds.newInstance(LatLng.newInstance(-90, -180),
                                                     LatLng.newInstance(90, 180));

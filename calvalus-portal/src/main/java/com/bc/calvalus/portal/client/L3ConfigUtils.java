@@ -1,6 +1,6 @@
 package com.bc.calvalus.portal.client;
 
-import com.google.gwt.maps.client.geom.LatLngBounds;
+import com.google.gwt.maps.client.base.LatLngBounds;
 
 import java.util.Date;
 

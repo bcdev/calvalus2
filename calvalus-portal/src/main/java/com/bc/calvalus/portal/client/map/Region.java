@@ -1,13 +1,15 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Marker;
-import com.google.gwt.maps.client.overlay.Overlay;
-import com.google.gwt.maps.client.overlay.Polygon;
-import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.ajaxloader.client.ArrayHelper;
+import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.maps.client.base.LatLngBounds;
+import com.google.gwt.maps.client.mvc.MVCArray;
+import com.google.gwt.maps.client.mvc.MVCArrayCallback;
+import com.google.gwt.maps.client.overlays.Marker;
+import com.google.gwt.maps.client.overlays.Polygon;
+import com.google.gwt.maps.client.overlays.PolygonOptions;
+import com.google.gwt.maps.client.overlays.Rectangle;
 import com.google.gwt.view.client.ProvidesKey;
-
-import java.util.Arrays;
 
 /**
  * Basically, a named polygon.
@@ -102,9 +104,8 @@ public class Region {
     }
 
     public LatLng[] getVertices() {
-        if (vertices == null) {
-            Overlay overlay = WKTParser.parse(geometryWkt);
-            vertices = getVertices(overlay);
+        if (vertices == null && geometryWkt != null) {
+            vertices = WKTParser.parse(geometryWkt);
         }
         return vertices;
     }
@@ -130,30 +131,51 @@ public class Region {
     }
 
     public Polygon createPolygon() {
-        return new Polygon(getVertices());
+        PolygonOptions polygonOptions = PolygonOptions.newInstance();
+        polygonOptions.setPaths(ArrayHelper.toJsArray(getVertices()));
+        return Polygon.newInstance(polygonOptions);
     }
 
-    public static LatLng[] getVertices(Overlay overlay) {
-        if (overlay instanceof Polygon) {
-            Polygon polygon = (Polygon) overlay;
-            LatLng[] points = new LatLng[polygon.getVertexCount()];
-            for (int i = 0; i < points.length; i++) {
-                points[i] = polygon.getVertex(i);
-            }
-            return points;
-        } else if (overlay instanceof Polyline) {
-            Polyline polyline = (Polyline) overlay;
-            LatLng[] points = new LatLng[polyline.getVertexCount()];
-            for (int i = 0; i < points.length; i++) {
-                points[i] = polyline.getVertex(i);
-            }
-            return points;
-        } else if (overlay instanceof Marker) {
-            Marker marker = (Marker) overlay;
-            return new LatLng[]{
-                    marker.getLatLng()
-            };
+    public static LatLng[] getVertices(Polygon polygon) {
+        MVCArray<LatLng> polygonPath = polygon.getPath();
+        LatLng[] points = new LatLng[polygonPath.getLength()];
+        for (int i = 0; i < points.length; i++) {
+            points[i] = polygonPath.get(i);
         }
-        return null;
+        return points;
+    }
+
+    public static LatLng[] getVertices(Marker marker) {
+        return new LatLng[]{
+                marker.getPosition()
+        };
+    }
+
+    public static LatLng[] getVertices(Rectangle rectangle) {
+        LatLngBounds bounds = rectangle.getBounds();
+        LatLng[] points = new LatLng[5];
+        LatLng northEast = bounds.getNorthEast();
+        LatLng southWest = bounds.getSouthWest();
+        points[0] = northEast;
+        points[1] = LatLng.newInstance(southWest.getLatitude(), northEast.getLongitude());
+        points[2] = southWest;
+        points[3] = LatLng.newInstance(northEast.getLatitude(), southWest.getLongitude());
+        points[4] = northEast;
+        return points;
+    }
+
+    public static LatLngBounds getBounds(Polygon polygon) {
+        MVCArray<LatLng> polygonPath = polygon.getPath();
+        LatLng latLngZero = polygonPath.get(0);
+        final LatLngBounds bounds = LatLngBounds.newInstance(latLngZero, latLngZero);
+        polygonPath.forEach(new MVCArrayCallback<LatLng>() {
+            @Override
+            public void forEach(LatLng latLng, int index) {
+                if (index > 0) {
+                    bounds.extend(latLng);
+                }
+            }
+        });
+        return bounds;
     }
 }

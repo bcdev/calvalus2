@@ -4,18 +4,22 @@ import com.bc.calvalus.portal.client.map.MapAction;
 import com.bc.calvalus.portal.client.map.MapInteraction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
-import com.google.gwt.maps.client.event.MapClickHandler;
-import com.google.gwt.maps.client.overlay.Overlay;
-import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.ajaxloader.client.Properties;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.maps.client.events.click.ClickMapEvent;
+import com.google.gwt.maps.client.events.click.ClickMapHandler;
+import com.google.gwt.maps.client.overlays.Polygon;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * An interactor that inserts rectangular polygons into a map.
+ * An interactor that selects polygons on a map.
  *
  * @author Norman Fomferra
  */
-public class SelectInteraction extends MapInteraction implements MapClickHandler {
+public class SelectInteraction extends MapInteraction  {
     private RegionMap regionMap;
 
     public SelectInteraction(MapAction selectAction) {
@@ -25,32 +29,10 @@ public class SelectInteraction extends MapInteraction implements MapClickHandler
     @Override
     public void attachTo(RegionMap regionMap) {
         this.regionMap = regionMap;
-        regionMap.getMapWidget().addMapClickHandler(this);
     }
 
     @Override
     public void detachFrom(RegionMap regionMap) {
-        regionMap.getMapWidget().removeMapClickHandler(this);
         this.regionMap = null;
-    }
-
-    @Override
-    public void onClick(MapClickEvent event) {
-        Overlay overlay = event.getOverlay();
-        if (overlay instanceof Polygon) {
-            Polygon polygon = (Polygon) overlay;
-            List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
-            for (Region region : list) {
-                Polygon regionPolygon = regionMap.getPolygon(region);
-                if (regionPolygon == polygon) {
-                    regionMap.getRegionMapSelectionModel().clearSelection();
-                    regionMap.getRegionMapSelectionModel().setSelected(region, true);
-                    run(regionMap);
-                    return;
-                }
-            }
-        }
-
-        regionMap.getRegionMapSelectionModel().clearSelection();
     }
 }

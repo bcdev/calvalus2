@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.maps.client.overlays.Polygon;
 
 /**
  * A Google map that has regions.

@@ -156,7 +156,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     @Override
     public void onShowing() {
         // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().checkResizeAndCenter();
+        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
     }
 
     @Override

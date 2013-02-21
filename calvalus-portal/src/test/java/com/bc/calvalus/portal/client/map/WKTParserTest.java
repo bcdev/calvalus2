@@ -1,10 +1,8 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.maps.client.Maps;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Overlay;
-import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.maps.client.LoadApi;
+import com.google.gwt.maps.client.base.LatLng;
 
 public class WKTParserTest extends GWTTestCase {
 
@@ -16,6 +14,13 @@ public class WKTParserTest extends GWTTestCase {
     @Override
     protected void gwtSetUp() throws Exception {
         assertMapsApiLoaded();
+    }
+
+    public void testMarkerWKT() throws Exception {
+        LatLng[] latLngs = WKTParser.parse("point(-18 -9)");
+        assertNotNull(latLngs);
+        assertEquals(1, latLngs.length);
+        assertEquals(LatLng.newInstance(-9, -18), latLngs[0]);
     }
 
     public void testNormalisedWKT() throws Exception {
@@ -69,15 +74,13 @@ public class WKTParserTest extends GWTTestCase {
     }
 
     private void assertWKTParsingOk(String wkt) {
-        Overlay overlay = WKTParser.parse(wkt);
-        assertTrue(overlay instanceof Polygon);
-        Polygon polygon = (Polygon) overlay;
-        assertEquals(5, polygon.getVertexCount());
-        assertEquals(LatLng.newInstance(-90, -180), polygon.getVertex(0));
-        assertEquals(LatLng.newInstance(-90, 180), polygon.getVertex(1));
-        assertEquals(LatLng.newInstance(90, 180), polygon.getVertex(2));
-        assertEquals(LatLng.newInstance(90, -180), polygon.getVertex(3));
-        assertEquals(LatLng.newInstance(-90, -180), polygon.getVertex(4));
+        LatLng[] latLngs = WKTParser.parse(wkt);
+        assertEquals(5, latLngs.length);
+        assertEquals(LatLng.newInstance(-90, -180), latLngs[0]);
+        assertEquals(LatLng.newInstance(-90, 180), latLngs[1]);
+        assertEquals(LatLng.newInstance(90, 180), latLngs[2]);
+        assertEquals(LatLng.newInstance(90, -180), latLngs[3]);
+        assertEquals(LatLng.newInstance(-90, -180), latLngs[4]);
     }
 
     private static void assertEquals(LatLng expected, LatLng vertex) {
@@ -87,19 +90,15 @@ public class WKTParserTest extends GWTTestCase {
 
 
     private static void assertMapsApiLoaded() {
-        if (!Maps.isLoaded()) {
-            final long t0 = System.currentTimeMillis();
-            Maps.loadMapsApi("", "2", false, new Runnable() {
-                @Override
-                public void run() {
-                    final long t1 = System.currentTimeMillis();
-                    long l = t1 - t0;
-                    System.out.println("MapsApi loaded after " + l + " ms");
-                }
-            });
-        }
-        while (!Maps.isLoaded()) {
-            // wait until it is loaded
-        }
+        final long t0 = System.currentTimeMillis();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final long t1 = System.currentTimeMillis();
+                long l = t1 - t0;
+                System.out.println("MapsApi loaded after " + l + " ms");
+            }
+        };
+        LoadApi.go(runnable, false);
     }
 }

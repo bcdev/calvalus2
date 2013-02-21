@@ -60,12 +60,14 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             public boolean accept(DtoProcessorDescriptor processorDescriptor) {
                 if (processorDescriptor.getBundleName().startsWith("freshmon")) {
                     DtoProductSet productSet = productSetSelectionForm.getProductSet();
-                    String productType = productSet.getProductType();
-                    if (productType != null) {
-                        String[] inputProductTypes = processorDescriptor.getInputProductTypes();
-                        for (String inputProductType : inputProductTypes) {
-                            if (inputProductType.equals(productType)) {
-                                return true;
+                    if (productSet != null)  {
+                        String productType = productSet.getProductType();
+                        if (productType != null) {
+                            String[] inputProductTypes = processorDescriptor.getInputProductTypes();
+                            for (String inputProductType : inputProductTypes) {
+                                if (inputProductType.equals(productType)) {
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -157,7 +159,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
     @Override
     public void onShowing() {
         // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().checkResizeAndCenter();
+        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
     }
 
     @Override

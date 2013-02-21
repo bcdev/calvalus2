@@ -1,8 +1,8 @@
 package com.bc.calvalus.portal.client.map;
 
 import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.maps.client.Maps;
-import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.LoadApi;
+import com.google.gwt.maps.client.base.LatLng;
 
 public class RegionTest extends GWTTestCase {
 
@@ -85,19 +85,15 @@ public class RegionTest extends GWTTestCase {
     }
 
     private static void assertMapsApiLoaded() {
-        if (!Maps.isLoaded()) {
-            final long t0 = System.currentTimeMillis();
-            Maps.loadMapsApi("", "2", false, new Runnable() {
-                @Override
-                public void run() {
-                    final long t1 = System.currentTimeMillis();
-                    long l = t1 - t0;
-                    System.out.println("MapsApi loaded after " + l + " ms");
-                }
-            });
-        }
-        while (!Maps.isLoaded()) {
-            // wait until it is loaded
-        }
+        final long t0 = System.currentTimeMillis();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final long t1 = System.currentTimeMillis();
+                long l = t1 - t0;
+                System.out.println("MapsApi loaded after " + l + " ms");
+            }
+        };
+        LoadApi.go(runnable, false);
     }
 }
