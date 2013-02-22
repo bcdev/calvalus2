@@ -1,0 +1,27 @@
+<bundleDescriptor>
+    <bundleName>geochildgen</bundleName>
+    <bundleVersion>1.7.6</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>geochildgen</executableName>
+            <processorName>Envisat N1 Child generator</processorName>
+            <processorVersion>1.7.6</processorVersion>
+            <defaultParameters><![CDATA[]]></defaultParameters>
+            <outputFormats>Envisat</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml>
+                <![CDATA[<p>Creates child products from Envsiat N1 files.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B</inputProductTypes>
+            <outputProductType>MERIS_L1B</outputProductType>
+
+            <validMaskExpression>true</validMaskExpression>
+            <outputVariables>
+                <outputVariable>
+                    <name>not_applicable</name>
+                </outputVariable>
+            </outputVariables>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>

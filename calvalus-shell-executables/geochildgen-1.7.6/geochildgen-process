@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+
+
+mkdir -p output
+./geochildgen-1.7.6/geochildgen-1.7.6/geochildgen.sh -g ./properties -c -m -v -o ./output $1
+
+rm -v $1
+# name of result file
+outputfilename=`ls output/*.N1`
+mv ${outputfilename} .
+echo CALVALUS_OUTPUT_PRODUCT $(basename ${outputfilename})
