@@ -1,0 +1,158 @@
+########################
+# POLYMER COMMAND FILE #
+########################
+
+# NB: paths can be given as relative or absolute
+#     lines starting with character '#' are ignored
+
+
+# INPUT/OUTPUT ######
+
+L1_FORMAT MERIS
+
+# output format: HDF or NETCDF
+OUTPUT_FORMAT HDF
+
+# NCEP and TOMS filenames
+# if commented or missing, MERIS level1 ancillary data will be used
+# %(ncep_toms)sFILE_METEO %(file_meteo)s
+# %(ncep_toms)sFILE_OZONE %(file_oz)s
+
+
+# BANDS DEFINITION #######
+
+BANDS_CORR 412 443 490 510 560 620 665     754 779 865
+BANDS_OC   412 443 490 510 560 620 665     754 779 865
+BANDS_RW   412 443 490 510 560 620 665     754 779 865
+
+BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 779 865 885 1020
+BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900
+
+
+# calibration coefficients (corresponding to BANDS_L1)
+CALIB    1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+BAND_WAVELEN_L1   412.691 442.559 489.882 509.819 559.694 619.601 664.573 680.821 708.329 753.371 761.508 778.409 864.876 884.944 900.000
+
+
+
+
+# GASEOUS CORRECTION ########
+
+# Ozone absorption (1/cm)
+K_OZ 0.000301800  0.00327200  0.0211900  0.0419600  0.104100  0.109100 0.0511500  0.0359600  0.0196800   0.00955800 0.00730400  0.00769300  0.00219300  0.00121100  0.00151600
+
+# NO2 absorption (from seadas, meris-specific data)
+K_NO2 6.074E-19 4.907E-19 2.916E-19 2.218E-19 7.338E-20 2.823E-20 6.626E-21 6.285E-21 4.950E-21 1.384E-21 4.717E-22 3.692E-22 2.885E-23 4.551E-23 5.522E-23
+NO2_CLIMATOLOGY auxdata/common/no2_climatology.hdf
+NO2_FRAC200M auxdata/common/trop_f_no2_200m.hdf
+
+
+
+# LOOK-UP TABLE FILES ############
+
+FILE_GAUSS             auxdata/common/GAUSS25
+FILE_LUT_MOL_GLINT_R   LUTS/MERIS/LUT_MOL_GLI/LUT.MERIS2.dat
+FILE_LUT_MOL_GLINT_T   LUTS/MERIS/LUT_MOL_GLI/TS.MERIS2.dat
+FILE_LUT_MOL           LUTS/MERIS/LUT_MOL/LUT.MERIS2.dat
+
+# number of elements in the LUT
+LUT_WIND_MAX  16.
+LUT_WIND_STEP 2.
+
+# for reduced resolution
+N_DETECTORS 925
+FILE_SUN_SPEC_FLUX        auxdata/meris/smile/v2/sun_spectral_flux_rr.txt
+FILE_DETECTOR_WAVELENGTH  auxdata/meris/smile/v2/central_wavelen_rr.txt
+
+
+
+# ATMOSPHERIC MODEL #########
+
+POLY_EXPO         0. -1. -4.
+
+# method for applying atmospheric transmissions
+# 0: old method, R'/T = Rpoly + Rw
+# 1: new method, R' = Rpoly + T Rw
+METHOD_TRANSMISSION     1
+
+# transmission factor applied to C0 term
+# 0: old method, c0+c1*lambda^-1+c2*lambda^-4
+# 1: direct transmission, c0*exp(-taum*air_mass)+c1*lambda^-1+c2*lambda^-4
+# 2: diffuse transmission, c0*exp(-taum/2*air_mass)+c1*lambda^-1+c2*lambda^-4
+# 3: combination of the 2 previous: coefficient applied to taum = 1-1/2exp(-Rgli/Rgli0)
+C0_TRANSMISSION 3
+
+# threshold for switching between direct and diffuse transmission of the
+# spectrally white component (C0)
+RGLI_0 0.02
+
+
+
+# WATER REFLECTANCE MODEL #########
+
+# MODEL SELECTION: MOREL, MOREL_FOQ
+OC_MODEL MOREL_FOQ
+
+# Morel's f/Q table
+FILE_MOREL_FOQ   auxdata/morel_fq.dat
+
+# clear water adjustment
+ADJUST_MM_MODEL_CLEARWATERS 1
+
+# NIR extension: similarity spectrum (0) or 1/AW (1)
+WATER_SPECTRUM_NIR_AW    0
+
+# spectral dependency of suspended matter
+BBSS_SPEC -1.
+
+
+
+
+# OPTIMIZATION PARAMETERS #########
+
+MAX_ITERATIONS        100
+
+FORCE_INITIALIZATION  0
+SIZE_END_ITER         0.005
+
+INITIAL_POINT         -1 0
+INITIAL_STEP          0.05 0.0005
+PARAMS_MIN_MAX        -2. 2. -0.005 0.1
+WL_WEIGHT             0
+
+# Constraint on bbs: amplitude, sigma(chl=0.01), sigma(chl=0.1)
+CONSTRAINT_BBS        1e-3 0.0001 0.005
+
+THRES_CHI2     0.005
+
+
+
+# CLOUD MASK ############
+
+BAND_NIR              865
+
+# Basic cloud mask parameters (negative values disable)
+THRES_R865            0.2
+THRES_R865_STD        0.04
+
+
+# Output datasets control #########
+
+WRITE_BBS      1
+WRITE_BBP      1
+WRITE_RW       1
+WRITE_CI       1
+WRITE_EPSILON  0
+WRITE_ANCILLARY 0
+WRITE_RPRIME   0
+WRITE_TRANSMITTANCE 0
+WRITE_RATM     0
+
+
+# DEBUGGING ###########
+
+# 0: standard processing
+# 1: stop before minimization
+# 2: stop before minimization and skip rayleigh correction
+PARTIAL_PROCESSING 0
