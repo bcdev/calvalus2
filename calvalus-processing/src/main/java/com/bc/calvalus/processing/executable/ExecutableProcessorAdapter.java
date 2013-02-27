@@ -31,6 +31,7 @@ import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import java.awt.Rectangle;
 import java.io.BufferedInputStream;
@@ -161,9 +162,32 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             if (productReader != null) {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
+            if (product.getStartTime() == null || product.getEndTime() == null) {
+                setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
+            }
             return product;
         }
         return null;
+    }
+
+    private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct, Rectangle inputRectangle) {
+        final ProductData.UTC startTime = sourceProduct.getStartTime();
+        final ProductData.UTC stopTime = sourceProduct.getEndTime();
+        if (startTime != null && stopTime != null && inputRectangle != null) {
+            final double height = sourceProduct.getSceneRasterHeight();
+            final double regionY = inputRectangle.getY();
+            final double regionHeight = inputRectangle.getHeight();
+            final double dStart = startTime.getMJD();
+            final double dStop = stopTime.getMJD();
+            final double vPerLine = (dStop - dStart) / (height - 1);
+            final double newStart = vPerLine * regionY + dStart;
+            final double newStop = vPerLine * (regionHeight - 1) + newStart;
+            targetProduct.setStartTime(new ProductData.UTC(newStart));
+            targetProduct.setEndTime(new ProductData.UTC(newStop));
+        } else {
+            targetProduct.setStartTime(startTime);
+            targetProduct.setEndTime(stopTime);
+        }
     }
 
     @Override
