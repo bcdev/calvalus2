@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
+import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinSource;
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -45,18 +46,20 @@ public class L3TemporalBinSource implements TemporalBinSource {
     private final Configuration configuration;
     private final Path partsDir;
     private final long startTime;
+    private final Mapper.Context context;
     private FileStatus[] parts;
     private FileSystem hdfs;
 
-    public L3TemporalBinSource(Configuration configuration, Path partsDir) {
-        this.configuration = configuration;
+    public L3TemporalBinSource(Path partsDir, Mapper.Context context) {
+        this.context = context;
+        this.configuration = context.getConfiguration();
         this.partsDir = partsDir;
-        startTime = System.nanoTime();
+        this.startTime = System.nanoTime();
     }
 
     @Override
     public int open() throws IOException {
-
+        context.progress();
         hdfs = partsDir.getFileSystem(configuration);
         parts = hdfs.listStatus(partsDir, new PathFilter() {
             @Override
@@ -74,6 +77,8 @@ public class L3TemporalBinSource implements TemporalBinSource {
 
     @Override
     public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
+        context.setStatus(String.format("part %d/%d", (index+1), (parts.length+1)));
+        context.progress();
         final FileStatus part = parts[index];
         Path partFile = part.getPath();
         LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
@@ -83,11 +88,13 @@ public class L3TemporalBinSource implements TemporalBinSource {
 
     @Override
     public void partProcessed(int index, Iterator<? extends TemporalBin> part) throws IOException {
+        context.progress();
         ((SequenceFileBinIterator) part).getReader().close();
     }
 
     @Override
     public void close() {
+        context.progress();
         long stopTime = System.nanoTime();
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
     }
