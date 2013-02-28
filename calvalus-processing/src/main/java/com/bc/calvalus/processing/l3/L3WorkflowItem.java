@@ -90,7 +90,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
-        job.setNumReduceTasks(4);
+        job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
         job.setMapperClass(L3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(L3SpatialBin.class);
