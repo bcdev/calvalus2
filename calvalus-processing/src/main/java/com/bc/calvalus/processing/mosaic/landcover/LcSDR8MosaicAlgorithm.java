@@ -130,7 +130,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         if (sensor.equals("MERIS")) {
             varIndexes[1] = getVariableIndex(varCtx, "sdr_8");
         } else {
-            varIndexes[1] = getVariableIndex(varCtx, "sdr_B0");
+            varIndexes[1] = getVariableIndex(varCtx, "sdr_B3");
         }
         return varIndexes;
     }

@@ -248,7 +248,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             sdrCloudBandIndex = 8;
         } else {
             numSDRBands = NUM_SDR_BANDS_VGT;
-            sdrCloudBandIndex = 1;
+            sdrCloudBandIndex = 3;
         }
     }
 

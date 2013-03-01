@@ -254,7 +254,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     static MosaicConfig getCloudMosaicConfig(ProductionRequest productionRequest, boolean isMeris) throws ProductionException {
-        String sdrBandName = isMeris ? "sdr_8" : "sdr_B0";
+        String sdrBandName = isMeris ? "sdr_8" : "sdr_B3";
         String asLandText = productionRequest.getString("calvalus.lc.remapAsLand", null);
         String maskExpr;
         if (asLandText != null) {
