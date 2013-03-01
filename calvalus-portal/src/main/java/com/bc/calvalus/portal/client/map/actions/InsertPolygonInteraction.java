@@ -4,88 +4,55 @@ import com.bc.calvalus.portal.client.map.MapAction;
 import com.bc.calvalus.portal.client.map.MapInteraction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
-import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.event.MapClickHandler;
-import com.google.gwt.maps.client.event.MapMouseMoveHandler;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.geom.Point;
-import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.maps.client.drawinglib.DrawingManager;
+import com.google.gwt.maps.client.drawinglib.OverlayType;
+import com.google.gwt.maps.client.events.overlaycomplete.polygon.PolygonCompleteMapEvent;
+import com.google.gwt.maps.client.events.overlaycomplete.polygon.PolygonCompleteMapHandler;
+import com.google.gwt.maps.client.overlays.Polygon;
+
 
 /**
  * An interactor that inserts polygons into a map.
  *
  * @author Norman Fomferra
  */
-public class InsertPolygonInteraction extends MapInteraction implements MapClickHandler, MapMouseMoveHandler {
+public class InsertPolygonInteraction extends MapInteraction implements PolygonCompleteMapHandler {
+    private final DrawingManager drawingManager;
     private RegionMap regionMap;
-    private Polyline polyline;
+    private HandlerRegistration handlerRegistration;
 
-    public InsertPolygonInteraction(MapAction insertAction) {
+    public InsertPolygonInteraction(DrawingManager drawingManager, MapAction insertAction) {
         super(insertAction);
+        this.drawingManager = drawingManager;
     }
 
     @Override
     public void attachTo(RegionMap regionMap) {
         this.regionMap = regionMap;
-        regionMap.getMapWidget().addMapClickHandler(this);
-        regionMap.getMapWidget().addMapMouseMoveHandler(this);
+        drawingManager.setMap(regionMap.getMapWidget());
+        drawingManager.setDrawingMode(OverlayType.POLYGON);
+        handlerRegistration = drawingManager.addPolygonCompleteHandler(this);
     }
 
     @Override
     public void detachFrom(RegionMap regionMap) {
-        regionMap.getMapWidget().removeMapClickHandler(this);
-        regionMap.getMapWidget().removeMapMouseMoveHandler(this);
+        drawingManager.setMap(null);
+        drawingManager.setDrawingMode(null);
+        if (handlerRegistration != null) {
+            handlerRegistration.removeHandler();
+        }
         this.regionMap = null;
     }
 
     @Override
-    public void onClick(MapClickEvent event) {
-        MapWidget mapWidget = event.getSender();
-        LatLng latLng = event.getLatLng();
-        if (latLng == null) {
-            latLng = event.getOverlayLatLng();
-            if (latLng == null) {
-                return;
-            }
-        }
-        if (polyline == null) {
-            polyline = new Polyline(new LatLng[]{latLng, latLng});
-            mapWidget.addOverlay(polyline);
-        } else {
-            Point point1 = mapWidget.convertLatLngToDivPixel(latLng);
-            Point point2 = mapWidget.convertLatLngToDivPixel(polyline.getVertex(0));
-            int dx = point2.getX() - point1.getX();
-            int dy = point2.getY() - point1.getY();
-            double pixelDistance = Math.sqrt(dx * dx + dy * dy);
-            if (pixelDistance < 8.0) {
-                LatLng[] polygonVertices = getPolygonVertices(polyline);
-                mapWidget.removeOverlay(polyline);
-                polyline = null;
-                regionMap.addRegion(Region.createUserRegion(polygonVertices));
-                // Interaction complete, invoke the actual action.
-                run(regionMap);
-            } else {
-                polyline.insertVertex(polyline.getVertexCount(), latLng);
-            }
-        }
+    public void onEvent(PolygonCompleteMapEvent event) {
+        Polygon polygon = event.getPolygon();
+        polygon.setMap(null);
+        LatLng[] polygonVertices = Region.getVertices(polygon);
+        regionMap.addRegion(Region.createUserRegion(polygonVertices));
+        // Interaction complete, invoke the actual action.
+        run(regionMap);
     }
-
-    @Override
-    public void onMouseMove(MapMouseMoveEvent event) {
-        if (polyline != null) {
-            polyline.deleteVertex(polyline.getVertexCount() - 1);
-            polyline.insertVertex(polyline.getVertexCount(), event.getLatLng());
-        }
-    }
-
-    static LatLng[] getPolygonVertices(Polyline polyline) {
-        int n = polyline.getVertexCount();
-        LatLng[] points = new LatLng[n];
-        for (int i = 0; i < n - 1; i++) {
-            points[i] = polyline.getVertex(i);
-        }
-        points[n - 1] = polyline.getVertex(0);
-        return points;
-    }
-
 }

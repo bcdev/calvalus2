@@ -135,15 +135,19 @@ public class LcL3ProductionTypeTest {
     @Test
     public void testGetCloudL3Config() throws Exception {
         MosaicConfig cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "foo", "bar"));
+                new ProductionRequest("test", "dummy", "foo", "bar"), true);
         assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
         cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"));
+                new ProductionRequest("test", "dummy", "foo", "bar"), false);
+        assertEquals("status == 1 and not nan(sdr_B0)", cloudL3Config.getValidMaskExpression());
+
+        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
+                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"), true);
         assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
         cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"));
+                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"), true);
         assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)",
                      cloudL3Config.getValidMaskExpression());
     }

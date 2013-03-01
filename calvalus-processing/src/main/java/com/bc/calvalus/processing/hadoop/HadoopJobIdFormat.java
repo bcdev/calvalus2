@@ -16,6 +16,9 @@ public class HadoopJobIdFormat implements JobIdFormat<JobID> {
 
     @Override
     public JobID parse(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
         return JobID.forName(text);
     }
 }

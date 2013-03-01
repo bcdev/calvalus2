@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.Formatter;
@@ -44,8 +45,9 @@ public class L3Formatter {
                        Path partsDir,
                        Geometry roiGeometry,
                        ProductData.UTC startTime,
-                       ProductData.UTC endTime) throws Exception {
-        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(configuration, partsDir);
+                       ProductData.UTC endTime,
+                       Mapper.Context context) throws Exception {
+        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(partsDir, context);
         Formatter.format(binningContext,
                          temporalBinSource, formatterConfig.getFormatterConfig(),
                          roiGeometry,

@@ -81,7 +81,7 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
                              split.getPath(),
                              regionGeometry,
                              L3FormatterConfig.parseTime(dateStart),
-                             L3FormatterConfig.parseTime(dateStop));
+                             L3FormatterConfig.parseTime(dateStop), context);
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");

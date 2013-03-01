@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>1.5-cdh4</version>
+    <version>1.6-cdh4</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>2.0.0-mr1-cdh4.1.2</hadoop.version>
-        <calvalus.version>1.5-cdh4</calvalus.version>
+        <calvalus.version>1.6-cdh4</calvalus.version>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -401,6 +401,7 @@
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
                 <version>1.2.14</version>
+                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.mail</groupId>

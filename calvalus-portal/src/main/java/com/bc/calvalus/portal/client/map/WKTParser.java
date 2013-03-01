@@ -1,9 +1,6 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Marker;
-import com.google.gwt.maps.client.overlay.Overlay;
-import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.maps.client.base.LatLng;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,26 +13,26 @@ public class WKTParser {
         this.wkt = wkt;
     }
 
-    public static Overlay parse(String wkt) {
+    public static LatLng[] parse(String wkt) {
         WKTParser parser = new WKTParser(wkt);
         return parser.parseOverlay();
     }
 
-    private Overlay parseOverlay() {
+    private LatLng[] parseOverlay() {
         int pos0 = pos;
         if (eat("POLYGON")) {
             ArrayList<LatLng> points = new ArrayList<LatLng>();
             force('(');
             force(points);
             force(')');
-            return new Polygon(points.toArray(new LatLng[points.size()]));
+            return points.toArray(new LatLng[points.size()]);
         } else if (eat("POINT")) {
             double[] point = new double[2];
             force('(');
             force(point, 0);
             force(point, 1);
             force(')');
-            return new Marker(LatLng.newInstance(point[1], point[0]));
+            return new LatLng[] { LatLng.newInstance(point[1], point[0]) };
         } else {
             pos = pos0;
             fail("'POINT' or 'POLYGON' expected");

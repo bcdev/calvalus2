@@ -14,9 +14,11 @@ import java.awt.Rectangle;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -26,10 +28,12 @@ import java.util.TimeZone;
  */
 class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
-    static final float[] WAVELENGTH = new float[]{
+    static final float[] MERIS_WAVELENGTH = new float[]{
             412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,
             619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
             761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
+
+    static final float[] SPOT_WAVELENGTH = new float[]{450f, 645f, 835f, 1665f};
 
     static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
@@ -60,6 +64,14 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             "120E", "125E", "130E", "135E", "140E", "145E",
             "150E", "155E", "160E", "165E", "170E", "175E" };
 
+    private final String[] outputFeatures;
+    private final float[] wavelength;
+
+    public LcL3Nc4MosaicProductFactory(String[] outputFeatures) {
+        this.outputFeatures = outputFeatures;
+        this.wavelength = outputFeatures.length > 30 ? MERIS_WAVELENGTH : SPOT_WAVELENGTH;
+    }
+
     public static String tileName(int tileY, int tileX) {
         return NORTHING_TILE_NAME[NORTHING_TILE_NAME.length - 1 - tileY] + EASTING_TILE_NAME[tileX];
     }
@@ -83,8 +95,9 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         calendar.add(Calendar.DATE, 1);
         Date endDate = calendar.getTime();
 
-        String sensor = "MERIS";
-        String platform = "ENVISAT";
+
+        String sensor = configuration.get("calvalus.lc.sensor", "MERIS"); // VEGETATION
+        String platform = sensor.equals("MERIS") ? "ENVISAT" : "SPOT";
         String spatialResolution = "360".equals(tileSizeParameter) ? "300" : "1000";
         String temporalResolution = "7";  // TODO
         String startTime = COMPACT_DATE_FORMAT.format(minDate);
@@ -119,8 +132,23 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         band.setSampleCoding(indexCoding);
         band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
-        for (String counter : LcL3Nc4WriterPlugIn.COUNTER_NAMES) {
-            band = product.addBand(counter + "_count", ProductData.TYPE_INT16);
+        List<String> countBandNames = new ArrayList<String>(outputFeatures.length);
+        List<String> srMeanBandNames = new ArrayList<String>(outputFeatures.length);
+        List<String> srSigmaBandNames = new ArrayList<String>(outputFeatures.length);
+        for (String outputFeature : outputFeatures) {
+            if (outputFeature.endsWith("_count")) {
+                countBandNames.add(outputFeature);
+            } else if (outputFeature.startsWith("sr_")) {
+                if (outputFeature.endsWith("_mean")) {
+                    srMeanBandNames.add(outputFeature);
+                } else if (outputFeature.endsWith("_sigma")) {
+                    srSigmaBandNames.add(outputFeature);
+                }
+            }
+        }
+
+        for (String counter : countBandNames) {
+            band = product.addBand(counter, ProductData.TYPE_INT16);
             band.setNoDataValue(-1);
             band.setNoDataValueUsed(true);
         }
@@ -135,19 +163,19 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         //band.setSampleCoding(indexCoding);
         //band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
-        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        for (int i = 0; i < srMeanBandNames.size(); i++) {
             int bandIndex = i + 1;
-            band = product.addBand("sr_" + bandIndex + "_mean", ProductData.TYPE_FLOAT32);
+            band = product.addBand(srMeanBandNames.get(i), ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
             band.setSpectralBandIndex(bandIndex);
-            band.setSpectralWavelength(WAVELENGTH[i]);
+            band.setSpectralWavelength(wavelength[i]);
         }
         band = product.addBand("vegetation_index_mean", ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
-        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
-            band = product.addBand("sr_" + (i + 1) + "_sigma", ProductData.TYPE_FLOAT32);
+        for (String srSigmaBandName : srSigmaBandNames) {
+            band = product.addBand(srSigmaBandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }

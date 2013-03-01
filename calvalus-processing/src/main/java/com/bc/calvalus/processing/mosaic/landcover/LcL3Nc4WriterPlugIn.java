@@ -34,7 +34,9 @@ import ucar.ma2.ArrayByte;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -76,11 +78,6 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     private class LCMainPart implements ProfileInitPartWriter {
 
         private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-        final float[] WAVELENGTH = new float[]{
-            412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,
-            619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
-            761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
 
         LCMainPart() {
             COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -183,17 +180,33 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -1);
             }
 
-            for (int i=1; i<=15; ++i) {
-                float wavelength = WAVELENGTH[i-1];
-                variable = writeable.addVariable("sr_" + i + "_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised surface reflectance of channel " + i);
+            String[] bandNames = product.getBandNames();
+            List<String> srMeanBandNames = new ArrayList<String>(bandNames.length);
+            List<String> srSigmaBandNames = new ArrayList<String>(bandNames.length);
+            for (String bandName : bandNames) {
+               if (bandName.startsWith("sr_")) {
+                    if (bandName.endsWith("_mean")) {
+                        srMeanBandNames.add(bandName);
+                    } else if (bandName.endsWith("_sigma")) {
+                        srSigmaBandNames.add(bandName);
+                    }
+                }
+            }
+
+
+            for (int i=0; i<15; i++) {
+                String meanBandName = srMeanBandNames.get(i);
+                String sigmaBandName = srSigmaBandNames.get(i);
+                float wavelength = product.getBand(meanBandName).getSpectralWavelength();
+                variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+                variable.addAttribute("long_name", "normalised surface reflectance of channel " + (i+1));
                 variable.addAttribute("standard_name", "surface_reflectance");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
-                variable = writeable.addVariable("sr_" + i + "_sigma", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "standard deviation of normalised surface reflectance of channel " + i);
+                variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+                variable.addAttribute("long_name", "standard deviation of normalised surface reflectance of channel " + (i+1));
                 variable.addAttribute("standard_name", "surface_reflectance standard_error");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);

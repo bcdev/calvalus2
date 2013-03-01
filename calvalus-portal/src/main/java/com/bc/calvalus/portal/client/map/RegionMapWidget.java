@@ -12,11 +12,23 @@ import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.maps.client.MapOptions;
 import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.control.MapTypeControl;
-import com.google.gwt.maps.client.event.PolygonLineUpdatedHandler;
-import com.google.gwt.maps.client.overlay.PolyStyleOptions;
-import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.maps.client.drawinglib.DrawingManager;
+import com.google.gwt.maps.client.drawinglib.DrawingManagerOptions;
+import com.google.gwt.maps.client.events.click.ClickMapEvent;
+import com.google.gwt.maps.client.events.click.ClickMapHandler;
+import com.google.gwt.maps.client.events.insertat.InsertAtMapEvent;
+import com.google.gwt.maps.client.events.insertat.InsertAtMapHandler;
+import com.google.gwt.maps.client.events.removeat.RemoveAtMapEvent;
+import com.google.gwt.maps.client.events.removeat.RemoveAtMapHandler;
+import com.google.gwt.maps.client.events.setat.SetAtMapEvent;
+import com.google.gwt.maps.client.events.setat.SetAtMapHandler;
+import com.google.gwt.maps.client.mvc.MVCArray;
+import com.google.gwt.maps.client.overlays.Polygon;
+import com.google.gwt.maps.client.overlays.PolygonOptions;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -38,7 +50,7 @@ import java.util.Map;
  *
  * @author Norman Fomferra
  */
-public class RegionMapWidget extends ResizeComposite implements RegionMap {
+public class RegionMapWidget extends ResizeComposite implements RegionMap, ClickMapHandler {
 
     private final RegionMapModel regionMapModel;
     private final RegionMapSelectionModel regionMapSelectionModel;
@@ -50,14 +62,15 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private final MapAction[] actions;
     private Map<Region, Polygon> polygonMap;
     private Map<Polygon, Region> regionMap;
+    private Map<Region, HandlerRegistration> handlerRegistrationMap;
 
-    private PolyStyleOptions normalPolyStrokeStyle;
-    private PolyStyleOptions normalPolyFillStyle;
-    private PolyStyleOptions selectedPolyStrokeStyle;
-    private PolyStyleOptions selectedPolyFillStyle;
+    private PolygonOptions normalPolyStyle;
+    private PolygonOptions selectedPolyStyle;
     private RegionMapToolbar regionMapToolbar;
-    private PolygonLineUpdatedHandler polygonLineUpdatedHandler;
     private CellTree regionCellTree;
+    private HandlerRegistration insertHandlerRegistration;
+    private HandlerRegistration removeHandlerRegistration;
+    private HandlerRegistration setHandlerRegistration;
 
     public RegionMapWidget(RegionMapModel regionMapModel, boolean editable, MapAction... actions) {
         this(regionMapModel, new RegionMapSelectionModelImpl(), editable, actions);
@@ -69,13 +82,24 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
                            MapAction... actions) {
         this.regionMapModel = regionMapModel;
         this.regionMapSelectionModel = regionMapSelectionModel;
+        this.handlerRegistrationMap = new HashMap<Region, HandlerRegistration>();
         this.editable = editable;
         this.actions = actions;
-        this.normalPolyStrokeStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.8);
-        this.normalPolyFillStyle = PolyStyleOptions.newInstance("#0000FF", 3, 0.2);
-        this.selectedPolyStrokeStyle = PolyStyleOptions.newInstance("#FFFF00", 3, 0.8);
-        this.selectedPolyFillStyle = normalPolyFillStyle;
-        polygonLineUpdatedHandler = new MyPolygonLineUpdatedHandler();
+
+        this.normalPolyStyle = PolygonOptions.newInstance();
+        this.normalPolyStyle.setStrokeColor("#0000FF");
+        this.normalPolyStyle.setStrokeWeight(3);
+        this.normalPolyStyle.setStrokeOpacity(0.8);
+        this.normalPolyStyle.setFillColor("#0000FF");
+        this.normalPolyStyle.setFillOpacity(0.2);
+
+        this.selectedPolyStyle = PolygonOptions.newInstance();
+        this.selectedPolyStyle.setStrokeColor("#FFFF00");
+        this.selectedPolyStyle.setStrokeWeight(3);
+        this.selectedPolyStyle.setStrokeOpacity(0.8);
+        this.selectedPolyStyle.setFillColor("#0000FF");
+        this.selectedPolyStyle.setFillOpacity(0.2);
+
         polygonMap = new HashMap<Region, Polygon>();
         regionMap = new HashMap<Polygon, Region>();
         initUi();
@@ -164,6 +188,11 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
         }
     }
 
+    @Override
+    public void onEvent(ClickMapEvent event) {
+        getRegionMapSelectionModel().clearSelection();
+    }
+
     interface CalvalusTreeResource extends CellTree.Resources {
 
         @Source("com/bc/calvalus/portal/client/cellTreeStyle.css")
@@ -171,14 +200,16 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     private void initUi() {
-
-        mapWidget = new MapWidget();
-        mapWidget.setDoubleClickZoom(true);
-        mapWidget.setScrollWheelZoomEnabled(true);
-        mapWidget.addControl(new MapTypeControl());
-        // Other possible MapWidget Controls are:
-        // mapWidget.addControl(new SmallMapControl());
-        // mapWidget.addControl(new OverviewMapControl());
+        MapOptions mapOptions = MapOptions.newInstance();
+        mapOptions.setCenter(LatLng.newInstance(0.0, 0.0));
+        mapOptions.setDisableDoubleClickZoom(false);
+        mapOptions.setScrollWheel(true);
+        mapOptions.setMapTypeControl(true);
+        mapOptions.setZoomControl(false);
+        mapOptions.setPanControl(false);
+        mapOptions.setStreetViewControl(false);
+        mapWidget = new MapWidget(mapOptions);
+        mapWidget.addClickHandler(this);
 
         CellTree.Resources res = GWT.create(CalvalusTreeResource.class);
 //        final SelectionModel<Region> regionSelectionModel = new MultiSelectionModel<Region>(Region.KEY_PROVIDER);
@@ -276,7 +307,8 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
             polygon.setVisible(true);
             regionMap.put(polygon, region);
             polygonMap.put(region, polygon);
-            mapWidget.addOverlay(polygon);
+            polygon.setMap(mapWidget);
+            handlerRegistrationMap.put(region, polygon.addClickHandler(new RegionClickMapHandler(region)));
             updatePolygonStyle(region, polygon, regionMapSelectionModel.isSelected(region));
         }
         return polygon;
@@ -285,7 +317,12 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     private Polygon ensurePolygonAbsent(Region region) {
         Polygon polygon = polygonMap.get(region);
         if (polygon != null) {
-            mapWidget.removeOverlay(polygon);
+            polygon.setMap(null);
+            HandlerRegistration handlerRegistration = handlerRegistrationMap.get(region);
+            if (handlerRegistration != null) {
+                handlerRegistrationMap.remove(region);
+                handlerRegistration.removeHandler();
+            }
             regionMap.remove(polygon);
             polygonMap.remove(region);
         }
@@ -306,14 +343,24 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     }
 
     private void updatePolygonStyle(Region region, Polygon polygon, boolean selected) {
-        polygon.setStrokeStyle(selected ? selectedPolyStrokeStyle : normalPolyStrokeStyle);
-        polygon.setFillStyle(selected ? selectedPolyFillStyle : normalPolyFillStyle);
+        polygon.setOptions(selected ? selectedPolyStyle : normalPolyStyle);
         if (editable && region.isUserRegion()) {
-            polygon.setEditingEnabled(selected);
+            polygon.setEditable(selected);
             if (selected) {
-                polygon.addPolygonLineUpdatedHandler(polygonLineUpdatedHandler);
+                MVCArray<LatLng> polygonPath = polygon.getPath();
+                insertHandlerRegistration = polygonPath.addInsertAtHandler(new MyInsertAtMapHandler(region));
+                removeHandlerRegistration = polygonPath.addRemoveAtHandler(new MyRemoveAtMapHandler(region));
+                setHandlerRegistration = polygonPath.addSetAtHandler(new MySetAtMapHandler(region));
             } else {
-                polygon.removePolygonLineUpdatedHandler(polygonLineUpdatedHandler);
+                if (insertHandlerRegistration != null) {
+                    insertHandlerRegistration.removeHandler();
+                }
+                if (removeHandlerRegistration != null) {
+                    removeHandlerRegistration.removeHandler();
+                }
+                if (setHandlerRegistration != null) {
+                    setHandlerRegistration.removeHandler();
+                }
             }
         }
     }
@@ -363,15 +410,19 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     public static MapAction[] createDefaultEditingActions() {
         // todo: use the action constructor that takes an icon image (nf)
         final SelectInteraction selectInteraction = createSelectInteraction();
+        DrawingManagerOptions options = DrawingManagerOptions.newInstance();
+        options.setDrawingControl(false);
+        DrawingManager drawingManager = DrawingManager.newInstance(options);
+        drawingManager.setDrawingMode(null);
         return new MapAction[]{
                 selectInteraction,
-                new InsertPolygonInteraction(new AbstractMapAction("P", "New polygon region") {
+                new InsertPolygonInteraction(drawingManager, new AbstractMapAction("P", "New polygon region") {
                     @Override
                     public void run(RegionMap regionMap) {
                         regionMap.setCurrentInteraction(selectInteraction);
                     }
                 }),
-                new InsertBoxInteraction(new AbstractMapAction("B", "New box region") {
+                new InsertBoxInteraction(drawingManager, new AbstractMapAction("B", "New box region") {
                     @Override
                     public void run(RegionMap regionMap) {
                         regionMap.setCurrentInteraction(selectInteraction);
@@ -402,6 +453,72 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
     public void setEnabled(boolean value) {
         mapWidget.setVisible(value);
         regionCellTree.setVisible(value);
+    }
+
+    private class RegionClickMapHandler implements ClickMapHandler {
+
+        private final Region region;
+
+        private RegionClickMapHandler(Region region) {
+            this.region = region;
+        }
+
+        @Override
+        public void onEvent(ClickMapEvent event) {
+            getRegionMapSelectionModel().clearSelection();
+            getRegionMapSelectionModel().setSelected(region, true);
+        }
+    }
+
+    private abstract class RegionChangeHandler {
+
+        private final Region region;
+
+        private RegionChangeHandler(Region region) {
+            this.region = region;
+        }
+
+        protected void handleRegionChangeEvent() {
+             Polygon polygon = polygonMap.get(region);
+             region.setVertices(Region.getVertices(polygon));
+             getRegionModel().fireRegionChanged(RegionMapWidget.this, region);
+         }
+    }
+
+    private class MyInsertAtMapHandler extends  RegionChangeHandler implements InsertAtMapHandler {
+
+        private MyInsertAtMapHandler(Region region) {
+            super(region);
+        }
+
+        @Override
+        public void onEvent(InsertAtMapEvent event) {
+            handleRegionChangeEvent();
+        }
+    }
+
+    private class MySetAtMapHandler extends  RegionChangeHandler implements SetAtMapHandler {
+
+        private MySetAtMapHandler(Region region) {
+            super(region);
+        }
+
+        @Override
+        public void onEvent(SetAtMapEvent event) {
+            handleRegionChangeEvent();
+        }
+    }
+
+    private class MyRemoveAtMapHandler extends  RegionChangeHandler implements RemoveAtMapHandler {
+
+        private MyRemoveAtMapHandler(Region region) {
+            super(region);
+        }
+
+        @Override
+        public void onEvent(RemoveAtMapEvent event) {
+            handleRegionChangeEvent();
+        }
     }
 
     private static class RegionTreeSelectionModel extends SelectionModel.AbstractSelectionModel<TreeNode> {
@@ -443,21 +560,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap {
 
         public LeafNode getSelectedLeafNode() {
             return selectedNode;
-        }
-
-
-    }
-
-    private class MyPolygonLineUpdatedHandler implements PolygonLineUpdatedHandler {
-
-        @Override
-        public void onUpdate(PolygonLineUpdatedEvent event) {
-            Polygon polygon = event.getSender();
-            Region region = regionMap.get(polygon);
-            if (region != null) {
-                region.setVertices(Region.getVertices(polygon));
-                getRegionModel().fireRegionChanged(RegionMapWidget.this, region);
-            }
         }
     }
 

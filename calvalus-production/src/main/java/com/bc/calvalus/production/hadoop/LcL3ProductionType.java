@@ -63,7 +63,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
     LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                              StagingService stagingService) {
+                       StagingService stagingService) {
         super("LCL3", inventoryService, processingService, stagingService);
     }
 
@@ -77,8 +77,21 @@ public class LcL3ProductionType extends HadoopProductionType {
         DateRange mainRange = productionRequest.createFromMinMax();
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
-        String cloudMosaicConfigXml = getCloudMosaicConfig(productionRequest).toXml();
-        String mainMosaicConfigXml = getMainMosaicConfig(productionRequest).toXml();
+        String resolution = productionRequest.getString("resolution", "FR");
+        int mosaicTileSize = 360;
+        boolean isMeris = true;
+        String groundResultion = "300m";
+        if (resolution.equals("RR")) {
+            mosaicTileSize = 90;
+            groundResultion = "1000m";
+        } else if (resolution.equals("SPOT")) {
+            mosaicTileSize = 90;
+            groundResultion = "1000m";
+            isMeris = false;
+        }
+
+        String cloudMosaicConfigXml = getCloudMosaicConfig(productionRequest, isMeris).toXml();
+        String mainMosaicConfigXml = getMainMosaicConfig(productionRequest, isMeris).toXml();
 
         String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
@@ -88,13 +101,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
 
-        String resolution = productionRequest.getString("resolution", "FR");
-        int mosaicTileSize = 360;
-        String groundResultion = "300m";
-        if (resolution.equals("RR")) {
-            mosaicTileSize = 90;
-            groundResultion = "1000m";
-        }
+
         Workflow.Sequential sequence = new Workflow.Sequential();
         if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
@@ -107,6 +114,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
             jobConfigCloud.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, cloudMosaicConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
+            jobConfigCloud.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
@@ -127,6 +135,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 // if cloud aggregation is disabled, don't set this property
                 jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
             }
+            jobConfigSr.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
@@ -146,6 +155,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mainMosaicConfigXml);
+            jobConfigFormat.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
@@ -164,7 +174,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     }
 
     static String createLcProductionName(String prefix, ProductionRequest productionRequest) throws
-                                                                                             ProductionException {
+            ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
         sb.append(getLcPeriodName(productionRequest));
         return sb.toString().trim();
@@ -191,7 +201,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
     // 7, or 10 days periods, that are adjusted to full month
     static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws
-                                                                                                       ProductionException {
+            ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
 
         Date minDate = productionRequest.getDate("minDate");
@@ -230,7 +240,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
 
     static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws
-                                                                                             ProductionException {
+            ProductionException {
         int wings = productionRequest.getInteger("wings", 10);
 
         Calendar calendar = ProductData.UTC.createCalendar();
@@ -243,7 +253,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         return new DateRange(date1, date2);
     }
 
-    static MosaicConfig getCloudMosaicConfig(ProductionRequest productionRequest) throws ProductionException {
+    static MosaicConfig getCloudMosaicConfig(ProductionRequest productionRequest, boolean isMeris) throws ProductionException {
+        String sdrBandName = isMeris ? "sdr_8" : "sdr_B3";
         String asLandText = productionRequest.getString("calvalus.lc.remapAsLand", null);
         String maskExpr;
         if (asLandText != null) {
@@ -254,33 +265,49 @@ public class LcL3ProductionType extends HadoopProductionType {
                 sb.append(" or status == ");
                 sb.append(i);
             }
-            maskExpr = "(status == 1 " + sb.toString() + ") and not nan(sdr_8)";
+            maskExpr = "(status == 1 " + sb.toString() + ") and not nan(" + sdrBandName + ")";
         } else {
-            maskExpr = "status == 1 and not nan(sdr_8)";
+            maskExpr = "status == 1 and not nan(" + sdrBandName + ")";
         }
-        String[] varNames = new String[]{"status", "sdr_8"};
+        String[] varNames = new String[]{"status", sdrBandName};
         String type = LcSDR8MosaicAlgorithm.class.getName();
 
         return new MosaicConfig(type, maskExpr, varNames);
     }
 
-    static MosaicConfig getMainMosaicConfig(ProductionRequest productionRequest) throws ProductionException {
-        // exclude invalid and deep water pixels
-        String maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4) and dem_alt > -100))";
+    static MosaicConfig getMainMosaicConfig(ProductionRequest productionRequest, boolean isMeris) throws ProductionException {
+        String maskExpr;
+        String[] varNames;
+        if (isMeris) {
+            // exclude invalid and deep water pixels
+            maskExpr = "(status == 1 or (status == 2 and not nan(sdr_1)) or status == 3 or ((status >= 4) and dem_alt > -100))";
 
-        String[] varNames = new String[]{
-                "status",
-                "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
-                "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
-                "sdr_11", "sdr_12", "sdr_13", "sdr_14", "sdr_15",
-                "ndvi",
-                "sdr_error_1", "sdr_error_2", "sdr_error_3", "sdr_error_4", "sdr_error_5",
-                "sdr_error_6", "sdr_error_7", "sdr_error_8", "sdr_error_9", "sdr_error_10",
-                "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15",
-        };
+            varNames = new String[]{
+                    "status",
+                    "sdr_1", "sdr_2", "sdr_3", "sdr_4", "sdr_5",
+                    "sdr_6", "sdr_7", "sdr_8", "sdr_9", "sdr_10",
+                    "sdr_11", "sdr_12", "sdr_13", "sdr_14", "sdr_15",
+                    "ndvi",
+                    "sdr_error_1", "sdr_error_2", "sdr_error_3", "sdr_error_4", "sdr_error_5",
+                    "sdr_error_6", "sdr_error_7", "sdr_error_8", "sdr_error_9", "sdr_error_10",
+                    "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15",
+            };
+
+        } else {
+            // exclude invalid
+            maskExpr = "(status == 1 or (status == 2 and not nan(sdr_B0)) or (status >= 3))";
+
+            varNames = new String[]{
+                    "status",
+                    "sdr_B0", "sdr_B2", "sdr_B3", "sdr_MIR",
+                    "ndvi",
+                    "sdr_error_B0", "sdr_error_B2", "sdr_error_B3", "sdr_error_MIR"
+            };
+
+        }
         String type = "NetCDF4-LC".equals(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"))
-                      ? LcL3Nc4MosaicAlgorithm.class.getName()
-                      : LCMosaicAlgorithm.class.getName();
+                ? LcL3Nc4MosaicAlgorithm.class.getName()
+                : LCMosaicAlgorithm.class.getName();
 
         return new MosaicConfig(type, maskExpr, varNames);
     }

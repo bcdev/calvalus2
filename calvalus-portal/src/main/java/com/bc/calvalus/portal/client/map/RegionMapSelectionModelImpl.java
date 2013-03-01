@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionModel;
 
 /**

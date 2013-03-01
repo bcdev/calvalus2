@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.5-cdh4</version>
+        <version>1.6-cdh4</version>
     </parent>
 
     <groupId>com.bc.calvalus</groupId>

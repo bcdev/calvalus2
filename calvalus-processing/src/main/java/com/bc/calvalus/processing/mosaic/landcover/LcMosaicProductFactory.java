@@ -10,6 +10,8 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The factory for creating the final mosaic product for LC-CCI
@@ -18,10 +20,15 @@ import java.awt.Rectangle;
  */
 class LcMosaicProductFactory extends DefaultMosaicProductFactory {
 
-    static final float[] WAVELENGTH = new float[]{
+    static final float[] MERIS_WAVELENGTH = new float[]{
             412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f,
             619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
             761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
+    static final float[] SPOT_WAVELENGTH = new float[]{450f, 645f, 835f, 1665f};
+
+    public LcMosaicProductFactory(String[] outputFeatures) {
+        super(outputFeatures);
+    }
 
     @Override
     public Product createProduct(String productName, Rectangle rect) {
@@ -47,24 +54,41 @@ class LcMosaicProductFactory extends DefaultMosaicProductFactory {
         band.setSampleCoding(indexCoding);
         band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
-        for (String counter : LCMosaicAlgorithm.COUNTER_NAMES) {
-            band = product.addBand(counter + "_count", ProductData.TYPE_INT8);
+        String[] outputFeatures = getOutputFeatures();
+        List<String> countBandNames = new ArrayList<String>(outputFeatures.length);
+        List<String> srMeanBandNames = new ArrayList<String>(outputFeatures.length);
+        List<String> srSigmaBandNames = new ArrayList<String>(outputFeatures.length);
+        for (String outputFeature : outputFeatures) {
+            if (outputFeature.endsWith("_count")) {
+                countBandNames.add(outputFeature);
+            } else if (outputFeature.startsWith("sr_")) {
+                if (outputFeature.endsWith("_mean")) {
+                    srMeanBandNames.add(outputFeature);
+                } else if (outputFeature.endsWith("_sigma")) {
+                    srSigmaBandNames.add(outputFeature);
+                }
+            }
+        }
+
+        for (String counter : countBandNames) {
+            band = product.addBand(counter, ProductData.TYPE_INT8);
             band.setNoDataValue(-1);
             band.setNoDataValueUsed(true);
         }
-        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
+        float[] wavelength = outputFeatures.length > 30 ? MERIS_WAVELENGTH : SPOT_WAVELENGTH;
+        for (int i = 0; i < srMeanBandNames.size(); i++) {
             int bandIndex = i + 1;
-            band = product.addBand("sr_" + bandIndex + "_mean", ProductData.TYPE_FLOAT32);
+            band = product.addBand(srMeanBandNames.get(i), ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
             band.setSpectralBandIndex(bandIndex);
-            band.setSpectralWavelength(WAVELENGTH[i]);
+            band.setSpectralWavelength(wavelength[i]);
         }
         band = product.addBand("ndvi_mean", ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
-        for (int i = 0; i < AbstractLcMosaicAlgorithm.NUM_SDR_BANDS; i++) {
-            band = product.addBand("sr_" + (i + 1) + "_sigma", ProductData.TYPE_FLOAT32);
+        for (String srSigmaBandName : srSigmaBandNames) {
+            band = product.addBand(srSigmaBandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
