@@ -121,7 +121,7 @@ public class IngestionTool extends Configured implements Tool {
 
             // loop over input files
             for (File sourceFile : sourceFiles) {
-                String archivePath = getArchivePath(sourceFile.getName(), productType, revision, pattern);
+                String archivePath = getArchivePath(sourceFile, productType, revision, pattern);
 
                 // calculate block size to cover complete N1
                 // blocksize must be a multiple of checksum size
@@ -197,14 +197,14 @@ public class IngestionTool extends Configured implements Tool {
      * Implements the archiving "rule"
      *
      *
-     * @param fileName a file name
+     * @param sourceFile a file name
      * @param productType the product type
      * @param revision the revision
      * @param pattern
      * @return   an archive path
      */
-    static String getArchivePath(String fileName, String productType, String revision, Pattern pattern) {
-        String subPath = getDatePath(fileName, productType, pattern);
+    static String getArchivePath(File sourceFile, String productType, String revision, Pattern pattern) {
+        String subPath = getDatePath(sourceFile, productType, pattern);
         return String.format("/calvalus/eodata/%s/%s/%s", productType, revision, subPath);
     }
 
@@ -218,18 +218,19 @@ public class IngestionTool extends Configured implements Tool {
      *  A2012280012500.L1A_LAC.bz2
      *  V2KRNP____20070501F083.ZIP
      * </pre>
-     * @param fileName     file name that contains the concrete date in some encoding
+     *
+     * @param sourceFile     file name that contains the concrete date in some encoding
      * @param productType  product type for default pattern selection
      * @param pattern      pattern used if it contains groups in parenthesis for year, month and day or for year and day of year
      * @return             directory path year/mont/day, "." if neither type is known nor pattern contains groups
      * @throws IllegalArgumentException  if pattern does not match
      */
-    static String getDatePath(String fileName, String productType, Pattern pattern) throws IllegalArgumentException {
+    static String getDatePath(File sourceFile, String productType, Pattern pattern) throws IllegalArgumentException {
         int numberOfParenthesis = countChars(pattern.pattern(), '(');
         if (numberOfParenthesis >= 2) {
-            Matcher matcher = pattern.matcher(fileName);
+            Matcher matcher = pattern.matcher(sourceFile.getName());
             if (! matcher.matches()) {
-                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not match file name " + fileName);
+                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not match file name " + sourceFile.getName());
             }
             if (matcher.groupCount() == 3) {
                 return String.format("%s/%s/%s", matcher.group(1), matcher.group(2), matcher.group(3));
@@ -238,7 +239,7 @@ public class IngestionTool extends Configured implements Tool {
                 try {
                     date = YEAR_DAY_OF_YEAR_FORMAT.parse(matcher.group(1) + matcher.group(2));
                 } catch (ParseException e) {
-                    throw new IllegalArgumentException("file name " + fileName + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
+                    throw new IllegalArgumentException("file name " + sourceFile.getName() + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
                 }
                 return YEAR_MONTH_DAY_FORMAT.format(date);
             } else if (matcher.groupCount() == 2 && matcher.group(1).length() == 2 && matcher.group(2).length() == 3) {
@@ -246,31 +247,43 @@ public class IngestionTool extends Configured implements Tool {
                 try {
                     date = YEAR2_DAY_OF_YEAR_FORMAT.parse(matcher.group(1) + matcher.group(2));
                 } catch (ParseException e) {
-                    throw new IllegalArgumentException("file name " + fileName + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
+                    throw new IllegalArgumentException("file name " + sourceFile.getName() + " does not contain expected year and dayofyear according to pattern " + pattern.pattern() + ": " + e.getMessage());
                 }
                 return YEAR_MONTH_DAY_FORMAT.format(date);
             } else {
-                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not contain recognised date in file name " + fileName);
+                throw new IllegalArgumentException("pattern " + pattern.pattern() + " does not contain recognised date in file name " + sourceFile.getName());
             }
         } else if (productType != null && productType.startsWith("MODIS")) {
             try {
-                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(fileName.substring(1,8)));
+                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(sourceFile.getName().substring(1, 8)));
             } catch (ParseException e) {
-                throw new IllegalArgumentException("file name " + fileName + " does not contain recognised date for MODIS default pattern");
+                throw new IllegalArgumentException("file name " + sourceFile + " does not contain recognised date for MODIS default pattern");
             }
         } else if (productType != null && productType.startsWith("SPOT_VGT")) {
             try {
-                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(fileName.substring(10,18)));
+                return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(sourceFile.getName().substring(10, 18)));
             } catch (ParseException e) {
-                throw new IllegalArgumentException("file name " + fileName + " does not contain recognised date for SPOT_VGT default pattern");
+                throw new IllegalArgumentException("file name " + sourceFile.getName() + " does not contain recognised date for SPOT_VGT default pattern");
             }
         } else if ("MER_RR__1P".equals(productType) || "MER_FRS_1P".equals(productType)) {
             return String.format("%s/%s/%s",
-                                 fileName.substring(14, 18),
-                                 fileName.substring(18, 20),
-                                 fileName.substring(20, 22));
+                                 sourceFile.getName().substring(14, 18),
+                                 sourceFile.getName().substring(18, 20),
+                                 sourceFile.getName().substring(20, 22));
         } else {
-            return ".";
+            File dayDir = sourceFile.getParentFile();
+            if (dayDir == null || dayDir.getName().length() != 2) {
+                return ".";
+            }
+            File monthDir = dayDir.getParentFile();
+            if (monthDir == null || monthDir.getName().length() != 2) {
+                return ".";
+            }
+            File yearDir = monthDir.getParentFile();
+            if (yearDir == null || yearDir.getName().length() != 4) {
+                return ".";
+            }
+            return String.format("%s/%s/%s", yearDir.getName(), monthDir.getName(), dayDir.getName());
         }
     }
 
