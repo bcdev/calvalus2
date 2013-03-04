@@ -140,7 +140,7 @@ public class LcL3ProductionTypeTest {
 
         cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
                 new ProductionRequest("test", "dummy", "foo", "bar"), false);
-        assertEquals("status == 1 and not nan(sdr_B0)", cloudL3Config.getValidMaskExpression());
+        assertEquals("status == 1 and not nan(sdr_B3)", cloudL3Config.getValidMaskExpression());
 
         cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
                 new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"), true);
