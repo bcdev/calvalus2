@@ -163,8 +163,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             if (productReader != null) {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
-            if (product.getStartTime() == null || product.getEndTime() == null) {
-                getLogger().log(Level.INFO, "Processed Product has no start/stop time.");
+            if (hasInvalidStartAndStopTime(product)) {
+                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time.");
+                // When processing with Polymere no time information is attached to the product.
+                // When processing with MEGS and input rectangle the start time is invalid.
+                // Therefor we have to adjust it here.
                 setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
             }
             return product;
@@ -172,12 +175,25 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return null;
     }
 
+    private boolean hasInvalidStartAndStopTime(Product product) {
+        ProductData.UTC startTime = product.getStartTime();
+        ProductData.UTC endTime = product.getEndTime();
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
+            return true;
+        }
+        return false;
+    }
+
     private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
                                                 Rectangle inputRectangle) {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         final ProductData.UTC stopTime = sourceProduct.getEndTime();
-        getLogger().log(Level.INFO, "Setting start/stop time from source.");
-        if (startTime != null && stopTime != null && inputRectangle != null) {
+        boolean fullHeight = sourceProduct.getSceneRasterHeight() == targetProduct.getSceneRasterHeight();
+
+        if (startTime != null && stopTime != null && !fullHeight && inputRectangle != null) {
             final double height = sourceProduct.getSceneRasterHeight();
             final double regionY = inputRectangle.getY();
             final double regionHeight = inputRectangle.getHeight();
