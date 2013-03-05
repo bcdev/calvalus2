@@ -166,10 +166,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             if (product.getStartTime() == null || product.getEndTime() == null) {
                 getLogger().log(Level.INFO, "Processed Product has no start/stop time.");
                 setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
-            } else {
-                getLogger().log(Level.INFO, "Processed Product:");
-                getLogger().log(Level.INFO, String.format("start time: %s", product.getStartTime().format()));
-                getLogger().log(Level.INFO, String.format("stop time: %s", product.getEndTime().format()));
             }
             return product;
         }
@@ -182,17 +178,12 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         final ProductData.UTC stopTime = sourceProduct.getEndTime();
         getLogger().log(Level.INFO, "Setting start/stop time from source.");
         if (startTime != null && stopTime != null && inputRectangle != null) {
-            getLogger().log(Level.INFO, String.format("Source start time: %s", startTime.format()));
-            getLogger().log(Level.INFO, String.format("Source stop time: %s", stopTime.format()));
             final double height = sourceProduct.getSceneRasterHeight();
             final double regionY = inputRectangle.getY();
             final double regionHeight = inputRectangle.getHeight();
             final double dStart = startTime.getMJD();
-            getLogger().log(Level.INFO, String.format("dStart: %s", dStart));
             final double dStop = stopTime.getMJD();
-            getLogger().log(Level.INFO, String.format("dStop: %s", dStop));
             final double vPerLine = (dStop - dStart) / (height - 1);
-            getLogger().log(Level.INFO, String.format("vPerLine: %s", vPerLine));
             final double newStart = vPerLine * regionY + dStart;
             final double newStop = vPerLine * (regionHeight - 1) + newStart;
             targetProduct.setStartTime(new ProductData.UTC(newStart));
@@ -201,10 +192,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             targetProduct.setStartTime(startTime);
             targetProduct.setEndTime(stopTime);
         }
-        getLogger().log(Level.INFO, "Start/stop time of target is now:");
-        getLogger().log(Level.INFO, String.format("Target start time: %s", targetProduct.getStartTime().format()));
-        getLogger().log(Level.INFO, String.format("Target stop time: %s", targetProduct.getEndTime().format()));
-
     }
 
     @Override
