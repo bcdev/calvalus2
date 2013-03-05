@@ -152,7 +152,9 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
+     *
      * @return The number of processed products.
+     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
@@ -171,9 +173,10 @@ public abstract class ProcessorAdapter {
      * Saves the processed products onto HDFS.
      *
      * @param pm A progress monitor
+     *
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract void saveProcessedProducts(ProgressMonitor pm) throws Exception;
+    public abstract void saveProcessedProducts(ProgressMonitor pm) throws IOException;
 
     /**
      * Return the output path to the processed product.
@@ -194,6 +197,7 @@ public abstract class ProcessorAdapter {
      * Convenient method that returns the processed product and does all the necessary steps.
      *
      * @param pm A progress monitor
+     *
      * @return The processed product
      */
     public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
@@ -248,8 +252,10 @@ public abstract class ProcessorAdapter {
      */
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
-            Geometry regionGeometry = JobUtils.createGeometry(getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle, inputSplit) {
+            Geometry regionGeometry = JobUtils.createGeometry(
+                    getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,
+                                                                                         inputSplit) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();
@@ -264,6 +270,7 @@ public abstract class ProcessorAdapter {
      * Return the input product.
      *
      * @return The input product
+     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product getInputProduct() throws IOException {
@@ -285,7 +292,9 @@ public abstract class ProcessorAdapter {
      *
      * @param inputPath   The input path
      * @param inputFormat The input format, may be {@code null}. If {@code null}, the file format will be detected.
+     *
      * @return The product The product read.
+     *
      * @throws java.io.IOException If an I/O error occurs
      */
     private Product readProduct(Path inputPath, String inputFormat) throws IOException {
@@ -328,7 +337,9 @@ public abstract class ProcessorAdapter {
             }
         }
         if (product == null) {
-            throw new IOException(String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(), inputFormat));
+            throw new IOException(
+                    String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(),
+                                  inputFormat));
         }
         getLogger().info(String.format("Opened product width = %d height = %d",
                                        product.getSceneRasterWidth(),
@@ -356,7 +367,9 @@ public abstract class ProcessorAdapter {
      * Copies the product given to the local input directory for access as a ordinary {@code eFile}.
      *
      * @param inputPath The path to the product in the HDFS.
+     *
      * @return the local file that contains the copy.
+     *
      * @throws IOException
      */
     protected File copyProductToLocal(Path inputPath) throws IOException {

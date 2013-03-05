@@ -79,7 +79,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         saveTargetProduct(targetProduct, pm);
     }
 

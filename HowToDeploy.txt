@@ -10,23 +10,23 @@ mvn clean install
 
 Calvalus
 --------
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --uninstall calvalus-1.6
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.6-calvalus/*.jar calvalus-1.6
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall calvalus-1.7-SNAPSHOT
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-SNAPSHOT
 
 for lc-cci
 ----------
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --uninstall  calvalus-1.6-lc
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.6-calvalus/*.jar calvalus-1.6-lc
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  calvalus-1.7-SNAPSHOT-lc
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-SNAPSHOT-lc
 
 BEAM
 -----
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --uninstall beam-4.10.4-SNAPSHOT
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.6-beam/*.jar beam-4.10.4-SNAPSHOT
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.10.4-SNAPSHOT
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.10.4-SNAPSHOT
 
 
 WAR (for the portal)
 --------------------
-(cd calvalus-portal/target; scp calvalus-portal-1.6.war cvop@bcvm03: )
+(cd calvalus-portal/target; scp calvalus-portal-1.7-SNAPSHOT.war cvop@bcvm03: )
 ssh cvop@bcvm03
 cd /opt/apache-tomcat-7.0.11/bin/
 ./shutdown.sh
@@ -39,7 +39,7 @@ mv staging/ ../../temp/
 cd ..
 rm -rf calvalus calvalus.war
 rm -rf ../work/Catalina/localhost/calvalus/
-mv /home/cvop/calvalus-portal-1.6.war calvalus.war
+mv /home/cvop/calvalus-portal-1.7-SNAPSHOT.war calvalus.war
 
 # restart
 cd ../bin/
@@ -54,7 +54,7 @@ mv ../../temp/staging .
 
 Sample executable
 -----------------
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --uninstall  test-1.0
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e --deploy  ../executables/test1/* test-1.0
-java -jar calvalus-production/target/calvalus-production-1.6-tool.jar -e ../executables/copy-request.xml
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  test-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  ../executables/test1/* test-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e ../executables/copy-request.xml
 

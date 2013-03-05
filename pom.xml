@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>1.6</version>
+    <version>1.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>0.20.205.0</hadoop.version>
-        <calvalus.version>1.6</calvalus.version>
+        <calvalus.version>1.7-SNAPSHOT</calvalus.version>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -305,28 +305,28 @@
                         <artifactId>core</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>org.mortbay.jetty</groupId>
-                      <artifactId>jetty</artifactId>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jetty</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>org.mortbay.jetty</groupId>
-                      <artifactId>jetty-util</artifactId>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jetty-util</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>tomcat</groupId>
-                      <artifactId>jasper-runtime</artifactId>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-runtime</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>tomcat</groupId>
-                      <artifactId>jasper-compiler</artifactId>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-compiler</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>org.mortbay.jetty</groupId>
-                      <artifactId>jsp-api-2.1</artifactId>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jsp-api-2.1</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>org.mortbay.jetty</groupId>
-                      <artifactId>jsp-2.1</artifactId>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jsp-2.1</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>commons-el</groupId>

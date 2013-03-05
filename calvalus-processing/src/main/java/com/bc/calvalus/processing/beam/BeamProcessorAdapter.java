@@ -81,7 +81,7 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         saveTargetProduct(targetProduct, pm);
     }
 

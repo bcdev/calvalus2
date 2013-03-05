@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.6";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.7-SNAPSHOT";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10.4-SNAPSHOT";
     private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
 
@@ -196,13 +196,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      * Updates the status. This method is called periodically after a fixed delay period.
      *
      * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
+     *
      * @return The process status.
      */
     static ProcessStatus convertStatus(JobStatus jobStatus) {
         if (jobStatus != null) {
             float progress = (9.0F * jobStatus.mapProgress() + jobStatus.reduceProgress()) / 10.0F;
             if (jobStatus.getRunState() == JobStatus.FAILED) {
-                return new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
+                return new ProcessStatus(ProcessState.ERROR, progress,
+                                         "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
             } else if (jobStatus.getRunState() == JobStatus.KILLED) {
                 return new ProcessStatus(ProcessState.CANCELLED, progress);
             } else if (jobStatus.getRunState() == JobStatus.PREP) {

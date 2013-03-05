@@ -59,7 +59,7 @@
                 </table>
                 <xsl:apply-templates select="readme"/>
                 <hr/>
-                <p class="copyright">Calvalus - Version 1.6, &#169; 2012 Brockmann Consult GmbH</p>
+                <p class="copyright">Calvalus - Version 1.7-SNAPSHOT, &#169; 2012 Brockmann Consult GmbH</p>
             </body>
         </html>
     </xsl:template>

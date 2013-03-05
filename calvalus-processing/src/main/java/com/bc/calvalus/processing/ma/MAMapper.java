@@ -108,13 +108,15 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
             if (containsData && !area.isEmpty()) {
                 if (!processorAdapter.supportsPullProcessing()) {
-                    Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+                    Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
+                                                        inputProduct.getSceneRasterHeight());
                     Rectangle maRectangle = area.getBounds();
                     maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
                     processorAdapter.setProcessingRectangle(fullScene.intersection(maRectangle));
                 }
                 Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
                 if (product == null) {
+                    LOG.info("Processed product is null!");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                     return;
                 }
@@ -142,12 +144,14 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 long recordReadTime = (now() - t0);
                 LOG.info(String.format("%s read input records from %s, took %s sec",
-                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(), recordReadTime / 1E3));
+                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(),
+                                       recordReadTime / 1E3));
                 logAttributeNames(productRecordSource);
 
                 Header header = productRecordSource.getHeader();
                 Rectangle inputRect = processorAdapter.getInputRectangle();
-                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
+                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header,
+                                                                                                        inputRect);
                 RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
 

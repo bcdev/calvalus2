@@ -43,6 +43,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.logging.Level;
 
 /**
  * A processor adapter that uses an executable to process an input product.
@@ -163,23 +164,35 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
             if (product.getStartTime() == null || product.getEndTime() == null) {
+                getLogger().log(Level.INFO, "Processed Product has no start/stop time.");
                 setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
+            } else {
+                getLogger().log(Level.INFO, "Processed Product:");
+                getLogger().log(Level.INFO, String.format("start time: %s", product.getStartTime().format()));
+                getLogger().log(Level.INFO, String.format("stop time: %s", product.getEndTime().format()));
             }
             return product;
         }
         return null;
     }
 
-    private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct, Rectangle inputRectangle) {
+    private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
+                                                Rectangle inputRectangle) {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         final ProductData.UTC stopTime = sourceProduct.getEndTime();
+        getLogger().log(Level.INFO, "Setting start/stop time from source.");
         if (startTime != null && stopTime != null && inputRectangle != null) {
+            getLogger().log(Level.INFO, String.format("Source start time: %s", startTime.format()));
+            getLogger().log(Level.INFO, String.format("Source stop time: %s", stopTime.format()));
             final double height = sourceProduct.getSceneRasterHeight();
             final double regionY = inputRectangle.getY();
             final double regionHeight = inputRectangle.getHeight();
             final double dStart = startTime.getMJD();
+            getLogger().log(Level.INFO, String.format("dStart: %s", dStart));
             final double dStop = stopTime.getMJD();
+            getLogger().log(Level.INFO, String.format("dStop: %s", dStop));
             final double vPerLine = (dStop - dStart) / (height - 1);
+            getLogger().log(Level.INFO, String.format("vPerLine: %s", vPerLine));
             final double newStart = vPerLine * regionY + dStart;
             final double newStop = vPerLine * (regionHeight - 1) + newStart;
             targetProduct.setStartTime(new ProductData.UTC(newStart));
@@ -188,10 +201,14 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             targetProduct.setStartTime(startTime);
             targetProduct.setEndTime(stopTime);
         }
+        getLogger().log(Level.INFO, "Start/stop time of target is now:");
+        getLogger().log(Level.INFO, String.format("Target start time: %s", targetProduct.getStartTime().format()));
+        getLogger().log(Level.INFO, String.format("Target stop time: %s", targetProduct.getEndTime().format()));
+
     }
 
     @Override
-    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
 
             Configuration conf = getConfiguration();
@@ -217,7 +234,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 String[] cmdArray = new String[outputFilesNames.length + 2];
                 cmdArray[0] = "./finalize";
                 System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
-                cmdArray[cmdArray.length-1] = outputPath.toString();
+                cmdArray[cmdArray.length - 1] = outputPath.toString();
 
                 Process process = Runtime.getRuntime().exec(cmdArray);
                 String processLogName = bundle + "-" + executable + "-finalize";
@@ -231,7 +248,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             } else {
                 MapContext mapContext = getMapContext();
                 for (String outputFileName : outputFilesNames) {
-                    InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                    InputStream inputStream = new BufferedInputStream(
+                            new FileInputStream(new File(cwd, outputFileName)));
                     OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
                     ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
                 }
