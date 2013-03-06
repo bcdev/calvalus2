@@ -17,6 +17,13 @@
             <outputProductType>MERIS_L2</outputProductType>
             <validMaskExpression>true</validMaskExpression>
 
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.hadoop.mapred.max.map.failures.percent</name>
+                    <value>10</value>
+                </jobParameter>
+            </jobConfig>
+
             <outputVariables>
                 <outputVariable>
                     <name>reflec_1</name>
