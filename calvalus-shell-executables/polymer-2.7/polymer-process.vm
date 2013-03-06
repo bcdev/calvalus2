@@ -43,10 +43,17 @@ if grep -E "OUTPUT_FORMAT\ +NETCDF" parameters.txt; then
   suffix="nc"
 fi
 
+export LD_LIBRARY_PATH="${POLYMER}/pylib"
+export PYTHONPATH="${POLYMER}/pyshared"
+${POLYMER}/get_meteo_calvalus.py ${inFileName} >> parameters.txt
+
 # append input,output to parameters.txt
 outFile=$(basename ${inFileName} .N1).polymer.${suffix}
 echo INPUT_FILE $inFile >> parameters.txt
 echo OUTPUT_FILE $outFile >> parameters.txt
+
+# for debugging purpose
+# cat parameters.txt
 
 function handle_progress() {
   line=$1

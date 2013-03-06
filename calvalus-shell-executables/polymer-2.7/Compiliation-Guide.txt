@@ -14,6 +14,10 @@ http://www.ijg.org/files/jpegsrc.v6b.tar.gz
 ftp://ftp.hdfgroup.org/lib-external/zlib/zlib-1.2.5.tar.gz
 
 -----------------------------------------------------------------------
+
+All mentioned archives are stored in:
+smb://bcserver2/fs1/projects/ongoing/OC-CCI/software/polymer/
+-----------------------------------------------------------------------
 2) Build dependencies
 
 required ubuntu packages: bison, lex, libjpeg62-dev
@@ -53,9 +57,13 @@ cd POLYMER
 # patch Makefile using Makefile.diff (adapt !!)
 make
 
+
+# add calvalus integration with python modules
+tar xf ../calvalus_python_integration.tar.gz
+
 -----------------------------------------------------------------------
 3) create archive
-tar czf ../polymer-2.7.tar.gz auxdata LUTS polymer
+tar czf ../polymer-2.7.tar.gz auxdata LUTS polymer get_meteo_calvalus.py pylib pyshared
 
 -----------------------------------------------------------------------
 4)memcpy fix (included in Makefile.diff)
