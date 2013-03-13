@@ -31,7 +31,7 @@
     <wps:Input>
       <ows:Identifier>processorName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>bandmath-merge</wps:LiteralData>
+        <wps:LiteralData>bandmath_merge</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 

@@ -31,7 +31,7 @@
     <wps:Input>
       <ows:Identifier>processorName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>merge-two-inputs</wps:LiteralData>
+        <wps:LiteralData>merge_two_inputs</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 
