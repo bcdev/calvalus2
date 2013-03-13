@@ -36,6 +36,7 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
@@ -396,6 +397,41 @@ public abstract class ProcessorAdapter {
         if (inputProduct != null) {
             inputProduct.dispose();
             inputProduct = null;
+        }
+    }
+
+    public static boolean hasInvalidStartAndStopTime(Product product) {
+        ProductData.UTC startTime = product.getStartTime();
+        ProductData.UTC endTime = product.getEndTime();
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
+            return true;
+        }
+        return false;
+    }
+
+    public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
+                                                Rectangle inputRectangle) {
+        final ProductData.UTC startTime = sourceProduct.getStartTime();
+        final ProductData.UTC stopTime = sourceProduct.getEndTime();
+        boolean fullHeight = sourceProduct.getSceneRasterHeight() == targetProduct.getSceneRasterHeight();
+
+        if (startTime != null && stopTime != null && !fullHeight && inputRectangle != null) {
+            final double height = sourceProduct.getSceneRasterHeight();
+            final double regionY = inputRectangle.getY();
+            final double regionHeight = inputRectangle.getHeight();
+            final double dStart = startTime.getMJD();
+            final double dStop = stopTime.getMJD();
+            final double vPerLine = (dStop - dStart) / (height - 1);
+            final double newStart = vPerLine * regionY + dStart;
+            final double newStop = vPerLine * (regionHeight - 1) + newStart;
+            targetProduct.setStartTime(new ProductData.UTC(newStart));
+            targetProduct.setEndTime(new ProductData.UTC(newStop));
+        } else {
+            targetProduct.setStartTime(startTime);
+            targetProduct.setEndTime(stopTime);
         }
     }
 }

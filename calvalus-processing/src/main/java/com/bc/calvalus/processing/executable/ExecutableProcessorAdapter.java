@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
@@ -168,47 +169,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 // When processing with Polymere no time information is attached to the product.
                 // When processing with MEGS and input rectangle the start time is invalid.
                 // Therefor we have to adjust it here.
-                setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
+                copySceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
             }
             return product;
         }
         return null;
     }
 
-    private boolean hasInvalidStartAndStopTime(Product product) {
-        ProductData.UTC startTime = product.getStartTime();
-        ProductData.UTC endTime = product.getEndTime();
-        if (startTime == null || endTime == null) {
-            return true;
-        }
-        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
-            return true;
-        }
-        return false;
-    }
-
-    private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
-                                                Rectangle inputRectangle) {
-        final ProductData.UTC startTime = sourceProduct.getStartTime();
-        final ProductData.UTC stopTime = sourceProduct.getEndTime();
-        boolean fullHeight = sourceProduct.getSceneRasterHeight() == targetProduct.getSceneRasterHeight();
-
-        if (startTime != null && stopTime != null && !fullHeight && inputRectangle != null) {
-            final double height = sourceProduct.getSceneRasterHeight();
-            final double regionY = inputRectangle.getY();
-            final double regionHeight = inputRectangle.getHeight();
-            final double dStart = startTime.getMJD();
-            final double dStop = stopTime.getMJD();
-            final double vPerLine = (dStop - dStart) / (height - 1);
-            final double newStart = vPerLine * regionY + dStart;
-            final double newStop = vPerLine * (regionHeight - 1) + newStart;
-            targetProduct.setStartTime(new ProductData.UTC(newStart));
-            targetProduct.setEndTime(new ProductData.UTC(newStop));
-        } else {
-            targetProduct.setStartTime(startTime);
-            targetProduct.setEndTime(stopTime);
-        }
-    }
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
@@ -279,7 +246,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
+        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         FileSystem fs = FileSystem.get(conf);
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);

@@ -48,7 +48,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.7-SNAPSHOT";
-    public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10.4-SNAPSHOT";
+    public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10.4";
     private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
 
     private final JobClient jobClient;
@@ -110,11 +110,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         });
         for (FileStatus fileStatus : fileStatuses) {
-            // For hadoops sake, skip protocol from path because it contains ':' and that is used
-            // as separator in the job configuration!
-            final Path path = fileStatus.getPath();
-            final Path pathWithoutProtocol = new Path(path.toUri().getPath());
-            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration);
+            System.out.println("addBundleToClassPath = " + fileStatus.getPath());
+            DistributedCache.addFileToClassPath(fileStatus.getPath(), configuration, fileSystem);
         }
     }
 

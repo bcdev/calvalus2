@@ -77,6 +77,6 @@ public class L2FormattingWorkflowItem extends HadoopWorkflowItem {
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         // for bundle only
-        ProcessorFactory.installProcessor(jobConfig);
+        ProcessorFactory.installProcessorBundle(jobConfig);
     }
 }

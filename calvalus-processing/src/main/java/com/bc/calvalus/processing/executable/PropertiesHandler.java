@@ -22,7 +22,7 @@ import java.util.Properties;
  */
 public class PropertiesHandler {
 
-    static Properties asProperties(String processorParameters) throws IOException {
+    public static Properties asProperties(String processorParameters) throws IOException {
         Properties properties = new Properties();
         if (StringUtils.isNotNullAndNotEmpty(processorParameters)) {
             Reader reader = new StringReader(processorParameters);

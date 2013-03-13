@@ -36,13 +36,13 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class SubsetProcessorAdapter extends ProcessorAdapter {
+public class IdentityProcessorAdapter extends ProcessorAdapter {
 
     private static final int DEFAULT_TILE_HEIGHT = 64;
 
-    private Product targetProduct;
+    private Product subsetProduct;
 
-    public SubsetProcessorAdapter(MapContext mapContext) {
+    public IdentityProcessorAdapter(MapContext mapContext) {
         super(mapContext);
         GpfUtils.init(mapContext.getConfiguration());
     }
@@ -61,26 +61,26 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("L2 Subset");
 
-        targetProduct = createSubset();
-        if (targetProduct == null ||
-            targetProduct.getSceneRasterWidth() == 0 ||
-            targetProduct.getSceneRasterHeight() == 0) {
+        subsetProduct = createSubset();
+        if (subsetProduct == null ||
+            subsetProduct.getSceneRasterWidth() == 0 ||
+            subsetProduct.getSceneRasterHeight() == 0) {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                                       targetProduct.getSceneRasterWidth(),
-                                       targetProduct.getSceneRasterHeight()));
+                                       subsetProduct.getSceneRasterWidth(),
+                                       subsetProduct.getSceneRasterHeight()));
         return 1;
     }
 
     @Override
     public Product openProcessedProduct() {
-        return targetProduct;
+        return subsetProduct;
     }
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
-        saveTargetProduct(targetProduct, pm);
+        saveTargetProduct(subsetProduct, pm);
     }
 
     @Override
@@ -96,9 +96,9 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     @Override
     public void dispose() {
         super.dispose();
-        if (targetProduct != null) {
-            targetProduct.dispose();
-            targetProduct = null;
+        if (subsetProduct != null) {
+            subsetProduct.dispose();
+            subsetProduct = null;
         }
     }
 

@@ -21,8 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.analysis.Quicklooks;
-import com.bc.calvalus.processing.beam.BeamProcessorAdapter;
-import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
+import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -56,7 +55,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         // todo - replace by an IdentityAdapter or something similar
-        ProcessorAdapter processorAdapter = new SubsetProcessorAdapter(context);
+        ProcessorAdapter processorAdapter = new IdentityProcessorAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 2 format", 100);
         try {
@@ -88,7 +87,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 if (!spatialSubsetParameter.isEmpty()) {
                     targetProduct = GPF.createProduct("Subset", spatialSubsetParameter, targetProduct);
                 }
-                BeamProcessorAdapter.copyTimeCoding(processorAdapter.getInputProduct(), targetProduct);
+                ProcessorAdapter.copySceneRasterStartAndStopTime(processorAdapter.getInputProduct(), targetProduct, null);
 
                 try {
                     context.setStatus("Quicklooks");
