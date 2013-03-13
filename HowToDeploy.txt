@@ -8,6 +8,7 @@ mvn clean install
 (cd calvalus-processing; mvn -Dmaven.test.skip=true assembly:assembly)
 (cd calvalus-production; mvn -Dmaven.test.skip=true assembly:assembly)
 
+===========================================================================
 Calvalus
 --------
 java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall calvalus-1.7-SNAPSHOT
@@ -23,6 +24,14 @@ BEAM
 java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.10.4-SNAPSHOT
 java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.10.4-SNAPSHOT
 
+
+===========================================================================
+Portal Software
+-------------------
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall calvalus-1.7-portal-20130313
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-portal-20130313
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.10.4-portal-20130313
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.10.4-portal-20130313
 
 WAR (for the portal)
 --------------------
@@ -55,6 +64,6 @@ mv ../../temp/staging .
 Sample executable
 -----------------
 java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  test-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  ../executables/test1/* test-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/example-1.0/* example-1.0
 java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e ../executables/copy-request.xml
 

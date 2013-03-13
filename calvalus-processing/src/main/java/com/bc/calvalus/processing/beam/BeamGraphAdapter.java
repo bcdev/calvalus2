@@ -14,16 +14,21 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.graph.Graph;
 import org.esa.beam.framework.gpf.graph.GraphContext;
 import org.esa.beam.framework.gpf.graph.GraphException;
 import org.esa.beam.framework.gpf.graph.GraphIO;
+import org.esa.beam.framework.gpf.graph.Header;
+import org.esa.beam.framework.gpf.graph.HeaderSource;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.List;
 
 /**
  * A processor adapter that uses a BEAM GPF {@code Graph} to process input products.
@@ -50,11 +55,20 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
 
         try {
             Graph graph = createGraph();
-            graphContext = new GraphContext(graph);
+            Header header = graph.getHeader();
+            List<HeaderSource> sources = header.getSources();
+            Operator sourceProducts = new SourceProductContainerOperator();
+            for (HeaderSource headerSource : sources) {
+                String sourceId = headerSource.getName();
+                String sourceFilePath = headerSource.getLocation();
+
+                Product product = readProduct(new Path(sourceFilePath), null);
+                sourceProducts.setSourceProduct(sourceId, product);
+            }
+            graphContext = new GraphContext(graph, sourceProducts);
         } catch (GraphException e) {
             throw new IOException("GraphException", e);
         }
-        // TODO: add reading nodes
         targetProducts = graphContext.getOutputProducts();
         // TODO handle parameters
 
@@ -96,7 +110,6 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
 
     public Graph createGraph() throws GraphException, IOException {
         Configuration conf = getConfiguration();
-        String graphName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
         ResourceEngine resourceEngine = new ResourceEngine();
@@ -116,7 +129,9 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         InputStream inputStream = fs.open(new Path(graphPathAsString));
         Reader inputReader = new InputStreamReader(inputStream);
         Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
-        StringReader graphReader = new StringReader(processedGraph.getContent());
+        String graphAsText = processedGraph.getContent();
+        System.out.println("graphAsText = \n" + graphAsText);
+        StringReader graphReader = new StringReader(graphAsText);
 
         try {
             return GraphIO.read(graphReader);
@@ -126,4 +141,14 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         }
     }
 
+    /**
+     * This operator is only a container for the source product of the graph.
+     */
+    private static class SourceProductContainerOperator extends Operator {
+
+        @Override
+        public void initialize() throws OperatorException {
+            // do nothing by intention
+        }
+    }
 }

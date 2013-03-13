@@ -298,7 +298,7 @@ public abstract class ProcessorAdapter {
      *
      * @throws java.io.IOException If an I/O error occurs
      */
-    private Product readProduct(Path inputPath, String inputFormat) throws IOException {
+    protected Product readProduct(Path inputPath, String inputFormat) throws IOException {
         Configuration configuration = getConfiguration();
         Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
