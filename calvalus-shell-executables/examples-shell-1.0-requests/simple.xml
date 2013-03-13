@@ -12,14 +12,14 @@
     <wps:Input>
       <ows:Identifier>productionName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell exec complex</wps:LiteralData>
+        <wps:LiteralData>shell exec simple</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     
     <wps:Input>
       <ows:Identifier>processorBundleName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell-examples</wps:LiteralData>
+        <wps:LiteralData>examples-shell</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -31,14 +31,14 @@
     <wps:Input>
       <ows:Identifier>processorName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>complex</wps:LiteralData>
+        <wps:LiteralData>simple</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/complex" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/simple" />
       </wps:Data>
     </wps:Input>
     <wps:Input>

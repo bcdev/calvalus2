@@ -6,20 +6,20 @@
              xmlns:ows="http://www.opengis.net/ows/1.1"
              xmlns:xlink="http://www.w3.org/1999/xlink">
 
-  <ows:Identifier>L3</ows:Identifier>
+  <ows:Identifier>L2</ows:Identifier>
 
   <wps:DataInputs>
     <wps:Input>
       <ows:Identifier>productionName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell exec simple with l3</wps:LiteralData>
+        <wps:LiteralData>shell exec complex</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     
     <wps:Input>
       <ows:Identifier>processorBundleName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell-examples</wps:LiteralData>
+        <wps:LiteralData>examples-shell</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -31,14 +31,14 @@
     <wps:Input>
       <ows:Identifier>processorName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>simple</wps:LiteralData>
+        <wps:LiteralData>complex</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/simple-l3" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/complex" />
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -59,32 +59,6 @@
         <wps:LiteralData>2008-06-01</wps:LiteralData>
       </wps:Data>
     </wps:Input>
-
-    <wps:Input>
-      <ows:Identifier>periodLength</ows:Identifier>
-      <wps:Data>
-        <wps:LiteralData>1</wps:LiteralData>
-      </wps:Data>
-    </wps:Input>
-
-    <wps:Input>
-        <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
-        <wps:Data>
-            <wps:ComplexData>
-                <parameters>
-                   <numRows>1000</numRows>
-                   <maskExpr>not l1_flags.INVALID</maskExpr>
-                   <aggregators>
-                    <aggregator>
-                        <type>AVG</type>
-                        <varName>radiance_13</varName>
-                    </aggregator>
-                </aggregators>
-              </parameters>
-            </wps:ComplexData>
-        </wps:Data>
-    </wps:Input>
-
   </wps:DataInputs>
 
 </wps:Execute>
