@@ -63,7 +63,10 @@ mv ../../temp/staging .
 
 Sample executable
 -----------------
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  test-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/example-1.0/* example-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e ../executables/copy-request.xml
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  examples-beam-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  examples-shell-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/examples-beam-1.0/* examples-beam-1.0
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/examples-shell-1.0/* examples-shell-1.0
+
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e calvalus-shell-executables/examples-shell-requests-1.0/simple.xml
 
