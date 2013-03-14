@@ -22,6 +22,9 @@ import org.esa.beam.framework.gpf.graph.GraphException;
 import org.esa.beam.framework.gpf.graph.GraphIO;
 import org.esa.beam.framework.gpf.graph.Header;
 import org.esa.beam.framework.gpf.graph.HeaderSource;
+import org.esa.beam.framework.gpf.graph.HeaderTarget;
+import org.esa.beam.framework.gpf.graph.Node;
+import org.esa.beam.framework.gpf.graph.NodeContext;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +41,7 @@ import java.util.List;
 public class BeamGraphAdapter extends IdentityProcessorAdapter {
 
     private GraphContext graphContext;
-    private Product[] targetProducts;
+    private Product targetProduct;
 
     public BeamGraphAdapter(MapContext mapContext) {
         super(mapContext);
@@ -66,37 +69,39 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 sourceProducts.setSourceProduct(sourceId, product);
             }
             graphContext = new GraphContext(graph, sourceProducts);
+            HeaderTarget target = header.getTarget();
+            if (target == null || target.getNodeId() == null) {
+                throw new IllegalArgumentException("No 'target' specified in graph header.");
+            }
+            Node targetNode = graph.getNode(target.getNodeId());
+            if (targetNode == null) {
+                throw new IllegalArgumentException("Specified targetNode '" + target.getNodeId() + "' does not exist in graph.");
+            }
+            NodeContext targetNodeContext = graphContext.getNodeContext(targetNode);
+            targetProduct = targetNodeContext.getTargetProduct();
         } catch (GraphException e) {
             throw new IOException("GraphException", e);
         }
-        targetProducts = graphContext.getOutputProducts();
-        // TODO handle parameters
-
-//        targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
-
-        if (targetProducts.length == 0 ||
-                targetProducts[0] == null ||
-                targetProducts[0].getSceneRasterWidth() == 0 ||
-                targetProducts[0].getSceneRasterHeight() == 0) {
+        if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                                       targetProducts[0].getSceneRasterWidth(),
-                                       targetProducts[0].getSceneRasterHeight()));
-        if (hasInvalidStartAndStopTime(targetProducts[0])) {
-            copySceneRasterStartAndStopTime(getInputProduct(), targetProducts[0], null);
+                                       targetProduct.getSceneRasterWidth(),
+                                       targetProduct.getSceneRasterHeight()));
+        if (hasInvalidStartAndStopTime(targetProduct)) {
+            copySceneRasterStartAndStopTime(getInputProduct(), targetProduct, null);
         }
-        return targetProducts.length;
+        return 1;
     }
 
     @Override
     public Product openProcessedProduct() {
-        return targetProducts[0];
+        return targetProduct;
     }
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
-        saveTargetProduct(targetProducts[0], pm);
+        saveTargetProduct(targetProduct, pm);
     }
 
     @Override
