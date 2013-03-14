@@ -40,7 +40,7 @@ import java.util.List;
  * Composting using the algorithm described by Pinty et. al.
  */
 public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
-    private String[] outputFeatures;
+    private String[] featureNames;
     private int tileSize;
     private Configuration jobConf;
     private int[] varIndexes;
@@ -53,12 +53,12 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static int VAR_VALID_LAI;
 
     @Override
-    public void init(TileIndexWritable tileIndex) {
+    public void initTemporal(TileIndexWritable tileIndex) {
         accu = new ArrayList<float[][]>();
     }
 
     @Override
-    public void process(float[][] samples) {
+    public void processTemporal(float[][] samples) {
         float[][] mySamples = new float[samples.length][];
         for (int i = 0; i < samples.length; i++) {
             mySamples[i] = samples[i].clone();
@@ -67,9 +67,9 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public float[][] getResult() {
+    public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
-        float[][] aggregatedSamples = new float[outputFeatures.length][numElems];
+        float[][] aggregatedSamples = new float[featureNames.length][numElems];
         for (int i = 0; i < numElems; i++) {
             processSinglePixel(i, varIndexes[VAR_VALID_FAPAR], varIndexes[VAR_TIME], varIndexes[VAR_FAPAR], 0, aggregatedSamples, -1.0f / 65534.0f);
             processSinglePixel(i, varIndexes[VAR_VALID_LAI], varIndexes[VAR_TIME], varIndexes[VAR_LAI], 4, aggregatedSamples, -1.0f / (256 * 16 - 2));
@@ -136,7 +136,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setVariableContext(VariableContext variableContext) {
         varIndexes = createVariableIndexes(variableContext);
-        outputFeatures = createOutputFeatureNames();
+        featureNames = createOutputFeatureNames();
         tileSize = MosaicGrid.create(jobConf).getTileSize();
     }
 
@@ -176,8 +176,18 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
 
     @Override
+    public String[] getTemporalFeatures() {
+        return featureNames;
+    }
+
+    @Override
+    public float[][] getOutputResult(float[][] temporalData) {
+        return temporalData;
+    }
+
+    @Override
     public String[] getOutputFeatures() {
-        return outputFeatures;
+        return featureNames;
     }
 
     @Override

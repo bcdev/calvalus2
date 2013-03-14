@@ -39,14 +39,14 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
-    private String[] outputFeatures;
+    private String[] featureNames;
     private int tileSize;
     private StatusRemapper statusRemapper;
     private Configuration jobConf;
     private String sensor;
 
     @Override
-    public void init(TileIndexWritable tileIndex) {
+    public void initTemporal(TileIndexWritable tileIndex) {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[NUM_AGGREGATION_BANDS][numElems];
         for (int band = 0; band < NUM_AGGREGATION_BANDS; band++) {
@@ -55,7 +55,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public void process(float[][] samples) {
+    public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) samples[varIndexes[0]][i];
@@ -73,7 +73,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public float[][] getResult() {
+    public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
         float[][] result = new float[1][numElems];
         for (int i = 0; i < numElems; i++) {
@@ -109,19 +109,29 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setVariableContext(VariableContext variableContext) {
         varIndexes = createVariableIndexes(variableContext);
-        outputFeatures = createOutputFeatureNames();
+        featureNames = createOutputFeatureNames();
         tileSize = MosaicGrid.create(jobConf).getTileSize();
         statusRemapper = StatusRemapper.create(jobConf);
     }
 
     @Override
+    public String[] getTemporalFeatures() {
+        return featureNames;
+    }
+
+    @Override
+    public float[][] getOutputResult(float[][] temporalData) {
+        return temporalData;
+    }
+
+    @Override
     public String[] getOutputFeatures() {
-        return outputFeatures;
+        return featureNames;
     }
 
     @Override
     public MosaicProductFactory getProductFactory() {
-        return new DefaultMosaicProductFactory(getOutputFeatures());
+        return new DefaultMosaicProductFactory(getTemporalFeatures());
     }
 
     private int[] createVariableIndexes(VariableContext varCtx) {

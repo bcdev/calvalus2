@@ -64,7 +64,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
 
     protected float[][] aggregatedSamples = null;
     protected int[] deepWaterCounter = null;
-    protected String[] outputFeatures;
+    protected String[] featureNames;
     protected int tileSize;
     protected int variableCount;
 
@@ -82,14 +82,14 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     @Override
     public void setVariableContext(VariableContext variableContext) {
         varIndexes = createVariableIndexes(variableContext, numSDRBands);
-        outputFeatures = createOutputFeatureNames(numSDRBands);
-        variableCount = outputFeatures.length;
+        featureNames = createOutputFeatureNames(numSDRBands);
+        variableCount = featureNames.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
         statusRemapper = StatusRemapper.create(jobConf);
     }
 
     @Override
-    public void init(TileIndexWritable tileIndex) throws IOException {
+    public void initTemporal(TileIndexWritable tileIndex) throws IOException {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         deepWaterCounter = new int[numElems];
@@ -134,7 +134,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     @Override
-    public void process(float[][] samples) {
+    public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) samples[varIndexes[0]][i];
@@ -205,7 +205,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     @Override
-    public float[][] getResult() {
+    public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = calculateStatus(aggregatedSamples[STATUS_LAND][i],
@@ -235,8 +235,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     @Override
-    public String[] getOutputFeatures() {
-        return outputFeatures;
+    public String[] getTemporalFeatures() {
+        return featureNames;
     }
 
     @Override

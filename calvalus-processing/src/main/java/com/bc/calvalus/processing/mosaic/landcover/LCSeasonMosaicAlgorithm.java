@@ -66,7 +66,7 @@ public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
 
     @Override
-    public void init(TileIndexWritable tileIndex) throws IOException {
+    public void initTemporal(TileIndexWritable tileIndex) throws IOException {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[NUM_BANDS][numElems];
         for (int band = 0; band < NUM_BANDS; band++) {
@@ -75,7 +75,7 @@ public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public void process(float[][] samples) {
+    public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int sampleStatus = (int) samples[STATUS][i];
@@ -121,7 +121,7 @@ public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public float[][] getResult() {
+    public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) aggregatedSamples[STATUS][i];
@@ -144,6 +144,16 @@ public class LCSeasonMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setVariableContext(VariableContext variableContext) {
         tileSize = MosaicGrid.create(jobConf).getTileSize();
+    }
+
+    @Override
+    public String[] getTemporalFeatures() {
+        return new String[0];
+    }
+
+    @Override
+    public float[][] getOutputResult(float[][] temporalData) {
+        return temporalData;
     }
 
     @Override

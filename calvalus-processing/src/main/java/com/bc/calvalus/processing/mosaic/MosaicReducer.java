@@ -34,13 +34,13 @@ public class MosaicReducer extends Reducer<TileIndexWritable, TileDataWritable, 
 
     @Override
     protected void reduce(TileIndexWritable tileIndex, Iterable<TileDataWritable> spatialTiles, Context context) throws IOException, InterruptedException {
-        algorithm.init(tileIndex);
+        algorithm.initTemporal(tileIndex);
         for (TileDataWritable spatialTile : spatialTiles) {
             float[][] samples = spatialTile.getSamples();
-            algorithm.process(samples);
+            algorithm.processTemporal(samples);
         }
 
-        float[][] result = algorithm.getResult();
+        float[][] result = algorithm.getTemporalResult();
         TileDataWritable value = new TileDataWritable(result);
         context.write(tileIndex, value);
     }

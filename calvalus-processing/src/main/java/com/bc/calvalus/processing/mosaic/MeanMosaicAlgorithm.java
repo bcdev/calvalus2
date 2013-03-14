@@ -14,13 +14,13 @@ import java.util.Arrays;
 public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private float[][] aggregatedSamples = null;
     private int[][] counters = null;
-    private String[] outputFeatures;
+    private String[] featureNames;
     private int variableCount;
     private int tileSize;
     private Configuration jobConf;
 
     @Override
-    public void init(TileIndexWritable tileIndex) {
+    public void initTemporal(TileIndexWritable tileIndex) {
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         counters = new int[variableCount][numElems];
@@ -31,7 +31,7 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public void process(float[][] samples) {
+    public void processTemporal(float[][] samples) {
         for (int band = 0; band < variableCount; band++) {
             float[] aggregatedSample = aggregatedSamples[band];
             int[] counter = counters[band];
@@ -47,7 +47,7 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     @Override
-    public float[][] getResult() {
+    public float[][] getTemporalResult() {
         for (int band = 0; band < aggregatedSamples.length; band++) {
             float[] aggregatedSample = aggregatedSamples[band];
             int[] counter = counters[band];
@@ -64,16 +64,26 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setVariableContext(VariableContext variableContext) {
         variableCount = variableContext.getVariableCount();
-        outputFeatures = new String[variableCount];
-        for (int i = 0; i < outputFeatures.length; i++) {
-            outputFeatures[i] = variableContext.getVariableName(i) + "_mean";
+        featureNames = new String[variableCount];
+        for (int i = 0; i < featureNames.length; i++) {
+            featureNames[i] = variableContext.getVariableName(i) + "_mean";
         }
         tileSize = MosaicGrid.create(jobConf).getTileSize();
     }
 
     @Override
+    public String[] getTemporalFeatures() {
+        return featureNames;
+    }
+
+    @Override
+    public float[][] getOutputResult(float[][] temporalData) {
+        return temporalData;
+    }
+
+    @Override
     public String[] getOutputFeatures() {
-        return outputFeatures;
+        return featureNames;
     }
 
     @Override
@@ -88,6 +98,6 @@ public class MeanMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     @Override
     public MosaicProductFactory getProductFactory() {
-        return new DefaultMosaicProductFactory(getOutputFeatures());
+        return new DefaultMosaicProductFactory(getTemporalFeatures());
     }
 }
