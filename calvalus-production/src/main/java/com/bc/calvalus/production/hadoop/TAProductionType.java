@@ -46,7 +46,7 @@ public class TAProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createProductionName("Trend analysis ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 32);
 

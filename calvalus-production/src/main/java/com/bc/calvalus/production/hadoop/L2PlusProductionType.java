@@ -64,7 +64,7 @@ public class L2PlusProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProdcutionName(
+        final String productionName = productionRequest.getProductionName(
                 createProductionName("Level 2 ", productionRequest));
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();

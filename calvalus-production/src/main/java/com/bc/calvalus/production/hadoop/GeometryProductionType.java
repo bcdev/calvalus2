@@ -57,7 +57,7 @@ public class GeometryProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createProductionName("Geometries ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 1);
 

@@ -325,7 +325,7 @@ public class ProductionRequest implements XmlConvertible {
     /////////////////////////////////////////////////////////////////////////
     // Support for specific parameters
 
-    public String getProdcutionName(String defaultProductionName) {
+    public String getProductionName(String defaultProductionName) {
         return getString("productionName", defaultProductionName);
     }
 

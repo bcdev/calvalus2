@@ -60,7 +60,7 @@ public class GLobVegProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createGlobVegProductionName("GLobVeg L3 ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         DateRange dateRange = productionRequest.createFromMinMax();
 
