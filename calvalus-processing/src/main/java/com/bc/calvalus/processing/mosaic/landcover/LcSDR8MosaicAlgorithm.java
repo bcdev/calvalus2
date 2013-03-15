@@ -44,6 +44,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private StatusRemapper statusRemapper;
     private Configuration jobConf;
     private String sensor;
+    private float applyFilterThresh;
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) {
@@ -86,10 +87,16 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 float sdrMean = sdrSum / count;
                 float sdrSigma = (float) Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
                 float cloudValue2 = sdrSigma / sdrMean;
-                if (cloudValue2 > 0.2f) {
+
+                if (cloudValue2 > applyFilterThresh) {
                     float sdrCloudDetector = Math.min(sdrMean * 1.35f, sdrMean + sdrSigma);
                     result[0][i] = sdrCloudDetector;
                 }
+                // if "ndvi" instead of sdr_B3 (spot only)
+                //if (cloudValue2 > applyFilterThresh) {
+                //    float sdrCloudDetector = Math.max(sdrMean * 0.85f, sdrMean - sdrSigma);
+                //    result[0][i] = sdrCloudDetector;
+                //}
             }
         }
         return result;
@@ -99,6 +106,11 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
         sensor = jobConf.get("calvalus.lc.sensor", "MERIS");
+        if (sensor.equals("MERIS")) {
+            applyFilterThresh = 0.2f;
+        } else {
+            applyFilterThresh = 0.075f;
+        }
     }
 
     @Override

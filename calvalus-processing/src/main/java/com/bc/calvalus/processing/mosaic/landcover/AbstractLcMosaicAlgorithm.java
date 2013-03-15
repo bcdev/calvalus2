@@ -196,6 +196,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     protected int temporalCloudCheck(float sdr8, float sdr8CloudThreshold) {
+        // if "ndvi" instead of sdr_B3 (spot only)
+        //if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
         if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
             // treat this as cloud
             return STATUS_CLOUD;
