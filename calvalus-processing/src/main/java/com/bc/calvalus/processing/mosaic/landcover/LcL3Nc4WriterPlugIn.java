@@ -204,14 +204,14 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
                 variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + (i+1));
                 variable.addAttribute("standard_name", "surface_reflectance standard_error");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
             }
 
             variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
@@ -219,7 +219,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("standard_name", "normalized_difference_vegetation_index");
             variable.addAttribute("valid_min", -1.0f);
             variable.addAttribute("valid_max", 1.0f);
-            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
+            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {
