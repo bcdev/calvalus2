@@ -95,7 +95,6 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
             if (getTemporalFeatures()[i].endsWith("_sigma")) {
                 for (int j=0; j<temporalData[i].length; ++j) {
                     int currentPixelState = (int) temporalData[currentPixelStateIndex][j];
-                    float oldValue = temporalData[i][j];
                     switch (currentPixelState) {
                         case 1:
                             temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[clearLandCountIndex][j]);
@@ -108,16 +107,6 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
                             break;
                         default:
                             temporalData[i][j] = Float.NaN;
-                    }
-                    if (temporalData[i][j] == Float.POSITIVE_INFINITY || temporalData[i][j] == Float.NEGATIVE_INFINITY) {
-                        System.out.println(MessageFormat.format("{0} j={1} oldvalue={2} state={3} #land={4} #snow={5} #water={6}",
-                                                                getTemporalFeatures()[i],
-                                                                j,
-                                                                oldValue,
-                                                                currentPixelState,
-                                                                temporalData[clearLandCountIndex][j],
-                                                                temporalData[clearWaterCountIndex][j],
-                                                                temporalData[clearSnowIceCountIndex][j]));
                     }
                 }
             }
