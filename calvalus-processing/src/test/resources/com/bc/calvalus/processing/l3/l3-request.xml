@@ -147,6 +147,8 @@
                             <varName>chl</varName>
                         </aggregator>
                     </aggregators>
+                    <compositingType>MOSAICKING</compositingType>
+                    <planetaryGrid>org.esa.beam.binning.support.PlateCarreeGrid</planetaryGrid>
                 </wps:ComplexData>
             </wps:Data>
         </wps:Input>

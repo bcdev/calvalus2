@@ -19,12 +19,14 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.processing.WpsConfig;
 import com.bc.ceres.binding.BindingException;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.CompositingType;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.aggregators.AggregatorMinMax;
 import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
+import org.esa.beam.binning.support.PlateCarreeGrid;
 import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
@@ -36,7 +38,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class L3ConfigTest {
 
@@ -49,14 +51,18 @@ public class L3ConfigTest {
 
     @Test
     public void testPlanetaryGrid() {
+        assertEquals(PlateCarreeGrid.class.getName(), l3Config.getBinningConfig().getPlanetaryGrid());
+    }
+
+    @Test
+    public void testPlanetaryGridCreation() {
         PlanetaryGrid grid = new L3Config().createPlanetaryGrid();
         assertEquals(2160, grid.getNumRows());
         assertEquals(SEAGrid.class, grid.getClass());
 
         grid = l3Config.createPlanetaryGrid();
         assertEquals(4320, grid.getNumRows());
-        assertEquals(SEAGrid.class, grid.getClass());
-
+        assertEquals(PlateCarreeGrid.class, grid.getClass());
     }
 
 //    @Test
@@ -128,7 +134,13 @@ public class L3ConfigTest {
         assertEquals(4320, l3Config.getNumRows());
     }
 
-    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException, BindingException {
+    @Test
+    public void testCompositingType() {
+        assertEquals(CompositingType.MOSAICKING, l3Config.getBinningConfig().getCompositingType());
+    }
+
+    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException,
+                                                          BindingException {
         String wpsRequest = loadConfigProperties(configPath);
         WpsConfig wpsConfig = new WpsConfig(wpsRequest);
         return L3Config.fromXml(wpsConfig.getLevel3Parameters());
