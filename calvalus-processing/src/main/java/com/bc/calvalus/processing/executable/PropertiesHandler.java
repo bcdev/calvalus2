@@ -42,8 +42,8 @@ public class PropertiesHandler {
     private static void handleChildElements(Properties properties, DomElement parentDomElements, String prefix) {
         DomElement[] childElements = parentDomElements.getChildren();
         if (childElements.length > 0) {
-            if (parentDomElements.getChildren(childElements[0].getName()).length == childElements.length) {
-                // all children have the same name
+            if (childElements.length > 1 && parentDomElements.getChildren(childElements[0].getName()).length == childElements.length) {
+                // all children have the same name and there is more than one child
                 if (!prefix.isEmpty()) {
                     properties.setProperty(prefix + "length", Integer.toString(childElements.length));
                 }
