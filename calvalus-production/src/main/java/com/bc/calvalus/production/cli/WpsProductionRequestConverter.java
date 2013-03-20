@@ -22,6 +22,8 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -38,6 +40,7 @@ import java.util.List;
  */
 class WpsProductionRequestConverter {
     private final Document document;
+    private XMLOutputter xmlOutputter;
 
     WpsProductionRequestConverter(String xml) throws JDOMException, IOException {
         this(new StringReader(xml));
@@ -46,6 +49,8 @@ class WpsProductionRequestConverter {
     WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
         SAXBuilder saxBuilder = new SAXBuilder();
         document = saxBuilder.build(reader);
+        Format format = Format.getRawFormat().setLineSeparator("\n");
+        xmlOutputter = new XMLOutputter(format);
     }
 
     ProductionRequest loadProductionRequest(String userName) throws IOException {
@@ -74,7 +79,7 @@ class WpsProductionRequestConverter {
                 if (complexDataElement != null) {
                     StringWriter out = new StringWriter();
                     Element complexContent = (Element) complexDataElement.getChildren().get(0);
-                    new org.jdom.output.XMLOutputter().output(complexContent, out);
+                    xmlOutputter.output(complexContent, out);
                     parameterValue = out.toString();
                 } else {
                     Element referenceElement = dataElement.getChild("Reference", wps);

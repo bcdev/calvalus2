@@ -23,7 +23,7 @@ public class WpsProductionRequestConverterTest {
         assertEquals("testuser", productionRequest.getUserName());
         Map<String, String> parameters = productionRequest.getParameters();
         assertNotNull(parameters);
-        assertEquals(9, parameters.size());
+        assertEquals(10, parameters.size());
 
         assertTrue(parameters.containsKey("calvalus.processor.package"));
         assertEquals("beam-meris-radiometry", parameters.get("calvalus.processor.package"));
@@ -50,6 +50,9 @@ public class WpsProductionRequestConverterTest {
 
         assertNull(productionRequest.getRegionGeometry(null));
 
+        assertNotNull(parameters.get("calvalus.plainText.parameter"));
+        String expectedPlainText = "<parameters>\nThis is a multiline\nTextfield\n</parameters>";
+        assertEquals(expectedPlainText, parameters.get("calvalus.plainText.parameter"));
     }
 
 }
