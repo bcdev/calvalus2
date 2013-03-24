@@ -148,14 +148,14 @@ public class GLobVegProductionType extends HadoopProductionType {
     private static MosaicConfig getMosaicConfig() throws ProductionException {
         String type = GlobVegMosaicAlgorithm.class.getName();
         String maskExpr = "valid_fapar == 1 || valid_lai == 1";
-        String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai"};
+        String[] varNames = new String[]{"valid_fapar", "valid_lai", "obs_time", "fapar", "lai", "ndvi_kg"};
         return new MosaicConfig(type, maskExpr, varNames);
     }
 
     // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for lc_cci Level3.");
+        throw new NotImplementedException("Staging currently not implemented for old Level3.");
     }
 
 }

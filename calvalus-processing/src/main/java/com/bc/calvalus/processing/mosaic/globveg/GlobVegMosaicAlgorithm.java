@@ -51,6 +51,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static int VAR_LAI;
     private static int VAR_VALID_FAPAR;
     private static int VAR_VALID_LAI;
+    private static int VAR_NDVI_KG;
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) {
@@ -73,8 +74,44 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         for (int i = 0; i < numElems; i++) {
             processSinglePixel(i, varIndexes[VAR_VALID_FAPAR], varIndexes[VAR_TIME], varIndexes[VAR_FAPAR], 0, aggregatedSamples, -1.0f / 65534.0f);
             processSinglePixel(i, varIndexes[VAR_VALID_LAI], varIndexes[VAR_TIME], varIndexes[VAR_LAI], 4, aggregatedSamples, -1.0f / (256 * 16 - 2));
+            processNdviKg(i, varIndexes[VAR_NDVI_KG], varIndexes[VAR_TIME], 8, aggregatedSamples, Short.MIN_VALUE / 10000.0f);
         }
         return aggregatedSamples;
+    }
+
+    private void processNdviKg(int i, int measurementIndex, int timeIndex, int offset, float[][] aggregatedSamples, float noDataValue) {
+        int obsCount = 0;
+        double sum = 0.0f;
+        double sumSqr = 0.0f;
+        float bestMeasurement = Float.NaN;
+        float bestTime = Float.NaN;
+
+        for (float[][] sample : accu) {
+            float measurement = sample[varIndexes[measurementIndex]][i];
+            if (! Float.isNaN(measurement)) {
+                ++obsCount;
+                sum += measurement;
+                sumSqr += measurement * measurement;
+                if (Float.isNaN(bestMeasurement) || bestMeasurement < measurement) {
+                    bestMeasurement = measurement;
+                    bestTime = sample[varIndexes[timeIndex]][i];
+                }
+            }
+        }
+        if (obsCount > 0) {
+            final float mean = (float) (sum / obsCount);
+            final float sigmaSqr = (float) (sumSqr / obsCount - mean * mean);
+            final float sigma = sigmaSqr > 0.0f ? (float) Math.sqrt(sigmaSqr) : 0.0f;
+            aggregatedSamples[offset + 0][i] = obsCount;
+            aggregatedSamples[offset + 1][i] = bestTime;
+            aggregatedSamples[offset + 2][i] = bestMeasurement;
+            aggregatedSamples[offset + 3][i] = sigma;
+        } else {
+            aggregatedSamples[offset + 0][i] = 0;
+            aggregatedSamples[offset + 1][i] = Float.NaN;
+            aggregatedSamples[offset + 2][i] = noDataValue;
+            aggregatedSamples[offset + 3][i] = 0.0f;
+        }
     }
 
     private void processSinglePixel(int i, int validIndex, int timeIndex, int measureIndex, int offset, float[][] aggregatedSamples, float noDataValue) {
@@ -141,7 +178,7 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private static String[] createOutputFeatureNames() {
-        String[] featureNames = new String[8];
+        String[] featureNames = new String[12];
         int j = 0;
         featureNames[j++] = "fapar_obs_count";
         featureNames[j++] = "fapar_obs_time";
@@ -151,18 +188,23 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         featureNames[j++] = "lai_obs_time";
         featureNames[j++] = "lai";
         featureNames[j++] = "lai_sigma";
+        featureNames[j++] = "ndvi_kg_obs_count";
+        featureNames[j++] = "ndvi_kg_obs_time";
+        featureNames[j++] = "ndvi_kg_max";
+        featureNames[j++] = "ndvi_kg_sigma";
         return featureNames;
     }
 
 
     private static int[] createVariableIndexes(VariableContext varCtx) {
-        int[] varIndexes = new int[5];
+        int[] varIndexes = new int[6];
         int j = 0;
         varIndexes[VAR_VALID_FAPAR = j++] = getVariableIndex(varCtx, "valid_fapar");
         varIndexes[VAR_VALID_LAI = j++] = getVariableIndex(varCtx, "valid_lai");
         varIndexes[VAR_TIME = j++] = getVariableIndex(varCtx, "obs_time");
         varIndexes[VAR_FAPAR = j++] = getVariableIndex(varCtx, "fapar");
         varIndexes[VAR_LAI = j++] = getVariableIndex(varCtx, "lai");
+        varIndexes[VAR_NDVI_KG = j++] = varCtx.getVariableIndex("ndvi_kg");
         return varIndexes;
     }
 
@@ -254,6 +296,24 @@ public class GlobVegMosaicAlgorithm implements MosaicAlgorithm, Configurable {
             band.setNoDataValue(0.0);
             band.setScalingFactor(1.0 / (256 * 16 - 2));
             band.setScalingOffset(-1.0 / (256 * 16 - 2));
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("ndvi_kg_obs_count", ProductData.TYPE_INT8);
+            band.setNoDataValue(0);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("ndvi_kg_obs_time", ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("ndvi_kg_max", ProductData.TYPE_INT16);
+            band.setNoDataValue(1.0 * Short.MIN_VALUE);
+            band.setScalingFactor(1.0 / 10000);
+            band.setNoDataValueUsed(true);
+
+            band = product.addBand("ndvi_kg_sigma", ProductData.TYPE_UINT16);
+            band.setNoDataValue(0);
+            band.setScalingFactor(1.0 / 10000);
             band.setNoDataValueUsed(true);
 
             String dateStart = jobConf.get(JobConfigNames.CALVALUS_MIN_DATE);
