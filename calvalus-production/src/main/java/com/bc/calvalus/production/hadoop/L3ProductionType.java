@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -16,7 +17,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -29,6 +29,7 @@ import org.esa.beam.binning.support.SEAGrid;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -201,8 +202,10 @@ public class L3ProductionType extends HadoopProductionType {
             // Check L3 XML before sending it to Hadoop
             try {
                 L3Config.fromXml(l3ConfigXml);
-            } catch (BindingException e) {
-                throw new ProductionException("Illegal L3 configuration: " + e.getMessage(), e);
+            } catch (Throwable ignore) {
+                // if the aggregator is not on the classpath (because it is in a bundle)
+                // Conversion is not possible. So only a warning:
+                CalvalusLogger.getLogger().log(Level.WARNING, "Failed to de-serialize l3XML:", ignore);
             }
         }
         return l3ConfigXml;
