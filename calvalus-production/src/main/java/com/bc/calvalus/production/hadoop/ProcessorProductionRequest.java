@@ -55,10 +55,10 @@ public class ProcessorProductionRequest {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
-            String processorBundle = getProcessorBundle();
-            if (processorBundle != null) {
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-            }
+        }
+        String processorBundle = getProcessorBundle();
+        if (processorBundle != null) {
+            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
         }
     }
 
