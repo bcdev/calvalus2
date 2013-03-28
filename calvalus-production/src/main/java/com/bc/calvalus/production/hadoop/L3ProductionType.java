@@ -134,7 +134,7 @@ public class L3ProductionType extends HadoopProductionType {
             Configuration qlJobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
             setRequestParameters(productionRequest, qlJobConfig);
-            processorProductionRequest.configureProcessor(qlJobConfig);
+
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, outputDir + "/[^_].*");
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
