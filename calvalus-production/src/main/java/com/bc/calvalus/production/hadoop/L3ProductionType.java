@@ -101,7 +101,10 @@ public class L3ProductionType extends HadoopProductionType {
 
             if (outputFormat != null) {
                 jobConfig = createJobConfig(productionRequest);
+                setDefaultProcessorParameters(processorProductionRequest, jobConfig);
                 setRequestParameters(productionRequest, jobConfig);
+                processorProductionRequest.configureProcessor(jobConfig);
+
                 jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, singleRangeOutputDir);
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
@@ -129,7 +132,9 @@ public class L3ProductionType extends HadoopProductionType {
         if (outputFormat != null && productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS,
                                                                 null) != null) {
             Configuration qlJobConfig = createJobConfig(productionRequest);
+            setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
             setRequestParameters(productionRequest, qlJobConfig);
+            processorProductionRequest.configureProcessor(qlJobConfig);
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, outputDir + "/[^_].*");
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
