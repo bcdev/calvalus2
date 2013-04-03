@@ -157,7 +157,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             NVariable variable;
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
-            variable.addAttribute("standard_name", "surface_reflectance status_flag");
+            variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
             final ArrayByte.D1 valids = new ArrayByte.D1(6);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
@@ -169,15 +169,15 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
             variable.addAttribute("valid_min", 0);
             variable.addAttribute("valid_max", 5);
-            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -1);
+            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)-1);
 
             for (String counter : COUNTER_NAMES) {
                 variable = writeable.addVariable(counter + "_count", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT16), tileSize, dimensions);
                 variable.addAttribute("long_name", "number of " + counter + " observations");
-                variable.addAttribute("standard_name", "surface_reflectance number_of_observations");
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance number_of_observations");
                 variable.addAttribute("valid_min", 0);
                 variable.addAttribute("valid_max", 150);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -1);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (short)-1);
             }
 
             String[] bandNames = product.getBandNames();
@@ -199,15 +199,15 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 String sigmaBandName = srSigmaBandNames.get(i);
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised surface reflectance of channel " + (i+1));
-                variable.addAttribute("standard_name", "surface_reflectance");
+                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + (i+1));
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
                 variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + (i+1));
-                variable.addAttribute("standard_name", "surface_reflectance standard_error");
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
