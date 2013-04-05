@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.executable.PropertiesHandler;
@@ -114,6 +115,8 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
     }
 
     public Graph createGraph() throws GraphException, IOException {
+        Path inputPath = getInputPath();
+        CalvalusLogger.getLogger().info("Creating graph for input: " + inputPath);
         Configuration conf = getConfiguration();
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
@@ -124,10 +127,10 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
-        Path inputPath = getInputPath();
         Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
+        velocityContext.put("GlobalFunctions", new GlobalsFunctions());
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         FileSystem fs = FileSystem.get(conf);
@@ -154,6 +157,12 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         @Override
         public void initialize() throws OperatorException {
             // do nothing by intention
+        }
+    }
+
+    public class GlobalsFunctions {
+        public Path createPath(String pathString) {
+            return new Path(pathString);
         }
     }
 }
