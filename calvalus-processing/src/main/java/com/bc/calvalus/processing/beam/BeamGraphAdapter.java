@@ -59,6 +59,10 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
 
         try {
             Graph graph = createGraph();
+            if (graph == null) {
+                getLogger().info("Skip processing");
+                return 0;
+            }
             Header header = graph.getHeader();
             List<HeaderSource> sources = header.getSources();
             Operator sourceProducts = new SourceProductContainerOperator();
@@ -84,6 +88,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             throw new IOException("GraphException", e);
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
+            getLogger().info("Skip processing");
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
@@ -139,8 +144,10 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
         String graphAsText = processedGraph.getContent();
         System.out.println("graphAsText = \n" + graphAsText);
+        if (graphAsText.contains("CALVALUS_SKIP_PROCESSING yes")) {
+            return null;
+        }
         StringReader graphReader = new StringReader(graphAsText);
-
         try {
             return GraphIO.read(graphReader);
         } finally {
