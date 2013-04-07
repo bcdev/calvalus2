@@ -58,6 +58,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         pm.beginTask("Level 3", 100);
         try {
