@@ -110,7 +110,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         });
         for (FileStatus fileStatus : fileStatuses) {
-            System.out.println("addBundleToClassPath = " + fileStatus.getPath());
             DistributedCache.addFileToClassPath(fileStatus.getPath(), configuration, fileSystem);
         }
     }

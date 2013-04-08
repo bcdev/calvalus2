@@ -70,7 +70,6 @@ public class ProcessorFactory {
             final FileSystem fs = FileSystem.get(conf);
             Path bundlePath = getBundlePath(bundle, fs);
             if (bundlePath != null) {
-                System.out.println("bundlePath = " + bundlePath);
                 HadoopProcessingService.addBundleToClassPath(bundle, conf);
                 addBundleArchives(bundlePath, fs, conf);
                 DistributedCache.createSymlink(conf);
@@ -84,7 +83,6 @@ public class ProcessorFactory {
                 throw new IllegalArgumentException("Processor bundle does not exist.");
             }
         }
-        System.out.println("processorType = " + processorType);
         conf.set(CALVALUS_L2_PROCESSOR_TYPE, processorType.toString());
     }
 
@@ -137,7 +135,6 @@ public class ProcessorFactory {
         });
         for (FileStatus archive : archives) {
             URI uri = convertPathToURI(archive.getPath());
-            System.out.println("addBundleArchive = " + uri);
             DistributedCache.addCacheArchive(uri, conf);
         }
     }
@@ -171,7 +168,6 @@ public class ProcessorFactory {
         String[] processorFiles = new String[processorStatuses.length];
         for (int i = 0; i < processorFiles.length; i++) {
             processorFiles[i] = processorStatuses[i].getPath().toString();
-            System.out.println("addBundleProcessorFile = " + processorFiles[i]);
         }
         return processorFiles;
     }
