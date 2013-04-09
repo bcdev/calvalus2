@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman
  */
-public class BeamProcessorAdapterTest {
+public class BeamOperatorAdapterTest {
 
     @Test
     public void testFullProduct() throws Exception {
@@ -44,11 +44,11 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
+        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamProcessorAdapter.openProcessedProduct();
+        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
     }
@@ -59,12 +59,12 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle(10, 20));
 
-        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamProcessorAdapter.openProcessedProduct();
+        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(10, targetProduct.getSceneRasterWidth());
@@ -77,11 +77,11 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
+        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamProcessorAdapter.openProcessedProduct();
+        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
         assertEquals(100, targetProduct.getSceneRasterWidth());
@@ -94,10 +94,10 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle());
         try {
-            beamProcessorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
             fail();
         } catch (IllegalStateException e) {
             assertEquals("Can not create an empty subset.", e.getMessage());
@@ -110,17 +110,17 @@ public class BeamProcessorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 10, 20);
-        BeamProcessorAdapter beamProcessorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        Product targetProduct = beamProcessorAdapter.openProcessedProduct();
-        Rectangle rectangle = beamProcessorAdapter.getInputRectangle();
+        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
+        Rectangle rectangle = beamOperatorAdapter.getInputRectangle();
 
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(100, rectangle.width);
         assertEquals(20, rectangle.height);
     }
 
-    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct,
+    private static BeamOperatorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct,
                                                                final Rectangle inputRect) {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, "0");
@@ -129,7 +129,7 @@ public class BeamProcessorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
-        return new BeamProcessorAdapter(mapContext) {
+        return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;
@@ -142,14 +142,14 @@ public class BeamProcessorAdapterTest {
         };
     }
 
-    private static BeamProcessorAdapter createProcessorAdapter(final InputSplit inputSplit,
+    private static BeamOperatorAdapter createProcessorAdapter(final InputSplit inputSplit,
                                                                final Product sourceProduct) {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
-        return new BeamProcessorAdapter(mapContext) {
+        return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;

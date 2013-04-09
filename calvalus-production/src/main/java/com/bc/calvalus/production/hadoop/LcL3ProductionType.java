@@ -72,7 +72,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createLcProductionName("Level 3 LC ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         DateRange mainRange = productionRequest.createFromMinMax();
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);

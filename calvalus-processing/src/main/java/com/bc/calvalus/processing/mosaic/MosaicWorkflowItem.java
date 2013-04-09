@@ -87,7 +87,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
-        ProcessorFactory.installProcessor(jobConfig);
+        ProcessorFactory.installProcessorBundle(jobConfig);
     }
 
     static int computeNumReducers(Configuration jobConfig) {

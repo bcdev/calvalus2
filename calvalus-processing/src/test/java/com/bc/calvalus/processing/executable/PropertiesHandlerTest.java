@@ -37,6 +37,19 @@ public class PropertiesHandlerTest {
     }
 
     @Test
+    public void testAsProperties_XML_oneProperty() throws Exception {
+        Properties properties = PropertiesHandler.asProperties(
+                "<parameters>\n" +
+                        "  <key>value1</key>\n" +
+                        "</parameters>"
+        );
+        assertNotNull(properties);
+        assertEquals(1, properties.size());
+
+        assertEquals("value1", properties.getProperty("key"));
+    }
+
+    @Test
     public void testAsProperties_XML() throws Exception {
         Properties properties = PropertiesHandler.asProperties(
                 "<parameters>\n" +
@@ -45,12 +58,10 @@ public class PropertiesHandlerTest {
                 "</parameters>"
         );
         assertNotNull(properties);
-        System.out.println("properties = " + properties);
         assertEquals(2, properties.size());
 
         assertEquals("value1", properties.getProperty("key"));
         assertEquals("value3", properties.getProperty("key2"));
-
     }
 
     @Test

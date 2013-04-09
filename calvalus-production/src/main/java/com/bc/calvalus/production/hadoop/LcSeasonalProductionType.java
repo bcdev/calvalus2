@@ -61,7 +61,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = LcL3ProductionType.createLcProductionName("Level 3 LC Seasonal",
                                                                                  productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         DateRange mainRange = productionRequest.createFromMinMax();
 

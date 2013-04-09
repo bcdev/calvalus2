@@ -46,7 +46,7 @@ public class MAProductionType extends HadoopProductionType {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createProductionName("Match-up extraction ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 

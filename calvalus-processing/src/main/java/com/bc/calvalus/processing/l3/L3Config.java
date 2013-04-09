@@ -111,8 +111,10 @@ public class L3Config implements XmlConvertible {
 
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
+        L3BinManagerImpl binManager = new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext));
         return new BinningContextImpl(createPlanetaryGrid(),
-                                      new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext)),
+                                      binManager,
+                                      binningConfig.getCompositingType(),
                                       getSuperSampling() != null ? getSuperSampling() : 1);
     }
 

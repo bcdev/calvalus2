@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
@@ -43,6 +44,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.logging.Level;
 
 /**
  * A processor adapter that uses an executable to process an input product.
@@ -162,36 +164,21 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             if (productReader != null) {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
-            if (product.getStartTime() == null || product.getEndTime() == null) {
-                setSceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
+            if (hasInvalidStartAndStopTime(product)) {
+                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time.");
+                // When processing with Polymere no time information is attached to the product.
+                // When processing with MEGS and input rectangle the start time is invalid.
+                // Therefor we have to adjust it here.
+                copySceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
             }
             return product;
         }
         return null;
     }
 
-    private void setSceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct, Rectangle inputRectangle) {
-        final ProductData.UTC startTime = sourceProduct.getStartTime();
-        final ProductData.UTC stopTime = sourceProduct.getEndTime();
-        if (startTime != null && stopTime != null && inputRectangle != null) {
-            final double height = sourceProduct.getSceneRasterHeight();
-            final double regionY = inputRectangle.getY();
-            final double regionHeight = inputRectangle.getHeight();
-            final double dStart = startTime.getMJD();
-            final double dStop = stopTime.getMJD();
-            final double vPerLine = (dStop - dStart) / (height - 1);
-            final double newStart = vPerLine * regionY + dStart;
-            final double newStop = vPerLine * (regionHeight - 1) + newStart;
-            targetProduct.setStartTime(new ProductData.UTC(newStart));
-            targetProduct.setEndTime(new ProductData.UTC(newStop));
-        } else {
-            targetProduct.setStartTime(startTime);
-            targetProduct.setEndTime(stopTime);
-        }
-    }
 
     @Override
-    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
 
             Configuration conf = getConfiguration();
@@ -217,7 +204,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 String[] cmdArray = new String[outputFilesNames.length + 2];
                 cmdArray[0] = "./finalize";
                 System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
-                cmdArray[cmdArray.length-1] = outputPath.toString();
+                cmdArray[cmdArray.length - 1] = outputPath.toString();
 
                 Process process = Runtime.getRuntime().exec(cmdArray);
                 String processLogName = bundle + "-" + executable + "-finalize";
@@ -231,7 +218,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             } else {
                 MapContext mapContext = getMapContext();
                 for (String outputFileName : outputFilesNames) {
-                    InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                    InputStream inputStream = new BufferedInputStream(
+                            new FileInputStream(new File(cwd, outputFileName)));
                     OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
                     ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
                 }
@@ -258,7 +246,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection("calvalus.l2.scriptFiles");
+        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         FileSystem fs = FileSystem.get(conf);
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);

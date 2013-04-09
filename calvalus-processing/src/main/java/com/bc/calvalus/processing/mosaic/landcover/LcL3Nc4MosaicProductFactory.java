@@ -73,6 +73,10 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
     }
 
     public static String tileName(int tileY, int tileX) {
+        return String.format("h%02dv%02d", tileX, tileY);
+    }
+
+    public static String neswTileName(int tileY, int tileX) {
         return NORTHING_TILE_NAME[NORTHING_TILE_NAME.length - 1 - tileY] + EASTING_TILE_NAME[tileX];
     }
 
@@ -101,8 +105,8 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         String spatialResolution = "360".equals(tileSizeParameter) ? "300" : "1000";
         String temporalResolution = "7";  // TODO
         String startTime = COMPACT_DATE_FORMAT.format(minDate);
-        String version = "0.94";  // TODO
-        String productName = MessageFormat.format("ESACCI-LC-SR-{0}-{1}m-{2}d-{3}-{4}-v{5}",
+        String version = "1.0";
+        String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}m-P{2}D-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
                                                   startTime, tileName(tileY, tileX),
                                                   version);
@@ -141,7 +145,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             } else if (outputFeature.startsWith("sr_")) {
                 if (outputFeature.endsWith("_mean")) {
                     srMeanBandNames.add(outputFeature);
-                } else if (outputFeature.endsWith("_sigma")) {
+                } else if (outputFeature.endsWith("_uncertainty")) {
                     srSigmaBandNames.add(outputFeature);
                 }
             }
@@ -152,16 +156,6 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             band.setNoDataValue(-1);
             band.setNoDataValueUsed(true);
         }
-        //band = product.addBand("risk_flag", ProductData.TYPE_INT8);
-        //indexCoding = new IndexCoding("risk_flag");
-        //points = new ColorPaletteDef.Point[2];
-        //indexCoding.addIndex("valid", 0, "");
-        //points[0] = new ColorPaletteDef.Point(0, Color.WHITE, "valid");
-        //indexCoding.addIndex("invalid", 1, "");
-        //points[1] = new ColorPaletteDef.Point(1, Color.BLACK, "invalid");
-        //product.getIndexCodingGroup().add(indexCoding);
-        //band.setSampleCoding(indexCoding);
-        //band.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
 
         for (int i = 0; i < srMeanBandNames.size(); i++) {
             int bandIndex = i + 1;
@@ -179,7 +173,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-        product.setAutoGrouping("mean:sigma:count");
+        product.setAutoGrouping("mean:uncertainty:count");
 
         product.setStartTime(ProductData.UTC.create(minDate, 0));
         product.setEndTime(ProductData.UTC.create(endDate, 0));

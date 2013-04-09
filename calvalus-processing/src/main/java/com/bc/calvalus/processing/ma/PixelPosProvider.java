@@ -20,6 +20,8 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
+import java.util.Date;
+
 /**
  * Provides a {@code PixelPos} for a given {@code Record}, if possible.
  */
@@ -30,7 +32,8 @@ class PixelPosProvider {
     private final long maxTimeDifference; // Note: time in ms (NOT h)
 
 
-    public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference, boolean hasReferenceTime) {
+    public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
+                            boolean hasReferenceTime) {
         this.product = product;
         this.pixelTimeProvider = pixelTimeProvider;
 
@@ -45,6 +48,7 @@ class PixelPosProvider {
      * Gets the temporally and spatially valid pixel position.
      *
      * @param referenceRecord The reference record
+     *
      * @return The pixel position, or {@code null} if no such exist.
      */
     public PixelPos getPixelPos(Record referenceRecord) {
@@ -98,11 +102,19 @@ class PixelPosProvider {
     }
 
     private long getMinReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() - maxTimeDifference;
+        Date time = referenceRecord.getTime();
+        if (time == null) {
+            throw new IllegalArgumentException("Point record has no time information.");
+        }
+        return time.getTime() - maxTimeDifference;
     }
 
     private long getMaxReferenceTime(Record referenceRecord) {
-        return referenceRecord.getTime().getTime() + maxTimeDifference;
+        Date time = referenceRecord.getTime();
+        if (time == null) {
+            throw new IllegalArgumentException("Point record has no time information.");
+        }
+        return time.getTime() + maxTimeDifference;
     }
 
 }

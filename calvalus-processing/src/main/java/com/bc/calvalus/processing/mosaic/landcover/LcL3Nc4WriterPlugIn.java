@@ -157,7 +157,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             NVariable variable;
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
-            variable.addAttribute("standard_name", "surface_reflectance status_flag");
+            variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
             final ArrayByte.D1 valids = new ArrayByte.D1(6);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
@@ -169,49 +169,49 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
             variable.addAttribute("valid_min", 0);
             variable.addAttribute("valid_max", 5);
-            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -1);
+            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)-1);
 
             for (String counter : COUNTER_NAMES) {
                 variable = writeable.addVariable(counter + "_count", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT16), tileSize, dimensions);
                 variable.addAttribute("long_name", "number of " + counter + " observations");
-                variable.addAttribute("standard_name", "surface_reflectance number_of_observations");
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance number_of_observations");
                 variable.addAttribute("valid_min", 0);
                 variable.addAttribute("valid_max", 150);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -1);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (short)-1);
             }
 
             String[] bandNames = product.getBandNames();
             List<String> srMeanBandNames = new ArrayList<String>(bandNames.length);
             List<String> srSigmaBandNames = new ArrayList<String>(bandNames.length);
             for (String bandName : bandNames) {
-               if (bandName.startsWith("sr_")) {
+                if (bandName.startsWith("sr_")) {
                     if (bandName.endsWith("_mean")) {
                         srMeanBandNames.add(bandName);
-                    } else if (bandName.endsWith("_sigma")) {
+                    } else if (bandName.endsWith("_uncertainty")) {
                         srSigmaBandNames.add(bandName);
                     }
                 }
             }
 
 
-            for (int i=0; i<15; i++) {
+            for (int i=0; i<srMeanBandNames.size(); i++) {
                 String meanBandName = srMeanBandNames.get(i);
                 String sigmaBandName = srSigmaBandNames.get(i);
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised surface reflectance of channel " + (i+1));
-                variable.addAttribute("standard_name", "surface_reflectance");
+                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + (i+1));
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "standard deviation of normalised surface reflectance of channel " + (i+1));
-                variable.addAttribute("standard_name", "surface_reflectance standard_error");
+                variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + (i+1));
+                variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
-                variable.addAttribute("valid_max", 0.5f);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
+                variable.addAttribute("valid_max", 1.0f);
+                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
             }
 
             variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
@@ -219,60 +219,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("standard_name", "normalized_difference_vegetation_index");
             variable.addAttribute("valid_min", -1.0f);
             variable.addAttribute("valid_max", 1.0f);
-            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, -999.0f);
-
-            /*
-            for (RasterDataNode rasterDataNode : product.getBands()) {
-                String variableName = ReaderUtils.getVariableName(rasterDataNode);
-
-                int dataType;
-                if (rasterDataNode.isLog10Scaled()) {
-                    dataType = rasterDataNode.getGeophysicalDataType();
-                } else {
-                    dataType = rasterDataNode.getDataType();
-                }
-                DataType netcdfDataType = DataTypeUtils.getNetcdfDataType(dataType);
-                Dimension tileSize1 = ImageManager.getPreferredTileSize(rasterDataNode.getProduct());
-                final NVariable var = writeable.addVariable(variableName, netcdfDataType, tileSize1, dimensions);
-                final String description = rasterDataNode.getDescription();
-                if (description != null) {
-                    var.addAttribute("long_name", description);
-                }
-//                String unit = rasterDataNode.getUnit();
-//                if (unit != null) {
-//                    unit = CfCompliantUnitMapper.tryFindUnitString(unit);
-//                    variable.addAttribute("units", unit);
-//                }
-//                final boolean unsigned = CfBandPart.isUnsigned(rasterDataNode);
-//                if (unsigned) {
-//                    var.addAttribute("_Unsigned", String.valueOf(unsigned));
-//                }
-
-                double noDataValue;
-                if (!rasterDataNode.isLog10Scaled()) {
-                    final double scalingFactor = rasterDataNode.getScalingFactor();
-                    if (scalingFactor != 1.0) {
-                        var.addAttribute(Constants.SCALE_FACTOR_ATT_NAME, scalingFactor);
-                    }
-                    final double scalingOffset = rasterDataNode.getScalingOffset();
-                    if (scalingOffset != 0.0) {
-                        var.addAttribute(Constants.ADD_OFFSET_ATT_NAME, scalingOffset);
-                    }
-                    noDataValue = rasterDataNode.getNoDataValue();
-                } else {
-                    // scaling information is not written anymore for log10 scaled bands
-                    // instead we always write geophysical values
-                    // we do this because log scaling is not supported by NetCDF-CF conventions
-                    noDataValue = rasterDataNode.getGeophysicalNoDataValue();
-                }
-                if (rasterDataNode.isNoDataValueUsed()) {
-                    Number fillValue = DataTypeUtils.convertTo(noDataValue, var.getDataType());
-                    var.addAttribute(Constants.FILL_VALUE_ATT_NAME, fillValue);
-                }
-                var.addAttribute("coordinates", "lat lon");
-            }
-            */
-
+            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {

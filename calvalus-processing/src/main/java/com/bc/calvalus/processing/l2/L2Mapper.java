@@ -85,21 +85,22 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         pm.beginTask("Level 2 processing", 100);
         try {
             processorAdapter.prepareProcessing();
             if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
-                LOG.info("process missing: testing if target product exist");
+                LOG.info("testing whether target product exists ...");
                 if (processorAdapter.canSkipInputProduct()) {
-                    LOG.info("process missing: target product exist, nothing to compute");
+                    LOG.info("target product exists, nothing to compute.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
                     return;
                 }
-                LOG.info("process missing: target product does not exist");
+                LOG.info("target product does not exist");
             }
             Rectangle sourceRectangle = processorAdapter.getInputRectangle();
             if (sourceRectangle != null && sourceRectangle.isEmpty()) {
-                LOG.warning("product does not cover region, skip processing.");
+                LOG.warning("product does not cover region, skipping processing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 // process input and write target product
@@ -144,7 +145,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 VelocityContext vcx = metadataResourceEngine.getVelocityContext();
                 vcx.put("system", System.getProperties());
                 vcx.put("softwareName", "Calvalus");
-                vcx.put("softwareVersion", "1.6");
+                vcx.put("softwareVersion", "1.7-SNAPSHOT");
                 vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
                 File targetFile = new File(targetPath);

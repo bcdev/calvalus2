@@ -20,12 +20,16 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,11 +40,11 @@ import java.util.Map;
  *
  * @author MarcoZ
  */
-public class BeamProcessorAdapter extends SubsetProcessorAdapter {
+public class BeamOperatorAdapter extends IdentityProcessorAdapter {
 
     private Product targetProduct;
 
-    public BeamProcessorAdapter(MapContext mapContext) {
+    public BeamOperatorAdapter(MapContext mapContext) {
         super(mapContext);
     }
 
@@ -71,7 +75,9 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
         getLogger().info(String.format("Processed product width = %d height = %d",
                                        targetProduct.getSceneRasterWidth(),
                                        targetProduct.getSceneRasterHeight()));
-        copyTimeCoding(subsetProduct, targetProduct);
+        if (hasInvalidStartAndStopTime(targetProduct)) {
+            copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+        }
         return 1;
     }
 
@@ -81,7 +87,7 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
     }
 
     @Override
-    public void saveProcessedProducts(ProgressMonitor pm) throws Exception {
+    public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         saveTargetProduct(targetProduct, pm);
     }
 
@@ -91,17 +97,6 @@ public class BeamProcessorAdapter extends SubsetProcessorAdapter {
         if (targetProduct != null) {
             targetProduct.dispose();
             targetProduct = null;
-        }
-    }
-
-    public static void copyTimeCoding(Product sourceProduct, Product targetProduct) {
-        if (targetProduct != sourceProduct) {
-            if (targetProduct.getStartTime() == null) {
-                targetProduct.setStartTime(sourceProduct.getStartTime());
-            }
-            if (targetProduct.getEndTime() == null) {
-                targetProduct.setEndTime(sourceProduct.getEndTime());
-            }
         }
     }
 

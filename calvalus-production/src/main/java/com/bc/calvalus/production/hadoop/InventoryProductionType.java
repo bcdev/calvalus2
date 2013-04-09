@@ -58,7 +58,7 @@ public class InventoryProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createProductionName("Inventory ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 

@@ -11,13 +11,17 @@ import java.io.IOException;
 */
 public interface MosaicAlgorithm {
 
-    void init(TileIndexWritable tileIndex) throws IOException;
+    void initTemporal(TileIndexWritable tileIndex) throws IOException;
 
-    void process(float[][] samples);
+    void processTemporal(float[][] samples);
 
-    float[][] getResult();
+    float[][] getTemporalResult();
 
     void setVariableContext(VariableContext variableContext);
+
+    String[] getTemporalFeatures();
+
+    float[][] getOutputResult(float[][] temporalData);
 
     String[] getOutputFeatures();
 

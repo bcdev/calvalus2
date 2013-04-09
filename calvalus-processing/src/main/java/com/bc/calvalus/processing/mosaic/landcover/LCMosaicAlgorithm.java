@@ -16,20 +16,28 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
-import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
-import org.apache.hadoop.conf.Configurable;
 
 /**
  * The algorithm, for lc_cci..
  *
  * @author MarcoZ
  */
-public class LCMosaicAlgorithm extends AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Configurable {
+public class LCMosaicAlgorithm extends AbstractLcMosaicAlgorithm {
 
     static final String[] COUNTER_NAMES = { "land", "water", "snow", "cloud", "cloud_shadow" };
 
     protected String[] getCounterNames() { return COUNTER_NAMES; }
+
+    @Override
+    public float[][] getOutputResult(float[][] temporalData) {
+        return temporalData;
+    }
+
+    @Override
+    public String[] getOutputFeatures() {
+        return getTemporalFeatures();
+    }
 
     @Override
     public MosaicProductFactory getProductFactory() {

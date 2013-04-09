@@ -73,6 +73,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        ProcessorFactory.installProcessor(jobConfig);
+        ProcessorFactory.installProcessorBundle(jobConfig);
     }
 }

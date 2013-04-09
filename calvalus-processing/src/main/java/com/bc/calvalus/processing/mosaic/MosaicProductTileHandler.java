@@ -82,7 +82,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
     @Override
     protected void writeDataTile(Point tile, TileDataWritable data) throws IOException {
         if (product != null) {
-            float[][] samples = data.getSamples();
+            float[][] samples = algorithm.getOutputResult(data.getSamples());
             Band[] bands = product.getBands();
             ProductData[] productData = new ProductData[bands.length];
             for (int bandIndex = 0; bandIndex < bands.length; bandIndex++) {

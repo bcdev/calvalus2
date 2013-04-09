@@ -94,6 +94,17 @@
                 <wps:LiteralData></wps:LiteralData>
             </wps:Data>
         </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.plainText.parameter</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+This is a multiline
+Textfield
+</parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
     </wps:DataInputs>
 
     <wps:ResponseForm>

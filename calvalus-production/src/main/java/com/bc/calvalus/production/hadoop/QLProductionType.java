@@ -58,7 +58,7 @@ public class QLProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createProductionName("Quick look generation ", productionRequest);
-        final String productionName = productionRequest.getProdcutionName(defaultProductionName);
+        final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         WorkflowItem workflowItem = createWorkflowItem(productionId, productionName, productionRequest);
 

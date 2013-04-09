@@ -46,6 +46,16 @@ public class CalvalusLogger {
         handler.setFormatter(new LogFormatter());
         logger.addHandler(handler);
         logger.setLevel(Level.ALL);
+
+        Logger beamLogger = Logger.getLogger("beam");
+        beamLogger.setUseParentHandlers(false);
+        beamLogger.addHandler(handler);
+        beamLogger.setLevel(Level.INFO);
+
+        Logger rootLogger = Logger.getLogger("");
+        rootLogger.setUseParentHandlers(false);
+        rootLogger.addHandler(handler);
+        rootLogger.setLevel(Level.INFO);
         return logger;
     }
 
