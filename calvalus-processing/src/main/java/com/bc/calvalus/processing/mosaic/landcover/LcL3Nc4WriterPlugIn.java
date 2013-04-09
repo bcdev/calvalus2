@@ -98,7 +98,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             float lonMax = lonMin + 5.0f;
 
             String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300".equals(spatialResolution) ? "MERIS FR L1B" : "MERIS RR L1B" : "SPOT VGT";
+            String source = "MERIS".equals(sensor) ? "300".equals(spatialResolution) ? "MERIS FR L1B r02" : "MERIS RR L1B r03" : "SPOT VGT P format V1.7";
             String spatialResolutionDegrees = "300".equals(spatialResolution) ? "0.002778" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
@@ -107,7 +107,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("summary", "This dataset contains a tile of a Level-3 " + temporalResolution + "-day global surface reflectance composite from satellite observations placed onto a regular grid.");
             writeable.addGlobalAttribute("project", "Climate Change Initiative - European Space Agency");
             writeable.addGlobalAttribute("references", "http://www.esa-landcover-cci.org/");
-            writeable.addGlobalAttribute("institution", "Brockmann Consult");
+            writeable.addGlobalAttribute("institution", "Brockmann Consult GmbH");
             writeable.addGlobalAttribute("contact", "info@brockmann-consult.de");
             writeable.addGlobalAttribute("source", source);
             writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-1.0, lc-sr-1.0");  // versions
@@ -136,6 +136,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("time_coverage_start", COMPACT_ISO_FORMAT.format(product.getStartTime().getAsDate()));
             writeable.addGlobalAttribute("time_coverage_end", COMPACT_ISO_FORMAT.format(product.getEndTime().getAsDate()));
             writeable.addGlobalAttribute("time_coverage_duration", "P" + temporalResolution + "D");
+            writeable.addGlobalAttribute("time_coverage_resolution", "P" + temporalResolution + "D");
 
             writeable.addGlobalAttribute("geospatial_lat_min", String.valueOf(latMin));
             writeable.addGlobalAttribute("geospatial_lat_max", String.valueOf(latMax));
