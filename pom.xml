@@ -63,7 +63,14 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+        </repository>
     </repositories>
 
     <build>
@@ -373,6 +380,11 @@
                 <version>1.4.3</version>
             </dependency>
             <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jdk14</artifactId>
+                <version>1.4.3</version>
+            </dependency>
+            <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty</artifactId>
                 <version>6.1.14</version>
@@ -394,7 +406,6 @@
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
                 <version>1.2.14</version>
-                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.mail</groupId>
