@@ -110,7 +110,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         });
         for (FileStatus fileStatus : fileStatuses) {
-            DistributedCache.addFileToClassPath(fileStatus.getPath(), configuration, fileSystem);
+            // For hadoops sake, skip protocol from path because it contains ':' and that is used
+            // as separator in the job configuration!
+            final Path path = fileStatus.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());
+            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration, fileSystem);
         }
     }
 
