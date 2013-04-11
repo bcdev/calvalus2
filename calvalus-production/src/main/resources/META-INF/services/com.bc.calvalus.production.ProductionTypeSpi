@@ -10,6 +10,7 @@ com.bc.calvalus.production.hadoop.LcSeasonalProductionType$Spi
 com.bc.calvalus.production.hadoop.TAProductionType$Spi
 com.bc.calvalus.production.hadoop.L3ProductionType$Spi
 com.bc.calvalus.production.hadoop.L3BinProcessorProductionType$Spi
+com.bc.calvalus.production.hadoop.L3MultiRegionFormatProductionType$Spi
 com.bc.calvalus.production.hadoop.MAProductionType$Spi
 com.bc.calvalus.production.hadoop.PrevueProductionType$Spi
 com.bc.calvalus.production.hadoop.L2ProductionType$Spi

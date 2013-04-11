@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.FormatterConfig;
 
 import java.io.File;
@@ -44,6 +45,7 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         jobConfig = context.getConfiguration();
         final FileSplit split = (FileSplit) context.getInputSplit();
+        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(split.getPath(), context);
 
         String dateStart = jobConfig.get(JobConfigNames.CALVALUS_MIN_DATE);
         String dateStop = jobConfig.get(JobConfigNames.CALVALUS_MAX_DATE);
@@ -65,23 +67,22 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
             FormatterConfig.BandConfiguration[] rgbBandConfig = new FormatterConfig.BandConfiguration[0];
 
             L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
-                                                                      productFile.getAbsolutePath(),
-                                                                      outputFormat,
-                                                                      rgbBandConfig);
-
-            Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+                    productFile.getAbsolutePath(),
+                    outputFormat,
+                    rgbBandConfig);
 
             L3Config l3Config = L3Config.get(jobConfig);
-            L3Formatter formatter = new L3Formatter(jobConfig);
+            L3Formatter formatter = new L3Formatter(l3Config.createBinningContext(),
+                    L3FormatterConfig.parseTime(dateStart),
+                    L3FormatterConfig.parseTime(dateStop),
+                    jobConfig);
 
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
-            formatter.format(l3Config.createBinningContext(),
-                             formatterConfig,
-                             split.getPath(),
-                             regionGeometry,
-                             L3FormatterConfig.parseTime(dateStart),
-                             L3FormatterConfig.parseTime(dateStop), context);
+            formatter.format(temporalBinSource,
+                    formatterConfig,
+                    jobConfig.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME),
+                    jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");

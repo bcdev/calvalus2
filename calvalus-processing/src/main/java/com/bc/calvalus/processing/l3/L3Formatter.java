@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -34,51 +35,52 @@ import org.esa.beam.util.StringUtils;
  */
 public class L3Formatter {
 
-    private Configuration configuration;
+    private final BinningContext binningContext;
+    private final ProductData.UTC startTime;
+    private final ProductData.UTC endTime;
+    private final Configuration configuration;
 
-    public L3Formatter(Configuration configuration) {
+    public L3Formatter(BinningContext binningContext, ProductData.UTC startTime,
+                       ProductData.UTC endTime, Configuration configuration) {
+        this.binningContext = binningContext;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.configuration = configuration;
     }
 
-    public void format(BinningContext binningContext,
-                       L3FormatterConfig formatterConfig,
-                       Path partsDir,
-                       Geometry roiGeometry,
-                       ProductData.UTC startTime,
-                       ProductData.UTC endTime,
-                       Mapper.Context context) throws Exception {
-        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(partsDir, context);
+    public void format(TemporalBinSource temporalBinSource, L3FormatterConfig formatterConfig, String regionName, String regionWKT) throws Exception {
+        Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
         Formatter.format(binningContext,
-                         temporalBinSource, formatterConfig.getFormatterConfig(),
-                         roiGeometry,
-                         startTime,
-                         endTime,
-                         createConfigurationMetadataElement()
+                temporalBinSource, formatterConfig.getFormatterConfig(),
+                regionGeometry,
+                startTime,
+                endTime,
+                createConfigurationMetadataElement(regionName, regionWKT)
         );
     }
 
-    private MetadataElement createConfigurationMetadataElement() {
-        MetadataElement configurationElement = new MetadataElement("calvalus.configuration");
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_DIR, ',');
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_FORMAT);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MIN_DATE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MAX_DATE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_INPUT_REGION_NAME);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_BEAM_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_BUNDLE);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_OPERATOR);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L2_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_L3_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_MA_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_TA_PARAMETERS);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_OUTPUT_DIR);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_USER);
-        addConfigElementToMetadataElement(configurationElement, JobConfigNames.CALVALUS_REQUEST);
-        addConfigElementToMetadataElement(configurationElement, "mapred.job.classpath.files", ',');
-        return configurationElement;
+    private MetadataElement createConfigurationMetadataElement(String regionName, String regionWKT) {
+        MetadataElement element = new MetadataElement("calvalus.configuration");
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_DIR, ',');
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_FORMAT);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MIN_DATE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MAX_DATE);
+        addElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
+        addElementToMetadataElement(element, JobConfigNames.CALVALUS_REGION_GEOMETRY, regionWKT);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_BEAM_BUNDLE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_OPERATOR);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_PARAMETERS);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L3_PARAMETERS);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MA_PARAMETERS);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_TA_PARAMETERS);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_OUTPUT_DIR);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_USER);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_REQUEST);
+        addConfigElementToMetadataElement(element, "mapred.job.classpath.files", ',');
+        return element;
     }
 
     private void addConfigElementToMetadataElement(MetadataElement parent, String name, char sep) {
@@ -95,7 +97,10 @@ public class L3Formatter {
     }
 
     private void addConfigElementToMetadataElement(MetadataElement parent, String name) {
-        String value = configuration.get(name);
+        addElementToMetadataElement(parent, name, configuration.get(name));
+    }
+
+    private void addElementToMetadataElement(MetadataElement parent, String name, String value) {
         if (value != null) {
             parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
         }
