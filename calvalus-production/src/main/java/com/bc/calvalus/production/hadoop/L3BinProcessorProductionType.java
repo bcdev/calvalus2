@@ -53,8 +53,12 @@ public class L3BinProcessorProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
+        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+        String regionWKT = regionGeometry != null ? regionGeometry.toString() : "";
+
         String outputDirParts = getOutputPath(productionRequest, productionId, "-parts");
         String outputDirProducts = getOutputPath(productionRequest, productionId, "-output");
+        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,regionWKT);
 
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, productionRequest.getString("inputPath"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirParts);
@@ -80,9 +84,8 @@ public class L3BinProcessorProductionType extends HadoopProductionType {
 
             String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
             jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-            Geometry regionGeometry = productionRequest.getRegionGeometry(null);
-            jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                          regionGeometry != null ? regionGeometry.toString() : "");
+            jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,regionWKT);
+
             List<DateRange> dateRanges = productionRequest.getDateRanges();
             DateRange dateRange = dateRanges.get(0);
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
