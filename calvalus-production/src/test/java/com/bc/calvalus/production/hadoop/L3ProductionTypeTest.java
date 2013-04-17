@@ -95,7 +95,6 @@ public class L3ProductionTypeTest {
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
         assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);
-        assertEquals(-999.9F, binManager.getAggregator(0).getOutputFillValue(), 1E-5F);
     }
 
     @Test
@@ -164,17 +163,14 @@ public class L3ProductionTypeTest {
                                      "variables.0.name", "a",
                                      "variables.0.aggregator", "MIN_MAX",
                                      "variables.0.weightCoeff", "1.0",
-                                     "variables.0.fillValue", "-999.9",
 
                                      "variables.1.name", "b",
                                      "variables.1.aggregator", "MIN_MAX",
                                      "variables.1.weightCoeff", "1.0",
-                                     "variables.1.fillValue", "-999.9",
 
                                      "variables.2.name", "c",
                                      "variables.2.aggregator", "MIN_MAX",
                                      "variables.2.weightCoeff", "1.0",
-                                     "variables.2.fillValue", "-999.9",
 
                                      "maskExpr", "NOT INVALID",
                                      "minDate", "2010-06-15",
