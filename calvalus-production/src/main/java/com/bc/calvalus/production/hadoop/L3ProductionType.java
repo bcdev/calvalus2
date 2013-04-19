@@ -210,7 +210,7 @@ public class L3ProductionType extends HadoopProductionType {
             } catch (Throwable ignore) {
                 // if the aggregator is not on the classpath (because it is in a bundle)
                 // Conversion is not possible. So only a warning:
-                CalvalusLogger.getLogger().log(Level.WARNING, "Failed to de-serialize l3XML:", ignore);
+                CalvalusLogger.getLogger().warning("Failed to de-serialize l3XML:" + ignore.getMessage());
             }
         }
         return l3ConfigXml;
