@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.l3.binprocessing.BinProcessor;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -10,10 +9,14 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.Observation;
 import org.esa.beam.binning.SpatialBin;
+import org.esa.beam.binning.VariableContext;
+import org.esa.beam.binning.WritableVector;
 import org.esa.beam.binning.support.ObservationImpl;
 import org.esa.beam.binning.support.VectorImpl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * A mapper to follow on with temporal bins....
@@ -21,22 +24,28 @@ import java.io.IOException;
 public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, LongWritable, L3SpatialBin> implements Configurable {
 
     private Configuration conf;
-    private BinProcessor binProcessor = null;
+
     private BinManager firstBinManager;
+    private float[] resultFeatures;
+    private WritableVector resultVector;
+
     private BinManager secondBinManager;
-    private float[] outputFeatures;
-    private VectorImpl outputVector;
+    private float[] observationFeatures;
+    private Observation observation;
+
+    private int[] resultIndexes;
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
-        firstBinManager.computeOutput(temporalBin, outputVector);
-        final float[] values;
-        if (binProcessor != null) {
-            values = binProcessor.process(outputFeatures);
-        } else {
-            values = outputFeatures;
+        // finish 1st L3 processing (computeOutput and post-processing)
+        firstBinManager.computeResult(temporalBin, resultVector);
+
+        // map features from result to observation vector
+        for (int i = 0; i < resultIndexes.length; i++) {
+            observationFeatures[i] = resultFeatures[resultIndexes[i]];
         }
-        Observation observation = new ObservationImpl(0.0, 0.0, 0.0, values);
+
+        // start 2nd L3 processing computeSpatial
         SpatialBin spatialBin = secondBinManager.createSpatialBin(binIndex.get());
         secondBinManager.aggregateSpatialBin(observation, spatialBin);
         secondBinManager.completeSpatialBin(spatialBin);
@@ -48,14 +57,22 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         this.conf = conf;
         firstBinManager = getFirstL3Config(conf).createBinningContext().getBinManager();
         secondBinManager = L3Config.get(conf).createBinningContext().getBinManager();
-        outputFeatures = new float[firstBinManager.getOutputFeatureNames().length];
-        outputVector = new VectorImpl(outputFeatures);
+        ArrayList<String> resultNameList = new ArrayList<String>();
+        Collections.addAll(resultNameList, firstBinManager.getResultFeatureNames());
+        VariableContext variableContext = secondBinManager.getVariableContext();
+        int variableCount = variableContext.getVariableCount();
 
-        // TODO example for bin processing
-        // TODO use registry or similar construct for creation
-//        BandShiftBinProcessor.BandShiftBinProcessorDescriptor processorDescriptor = new BandShiftBinProcessor.BandShiftBinProcessorDescriptor();
-//        BinProcessorConfig config = processorDescriptor.createBinProcessorConfig();
-//        binProcessor = processorDescriptor.createBinProcessor(secondBinManager.getVariableContext(), config);
+        resultFeatures = new float[resultNameList.size()];
+        resultVector = new VectorImpl(resultFeatures);
+
+        observationFeatures = new float[variableCount];
+        observation = new ObservationImpl(0.0, 0.0, 0.0, observationFeatures);
+
+        resultIndexes = new int[variableCount];
+        for (int i = 0; i < resultIndexes.length; i++) {
+            String obsName = variableContext.getVariableName(i);
+            resultIndexes[i] = resultNameList.indexOf(obsName);
+        }
     }
 
     @Override

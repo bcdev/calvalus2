@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.l3;
 
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.PostProcessorConfig;
 import org.esa.beam.binning.VariableContext;
 
 /**
@@ -11,8 +12,8 @@ import org.esa.beam.binning.VariableContext;
  */
 public class L3BinManagerImpl extends BinManager {
 
-    public L3BinManagerImpl(VariableContext variableContext, Aggregator... aggregators) {
-        super(variableContext, aggregators);
+    public L3BinManagerImpl(VariableContext variableContext, PostProcessorConfig postProcessorConfig, Aggregator... aggregators) {
+        super(variableContext, postProcessorConfig, aggregators);
     }
 
     @Override

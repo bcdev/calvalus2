@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
@@ -111,7 +112,8 @@ public class L3Config implements XmlConvertible {
 
     public BinningContext createBinningContext() {
         VariableContext variableContext = createVariableContext();
-        L3BinManagerImpl binManager = new L3BinManagerImpl(variableContext, getBinningConfig().createAggregators(variableContext));
+        Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
+        L3BinManagerImpl binManager = new L3BinManagerImpl(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
         return new BinningContextImpl(createPlanetaryGrid(),
                                       binManager,
                                       binningConfig.getCompositingType(),
