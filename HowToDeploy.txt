@@ -21,8 +21,8 @@ java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -
 
 BEAM
 -----
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.11
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.11
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.11.1-SNAPSHOT
+java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.11.1-SNAPSHOT
 
 
 ===========================================================================
