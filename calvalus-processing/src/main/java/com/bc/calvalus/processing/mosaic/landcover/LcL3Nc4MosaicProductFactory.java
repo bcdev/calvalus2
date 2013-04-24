@@ -4,10 +4,14 @@ import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -108,10 +112,15 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         String version = "1.0";
         String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}m-P{2}D-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
-                                                  startTime, tileName(tileY, tileX),
+                                                  tileName(tileY, tileX), startTime,
                                                   version);
 
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
+//        try {
+//            product.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect.width, rect.height, -180.0+10.0*tileX, 90.0-10.0*tileY, 10.0/rect.width, 10.0/rect.height, 0.0, 0.0));
+//        } catch (Exception ex) {
+//            throw new RuntimeException("failed to create geocoding for tile", ex);
+//        }
 
         Band band = product.addBand("current_pixel_state", ProductData.TYPE_INT8);
         band.setNoDataValue(-1);
@@ -158,12 +167,18 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         }
 
         for (int i = 0; i < srMeanBandNames.size(); i++) {
-            int bandIndex = i + 1;
-            band = product.addBand(srMeanBandNames.get(i), ProductData.TYPE_FLOAT32);
+            final String bandName = srMeanBandNames.get(i);
+            final int bandIndex;
+            try {
+                bandIndex = Integer.parseInt(bandName.substring("sr_".length(), bandName.length()-"_mean".length()));
+            } catch (NumberFormatException ex) {
+                throw new RuntimeException("cannot determine band index from band name " + bandName, ex);
+            }
+            band = product.addBand(bandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
             band.setSpectralBandIndex(bandIndex);
-            band.setSpectralWavelength(wavelength[i]);
+            band.setSpectralWavelength(wavelength[bandIndex-1]);
         }
         band = product.addBand("vegetation_index_mean", ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);

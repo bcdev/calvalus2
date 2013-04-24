@@ -146,7 +146,7 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
             } else if (temporalFeatures[i].equals("status")) {
                 outputFeatures[targetI++] = "current_pixel_state";
             } else if (temporalFeatures[i].endsWith("_sigma")) {
-                outputFeatures[targetI++] = temporalFeatures[i].substring(0, temporalFeatures[i].length()-5) + "uncertainty";
+                outputFeatures[targetI++] = temporalFeatures[i].substring(0, temporalFeatures[i].length()-"sigma".length()) + "uncertainty";
             } else {
                 outputFeatures[targetI++] = temporalFeatures[i];
             }

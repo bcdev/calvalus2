@@ -20,6 +20,7 @@ import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
 import org.esa.beam.dataio.netcdf.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
+import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
@@ -62,7 +63,8 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfilePartWriter createGeoCodingPartWriter() {
-        return new CfGeocodingPart();
+//        return new CfGeocodingPart();
+        return new BeamGeocodingPart();
     }
 
     @Override
@@ -110,7 +112,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("institution", "Brockmann Consult GmbH");
             writeable.addGlobalAttribute("contact", "info@brockmann-consult.de");
             writeable.addGlobalAttribute("source", source);
-            writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-1.0, lc-sr-1.0");  // versions
+            writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.0, lc-sr-2.0");  // versions
             writeable.addGlobalAttribute("comment", "");
 
             writeable.addGlobalAttribute("Conventions", "CF-1.6");
@@ -172,6 +174,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("valid_max", 5);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)-1);
 
+            StringBuffer ancillaryVariables = new StringBuffer("current_pixel_state");
             for (String counter : COUNTER_NAMES) {
                 variable = writeable.addVariable(counter + "_count", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT16), tileSize, dimensions);
                 variable.addAttribute("long_name", "number of " + counter + " observations");
@@ -179,6 +182,9 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute("valid_min", 0);
                 variable.addAttribute("valid_max", 150);
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (short)-1);
+                ancillaryVariables.append(' ');
+                ancillaryVariables.append(counter);
+                ancillaryVariables.append("_count");
             }
 
             String[] bandNames = product.getBandNames();
@@ -198,16 +204,18 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             for (int i=0; i<srMeanBandNames.size(); i++) {
                 String meanBandName = srMeanBandNames.get(i);
                 String sigmaBandName = srSigmaBandNames.get(i);
+                int bandIndex = product.getBand(meanBandName).getSpectralBandIndex();
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + (i+1));
+                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + bandIndex);
                 variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
+                variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
                 variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + (i+1));
+                variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + bandIndex);
                 variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
                 variable.addAttribute("wavelength", wavelength);
                 variable.addAttribute("valid_min", 0.0f);
@@ -221,6 +229,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("valid_min", -1.0f);
             variable.addAttribute("valid_max", 1.0f);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
+            variable.addAttribute("ancillary_variables", ancillaryVariables.toString());
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {
