@@ -1,8 +1,11 @@
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3Formatter;
+import com.bc.calvalus.processing.l3.L3FormatterConfig;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -21,47 +24,29 @@ import java.util.logging.Logger;
  *  The reducer for for formatting
  *  multiple regions of a Binning product at once.
  */
-public class L3MultiRegionFormatReducer extends Reducer<L3RegionBinIndex, L3TemporalBin, NullWritable, NullWritable> implements Configurable {
+public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L3MultiRegionTemporalBin, NullWritable, NullWritable> implements Configurable {
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private Configuration conf;
 
-    private TemporalBin value;
-    private int currentRegion;
-    private L3MultiRegionFormatConfig.Region region;
+    private L3MultiRegionFormatConfig l3MultiRegionFormatConfig;
+
 
     @Override
-    public void run(Context context) throws IOException, InterruptedException {
-        while (readNext(context)) {
-            writeProduct(context, new ReduceTemporalBinSource(context));
-        }
+    protected void reduce(L3MultiRegionBinIndex key, Iterable<L3MultiRegionTemporalBin> values, Context context) throws IOException, InterruptedException {
+        L3MultiRegionFormatConfig.Region region = l3MultiRegionFormatConfig.getRegions()[key.getRegionIndex()];
+
+        writeProduct(context, region, new ReduceTemporalBinSource(values));
     }
 
-    public boolean readNext(Context context) throws IOException, InterruptedException {
-        boolean hasNext = context.nextKey();
-        if (hasNext) {
-            value = context.getCurrentValue();
-            L3RegionBinIndex currentKey = context.getCurrentKey();
-            value.setIndex(currentKey.getBinIndex());
-            if (currentRegion == -1) {
-                currentRegion = currentKey.getRegionIndex();
-                L3MultiRegionFormatConfig l3MultiRegionFormatConfig = L3MultiRegionFormatConfig.get(conf);
-                region = l3MultiRegionFormatConfig.getRegions()[currentRegion];
-            }
-            return true;
-        } else {
-            value = null;
-            return false;
-        }
-    }
 
     private class ReduceTemporalBinSource implements TemporalBinSource {
 
-        private final Context context;
+        private final Iterable<L3MultiRegionTemporalBin> values;
 
-        public ReduceTemporalBinSource(Context context) throws IOException, InterruptedException {
-            this.context = context;
+        public ReduceTemporalBinSource(Iterable<L3MultiRegionTemporalBin> values) throws IOException, InterruptedException {
+            this.values = values;
         }
 
         @Override
@@ -71,32 +56,7 @@ public class L3MultiRegionFormatReducer extends Reducer<L3RegionBinIndex, L3Temp
 
         @Override
         public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
-            return new Iterator<TemporalBin>() {
-
-                @Override
-                public boolean hasNext() {
-                    return value != null;
-                }
-
-                @Override
-                public TemporalBin next() {
-                    TemporalBin currentValue = value;
-                    try {
-                        readNext(context);
-                    } catch (IOException ie) {
-                        throw new RuntimeException("next value iterator failed", ie);
-                    } catch (InterruptedException ie) {
-                        // this is bad, but we can't modify the exception list of java.util
-                        throw new RuntimeException("next value iterator interrupted", ie);
-                    }
-                    return currentValue;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException("remove not implemented");
-                }
-            };
+            return values.iterator();
         }
 
         @Override
@@ -108,7 +68,7 @@ public class L3MultiRegionFormatReducer extends Reducer<L3RegionBinIndex, L3Temp
         }
     }
 
-    private void writeProduct(Context context, TemporalBinSource temporalBinSource) throws IOException {
+    private void writeProduct(Context context, L3MultiRegionFormatConfig.Region region, TemporalBinSource temporalBinSource) throws IOException {
         String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
         String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
         String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
@@ -162,6 +122,7 @@ public class L3MultiRegionFormatReducer extends Reducer<L3RegionBinIndex, L3Temp
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
+        this.l3MultiRegionFormatConfig = L3MultiRegionFormatConfig.get(conf);
     }
 
     @Override

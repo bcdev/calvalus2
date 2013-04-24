@@ -1,6 +1,8 @@
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -20,7 +22,7 @@ import java.io.IOException;
  *  For each region that contains the center lat/lon of the
  *  bin cell the bin emitted.
  */
-public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBin, L3RegionBinIndex, L3TemporalBin> implements Configurable {
+public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBin, L3MultiRegionBinIndex, L3MultiRegionTemporalBin> implements Configurable {
     private Configuration conf;
     private Geometry[] geometries;
     private PlanetaryGrid planetaryGrid;
@@ -32,10 +34,18 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
         double[] centerLatLon = planetaryGrid.getCenterLatLon(binIndexLong);
         Point point = geometryFactory.createPoint(new Coordinate(centerLatLon[1], centerLatLon[0]));
 
+        L3MultiRegionTemporalBin mBin = null;
         for (int regionId = 0; regionId < geometries.length; regionId++) {
             if (geometries[regionId].contains(point)) {
-                L3RegionBinIndex l3RegionBinIndex = new L3RegionBinIndex(regionId, binIndexLong);
-                context.write(l3RegionBinIndex, temporalBin);
+                L3MultiRegionBinIndex mBinIndex = new L3MultiRegionBinIndex(regionId, binIndexLong);
+                if (mBin == null) {
+                    float[] featuresSrc = temporalBin.getFeatureValues();
+                    int numFeatures = featuresSrc.length;
+                    mBin = new L3MultiRegionTemporalBin(temporalBin.getIndex(), numFeatures);
+                    float[] featuresTarget = mBin.getFeatureValues();
+                    System.arraycopy(featuresSrc, 0, featuresTarget, 0, numFeatures);
+                }
+                context.write(mBinIndex, mBin);
             }
         }
     }

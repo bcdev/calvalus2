@@ -8,7 +8,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3BinProcessorWorkflowItem;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
-import com.bc.calvalus.processing.l3.L3MultiRegionFormatWorkflowItem;
+import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;

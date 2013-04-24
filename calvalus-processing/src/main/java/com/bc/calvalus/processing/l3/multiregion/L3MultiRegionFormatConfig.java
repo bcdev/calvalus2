@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;

@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
@@ -46,18 +46,17 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
         job.setMapperClass(L3MultiRegionFormatMapper.class);
-        job.setMapOutputKeyClass(L3RegionBinIndex.class);
-        job.setMapOutputValueClass(L3TemporalBin.class);
+        job.setMapOutputKeyClass(L3MultiRegionBinIndex.class);
+        job.setMapOutputValueClass(L3MultiRegionTemporalBin.class);
 
         job.setPartitionerClass(L3MultiRegionFormatPartitioner.class);
+        job.setSortComparatorClass(L3MultiRegionSortingComparator.class);
+        job.setGroupingComparatorClass(L3MultiRegionGroupingComparator.class);
 
         job.setReducerClass(L3MultiRegionFormatReducer.class);
 
-        // hard code this to the number of regions
-        // when the reducer supports the handling of multiple regions
-        // this constrain cn be removed
         int numRegions = L3MultiRegionFormatConfig.get(jobConfig).getRegions().length;
-        job.setNumReduceTasks(numRegions);
+        job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, numRegions));
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
 

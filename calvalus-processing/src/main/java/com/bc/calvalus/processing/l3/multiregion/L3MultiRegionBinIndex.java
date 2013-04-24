@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.l3;
+package com.bc.calvalus.processing.l3.multiregion;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -11,12 +11,12 @@ import java.io.IOException;
  *  The key (regionID and binIndex) for for formatting
  *  multiple regions of a Binning product at once.
  */
-public class L3RegionBinIndex implements WritableComparable {
+public class L3MultiRegionBinIndex implements WritableComparable {
 
     private int regionIndex;
     private long binIndex;
 
-    public L3RegionBinIndex(int regionIndex, long binIndex) {
+    public L3MultiRegionBinIndex(int regionIndex, long binIndex) {
         this.regionIndex = regionIndex;
         this.binIndex = binIndex;
     }
@@ -42,7 +42,7 @@ public class L3RegionBinIndex implements WritableComparable {
     }
 
     public int compareTo(Object o) {
-        L3RegionBinIndex that = (L3RegionBinIndex) o;
+        L3MultiRegionBinIndex that = (L3MultiRegionBinIndex) o;
         int result = compareInts(this.regionIndex, that.regionIndex);
         if (result == 0) {
             result = compareLongs(this.binIndex, that.binIndex);
@@ -50,34 +50,7 @@ public class L3RegionBinIndex implements WritableComparable {
         return result;
     }
 
-    /**
-     * A Comparator optimized for L3RegionBinIndex.
-     */
-    public static class Comparator extends WritableComparator {
-        public Comparator() {
-            super(L3RegionBinIndex.class);
-        }
-
-        public int compare(byte[] b1, int s1, int l1,
-                           byte[] b2, int s2, int l2) {
-            int thisRegionIndex = readInt(b1, s1);
-            int thatRegionIndex = readInt(b2, s2);
-            int result = compareInts(thisRegionIndex, thatRegionIndex);
-            if (result == 0) {
-                long thisBinIndex = readLong(b1, s1 + 4);
-                long thatBinIndex = readLong(b2, s2 + 4);
-                result = compareLongs(thisBinIndex, thatBinIndex);
-            }
-            return result;
-        }
-    }
-
-    // register this comparator
-    static {
-        WritableComparator.define(L3RegionBinIndex.class, new Comparator());
-    }
-
-    private static int compareInts(int thisInt, int thatInt) {
+    static int compareInts(int thisInt, int thatInt) {
         if (thisInt < thatInt) {
             return -1;
         } else if (thisInt == thatInt) {
@@ -87,7 +60,7 @@ public class L3RegionBinIndex implements WritableComparable {
         }
     }
 
-    private static int compareLongs(long thisInt, long thatInt) {
+    static int compareLongs(long thisInt, long thatInt) {
         if (thisInt < thatInt) {
             return -1;
         } else if (thisInt == thatInt) {
