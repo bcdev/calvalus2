@@ -39,7 +39,7 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
             if (geometries[regionId].contains(point)) {
                 L3MultiRegionBinIndex mBinIndex = new L3MultiRegionBinIndex(regionId, binIndexLong);
                 if (mBin == null) {
-                    mBin = new L3MultiRegionTemporalBin(temporalBin);
+                    mBin = new L3MultiRegionTemporalBin(binIndexLong, temporalBin);
                 }
                 context.write(mBinIndex, mBin);
             }
