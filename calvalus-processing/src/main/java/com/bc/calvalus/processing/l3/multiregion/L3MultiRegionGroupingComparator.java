@@ -6,6 +6,7 @@ import org.apache.hadoop.io.WritableComparator;
  * A Comparator for grouping L3MultiRegionBinIndex by region.
  */
 public class L3MultiRegionGroupingComparator extends WritableComparator {
+
     public L3MultiRegionGroupingComparator() {
         super(L3MultiRegionBinIndex.class);
     }

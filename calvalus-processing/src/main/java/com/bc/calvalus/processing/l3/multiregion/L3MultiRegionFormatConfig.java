@@ -26,6 +26,14 @@ public class L3MultiRegionFormatConfig implements XmlConvertible {
         public String getRegionWKT() {
             return regionWKT;
         }
+
+        @Override
+        public String toString() {
+            return "Region{" +
+                    "name='" + name + '\'' +
+                    ", regionWKT='" + regionWKT + '\'' +
+                    '}';
+        }
     }
 
     @Parameter(itemAlias = "region")

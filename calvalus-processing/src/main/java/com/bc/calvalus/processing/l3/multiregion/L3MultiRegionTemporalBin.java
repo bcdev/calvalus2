@@ -6,6 +6,7 @@ import org.esa.beam.binning.TemporalBin;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 
 /**
@@ -26,6 +27,14 @@ public final class L3MultiRegionTemporalBin extends TemporalBin implements Writa
         super(index, numFeatures);
     }
 
+    public L3MultiRegionTemporalBin(TemporalBin temporalBin) {
+        super(temporalBin.getIndex(), temporalBin.getFeatureValues().length);
+        float[] featureValues = temporalBin.getFeatureValues();
+        System.arraycopy(featureValues, 0, getFeatureValues(), 0, featureValues.length);
+        setNumObs(temporalBin.getNumObs());
+        setNumPasses(temporalBin.getNumPasses());
+    }
+
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         dataOutput.writeLong(getIndex());
@@ -36,5 +45,15 @@ public final class L3MultiRegionTemporalBin extends TemporalBin implements Writa
     public void readFields(DataInput dataInput) throws IOException {
         setIndex(dataInput.readLong());
         super.readFields(dataInput);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s{index=%d, numObs=%d, numPasses=%d, featureValues=%s}",
+                                     getClass().getSimpleName(),
+                                     getIndex(),
+                                     getNumObs(),
+                                     getNumPasses(),
+                                     Arrays.toString(getFeatureValues()));
     }
 }

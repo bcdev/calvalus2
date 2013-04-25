@@ -21,25 +21,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *  The reducer for for formatting
- *  multiple regions of a Binning product at once.
+ * The reducer for for formatting
+ * multiple regions of a Binning product at once.
  */
 public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L3MultiRegionTemporalBin, NullWritable, NullWritable> implements Configurable {
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private Configuration conf;
-
     private L3MultiRegionFormatConfig l3MultiRegionFormatConfig;
-
 
     @Override
     protected void reduce(L3MultiRegionBinIndex key, Iterable<L3MultiRegionTemporalBin> values, Context context) throws IOException, InterruptedException {
         L3MultiRegionFormatConfig.Region region = l3MultiRegionFormatConfig.getRegions()[key.getRegionIndex()];
-
         writeProduct(context, region, new ReduceTemporalBinSource(values));
     }
-
 
     private class ReduceTemporalBinSource implements TemporalBinSource {
 
@@ -56,7 +52,7 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
 
         @Override
         public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
-            return values.iterator();
+            return new CloningIterator(values.iterator());
         }
 
         @Override
@@ -65,6 +61,29 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
 
         @Override
         public void close() throws IOException {
+        }
+    }
+
+    private static class CloningIterator implements Iterator<TemporalBin> {
+
+        Iterator<L3MultiRegionTemporalBin> delegate;
+
+        private CloningIterator(Iterator<L3MultiRegionTemporalBin> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return delegate.hasNext();
+        }
+
+        @Override
+        public TemporalBin next() {
+            return new L3MultiRegionTemporalBin(delegate.next());
+        }
+
+        @Override
+        public void remove() {
         }
     }
 
@@ -89,22 +108,22 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
             FormatterConfig.BandConfiguration[] rgbBandConfig = new FormatterConfig.BandConfiguration[0];
 
             L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
-                    productFile.getAbsolutePath(),
-                    outputFormat,
-                    rgbBandConfig);
+                                                                      productFile.getAbsolutePath(),
+                                                                      outputFormat,
+                                                                      rgbBandConfig);
 
             L3Config l3Config = L3Config.get(conf);
             L3Formatter formatter = new L3Formatter(l3Config.createBinningContext(),
-                    L3FormatterConfig.parseTime(dateStart),
-                    L3FormatterConfig.parseTime(dateStop),
-                    conf);
+                                                    L3FormatterConfig.parseTime(dateStart),
+                                                    L3FormatterConfig.parseTime(dateStop),
+                                                    conf);
 
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
             formatter.format(temporalBinSource,
-                    formatterConfig,
-                    region.getName(),
-                    region.getRegionWKT());
+                             formatterConfig,
+                             region.getName(),
+                             region.getRegionWKT());
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");

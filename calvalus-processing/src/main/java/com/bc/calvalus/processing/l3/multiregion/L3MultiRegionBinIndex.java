@@ -16,6 +16,9 @@ public class L3MultiRegionBinIndex implements WritableComparable {
     private int regionIndex;
     private long binIndex;
 
+    public L3MultiRegionBinIndex() {
+    }
+
     public L3MultiRegionBinIndex(int regionIndex, long binIndex) {
         this.regionIndex = regionIndex;
         this.binIndex = binIndex;
@@ -68,5 +71,13 @@ public class L3MultiRegionBinIndex implements WritableComparable {
         } else {
             return 1;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "L3MultiRegionBinIndex{" +
+                "regionIndex=" + regionIndex +
+                ", binIndex=" + binIndex +
+                '}';
     }
 }
