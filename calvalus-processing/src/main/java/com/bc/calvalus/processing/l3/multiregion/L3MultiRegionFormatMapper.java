@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -49,15 +50,33 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
+        L3Config l3Config = L3Config.get(conf);
+        planetaryGrid = l3Config.createPlanetaryGrid();
+        geometryFactory = new GeometryFactory();
+
         L3MultiRegionFormatConfig l3MultiRegionFormatConfig = L3MultiRegionFormatConfig.get(conf);
         L3MultiRegionFormatConfig.Region[] regions = l3MultiRegionFormatConfig.getRegions();
         geometries = new Geometry[regions.length];
         for (int i = 0; i < regions.length; i++) {
-            geometries[i] = JobUtils.createGeometry(regions[i].getRegionWKT());
+            // create buffer around given geometry to include also bins that
+            // only partially fall into the given geometry
+            // work on envelope as the product is rectangular anyways
+            Geometry givenGeometry = JobUtils.createGeometry(regions[i].getRegionWKT());
+            Envelope envelope = givenGeometry.getEnvelopeInternal();
+            double longitudeExtend1 = getLongitudeExtend(envelope.getMinY());
+            double longitudeExtend2 = getLongitudeExtend(envelope.getMaxY());
+            double longitudeExtend = Math.max(longitudeExtend1, longitudeExtend2);
+            envelope.expandBy(longitudeExtend, 0.0);
+            Geometry extendedGeometry = geometryFactory.toGeometry(envelope);
+            geometries[i] = extendedGeometry;
         }
-        L3Config l3Config = L3Config.get(conf);
-        planetaryGrid = l3Config.createPlanetaryGrid();
-        geometryFactory = new GeometryFactory();
+    }
+
+    private double getLongitudeExtend(double latitude) {
+        long binIndex = planetaryGrid.getBinIndex(latitude, 0);
+        int rowIndex = planetaryGrid.getRowIndex(binIndex);
+        int numberOfBinsInRow = planetaryGrid.getNumCols(rowIndex);
+        return 360.0 / numberOfBinsInRow;
     }
 
     @Override
