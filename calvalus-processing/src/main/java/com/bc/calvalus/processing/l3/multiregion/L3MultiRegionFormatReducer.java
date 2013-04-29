@@ -79,7 +79,13 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
 
         @Override
         public TemporalBin next() {
-            return new L3MultiRegionTemporalBin(delegate.next());
+            L3MultiRegionTemporalBin bin = delegate.next();
+            float[] featureValues = bin.getFeatureValues();
+            L3MultiRegionTemporalBin clonedBin = new L3MultiRegionTemporalBin(bin.getIndex(), featureValues.length);
+            clonedBin.setNumObs(bin.getNumObs());
+            clonedBin.setNumPasses(bin.getNumPasses());
+            System.arraycopy(featureValues, 0, clonedBin.getFeatureValues(), 0, featureValues.length);
+            return clonedBin;
         }
 
         @Override

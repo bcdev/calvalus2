@@ -28,6 +28,7 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
     private Geometry[] geometries;
     private PlanetaryGrid planetaryGrid;
     private GeometryFactory geometryFactory;
+    private L3MultiRegionTemporalBin mBin;
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
@@ -35,12 +36,21 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
         double[] centerLatLon = planetaryGrid.getCenterLatLon(binIndexLong);
         Point point = geometryFactory.createPoint(new Coordinate(centerLatLon[1], centerLatLon[0]));
 
-        L3MultiRegionTemporalBin mBin = null;
+        boolean binContentCopied = false;
         for (int regionId = 0; regionId < geometries.length; regionId++) {
             if (geometries[regionId].contains(point)) {
                 L3MultiRegionBinIndex mBinIndex = new L3MultiRegionBinIndex(regionId, binIndexLong);
-                if (mBin == null) {
-                    mBin = new L3MultiRegionTemporalBin(binIndexLong, temporalBin);
+                if (!binContentCopied) {
+                    float[] srcValues = temporalBin.getFeatureValues();
+                    if (mBin == null) {
+                        mBin = new L3MultiRegionTemporalBin(binIndexLong, srcValues.length);
+                    } else {
+                        mBin.setIndex(binIndexLong);
+                    }
+                    mBin.setNumObs(temporalBin.getNumObs());
+                    mBin.setNumPasses(temporalBin.getNumPasses());
+                    System.arraycopy(srcValues, 0, mBin.getFeatureValues(), 0, srcValues.length);
+                    binContentCopied = true;
                 }
                 context.write(mBinIndex, mBin);
             }
@@ -50,6 +60,7 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
+
         L3Config l3Config = L3Config.get(conf);
         planetaryGrid = l3Config.createPlanetaryGrid();
         geometryFactory = new GeometryFactory();

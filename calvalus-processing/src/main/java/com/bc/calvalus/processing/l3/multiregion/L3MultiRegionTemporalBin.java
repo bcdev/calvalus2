@@ -27,18 +27,6 @@ public final class L3MultiRegionTemporalBin extends TemporalBin implements Writa
         super(index, numFeatures);
     }
 
-    public L3MultiRegionTemporalBin(TemporalBin temporalBin) {
-        this(temporalBin.getIndex(), temporalBin);
-    }
-
-    public L3MultiRegionTemporalBin(long index, TemporalBin temporalBin) {
-        super(index, temporalBin.getFeatureValues().length);
-        float[] featureValues = temporalBin.getFeatureValues();
-        System.arraycopy(featureValues, 0, getFeatureValues(), 0, featureValues.length);
-        setNumObs(temporalBin.getNumObs());
-        setNumPasses(temporalBin.getNumPasses());
-    }
-
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         dataOutput.writeLong(getIndex());
