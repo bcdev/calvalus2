@@ -202,17 +202,20 @@ public abstract class AbstractInventoryService implements InventoryService {
             matcher = pattern.matcher("");
         }
         for (FileStatus fStat : fileStatuses) {
-            if (fStat.isDir()) {
-                collectFileStatuses(fStat.getPath(), pattern, result);
-            } else {
-                String fPath = fStat.getPath().toString();
-                if (matcher != null) {
-                    matcher.reset(fPath);
-                    if (matcher.matches()) {
+            String filename = fStat.getPath().getName();
+            if (!filename.startsWith("_") && !filename.startsWith(".")) {
+                if (fStat.isDir()) {
+                    collectFileStatuses(fStat.getPath(), pattern, result);
+                } else {
+                    String fPath = fStat.getPath().toString();
+                    if (matcher != null) {
+                        matcher.reset(fPath);
+                        if (matcher.matches()) {
+                            result.add(fStat);
+                        }
+                    } else {
                         result.add(fStat);
                     }
-                } else {
-                    result.add(fStat);
                 }
             }
         }
