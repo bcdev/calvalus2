@@ -2,7 +2,7 @@ package com.bc.calvalus.processing.l3;
 
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.PostProcessorConfig;
+import org.esa.beam.binning.CellProcessorConfig;
 import org.esa.beam.binning.VariableContext;
 
 /**
@@ -12,7 +12,7 @@ import org.esa.beam.binning.VariableContext;
  */
 public class L3BinManagerImpl extends BinManager {
 
-    public L3BinManagerImpl(VariableContext variableContext, PostProcessorConfig postProcessorConfig, Aggregator... aggregators) {
+    public L3BinManagerImpl(VariableContext variableContext, CellProcessorConfig postProcessorConfig, Aggregator... aggregators) {
         super(variableContext, postProcessorConfig, aggregators);
     }
 
@@ -29,4 +29,14 @@ public class L3BinManagerImpl extends BinManager {
          initTemporalBin(temporalBin);
          return temporalBin;
      }
+
+    @Override
+    public L3TemporalBin createOutputBin(long binIndex) {
+        return new L3TemporalBin(binIndex, getOutputFeatureCount());
+    }
+
+    @Override
+    public L3TemporalBin createProcessBin(long binIndex) {
+        return new L3TemporalBin(binIndex, getPostProcessFeatureCount());
+    }
 }

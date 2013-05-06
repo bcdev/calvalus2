@@ -22,14 +22,13 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.AggregatorDescriptor;
-import org.esa.beam.binning.AggregatorDescriptorRegistry;
+import org.esa.beam.binning.TypedDescriptorsRegistry;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -237,9 +236,9 @@ public class L3ProductionType extends HadoopProductionType {
             Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
             Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
 
-            AggregatorDescriptorRegistry registry = AggregatorDescriptorRegistry.getInstance();
-            AggregatorDescriptor aggregatorDescriptor = registry.getAggregatorDescriptor(aggregatorName);
-            AggregatorConfig aggregatorConfig = aggregatorDescriptor.createAggregatorConfig();
+            TypedDescriptorsRegistry registry = TypedDescriptorsRegistry.getInstance();
+            AggregatorDescriptor aggregatorDescriptor = registry.getDescriptor(AggregatorDescriptor.class, aggregatorName);
+            AggregatorConfig aggregatorConfig = aggregatorDescriptor.createConfig();
             PropertySet propertySet = aggregatorConfig.asPropertySet();
             if (propertySet.isPropertyDefined("varName")) {
                 propertySet.setValue("varName", variableName);

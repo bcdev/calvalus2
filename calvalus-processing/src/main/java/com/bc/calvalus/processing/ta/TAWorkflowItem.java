@@ -67,6 +67,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L3_COMPUTE_OUTPUTS, "false"},
                 {JobConfigNames.CALVALUS_TA_PARAMETERS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}

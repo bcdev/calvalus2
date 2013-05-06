@@ -101,7 +101,7 @@ public class TAReducerTest {
         l3Config.setNumRows(2160);
         l3Config.setSuperSampling(1); // unused
         l3Config.setMaskExpr(""); // unused
-        AggregatorConfig aggConf = new AggregatorAverageML.Descriptor().createAggregatorConfig();
+        AggregatorConfig aggConf = new AggregatorAverageML.Descriptor().createConfig();
         PropertySet aggProperties = aggConf.asPropertySet();
         aggProperties.setValue("varName", "chl_conc");
         aggProperties.setValue("weightCoeff", 0.5);

@@ -10,9 +10,7 @@ import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.Observation;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.VariableContext;
-import org.esa.beam.binning.WritableVector;
 import org.esa.beam.binning.support.ObservationImpl;
-import org.esa.beam.binning.support.VectorImpl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,9 +23,7 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
 
     private Configuration conf;
 
-    private BinManager firstBinManager;
     private float[] resultFeatures;
-    private WritableVector resultVector;
 
     private BinManager secondBinManager;
     private float[] observationFeatures;
@@ -37,9 +33,6 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
-        // finish 1st L3 processing (computeOutput and post-processing)
-        firstBinManager.computeResult(temporalBin, resultVector);
-
         // map features from result to observation vector
         for (int i = 0; i < resultIndexes.length; i++) {
             observationFeatures[i] = resultFeatures[resultIndexes[i]];
@@ -55,7 +48,7 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        firstBinManager = getFirstL3Config(conf).createBinningContext().getBinManager();
+        BinManager firstBinManager = getFirstL3Config(conf).createBinningContext().getBinManager();
         secondBinManager = L3Config.get(conf).createBinningContext().getBinManager();
         ArrayList<String> resultNameList = new ArrayList<String>();
         Collections.addAll(resultNameList, firstBinManager.getResultFeatureNames());
@@ -63,7 +56,6 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         int variableCount = variableContext.getVariableCount();
 
         resultFeatures = new float[resultNameList.size()];
-        resultVector = new VectorImpl(resultFeatures);
 
         observationFeatures = new float[variableCount];
         observation = new ObservationImpl(0.0, 0.0, 0.0, observationFeatures);

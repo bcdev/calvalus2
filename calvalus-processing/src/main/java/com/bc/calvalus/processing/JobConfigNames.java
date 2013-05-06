@@ -58,6 +58,7 @@ public interface JobConfigNames {
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
     String CALVALUS_L3_PARAMETERS_FIRST = "calvalus.l3.parameters.first";
     String CALVALUS_L3_REDUCERS = "calvalus.l3.reducers";
+    String CALVALUS_L3_COMPUTE_OUTPUTS = "calvalus.l3.computeOutputs";
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";

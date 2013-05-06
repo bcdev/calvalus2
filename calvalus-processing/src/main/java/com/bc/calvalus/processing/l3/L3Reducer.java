@@ -16,12 +16,15 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
+import org.esa.beam.binning.cellprocessor.CellProcessorChain;
 
 import java.io.IOException;
 
@@ -35,17 +38,30 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
 
     private Configuration conf;
     private TemporalBinner temporalBinner;
+    private CellProcessorChain cellChain;
+    private boolean computeOutput;
 
     @Override
     protected void reduce(LongWritable binIndex, Iterable<L3SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
-        TemporalBin temporalBin = temporalBinner.processSpatialBins(binIndex.get(), spatialBins);
+        final long idx = binIndex.get();
+        TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
+
+        if (computeOutput) {
+            temporalBin = temporalBinner.computeOutput(idx, temporalBin);
+            temporalBin = cellChain.process(temporalBin);
+        }
+
         context.write(binIndex, (L3TemporalBin) temporalBin);
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        temporalBinner = new TemporalBinner(L3Config.get(conf).createBinningContext());
+        computeOutput = conf.getBoolean(JobConfigNames.CALVALUS_L3_COMPUTE_OUTPUTS, true);
+        BinningContext binningContext = L3Config.get(conf).createBinningContext();
+        temporalBinner = new TemporalBinner(binningContext);
+        cellChain = new CellProcessorChain(binningContext);
+
     }
 
     @Override
