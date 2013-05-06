@@ -56,6 +56,7 @@ public interface JobConfigNames {
     String CALVALUS_PROJECT_NAME = "calvalus.project.name";
 
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
+    String CALVALUS_L3_FORMAT_PARAMETERS = "calvalus.l3.format.parameters";
     String CALVALUS_L3_PARAMETERS_FIRST = "calvalus.l3.parameters.first";
     String CALVALUS_L3_REDUCERS = "calvalus.l3.reducers";
     String CALVALUS_L3_COMPUTE_OUTPUTS = "calvalus.l3.computeOutputs";
