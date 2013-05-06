@@ -23,8 +23,6 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
 
     private Configuration conf;
 
-    private float[] resultFeatures;
-
     private BinManager secondBinManager;
     private float[] observationFeatures;
     private Observation observation;
@@ -33,9 +31,11 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
+        final float[] temporalFeatures = temporalBin.getFeatureValues();
+
         // map features from result to observation vector
         for (int i = 0; i < resultIndexes.length; i++) {
-            observationFeatures[i] = resultFeatures[resultIndexes[i]];
+            observationFeatures[i] = temporalFeatures[resultIndexes[i]];
         }
 
         // start 2nd L3 processing computeSpatial
@@ -54,8 +54,6 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         Collections.addAll(resultNameList, firstBinManager.getResultFeatureNames());
         VariableContext variableContext = secondBinManager.getVariableContext();
         int variableCount = variableContext.getVariableCount();
-
-        resultFeatures = new float[resultNameList.size()];
 
         observationFeatures = new float[variableCount];
         observation = new ObservationImpl(0.0, 0.0, 0.0, observationFeatures);
