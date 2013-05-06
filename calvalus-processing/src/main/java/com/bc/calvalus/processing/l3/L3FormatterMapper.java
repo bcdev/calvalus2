@@ -18,15 +18,12 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.binning.TemporalBinSource;
-import org.esa.beam.binning.operator.FormatterConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,11 +36,10 @@ import java.util.logging.Logger;
 public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private Configuration jobConfig;
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
-        jobConfig = context.getConfiguration();
+        Configuration jobConfig = context.getConfiguration();
         final FileSplit split = (FileSplit) context.getInputSplit();
         final TemporalBinSource temporalBinSource = new L3TemporalBinSource(split.getPath(), context);
 
@@ -57,30 +53,16 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
         String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
-        String outputFormat = productFormatter.getOutputFormat();
         try {
             File productFile = productFormatter.createTemporaryProductFile();
 
-            // todo - make 'outputType' a production request parameter (mz)
-            String outputType = "Product";
-            // todo - make 'bandConfiguration' a production request parameter (mz)
-            FormatterConfig.BandConfiguration[] rgbBandConfig = new FormatterConfig.BandConfiguration[0];
-
-            L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
-                    productFile.getAbsolutePath(),
-                    outputFormat,
-                    rgbBandConfig);
-
-            L3Config l3Config = L3Config.get(jobConfig);
-            L3Formatter formatter = new L3Formatter(l3Config.createBinningContext(),
-                    L3FormatterConfig.parseTime(dateStart),
-                    L3FormatterConfig.parseTime(dateStop),
-                    jobConfig);
-
+            L3Formatter formatter = new L3Formatter(dateStart, dateStop,
+                                                    productFile.getAbsolutePath(),
+                                                    productFormatter.getOutputFormat(),
+                                                    jobConfig);
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
             formatter.format(temporalBinSource,
-                    formatterConfig,
                     jobConfig.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME),
                     jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 

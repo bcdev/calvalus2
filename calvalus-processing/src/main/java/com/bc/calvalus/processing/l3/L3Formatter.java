@@ -18,17 +18,19 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.Formatter;
+import org.esa.beam.binning.operator.FormatterConfig;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.StringUtils;
+
+import java.text.ParseException;
 
 /**
  * For formatting the results of a BEAM Level 3 Hadoop Job.
@@ -39,19 +41,32 @@ public class L3Formatter {
     private final ProductData.UTC startTime;
     private final ProductData.UTC endTime;
     private final Configuration configuration;
+    private FormatterConfig formatterConfig;
 
-    public L3Formatter(BinningContext binningContext, ProductData.UTC startTime,
-                       ProductData.UTC endTime, Configuration configuration) {
-        this.binningContext = binningContext;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.configuration = configuration;
+    public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
+        L3Config l3Config = L3Config.get(conf);
+        this.binningContext = l3Config.createBinningContext();
+        this.startTime = parseTime(dateStart);
+        this.endTime = parseTime(dateStop);
+        this.configuration = conf;
+
+        String formatterXML = conf.get(JobConfigNames.CALVALUS_L3_FORMAT_PARAMETERS);
+        if (formatterXML != null) {
+            formatterConfig = FormatterConfig.fromXml(formatterXML);
+        } else {
+            formatterConfig = new FormatterConfig();
+        }
+        formatterConfig.setOutputType("Product");
+        formatterConfig.setOutputFile(outputFile);
+        formatterConfig.setOutputFormat(outputFormat);
+
     }
 
-    public void format(TemporalBinSource temporalBinSource, L3FormatterConfig formatterConfig, String regionName, String regionWKT) throws Exception {
+    public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
         Formatter.format(binningContext,
-                temporalBinSource, formatterConfig.getFormatterConfig(),
+                temporalBinSource,
+                formatterConfig,
                 regionGeometry,
                 startTime,
                 endTime,
@@ -105,4 +120,13 @@ public class L3Formatter {
             parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
         }
     }
+
+    public static ProductData.UTC parseTime(String timeString) {
+        try {
+            return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Illegal date format.", e);
+        }
+    }
+
 }

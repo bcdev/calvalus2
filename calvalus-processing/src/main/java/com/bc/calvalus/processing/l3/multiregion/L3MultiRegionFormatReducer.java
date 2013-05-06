@@ -3,16 +3,13 @@ package com.bc.calvalus.processing.l3.multiregion;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3Formatter;
-import com.bc.calvalus.processing.l3.L3FormatterConfig;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinSource;
-import org.esa.beam.binning.operator.FormatterConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,30 +101,16 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
-        String outputFormat = productFormatter.getOutputFormat();
         try {
             File productFile = productFormatter.createTemporaryProductFile();
 
-            // todo - make 'outputType' a production request parameter (mz)
-            String outputType = "Product";
-            // todo - make 'bandConfiguration' a production request parameter (mz)
-            FormatterConfig.BandConfiguration[] rgbBandConfig = new FormatterConfig.BandConfiguration[0];
-
-            L3FormatterConfig formatterConfig = new L3FormatterConfig(outputType,
-                                                                      productFile.getAbsolutePath(),
-                                                                      outputFormat,
-                                                                      rgbBandConfig);
-
-            L3Config l3Config = L3Config.get(conf);
-            L3Formatter formatter = new L3Formatter(l3Config.createBinningContext(),
-                                                    L3FormatterConfig.parseTime(dateStart),
-                                                    L3FormatterConfig.parseTime(dateStop),
+            L3Formatter formatter = new L3Formatter(dateStart, dateStop,
+                                                    productFile.getAbsolutePath(),
+                                                    productFormatter.getOutputFormat(),
                                                     conf);
-
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
             formatter.format(temporalBinSource,
-                             formatterConfig,
                              region.getName(),
                              region.getRegionWKT());
 
