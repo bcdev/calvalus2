@@ -106,7 +106,8 @@ public class ProcessorFactory {
         final FileStatus[] executableFiles = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().startsWith(executable + "-process");
+                return path.getName().equals(executable + "-process") ||
+                        path.getName().equals(executable + "-process.vm") ;
             }
         });
         if (executableFiles.length == 1) {
