@@ -181,7 +181,14 @@ public class IngestionTool extends Configured implements Tool {
 
     static void collectInputFiles(File file, Pattern filter, List<File> accu) throws IOException {
         if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
+            if ("lost+found".equals(file.getName())) {
+                return;
+            }
+            final File[] files = file.listFiles();
+            if (files == null) {
+                throw new FileNotFoundException("cannot access directory " + file.getPath() + ".");
+            }
+            for (File f : files) {
                 collectInputFiles(f, filter, accu);
             }
         } else if (file.isFile()) {
