@@ -154,7 +154,7 @@ public class L3ProductionTypeTest {
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
                                      "processorBundleName", "beam",
-                                     "processorBundleVersion", "4.9-SNAPSHOT",
+                                     "processorBundleVersion", "4.11.1-SNAPSHOT",
                                      "processorName", "BandMaths",
                                      "processorParameters", "<!-- no params -->",
                                      // Special Level 3 parameters

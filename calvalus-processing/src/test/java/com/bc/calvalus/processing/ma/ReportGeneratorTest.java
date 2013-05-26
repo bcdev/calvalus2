@@ -50,8 +50,8 @@ public class ReportGeneratorTest {
                 "    <macroPixelSize>5</macroPixelSize>\n" +
                 "    <maxTimeDifference>5.0</maxTimeDifference>\n" +
                 "</parameters>");
-        configuration.set(JobConfigNames.CALVALUS_BEAM_BUNDLE, "beam-4.10-SNAPSHOT" );
-        configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-0.4-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_BEAM_BUNDLE, "beam-4.11.1-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-1.8-cdh4" );
         configuration.set(JobConfigNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.2-SNAPSHOT" );
         configuration.set(JobConfigNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W" );
                 configuration.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "" +
