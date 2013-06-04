@@ -1,0 +1,38 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <g:VerticalPanel spacing="10">
+
+        <g:HTMLPanel width="100%">
+            <h3>Existing Bundles</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:ListBox ui:field="bundleList" width="40em" visibleItemCount="20"/>
+        <g:Button ui:field='removeButton' text="Remove"/>
+
+        <g:HTMLPanel width="100%">
+            <h3>Upload new Bundle</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:FormPanel ui:field="uploadForm" method="POST">
+            <g:VerticalPanel spacing="2">
+                <g:HorizontalPanel spacing="2">
+                    <g:Label>Bundle Name:</g:Label>
+                    <g:TextBox ui:field="bundleName" width="36em"/>
+                </g:HorizontalPanel>
+
+                <g:HorizontalPanel spacing="2">
+                    <g:Label>Bundle Version:</g:Label>
+                    <g:TextBox ui:field="bundleVersion" width="36em"/>
+                </g:HorizontalPanel>
+
+                <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+                <g:Button ui:field='submitButton' text="Upload"/>
+            </g:VerticalPanel>
+        </g:FormPanel>
+
+    </g:VerticalPanel>
+</ui:UiBinder>
