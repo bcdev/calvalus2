@@ -2,6 +2,8 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
+
     <g:VerticalPanel spacing="10">
 
         <g:HTMLPanel width="100%">
@@ -9,7 +11,16 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:ListBox ui:field="bundleList" width="40em" visibleItemCount="20"/>
+        <g:HorizontalPanel spacing="10">
+            <g:ListBox ui:field="bundleList" width="28em" visibleItemCount="20"/>
+            <g:VerticalPanel spacing="5">
+                <g:HTMLPanel width="100%">
+                    <h4>Processor in this Bundles</h4>
+                    <hr/>
+                </g:HTMLPanel>
+                <g:FlexTable ui:field="processors"></g:FlexTable>
+            </g:VerticalPanel>
+        </g:HorizontalPanel>
         <g:Button ui:field='removeButton' text="Remove"/>
 
         <g:HTMLPanel width="100%">

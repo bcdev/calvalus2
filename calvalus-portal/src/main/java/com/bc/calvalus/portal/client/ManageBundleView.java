@@ -33,8 +33,7 @@ public class ManageBundleView extends PortalView {
         manageBundleForm = new ManageBundleForm(portalContext);
 
         BundleUploadAction action = new BundleUploadAction();
-        FileUploadManager.configureForm(manageBundleForm.getUploadForm(),
-                                        "dir=" + "FOOOOO", action, action);
+        FileUploadManager.configureForm(manageBundleForm.getUploadForm(), "dir=" + "FOOOOO", action, action);
     }
 
     @Override
@@ -55,12 +54,12 @@ public class ManageBundleView extends PortalView {
     private class BundleUploadAction implements FormPanel.SubmitCompleteHandler, FormPanel.SubmitHandler {
         @Override
         public void onSubmit(FormPanel.SubmitEvent event) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            //TODO
         }
 
         @Override
         public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            //TODO
         }
     }
 }
