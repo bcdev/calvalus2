@@ -12,16 +12,24 @@
         </g:HTMLPanel>
 
         <g:HorizontalPanel spacing="10">
-            <g:ListBox ui:field="bundleList" width="28em" visibleItemCount="20"/>
-            <g:VerticalPanel spacing="5">
+            <g:VerticalPanel>
+                <g:CheckBox ui:field="showAllUserBundles" text="Show bundles of all users" checked="false"/>
+                <g:ListBox ui:field="bundleList" width="28em" visibleItemCount="20"/>
+                <g:HorizontalPanel>
+                    <g:Button ui:field='removeButton' text="Remove"/>
+                    <g:Button ui:field='updateButton' text="Update"/>
+                </g:HorizontalPanel>
+            </g:VerticalPanel>
+            <g:VerticalPanel spacing="5" height="26em">
                 <g:HTMLPanel width="100%">
                     <h4>Processor in this Bundles</h4>
                     <hr/>
                 </g:HTMLPanel>
-                <g:FlexTable ui:field="processors"></g:FlexTable>
+                <g:ScrollPanel height="22em" width="100%">
+                    <g:FlexTable ui:field="processors"/>
+                </g:ScrollPanel>
             </g:VerticalPanel>
         </g:HorizontalPanel>
-        <g:Button ui:field='removeButton' text="Remove"/>
 
         <g:HTMLPanel width="100%">
             <h3>Upload new Bundle</h3>

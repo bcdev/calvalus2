@@ -25,6 +25,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -69,6 +70,10 @@ public class ManageBundleForm extends Composite {
     Button removeButton;
     @UiField
     FlexTable processors;
+    @UiField
+    CheckBox showAllUserBundles;
+    @UiField
+    Button updateButton;
 
     private final DtoProcessorDescriptor[] processorsDesc;
 
@@ -90,6 +95,12 @@ public class ManageBundleForm extends Composite {
                 Dialog.info("Warning", "You are not allowed to upload new bundles.");
             }
         });
+        updateButton.addClickHandler(new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent event) {
+                        Dialog.info("Warning", "You are not allowed to update bundles.");
+                    }
+                });
         bundleList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
@@ -115,17 +126,20 @@ public class ManageBundleForm extends Composite {
         String bundleName = bundleList.getItemText(bundleList.getSelectedIndex());
         processors.removeAllRows();
         int row = 0;
+        FlexTable.FlexCellFormatter flexCellFormatter = processors.getFlexCellFormatter();
         for (DtoProcessorDescriptor descriptor : processorsDesc) {
             String name = descriptor.getBundleName() + "-" + descriptor.getBundleVersion();
             if (name.equals(bundleName)) {
+                flexCellFormatter.setStyleName(row, 0, style.explanatoryValue());
                 processors.setWidget(row, 0, new Label(descriptor.getProcessorName()));
-                processors.getFlexCellFormatter().setStyleName(row, 0, style.explanatoryValue());
                 processors.setWidget(row, 1, new Label(descriptor.getProcessorVersion()));
-                processors.getFlexCellFormatter().setStyleName(row, 1, style.explanatoryValue());
+                flexCellFormatter.setStyleName(row, 1, style.explanatoryValue());
                 row++;
                 processors.setWidget(row, 0, new HTML(descriptor.getDescriptionHtml()));
+                flexCellFormatter.setColSpan(row, 0, 2);
                 row++;
                 processors.setWidget(row, 0, new HTML("&nbsp;"));
+                flexCellFormatter.setColSpan(row, 0, 2);
                 row++;
             }
         }
