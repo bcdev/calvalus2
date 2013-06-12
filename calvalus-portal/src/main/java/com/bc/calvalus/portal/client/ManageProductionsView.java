@@ -76,7 +76,7 @@ public class ManageProductionsView extends PortalView {
 
     private static final int UPDATE_PERIOD_MILLIS = 2000;
 
-    private static final String BEAM_NAME = "BEAM 4.10";
+    private static final String BEAM_NAME = "BEAM 4.11";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
                                             "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
