@@ -52,8 +52,8 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, "0"},
                 {JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, "0"},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L2_BUNDLE, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L2_OPERATOR, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
+                {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
                 {JobConfigNames.CALVALUS_REGION_GEOMETRY, null},
                 {JobConfigNames.CALVALUS_PROCESS_ALL, "false"}
