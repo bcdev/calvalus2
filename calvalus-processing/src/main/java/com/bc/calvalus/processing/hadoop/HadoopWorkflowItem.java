@@ -18,11 +18,15 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
@@ -92,9 +96,52 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     public void updateStatus() {
         if (jobId != null) {
             if (!getStatus().isDone()) {
-                setStatus(processingService.getJobStatus(jobId));
+                ProcessStatus newJobStatus = processingService.getJobStatus(jobId);
+                if (newJobStatus.getState().equals(ProcessState.ERROR)) {
+                    String failedTaskMessage = getDiagnosticFromFirstFailedTask();
+                    if (failedTaskMessage != null) {
+                        newJobStatus = new ProcessStatus(ProcessState.ERROR, newJobStatus.getProgress(), failedTaskMessage);
+                    }
+                }
+                setStatus(newJobStatus);
             }
         }
+    }
+
+    private String getDiagnosticFromFirstFailedTask() {
+        JobClient jobClient = processingService.getJobClient();
+        org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
+        try {
+            RunningJob runningJob = jobClient.getJob(downgradeJobId);
+            if (runningJob == null) {
+                return null;
+            }
+            int eventCounter = 0;
+            while (true) {
+                TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
+                if (taskCompletionEvents.length == 0) {
+                    break;
+                }
+                eventCounter += taskCompletionEvents.length;
+                for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
+                    if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
+                        String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
+                        if (taskDiagnostics.length > 0) {
+                            // this is a stack trace and we only want the case
+                            // so take the first line
+                            // remove the "*Exception: " prefixes (can be multiple)
+                            String firstMessage = taskDiagnostics[0];
+                            String firstLine = firstMessage.split("\\n")[0];
+                            String[] firstLineSplit = firstLine.split("Exception: ");
+                            return firstLineSplit[firstLineSplit.length -1];
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
     }
 
     @Override
