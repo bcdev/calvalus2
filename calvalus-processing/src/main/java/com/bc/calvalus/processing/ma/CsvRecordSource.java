@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -20,7 +21,7 @@ import java.util.Iterator;
  * <li>Comment lines are ones whose first character is the hash character ('#').
  * Comment lines and empty lines are ignored.</li>
  * <li>The first record must contain the header names. All non-header records must use the same data type in a column.</li>
- * <li>Calvalus expects a geographical point coordinate top be present, the recognised header names are "lat",
+ * <li>Calvalus expects a geographical point coordinate to be present, the recognised header names are "lat",
  * "latitude", "northing" and "lon", "long", "longitude", "easting" (all case-insensitive).
  * Coordinates must be given as decimal degrees.</li>
  * <li>In order to indicate an optional time(-stamp) value, the header names "time" or "date" (all case-insensitive)
@@ -205,24 +206,58 @@ public class CsvRecordSource implements RecordSource {
             }
 
             if (getHeader().getAttributeNames().length != textValues.length) {
-                System.out.println("to less values " + Arrays.toString(textValues));
+                System.out.println("different number of columns " + textValues.length
+                                           + " instead of " + getHeader().getAttributeNames().length
+                                           + " in line " + reader.getLineNumber() +
+                                           " of point data file");
             }
 
             final Object[] values = toObjects(textValues, attributeTypes, dateFormat);
 
             final GeoPos location;
-            if (header.hasLocation() && values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
+            if (! header.hasLocation()) {
+                StringBuffer latNames = new StringBuffer();
+                for (String name : LAT_NAMES) {
+                    if (latNames.length() > 0) {
+                        latNames.append(", ");
+                    }
+                    latNames.append(name);
+                }
+                StringBuffer lonNames = new StringBuffer();
+                for (String name : LON_NAMES) {
+                    if (lonNames.length() > 0) {
+                        lonNames.append(", ");
+                    }
+                    lonNames.append(name);
+                }
+                throw new IllegalArgumentException("missing lat and lon columns in header (one of " + latNames + " and one of " + lonNames + " expected)");
+            } else if (values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
                 location = new GeoPos(((Number) values[latIndex]).floatValue(),
                                       ((Number) values[lonIndex]).floatValue());
+                if (location.getLat() < -90.0f || location.getLat() > 90.0f || location.getLon() < -180.0f || location.getLon() > 360.0f) {
+                    throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
+                                           + "' and '" + textValues[lonIndex]
+                                           + "' in line " + reader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                                           + " of point data file out of range [-90..90] or [-180..360]");
+                }
             } else {
-                location = null;
+                throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
+                       + "' and '" + textValues[lonIndex]
+                       + "' in line " + reader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                       + " of point data file not well-formed numbers");
             }
 
             final Date time;
-            if (header.hasTime() && values[timeIndex] instanceof Date) {
-                time = values[timeIndex] instanceof Date ? (Date) values[timeIndex] : null;
-            } else {
+            if (! header.hasTime()) {
                 time = null;
+            } else if (values[timeIndex] instanceof Date && ((Date) values[timeIndex]).getTime() != 0) {
+                time = (Date) values[timeIndex];
+            } else {
+                throw new IllegalArgumentException("time value '" + textValues[timeIndex]
+                        + "' in line " + reader.getLineNumber() + " column " + timeIndex
+                        + " of point data file not well-formed (pattern "
+                        + (dateFormat instanceof SimpleDateFormat ? ((SimpleDateFormat) dateFormat).toPattern() : dateFormat.toString())
+                        + " expected)");
             }
 
             return new DefaultRecord(location, time, values);
@@ -240,10 +275,9 @@ public class CsvRecordSource implements RecordSource {
         }
 
         @Override
-        protected boolean canDecodeContent(String recordSourceUrl) {
-            return recordSourceUrl.endsWith(".txt") || recordSourceUrl.endsWith(".csv");
+        public String[] getAcceptedExtensions() {
+            return new String[] { ".txt", ".csv" };
         }
-
     }
 
 }

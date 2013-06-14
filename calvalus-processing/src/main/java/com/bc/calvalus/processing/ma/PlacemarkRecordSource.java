@@ -65,8 +65,8 @@ public class PlacemarkRecordSource implements RecordSource {
         }
 
         @Override
-        protected boolean canDecodeContent(String recordSourceUrl) {
-            return recordSourceUrl.endsWith(".placemark");
+        public String[] getAcceptedExtensions() {
+            return new String[] { ".placemark" };
         }
     }
 

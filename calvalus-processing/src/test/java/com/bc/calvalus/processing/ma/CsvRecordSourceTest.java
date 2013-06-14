@@ -153,6 +153,141 @@ public class CsvRecordSourceTest {
         System.out.println("CsvRecordSource read " + n + " records, took " + (System.currentTimeMillis() - t0) + " ms");
     }
 
+    @Test
+    public void testBadCsvWithMalformedTime() throws Exception {
+        final String CSV = ""
+                + "\n"
+                + "# Test CSV\n"
+                + "\n"
+                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+
+
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
+            Iterable<Record> records = recordSource.getRecords();
+            for (Record record : records) {}
+            assertNull("error not detected", recordSource);
+            assertNotNull("error not detected", recordSource);
+        } catch (Exception e) {
+            assertEquals("time value '03.04.2003' in line 5 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBadCsvWithNoTime() throws Exception {
+        final String CSV = ""
+                + "\n"
+                + "# Test CSV\n"
+                + "\n"
+                + "ID\tLAT\tLONG\tNoTIME\tSITE\tCHL\tFLAG\n"
+                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+
+
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
+            Iterable<Record> records;
+            records = recordSource.getRecords();
+            for (Record record : records) {
+                assertNull("time value", record.getTime());
+            }
+        } catch (Exception e) {
+            assertEquals("unexpected", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBadCsvWithMalformedLat() throws Exception {
+        final String CSV = ""
+                + "\n"
+                + "# Test CSV\n"
+                + "\n"
+                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                + "17\t\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+
+
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd hh:mm:ss");
+        try {
+            CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
+            Iterable<Record> records;
+            records = recordSource.getRecords();
+            for (Record record : records) {
+                record.getLocation().getLat();
+            }
+            assertNull("error not detected", recordSource);
+            assertNotNull("error not detected", recordSource);
+        } catch (Exception e) {
+            assertEquals("lat and lon value '' and '13.4' in line 6 column 1 and 2 of point data file not well-formed numbers", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBadCsvWithNoLat() throws Exception {
+        final String CSV = ""
+                + "\n"
+                + "# Test CSV\n"
+                + "\n"
+                + "ID\tNoLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                + "17\t53.3\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+
+
+        DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
+            Iterable<Record> records;
+            records = recordSource.getRecords();
+            for (Record record : records) {
+                record.getLocation();
+            }
+            assertNull("error not detected", recordSource);
+            assertNotNull("error not detected", recordSource);
+        } catch (Exception e) {
+            assertEquals("missing lat and lon columns in header (one of lat, latitude, northing and one of lon, long, longitude, easting expected)", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testRealLifeCsvWithMalformedTime() throws Exception {
+        try {
+            final String url = "file:calvalus-processing/src/test/resources/point-data-bad-time-format.txt";
+            MAConfig maConfig = new MAConfig();
+            maConfig.setRecordSourceUrl(url);
+            final RecordSource recordSource = maConfig.createRecordSource();
+            Iterable<Record> records = recordSource.getRecords();
+            for (Record record : records) {
+                record.getTime();
+            }
+            assertNull("error not detected", recordSource);
+            assertNotNull("error not detected", recordSource);
+        } catch (Exception e) {
+            assertEquals("time value '08.05.2006' in line 3 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBadFilenameExtension() throws Exception {
+        try {
+            final String url = "file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc";
+            MAConfig maConfig = new MAConfig();
+            maConfig.setRecordSourceUrl(url);
+            final RecordSource recordSource = maConfig.createRecordSource();
+            assertNull("error not detected", recordSource);
+            assertNotNull("error not detected", recordSource);
+        } catch (Exception e) {
+            assertEquals("no record source reader found for filename extension of file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)", e.getMessage());
+        }
+    }
+
     private static void assertType(int n, Class<?> expectedType, Object attributeValue) {
         if (attributeValue != null) {
             assertEquals(String.format("Record #%d: value=%s ", (n + 1), attributeValue), expectedType, attributeValue.getClass());

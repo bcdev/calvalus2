@@ -18,7 +18,7 @@ public class TestRecordSourceSpi extends RecordSourceSpi {
     }
 
     @Override
-    protected boolean canDecodeContent(String recordSourceUrl) {
-        return false;
+    public String[] getAcceptedExtensions() {
+        return new String[0];
     }
 }
