@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
+import static org.junit.internal.matchers.StringContains.*;
 
 public class CsvRecordSourceTest {
 
@@ -282,16 +283,16 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadFilenameExtension() throws Exception {
         try {
-            final String url = "file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc";
+            final String url = this.getClass().getResource("/point-data-bad-filename-extension.doc").toExternalForm();
             MAConfig maConfig = new MAConfig();
             maConfig.setRecordSourceUrl(url);
             final RecordSource recordSource = maConfig.createRecordSource();
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals(
-                    "no record source reader found for filename extension of file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)",
-                    e.getMessage());
+            String message = e.getMessage();
+            assertThat(message, containsString("no record source reader found for filename extension of file:"));
+            assertThat(message, containsString("point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)"));
         }
     }
 
