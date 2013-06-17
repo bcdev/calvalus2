@@ -78,8 +78,10 @@ public class ManageProductionsView extends PortalView {
 
     private static final String BEAM_NAME = "BEAM 4.11";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
+    private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
                                             "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+    private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a></small>";
 
     static final String RESTART = "Restart";
     static final String CANCEL = "Cancel";
@@ -179,17 +181,24 @@ public class ManageProductionsView extends PortalView {
 
         widget = new FlexTable();
         widget.setWidth("100%");
-        widget.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT);
-        widget.getFlexCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        widget.getFlexCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        widget.getFlexCellFormatter().setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
-        widget.getFlexCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        FlexTable.FlexCellFormatter flexCellFormatter = widget.getFlexCellFormatter();
+        flexCellFormatter.setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexCellFormatter.setColSpan(0, 0, 2);
+        flexCellFormatter.setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexCellFormatter.setColSpan(1, 0, 2);
+        flexCellFormatter.setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexCellFormatter.setColSpan(2, 0, 2);
+        flexCellFormatter.setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        flexCellFormatter.setColSpan(3, 0, 2);
+        flexCellFormatter.setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
+        flexCellFormatter.setHorizontalAlignment(4, 1, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.setCellSpacing(4);
         widget.setWidget(0, 0, allUsers);
         widget.setWidget(1, 0, productionTable);
         widget.setWidget(2, 0, pager);
         widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
         widget.setWidget(4, 0, new HTML(BEAM_HTML));
+        widget.setWidget(4, 1, new HTML(GANGLIA_HTML));
 
         fireSortListEvent();
     }
