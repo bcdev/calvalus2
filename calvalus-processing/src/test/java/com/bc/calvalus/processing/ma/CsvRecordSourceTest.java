@@ -13,14 +13,15 @@ import java.util.Iterator;
 import static org.junit.Assert.*;
 
 public class CsvRecordSourceTest {
+
     @Test
     public void testSimpleCsv() throws Exception {
         final String CSV = ""
-                + "# Test CSV\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                           + "# Test CSV\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
@@ -68,13 +69,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testSimpleCsvWithMissingValues() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
@@ -156,37 +157,39 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithMalformedTime() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
         try {
             CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
             Iterable<Record> records = recordSource.getRecords();
-            for (Record record : records) {}
+            for (Record record : records) {
+            }
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals("time value '03.04.2003' in line 5 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)", e.getMessage());
+            assertEquals("time value '03.04.2003' in line 5 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)",
+                         e.getMessage());
         }
     }
 
     @Test
     public void testBadCsvWithNoTime() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tNoTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tNoTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -205,13 +208,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithMalformedLat() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
-                + "17\t\t13.4\t2003-04-08 00:00:00\t\t\t\n"
-                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                           + "17\t\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                           + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -232,13 +235,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithNoLat() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tNoLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t2003-04-08 00:00:00\t\t\t\n"
-                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tNoLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                           + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
 
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -252,14 +255,15 @@ public class CsvRecordSourceTest {
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals("missing lat and lon columns in header (one of lat, latitude, northing and one of lon, long, longitude, easting expected)", e.getMessage());
+            assertEquals("missing lat and lon columns in header (one of lat, latitude, northing and one of lon, long, longitude, easting expected)",
+                         e.getMessage());
         }
     }
 
     @Test
     public void testRealLifeCsvWithMalformedTime() throws Exception {
         try {
-            final String url = "file:calvalus-processing/src/test/resources/point-data-bad-time-format.txt";
+            final String url = this.getClass().getResource("/point-data-bad-time-format.txt").toExternalForm();
             MAConfig maConfig = new MAConfig();
             maConfig.setRecordSourceUrl(url);
             final RecordSource recordSource = maConfig.createRecordSource();
@@ -270,7 +274,8 @@ public class CsvRecordSourceTest {
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals("time value '08.05.2006' in line 3 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)", e.getMessage());
+            assertEquals("time value '08.05.2006' in line 3 column 3 of point data file not well-formed (pattern yyyy-MM-dd HH:mm:ss expected)",
+                         e.getMessage());
         }
     }
 
@@ -284,7 +289,9 @@ public class CsvRecordSourceTest {
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals("no record source reader found for filename extension of file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)", e.getMessage());
+            assertEquals(
+                    "no record source reader found for filename extension of file:calvalus-processing/src/test/resources/point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)",
+                    e.getMessage());
         }
     }
 
