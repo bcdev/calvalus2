@@ -230,7 +230,7 @@ public class CsvRecordSource implements RecordSource {
                     }
                     lonNames.append(name);
                 }
-                throw new IllegalArgumentException("missing lat and lon columns in header (one of " + latNames + " and one of " + lonNames + " expected)");
+                throw new IllegalArgumentException("missing lat and lon columns in header of point data file (one of " + latNames + " and one of " + lonNames + " expected)");
             } else if (values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
                 location = new GeoPos(((Number) values[latIndex]).floatValue(),
                                       ((Number) values[lonIndex]).floatValue());

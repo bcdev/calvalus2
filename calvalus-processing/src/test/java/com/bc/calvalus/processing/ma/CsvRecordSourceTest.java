@@ -256,7 +256,7 @@ public class CsvRecordSourceTest {
             assertNull("error not detected", recordSource);
             assertNotNull("error not detected", recordSource);
         } catch (Exception e) {
-            assertEquals("missing lat and lon columns in header (one of lat, latitude, northing and one of lon, long, longitude, easting expected)",
+            assertEquals("missing lat and lon columns in header of point data file (one of lat, latitude, northing and one of lon, long, longitude, easting expected)",
                          e.getMessage());
         }
     }
@@ -292,7 +292,7 @@ public class CsvRecordSourceTest {
         } catch (Exception e) {
             String message = e.getMessage();
             assertThat(message, containsString("no record source reader found for filename extension of file:"));
-            assertThat(message, containsString("point-data-bad-filename-extension.doc (one of .placemark, .txt, .csv expected)"));
+            assertThat(message, containsString("point-data-bad-filename-extension.doc point data file (one of .placemark, .txt, .csv expected)"));
         }
     }
 

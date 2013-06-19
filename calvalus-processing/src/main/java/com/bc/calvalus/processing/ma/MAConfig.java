@@ -191,7 +191,7 @@ public class MAConfig implements XmlConvertible {
             return service.createRecordSource(getRecordSourceUrl());
         } else {
             if (className != null) {
-                throw new IllegalStateException("record source reader service " + className + " not found");
+                throw new IllegalStateException("record source reader service " + className + " of point data file not found");
             } else {
                 ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
                 StringBuffer supportedExtensions = new StringBuffer();
@@ -204,7 +204,7 @@ public class MAConfig implements XmlConvertible {
                     }
                 }
                 throw new IllegalArgumentException("no record source reader found for filename extension of " + getRecordSourceUrl()
-                                                   + " (one of " + supportedExtensions + " expected)");
+                                                   + " point data file (one of " + supportedExtensions + " expected)");
             }
         }
     }
