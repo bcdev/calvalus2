@@ -26,8 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapred.TIPStatus;
-import org.apache.hadoop.mapred.TaskReport;
+import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
@@ -117,39 +116,43 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             if (runningJob == null) {
                 return null;
             }
-            for (TaskReport mapTaskReport : jobClient.getMapTaskReports(downgradeJobId)) {
-                if (mapTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
-                    String[] taskDiagnostics = mapTaskReport.getDiagnostics();
-                    if (taskDiagnostics.length > 0) {
-                        return getErrorMessageFromDiagnostics(taskDiagnostics);
-                    }
-                }
-            }
-            for (TaskReport reduceTaskReport : jobClient.getReduceTaskReports(downgradeJobId)) {
-                if (reduceTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
-                    String[] taskDiagnostics = reduceTaskReport.getDiagnostics();
-                    if (taskDiagnostics.length > 0) {
-                        return getErrorMessageFromDiagnostics(taskDiagnostics);
-                    }
-                }
-            }
-
-//            int eventCounter = 0;
-//            while (true) {
-//                TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
-//                if (taskCompletionEvents.length == 0) {
-//                    break;
-//                }
-//                eventCounter += taskCompletionEvents.length;
-//                for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
-//                    if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
-//                        String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
-//                        if (taskDiagnostics.length > 0) {
-//                            return getErrorMessageFromDiagnostics(taskDiagnostics);
-//                        }
+//            for (TaskReport mapTaskReport : jobClient.getMapTaskReports(downgradeJobId)) {
+//                System.out.println("mapTaskReport = " + mapTaskReport.getCurrentStatus() + " "+ mapTaskReport.getState());
+//                if (mapTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
+//                    String[] taskDiagnostics = mapTaskReport.getDiagnostics();
+//                    System.out.println("taskDiagnostics = " + Arrays.toString(taskDiagnostics));
+//                    if (taskDiagnostics.length > 0) {
+//                        return getErrorMessageFromDiagnostics(taskDiagnostics);
 //                    }
 //                }
 //            }
+//            for (TaskReport reduceTaskReport : jobClient.getReduceTaskReports(downgradeJobId)) {
+//                System.out.println("reduceTaskReport = " + reduceTaskReport.getCurrentStatus() + " "+ reduceTaskReport.getState());
+//                if (reduceTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
+//                    String[] taskDiagnostics = reduceTaskReport.getDiagnostics();
+//                    System.out.println("taskDiagnostics = " + Arrays.toString(taskDiagnostics));
+//                    if (taskDiagnostics.length > 0) {
+//                        return getErrorMessageFromDiagnostics(taskDiagnostics);
+//                    }
+//                }
+//            }
+
+            int eventCounter = 0;
+            while (true) {
+                TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
+                if (taskCompletionEvents.length == 0) {
+                    break;
+                }
+                eventCounter += taskCompletionEvents.length;
+                for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
+                    if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
+                        String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
+                        if (taskDiagnostics.length > 0) {
+                            return getErrorMessageFromDiagnostics(taskDiagnostics);
+                        }
+                    }
+                }
+            }
         } catch (IOException e) {
             return null;
         }
