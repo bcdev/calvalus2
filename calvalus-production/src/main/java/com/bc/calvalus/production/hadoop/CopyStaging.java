@@ -75,10 +75,15 @@ class CopyStaging extends ProductionStaging {
             }
         }
          if (totalFilesSize < 2L * GIGABYTE) {
-            zip(stagingDir, new File(stagingDir, stagingDir.getName() + ".zip"));
+             String zipFilename = getSafeFilename(production.getName() + ".zip");
+             zip(stagingDir, new File(stagingDir, zipFilename));
          }
 
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
+    }
+
+    private static String getSafeFilename(String filename) {
+        return filename.replace("/", "").replace("\\", "");
     }
 
     @Override
