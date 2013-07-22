@@ -10,7 +10,6 @@
         <version>1.7-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-portal</artifactId>
     <packaging>war</packaging>
 
@@ -34,6 +33,13 @@
             <version>${gwt.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>com.google.gwt</groupId>-->
+            <!--<artifactId>gwt-dev</artifactId>-->
+            <!--<version>${gwt.version}</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
         <!-- GWT Maps API V3 -->
         <dependency>
