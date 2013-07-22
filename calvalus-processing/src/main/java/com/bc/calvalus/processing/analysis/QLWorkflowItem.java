@@ -56,6 +56,12 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
     }
 
     protected void configureJob(Job job) throws IOException {
+        Configuration jobConfig = job.getConfiguration();
+
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
+
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(QLMapper.class);
@@ -64,7 +70,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        ProcessorFactory.installProcessorBundle(job.getConfiguration());
+        ProcessorFactory.installProcessorBundle(jobConfig);
 
     }
 }
