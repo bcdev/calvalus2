@@ -160,7 +160,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         manageProductionsView = new ManageProductionsView(this);
         views = new PortalView[]{
-                new FrameView(this, "NewsView", "News", "/calvalus-news.html"),
+                new FrameView(this, "NewsView", "News", "calvalus-news.html"),
                 new OrderL2ProductionView(this),
                 new OrderMAProductionView(this),
                 new OrderL3ProductionView(this),
