@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 import org.esa.beam.framework.datamodel.GeoPos;
 
 import java.io.*;
@@ -276,7 +278,14 @@ public class CsvRecordSource implements RecordSource {
 
         @Override
         public RecordSource createRecordSource(String url) throws Exception {
-            InputStream inputStream = new URL(url).openStream();
+            InputStream inputStream;
+            if (url.startsWith("hdfs:")) {
+                final Configuration conf = new Configuration();
+                final Path path = new Path(url);
+                inputStream = path.getFileSystem(conf).open(path);
+            } else {
+                inputStream = new URL(url).openStream();
+            }
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             return new CsvRecordSource(inputStreamReader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
         }
