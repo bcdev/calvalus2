@@ -354,6 +354,11 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
+    @Override
+    public String getQualifiedUserPath(String userName, String path) {
+        return inventoryService.getQualifiedPath(getUserPath(userName, path));
+    }
+
     private String getUserGlob(String userName, String dirPath) {
         return getUserPath(userName, dirPath) + "/.*";
     }

@@ -34,6 +34,10 @@ import com.bc.calvalus.portal.shared.DtoRegion;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.ma.Header;
+import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordSource;
+import com.bc.calvalus.processing.ma.RecordSourceSpi;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -41,18 +45,24 @@ import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.esa.beam.dataio.netcdf.util.TimeUtils;
+import org.esa.beam.framework.datamodel.GeoPos;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -76,6 +86,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private ProductionService productionService;
     private BackendConfig backendConfig;
     private Timer statusObserver;
+    private static final SimpleDateFormat CCSDS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    static {
+        CCSDS_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     /**
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
@@ -294,6 +308,29 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    @Override
+    public String checkUserFile(String filePath) throws BackendServiceException {
+        try {
+            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            Header header = recordSource.getHeader();
+            Iterable<Record> records = recordSource.getRecords();
+            GeoPos location = null;
+            Date time = null;
+            for (Record record : records) {
+                location = record.getLocation();
+                time = record.getTime();
+            }
+            return recordSource.getTimeAndLocationColumnDescription()
+                    + ". Example values: lat=" + location.getLat()
+                    + " lon=" + location.getLon()
+                    + " time=" + (time != null ? CCSDS_FORMAT.format(time) : null);
+        } catch (Exception e) {
+            throw convert(e);
+        }
+    }
+
     private String[] convert(String[] strings) {
         if (strings == null) {
             return new String[0];
@@ -420,7 +457,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                      gwtProductionRequest.getProductionParameters());
     }
 
-    private BackendServiceException convert(ProductionException e) {
+    private BackendServiceException convert(Exception e) {
         log(e.getMessage(), e);
         return new BackendServiceException(e.getMessage(), e);
     }

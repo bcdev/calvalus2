@@ -37,4 +37,9 @@ public class DefaultRecordSource implements RecordSource {
     public Iterable<Record> getRecords() {
         return Collections.unmodifiableList(records);
     }
+
+    @Override
+    public String getTimeAndLocationColumnDescription() {
+        return null;
+    }
 }

@@ -55,6 +55,11 @@ public class PlacemarkRecordSource implements RecordSource {
         return records;
     }
 
+    @Override
+    public String getTimeAndLocationColumnDescription() {
+        return "BEAM placemark format";
+    }
+
     public static class Spi extends RecordSourceSpi {
 
         @Override

@@ -42,4 +42,13 @@ public class DefaultHeader implements Header {
     public String[] getAttributeNames() {
         return attributeNames.toArray(new String[attributeNames.size()]);
     }
+
+    @Override
+    public String getAttributeName(int index) {
+        if (index >= 0) {
+            return attributeNames.get(index);
+        } else {
+            return null;
+        }
+    }
 }

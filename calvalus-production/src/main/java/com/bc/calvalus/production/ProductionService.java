@@ -160,4 +160,6 @@ public interface ProductionService {
      * @throws ProductionException If an error occured (file exists, but can't be removed).
      */
     boolean removeUserFile(String userName, String path) throws ProductionException;
+
+    String getQualifiedUserPath(String userName, String filePath);
 }

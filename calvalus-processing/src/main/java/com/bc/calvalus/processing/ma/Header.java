@@ -22,4 +22,11 @@ public interface Header {
      * @return The array of attribute names.
      */
     String[] getAttributeNames();
+
+    /**
+     * @param index The column index of the attribute, starting from column 0
+     * @return The attribute of the respective column, or null if index is less than 0
+     */
+    String getAttributeName(int index);
 }
+

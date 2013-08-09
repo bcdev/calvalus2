@@ -50,9 +50,10 @@ public class ManageProductionsView extends PortalView {
     private static final String BEAM_NAME = "BEAM 4.11";
     private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
     private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
+    private static final String MERCI_URL = "http://calvalus-merci:8080/merci/";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
             "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
-    private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a></small>";
+    private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a><br><a href=\"" + MERCI_URL + "\" target=\"_blank\">Calvalus-Catalogue</a></small>";
 
     static final String RESTART = "Restart";
     static final String CANCEL = "Cancel";

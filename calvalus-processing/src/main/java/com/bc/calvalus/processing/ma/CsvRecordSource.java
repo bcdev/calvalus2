@@ -93,6 +93,13 @@ public class CsvRecordSource implements RecordSource {
         };
     }
 
+    @Override
+    public String getTimeAndLocationColumnDescription() {
+        return "columns for lat=\"" + getHeader().getAttributeName(latIndex)
+                + "\" lon=\"" + getHeader().getAttributeName(lonIndex)
+                + "\" time=\"" + getHeader().getAttributeName(timeIndex) + "\"";
+    }
+
     private static String[] splitRecordLine(String line, int recordLength) {
         int pos2;
         int pos1 = 0;
