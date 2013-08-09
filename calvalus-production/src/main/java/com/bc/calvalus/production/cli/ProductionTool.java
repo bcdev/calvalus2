@@ -2,6 +2,7 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -270,6 +271,9 @@ public class ProductionTool {
 
     private void observeProduction(ProductionService productionService, Production production) throws
                                                                                                InterruptedException {
+        final Thread shutDownHook = createShutdownHook(production.getWorkflow());
+        Runtime.getRuntime().addShutdownHook(shutDownHook);
+
         while (!production.getProcessingStatus().getState().isDone()) {
             Thread.sleep(1000);
             productionService.updateStatuses();
@@ -279,11 +283,26 @@ public class ProductionTool {
                               processingStatus.getProgress(),
                               processingStatus.getMessage()));
         }
+        Runtime.getRuntime().removeShutdownHook(shutDownHook);
+
         if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
             say("Production completed. Output directory is " + production.getStagingPath());
         } else {
             exit("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage(), 2);
         }
+    }
+
+    private Thread createShutdownHook(final WorkflowItem workflow) {
+        return new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        workflow.kill();
+                    } catch (Exception e) {
+                        say("Failed to shutdown production: " + e.getMessage());
+                    }
+                }
+            };
     }
 
     private void installBundles(String sourcePathsString, Map<String, String> config) {
