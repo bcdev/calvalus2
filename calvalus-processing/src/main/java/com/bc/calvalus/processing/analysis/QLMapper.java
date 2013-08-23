@@ -78,6 +78,8 @@ import java.util.logging.Logger;
  */
 public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
+    private static final String FILE_SYSTEM_COUNTERS = "FileSystemCounters";
+    private static final String FILE_BYTES_WRITTEN = "FILE_BYTES_WRITTEN";
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 
@@ -124,12 +126,12 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             RenderedImage quicklookImage = createImage(context.getConfiguration(), product, config);
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
                 try {
-                    ImageIO.write(quicklookImage, config.getImageType(), outputStream);
+                    ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
                 } finally {
                     outputStream.close();
                 }
-            } else {
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not create quicklook image '" + config.getBandName() + "'.", e);
@@ -370,5 +372,60 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         ColorPaletteDef paletteDef = new ColorPaletteDef(points, 256);
         paletteDef.setAutoDistribute(propertyMap.getPropertyBool("autoDistribute", false));
         return paletteDef;
+    }
+
+    private static class BytesCountingOutputStream extends OutputStream {
+
+        private final OutputStream wrappedStream;
+        private final Mapper.Context context;
+        private int countedBytes;
+
+        public BytesCountingOutputStream(OutputStream outputStream, Mapper.Context context) {
+            wrappedStream = outputStream;
+            this.context = context;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            wrappedStream.write(b);
+            maybeIncrementHadoopCounter(1);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            wrappedStream.write(b);
+            maybeIncrementHadoopCounter(b.length);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            wrappedStream.write(b, off, len);
+            maybeIncrementHadoopCounter(len - off);
+        }
+
+        @Override
+        public void close() throws IOException {
+            wrappedStream.close();
+            incrementHadoopCounter();
+        }
+
+        @Override
+        public void flush() throws IOException {
+            wrappedStream.flush();
+            incrementHadoopCounter();
+        }
+
+
+        private void maybeIncrementHadoopCounter(int byteCount) {
+            countedBytes += byteCount;
+            if (countedBytes / (1024 * 10) >= 1) {
+                incrementHadoopCounter();
+            }
+        }
+
+        private void incrementHadoopCounter() {
+            context.getCounter(FILE_SYSTEM_COUNTERS, FILE_BYTES_WRITTEN).increment(countedBytes);
+            countedBytes = 0;
+        }
     }
 }
