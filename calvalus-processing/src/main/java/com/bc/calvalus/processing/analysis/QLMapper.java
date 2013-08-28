@@ -28,14 +28,17 @@ import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.LayerTypeRegistry;
 import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.grender.Rendering;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.Progressable;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -63,6 +66,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -123,7 +127,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
                                        Quicklooks.QLConfig config) {
         try {
-            RenderedImage quicklookImage = createImage(context.getConfiguration(), product, config);
+            RenderedImage quicklookImage = createImage(context, product, config);
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
                 OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
@@ -140,11 +144,11 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws Exception {
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
-        return path.getFileSystem(context.getConfiguration()).create(path);
+        final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
+        return new BufferedOutputStream(fsDataOutputStream);
     }
 
-    static RenderedImage createImage(Configuration configuration, Product product, Quicklooks.QLConfig qlConfig) throws
-                                                                                                                 IOException {
+    static RenderedImage createImage(final Mapper.Context context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<String, Object>();
@@ -203,7 +207,10 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 return null;
 
             }
-            multiLevelSource = BandImageMultiLevelSource.create(masterBand, ProgressMonitor.NULL);
+
+            masterBand.getImageInfo(new ProgressableWrappingPM(context));
+            multiLevelSource = BandImageMultiLevelSource.create(masterBand, new ProgressableWrappingPM(context));
+
             InputStream inputStream = new URL(cpdURL).openStream();
             try {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
@@ -234,6 +241,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
 
         // TODO generalize
+        Configuration configuration = context.getConfiguration();
         if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
             addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
         } else {
@@ -247,13 +255,12 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
 
         Rectangle2D modelBounds = collectionLayer.getModelBounds();
-        Rectangle2D imageBounds = imageLayer.getModelToImageTransform().createTransformedShape(
-                modelBounds).getBounds2D();
+        Rectangle2D imageBounds = imageLayer.getModelToImageTransform().createTransformedShape(modelBounds).getBounds2D();
         int imageType = canUseAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
         BufferedImage bufferedImage = new BufferedImage((int) imageBounds.getWidth(),
                                                         (int) imageBounds.getHeight(), imageType);
 
-        BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
+        final BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
         Viewport viewport = rendering.getViewport();
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
         viewport.zoom(modelBounds);
@@ -262,7 +269,19 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         graphics.setColor(qlConfig.getBackgroundColor());
         graphics.fill(imageBounds);
 
-        collectionLayer.render(rendering);
+        collectionLayer.render(new Rendering() {
+            @Override
+            public Graphics2D getGraphics() {
+                context.progress();
+                return rendering.getGraphics();
+            }
+
+            @Override
+            public Viewport getViewport() {
+                context.progress();
+                return rendering.getViewport();
+            }
+        });
         return rendering.getImage();
     }
 
@@ -425,7 +444,52 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
         private void incrementHadoopCounter() {
             context.getCounter(FILE_SYSTEM_COUNTERS, FILE_BYTES_WRITTEN).increment(countedBytes);
+            context.progress();
             countedBytes = 0;
+        }
+    }
+
+    private static class ProgressableWrappingPM implements ProgressMonitor {
+
+        private final Progressable progressable;
+
+        public ProgressableWrappingPM(Progressable progressable) {
+            this.progressable = progressable;
+        }
+
+        @Override
+        public void beginTask(String taskName, int totalWork) {
+        }
+
+        @Override
+        public void done() {
+        }
+
+        @Override
+        public void internalWorked(double work) {
+            progressable.progress();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void setCanceled(boolean canceled) {
+        }
+
+        @Override
+        public void setTaskName(String taskName) {
+        }
+
+        @Override
+        public void setSubTaskName(String subTaskName) {
+        }
+
+        @Override
+        public void worked(int work) {
+            internalWorked(work);
         }
     }
 }
