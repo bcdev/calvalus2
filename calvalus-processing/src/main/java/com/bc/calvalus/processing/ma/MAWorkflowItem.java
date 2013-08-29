@@ -73,7 +73,6 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
         jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
 
         // Enable JVM reuse, to speedup processing.

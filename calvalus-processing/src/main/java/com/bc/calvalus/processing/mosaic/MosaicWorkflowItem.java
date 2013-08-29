@@ -63,7 +63,6 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         // because the size of the value objects can get very big
         // it is better to report progress more often

@@ -87,7 +87,6 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));

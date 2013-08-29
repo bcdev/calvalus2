@@ -65,7 +65,6 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(L2Mapper.class);
