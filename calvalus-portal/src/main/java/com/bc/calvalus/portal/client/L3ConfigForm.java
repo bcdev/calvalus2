@@ -365,7 +365,13 @@ public class L3ConfigForm extends Composite {
             } else {
                 parameters.put(prefix + ".name", variable.name);
             }
-            parameters.put(prefix + ".aggregator", variable.aggregator);
+            String aggregator = variable.aggregator;
+            if (aggregator.startsWith("PERCENTILE_")) {
+                parameters.put(prefix + ".aggregator", "PERCENTILE");
+                parameters.put(prefix + ".percentage", aggregator.substring("PERCENTILE_".length()));
+            } else {
+                parameters.put(prefix + ".aggregator", aggregator);
+            }
             parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
             parameters.put(prefix + ".fillValue", variable.fillValue + "");
         }
@@ -461,7 +467,15 @@ public class L3ConfigForm extends Composite {
                 "AVG",
                 "AVG_ML",
                 "MIN_MAX",
-                "PERCENTILE"
+                "PERCENTILE_2",
+                "PERCENTILE_5",
+                "PERCENTILE_10",
+                "PERCENTILE_25",
+                "PERCENTILE_50",
+                "PERCENTILE_75",
+                "PERCENTILE_90",
+                "PERCENTILE_95",
+                "PERCENTILE_98"
         );
 
         SelectionCell aggregatorCell = new SelectionCell(valueList);
