@@ -31,10 +31,13 @@ public abstract class ProductionStaging extends Staging {
             performStaging();
         } catch (Throwable t) {
             production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, 1.0F, t.getMessage()));
-            Logger.getLogger("com.bc.calvalus").log(Level.SEVERE,
-                                                    String.format("Staging of production '%s' failed: %s",
-                                                                  production.getId(), t.getMessage()),
-                                                    t);
+            final String msg = String.format("Staging of production '%s' failed: %s", production.getId(), t.getMessage());
+            Logger.getLogger("com.bc.calvalus").log(Level.SEVERE, msg, t);
         }
     }
+
+    public static String getSafeFilename(String filename) {
+        return filename.replace("/", "").replace("\\", "");
+    }
+
 }

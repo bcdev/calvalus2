@@ -142,8 +142,7 @@ public class ProductionServiceImpl implements ProductionService {
 
 
     @Override
-    public synchronized void scpProduction(final String productionId, final String scpPath) throws
-                                                                                            ProductionException {
+    public synchronized void scpProduction(final String productionId, final String scpPath) throws ProductionException {
 
         executorService.submit(new Runnable() {
             @Override
@@ -163,7 +162,7 @@ public class ProductionServiceImpl implements ProductionService {
 
                         scpTo = new ScpTo(user, host);
                         scpTo.connect();
-                        Production production = getProduction(productionId);
+                        final Production production = getProduction(productionId);
                         ProductionType type = findProductionType(production.getProductionRequest());
                         if (!(type instanceof HadoopProductionType)) {
                             return;
@@ -175,7 +174,8 @@ public class ProductionServiceImpl implements ProductionService {
                         File[] listToCopy = inputDir.listFiles(new FilenameFilter() {
                             @Override
                             public boolean accept(File dir, String name) {
-                                return !name.startsWith(inputDir.getName());
+                                final String zippedProductionFilename = ProductionStaging.getSafeFilename(production.getName() + ".zip");
+                                return !name.equals(zippedProductionFilename);
                             }
                         });
                         logger.info("Starting to copy via scp");
