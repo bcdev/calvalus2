@@ -23,7 +23,7 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
 
     private Configuration conf;
 
-    private BinManager secondBinManager;
+    private BinManager binManager;
     private float[] observationFeatures;
     private Observation observation;
 
@@ -39,20 +39,19 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         }
 
         // start 2nd L3 processing computeSpatial
-        SpatialBin spatialBin = secondBinManager.createSpatialBin(binIndex.get());
-        secondBinManager.aggregateSpatialBin(observation, spatialBin);
-        secondBinManager.completeSpatialBin(spatialBin);
+        SpatialBin spatialBin = binManager.createSpatialBin(binIndex.get());
+        binManager.aggregateSpatialBin(observation, spatialBin);
+        binManager.completeSpatialBin(spatialBin);
         context.write(binIndex, (L3SpatialBin) spatialBin);
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        BinManager firstBinManager = getFirstL3Config(conf).createBinningContext().getBinManager();
-        secondBinManager = L3Config.get(conf).createBinningContext().getBinManager();
-        ArrayList<String> resultNameList = new ArrayList<String>();
-        Collections.addAll(resultNameList, firstBinManager.getResultFeatureNames());
-        VariableContext variableContext = secondBinManager.getVariableContext();
+        binManager = L3Config.get(conf).createBinningContext().getBinManager();
+        ArrayList<String> inputFeatureNames = new ArrayList<String>();
+        Collections.addAll(inputFeatureNames, getInputFeatureNames(conf));
+        VariableContext variableContext = binManager.getVariableContext();
         int variableCount = variableContext.getVariableCount();
 
         observationFeatures = new float[variableCount];
@@ -61,7 +60,7 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         resultIndexes = new int[variableCount];
         for (int i = 0; i < resultIndexes.length; i++) {
             String obsName = variableContext.getVariableName(i);
-            resultIndexes[i] = resultNameList.indexOf(obsName);
+            resultIndexes[i] = inputFeatureNames.indexOf(obsName);
         }
     }
 
@@ -70,15 +69,24 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
         return conf;
     }
 
-    static L3Config getFirstL3Config(Configuration jobConfig) {
+    static String[] getInputFeatureNames(Configuration jobConfig) {
+        String[] featureNames = jobConfig.getStrings("calvalus.l3.inputFeatureNames");
+        if (featureNames != null) {
+            return featureNames;
+        }
+
+        // legacy method could be removed later
         String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST);
         if (xml == null) {
             throw new IllegalArgumentException("Missing (first) L3 configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST + "'");
         }
+        L3Config l3Config;
         try {
-            return L3Config.fromXml(xml);
+            l3Config = L3Config.fromXml(xml);
         } catch (BindingException e) {
             throw new IllegalArgumentException("Invalid (first) L3 configuration: " + e.getMessage(), e);
         }
+        BinManager binManager = l3Config.createBinningContext().getBinManager();
+        return binManager.getResultFeatureNames();
     }
 }

@@ -41,7 +41,7 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
             FileSystem fs = path.getFileSystem(configuration);
             SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, configuration);
             SequenceFile.Metadata metadata = reader.getMetadata();
-            Text featureNamesText = metadata.get(new Text("calvalus.l3.inputFeatureNames"));
+            Text featureNamesText = metadata.get(new Text("calvalus.l3.featureNames"));
             if (featureNamesText != null) {
                 configuration.setStrings("calvalus.l3.inputFeatureNames", featureNamesText.toString());
             }

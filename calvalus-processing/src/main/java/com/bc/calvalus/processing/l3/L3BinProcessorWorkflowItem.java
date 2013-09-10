@@ -5,6 +5,8 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.l3.cellstream.CellInputFormat;
+import com.bc.calvalus.processing.l3.cellstream.CellOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -36,7 +38,7 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST, null},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT}
         };
     }
@@ -46,7 +48,7 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
         Configuration jobConfig = job.getConfiguration();
 
         SequenceFileInputFormat.addInputPaths(job, getInputDir());
-        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setInputFormatClass(CellInputFormat.class);
 
         job.setMapperClass(L3BinProcessorMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
@@ -60,7 +62,7 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setOutputFormatClass(CellOutputFormat.class);
 
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
