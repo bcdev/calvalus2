@@ -11,16 +11,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import java.io.IOException;
 
 /**
- * A workflow item taking bins and further aggregating them
+ * A workflow item taking cells (bins) and processing them and the stores them again
  */
-public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
+public class CellProcessorWorkflowItem extends HadoopWorkflowItem {
 
-    public L3BinProcessorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
+    public CellProcessorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
     }
 
@@ -38,7 +37,6 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST, null},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT}
         };
     }
@@ -50,16 +48,11 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
         FileInputFormat.addInputPaths(job, getInputDir());
         job.setInputFormatClass(CellInputFormat.class);
 
-        job.setMapperClass(L3BinProcessorMapper.class);
+        job.setMapperClass(CellProcessorMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
-        job.setMapOutputValueClass(L3SpatialBin.class);
+        job.setMapOutputValueClass(L3TemporalBin.class);
 
-        job.setPartitionerClass(L3Partitioner.class);
-
-        job.setReducerClass(L3Reducer.class);
-        job.setOutputKeyClass(LongWritable.class);
-        job.setOutputValueClass(L3TemporalBin.class);
-        job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
+        job.setNumReduceTasks(0);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         job.setOutputFormatClass(CellOutputFormat.class);
