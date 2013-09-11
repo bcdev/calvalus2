@@ -109,18 +109,15 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
                 String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
-                createQuicklooks(product, productName, context);
+                Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+                for (Quicklooks.QLConfig config : configs) {
+                    String imageFileName = productName + "_" + config.getBandName();
+                    createQuicklook(product, imageFileName, context, config);
+                }
             }
         } finally {
             pm.done();
             processorAdapter.dispose();
-        }
-    }
-
-    public static void createQuicklooks(Product product, String imageFileName, Mapper.Context context) {
-        Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
-        for (Quicklooks.QLConfig config : configs) {
-            createQuicklook(product, imageFileName, context, config);
         }
     }
 
@@ -138,7 +135,8 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Could not create quicklook image '" + config.getBandName() + "'.", e);
+            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
+            LOGGER.log(Level.WARNING, msg, e);
         }
     }
 
