@@ -21,7 +21,6 @@ import java.io.IOException;
 public class CellProcessorMapper extends Mapper<LongWritable, L3TemporalBin, LongWritable, L3TemporalBin> implements Configurable {
 
     private Configuration conf;
-
     private CellProcessor cellProcessor;
     private BinManager binManager;
 
@@ -38,8 +37,8 @@ public class CellProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lon
         binManager = l3Config.createBinningContext().getBinManager();
 
         CellProcessorConfig postProcessorConfig = l3Config.getBinningConfig().getPostProcessorConfig();
-        String[] inputFeatureNames = conf.getStrings("calvalus.l3.inputFeatureNames");
-        cellProcessor = createCellProcessor(postProcessorConfig, inputFeatureNames);
+        cellProcessor = createCellProcessor(postProcessorConfig, conf.getStrings("calvalus.l3.inputFeatureNames"));
+        conf.setStrings("calvalus.l3.outputFeatureNames", cellProcessor.getOutputFeatureNames());
     }
 
     @Override

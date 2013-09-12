@@ -11,7 +11,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import java.io.IOException;
 
@@ -39,7 +38,9 @@ public class L3BinProcessorWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST, null},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT}
+                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}
         };
     }
 

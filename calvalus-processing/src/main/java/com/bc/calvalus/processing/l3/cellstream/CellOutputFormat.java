@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3.cellstream;
 
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,8 +31,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringUtils;
-import org.esa.beam.binning.BinningContext;
 
 import java.io.IOException;
 
@@ -60,12 +58,13 @@ public class CellOutputFormat extends FileOutputFormat<LongWritable, L3TemporalB
         Path file = getDefaultWorkFile(context, "");
         FileSystem fs = file.getFileSystem(conf);
 
-        BinningContext binningContext = L3Config.get(conf).createBinningContext();
-        String[] resultFeatureNames = binningContext.getBinManager().getResultFeatureNames();
-        Text featureNames = new Text(StringUtils.arrayToString(resultFeatureNames));
-
         SequenceFile.Metadata metadata = new SequenceFile.Metadata();
-        metadata.set(new Text("calvalus.l3.featureNames"), featureNames);
+        Conf2MetaCopier conf2Meta = new Conf2MetaCopier(conf, metadata);
+        conf2Meta.copy("calvalus.l3.outputFeatureNames", "calvalus.l3.featureNames");
+        conf2Meta.copy(JobConfigNames.CALVALUS_MIN_DATE);
+        conf2Meta.copy(JobConfigNames.CALVALUS_MAX_DATE);
+
+        // TODO add l3_params ???
         final SequenceFile.Writer out = SequenceFile.createWriter(fs, conf, file,
                                                                   context.getOutputKeyClass(),
                                                                   context.getOutputValueClass(),
@@ -84,5 +83,27 @@ public class CellOutputFormat extends FileOutputFormat<LongWritable, L3TemporalB
                 out.close();
             }
         };
+    }
+
+
+    private static class Conf2MetaCopier {
+        private final Configuration configuration;
+        private final SequenceFile.Metadata metadata;
+
+        private Conf2MetaCopier(Configuration configuration, SequenceFile.Metadata metadata) {
+            this.configuration = configuration;
+            this.metadata = metadata;
+        }
+
+        private void copy(String propertyName) {
+            copy(propertyName, propertyName);
+        }
+
+        private void copy(String configurationPropertyName, String metadataPropertyName) {
+            String value = configuration.get(configurationPropertyName);
+            if (value != null) {
+                metadata.set(new Text(metadataPropertyName), new Text(value));
+            }
+        }
     }
 }

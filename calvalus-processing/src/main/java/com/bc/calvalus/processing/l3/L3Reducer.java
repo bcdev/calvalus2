@@ -62,6 +62,8 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         temporalBinner = new TemporalBinner(binningContext);
         cellChain = new CellProcessorChain(binningContext);
 
+        String[] resultFeatureNames = binningContext.getBinManager().getResultFeatureNames();
+        conf.setStrings("calvalus.l3.outputFeatureNames", resultFeatureNames);
     }
 
     @Override

@@ -75,7 +75,7 @@ public class L3BinProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lo
             return featureNames;
         }
 
-        // legacy method could be removed later
+        // TODO legacy method could be removed later
         String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST);
         if (xml == null) {
             throw new IllegalArgumentException("Missing (first) L3 configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS_FIRST + "'");
