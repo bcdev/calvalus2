@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.l3.cellstream;
 
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
+import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFile;
@@ -10,6 +11,8 @@ import ucar.nc2.Variable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,6 +37,8 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
     private int currentBinIndex = 0;
     private int arrayPointer = Integer.MAX_VALUE;
     private int readAhead;
+    private final Date startDate;
+    private final Date endDate;
 
     public SeadasBinnnedCellReader(NetcdfFile netcdfFile) {
         super(netcdfFile);
@@ -65,6 +70,19 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
         featureVars = featureVarsList.toArray(new Variable[featureVarsList.size()]);
         featureArrays = new Array[featureVarsList.size()];
         featureNames = featureNameList.toArray(new String[featureNameList.size()]);
+
+        startDate = extractDate(netcdfFile, "Start_Day", "Start_Year");
+        endDate = extractDate(netcdfFile, "End_Day", "End_Year");
+    }
+
+    private static Date extractDate(NetcdfFile netcdfFile, String dayName, String yearName) {
+        int day = netcdfFile.findGlobalAttribute(dayName).getNumericValue().intValue();
+        int year = netcdfFile.findGlobalAttribute(yearName).getNumericValue().intValue();
+        Calendar calendar = ProductData.UTC.createCalendar();
+        calendar.setTimeInMillis(0);
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.DAY_OF_YEAR, day);
+        return calendar.getTime();
     }
 
     @Override
@@ -80,6 +98,16 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
     @Override
     public int getNumBins() {
         return numBins;
+    }
+
+    @Override
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    @Override
+    public Date getEndDate() {
+        return endDate;
     }
 
     @Override

@@ -10,17 +10,22 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.framework.datamodel.ProductData;
 import ucar.nc2.NetcdfFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * A record reader for reading binned data out of netcdf files.
  * The actual reading is done by implementations of {@link }AbstractNetcdfCellReader}.
  */
 class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
+
+    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
 
     private Configuration conf;
     private LongWritable key;
@@ -77,6 +82,23 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
     public void close() throws IOException {
         cellReader.close();
     }
+
+    public String getStartDate() {
+        Date startDate = cellReader.getStartDate();
+        if (startDate != null) {
+            return DATE_FORMAT.format(startDate);
+        }
+        return "";
+    }
+
+    public String getEndDate() {
+        Date endDate = cellReader.getEndDate();
+        if (endDate != null) {
+            return DATE_FORMAT.format(endDate);
+        }
+        return "";
+    }
+
 
     /**
      * Copies the file given to the local input directory for access as a ordinary {@link java.io.File}.
@@ -140,6 +162,9 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
         long time = t1 - t0;
         System.out.println("time = " + time);
         System.out.println("totalBinsRead = " + totalBinsRead);
+
+        System.out.println("startDate = " + reader.getStartDate());
+        System.out.println("endDate = " + reader.getEndDate());
     }
 
 }

@@ -5,6 +5,7 @@ import org.apache.hadoop.io.LongWritable;
 import ucar.nc2.NetcdfFile;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * An abstract reader for reading binned data from NetCDf / HDF files..
@@ -26,6 +27,10 @@ public abstract class AbstractNetcdfCellReader {
     public abstract int getCurrentIndex();
 
     public abstract int getNumBins();
+
+    public abstract Date getStartDate();
+
+    public abstract Date getEndDate();
 
     public abstract boolean readNext(LongWritable key, L3TemporalBin value) throws Exception;
 }

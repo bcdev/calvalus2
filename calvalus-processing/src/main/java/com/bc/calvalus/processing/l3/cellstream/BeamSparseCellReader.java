@@ -1,7 +1,10 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
+import org.esa.beam.binning.operator.BinningOp;
+import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
@@ -11,8 +14,12 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Reads binned product written by the BEAM binner2 in sparse format.
@@ -20,9 +27,12 @@ import java.util.List;
 public class BeamSparseCellReader extends AbstractNetcdfCellReader {
 
     private static final int DEFAULT_READAHEAD = 1000;
+    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(BinningOp.DATETIME_PATTERN);
 
     private final String[] featureNames;
     private final int numBins;
+    private final Date startDate;
+    private final Date endDate;
 
     private Variable binNumVar;
     private Array binNumArray;
@@ -69,6 +79,25 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
         featureVars = featureVarsList.toArray(new Variable[featureVarsList.size()]);
         featureArrays = new Array[featureVarsList.size()];
         featureNames = featureNameList.toArray(new String[featureNameList.size()]);
+
+        startDate = extractDate(netcdfFile, "start_time", "time_coverage_start");
+        endDate = extractDate(netcdfFile, "stop_time", "time_coverage_end");
+    }
+
+    private static Date extractDate(NetcdfFile netcdfFile, String name, String alternativeName) {
+        Attribute timeAttribute = netcdfFile.findGlobalAttribute(name);
+        if (timeAttribute == null) {
+            timeAttribute = netcdfFile.findGlobalAttribute(alternativeName);
+        }
+        if (timeAttribute == null) {
+            return null;
+        }
+        try {
+            return DATE_FORMAT.parse(timeAttribute.getStringValue());
+        } catch (ParseException e) {
+            CalvalusLogger.getLogger().log(Level.WARNING, "failed to parse date. " + e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override
@@ -84,6 +113,16 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
     @Override
     public int getNumBins() {
         return numBins;
+    }
+
+    @Override
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    @Override
+    public Date getEndDate() {
+        return endDate;
     }
 
     @Override

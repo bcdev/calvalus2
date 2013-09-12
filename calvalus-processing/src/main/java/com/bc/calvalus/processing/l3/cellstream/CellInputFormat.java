@@ -37,6 +37,8 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
         if (filename.endsWith(SUFFIX_NETCDF) || filename.endsWith(SUFFIX_HDF)) {
             CellRecordReader reader = new CellRecordReader();
             conf.setStrings("calvalus.l3.inputFeatureNames", reader.getFeatureNames());
+            conf.set(JobConfigNames.CALVALUS_MIN_DATE, reader.getStartDate());
+            conf.set(JobConfigNames.CALVALUS_MAX_DATE, reader.getEndDate());
             return reader;
         } else {
             FileSystem fs = path.getFileSystem(conf);
