@@ -16,9 +16,10 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.processing.WpsConfig;
-import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.Property;
+import com.bc.ceres.binding.PropertySet;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.CellProcessorConfig;
 import org.esa.beam.binning.CompositingType;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
@@ -26,17 +27,17 @@ import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.aggregators.AggregatorMinMax;
 import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
+import org.esa.beam.binning.cellprocessor.FeatureSelection;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.support.PlateCarreeGrid;
 import org.esa.beam.binning.support.SEAGrid;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Calendar;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -45,8 +46,8 @@ public class L3ConfigTest {
     private L3Config l3Config;
 
     @Before
-    public void createL3Config() throws IOException, SAXException, ParserConfigurationException, BindingException {
-        l3Config = loadConfig("l3-request.xml");
+    public void createL3Config() throws Exception {
+        l3Config = loadConfig("l3-parameters.xml");
     }
 
     @Test
@@ -63,28 +64,6 @@ public class L3ConfigTest {
         grid = l3Config.createPlanetaryGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(PlateCarreeGrid.class, grid.getClass());
-    }
-
-//    @Test
-//    public void testStartEndTime() throws ParseException {
-//        Properties properties = new Properties();
-//        com.bc.calvalus.binning.job.BeamL3Config l3Config = new com.bc.calvalus.binning.job.BeamL3Config(properties);
-//        properties.setProperty(CONFNAME_L3_START_DATE, "2008-06-01");
-//        ProductData.UTC startTime = l3Config.getStartTime();
-//        assertNotNull(startTime);
-//        Calendar expectedStart = ProductData.UTC.parse("01-JUN-2008 00:00:00").getAsCalendar();
-//        assertEqualsCalendar(expectedStart, startTime.getAsCalendar());
-//
-//        ProductData.UTC endTime = l3Config.getEndTime();
-//        assertNotNull(endTime);
-//        Calendar expectedEnd = ProductData.UTC.parse("16-JUN-2008 00:00:00").getAsCalendar();
-//        assertEqualsCalendar(expectedEnd, endTime.getAsCalendar());
-//    }
-
-    private static void assertEqualsCalendar(Calendar expected, Calendar actual) {
-        assertEquals(expected.get(Calendar.YEAR), actual.get(Calendar.YEAR));
-        assertEquals(expected.get(Calendar.MONTH), actual.get(Calendar.MONTH));
-        assertEquals(expected.get(Calendar.DAY_OF_MONTH), actual.get(Calendar.DAY_OF_MONTH));
     }
 
     @Test
@@ -139,16 +118,37 @@ public class L3ConfigTest {
         assertEquals(CompositingType.MOSAICKING, l3Config.getBinningConfig().getCompositingType());
     }
 
-    private L3Config loadConfig(String configPath) throws IOException, SAXException, ParserConfigurationException,
-                                                          BindingException {
-        String wpsRequest = loadConfigProperties(configPath);
-        WpsConfig wpsConfig = new WpsConfig(wpsRequest);
-        return L3Config.fromXml(wpsConfig.getLevel3Parameters());
+    @Test
+    public void testL3configForCellProcressing() throws Exception {
+        L3Config cellProcessingConfig = loadConfig("l3-cellProcessing.xml");
+        assertNotNull(cellProcessingConfig);
+        BinningConfig binningConfig = cellProcessingConfig.getBinningConfig();
+        assertNotNull(binningConfig);
+        CellProcessorConfig postProcessorConfig = binningConfig.getPostProcessorConfig();
+        assertNotNull(postProcessorConfig);
+        assertSame(FeatureSelection.Config.class, postProcessorConfig.getClass());
+        PropertySet propertySet = postProcessorConfig.asPropertySet();
+        assertNotNull(propertySet);
+        Property[] properties = propertySet.getProperties();
+        assertEquals(2, properties.length);
+        System.out.println("properties = " + Arrays.toString(properties));
+        assertEquals("Selection", propertySet.getProperty("type").getValue());
+        String[] expected = {"tsm_mean", " tsm_sigma", " chl_min", "cmax = chl_max"};
+        String[]  actual = propertySet.getProperty("varNames").getValue();
+        assertArrayEquals(expected, actual);
+    }
+
+    private L3Config loadConfig(String configPath) throws Exception {
+        return L3Config.fromXml(loadConfigProperties(configPath));
     }
 
     private String loadConfigProperties(String configPath) throws IOException {
         InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(configPath));
-        return FileUtils.readText(inputStreamReader).trim();
+        try {
+            return FileUtils.readText(inputStreamReader).trim();
+        } finally {
+            inputStreamReader.close();
+        }
     }
 
 }
