@@ -7,10 +7,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -32,52 +28,43 @@ import java.util.Iterator;
  * <li>Missing numbers (no-data) must be indicated using the string "nan" (case-insensitive).</li>
  * </ul>
  * </p>
+ * <p>
+ * If the format of the CSV text differs from the given default structure.
+ * A number of parameters can be set in comment lines (lines starting with '#') in the format "key=value":
+ * <ul>
+ *     <li>'latColumn': the name of the column containing the latitude values.</li>
+ *     <li>'lonColumn': the name of the column containing the longitude values.</li>
+ *     <li>'timeColumn': the name of the column containing the date values.</li>
+ *     <li>'timeColumns': a comma separated list of column names containing the date/time information.
+ *     The values of the columns are concatenated separated by the pipe character ('|').
+ *     For parsing this combined value a 'dateFormat' has to be given as well.</li>
+ *     <li>'dateFormat': as {@link DateFormat} for interpreting the date/time information.</li>
+ *     <li>'columnSeparator': the character that separates different columns on a line.</li>
+ * </ul>
+ * </p>
  *
  * @author Norman
+ * @author MarcoZ
  */
 public class CsvRecordSource implements RecordSource {
 
-    private static final String[] LAT_NAMES = new String[]{"lat", "latitude", "northing"};
-    private static final String[] LON_NAMES = new String[]{"lon", "long", "longitude", "easting"};
-    private static final String[] TIME_NAMES = new String[]{"time", "date"};
-    private final LineNumberReader reader;
     private final Header header;
     private final int recordLength;
-    private final DateFormat dateFormat;
     private final int latIndex;
     private final int lonIndex;
-    private final int timeIndex;
     private final Class<?>[] attributeTypes;
+    private final CsvLineReader csvLineReader;
 
     public CsvRecordSource(Reader reader, DateFormat dateFormat) throws IOException {
-        if (reader instanceof LineNumberReader) {
-            this.reader = (LineNumberReader) reader;
-        } else {
-            this.reader = new LineNumberReader(reader);
-        }
+        csvLineReader = new CsvLineReader(reader, dateFormat);
 
-        this.dateFormat = dateFormat;
-
-        String[] attributeNames = readTextRecord(-1);
+        String[] attributeNames = csvLineReader.getAttributeNames();
         attributeTypes = new Class<?>[attributeNames.length];
 
-        latIndex = TextUtils.indexOf(attributeNames, LAT_NAMES);
-        lonIndex = TextUtils.indexOf(attributeNames, LON_NAMES);
-        timeIndex = TextUtils.indexOf(attributeNames, TIME_NAMES);
-
-        header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, attributeNames);
+        latIndex = csvLineReader.getLatIndex();
+        lonIndex = csvLineReader.getLonIndex();
+        header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, csvLineReader.hasTime(), attributeNames);
         recordLength = attributeNames.length;
-    }
-
-    private String[] readTextRecord(int recordLength) throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String trimLine = line.trim();
-            if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
-                return splitRecordLine(line, recordLength);
-            }
-        }
-        return null;
     }
 
     @Override
@@ -99,38 +86,18 @@ public class CsvRecordSource implements RecordSource {
     public String getTimeAndLocationColumnDescription() {
         return "columns for lat=\"" + getHeader().getAttributeName(latIndex)
                 + "\" lon=\"" + getHeader().getAttributeName(lonIndex)
-                + "\" time=\"" + getHeader().getAttributeName(timeIndex) + "\"";
-    }
-
-    private static String[] splitRecordLine(String line, int recordLength) {
-        int pos2;
-        int pos1 = 0;
-        ArrayList<String> strings = new ArrayList<String>(256);
-        while ((pos2 = line.indexOf('\t', pos1)) >= 0) {
-            strings.add(line.substring(pos1, pos2).trim());
-            if (recordLength > 0 && strings.size() >= recordLength) {
-                break;
-            }
-            pos1 = pos2 + 1;
-        }
-        strings.add(line.substring(pos1).trim());
-        if (recordLength > 0) {
-            return strings.toArray(new String[recordLength]);
-        } else {
-            return strings.toArray(new String[strings.size()]);
-        }
+                + "\" time=\"" + csvLineReader.getTimeColumnNames() + "\"";
     }
 
     /**
-     * Converts a string array into an array of object which are either a number ({@link Double}), a text ({@link String}),
-     * a date/time value ({@link Date}). Empty text is converted to {@code null}.
+     * Converts a string array into an array of object which are either a number ({@link Double}), a text ({@link String}).
+     * Empty text is converted to {@code null}.
      *
      * @param textValues The text values to convert.
      * @param types      The types.
-     * @param dateFormat The date format to be used.
      * @return The array of converted objects.
      */
-    public static Object[] toObjects(String[] textValues, Class<?>[] types, DateFormat dateFormat) {
+    public static Object[] toObjects(String[] textValues, Class<?>[] types) {
         final Object[] values = new Object[textValues.length];
         for (int i = 0; i < textValues.length; i++) {
             final String text = textValues[i];
@@ -138,9 +105,9 @@ public class CsvRecordSource implements RecordSource {
                 final Object value;
                 final Class<?> type = types[i];
                 if (type != null) {
-                    value = parse(text, type, dateFormat);
+                    value = parse(text, type);
                 } else {
-                    value = parse(text, dateFormat);
+                    value = parse(text);
                     if (value != null) {
                         types[i] = value.getClass();
                     }
@@ -151,7 +118,7 @@ public class CsvRecordSource implements RecordSource {
         return values;
     }
 
-    private static Object parse(String text, Class<?> type, DateFormat dateFormat) {
+    private static Object parse(String text, Class<?> type) {
         if (type.equals(Double.class)) {
             try {
                 return parseDouble(text);
@@ -160,26 +127,16 @@ public class CsvRecordSource implements RecordSource {
             }
         } else if (type.equals(String.class)) {
             return text;
-        } else if (type.equals(Date.class)) {
-            try {
-                return dateFormat.parse(text);
-            } catch (ParseException e) {
-                return new Date(0L);
-            }
         } else {
             throw new IllegalStateException("Unhandled data type: " + type);
         }
     }
 
-    private static Object parse(String text, DateFormat dateFormat) {
+    private static Object parse(String text) {
         try {
             return parseDouble(text);
         } catch (NumberFormatException e) {
-            try {
-                return dateFormat.parse(text);
-            } catch (ParseException e1) {
-                return text;
-            }
+            return text;
         }
     }
 
@@ -205,7 +162,7 @@ public class CsvRecordSource implements RecordSource {
 
             final String[] textValues;
             try {
-                textValues = readTextRecord(recordLength);
+                textValues = csvLineReader.readTextRecord(recordLength);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -217,56 +174,38 @@ public class CsvRecordSource implements RecordSource {
             if (getHeader().getAttributeNames().length != textValues.length) {
                 System.out.println("different number of columns " + textValues.length
                                            + " instead of " + getHeader().getAttributeNames().length
-                                           + " in line " + reader.getLineNumber() +
+                                           + " in line " + csvLineReader.getLineNumber() +
                                            " of point data file");
             }
 
-            final Object[] values = toObjects(textValues, attributeTypes, dateFormat);
+            final Object[] values = toObjects(textValues, attributeTypes);
 
             final GeoPos location;
             if (! header.hasLocation()) {
-                StringBuffer latNames = new StringBuffer();
-                for (String name : LAT_NAMES) {
-                    if (latNames.length() > 0) {
-                        latNames.append(", ");
-                    }
-                    latNames.append(name);
-                }
-                StringBuffer lonNames = new StringBuffer();
-                for (String name : LON_NAMES) {
-                    if (lonNames.length() > 0) {
-                        lonNames.append(", ");
-                    }
-                    lonNames.append(name);
-                }
-                throw new IllegalArgumentException("missing lat and lon columns in header of point data file (one of " + latNames + " and one of " + lonNames + " expected)");
+                String msg = "missing lat and lon columns in header of point data file (one of " +
+                        csvLineReader.getLatNames() + " and one of " + csvLineReader.getLonNames() + " expected)";
+                throw new IllegalArgumentException(msg);
             } else if (values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
                 location = new GeoPos(((Number) values[latIndex]).floatValue(),
                                       ((Number) values[lonIndex]).floatValue());
                 if (location.getLat() < -90.0f || location.getLat() > 90.0f || location.getLon() < -180.0f || location.getLon() > 360.0f) {
                     throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
                                            + "' and '" + textValues[lonIndex]
-                                           + "' in line " + reader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                                           + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
                                            + " of point data file out of range [-90..90] or [-180..360]");
                 }
             } else {
                 throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
                        + "' and '" + textValues[lonIndex]
-                       + "' in line " + reader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                       + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
                        + " of point data file not well-formed numbers");
             }
 
             final Date time;
             if (! header.hasTime()) {
                 time = null;
-            } else if (values[timeIndex] instanceof Date && ((Date) values[timeIndex]).getTime() != 0) {
-                time = (Date) values[timeIndex];
             } else {
-                throw new IllegalArgumentException("time value '" + textValues[timeIndex]
-                        + "' in line " + reader.getLineNumber() + " column " + timeIndex
-                        + " of point data file not well-formed (pattern "
-                        + (dateFormat instanceof SimpleDateFormat ? ((SimpleDateFormat) dateFormat).toPattern() : dateFormat.toString())
-                        + " expected)");
+                time = csvLineReader.extractTime(values, csvLineReader.getLineNumber());
             }
 
             return new DefaultRecord(location, time, values);
