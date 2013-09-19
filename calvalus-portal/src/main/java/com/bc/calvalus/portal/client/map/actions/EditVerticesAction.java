@@ -81,8 +81,6 @@ public class EditVerticesAction extends AbstractMapAction {
                 LatitudeLongitude latitudeLongitude = new LatitudeLongitude(vertice.getLatitude(), vertice.getLongitude());
                 verticesProviderList.add(latitudeLongitude);
             }
-            // remove the last vertex, its equal to the first one
-            verticesProviderList.remove(verticesProviderList.size()-1);
             verticesTable = new CellTable<LatitudeLongitude>();
             initTableColumns();
             verticesProvider.addDataDisplay(verticesTable);
@@ -91,13 +89,11 @@ public class EditVerticesAction extends AbstractMapAction {
 
         public LatLng[] getVertices() {
             List<LatitudeLongitude> verticesProviderList = verticesProvider.getList();
-            LatLng[] vertices = new LatLng[verticesProviderList.size()+1];
+            LatLng[] vertices = new LatLng[verticesProviderList.size()];
             for (int i = 0; i < verticesProviderList.size(); i++) {
                 LatitudeLongitude latitudeLongitude = verticesProviderList.get(i);
                 vertices[i] = LatLng.newInstance(latitudeLongitude.latitude, latitudeLongitude.longitude);
             }
-            LatitudeLongitude latitudeLongitude = verticesProviderList.get(0);
-            vertices[vertices.length - 1] = LatLng.newInstance(latitudeLongitude.latitude, latitudeLongitude.longitude);
             return vertices;
         }
 
