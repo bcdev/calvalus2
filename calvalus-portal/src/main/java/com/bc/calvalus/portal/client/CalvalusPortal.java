@@ -1,10 +1,16 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -81,7 +87,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             public void run() {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
-                backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
+                final BundleFilter filter = new BundleFilter();
+                filter.withProvider(BundleFilter.Provider.SYSTEM).withProvider(BundleFilter.Provider.USER);
+                backendService.getProcessors(filter.toString(), new InitProcessorsCallback());
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }
         };
@@ -230,9 +238,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private boolean isAllInputDataAvailable() {
         return regions != null
-                && productSets != null
-                && processors != null
-                && productions != null;
+               && productSets != null
+               && processors != null
+               && productions != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -312,6 +320,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {
+
         @Override
         public void onSuccess(DtoRegion[] regions) {
             List<Region> regionList = RegionConverter.decodeRegions(regions);
@@ -328,6 +337,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
+
         @Override
         public void onSuccess(DtoProductSet[] productSets) {
             CalvalusPortal.this.productSets = productSets;
@@ -343,6 +353,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitProcessorsCallback implements AsyncCallback<DtoProcessorDescriptor[]> {
+
         @Override
         public void onSuccess(DtoProcessorDescriptor[] processors) {
             CalvalusPortal.this.processors = processors;
@@ -358,6 +369,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitProductionsCallback implements AsyncCallback<DtoProduction[]> {
+
         @Override
         public void onSuccess(DtoProduction[] productions) {
             updateProductions(productions);
@@ -373,6 +385,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class UpdateProductionsCallback implements AsyncCallback<DtoProduction[]> {
+
         @Override
         public void onSuccess(DtoProduction[] unknownProductions) {
             updateProductions(unknownProductions);

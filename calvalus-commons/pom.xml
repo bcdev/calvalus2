@@ -10,7 +10,6 @@
         <version>1.7-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-commons</artifactId>
 
     <name>Calvalus Commons</name>
@@ -20,6 +19,11 @@
         <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
         </dependency>
     </dependencies>
 

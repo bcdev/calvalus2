@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.commons.ProcessStatus;
 
 import java.io.IOException;
@@ -14,11 +15,13 @@ public interface ProcessingService<JobId> {
     /**
      * Gets the list of processor bundles available by the service.
      *
-     * @param filter An optional filter expression (unused)
+     * @param filter An filter to define which bundles shall be looked up.
+     *
      * @return The list of processors supported by the service.
+     *
      * @throws IOException if an I/O error occurs.
      */
-    BundleDescriptor[] getBundles(String filter) throws Exception;
+    BundleDescriptor[] getBundles(BundleFilter filter) throws Exception;
 
     /**
      * @return The format used represent job IDs as plain text.
@@ -27,14 +30,18 @@ public interface ProcessingService<JobId> {
 
     /**
      * Gets status information for a processing job.
+     *
      * @param jobId The job identifier.
+     *
      * @return Job status information.
      */
     ProcessStatus getJobStatus(JobId jobId);
 
     /**
      * Kill a processing job.
+     *
      * @param jobId The job identifier.
+     *
      * @return {@code true} if the job could be killed.
      *
      * @throws java.io.IOException if an I/O error occurs

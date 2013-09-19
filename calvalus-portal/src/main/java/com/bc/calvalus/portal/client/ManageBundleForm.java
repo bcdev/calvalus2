@@ -25,7 +25,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -49,6 +48,7 @@ public class ManageBundleForm extends Composite {
     interface TheUiBinder extends UiBinder<Widget, ManageBundleForm> {
 
     }
+
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
@@ -70,8 +70,6 @@ public class ManageBundleForm extends Composite {
     Button removeButton;
     @UiField
     FlexTable processors;
-    @UiField
-    CheckBox showAllUserBundles;
     @UiField
     Button updateButton;
 
@@ -96,11 +94,11 @@ public class ManageBundleForm extends Composite {
             }
         });
         updateButton.addClickHandler(new ClickHandler() {
-                    @Override
-                    public void onClick(ClickEvent event) {
-                        Dialog.info("Warning", "You are not allowed to update bundles.");
-                    }
-                });
+            @Override
+            public void onClick(ClickEvent event) {
+                Dialog.info("Warning", "You are not allowed to update bundles.");
+            }
+        });
         bundleList.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {

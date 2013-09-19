@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.WorkflowStatusListener;
@@ -49,16 +50,13 @@ public class L2ProductionTypeTest {
         JobClient jobClient = new JobClient(new JobConf());
         HadoopProcessingService processingService = new HadoopProcessingService(jobClient) {
             @Override
-            public BundleDescriptor[] getBundles(String filter) {
-                ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0",
-                                                                                  "");
+            public BundleDescriptor[] getBundles(BundleFilter filter) {
+                ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
                 processorDescriptor.setOutputProductType("Generic-L2");
                 return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", processorDescriptor)};
             }
         };
-        productionType = new L2ProductionType(new TestInventoryService(),
-                                              processingService,
-                                              new TestStagingService());
+        productionType = new L2ProductionType(new TestInventoryService(), processingService, new TestStagingService());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.bc.calvalus.production.local;
 
+import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -17,6 +18,7 @@ import java.util.TimerTask;
  * A processing system that is implemented locally (e.g. using BEAM).
  */
 class LocalProcessingService implements ProcessingService<String> {
+
     private final BundleDescriptor[] bundleDescriptors;
     private final Map<String, Job> jobs;
     private final Map<String, ProcessStatus> jobStatuses;
@@ -30,7 +32,7 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(String filter) throws IOException {
+    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
         return bundleDescriptors;
     }
 
