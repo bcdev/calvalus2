@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.shared.BundleFilter;
 
 import java.io.IOException;
 

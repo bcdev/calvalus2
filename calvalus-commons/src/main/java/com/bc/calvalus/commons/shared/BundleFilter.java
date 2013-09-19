@@ -1,6 +1,4 @@
-package com.bc.calvalus.commons;
-
-import org.esa.beam.util.StringUtils;
+package com.bc.calvalus.commons.shared;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +73,7 @@ public class BundleFilter {
     }
 
     public BundleFilter withTheBundle(String bundleName, String bundleVersion) {
-        if (StringUtils.isNullOrEmpty(bundleName) || StringUtils.isNullOrEmpty(bundleVersion)) {
+        if (isNullOrEmpty(bundleName) || isNullOrEmpty(bundleVersion)) {
             throw new IllegalArgumentException("bundleName and bundleVersion must not be null or empty");
         }
         this.bundleName = bundleName;
@@ -84,7 +82,7 @@ public class BundleFilter {
     }
 
     public BundleFilter withTheProcessor(String processorName, String processorVersion) {
-        if (StringUtils.isNullOrEmpty(processorName) || StringUtils.isNullOrEmpty(processorVersion)) {
+        if (isNullOrEmpty(processorName) || isNullOrEmpty(processorVersion)) {
             throw new IllegalArgumentException("processorName and processorVersion must not be null or empty");
         }
         this.processorName = processorName;
@@ -153,4 +151,9 @@ public class BundleFilter {
         }
         return filter;
     }
+
+    private static boolean isNullOrEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
+
 }

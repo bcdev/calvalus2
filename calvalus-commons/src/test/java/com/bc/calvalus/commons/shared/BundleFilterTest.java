@@ -1,4 +1,4 @@
-package com.bc.calvalus.commons;
+package com.bc.calvalus.commons.shared;
 
 import org.junit.Test;
 

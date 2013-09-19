@@ -1,6 +1,6 @@
 package com.bc.calvalus.production;
 
-import com.bc.calvalus.commons.BundleFilter;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
 

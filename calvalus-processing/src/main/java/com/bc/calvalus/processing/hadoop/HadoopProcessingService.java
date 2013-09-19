@@ -17,9 +17,9 @@
 package com.bc.calvalus.processing.hadoop;
 
 
-import com.bc.calvalus.commons.BundleFilter;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;

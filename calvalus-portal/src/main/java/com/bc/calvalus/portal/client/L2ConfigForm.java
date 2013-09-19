@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.commons.BundleFilter;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
