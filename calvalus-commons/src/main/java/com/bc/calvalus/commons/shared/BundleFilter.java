@@ -8,6 +8,10 @@ import java.util.List;
  */
 public class BundleFilter {
 
+    public static final String PROVIDER_SYSTEM = "SYSTEM";
+    public static final String PROVIDER_USER = "USER";
+    public static final String PROVIDER_ALL_USERS = "ALL_USER";
+
     private static final char VALUE_SEPARATOR = ',';
     private static final char PARAMETER_SEPARATOR = ';';
     private static final char TAG_SEPARATOR = '=';
@@ -15,26 +19,20 @@ public class BundleFilter {
     private static final String BUNDLE_TAG = "bundle" + TAG_SEPARATOR;
     private static final String PROCESSOR_TAG = "processor" + TAG_SEPARATOR;
     private static final String USER_TAG = "user" + TAG_SEPARATOR;
-    private final List<Provider> providerList;
+
+    private final List<String> providerList;
     private String bundleName;
     private String bundleVersion;
     private String processorName;
     private String processorVersion;
     private String userName;
 
-    public enum Provider {
-        SYSTEM,
-        USER,
-        ALL_USERS
-    }
-
-
     public BundleFilter() {
-        this.providerList = new ArrayList<Provider>();
+        this.providerList = new ArrayList<String>();
     }
 
 
-    public boolean isProviderSupported(Provider provider) {
+    public boolean isProviderSupported(String provider) {
         return providerList.contains(provider);
     }
 
@@ -62,7 +60,7 @@ public class BundleFilter {
         return userName;
     }
 
-    public BundleFilter withProvider(Provider provider) {
+    public BundleFilter withProvider(String provider) {
         providerList.add(provider);
         return this;
     }
@@ -98,11 +96,11 @@ public class BundleFilter {
         final StringBuilder sb = new StringBuilder();
         if (!providerList.isEmpty()) {
             sb.append(PROVIDER_TAG);
-            for (Provider provider : providerList) {
+            for (String provider : providerList) {
                 if (sb.charAt(sb.length() - 1) == TAG_SEPARATOR) {
                     sb.append(VALUE_SEPARATOR);
                 }
-                sb.append(provider.name());
+                sb.append(provider);
             }
         }
         sb.append(PARAMETER_SEPARATOR);
@@ -135,7 +133,7 @@ public class BundleFilter {
             if (parameter.startsWith(PROVIDER_TAG)) {
                 final String[] providers = parameter.substring(PROVIDER_TAG.length()).split(String.valueOf(VALUE_SEPARATOR));
                 for (String provider : providers) {
-                    filter.withProvider(Provider.valueOf(provider));
+                    filter.withProvider(provider);
                 }
             } else if (parameter.startsWith(BUNDLE_TAG)) {
                 final String[] bundleInfos = parameter.substring(BUNDLE_TAG.length()).split(String.valueOf(VALUE_SEPARATOR));

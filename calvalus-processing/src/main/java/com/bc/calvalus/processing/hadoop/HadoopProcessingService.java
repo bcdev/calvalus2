@@ -77,19 +77,19 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         try {
             if (filter.getNumSupportedProvider() == 0) {
                 logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
-                filter.withProvider(BundleFilter.Provider.SYSTEM);
+                filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             }
-            if (filter.isProviderSupported(BundleFilter.Provider.USER)) {
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_USER)) {
                 String bundleLocationPattern = String.format("home/%s/software/%s", filter.getUserName().toLowerCase(), bundleDirName);
                 final String[] globedPaths = globPaths(bundleLocationPattern);
                 collectBundleDescriptors(globedPaths, filter, descriptors);
             }
-            if (filter.isProviderSupported(BundleFilter.Provider.ALL_USERS)) {
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
                 String bundleLocationPattern = String.format("home/%s/software/%s", "*", bundleDirName);
                 final String[] globedPaths = globPaths(bundleLocationPattern);
                 collectBundleDescriptors(globedPaths, filter, descriptors);
             }
-            if (filter.isProviderSupported(BundleFilter.Provider.SYSTEM)) {
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
                 String bundleLocationPattern = String.format(CALVALUS_SOFTWARE_PATH + "/" + bundleDirName);
                 final String[] globedPaths = globPaths(bundleLocationPattern);
                 collectBundleDescriptors(globedPaths, filter, descriptors);

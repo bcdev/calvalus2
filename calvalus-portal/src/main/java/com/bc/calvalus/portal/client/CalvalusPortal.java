@@ -88,7 +88,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
                 final BundleFilter filter = new BundleFilter();
-                filter.withProvider(BundleFilter.Provider.SYSTEM).withProvider(BundleFilter.Provider.USER);
+                filter.withProvider(BundleFilter.PROVIDER_SYSTEM).withProvider(BundleFilter.PROVIDER_USER);
                 backendService.getProcessors(filter.toString(), new InitProcessorsCallback());
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }

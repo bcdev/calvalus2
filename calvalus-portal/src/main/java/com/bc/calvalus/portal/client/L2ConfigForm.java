@@ -215,13 +215,13 @@ public class L2ConfigForm extends Composite {
     private String createFilterString() {
         final BundleFilter bundleFilter = new BundleFilter();
         if (showSystemProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.Provider.SYSTEM);
+            bundleFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
         }
         if (showAllUserProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.Provider.ALL_USERS);
+            bundleFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
         }
         if (showMyProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.Provider.USER);
+            bundleFilter.withProvider(BundleFilter.PROVIDER_USER);
         }
         return bundleFilter.toString();
     }
