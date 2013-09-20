@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessingService;
@@ -28,12 +29,14 @@ import org.apache.hadoop.conf.Configuration;
  */
 public class ProcessorProductionRequest {
 
-    private final String processorName;
-    private final String processorParameters;
+    private final String[] bundleProviders;
     private final String processorBundleName;
     private final String processorBundleVersion;
+    private final String processorName;
+    private final String processorParameters;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
+        this.bundleProviders = productionRequest.getString("bundleProviders", BundleFilter.PROVIDER_SYSTEM).split(",");
         this.processorName = productionRequest.getString("processorName", null);
         this.processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
         this.processorBundleName = productionRequest.getString("processorBundleName", null);
@@ -64,7 +67,12 @@ public class ProcessorProductionRequest {
 
     public ProcessorDescriptor getProcessorDescriptor(ProcessingService processingService) {
         try {
-            BundleDescriptor[] bundles = processingService.getBundles("");
+            final BundleFilter filter = new BundleFilter();
+            for (String bundleProvider : bundleProviders) {
+                filter.withProvider(bundleProvider);
+            }
+            filter.withTheBundle(processorBundleName, processorBundleVersion);
+            BundleDescriptor[] bundles = processingService.getBundles(filter);
             for (BundleDescriptor bundle : bundles) {
                 if (bundle.getBundleName().equals(processorBundleName) && bundle.getBundleVersion().equals(
                         processorBundleVersion)) {
