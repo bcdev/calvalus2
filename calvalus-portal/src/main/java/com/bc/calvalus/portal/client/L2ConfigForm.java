@@ -32,7 +32,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
@@ -50,7 +49,9 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -107,8 +108,7 @@ public class L2ConfigForm extends Composite {
     private final PortalContext portalContext;
     private final Filter<DtoProcessorDescriptor> processorFilter;
     private final Map<DtoParameterDescriptor, Widget> parameterDescriptorWidgets;
-
-    private DtoProcessorDescriptor[] processorDescriptors;
+    private final List<DtoProcessorDescriptor> processorDescriptors;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, null, selectionMandatory);
@@ -118,6 +118,7 @@ public class L2ConfigForm extends Composite {
         this.portalContext = portalContext;
         this.processorFilter = processorFilter;
         this.selectionMandatory = selectionMandatory;
+        this.processorDescriptors = new ArrayList<DtoProcessorDescriptor>();
         initWidget(uiBinder.createAndBindUi(this));
 
         FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=xml",
@@ -165,65 +166,47 @@ public class L2ConfigForm extends Composite {
     }
 
     public void updateProcessorList() {
-        portalContext.getBackendService().getProcessors(createFilterString(), new AsyncCallback<DtoProcessorDescriptor[]>() {
-            @Override
-            public void onFailure(Throwable throwable) {
-                Dialog.error("Error", "Could not obtain processor descriptors.\n\n" + "Exception message:\n" + throwable.getMessage());
-            }
+        DtoProcessorDescriptor oldSelection = getSelectedProcessorDescriptor();
 
-            @Override
-            public void onSuccess(DtoProcessorDescriptor[] dtoProcessorDescriptors) {
-                if (processorFilter != null) {
-                    ArrayList<DtoProcessorDescriptor> filtered = new ArrayList<DtoProcessorDescriptor>(dtoProcessorDescriptors.length);
-                    for (DtoProcessorDescriptor productSet : dtoProcessorDescriptors) {
-                        if (processorFilter.accept(productSet)) {
-                            filtered.add(productSet);
-                        }
-                    }
-                    dtoProcessorDescriptors = filtered.toArray(new DtoProcessorDescriptor[filtered.size()]);
-                }
-                DtoProcessorDescriptor oldSelection = null;
-                if (processorDescriptors != null) {
-                    int selectedIndex = processorList.getSelectedIndex();
-                    if (selectedIndex != -1) {
-                        oldSelection = processorDescriptors[selectionMandatory ? selectedIndex : selectedIndex - 1];
-                    }
-                }
-                processorDescriptors = dtoProcessorDescriptors;
-                processorList.clear();
-                if (!selectionMandatory) {
-                    processorList.addItem("<none>");
-                }
-                int newSelectionIndex = 0;
-                boolean productSetChanged = true;
-                for (DtoProcessorDescriptor processor : processorDescriptors) {
-                    String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
-                    processorList.addItem(label);
-                    if (oldSelection != null && oldSelection.equals(processor)) {
-                        newSelectionIndex = processorList.getItemCount() - 1;
-                        productSetChanged = false;
-                    }
-                }
-                processorList.setSelectedIndex(selectionMandatory ? newSelectionIndex : newSelectionIndex + 1);
-                if (productSetChanged) {
-                    DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
-                }
-            }
-        });
-    }
-
-    private String createFilterString() {
-        final BundleFilter bundleFilter = new BundleFilter();
+        processorDescriptors.clear();
         if (showSystemProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
-        }
-        if (showAllUserProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_SYSTEM));
         }
         if (showMyProcessors.getValue()) {
-            bundleFilter.withProvider(BundleFilter.PROVIDER_USER);
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_USER));
         }
-        return bundleFilter.toString();
+        if (showAllUserProcessors.getValue()) {
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_ALL_USERS));
+        }
+
+        if (processorFilter != null) {
+            final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
+            while (iterator.hasNext()) {
+                DtoProcessorDescriptor productSet = iterator.next();
+                if (!processorFilter.accept(productSet)) {
+                    iterator.remove();
+                }
+            }
+        }
+
+        processorList.clear();
+        if (!selectionMandatory) {
+            processorList.addItem("<none>");
+        }
+        int newSelectionIndex = 0;
+        boolean productSetChanged = true;
+        for (DtoProcessorDescriptor processor : processorDescriptors) {
+            String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
+            processorList.addItem(label);
+            if (oldSelection != null && oldSelection.equals(processor)) {
+                newSelectionIndex = processorList.getItemCount() - 1;
+                productSetChanged = false;
+            }
+        }
+        processorList.setSelectedIndex(selectionMandatory ? newSelectionIndex : newSelectionIndex + 1);
+        if (productSetChanged) {
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
+        }
     }
 
     private void updateProcessorDetails() {
@@ -247,11 +230,13 @@ public class L2ConfigForm extends Composite {
 
     public DtoProcessorDescriptor getSelectedProcessorDescriptor() {
         int selectedIndex = processorList.getSelectedIndex();
-        int offset = selectionMandatory ? 0 : 1;
-        if (selectedIndex >= offset) {
-            return processorDescriptors[selectedIndex - offset];
-        } else {
+        if (selectedIndex == -1) {
             return null;
+        }
+        if (selectionMandatory) {
+            return processorDescriptors.get(selectedIndex);
+        } else {
+            return processorDescriptors.get(selectedIndex - 1);
         }
     }
 

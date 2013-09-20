@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -78,7 +79,7 @@ public class ManageBundleForm extends Composite {
     public ManageBundleForm(PortalContext portalContext) {
         initWidget(uiBinder.createAndBindUi(this));
 
-        processorsDesc = portalContext.getProcessors();
+        processorsDesc = portalContext.getProcessors(BundleFilter.PROVIDER_USER);
         fillBundleList();
         updateBundleDetails();
         removeButton.addClickHandler(new ClickHandler() {
@@ -108,37 +109,42 @@ public class ManageBundleForm extends Composite {
     }
 
     private void fillBundleList() {
-        Set<String> bundles = new HashSet<String>(processorsDesc.length);
-        for (DtoProcessorDescriptor descriptor : processorsDesc) {
-            bundles.add(descriptor.getBundleName() + "-" + descriptor.getBundleVersion());
+        if (processorsDesc.length > 0) {
+            Set<String> bundles = new HashSet<String>(processorsDesc.length);
+            for (DtoProcessorDescriptor descriptor : processorsDesc) {
+                bundles.add(descriptor.getBundleName() + "-" + descriptor.getBundleVersion());
+            }
+            ArrayList<String> bundleNames = new ArrayList<String>(bundles);
+            Collections.sort(bundleNames);
+            for (String bundle : bundleNames) {
+                bundleList.addItem(bundle);
+            }
+            bundleList.setSelectedIndex(0);
         }
-        ArrayList<String> bundleNames = new ArrayList<String>(bundles);
-        Collections.sort(bundleNames);
-        for (String bundle : bundleNames) {
-            bundleList.addItem(bundle);
-        }
-        bundleList.setSelectedIndex(0);
     }
 
     private void updateBundleDetails() {
-        String bundleName = bundleList.getItemText(bundleList.getSelectedIndex());
         processors.removeAllRows();
-        int row = 0;
-        FlexTable.FlexCellFormatter flexCellFormatter = processors.getFlexCellFormatter();
-        for (DtoProcessorDescriptor descriptor : processorsDesc) {
-            String name = descriptor.getBundleName() + "-" + descriptor.getBundleVersion();
-            if (name.equals(bundleName)) {
-                flexCellFormatter.setStyleName(row, 0, style.explanatoryValue());
-                processors.setWidget(row, 0, new Label(descriptor.getProcessorName()));
-                processors.setWidget(row, 1, new Label(descriptor.getProcessorVersion()));
-                flexCellFormatter.setStyleName(row, 1, style.explanatoryValue());
-                row++;
-                processors.setWidget(row, 0, new HTML(descriptor.getDescriptionHtml()));
-                flexCellFormatter.setColSpan(row, 0, 2);
-                row++;
-                processors.setWidget(row, 0, new HTML("&nbsp;"));
-                flexCellFormatter.setColSpan(row, 0, 2);
-                row++;
+        final int selectedIndex = bundleList.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            String bundleName = bundleList.getItemText(selectedIndex);
+            int row = 0;
+            FlexTable.FlexCellFormatter flexCellFormatter = processors.getFlexCellFormatter();
+            for (DtoProcessorDescriptor descriptor : processorsDesc) {
+                String name = descriptor.getBundleName() + "-" + descriptor.getBundleVersion();
+                if (name.equals(bundleName)) {
+                    flexCellFormatter.setStyleName(row, 0, style.explanatoryValue());
+                    processors.setWidget(row, 0, new Label(descriptor.getProcessorName()));
+                    processors.setWidget(row, 1, new Label(descriptor.getProcessorVersion()));
+                    flexCellFormatter.setStyleName(row, 1, style.explanatoryValue());
+                    row++;
+                    processors.setWidget(row, 0, new HTML(descriptor.getDescriptionHtml()));
+                    flexCellFormatter.setColSpan(row, 0, 2);
+                    row++;
+                    processors.setWidget(row, 0, new HTML("&nbsp;"));
+                    flexCellFormatter.setColSpan(row, 0, 2);
+                    row++;
+                }
             }
         }
     }

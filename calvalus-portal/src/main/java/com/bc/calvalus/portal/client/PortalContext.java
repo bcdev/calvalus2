@@ -17,6 +17,7 @@ import com.google.gwt.view.client.ListDataProvider;
  * @author Norman
  */
 public interface PortalContext {
+
     RegionMapModel getRegionMapModel();
 
     ListDataProvider<Region> getRegions();
@@ -25,7 +26,7 @@ public interface PortalContext {
     DtoProductSet[] getProductSets();
 
     // make this return ListDataProvider<GsProcessorDescriptor>
-    DtoProcessorDescriptor[] getProcessors();
+    DtoProcessorDescriptor[] getProcessors(String filter);
 
     ListDataProvider<DtoProduction> getProductions();
 

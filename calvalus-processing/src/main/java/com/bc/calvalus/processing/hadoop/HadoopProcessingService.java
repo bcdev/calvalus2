@@ -20,7 +20,6 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
@@ -80,19 +79,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER)) {
-                String bundleLocationPattern = String.format("home/%s/software/%s", filter.getUserName().toLowerCase(), bundleDirName);
-                final String[] globedPaths = globPaths(bundleLocationPattern);
-                collectBundleDescriptors(globedPaths, filter, descriptors);
+                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
+                                                             BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
-                String bundleLocationPattern = String.format("home/%s/software/%s", "*", bundleDirName);
-                final String[] globedPaths = globPaths(bundleLocationPattern);
-                collectBundleDescriptors(globedPaths, filter, descriptors);
+                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                String bundleLocationPattern = String.format(CALVALUS_SOFTWARE_PATH + "/" + bundleDirName);
-                final String[] globedPaths = globPaths(bundleLocationPattern);
-                collectBundleDescriptors(globedPaths, filter, descriptors);
+                String bundleLocationPattern = String.format("%s/%s/%s", CALVALUS_SOFTWARE_PATH, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
         } catch (IOException e) {
             logger.warning(e.getMessage());
@@ -102,44 +99,31 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
     }
 
-    private void collectBundleDescriptors(String[] bundlePaths, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
-        for (String bundlePathString : bundlePaths) {
-            final Path bundlePath = new Path(bundlePathString);
-            Path qualifiedBundlePath = fileSystem.makeQualified(bundlePath);
-            FileStatus[] paths = fileSystem.listStatus(qualifiedBundlePath);
-            final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
-            for (FileStatus path : paths) {
-                FileStatus[] subPaths = fileSystem.listStatus(path.getPath());
-                for (FileStatus subPath : subPaths) {
-                    if (subPath.getPath().toString().endsWith(BUNDLE_DESCRIPTOR_XML_FILENAME)) {
-                        try {
-                            BundleDescriptor bd = new BundleDescriptor();
-                            if (filter.getProcessorName() != null) {
-                                final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
-                                for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                                    if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
-                                        processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
-                                        parameterBlockConverter.convertXmlToObject(readFile(subPath), bd);
-                                        descriptors.add(bd);
-                                    }
-                                }
-                            } else {
-                                parameterBlockConverter.convertXmlToObject(readFile(subPath), bd);
-                                descriptors.add(bd);
-                            }
-                        } catch (Exception e) {
-                            logger.warning(e.getMessage());
+    private void collectBundleDescriptors(String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
+        final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
+        final FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
+        final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
+
+        for (FileStatus file : fileStatuses) {
+            try {
+                BundleDescriptor bd = new BundleDescriptor();
+                if (filter.getProcessorName() != null) {
+                    final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
+                    for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                        if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
+                            processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                            parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                            descriptors.add(bd);
                         }
                     }
+                } else {
+                    parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                    descriptors.add(bd);
                 }
+            } catch (Exception e) {
+                logger.warning(e.getMessage());
             }
         }
-    }
-
-    private String[] globPaths(String bundleLocationPattern) throws IOException {
-        final ArrayList<String> allUsersPathPatterns = new ArrayList<String>();
-        allUsersPathPatterns.add(bundleLocationPattern);
-        return new HdfsInventoryService(fileSystem).globPaths(allUsersPathPatterns);
     }
 
     // this code exists somewhere else already
