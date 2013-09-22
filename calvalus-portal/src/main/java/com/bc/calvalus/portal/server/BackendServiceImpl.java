@@ -18,6 +18,7 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
@@ -45,14 +46,11 @@ import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import org.esa.beam.dataio.netcdf.util.TimeUtils;
 import org.esa.beam.framework.datamodel.GeoPos;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
@@ -87,6 +85,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private BackendConfig backendConfig;
     private Timer statusObserver;
     private static final SimpleDateFormat CCSDS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
     static {
         CCSDS_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
@@ -184,9 +183,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public DtoProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException {
+    public DtoProcessorDescriptor[] getProcessors(String filterString) throws BackendServiceException {
         try {
             List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
+            final BundleFilter filter = BundleFilter.fromString(filterString);
+            filter.withTheUser(getUserName());
+
             final BundleDescriptor[] bundleDescriptors = productionService.getBundles(filter);
             for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
                 DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
@@ -323,9 +325,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 time = record.getTime();
             }
             return recordSource.getTimeAndLocationColumnDescription()
-                    + ". Example values: lat=" + location.getLat()
-                    + " lon=" + location.getLon()
-                    + " time=" + (time != null ? CCSDS_FORMAT.format(time) : null);
+                   + ". Example values: lat=" + location.getLat()
+                   + " lon=" + location.getLon()
+                   + " time=" + (time != null ? CCSDS_FORMAT.format(time) : null);
         } catch (Exception e) {
             throw convert(e);
         }

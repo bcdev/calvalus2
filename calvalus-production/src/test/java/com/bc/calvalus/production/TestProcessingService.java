@@ -2,6 +2,7 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
@@ -17,7 +18,8 @@ import java.util.HashMap;
  */
 @Ignore
 public class TestProcessingService implements ProcessingService<String> {
-    private HashMap<String,ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
+
+    private HashMap<String, ProcessStatus> jobStatusMap = new HashMap<String, ProcessStatus>();
     private boolean closed;
 
     @Override
@@ -26,7 +28,7 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(String filter) throws IOException {
+    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
         return new BundleDescriptor[0];
     }
 

@@ -12,9 +12,10 @@
     <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
 
     <!--<inherits name='com.google.gwt.maps.GoogleMaps'/>-->
-    <inherits name='com.google.gwt.maps.Maps' />
+    <inherits name='com.google.gwt.maps.Maps'/>
 
     <!-- Other module inherits                                      -->
+    <inherits name='com.bc.calvalus.commons.CalvalusCommons'/>
 
     <!-- Specify the app entry point class.                         -->
     <entry-point class='com.bc.calvalus.portal.client.CalvalusPortal'/>

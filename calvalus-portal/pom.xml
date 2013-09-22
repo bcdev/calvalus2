@@ -131,6 +131,10 @@
                     <hostedWebapp>target/www</hostedWebapp>
                     <compileReport>true</compileReport>
                     <!--<style>DETAILED</style>-->
+                    <compileSourcesArtifacts>
+                        <artifact>com.bc.calvalus:calvalus-commons</artifact>
+                    </compileSourcesArtifacts>
+
                 </configuration>
             </plugin>
 

@@ -25,6 +25,9 @@ public class WKTParser {
             force('(');
             force(points);
             force(')');
+            if (points.get(0).equals(points.get(points.size()-1))) {
+                points.remove(points.size()-1);
+            }
             return points.toArray(new LatLng[points.size()]);
         } else if (eat("POINT")) {
             double[] point = new double[2];

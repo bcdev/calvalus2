@@ -1,10 +1,16 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -44,7 +50,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     // Data provided by various external services
     private ListDataProvider<Region> regions;
     private DtoProductSet[] productSets;
-    private DtoProcessorDescriptor[] processors;
+    private DtoProcessorDescriptor[] systemProcessors;
+    private DtoProcessorDescriptor[] userProcessors;
+    private DtoProcessorDescriptor[] allUserProcessors;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
     private PortalView[] views;
@@ -81,7 +89,19 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             public void run() {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
-                backendService.getProcessors(NO_FILTER, new InitProcessorsCallback());
+
+                final BundleFilter systemFilter = new BundleFilter();
+                systemFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
+                backendService.getProcessors(systemFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_SYSTEM));
+
+                final BundleFilter userFilter = new BundleFilter();
+                userFilter.withProvider(BundleFilter.PROVIDER_USER);
+                backendService.getProcessors(userFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_USER));
+
+                final BundleFilter allUserFilter = new BundleFilter();
+                allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
+                backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
+
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
             }
         };
@@ -109,8 +129,15 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
-    public DtoProcessorDescriptor[] getProcessors() {
-        return processors;
+    public DtoProcessorDescriptor[] getProcessors(String filter) {
+        if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
+            return systemProcessors;
+        } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
+            return userProcessors;
+        } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
+            return allUserProcessors;
+        }
+        return new DtoProcessorDescriptor[0];
     }
 
     @Override
@@ -230,9 +257,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private boolean isAllInputDataAvailable() {
         return regions != null
-                && productSets != null
-                && processors != null
-                && productions != null;
+               && productSets != null
+               && systemProcessors != null && userProcessors != null && allUserProcessors != null
+               && productions != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -267,7 +294,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             productionsMap.remove(deletedProduction.getId());
             listChange = true;
         }
-        // GWT.log("Updated productions: got " + productions.getList().size() + ",  listChange = " + listChange + ", propertyChange = " + propertyChange);
         if (listChange) {
             if (manageProductionsView != null) {
                 manageProductionsView.fireSortListEvent();
@@ -312,6 +338,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {
+
         @Override
         public void onSuccess(DtoRegion[] regions) {
             List<Region> regionList = RegionConverter.decodeRegions(regions);
@@ -328,6 +355,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
+
         @Override
         public void onSuccess(DtoProductSet[] productSets) {
             CalvalusPortal.this.productSets = productSets;
@@ -343,9 +371,16 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class InitProcessorsCallback implements AsyncCallback<DtoProcessorDescriptor[]> {
+
+        private final String filter;
+
+        public InitProcessorsCallback(String filter) {
+            this.filter = filter;
+        }
+
         @Override
         public void onSuccess(DtoProcessorDescriptor[] processors) {
-            CalvalusPortal.this.processors = processors;
+            assign(processors);
             maybeInitFrontend();
         }
 
@@ -353,11 +388,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.processors = new DtoProcessorDescriptor[0];
+            assign(new DtoProcessorDescriptor[0]);
+        }
+
+        private void assign(DtoProcessorDescriptor[] processors) {
+            if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
+                CalvalusPortal.this.systemProcessors = processors;
+            } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
+                CalvalusPortal.this.userProcessors = processors;
+            } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
+                CalvalusPortal.this.allUserProcessors = processors;
+            }
         }
     }
 
     private class InitProductionsCallback implements AsyncCallback<DtoProduction[]> {
+
         @Override
         public void onSuccess(DtoProduction[] productions) {
             updateProductions(productions);
@@ -373,6 +419,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class UpdateProductionsCallback implements AsyncCallback<DtoProduction[]> {
+
         @Override
         public void onSuccess(DtoProduction[] unknownProductions) {
             updateProductions(unknownProductions);

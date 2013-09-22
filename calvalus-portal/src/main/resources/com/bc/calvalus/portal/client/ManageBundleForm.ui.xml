@@ -13,7 +13,6 @@
 
         <g:HorizontalPanel spacing="10">
             <g:VerticalPanel>
-                <g:CheckBox ui:field="showAllUserBundles" text="Show bundles of all users" checked="false"/>
                 <g:ListBox ui:field="bundleList" width="28em" visibleItemCount="20"/>
                 <g:HorizontalPanel>
                     <g:Button ui:field='removeButton' text="Remove"/>

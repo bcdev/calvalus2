@@ -14,6 +14,13 @@
                     <h3>Level-2 Processor</h3>
                     <hr/>
                 </g:HTMLPanel>
+                <g:HorizontalPanel>
+                    <g:VerticalPanel>
+                        <g:CheckBox ui:field="showMyProcessors" text="My processors" value="true"/>
+                        <g:CheckBox ui:field="showSystemProcessors" text="System processors" value="true"/>
+                    </g:VerticalPanel>
+                    <g:CheckBox ui:field="showAllUserProcessors" text="Processors of other users" value="false"/>
+                </g:HorizontalPanel>
 
                 <g:ListBox ui:field="processorList" width="28em" visibleItemCount="12"/>
                 <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryLabel}"/>

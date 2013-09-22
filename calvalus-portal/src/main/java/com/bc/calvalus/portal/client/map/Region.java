@@ -126,6 +126,12 @@ public class Region {
             stringBuilder.append(' ');
             stringBuilder.append(point.getLatitude());
         }
+        if (!vertices[0].equals(vertices[vertices.length - 1])){
+            stringBuilder.append(',');
+            stringBuilder.append(vertices[0].getLongitude());
+            stringBuilder.append(' ');
+            stringBuilder.append(vertices[0].getLatitude());
+        }
         stringBuilder.append("))");
         return stringBuilder.toString();
     }
@@ -153,14 +159,13 @@ public class Region {
 
     public static LatLng[] getVertices(Rectangle rectangle) {
         LatLngBounds bounds = rectangle.getBounds();
-        LatLng[] points = new LatLng[5];
+        LatLng[] points = new LatLng[4];
         LatLng northEast = bounds.getNorthEast();
         LatLng southWest = bounds.getSouthWest();
         points[0] = northEast;
         points[1] = LatLng.newInstance(southWest.getLatitude(), northEast.getLongitude());
         points[2] = southWest;
         points[3] = LatLng.newInstance(northEast.getLatitude(), southWest.getLongitude());
-        points[4] = northEast;
         return points;
     }
 

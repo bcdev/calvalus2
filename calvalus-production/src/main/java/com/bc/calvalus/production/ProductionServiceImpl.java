@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -79,7 +80,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(String filter) throws ProductionException {
+    public BundleDescriptor[] getBundles(BundleFilter filter) throws ProductionException {
         try {
             return processingService.getBundles(filter);
         } catch (Exception e) {

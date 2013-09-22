@@ -75,12 +75,11 @@ public class WKTParserTest extends GWTTestCase {
 
     private void assertWKTParsingOk(String wkt) {
         LatLng[] latLngs = WKTParser.parse(wkt);
-        assertEquals(5, latLngs.length);
+        assertEquals(4, latLngs.length);
         assertEquals(LatLng.newInstance(-90, -180), latLngs[0]);
         assertEquals(LatLng.newInstance(-90, 180), latLngs[1]);
         assertEquals(LatLng.newInstance(90, 180), latLngs[2]);
         assertEquals(LatLng.newInstance(90, -180), latLngs[3]);
-        assertEquals(LatLng.newInstance(-90, -180), latLngs[4]);
     }
 
     private static void assertEquals(LatLng expected, LatLng vertex) {

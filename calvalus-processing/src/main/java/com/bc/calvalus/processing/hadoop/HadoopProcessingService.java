@@ -19,9 +19,11 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -50,6 +52,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.7-SNAPSHOT";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10.4";
     private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
+    private static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
 
     private final JobClient jobClient;
     private final FileSystem fileSystem;
@@ -64,31 +67,63 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(String filter) throws IOException {
+    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
         ArrayList<BundleDescriptor> descriptors = new ArrayList<BundleDescriptor>();
-
+        String bundleDirName = "*";
+        if (filter.getBundleName() != null) {
+            bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
+        }
         try {
-            Path softwarePath = fileSystem.makeQualified(new Path(CALVALUS_SOFTWARE_PATH));
-            FileStatus[] paths = fileSystem.listStatus(softwarePath);
-            for (FileStatus path : paths) {
-                FileStatus[] subPaths = fileSystem.listStatus(path.getPath());
-                for (FileStatus subPath : subPaths) {
-                    if (subPath.getPath().toString().endsWith("bundle-descriptor.xml")) {
-                        try {
-                            BundleDescriptor bd = new BundleDescriptor();
-                            new ParameterBlockConverter().convertXmlToObject(readFile(subPath), bd);
-                            descriptors.add(bd);
-                        } catch (Exception e) {
-                            logger.warning(e.getMessage());
-                        }
-                    }
-                }
+            if (filter.getNumSupportedProvider() == 0) {
+                logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
+                filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
+            }
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_USER)) {
+                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
+                                                             BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
+            }
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
+                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
+            }
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
+                String bundleLocationPattern = String.format("%s/%s/%s", CALVALUS_SOFTWARE_PATH, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
         } catch (IOException e) {
             logger.warning(e.getMessage());
+            throw e;
         }
 
         return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
+    }
+
+    private void collectBundleDescriptors(String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
+        final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
+        final FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
+        final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
+
+        for (FileStatus file : fileStatuses) {
+            try {
+                BundleDescriptor bd = new BundleDescriptor();
+                if (filter.getProcessorName() != null) {
+                    final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
+                    for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                        if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
+                            processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                            parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                            descriptors.add(bd);
+                        }
+                    }
+                } else {
+                    parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                    descriptors.add(bd);
+                }
+            } catch (Exception e) {
+                logger.warning(e.getMessage());
+            }
+        }
     }
 
     // this code exists somewhere else already
