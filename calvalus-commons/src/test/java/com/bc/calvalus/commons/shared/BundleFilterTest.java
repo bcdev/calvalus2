@@ -29,6 +29,14 @@ public class BundleFilterTest {
     }
 
     @Test
+    public void testToStringNotAllValuesSet() throws Exception {
+        final BundleFilter filter = new BundleFilter();
+        assertNotNull(filter.withProvider(BundleFilter.PROVIDER_USER));
+        assertNotNull(filter.withTheProcessor("c2r", "1.0"));
+        assertEquals("provider=USER;processor=c2r,1.0", filter.toString());
+    }
+
+    @Test
     public void testFromString() throws Exception {
         final BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER;bundle=coastcolour,1.6;processor=idepix,1.8-cc;user=Hugo");
 

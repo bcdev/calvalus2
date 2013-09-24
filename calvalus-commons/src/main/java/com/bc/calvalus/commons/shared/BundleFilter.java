@@ -103,22 +103,22 @@ public class BundleFilter {
                 }
             }
         }
-        sb.append(PARAMETER_SEPARATOR);
         if (bundleName != null) {
+            sb.append(PARAMETER_SEPARATOR);
             sb.append(BUNDLE_TAG);
             sb.append(bundleName);
             sb.append(VALUE_SEPARATOR);
             sb.append(bundleVersion);
         }
-        sb.append(PARAMETER_SEPARATOR);
         if (processorName != null) {
+            sb.append(PARAMETER_SEPARATOR);
             sb.append(PROCESSOR_TAG);
             sb.append(processorName);
             sb.append(VALUE_SEPARATOR);
             sb.append(processorVersion);
         }
-        sb.append(PARAMETER_SEPARATOR);
         if (userName != null) {
+            sb.append(PARAMETER_SEPARATOR);
             sb.append(USER_TAG);
             sb.append(userName);
         }
