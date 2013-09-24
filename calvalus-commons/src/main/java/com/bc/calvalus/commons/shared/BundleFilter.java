@@ -96,11 +96,11 @@ public class BundleFilter {
         final StringBuilder sb = new StringBuilder();
         if (!providerList.isEmpty()) {
             sb.append(PROVIDER_TAG);
-            for (String provider : providerList) {
-                if (sb.charAt(sb.length() - 1) == TAG_SEPARATOR) {
+            for (int i = 0; i < providerList.size(); i++) {
+                sb.append(providerList.get(i));
+                if (i < providerList.size() - 1) {
                     sb.append(VALUE_SEPARATOR);
                 }
-                sb.append(provider);
             }
         }
         sb.append(PARAMETER_SEPARATOR);

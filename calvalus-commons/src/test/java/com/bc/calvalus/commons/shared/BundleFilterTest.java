@@ -10,11 +10,15 @@ public class BundleFilterTest {
     public void testToString() throws Exception {
         final BundleFilter filter = new BundleFilter();
         assertNotNull(filter.withProvider(BundleFilter.PROVIDER_ALL_USERS));
+        assertNotNull(filter.withProvider(BundleFilter.PROVIDER_USER));
         assertNotNull(filter.withTheBundle("testname", "9.9"));
         assertNotNull(filter.withTheProcessor("proc", "1.7-SNAPSHOT"));
         assertNotNull(filter.withTheUser("Marco"));
 
+
+        assertEquals("provider=ALL_USER,USER;bundle=testname,9.9;processor=proc,1.7-SNAPSHOT;user=Marco", filter.toString());
         assertTrue(filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS));
+        assertTrue(filter.isProviderSupported(BundleFilter.PROVIDER_USER));
         assertFalse(filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM));
         assertEquals("testname", filter.getBundleName());
         assertEquals("9.9", filter.getBundleVersion());
