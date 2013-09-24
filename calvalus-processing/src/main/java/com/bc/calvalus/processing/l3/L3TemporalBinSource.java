@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinSource;
@@ -29,8 +30,10 @@ import org.apache.hadoop.io.SequenceFile;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -41,13 +44,13 @@ import java.util.logging.Logger;
 public class L3TemporalBinSource implements TemporalBinSource {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String PART_FILE_PREFIX = "part-r-";
+    private static final String PART_FILE_PREFIX = "part-";
 
     private final Configuration configuration;
     private final Path partsDir;
     private final long startTime;
     private final Mapper.Context context;
-    private FileStatus[] parts;
+    private List<PartFile> partFiles;
     private FileSystem hdfs;
 
     public L3TemporalBinSource(Path partsDir, Mapper.Context context) {
@@ -61,26 +64,43 @@ public class L3TemporalBinSource implements TemporalBinSource {
     public int open() throws IOException {
         context.progress();
         hdfs = partsDir.getFileSystem(configuration);
-        parts = hdfs.listStatus(partsDir, new PathFilter() {
+        FileStatus[] parts = hdfs.listStatus(partsDir, new PathFilter() {
             @Override
             public boolean accept(Path path) {
                 return path.getName().startsWith(PART_FILE_PREFIX);
             }
         });
+        partFiles = readFirstIndices(parts);
 
         LOG.info(MessageFormat.format("start reprojection, collecting {0} parts", parts.length));
 
-        Arrays.sort(parts);
+        Collections.sort(partFiles);
 
-        return parts.length;
+        return partFiles.size();
+    }
+
+    private List<PartFile> readFirstIndices(FileStatus[] parts) throws IOException {
+        List<PartFile> partFiles = new ArrayList<PartFile>(parts.length);
+        for (FileStatus part : parts) {
+            SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, part.getPath(), configuration);
+            try {
+                LongWritable key = new LongWritable(-42);
+                boolean more = reader.next(key);
+                if (more && key.get() != -42) {
+                    partFiles.add(new PartFile(part.getPath(), key.get()));
+                }
+            } finally {
+                reader.close();
+            }
+        }
+        return partFiles;
     }
 
     @Override
     public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
-        context.setStatus(String.format("part %d/%d", (index+1), (parts.length+1)));
+        context.setStatus(String.format("part %d/%d", (index + 1), (partFiles.size() + 1)));
         context.progress();
-        final FileStatus part = parts[index];
-        Path partFile = part.getPath();
+        Path partFile = partFiles.get(index).getPath();
         LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
         SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
         return new SequenceFileBinIterator(reader);
@@ -97,5 +117,27 @@ public class L3TemporalBinSource implements TemporalBinSource {
         context.progress();
         long stopTime = System.nanoTime();
         LOG.info(MessageFormat.format("stop reprojection after {0} sec", (stopTime - startTime) / 1E9));
+    }
+
+    private static class PartFile implements Comparable<PartFile> {
+
+        private final Path path;
+        private final long firstIndex;
+
+        public PartFile(Path path, long firstIndex) {
+            this.path = path;
+            this.firstIndex = firstIndex;
+        }
+
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public int compareTo(PartFile other) {
+            long thisVal = this.firstIndex;
+            long anotherVal = other.firstIndex;
+            return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
+        }
     }
 }
