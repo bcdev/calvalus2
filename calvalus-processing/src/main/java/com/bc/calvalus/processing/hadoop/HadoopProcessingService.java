@@ -107,6 +107,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         for (FileStatus file : fileStatuses) {
             try {
                 BundleDescriptor bd = new BundleDescriptor();
+                parameterBlockConverter.convertXmlToObject(readFile(file), bd);
                 if (filter.getProcessorName() != null) {
                     final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
                     for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
@@ -117,7 +118,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                         }
                     }
                 } else {
-                    parameterBlockConverter.convertXmlToObject(readFile(file), bd);
                     descriptors.add(bd);
                 }
             } catch (Exception e) {
