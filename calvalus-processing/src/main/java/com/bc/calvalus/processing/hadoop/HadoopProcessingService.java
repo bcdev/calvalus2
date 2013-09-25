@@ -163,8 +163,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         // Make user hadoop owns the outputs, required by "fuse"
         jobConfig.set("hadoop.job.ugi", "hadoop,hadoop");
 
-        jobConfig.set("mapred.map.tasks.speculative.execution", "false");
-        jobConfig.set("mapred.reduce.tasks.speculative.execution", "false");
+        jobConfig.setBoolean("mapred.map.tasks.speculative.execution", false);
+        jobConfig.setBoolean("mapred.reduce.tasks.speculative.execution", false);
+        jobConfig.setBoolean("mapred.used.genericoptionsparser", true);
 
         if (DEBUG) {
             // For debugging uncomment following line:
