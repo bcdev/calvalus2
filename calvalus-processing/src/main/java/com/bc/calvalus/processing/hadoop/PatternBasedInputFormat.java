@@ -76,7 +76,7 @@ public class PatternBasedInputFormat extends InputFormat {
                                                             regionName);
                 createSplits(fs, productInventory, fileStatuses, splits);
             }
-
+            CalvalusLogger.getLogger().info("Total files to process : " + splits.size());
             return splits;
         } catch (IOException e) {
             LOG.log(Level.SEVERE, String.format("Failed to compute list of input splits: %s", e.getMessage()), e);
