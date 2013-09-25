@@ -275,7 +275,7 @@ public class ProductionTool {
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 
         while (!production.getProcessingStatus().getState().isDone()) {
-            Thread.sleep(1000);
+            Thread.sleep(5000);
             productionService.updateStatuses();
             ProcessStatus processingStatus = production.getProcessingStatus();
             say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
