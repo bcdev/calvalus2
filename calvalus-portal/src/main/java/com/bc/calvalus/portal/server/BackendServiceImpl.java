@@ -205,7 +205,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
         for (int i = 0; i < processorDescriptors.length; i++) {
             dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                        processorDescriptors[i]);
+                                        bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
         }
         return dtoDescriptors;
     }
@@ -351,7 +351,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getRegionWKT());
     }
 
-    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion,
+    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
@@ -359,6 +359,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
                                           bundleName,
                                           bundleVersion,
+                                          bundlePath,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
                                           processorDescriptor.getOutputProductType(),

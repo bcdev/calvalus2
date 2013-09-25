@@ -62,9 +62,9 @@ public abstract class HadoopProductionType implements ProductionType {
     }
 
     protected static String createProductionName(String prefix, ProductionRequest productionRequest) throws
-            ProductionException {
+                                                                                                     ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
-        String processorName = productionRequest.getString("processorName", null);
+        String processorName = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_NAME, null);
         if (processorName != null) {
             sb.append(processorName).append(" ");
         }
@@ -148,6 +148,7 @@ public abstract class HadoopProductionType implements ProductionType {
      * @param productionRequest request
      * @param productionId      production ID
      * @param dirSuffix         suffix to make multiple outputs unique
+     *
      * @return the fully qualified output path
      */
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
@@ -163,6 +164,7 @@ public abstract class HadoopProductionType implements ProductionType {
      * after successfully completing a former job attempt.
      *
      * @param outputDir The output directory
+     *
      * @return true, if "_SUCCESS" exists
      */
     protected boolean successfullyCompleted(String outputDir) {

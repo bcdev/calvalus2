@@ -50,6 +50,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_L2_BUNDLE, null},
+                {JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
                 {JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, NO_DEFAULT},

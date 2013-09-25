@@ -53,7 +53,7 @@ public class L2ProductionTypeTest {
             public BundleDescriptor[] getBundles(BundleFilter filter) {
                 ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
                 processorDescriptor.setOutputProductType("Generic-L2");
-                return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", processorDescriptor)};
+                return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", "/software/test/system", processorDescriptor)};
             }
         };
         productionType = new L2ProductionType(new TestInventoryService(), processingService, new TestStagingService());
@@ -105,10 +105,11 @@ public class L2ProductionTypeTest {
                                                                     "inputPath", "MER_RR__1P/r03",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
-                                                                    "processorBundleName", "beam",
-                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
-                                                                    "processorName", "BandMaths",
-                                                                    "processorParameters", "<parameters/>",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "beam",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "4.9-SNAPSHOT",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/software/test/system",
+                                                                    ProcessorProductionRequest.PROCESSOR_NAME, "BandMaths",
+                                                                    ProcessorProductionRequest.PROCESSOR_PARAMETERS, "<parameters/>",
                                                                     "minLon", "5",
                                                                     "maxLon", "25",
                                                                     "minLat", "50",
@@ -160,9 +161,10 @@ public class L2ProductionTypeTest {
                                                                     "inputPath", "MER_RR__1P/r03",
                                                                     "productionName",
                                                                     nameForProduction,
-                                                                    "processorBundleName", "beam",
-                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
-                                                                    "processorName", "BandMaths");
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "beam",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "4.9-SNAPSHOT",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/test/bundles",
+                                                                    ProcessorProductionRequest.PROCESSOR_NAME, "BandMaths");
 
         Production production = productionType.createProduction(productionRequest);
         assertNotNull(production);
@@ -178,10 +180,11 @@ public class L2ProductionTypeTest {
                                                                     "maxDate", "2005-01-31",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
-                                                                    "processorBundleName", "beam",
-                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
-                                                                    "processorName", "BandMaths",
-                                                                    "processorParameters", "<!-- no params -->",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "beam",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "4.9-SNAPSHOT",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/software/test/system",
+                                                                    ProcessorProductionRequest.PROCESSOR_NAME, "BandMaths",
+                                                                    ProcessorProductionRequest.PROCESSOR_PARAMETERS, "<!-- no params -->",
                                                                     "minLon", "5",
                                                                     "maxLon", "25",
                                                                     "minLat", "50",
@@ -233,10 +236,11 @@ public class L2ProductionTypeTest {
                                                                     "dateList", "2005-01-01 2005-01-15 2005-01-31",
                                                                     "outputFormat", "NetCDF",
                                                                     "autoStaging", "true",
-                                                                    "processorBundleName", "beam",
-                                                                    "processorBundleVersion", "4.9-SNAPSHOT",
-                                                                    "processorName", "BandMaths",
-                                                                    "processorParameters", "<!-- no params -->",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "beam",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "4.9-SNAPSHOT",
+                                                                    ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/software/test/system",
+                                                                    ProcessorProductionRequest.PROCESSOR_NAME, "BandMaths",
+                                                                    ProcessorProductionRequest.PROCESSOR_PARAMETERS, "<!-- no params -->",
                                                                     "regionName", "Island In The Sun",
                                                                     "regionWKT",
                                                                     "POLYGON ((5 55, 25 50, 25 60, 5 60, 5 55))"

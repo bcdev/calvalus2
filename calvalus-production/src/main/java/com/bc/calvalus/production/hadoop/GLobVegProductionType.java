@@ -51,7 +51,7 @@ public class GLobVegProductionType extends HadoopProductionType {
     }
 
     GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                 StagingService stagingService) {
+                          StagingService stagingService) {
         super("GLobVeg", inventoryService, processingService, stagingService);
     }
 
@@ -64,9 +64,10 @@ public class GLobVegProductionType extends HadoopProductionType {
 
         DateRange dateRange = productionRequest.createFromMinMax();
 
-        String processorName = productionRequest.getString("processorName", null);
+        String processorName = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_NAME, null);
         String processorBundle = productionRequest.getString("processorBundle", null);
-        String processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
+        String processorBundleLocation = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, null);
+        String processorParameters = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "<parameters/>");
 
         String mosaicConfigXml = getMosaicConfig().toXml();
 
@@ -90,6 +91,7 @@ public class GLobVegProductionType extends HadoopProductionType {
 
             if (processorName != null) {
                 jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
             }

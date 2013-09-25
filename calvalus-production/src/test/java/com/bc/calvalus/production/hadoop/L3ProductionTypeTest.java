@@ -153,10 +153,11 @@ public class L3ProductionTypeTest {
                                      "inputPath", "MER_RR__1P/r03/2010",
                                      "outputFormat", "NetCDF",
                                      "autoStaging", "true",
-                                     "processorBundleName", "beam",
-                                     "processorBundleVersion", "4.9-SNAPSHOT",
-                                     "processorName", "BandMaths",
-                                     "processorParameters", "<!-- no params -->",
+                                     ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "beam",
+                                     ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "4.9-SNAPSHOT",
+                                     ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/test/bundles",
+                                     ProcessorProductionRequest.PROCESSOR_NAME, "BandMaths",
+                                     ProcessorProductionRequest.PROCESSOR_PARAMETERS, "<!-- no params -->",
                                      // Special Level 3 parameters
                                      "variables.count", "3",
 

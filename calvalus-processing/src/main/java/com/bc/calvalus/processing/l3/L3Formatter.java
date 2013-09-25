@@ -65,12 +65,12 @@ public class L3Formatter {
     public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
         Formatter.format(binningContext,
-                temporalBinSource,
-                formatterConfig,
-                regionGeometry,
-                startTime,
-                endTime,
-                createConfigurationMetadataElement(regionName, regionWKT)
+                         temporalBinSource,
+                         formatterConfig,
+                         regionGeometry,
+                         startTime,
+                         endTime,
+                         createConfigurationMetadataElement(regionName, regionWKT)
         );
     }
 
@@ -86,6 +86,7 @@ public class L3Formatter {
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_BEAM_BUNDLE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_OPERATOR);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_PARAMETERS);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L3_PARAMETERS);
