@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <ows:Identifier>L3MultiRegion</ows:Identifier>
+
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>productionName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>example 01_l3multiregion_daily</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/projects/example/01_l3multiregion_daily</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>inputPath</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-1</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+          <ows:Identifier>calvalus.output.format</ows:Identifier>
+          <wps:Data>
+            <wps:LiteralData>BEAM-DIMAP</wps:LiteralData>
+          </wps:Data>
+        </wps:Input>
+        <wps:Input>
+          <ows:Identifier>calvalus.output.prefix</ows:Identifier>
+          <wps:Data>
+            <wps:LiteralData>01_l3multiregion</wps:LiteralData>
+          </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.l3.multiformat</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <regions>
+                            <region>
+                                <name>northsea</name>
+                                <regionWKT>polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00, 0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))</regionWKT>
+                            </region>
+                            <region>
+                                <name>acadia</name>
+                                <regionWKT>polygon((-69.00 42.00, -52.00 42.00, -52.00 52.00, -69.00 52.00, -69.00 42.00))</regionWKT>
+                            </region>
+                        </regions>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
+
+    </wps:DataInputs>
+</wps:Execute>
