@@ -6,7 +6,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3BinProcessorWorkflowItem;
+import com.bc.calvalus.processing.l3.CellL3ProcessorWorkflowItem;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -25,26 +25,26 @@ import java.util.List;
  *
  * @author MarcoZ
  */
-public class L3BinProcessorProductionType extends HadoopProductionType {
+public class CellL3ProcessorProductionType extends HadoopProductionType {
 
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
         public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new L3BinProcessorProductionType(inventory, processing, staging);
+            return new CellL3ProcessorProductionType(inventory, processing, staging);
         }
     }
 
-    L3BinProcessorProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                 StagingService stagingService) {
-        super("L3Proc", inventoryService, processingService, stagingService);
+    CellL3ProcessorProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                  StagingService stagingService) {
+        super("CellL3", inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level 3 Bin Processing", productionRequest);
+        String defaultProductionName = createProductionName("Cell Level-3 Processing", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
@@ -53,12 +53,15 @@ public class L3BinProcessorProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
-        Geometry regionGeometry = productionRequest.getRegionGeometry(null);
-        String regionWKT = regionGeometry != null ? regionGeometry.toString() : "";
+        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        DateRange dateRange = dateRanges.get(0);
+        String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
+        String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
+        jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
+        jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
         String outputDirParts = getOutputPath(productionRequest, productionId, "-parts");
         String outputDirProducts = getOutputPath(productionRequest, productionId, "-output");
-        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,regionWKT);
 
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, productionRequest.getString("inputPath"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirParts);
@@ -66,7 +69,7 @@ public class L3BinProcessorProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
                 JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
 
-        WorkflowItem workflowItem = new L3BinProcessorWorkflowItem(getProcessingService(), productionName, jobConfig);
+        WorkflowItem workflowItem = new CellL3ProcessorWorkflowItem(getProcessingService(), productionName, jobConfig);
         if (outputFormat != null) {
             jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
@@ -75,26 +78,16 @@ public class L3BinProcessorProductionType extends HadoopProductionType {
 
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, outputDirParts);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirProducts);
-            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
+            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
             // is in fact dependent on the outputFormat TODO unify
             String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
                     JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
-            String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
-            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-            jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,regionWKT);
-
-            List<DateRange> dateRanges = productionRequest.getDateRanges();
-            DateRange dateRange = dateRanges.get(0);
-            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
-            jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
-            jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-
             WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                                                               productionName + " Format " + date1Str, jobConfig);
+                                                               productionName + " Format",
+                                                               jobConfig);
             workflowItem = new Workflow.Sequential(workflowItem, formatItem);
         }
 

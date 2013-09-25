@@ -17,16 +17,21 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.binning.cellprocessor.CellProcessorChain;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Reduces list of spatial bins to a temporal bin.
@@ -55,15 +60,41 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     }
 
     @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+        Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+        ProcessingMetadata.write(workOutputPath, conf, metadata);
+    }
+
+    @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
         computeOutput = conf.getBoolean(JobConfigNames.CALVALUS_L3_COMPUTE_OUTPUTS, true);
-        BinningContext binningContext = L3Config.get(conf).createBinningContext();
+
+        L3Config l3Config = getL3Config(conf);
+
+        BinningContext binningContext = l3Config.createBinningContext();
         temporalBinner = new TemporalBinner(binningContext);
         cellChain = new CellProcessorChain(binningContext);
+        conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, binningContext.getBinManager().getResultFeatureNames());
+    }
 
-        String[] resultFeatureNames = binningContext.getBinManager().getResultFeatureNames();
-        conf.setStrings("calvalus.l3.outputFeatureNames", resultFeatureNames);
+    private L3Config getL3Config(Configuration conf) {
+        String cellL3Conf = conf.get(JobConfigNames.CALVALUS_CELL_PARAMETERS);
+        String stdL3Conf = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
+        String l3ConfXML;
+        if (cellL3Conf != null) {
+            l3ConfXML = cellL3Conf;
+        } else {
+            l3ConfXML = stdL3Conf;
+        }
+        L3Config l3Config;
+        try {
+            l3Config = L3Config.fromXml(l3ConfXML);
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("Invalid L3 configuration: " + e.getMessage(), e);
+        }
+        return l3Config;
     }
 
     @Override

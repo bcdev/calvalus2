@@ -53,17 +53,12 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3"},
                 {JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"},
-                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_REGION_GEOMETRY, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_MIN_DATE, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_MAX_DATE, NO_DEFAULT}
+                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT}
         };
     }
 
     @Override
     protected void configureJob(Job job) throws IOException {
-
         job.setInputFormatClass(L3FormatterInputFormat.class);
         FileInputFormat.setInputPaths(job, getInputDir());
 

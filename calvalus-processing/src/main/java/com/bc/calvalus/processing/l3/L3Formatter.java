@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.binning.operator.FormatterConfig;
@@ -37,19 +37,21 @@ import java.text.ParseException;
  */
 public class L3Formatter {
 
-    private final BinningContext binningContext;
     private final ProductData.UTC startTime;
     private final ProductData.UTC endTime;
     private final Configuration configuration;
+    private final PlanetaryGrid planetaryGrid;
+    private final String[] featureNames;
     private FormatterConfig formatterConfig;
 
     public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
         L3Config l3Config = L3Config.get(conf);
-        this.binningContext = l3Config.createBinningContext();
+        planetaryGrid = l3Config.createBinningContext().getPlanetaryGrid();
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
         this.configuration = conf;
 
+        featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         String formatterXML = conf.get(JobConfigNames.CALVALUS_L3_FORMAT_PARAMETERS);
         if (formatterXML != null) {
             formatterConfig = FormatterConfig.fromXml(formatterXML);
@@ -64,8 +66,9 @@ public class L3Formatter {
 
     public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
-        Formatter.format(binningContext,
+        Formatter.format(planetaryGrid,
                 temporalBinSource,
+                featureNames,
                 formatterConfig,
                 regionGeometry,
                 startTime,

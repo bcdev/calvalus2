@@ -18,8 +18,10 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -27,6 +29,7 @@ import org.esa.beam.binning.TemporalBinSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,8 +43,13 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
-        final FileSplit split = (FileSplit) context.getInputSplit();
-        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(split.getPath(), context);
+        FileSplit fileSplit = (FileSplit) context.getInputSplit();
+        Path partsDirPath = fileSplit.getPath();
+
+        Map<String, String> metadata = ProcessingMetadata.read(partsDirPath, jobConfig);
+        ProcessingMetadata.metadata2Config(metadata, jobConfig, JobConfigNames.LEVEL3_METADATA_KEYS);
+
+        final TemporalBinSource temporalBinSource = new L3TemporalBinSource(partsDirPath, context);
 
         String dateStart = jobConfig.get(JobConfigNames.CALVALUS_MIN_DATE);
         String dateStop = jobConfig.get(JobConfigNames.CALVALUS_MAX_DATE);

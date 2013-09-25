@@ -23,7 +23,6 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
-import com.bc.calvalus.processing.l3.cellstream.CellOutputFormat;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -98,7 +97,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(L3Reducer.class);
         job.setOutputKeyClass(LongWritable.class);
         job.setOutputValueClass(L3TemporalBin.class);
-        job.setOutputFormatClass(CellOutputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         ProcessorFactory.installProcessorBundle(jobConfig);

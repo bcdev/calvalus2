@@ -5,11 +5,14 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * A workflow item taking bins distributing them to reducers for formatting
@@ -33,8 +36,7 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
                 {JobConfigNames.CALVALUS_INPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                {JobConfigNames.CALVALUS_L3_PARAMETERS, NO_DEFAULT}
+                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT}
         };
     }
 
@@ -61,6 +63,9 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
 
         ProcessorFactory.installProcessorBundle(jobConfig);
+
+        Map<String, String> metadata = ProcessingMetadata.read(FileInputFormat.getInputPaths(job)[0], jobConfig);
+        ProcessingMetadata.metadata2Config(metadata, jobConfig, JobConfigNames.LEVEL3_METADATA_KEYS);
     }
 
 }

@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class L3ProductionTypeTest {
 
@@ -44,37 +45,42 @@ public class L3ProductionTypeTest {
         Production production = productionType.createProduction(productionRequest);
 
         assertNotNull(production);
-        assertEquals("Level 3 BandMaths 2010-06-15 to 2010-08-15", production.getName());
+        assertEquals("Level-3 BandMaths 2010-06-15 to 2010-08-15", production.getName());
         assertEquals(true, production.getStagingPath().startsWith("ewa/"));
         assertEquals(true, production.getId().contains("_" + "L3" + "_"));
-        assertNotNull(production.getWorkflow());
-        assertNotNull(production.getWorkflow().getItems());
-        assertEquals(3, production.getWorkflow().getItems().length);
+        WorkflowItem workflow = production.getWorkflow();
+        assertNotNull(workflow);
+        assertSame(Workflow.Sequential.class, workflow.getClass());
+        WorkflowItem[] sequenceWfs = workflow.getItems();
+        assertNotNull(sequenceWfs);
+        assertEquals(2, sequenceWfs.length);
 
+        WorkflowItem wfL3Parallel = sequenceWfs[0];
+        assertSame(Workflow.Parallel.class, wfL3Parallel.getClass());
+        WorkflowItem[] parallelWfs = wfL3Parallel.getItems();
+        assertNotNull(parallelWfs);
+        assertEquals(3, parallelWfs.length);
         // Note that periodLength=20 and compositingPeriodLength=5
-        testItem(production.getWorkflow().getItems()[0], "2010-06-15", "2010-06-19");
-        testItem(production.getWorkflow().getItems()[1], "2010-07-05", "2010-07-09");
-        testItem(production.getWorkflow().getItems()[2], "2010-07-25", "2010-07-29");
-    }
+        testL3Item(parallelWfs[0], "2010-06-15", "2010-06-19");
+        testL3Item(parallelWfs[1], "2010-07-05", "2010-07-09");
+        testL3Item(parallelWfs[2], "2010-07-25", "2010-07-29");
 
-    private void testItem(WorkflowItem item, String date1, String date2) {
-
-        assertTrue(item instanceof Workflow.Sequential);
-        final WorkflowItem[] items = item.getItems();
-        assertEquals(2, items.length);
-        assertTrue(items[0] instanceof L3WorkflowItem);
-        assertTrue(items[1] instanceof L3FormatWorkflowItem);
-
-        L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) items[0];
-        assertEquals(date1, l3WorkflowItem.getMinDate());
-        assertEquals(date2, l3WorkflowItem.getMaxDate());
-        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
-
-        L3FormatWorkflowItem l3formatWorkflowItem = (L3FormatWorkflowItem) items[1];
+        WorkflowItem wfFormat = sequenceWfs[1];
+        assertSame(L3FormatWorkflowItem.class, wfFormat.getClass());
+        L3FormatWorkflowItem l3formatWorkflowItem = (L3FormatWorkflowItem) wfFormat;
         assertEquals(true,
                      l3formatWorkflowItem.getInputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
         assertEquals(true,
                      l3formatWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
+    }
+
+    private void testL3Item(WorkflowItem item, String date1, String date2) {
+        assertSame(L3WorkflowItem.class, item.getClass());
+        L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) item;
+
+        assertEquals(date1, l3WorkflowItem.getMinDate());
+        assertEquals(date2, l3WorkflowItem.getMaxDate());
+        assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
     }
 
 
