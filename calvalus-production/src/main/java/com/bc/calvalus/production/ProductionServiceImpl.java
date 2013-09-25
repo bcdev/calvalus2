@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
@@ -67,7 +68,7 @@ public class ProductionServiceImpl implements ProductionService {
         this.productionTypes = productionTypes;
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
-        this.logger = Logger.getLogger("com.bc.calvalus");
+        this.logger = CalvalusLogger.getLogger();
     }
 
     @Override
