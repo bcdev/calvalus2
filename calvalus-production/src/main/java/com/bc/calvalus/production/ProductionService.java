@@ -162,5 +162,13 @@ public interface ProductionService {
      */
     boolean removeUserFile(String userName, String path) throws ProductionException;
 
+    /**
+     * Gets the qualified path to the specified user file.
+     *
+     * @param userName The name of the user.
+     * @param filePath A relative path.
+     *
+     * @return A fully qualified path to the user file.
+     */
     String getQualifiedUserPath(String userName, String filePath);
 }
