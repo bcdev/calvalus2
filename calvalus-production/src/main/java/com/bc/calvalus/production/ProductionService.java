@@ -158,9 +158,21 @@ public interface ProductionService {
      *
      * @return true, if the file could be found and removed.
      *
-     * @throws ProductionException If an error occured (file exists, but can't be removed).
+     * @throws ProductionException If an error occurred (file exists, but can't be removed).
      */
     boolean removeUserFile(String userName, String path) throws ProductionException;
+
+    /**
+     * Deletes a directory from the user's file space in the inventory.
+     *
+     * @param userName The name of an authorised user.
+     * @param path     A relative path into the user's file space.
+     *
+     * @return true, if the directory could be found and removed.
+     *
+     * @throws ProductionException If an error occurred (directory exists, but can't be removed).
+     */
+    boolean removeUserDirectory(String userName, String path) throws ProductionException;
 
     /**
      * Gets the qualified path to the specified user file.

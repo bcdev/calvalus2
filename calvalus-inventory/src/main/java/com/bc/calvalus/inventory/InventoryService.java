@@ -64,4 +64,15 @@ public interface InventoryService {
      * @throws IOException If an I/O error occurs
      */
     boolean removeFile(String userPath) throws IOException;
+
+    /**
+     * Deletes the directory specified by the given path.
+     *
+     * @param userPath the path to the directory to be deleted.
+     *
+     * @return {@code true}, if the deletion was successful, otherwise {@code false}.
+     *
+     * @throws IOException If an I/O error occurs
+     */
+    boolean removeDirectory(String userPath) throws IOException;
 }

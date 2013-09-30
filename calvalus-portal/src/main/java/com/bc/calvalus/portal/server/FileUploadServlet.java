@@ -58,6 +58,8 @@ public class FileUploadServlet extends HttpServlet {
             fileHandler = new EchoXMLFileHandler();
         } else if ("1".equals(req.getParameter("local"))) {
             fileHandler = new LocalFileHandler(backendConfig.getLocalUploadDir());
+        } else if (Boolean.TRUE.equals(Boolean.valueOf(req.getParameter("bundle")))) {
+            fileHandler = new BundleFileHandler(getServletContext());
         } else {
             fileHandler = new InventoryFileHandler();
         }
@@ -78,6 +80,7 @@ public class FileUploadServlet extends HttpServlet {
     }
 
     public interface FileHandler {
+
         void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception;
     }
 
@@ -174,4 +177,5 @@ public class FileUploadServlet extends HttpServlet {
         }
 
     }
+
 }

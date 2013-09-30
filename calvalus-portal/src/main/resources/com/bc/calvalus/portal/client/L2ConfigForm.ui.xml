@@ -34,9 +34,7 @@
                     <hr/>
                 </g:HTMLPanel>
 
-                <g:TextArea ui:field="processorParametersArea"
-                            characterWidth="72"
-                            visibleLines="12"/>
+                <g:TextArea ui:field="processorParametersArea" characterWidth="72" visibleLines="16"/>
 
                 <g:FormPanel ui:field="uploadForm" method="POST">
                     <g:HorizontalPanel spacing="2">

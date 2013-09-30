@@ -356,6 +356,15 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
+    public boolean removeUserDirectory(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.removeDirectory(getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
     public String getQualifiedUserPath(String userName, String path) {
         return inventoryService.getQualifiedPath(getUserPath(userName, path));
     }

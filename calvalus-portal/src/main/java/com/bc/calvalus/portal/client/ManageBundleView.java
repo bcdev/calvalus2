@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -24,16 +23,12 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class ManageBundleView extends PortalView {
 
-    public static final String ID = ManageBundleView.class.getName();
 
     private ManageBundleForm manageBundleForm;
 
     public ManageBundleView(PortalContext portalContext) {
         super(portalContext);
         manageBundleForm = new ManageBundleForm(portalContext);
-
-        BundleUploadAction action = new BundleUploadAction();
-        FileUploadManager.configureForm(manageBundleForm.getUploadForm(), "dir=" + "FOOOOO", action, action);
     }
 
     @Override
@@ -42,24 +37,8 @@ public class ManageBundleView extends PortalView {
     }
 
     @Override
-    public String getViewId() {
-        return ID;
-    }
-
-    @Override
     public String getTitle() {
         return "Manage Bundles";
     }
 
-    private class BundleUploadAction implements FormPanel.SubmitCompleteHandler, FormPanel.SubmitHandler {
-        @Override
-        public void onSubmit(FormPanel.SubmitEvent event) {
-            //TODO
-        }
-
-        @Override
-        public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-            //TODO
-        }
-    }
 }
