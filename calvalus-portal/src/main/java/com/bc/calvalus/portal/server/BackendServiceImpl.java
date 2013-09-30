@@ -35,7 +35,6 @@ import com.bc.calvalus.portal.shared.DtoRegion;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordSourceSpi;
@@ -325,7 +324,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             String url = productionService.getQualifiedUserPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
-            Header header = recordSource.getHeader();
             Iterable<Record> records = recordSource.getRecords();
             GeoPos location = null;
             Date time = null;
