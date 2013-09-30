@@ -311,6 +311,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public boolean removeUserDirectory(String filePath) throws BackendServiceException {
+        try {
+            return productionService.removeUserDirectory(getUserName(), filePath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
     public String checkUserFile(String filePath) throws BackendServiceException {
         try {
             String url = productionService.getQualifiedUserPath(getUserName(), filePath);

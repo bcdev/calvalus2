@@ -25,6 +25,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
@@ -45,6 +46,8 @@ import java.util.Set;
  * Form for handling bundles (and maybe more...) for processor bundles
  */
 public class ManageBundleForm extends Composite {
+
+    private static final String BUNDLE_DIRECTORY = "software";
 
     private final PortalContext portalContext;
 
@@ -74,12 +77,7 @@ public class ManageBundleForm extends Composite {
         initWidget(uiBinder.createAndBindUi(this));
 
         updateBundlesList();
-        removeButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                Dialog.info("Warning", "You are not allowed to remove this bundle.");
-            }
-        });
+        removeButton.addClickHandler(new BundleRemoveHandler());
         uploadButton.addClickHandler(new BundleUploadHandler());
         bundleList.addChangeHandler(new BundleListChangeHandler());
     }
@@ -131,9 +129,53 @@ public class ManageBundleForm extends Composite {
         }
     }
 
+    private class BundleRemoveHandler implements ClickHandler {
+
+        @Override
+        public void onClick(ClickEvent event) {
+            final int selectedIndex = bundleList.getSelectedIndex();
+            final String bundleName;
+            if (selectedIndex >= 0) {
+                bundleName = bundleList.getItemText(selectedIndex);
+            } else {
+                bundleName = null;
+            }
+            if (bundleName != null) {
+                Dialog.ask("Remove Bundle",
+                           new HTML("The bundle '" + bundleName + "' will be permanently deleted.<br/>" +
+                                    "Do you really want to continue?"),
+                           new Runnable() {
+                               @Override
+                               public void run() {
+                                   removeBundle(bundleName);
+                               }
+                           });
+            } else {
+                Dialog.error("Remove Bundle",
+                             "No bundle selected.");
+            }
+
+        }
+
+        private void removeBundle(String bundleName) {
+            portalContext.getBackendService().removeUserDirectory(BUNDLE_DIRECTORY + "/" + bundleName, new AsyncCallback<Boolean>() {
+                @Override
+                public void onFailure(Throwable caught) {
+                    Dialog.error("Remove Bundle",
+                                 "No bundle selected.");
+                }
+
+                @Override
+                public void onSuccess(Boolean result) {
+                    Dialog.info("Remove Bundle",
+                                "Bundle has been successfully removed.");
+                }
+            });
+        }
+    }
+
     private class BundleUploadHandler implements ClickHandler {
 
-        public static final String BUNDLE_DIRECTORY = "software";
         private final FileUpload bundleFileUpload;
         private final FormPanel uploadForm;
         private Dialog fileUploadDialog;
@@ -150,7 +192,7 @@ public class ManageBundleForm extends Composite {
 
             final BundleSubmitHandler submitHandler = new BundleSubmitHandler();
             FileUploadManager.configureForm(uploadForm,
-                                            "dir=" + BUNDLE_DIRECTORY + "&bundle=true",  // todo - actually the dir could be removed
+                                            "dir=" + BUNDLE_DIRECTORY + "&bundle=true",
                                             submitHandler,
                                             submitHandler);
         }
@@ -168,14 +210,14 @@ public class ManageBundleForm extends Composite {
                 protected void onOk() {
                     String filename = bundleFileUpload.getFilename();
                     if (filename == null || filename.isEmpty()) {
-                        Dialog.info("Bundle Upload",
-                                    new HTML("No filename selected."),
-                                    new HTML("Please specify a bundle file (*.zip)."));
+                        Dialog.error("Bundle Upload",
+                                     new HTML("No filename selected."),
+                                     new HTML("Please specify a bundle file (*.zip)."));
                         return;
                     } else if (!filename.endsWith(".zip")) {
-                        Dialog.info("Bundle Upload",
-                                    new HTML("Not a valid bundle file selected."),
-                                    new HTML("Please specify a bundle file (*.zip)."));
+                        Dialog.error("Bundle Upload",
+                                     new HTML("Not a valid bundle file selected."),
+                                     new HTML("Please specify a bundle file (*.zip)."));
                     }
                     monitorDialog = new Dialog("Bundle Upload", new Label("Sending '" + filename + "'..."), ButtonType.CANCEL) {
                         @Override
