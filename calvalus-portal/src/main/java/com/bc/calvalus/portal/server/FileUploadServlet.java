@@ -75,7 +75,8 @@ public class FileUploadServlet extends HttpServlet {
             }
         } catch (Exception e) {
             log("Error uploading a file", e);
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().print(e.getMessage());
         }
     }
 

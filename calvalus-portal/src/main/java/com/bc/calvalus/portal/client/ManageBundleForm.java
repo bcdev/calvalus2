@@ -260,14 +260,11 @@ public class ManageBundleForm extends Composite {
                 ManageBundleForm.this.updateBundlesList();
                 updateBundleDetails();
                 String resultHTML = submitCompleteEvent.getResults();
-                String resultMessage = resultHTML.substring(0, resultHTML.indexOf("\n"));
-                String message;
-                if (!resultMessage.contains("200")) {
-                    message = resultMessage;
+                if (resultHTML.equals(bundleFileUpload.getFilename())) {
+                    Dialog.info("Bundle Upload", "File successfully uploaded.");
                 } else {
-                    message = "File successfully uploaded.";
+                    Dialog.error("Bundle Upload", "Error while bundle upload.<br/>" + resultHTML);
                 }
-                Dialog.info("File Upload", message);
             }
         }
     }
