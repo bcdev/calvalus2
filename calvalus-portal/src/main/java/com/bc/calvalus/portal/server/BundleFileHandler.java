@@ -73,7 +73,7 @@ class BundleFileHandler implements FileUploadServlet.FileHandler {
                 zipFile.close();
             }
 
-            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
             resp.setHeader("content-type", "text/html");
             resp.getWriter().print(item.getName());
             context.log("Copied file " + item + " for user '" + getUserName(req) + "' to inventory");
