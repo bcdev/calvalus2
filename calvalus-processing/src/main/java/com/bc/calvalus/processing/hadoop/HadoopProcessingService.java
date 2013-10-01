@@ -78,7 +78,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             }
-            if (filter.isProviderSupported(BundleFilter.PROVIDER_USER)) {
+            if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
                                                              BUNDLE_DESCRIPTOR_XML_FILENAME);
                 collectBundleDescriptors(bundleLocationPattern, filter, descriptors);

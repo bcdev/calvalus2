@@ -80,7 +80,6 @@ public class ProcessorProductionRequest {
         try {
             final BundleFilter filter = new BundleFilter();
             filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
-            filter.withProvider(BundleFilter.PROVIDER_USER);
             filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
             BundleDescriptor[] bundles = processingService.getBundles(filter);
