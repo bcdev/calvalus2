@@ -24,7 +24,7 @@
                 <hr/>
             </g:HTMLPanel>
             <g:ScrollPanel>
-                <g:FlexTable ui:field="processors" width="100%"/>
+                <g:FlexTable ui:field="processors" width="50em"/>
             </g:ScrollPanel>
         </g:VerticalPanel>
 
