@@ -29,18 +29,23 @@ import org.apache.hadoop.conf.Configuration;
  */
 public class ProcessorProductionRequest {
 
-    private final String[] bundleProviders;
+    public static final String PROCESSOR_BUNDLE_NAME = "processorBundleName";
+    public static final String PROCESSOR_BUNDLE_VERSION = "processorBundleVersion";
+    public static final String PROCESSOR_BUNDLE_LOCATION = "processorBundleLocation";
+    public static final String PROCESSOR_NAME = "processorName";
+    public static final String PROCESSOR_PARAMETERS = "processorParameters";
     private final String processorBundleName;
     private final String processorBundleVersion;
+    private final String processorBundleLocation;
     private final String processorName;
     private final String processorParameters;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
-        this.bundleProviders = productionRequest.getString("bundleProviders", BundleFilter.PROVIDER_SYSTEM).split(",");
-        this.processorName = productionRequest.getString("processorName", null);
-        this.processorParameters = productionRequest.getString("processorParameters", "<parameters/>");
-        this.processorBundleName = productionRequest.getString("processorBundleName", null);
-        this.processorBundleVersion = productionRequest.getString("processorBundleVersion", null);
+        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME, null);
+        this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION, null);
+        this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION, null);
+        this.processorName = productionRequest.getString(PROCESSOR_NAME, null);
+        this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS, "<parameters/>");
     }
 
     public String getProcessorName() {
@@ -54,28 +59,35 @@ public class ProcessorProductionRequest {
         return null;
     }
 
+    public String getProcessorBundleLocation() {
+        return processorBundleLocation;
+    }
+
     public void configureProcessor(Configuration jobConfig) {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
         }
         String processorBundle = getProcessorBundle();
-        if (processorBundle != null) {
+        final String processorBundleLocation = getProcessorBundleLocation();
+        if (processorBundle != null && processorBundleLocation != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
         }
     }
 
     public ProcessorDescriptor getProcessorDescriptor(ProcessingService processingService) {
         try {
             final BundleFilter filter = new BundleFilter();
-            for (String bundleProvider : bundleProviders) {
-                filter.withProvider(bundleProvider);
-            }
+            filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
+            filter.withProvider(BundleFilter.PROVIDER_USER);
+            filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
             BundleDescriptor[] bundles = processingService.getBundles(filter);
             for (BundleDescriptor bundle : bundles) {
-                if (bundle.getBundleName().equals(processorBundleName) && bundle.getBundleVersion().equals(
-                        processorBundleVersion)) {
+                if (bundle.getBundleName().equals(processorBundleName) &&
+                    bundle.getBundleVersion().equals(processorBundleVersion) &&
+                    bundle.getBundleLocation().equals(processorBundleLocation)) {
                     ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
                     for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
                         if (processorDescriptor.getExecutableName().equals(processorName)) {

@@ -51,8 +51,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.7-SNAPSHOT";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-4.10.4";
+    public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
-    private static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
 
     private final JobClient jobClient;
     private final FileSystem fileSystem;
@@ -108,6 +108,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             try {
                 BundleDescriptor bd = new BundleDescriptor();
                 parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                bd.setBundleLocation(file.getPath().getParent().toString());
                 if (filter.getProcessorName() != null) {
                     final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
                     for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
@@ -135,9 +136,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
 
-    public static void addBundleToClassPath(String bundle, Configuration configuration) throws IOException {
+    public static void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
         final FileSystem fileSystem = FileSystem.get(configuration);
-        final Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH, bundle);
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {

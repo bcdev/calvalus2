@@ -25,6 +25,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
@@ -33,7 +34,7 @@ import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
@@ -46,6 +47,10 @@ import java.util.Set;
  */
 public class ManageBundleForm extends Composite {
 
+    private static final String BUNDLE_DIRECTORY = "software";
+
+    private final PortalContext portalContext;
+
     interface TheUiBinder extends UiBinder<Widget, ManageBundleForm> {
 
     }
@@ -56,56 +61,31 @@ public class ManageBundleForm extends Composite {
     L2ConfigForm.L2Style style;
 
     @UiField
-    FileUpload fileUpload;
-    @UiField
-    FormPanel uploadForm;
-    @UiField
     ListBox bundleList;
-    @UiField
-    TextBox bundleName;
-    @UiField
-    Button submitButton;
-    @UiField
-    TextBox bundleVersion;
     @UiField
     Button removeButton;
     @UiField
-    FlexTable processors;
-    @UiField
-    Button updateButton;
+    Button uploadButton;
 
-    private final DtoProcessorDescriptor[] processorsDesc;
+    @UiField
+    FlexTable processors;
+
+    private DtoProcessorDescriptor[] processorsDesc;
 
     public ManageBundleForm(PortalContext portalContext) {
+        this.portalContext = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
 
+        updateBundlesList();
+        removeButton.addClickHandler(new BundleRemoveHandler());
+        uploadButton.addClickHandler(new BundleUploadHandler());
+        bundleList.addChangeHandler(new BundleListChangeHandler());
+    }
+
+    private void updateBundlesList() {
         processorsDesc = portalContext.getProcessors(BundleFilter.PROVIDER_USER);
         fillBundleList();
         updateBundleDetails();
-        removeButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                Dialog.info("Warning", "You are not allowed to remove this bundle.");
-            }
-        });
-        submitButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                Dialog.info("Warning", "You are not allowed to upload new bundles.");
-            }
-        });
-        updateButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                Dialog.info("Warning", "You are not allowed to update bundles.");
-            }
-        });
-        bundleList.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                updateBundleDetails();
-            }
-        });
     }
 
     private void fillBundleList() {
@@ -149,8 +129,151 @@ public class ManageBundleForm extends Composite {
         }
     }
 
-    public FormPanel getUploadForm() {
-        return uploadForm;
+    private class BundleRemoveHandler implements ClickHandler {
+
+        @Override
+        public void onClick(ClickEvent event) {
+            final int selectedIndex = bundleList.getSelectedIndex();
+            final String bundleName;
+            if (selectedIndex >= 0) {
+                bundleName = bundleList.getItemText(selectedIndex);
+            } else {
+                bundleName = null;
+            }
+            if (bundleName != null) {
+                Dialog.ask("Remove Bundle",
+                           new HTML("The bundle '" + bundleName + "' will be permanently deleted.<br/>" +
+                                    "Do you really want to continue?"),
+                           new Runnable() {
+                               @Override
+                               public void run() {
+                                   removeBundle(bundleName);
+                               }
+                           });
+            } else {
+                Dialog.error("Remove Bundle",
+                             "No bundle selected.");
+            }
+
+        }
+
+        private void removeBundle(String bundleName) {
+            portalContext.getBackendService().removeUserDirectory(BUNDLE_DIRECTORY + "/" + bundleName, new AsyncCallback<Boolean>() {
+                @Override
+                public void onFailure(Throwable caught) {
+                    Dialog.error("Remove Bundle",
+                                 "No bundle selected.");
+                }
+
+                @Override
+                public void onSuccess(Boolean result) {
+                    Dialog.info("Remove Bundle",
+                                "Bundle has been successfully removed.");
+                }
+            });
+        }
     }
 
+    private class BundleUploadHandler implements ClickHandler {
+
+        private final FileUpload bundleFileUpload;
+        private final FormPanel uploadForm;
+        private Dialog fileUploadDialog;
+        private Dialog monitorDialog;
+        private FormPanel.SubmitEvent submitEvent;
+
+        private BundleUploadHandler() {
+            bundleFileUpload = new FileUpload();
+            bundleFileUpload.setName("bundleUpload");
+            // this is more like a hint. It is up to the browser how it will consider the MIME type
+            bundleFileUpload.getElement().setPropertyString("accept", "application/zip");
+            uploadForm = new FormPanel();
+            uploadForm.setWidget(bundleFileUpload);
+
+            final BundleSubmitHandler submitHandler = new BundleSubmitHandler();
+            FileUploadManager.configureForm(uploadForm,
+                                            "dir=" + BUNDLE_DIRECTORY + "&bundle=true",
+                                            submitHandler,
+                                            submitHandler);
+        }
+
+        @Override
+        public void onClick(ClickEvent event) {
+            VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
+                                                                      new HTML("Select a bundle file:"),
+                                                                      uploadForm,
+                                                                      new HTML(
+                                                                              "The bundle file must be <b>*.zip</b> file containing a bundle descriptor XML file.</br>" +
+                                                                              "Uploads will replace existing bundles if they have the same name and version."));
+            fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+                @Override
+                protected void onOk() {
+                    String filename = bundleFileUpload.getFilename();
+                    if (filename == null || filename.isEmpty()) {
+                        Dialog.error("Bundle Upload",
+                                     new HTML("No filename selected."),
+                                     new HTML("Please specify a bundle file (*.zip)."));
+                        return;
+                    } else if (!filename.endsWith(".zip")) {
+                        Dialog.error("Bundle Upload",
+                                     new HTML("Not a valid bundle file selected."),
+                                     new HTML("Please specify a bundle file (*.zip)."));
+                    }
+                    monitorDialog = new Dialog("Bundle Upload", new Label("Sending '" + filename + "'..."), ButtonType.CANCEL) {
+                        @Override
+                        protected void onCancel() {
+                            cancelSubmit();
+                        }
+                    };
+                    monitorDialog.show();
+                    uploadForm.submit();
+                }
+
+                private void cancelSubmit() {
+                    closeDialogs();
+                    if (submitEvent != null) {
+                        submitEvent.cancel();
+                    }
+                }
+            };
+
+            fileUploadDialog.show();
+        }
+
+        private void closeDialogs() {
+            monitorDialog.hide();
+            fileUploadDialog.hide();
+        }
+
+
+        private class BundleSubmitHandler implements FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
+
+
+            @Override
+            public void onSubmit(FormPanel.SubmitEvent submitEvent) {
+                BundleUploadHandler.this.submitEvent = submitEvent;
+            }
+
+            @Override
+            public void onSubmitComplete(FormPanel.SubmitCompleteEvent submitCompleteEvent) {
+                closeDialogs();
+                ManageBundleForm.this.updateBundlesList();
+                updateBundleDetails();
+                String resultHTML = submitCompleteEvent.getResults();
+                if (resultHTML.equals(bundleFileUpload.getFilename())) {
+                    Dialog.info("Bundle Upload", "File successfully uploaded.");
+                } else {
+                    Dialog.error("Bundle Upload", "Error while bundle upload.<br/>" + resultHTML);
+                }
+            }
+        }
+    }
+
+    private class BundleListChangeHandler implements ChangeHandler {
+
+        @Override
+        public void onChange(ChangeEvent event) {
+            updateBundleDetails();
+        }
+    }
 }

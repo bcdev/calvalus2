@@ -89,6 +89,7 @@ public class L3Formatter {
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_BEAM_BUNDLE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE);
+        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_OPERATOR);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_PARAMETERS);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L3_PARAMETERS);

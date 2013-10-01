@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -256,10 +257,11 @@ public class L2ConfigForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
         DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
-            parameters.put("processorBundleName", processorDescriptor.getBundleName());
-            parameters.put("processorBundleVersion", processorDescriptor.getBundleVersion());
-            parameters.put("processorName", processorDescriptor.getExecutableName());
-            parameters.put("processorParameters", getProcessorParameters());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, getProcessorParameters());
         }
         return parameters;
     }

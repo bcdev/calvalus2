@@ -4,53 +4,30 @@
 
     <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
 
-    <g:VerticalPanel spacing="10">
+    <g:HorizontalPanel width="100%">
 
-        <g:HTMLPanel width="100%">
-            <h3>Existing Bundles</h3>
-            <hr/>
-        </g:HTMLPanel>
+        <g:VerticalPanel spacing="5" height="30em" width="100%">
+            <g:HTMLPanel width="100%">
+                <h3>User Bundles on Calvalus</h3>
+                <hr/>
+            </g:HTMLPanel>
+            <g:ListBox ui:field="bundleList" width="100%" visibleItemCount="25"/>
+            <g:HorizontalPanel>
+                <g:Button ui:field='removeButton' text="Remove"/>
+                <g:Button ui:field='uploadButton' text="Upload"/>
+            </g:HorizontalPanel>
+        </g:VerticalPanel>
 
-        <g:HorizontalPanel spacing="10">
-            <g:VerticalPanel>
-                <g:ListBox ui:field="bundleList" width="28em" visibleItemCount="20"/>
-                <g:HorizontalPanel>
-                    <g:Button ui:field='removeButton' text="Remove"/>
-                    <g:Button ui:field='updateButton' text="Update"/>
-                </g:HorizontalPanel>
-            </g:VerticalPanel>
-            <g:VerticalPanel spacing="5" height="26em">
-                <g:HTMLPanel width="100%">
-                    <h4>Processor in this Bundles</h4>
-                    <hr/>
-                </g:HTMLPanel>
-                <g:ScrollPanel height="22em" width="100%">
-                    <g:FlexTable ui:field="processors"/>
-                </g:ScrollPanel>
-            </g:VerticalPanel>
-        </g:HorizontalPanel>
+        <g:VerticalPanel spacing="5" height="44em" width="100%">
+            <g:HTMLPanel width="100%">
+                <h3>Processors Defined in Selected Bundle</h3>
+                <hr/>
+            </g:HTMLPanel>
+            <g:ScrollPanel>
+                <g:FlexTable ui:field="processors" width="100%"/>
+            </g:ScrollPanel>
+        </g:VerticalPanel>
 
-        <g:HTMLPanel width="100%">
-            <h3>Upload new Bundle</h3>
-            <hr/>
-        </g:HTMLPanel>
+    </g:HorizontalPanel>
 
-        <g:FormPanel ui:field="uploadForm" method="POST">
-            <g:VerticalPanel spacing="2">
-                <g:HorizontalPanel spacing="2">
-                    <g:Label>Bundle Name:</g:Label>
-                    <g:TextBox ui:field="bundleName" width="36em"/>
-                </g:HorizontalPanel>
-
-                <g:HorizontalPanel spacing="2">
-                    <g:Label>Bundle Version:</g:Label>
-                    <g:TextBox ui:field="bundleVersion" width="36em"/>
-                </g:HorizontalPanel>
-
-                <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
-                <g:Button ui:field='submitButton' text="Upload"/>
-            </g:VerticalPanel>
-        </g:FormPanel>
-
-    </g:VerticalPanel>
 </ui:UiBinder>

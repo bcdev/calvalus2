@@ -65,12 +65,11 @@ public class ProcessorFactory {
 
     public static void installProcessorBundle(Configuration conf) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        if (bundle != null) {
+        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE) != null) {
             final FileSystem fs = FileSystem.get(conf);
-            Path bundlePath = getBundlePath(bundle, fs);
+            Path bundlePath = getBundlePath(conf, fs);
             if (bundlePath != null) {
-                HadoopProcessingService.addBundleToClassPath(bundle, conf);
+                HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
                 addBundleArchives(bundlePath, fs, conf);
                 DistributedCache.createSymlink(conf);
 
@@ -83,6 +82,7 @@ public class ProcessorFactory {
                 throw new IllegalArgumentException("Processor bundle does not exist.");
             }
         }
+
         conf.set(CALVALUS_L2_PROCESSOR_TYPE, processorType.toString());
     }
 
@@ -107,7 +107,7 @@ public class ProcessorFactory {
             @Override
             public boolean accept(Path path) {
                 return path.getName().equals(executable + "-process") ||
-                        path.getName().equals(executable + "-process.vm") ;
+                       path.getName().equals(executable + "-process.vm");
             }
         });
         if (executableFiles.length == 1) {
@@ -116,12 +116,15 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    static Path getBundlePath(String bundle, FileSystem fs) throws IOException {
-        final Path bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
-        if (fs.exists(bundlePath)) {
-            FileStatus bundleStatus = fs.getFileStatus(bundlePath);
-            if (bundleStatus != null && bundleStatus.isDir()) {
-                return bundlePath;
+    private static Path getBundlePath(Configuration conf, FileSystem fs) throws IOException {
+        String bundleLocation = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
+        if (bundleLocation != null) {
+            final Path bundlePath = new Path(bundleLocation);
+            if (fs.exists(bundlePath)) {
+                FileStatus bundleStatus = fs.getFileStatus(bundlePath);
+                if (bundleStatus != null && bundleStatus.isDir()) {
+                    return bundlePath;
+                }
             }
         }
         return null;
@@ -179,7 +182,7 @@ public class ProcessorFactory {
     static boolean isArchive(Path archivePath) {
         String filename = archivePath.getName();
         return filename.endsWith(".tgz") || filename.endsWith(".tar.gz") ||
-                filename.endsWith(".tar") || filename.endsWith(".zip");
+               filename.endsWith(".tar") || filename.endsWith(".zip");
     }
 
     /**

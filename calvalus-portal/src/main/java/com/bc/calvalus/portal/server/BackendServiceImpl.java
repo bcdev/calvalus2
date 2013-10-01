@@ -35,7 +35,6 @@ import com.bc.calvalus.portal.shared.DtoRegion;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordSourceSpi;
@@ -205,7 +204,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
         for (int i = 0; i < processorDescriptors.length; i++) {
             dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                        processorDescriptors[i]);
+                                        bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
         }
         return dtoDescriptors;
     }
@@ -311,12 +310,20 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public boolean removeUserDirectory(String filePath) throws BackendServiceException {
+        try {
+            return productionService.removeUserDirectory(getUserName(), filePath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
     public String checkUserFile(String filePath) throws BackendServiceException {
         try {
             String url = productionService.getQualifiedUserPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
-            Header header = recordSource.getHeader();
             Iterable<Record> records = recordSource.getRecords();
             GeoPos location = null;
             Date time = null;
@@ -351,7 +358,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getRegionWKT());
     }
 
-    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion,
+    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
@@ -359,6 +366,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
                                           bundleName,
                                           bundleVersion,
+                                          bundlePath,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
                                           processorDescriptor.getOutputProductType(),
