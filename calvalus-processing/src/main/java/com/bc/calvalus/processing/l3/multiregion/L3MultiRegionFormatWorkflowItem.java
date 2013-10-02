@@ -44,7 +44,7 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
-        SequenceFileInputFormat.addInputPaths(job, getInputDir());
+        FileInputFormat.addInputPaths(job, getInputDir());
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
         job.setMapperClass(L3MultiRegionFormatMapper.class);
