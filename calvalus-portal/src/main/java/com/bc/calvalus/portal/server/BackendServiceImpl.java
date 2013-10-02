@@ -46,20 +46,20 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -83,11 +83,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private ProductionService productionService;
     private BackendConfig backendConfig;
     private Timer statusObserver;
-    private static final SimpleDateFormat CCSDS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    static {
-        CCSDS_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    private static final DateFormat CCSDS_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /**
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
@@ -325,16 +321,45 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
             Iterable<Record> records = recordSource.getRecords();
-            GeoPos location = null;
-            Date time = null;
+            int numRecords = 0;
+            double latMin = +Double.MAX_VALUE;
+            double latMax = -Double.MAX_VALUE;
+            double lonMin = +Double.MAX_VALUE;
+            double lonMax = -Double.MAX_VALUE;
+            long timeMin = Long.MAX_VALUE;
+            long timeMax = Long.MIN_VALUE;
+
             for (Record record : records) {
-                location = record.getLocation();
-                time = record.getTime();
+                GeoPos location = record.getLocation();
+                if (location != null && location.isValid()) {
+                    numRecords++;
+                    latMin = Math.min(latMin, location.getLat());
+                    latMax = Math.max(latMax, location.getLat());
+                    lonMin = Math.min(lonMin, location.getLon());
+                    lonMax = Math.max(lonMax, location.getLon());
+                }
+                Date time = record.getTime();
+                if (time != null) {
+                    timeMin = Math.min(timeMin, time.getTime());
+                    timeMax = Math.max(timeMax, time.getTime());
+                }
             }
-            return recordSource.getTimeAndLocationColumnDescription()
-                   + ". Example values: lat=" + location.getLat()
-                   + " lon=" + location.getLon()
-                   + " time=" + (time != null ? CCSDS_FORMAT.format(time) : null);
+            String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
+                                             recordSource.getTimeAndLocationColumnDescription(),
+                                             numRecords);
+            if (numRecords > 0) {
+                reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
+                                           latMin, latMax, lonMin, lonMax);
+            }
+            if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
+                reportMsg += String.format("Time range: [%s, %s]\n",
+                                           CCSDS_FORMAT.format(new Date(timeMin)),
+                                           CCSDS_FORMAT.format(new Date(timeMax)));
+            } else {
+                reportMsg += "No time information given.\n";
+            }
+            reportMsg += "Time range: [" + lonMin + ", " +  lonMax + "]\n";
+            return reportMsg;
         } catch (Exception e) {
             throw convert(e);
         }
