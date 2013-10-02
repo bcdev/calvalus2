@@ -1,7 +1,10 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
+import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
+import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.support.SeadasGrid;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
@@ -11,6 +14,7 @@ import ucar.nc2.Variable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -24,6 +28,7 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
 
     private final String[] featureNames;
     private final int numBins;
+    private int numRows;
 
     private Variable binNumVar;
     private Array binNumArray;
@@ -34,13 +39,25 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
     private final Variable[] featureVars;
     private final Array[] featureArrays;
 
-    private int currentBinIndex = 0;
-    private int arrayPointer = Integer.MAX_VALUE;
-    private int readAhead;
+    private int currentBinIndex;
+    private int currentBlockPointer = Integer.MAX_VALUE;
     private final Date startDate;
     private final Date endDate;
+    private final SeadasGrid seadasGrid;
+    private int[] rowOffset;
+    private int[] rowExtent;
+    private int[] blockOffset;
+    private int[] blockExtent;
 
-    public SeadasBinnnedCellReader(NetcdfFile netcdfFile) {
+    private int currentRow;
+    private int currentRowPointer;
+    private int currentRowElems;
+    private int currentBlock;
+    private int readAheadElems;
+    private int numReadBins;
+
+
+    public SeadasBinnnedCellReader(NetcdfFile netcdfFile) throws IOException {
         super(netcdfFile);
         numBins = readLargestDimensionSize(netcdfFile);
         List<String> featureNameList = new ArrayList<String>();
@@ -66,13 +83,77 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
         featureNameList.add(weights.getShortName());
         featureVarsList.add(weights);
 
-        readAhead = DEFAULT_READAHEAD;
         featureVars = featureVarsList.toArray(new Variable[featureVarsList.size()]);
         featureArrays = new Array[featureVarsList.size()];
         featureNames = featureNameList.toArray(new String[featureNameList.size()]);
 
         startDate = extractDate(netcdfFile, "Start_Day", "Start_Year");
         endDate = extractDate(netcdfFile, "End_Day", "End_Year");
+
+        Variable binIndexVariable = netcdfFile.findVariable("Level-3_Binned_Data/BinIndex");
+        List<Variable> variables = ((Structure) binIndexVariable).getVariables();
+        Array extentArray = null;
+        for (Variable variable : variables) {
+            if (variable.getShortName().equals("extent")) {
+                extentArray = variable.read();
+                break;
+            }
+        }
+        numRows = binIndexVariable.getShape(0);
+        rowOffset = new int[numRows];
+        rowExtent = new int[numRows];
+        blockOffset = new int[numRows];
+        blockExtent = new int[numRows];
+
+        int rowOff = 0;
+        int blockOff = 0;
+        int blockSize = 0;
+        int rowCounter = 0;
+        int blockCounter = 0;
+        for (int i = 0; i < numRows; i++) {
+            int extent = extentArray.getInt(i);
+            if (extent != 0) {
+                rowOffset[rowCounter] = rowOff;
+                rowExtent[rowCounter] = extent;
+                rowOff += extent;
+                rowCounter++;
+                blockSize += extent;
+                if (blockSize > DEFAULT_READAHEAD) {
+                    blockExtent[blockCounter] = blockSize;
+                    blockOffset[blockCounter] = blockOff;
+                    blockOff += blockSize;
+                    blockSize = 0;
+                    blockCounter++;
+                }
+            }
+        }
+        if (blockSize > 0) {
+            blockExtent[blockCounter] = blockSize;
+            blockOffset[blockCounter] = blockOff;
+            blockCounter++;
+        }
+
+        rowExtent = Arrays.copyOf(rowExtent, rowCounter);
+        rowOffset = Arrays.copyOf(rowOffset, rowCounter);
+        blockExtent = Arrays.copyOf(blockExtent, blockCounter);
+        blockOffset = Arrays.copyOf(blockOffset, blockCounter);
+
+        currentRow = rowExtent.length - 1;
+        currentBlock = blockExtent.length - 1;
+
+        currentBinIndex = numBins;
+        currentBlockPointer = Integer.MAX_VALUE;
+        readAheadElems = 0;
+
+        currentRowPointer = Integer.MAX_VALUE;
+        currentRowElems = 0;
+
+        numReadBins = 0;
+
+        L3Config l3Config = new L3Config();
+        l3Config.setNumRows(numRows);
+        PlanetaryGrid planetaryGrid = l3Config.createPlanetaryGrid();
+        seadasGrid = new SeadasGrid(planetaryGrid);
     }
 
     private static Date extractDate(NetcdfFile netcdfFile, String dayName, String yearName) {
@@ -86,13 +167,18 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
     }
 
     @Override
+    public int getNumRows() {
+        return numRows;
+    }
+
+    @Override
     public String[] getFeatureNames() {
         return featureNames;
     }
 
     @Override
-    public int getCurrentIndex() {
-        return currentBinIndex;
+    public int getNumReadBins() {
+        return numReadBins;
     }
 
     @Override
@@ -112,26 +198,43 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
 
     @Override
     public boolean readNext(LongWritable key, L3TemporalBin temporalBin) throws Exception {
-        if (currentBinIndex >= numBins) {
+        if (currentBlock == -1 && currentRowPointer >=  currentRowElems && currentRow == -1) {
             return false;
         }
-        if (arrayPointer >= readAhead) {
-            final int origin = currentBinIndex;
-            final int shape = Math.min(numBins - currentBinIndex, readAhead);
-            readAhead(new int[]{origin}, new int[]{shape});
-            arrayPointer = 0;
+
+        // read ahead buffer is empty
+        if (currentBlockPointer >=  readAheadElems) {
+            int toRead = blockExtent[currentBlock];
+            int origin = blockOffset[currentBlock];
+            currentBlock--;
+            readAhead(new int[]{origin}, new int[]{toRead});
+            readAheadElems = toRead;
+            currentBlockPointer = 0;
         }
-        long binIndex = binNumArray.getLong(arrayPointer);
-        key.set(binIndex);
-        temporalBin.setIndex(binIndex);
-        temporalBin.setNumObs(numObsArray.getInt(arrayPointer));
-        temporalBin.setNumPasses(numSceneArray.getInt(arrayPointer));
+        // new row
+        if (currentRowPointer >=  currentRowElems) {
+            currentRowPointer = 0;
+            currentRowElems = rowExtent[currentRow];
+            currentBinIndex = rowOffset[currentRow];
+            currentRow--;
+        }
+
+        long seadasBinIndex = binNumArray.getLong(currentBinIndex);
+        long beamBinIndex = seadasGrid.reverseBinIndex(seadasBinIndex);
+        key.set(beamBinIndex);
+
+        temporalBin.setIndex(beamBinIndex);
+        temporalBin.setNumObs(numObsArray.getInt(currentBinIndex));
+        temporalBin.setNumPasses(numSceneArray.getInt(currentBinIndex));
         float[] featureValues = temporalBin.getFeatureValues();
         for (int i = 0; i < featureArrays.length; i++) {
-            featureValues[i] = featureArrays[i].getFloat(arrayPointer);
+            featureValues[i] = featureArrays[i].getFloat(currentBinIndex);
         }
-        arrayPointer++;
+
+        currentBlockPointer++;
+        currentRowPointer++;
         currentBinIndex++;
+        numReadBins++;
         return true;
     }
 

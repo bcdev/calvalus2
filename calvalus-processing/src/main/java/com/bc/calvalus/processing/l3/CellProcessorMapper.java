@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.calvalus.processing.l3.cellstream.CellFileSplit;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -30,6 +31,17 @@ public class CellProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lon
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
+        CellFileSplit cellFileSplit = (CellFileSplit) context.getInputSplit();
+
+        Map<String, String> metadata;
+        if (cellFileSplit.hasMetadata()) {
+            metadata = cellFileSplit.getMetadata();
+        } else {
+            Path inputDirectory = cellFileSplit.getPath().getParent();
+            metadata = ProcessingMetadata.read(inputDirectory, conf);
+        }
+        ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+
         L3Config l3Config = getCellL3Config(conf);
         CellProcessorConfig postProcessorConfig = l3Config.getBinningConfig().getPostProcessorConfig();
 

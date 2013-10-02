@@ -6,11 +6,11 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.calvalus.processing.l3.cellstream.CellInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
         Configuration jobConfig = job.getConfiguration();
 
         FileInputFormat.addInputPaths(job, getInputDir());
-        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setInputFormatClass(CellInputFormat.class);
 
         job.setMapperClass(CellL3ProcessorMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);

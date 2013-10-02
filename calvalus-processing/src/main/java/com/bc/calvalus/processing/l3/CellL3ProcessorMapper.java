@@ -3,12 +3,11 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.calvalus.processing.l3.cellstream.CellFileSplit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.Observation;
 import org.esa.beam.binning.SpatialBin;
@@ -41,10 +40,16 @@ public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, L
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        InputSplit inputSplit = context.getInputSplit();
-        Path inputDirectory = ((FileSplit) inputSplit).getPath().getParent();
         Configuration conf = context.getConfiguration();
-        Map<String, String> metadata = ProcessingMetadata.read(inputDirectory, conf);
+        CellFileSplit cellFileSplit = (CellFileSplit) context.getInputSplit();
+
+        Map<String, String> metadata;
+        if (cellFileSplit.hasMetadata()) {
+            metadata = cellFileSplit.getMetadata();
+        } else {
+            Path inputDirectory = cellFileSplit.getPath().getParent();
+            metadata = ProcessingMetadata.read(inputDirectory, conf);
+        }
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
         L3Config cellL3Config = CellProcessorMapper.getCellL3Config(conf);

@@ -9,7 +9,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.nc2.NetcdfFile;
 
@@ -27,27 +26,22 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
 
     private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
 
-    private Configuration conf;
-    private LongWritable key;
-    private L3TemporalBin value;
-    private AbstractNetcdfCellReader cellReader;
+    private final AbstractNetcdfCellReader cellReader;
+    private final LongWritable key;
+    private final L3TemporalBin value;
     private boolean hasMore;
 
-    @Override
-    public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
-        FileSplit fileSplit = (FileSplit) split;
-        conf = context.getConfiguration();
-        Path path = fileSplit.getPath();
-        File localFile = copyToLocal(path);
+    public CellRecordReader(Path path, Configuration conf) throws IOException {
+        File localFile = copyToLocal(path, conf);
         NetcdfFile netcdfFile = NetcdfFile.open(localFile.getAbsolutePath());
         cellReader = createReader(netcdfFile);
         key = new LongWritable();
         value = new L3TemporalBin(-1, cellReader.getFeatureNames().length);
-        hasMore = true;
     }
 
-    public String[] getFeatureNames() {
-        return cellReader.getFeatureNames();
+    @Override
+    public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+        hasMore = true;
     }
 
     @Override
@@ -75,12 +69,16 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
 
     @Override
     public float getProgress() throws IOException, InterruptedException {
-        return Math.min(1.0f, (cellReader.getCurrentIndex() / (float) cellReader.getNumBins()));
+        return Math.min(1.0f, (cellReader.getNumReadBins() / (float) cellReader.getNumBins()));
     }
 
     @Override
     public void close() throws IOException {
         cellReader.close();
+    }
+
+    public String[] getFeatureNames() {
+        return cellReader.getFeatureNames();
     }
 
     public String getStartDate() {
@@ -100,6 +98,10 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
     }
 
 
+    public int getNumRows() {
+        return cellReader.getNumRows();
+    }
+
     /**
      * Copies the file given to the local input directory for access as a ordinary {@link java.io.File}.
      *
@@ -107,7 +109,7 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
      * @return the local file that contains the copy.
      * @throws java.io.IOException
      */
-    private File copyToLocal(Path inputPath) throws IOException {
+    private static File copyToLocal(Path inputPath, Configuration conf) throws IOException {
         File localFile = new File(".", inputPath.getName());
         if (!localFile.exists()) {
             FileSystem fs = inputPath.getFileSystem(conf);
@@ -132,10 +134,6 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
     public static void main(String[] args) throws Exception {
         NetcdfFile netcdfFile = NetcdfFile.open(args[0]);
 
-        System.out.println("fileTypeDescription = " + netcdfFile.getFileTypeDescription());
-        System.out.println("fileTypeId = " + netcdfFile.getFileTypeId());
-        System.out.println("fileTypeVersion = " + netcdfFile.getFileTypeVersion());
-        System.out.println();
 
         String cdl = netcdfFile.toString();
         System.out.println("Netcdf as CDL");
@@ -145,6 +143,7 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
         System.out.println("reader.getClass().getName() = " + reader.getClass().getName());
         System.out.println("featureNames = " + Arrays.toString(reader.getFeatureNames()));
         System.out.println("NumBins = " + reader.getNumBins());
+        System.out.println("NumRows = " + reader.getNumRows());
 
         LongWritable key = new LongWritable();
         L3TemporalBin value = new L3TemporalBin(-1, reader.getFeatureNames().length);
@@ -157,6 +156,7 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
 //            System.out.println("value = " + value);
 //            System.out.println("currentIndex = " + reader.getCurrentIndex());
 //            System.out.println("---------------------------------");
+//            if (totalBinsRead > 8118) break;
         }
         long t1 = System.currentTimeMillis();
         long time = t1 - t0;
@@ -166,5 +166,4 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
         System.out.println("startDate = " + reader.getStartDate());
         System.out.println("endDate = " + reader.getEndDate());
     }
-
 }

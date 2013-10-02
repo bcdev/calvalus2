@@ -24,7 +24,9 @@ public abstract class AbstractNetcdfCellReader {
 
     public abstract String[] getFeatureNames();
 
-    public abstract int getCurrentIndex();
+    public abstract int getNumReadBins();
+
+    public abstract int getNumRows();
 
     public abstract int getNumBins();
 

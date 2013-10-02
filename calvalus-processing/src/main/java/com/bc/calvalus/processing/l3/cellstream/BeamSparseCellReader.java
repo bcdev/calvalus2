@@ -33,6 +33,7 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
     private final int numBins;
     private final Date startDate;
     private final Date endDate;
+    private int numRows;
 
     private Variable binNumVar;
     private Array binNumArray;
@@ -82,6 +83,11 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
 
         startDate = extractDate(netcdfFile, "start_time", "time_coverage_start");
         endDate = extractDate(netcdfFile, "stop_time", "time_coverage_end");
+
+        final Dimension bin_index = netcdfFile.findDimension("bin_index");
+        if (bin_index != null) {
+            numRows = bin_index.getLength();
+        }
     }
 
     private static Date extractDate(NetcdfFile netcdfFile, String name, String alternativeName) {
@@ -101,12 +107,17 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
     }
 
     @Override
+    public int getNumRows() {
+        return numRows;
+    }
+
+    @Override
     public String[] getFeatureNames() {
         return featureNames;
     }
 
     @Override
-    public int getCurrentIndex() {
+    public int getNumReadBins() {
         return currentBinIndex;
     }
 
