@@ -118,13 +118,17 @@ public class ProcessorFactory {
 
     private static Path getBundlePath(Configuration conf, FileSystem fs) throws IOException {
         String bundleLocation = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
+        final Path bundlePath;
         if (bundleLocation != null) {
-            final Path bundlePath = new Path(bundleLocation);
-            if (fs.exists(bundlePath)) {
-                FileStatus bundleStatus = fs.getFileStatus(bundlePath);
-                if (bundleStatus != null && bundleStatus.isDir()) {
-                    return bundlePath;
-                }
+            bundlePath = new Path(bundleLocation);
+        } else {
+            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
+            bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
+        }
+        if (fs.exists(bundlePath)) {
+            FileStatus bundleStatus = fs.getFileStatus(bundlePath);
+            if (bundleStatus != null && bundleStatus.isDir()) {
+                return bundlePath;
             }
         }
         return null;
