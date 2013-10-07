@@ -358,8 +358,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             } else {
                 reportMsg += "No time information given.\n";
             }
-            reportMsg += "Time range: [" + lonMin + ", " +  lonMax + "]\n";
-            return reportMsg;
+            return reportMsg.replace("\n", "<br>");
         } catch (Exception e) {
             throw convert(e);
         }
