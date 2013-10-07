@@ -63,6 +63,8 @@ import java.util.Map;
  */
 public class L2ConfigForm extends Composite {
 
+    public static final String NO_PROCESSOR_SELCTION = "<none>";
+
     interface TheUiBinder extends UiBinder<Widget, L2ConfigForm> {
 
     }
@@ -192,7 +194,7 @@ public class L2ConfigForm extends Composite {
 
         processorList.clear();
         if (!selectionMandatory) {
-            processorList.addItem("<none>");
+            processorList.addItem(NO_PROCESSOR_SELCTION);
         }
         int newSelectionIndex = 0;
         boolean productSetChanged = true;
@@ -231,13 +233,11 @@ public class L2ConfigForm extends Composite {
 
     public DtoProcessorDescriptor getSelectedProcessorDescriptor() {
         int selectedIndex = processorList.getSelectedIndex();
-        if (selectedIndex == -1) {
-            return null;
-        }
-        if (selectionMandatory) {
-            return processorDescriptors.get(selectedIndex);
+        int offset = selectionMandatory ? 0 : 1;
+        if (selectedIndex >= offset) {
+            return processorDescriptors.get(selectedIndex - offset);
         } else {
-            return processorDescriptors.get(selectedIndex - 1);
+            return null;
         }
     }
 
