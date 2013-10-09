@@ -14,7 +14,6 @@ import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.support.ObservationImpl;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.DateTimeUtils;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -108,7 +107,6 @@ public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, L
             CalvalusLogger.getLogger().log(Level.WARNING, "failed to parse date. " + e.getMessage(), e);
             return 0;
         }
-        double julianDate = DateTimeUtils.utcToJD(date);
-        return DateTimeUtils.jdToMJD(julianDate);
+        return ProductData.UTC.create(date, 0).getMJD();
     }
 }
