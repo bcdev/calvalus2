@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.l2;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.log.NullLogChute;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -56,6 +58,7 @@ public class VelocityTest {
         VelocityContext vc = new VelocityContext();
         vc.put("targetProduct", targetProduct);
         VelocityEngine velocityEngine = new VelocityEngine();
+        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, NullLogChute.class);
         velocityEngine.init();
 
         StringWriter writer = new StringWriter();
