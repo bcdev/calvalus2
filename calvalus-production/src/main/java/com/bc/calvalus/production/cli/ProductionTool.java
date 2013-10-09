@@ -3,6 +3,7 @@ package com.bc.calvalus.production.cli;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.ingestion.IngestionTool;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -96,11 +97,12 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
-                                  || commandLine.hasOption("uninstall")
-                                  || commandLine.hasOption("install")
-                                  || commandLine.hasOption("kill")
-                                  || commandLine.hasOption("copy")
-                                  || commandLine.hasOption("help");
+                || commandLine.hasOption("uninstall")
+                || commandLine.hasOption("install")
+                || commandLine.hasOption("kill")
+                || commandLine.hasOption("copy")
+                || commandLine.hasOption("ingestion")
+                || commandLine.hasOption("help");
         List argList = commandLine.getArgList();
         if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
@@ -137,6 +139,11 @@ public class ProductionTool {
             say(String.format("Loading Calvalus configuration '%s'...", configFile));
             Map<String, String> config = ProductionServiceConfig.loadConfig(new File(configFile), defaultConfig);
             say("Configuration loaded.");
+
+            if (commandLine.hasOption("ingestion")) {
+                IngestionTool.handleIngestionCommand(commandLine, commandLine.getOptionValues("ingestion"), getHDFS(config));
+                return;
+            }
 
             if (commandLine.hasOption("uninstall")) {
                 uninstallBundles(commandLine.getOptionValue("uninstall"), config);
@@ -207,8 +214,8 @@ public class ProductionTool {
     }
 
     private Production orderProduction(ProductionService productionService, ProductionRequest request) throws
-                                                                                                       ProductionException,
-                                                                                                       InterruptedException {
+            ProductionException,
+            InterruptedException {
         say("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
@@ -245,14 +252,14 @@ public class ProductionTool {
     }
 
     private void stageProduction(ProductionService productionService, Production production) throws ProductionException,
-                                                                                                    InterruptedException {
+            InterruptedException {
         say("Staging results...");
         productionService.stageProductions(production.getId());
         observeStagingStatus(productionService, production);
     }
 
     private void observeStagingStatus(ProductionService productionService, Production production) throws
-                                                                                                  InterruptedException {
+            InterruptedException {
         while (!production.getStagingStatus().isDone()) {
             Thread.sleep(500);
             productionService.updateStatuses();
@@ -270,7 +277,7 @@ public class ProductionTool {
     }
 
     private void observeProduction(ProductionService productionService, Production production) throws
-                                                                                               InterruptedException {
+            InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 
@@ -294,15 +301,15 @@ public class ProductionTool {
 
     private Thread createShutdownHook(final WorkflowItem workflow) {
         return new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        workflow.kill();
-                    } catch (Exception e) {
-                        say("Failed to shutdown production: " + e.getMessage());
-                    }
+            @Override
+            public void run() {
+                try {
+                    workflow.kill();
+                } catch (Exception e) {
+                    say("Failed to shutdown production: " + e.getMessage());
                 }
-            };
+            }
+        };
     }
 
     private void installBundles(String sourcePathsString, Map<String, String> config) {
@@ -410,7 +417,7 @@ public class ProductionTool {
     }
 
     private void installBundle(Path sourcePath, FileSystem hdfs, Path bundlePath, Configuration hadoopConfig) throws
-                                                                                                              IOException {
+            IOException {
         DirCopy.copyDir(new File(sourcePath.toString()), hdfs, bundlePath, hadoopConfig);
         say("+ " + bundlePath.getName() + " installed");
     }
@@ -508,7 +515,7 @@ public class ProductionTool {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp(TOOL_NAME + " [OPTION]... REQUEST",
                                 "\nThe Calvalus production tool submits a production REQUEST to a Calvalus production system. REQUEST must be a plain text XML file " +
-                                "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
+                                        "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
                                 TOOL_OPTIONS,
                                 "", false);
     }
@@ -560,7 +567,7 @@ public class ProductionTool {
                                   .withArgName("FILES")
                                   .withDescription(
                                           "Copies FILES to '/calvalus/home/<user>' before any request is executed." +
-                                          "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
+                                                  "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("deploy")
@@ -568,31 +575,68 @@ public class ProductionTool {
                                   .withArgName("FILES-->BUNDLE")
                                   .withDescription(
                                           "Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
-                                          "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
-                                          "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
-                                          "Alternatively a list of files and as last argument the bundle name can be given.")
+                                                  "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
+                                                  "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
+                                                  "Alternatively a list of files and as last argument the bundle name can be given.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("install")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
-                                                   "on Calvalus before any request is executed." +
-                                                   "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
+                                                           "on Calvalus before any request is executed." +
+                                                           "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("uninstall")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
-                                                   "from Calvalus before any request is executed." +
-                                                   "Use character ',' to separate multiple entries in BUNDLES.")
+                                                           "from Calvalus before any request is executed." +
+                                                           "Use character ',' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("kill")
                                   .hasArgs()
                                   .withArgName("PID")
                                   .withDescription("Kills the production with given identifier PID.")
+                                  .create());  // (sub) commands don't have short options
+
+
+        options.addOption(OptionBuilder
+                                  .withLongOpt("ingestion")
+                                  .hasArgs()
+                                  .withArgName("FILES")
+                                  .withDescription("Transfers EO data products to HDFS.")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("producttype")
+                                  .hasArg()
+                                  .withDescription("Product type of uploaded files, defaults to " + IngestionTool.DEFAULT_PRODUCT_TYPE)
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("revision")
+                                  .hasArg()
+                                  .withDescription("Revision of uploaded files, defaults to " + IngestionTool.DEFAULT_REVISION)
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("replication")
+                                  .hasArg()
+                                  .withDescription("Replication factor of uploaded files, defaults 1")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("blocksize")
+                                  .hasArg()
+                                  .withDescription("Block size in MB for uploaded files, defaults to file size")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("filenamepattern")
+                                  .hasArg()
+                                  .withDescription("Regular expression matching filenames, defaults to 'producttype.*\\.N1'")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("verify")
+                                  .withDescription("Verify existence and size to avoid double copying, defaults to false")
                                   .create());  // (sub) commands don't have short options
         return options;
     }
