@@ -4,10 +4,12 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -84,6 +86,16 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
             return false;
         } else {
             return true;
+        }
+    }
+
+    public Path getFirstInputDirectory(Job job) throws IOException {
+        JobContext jobContext = new JobContext(job.getConfiguration(), null);
+        List<FileStatus> fileStatuses = listStatus(jobContext);
+        if (fileStatuses.isEmpty()) {
+            return null;
+        } else {
+            return fileStatuses.get(0).getPath().getParent();
         }
     }
 }

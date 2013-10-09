@@ -26,25 +26,7 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-1</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>inputPath</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-2</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>inputPath</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-3</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>inputPath</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-4</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-[1-4]</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

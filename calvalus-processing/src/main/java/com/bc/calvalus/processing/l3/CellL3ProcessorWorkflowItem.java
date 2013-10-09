@@ -8,6 +8,7 @@ import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.calvalus.processing.l3.cellstream.CellInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -68,14 +69,16 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
 
         ProcessorFactory.installProcessorBundle(jobConfig);
 
-        Map<String, String> metadata = ProcessingMetadata.read(FileInputFormat.getInputPaths(job)[0], jobConfig);
-        String[] coreL3Keys = {
-                JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                JobConfigNames.CALVALUS_INPUT_REGION_NAME,
-                JobConfigNames.CALVALUS_L3_PARAMETERS
-        };
-        ProcessingMetadata.metadata2Config(metadata, jobConfig, coreL3Keys);
-
+        CellInputFormat cellInputFormat = new CellInputFormat();
+        Path inputDirectory = cellInputFormat.getFirstInputDirectory(job);
+        if (inputDirectory != null) {
+            Map<String, String> metadata = ProcessingMetadata.read(inputDirectory, jobConfig);
+            String[] coreL3Keys = {
+                    JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                    JobConfigNames.CALVALUS_INPUT_REGION_NAME,
+                    JobConfigNames.CALVALUS_L3_PARAMETERS
+            };
+            ProcessingMetadata.metadata2Config(metadata, jobConfig, coreL3Keys);
+        }
     }
-
 }
